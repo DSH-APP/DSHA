@@ -43,7 +43,12 @@ public class GlassCard extends BlurView {
     }
 
     private void init() {
-        setBackgroundResource(R.drawable.bg_card);
+        // 玻璃开着时，背景只能留圆角和描边、填充必须透明 —— BlurView 的绘制顺序是
+        // 「先画模糊 + overlay，再 super.draw() 画 background 和子 View」，不透明的
+        // background 会把刚画好的模糊整块盖住（症状：卡片看着毫无效果）。
+        // 玻璃关着时它就是一张普通卡片，照旧用不透明底。
+        boolean glass = DshaGlass.enabled(getContext());
+        setBackgroundResource(glass ? R.drawable.bg_card_glass : R.drawable.bg_card);
         int pad = getResources().getDimensionPixelSize(R.dimen.card_pad);
         setPadding(pad, pad, pad, pad);
         // 圆角：BlurView 自己画模糊，不裁的话四个角会溢出方形的模糊块
@@ -72,18 +77,22 @@ public class GlassCard extends BlurView {
 
     private void wire() {
         try {
-            BlurTarget target = null;
-            for (ViewGroup p = (ViewGroup) getParent(); p != null; ) {
-                if (p instanceof BlurTarget) {
-                    target = (BlurTarget) p;
-                    break;
-                }
-                p = (p.getParent() instanceof ViewGroup) ? (ViewGroup) p.getParent() : null;
-            }
-            if (target == null) return;              // 不在可取样的层级里，就当普通卡片
-            // 半径比顶栏小一档：卡片面积小，糊过头会变成一团色，看不出层次。
-            setupWith(target)
-                    .setBlurRadius(14f)
+            if (!DshaGlass.enabled(getContext())) return;   // 玻璃没开 → 就是一张普通卡片
+            // 取样源必须**不包含自己**，否则渲染树自己套自己 —— 上一版就是向上找最近的
+            // BlurTarget（那个含内容区，卡片就在里面），启动直接栈溢出闪退：
+            // logcat 里 500+ 帧的 RenderNode::prepareTreeImpl ↔ prepareListAndChildren。
+            // 库的 README 有这条约束，只是当时读过没当真。
+            //
+            // 所以按 id 找专门那一层：bg_blur_target 只装背景图，不含任何卡片。
+            View root = getRootView();
+            BlurTarget target = root == null ? null : root.findViewById(R.id.bg_blur_target);
+            if (target == null) return;              // 不在主界面里，就当普通卡片
+            // 卡片糊的只有背景图（静态内容），所以可以把降采样开大、半径也放开：
+            // scaleFactor 8 + radius 20 出来的是一片干净的色雾，文字压在上面很好读。
+            // 之前 radius 14 配默认 scaleFactor 4，糊得不够，背景纹样还能看出形状，
+            // 反而干扰阅读 —— 那就是「配置页模糊要优化」的症状。
+            setupWith(target, 8f, true)
+                    .setBlurRadius(20f)
                     .setOverlayColor(DshaGlass.overlayColor(getContext(), 1f));
             wired = true;
         } catch (Throwable t) {

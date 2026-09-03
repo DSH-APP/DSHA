@@ -38,16 +38,38 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="@dimen/touch_min"
-                android:text="樱花 · 浅色暖粉" />
-
-            <RadioButton
-                android:id="@+id/ap_theme_glass"
-                style="@style/DshaText.Body"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="@dimen/touch_min"
-                android:text="玻璃 · 深色半透明" />
+                android:text="樱花 · 暖粉" />
         </RadioGroup>
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="两套配色都跟随系统的浅色/深色模式。" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/stroke"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/dshaLine" />
+
+        <CheckBox
+            android:id="@+id/ap_glass"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/touch_min"
+            android:text="玻璃效果" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="顶栏、底栏与卡片会模糊各自背后的内容。叠加在任一配色上，配一张背景图效果最明显。" />
 
         <View
             android:layout_width="match_parent"

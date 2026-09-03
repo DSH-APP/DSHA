@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GlassCard 专用的背景：只有圆角和描边，**填充是透明的**。
+
+  为什么不能沿用 bg_card：BlurView 的绘制顺序是「先画模糊 + overlay，再 super.draw()
+  画 background 和子 View」。background 一旦不透明，就把刚画好的模糊整块盖住 ——
+  表现是卡片看着完全不透明，像什么效果都没加（这正是「日志变成不透明了」）。
+
+  填充交给 BlurView 的 overlayColor（那个带用户设定的 alpha）。这里只留边框，
+  因为 setClipToOutline 需要一个能提供 outline 的背景，圆角也靠它。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+    <corners android:radius="@dimen/radius_card" />
+    <stroke android:width="@dimen/stroke" android:color="?attr/dshaLine" />
+</shape>

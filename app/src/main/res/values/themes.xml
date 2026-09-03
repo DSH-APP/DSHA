@@ -101,7 +101,7 @@
          （本项目在「同一份配置散落两处」上栽过几次）。 -->
 
     <!-- 樱花：浅色暖粉。取色自一份参考设计（#d4879e 主色 / #5c3344 文字），
-         比原来的蓝灰更柔和，长时间看眼睛松一些。 -->
+         比原来的蓝灰更柔和。这一份是浅色，深色在 values-night 里。 -->
     <style name="Theme.DeepseekHarness.Sakura" parent="Theme.DeepseekHarness">
         <item name="dshaSurface">@color/sk_surface</item>
         <item name="dshaCard">@color/sk_card</item>
@@ -137,37 +137,4 @@
         <item name="android:textColorHint">@color/sk_muted</item>
     </style>
 
-    <!-- 玻璃：深色 + 半透明卡片 + 渐变底衬。卡片带 alpha 才有「材质」可言，
-         纯色底上做模糊是看不出来的，所以窗口底衬换成渐变。
-         Android 12+ 还会在代码里给卡片叠一层真模糊（RenderEffect）。 -->
-    <style name="Theme.DeepseekHarness.Glass" parent="Theme.DeepseekHarness">
-        <item name="dshaSurface">@color/gl_surface</item>
-        <item name="dshaCard">@color/gl_card</item>
-        <item name="dshaRaised">@color/gl_raised</item>
-        <item name="dshaLine">@color/gl_line</item>
-        <item name="dshaPreview">@color/gl_raised</item>
-        <item name="dshaText">@color/gl_text</item>
-        <item name="dshaTextSecondary">@color/gl_sub</item>
-        <item name="dshaTextMuted">@color/gl_muted</item>
-        <item name="dshaPrimary">@color/gl_primary</item>
-        <item name="dshaRipple">@color/gl_ripple</item>
-        <item name="dshaWindowBackground">@drawable/bg_window_glass</item>
-
-        <item name="colorPrimary">@color/gl_primary</item>
-        <item name="colorSurface">@color/gl_card_solid</item>
-        <item name="colorOnSurface">@color/gl_text</item>
-        <item name="colorSurfaceVariant">@color/gl_raised</item>
-        <item name="colorOnSurfaceVariant">@color/gl_sub</item>
-        <item name="colorOutline">@color/gl_line</item>
-        <item name="colorOutlineVariant">@color/gl_line</item>
-        <item name="colorControlHighlight">@color/gl_ripple</item>
-        <item name="android:colorBackground">@color/gl_surface</item>
-        <item name="android:windowBackground">@drawable/bg_window_glass</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:textColorPrimary">@color/gl_text</item>
-        <item name="android:textColorSecondary">@color/gl_sub</item>
-        <item name="android:textColorHint">@color/gl_muted</item>
-    </style>
 </resources>

@@ -32,4 +32,16 @@
     <color name="gl_muted">#7A8698</color>
     <color name="gl_primary">#8AB4F8</color>
     <color name="gl_ripple">#338AB4F8</color>
+
+    <!-- 樱花的深色版。同一套主题要跟随系统深浅，就必须有这一份 ——
+         否则夜里打开是一片刺眼的白。底色走深紫褐（不是纯黑），
+         主色沿用 #D4879E：那个粉在深底上依然清楚。 -->
+    <color name="sk_dark_surface">#171014</color>
+    <color name="sk_dark_card">#221822</color>
+    <color name="sk_dark_raised">#2C2029</color>
+    <color name="sk_dark_line">#3A2B35</color>
+    <color name="sk_dark_text">#F2E4EA</color>
+    <color name="sk_dark_sub">#C8ACB8</color>
+    <color name="sk_dark_muted">#8E7482</color>
+    <color name="sk_dark_ripple">#33D4879E</color>
 </resources>

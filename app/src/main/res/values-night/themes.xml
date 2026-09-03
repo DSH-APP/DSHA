@@ -57,4 +57,40 @@
              「浅蓝底白字看不清」。上一版只改了 day 那份，深色模式毫无变化。 -->
         <item name="materialButtonStyle">@style/Widget.DSHA.Button</item>
     </style>
+
+    <!-- 樱花 · 深色。跟 values/themes.xml 里那份同名，系统进夜间模式时自动换到这边。
+         只覆盖颜色槽，行为配置（materialButtonStyle 等）由 parent 带过来。 -->
+    <style name="Theme.DeepseekHarness.Sakura" parent="Theme.DeepseekHarness">
+        <item name="dshaSurface">@color/sk_dark_surface</item>
+        <item name="dshaCard">@color/sk_dark_card</item>
+        <item name="dshaRaised">@color/sk_dark_raised</item>
+        <item name="dshaLine">@color/sk_dark_line</item>
+        <item name="dshaPreview">@color/sk_dark_raised</item>
+        <item name="dshaText">@color/sk_dark_text</item>
+        <item name="dshaTextSecondary">@color/sk_dark_sub</item>
+        <item name="dshaTextMuted">@color/sk_dark_muted</item>
+        <item name="dshaPrimary">@color/sk_primary</item>
+        <item name="dshaOk">@color/sk_ok</item>
+        <item name="dshaWarn">@color/sk_warn</item>
+        <item name="dshaErr">@color/sk_primary</item>
+        <item name="dshaRipple">@color/sk_dark_ripple</item>
+        <item name="dshaWindowBackground">@color/sk_dark_surface</item>
+
+        <item name="colorPrimary">@color/sk_primary</item>
+        <item name="colorSurface">@color/sk_dark_card</item>
+        <item name="colorOnSurface">@color/sk_dark_text</item>
+        <item name="colorSurfaceVariant">@color/sk_dark_raised</item>
+        <item name="colorOnSurfaceVariant">@color/sk_dark_sub</item>
+        <item name="colorOutline">@color/sk_dark_line</item>
+        <item name="colorOutlineVariant">@color/sk_dark_line</item>
+        <item name="colorControlHighlight">@color/sk_dark_ripple</item>
+        <item name="android:colorBackground">@color/sk_dark_surface</item>
+        <item name="android:windowBackground">@color/sk_dark_surface</item>
+        <item name="android:statusBarColor">@color/sk_dark_surface</item>
+        <item name="android:navigationBarColor">@color/sk_dark_surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:textColorPrimary">@color/sk_dark_text</item>
+        <item name="android:textColorSecondary">@color/sk_dark_sub</item>
+        <item name="android:textColorHint">@color/sk_dark_muted</item>
+    </style>
 </resources>

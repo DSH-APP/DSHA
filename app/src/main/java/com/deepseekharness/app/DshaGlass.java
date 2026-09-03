@@ -28,6 +28,35 @@ final class DshaGlass {
     static final String KEY_ALPHA = "ui_card_alpha";
     static final int ALPHA_DEFAULT = 100;
 
+    /** 玻璃效果总开关。
+     *
+     *  <p>玻璃是**叠加**在配色之上的，不是一套配色 —— 这样「樱花 + 玻璃」「蓝灰 + 玻璃」
+     *  都表达得出来，而配色又能各自跟随系统深浅。早先把它做成第三套主题，
+     *  结果是玻璃被钉死在深色上、樱花永远没有玻璃。
+     *
+     *  <p>关掉时：卡片与栏都是不透明的，BlurView 不装配（连快照都不记）。 */
+    static final String KEY_ENABLED = "ui_glass";
+
+    static boolean enabled(Context ctx) {
+        try {
+            android.content.SharedPreferences sp =
+                    ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE);
+            if (sp.contains(KEY_ENABLED)) return sp.getBoolean(KEY_ENABLED, false);
+            // 没有这个键 = 从「玻璃是一套主题」的旧版升上来。之前设过背景图、或者把卡片
+            // 透明度调低过的人，本来就在用玻璃 —— 默认给开，别让一次升级把效果悄悄关掉。
+            boolean had = DshaBackground.exists(ctx) || sp.getInt(KEY_ALPHA, ALPHA_DEFAULT) < 100;
+            sp.edit().putBoolean(KEY_ENABLED, had).apply();
+            return had;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    static void setEnabled(Context ctx, boolean on) {
+        ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
+                .edit().putBoolean(KEY_ENABLED, on).apply();
+    }
+
     private DshaGlass() {
     }
 
@@ -70,6 +99,7 @@ final class DshaGlass {
     static void apply(View root) {
         if (root == null) return;
         try {
+            if (!enabled(root.getContext())) return;   // 玻璃没开 → 一切保持不透明
             int pct = alpha(root.getContext());
             walk(root, (int) (pct / 100f * 255f));
         } catch (Throwable t) {

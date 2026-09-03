@@ -21,15 +21,28 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- 自定义背景图。默认 gone —— 没设图时留给主题的窗口底衬，
-             多一个全屏 ImageView 白画一层没意义。 -->
-        <ImageView
-            android:id="@+id/app_background"
+        <!-- 内层 target：只装背景图，专门给内容卡片当取样源。
+             为什么要多这一层 —— BlurTarget 不允许包含 target 它自己的 BlurView，
+             否则渲染树自己套自己，直接栈溢出闪退（实测 500+ 帧的
+             RenderNode::prepareTreeImpl 递归）。卡片在 fragment_container 里、
+             也就是在外层 target 里，所以它只能取样这个「不含自己」的内层。
+             外层 target 包含内层 —— 库明确允许 BlurTarget 嵌套，所以顶栏底栏
+             取样外层时照样能糊到背景图。 -->
+        <eightbitlab.com.blurview.BlurTarget
+            android:id="@+id/bg_blur_target"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            android:visibility="gone" />
+            android:layout_height="match_parent">
+
+            <!-- 自定义背景图。默认 gone —— 没设图时留给主题的窗口底衬，
+                 多一个全屏 ImageView 白画一层没意义。 -->
+            <ImageView
+                android:id="@+id/app_background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+        </eightbitlab.com.blurview.BlurTarget>
 
         <FrameLayout
             android:id="@+id/fragment_container"

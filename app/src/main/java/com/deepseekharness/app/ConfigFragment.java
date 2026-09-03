@@ -401,9 +401,14 @@ public class ConfigFragment extends Fragment {
         final android.content.Context ctx = requireContext();
         View v = android.view.LayoutInflater.from(ctx).inflate(R.layout.dialog_appearance, null);
 
-        final int[] ids = {R.id.ap_theme_default, R.id.ap_theme_sakura, R.id.ap_theme_glass};
+        final int[] ids = {R.id.ap_theme_default, R.id.ap_theme_sakura};
         final android.widget.RadioGroup group = v.findViewById(R.id.ap_theme_group);
         group.check(ids[DshaTheme.currentIndex(ctx)]);
+
+        // 玻璃是叠加开关，不是第三套配色 —— 这样它能配任一配色，
+        // 而配色各自跟随系统深浅。
+        final android.widget.CheckBox glass = v.findViewById(R.id.ap_glass);
+        glass.setChecked(DshaGlass.enabled(ctx));
 
         final TextView bgState = v.findViewById(R.id.ap_bg_state);
         refreshBgState(bgState);
@@ -440,6 +445,7 @@ public class ConfigFragment extends Fragment {
                 .setView(v)
                 .setPositiveButton("应用", (d, w) -> {
                     DshaGlass.setAlpha(ctx, alpha.getProgress());
+                    DshaGlass.setEnabled(ctx, glass.isChecked());
                     DshaBackground.setDim(ctx, dim.getProgress());
                     DshaBackground.setBlur(ctx, blur.getProgress());
                     int idx = 0;

@@ -218,18 +218,22 @@ public class MainActivity extends AppCompatActivity {
      *  会得到"半透明的模糊"，看着发灰。 */
     private void setupGlass() {
         try {
+            DshaBackground.applyTo(findViewById(R.id.app_background));
+            if (!DshaGlass.enabled(this)) return;    // 玻璃没开：栏保持不透明，连快照都不记
             eightbitlab.com.blurview.BlurTarget target = findViewById(R.id.blur_target);
             if (target == null) return;
-            DshaBackground.applyTo(findViewById(R.id.app_background));
 
+            int overlay = DshaGlass.overlayColor(this, 0.82f);
             int[] ids = {R.id.top_glass, R.id.bottom_glass};
             for (int id : ids) {
                 eightbitlab.com.blurview.BlurView bv = findViewById(id);
                 if (bv == null) continue;
-                bv.setupWith(target)
+                // scaleFactor 5：栏是常驻的，每帧都要重算，降采样狠一点省 GPU；
+                // 反正模糊本身就不需要精确。半径 24 是在这个缩放下试出来的观感。
+                bv.setupWith(target, 5f, true)
                         .setFrameClearDrawable(getWindow().getDecorView().getBackground())
                         .setBlurRadius(24f)
-                        .setOverlayColor(DshaGlass.overlayColor(this, 0.82f));
+                        .setOverlayColor(overlay);
             }
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "玻璃栏初始化失败（退化成普通栏，功能不受影响）: " + t);
