@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  外观面板。三个滑块都要能实时看到效果 —— 透明度、暗化、模糊这类东西讲不清，
+  只能看着调，所以拖动时就地预览，松手才落盘。
+
+  主题单选放在最上面：它决定另外几项的意义（不透明主题下调透明度看不出什么）。
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
+
+        <RadioGroup
+            android:id="@+id/ap_theme_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/ap_theme_default"
+                style="@style/DshaText.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/touch_min"
+                android:text="默认 · 蓝灰（跟随系统深浅）" />
+
+            <RadioButton
+                android:id="@+id/ap_theme_sakura"
+                style="@style/DshaText.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/touch_min"
+                android:text="樱花 · 浅色暖粉" />
+
+            <RadioButton
+                android:id="@+id/ap_theme_glass"
+                style="@style/DshaText.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/touch_min"
+                android:text="玻璃 · 深色半透明" />
+        </RadioGroup>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/stroke"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"
+            android:background="?attr/dshaLine" />
+
+        <!-- ── 背景图 ── -->
+        <TextView
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="背景图片" />
+
+        <TextView
+            android:id="@+id/ap_bg_state"
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="未设置" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/ap_bg_pick"
+                style="@style/Widget.DSHA.Button"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_btn"
+                android:text="选择图片" />
+
+            <Button
+                android:id="@+id/ap_bg_clear"
+                style="@style/Widget.DSHA.Button"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_btn"
+                android:text="清除" />
+        </LinearLayout>
+
+        <!-- ── 三个滑块 ── -->
+        <TextView
+            android:id="@+id/ap_alpha_label"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="卡片不透明度" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="调低了才透得出背景。太低会看不清字，下限 20%。" />
+
+        <SeekBar
+            android:id="@+id/ap_alpha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
+
+        <TextView
+            android:id="@+id/ap_dim_label"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="背景压暗" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="亮照片上的浅色文字会看不清，压暗一点更稳。" />
+
+        <SeekBar
+            android:id="@+id/ap_dim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="80" />
+
+        <TextView
+            android:id="@+id/ap_blur_label"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="背景模糊" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="糊掉细节，界面上的字更好读。改这一项要重开界面才看得到。" />
+
+        <SeekBar
+            android:id="@+id/ap_blur"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
+    </LinearLayout>
+</ScrollView>

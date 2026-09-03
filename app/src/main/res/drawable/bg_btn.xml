@@ -2,7 +2,7 @@
 <!-- 次级按钮：描边浅底 + 按压涟漪 + 禁用变灰。
      旧版是静态 shape：按下去毫无反馈，禁用后外观照旧（用户一直点一直没反应）。 -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/ripple">
+    android:color="?attr/dshaRipple">
 
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
@@ -15,17 +15,17 @@
         <selector>
             <item android:state_enabled="false">
                 <shape android:shape="rectangle">
-                    <solid android:color="@color/disabled" />
+                    <solid android:color="?attr/dshaDisabled" />
                     <corners android:radius="@dimen/radius_control" />
                 </shape>
             </item>
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="@color/raised" />
+                    <solid android:color="?attr/dshaRaised" />
                     <corners android:radius="@dimen/radius_control" />
                     <stroke
                         android:width="@dimen/stroke"
-                        android:color="@color/line" />
+                        android:color="?attr/dshaLine" />
                 </shape>
             </item>
         </selector>

@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="?attr/dshaSurface"
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:paddingStart="@dimen/page_pad_wide"
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/gap_section"
         android:text="DSHA"
-        android:textColor="@color/text"
+        android:textColor="?attr/dshaText"
         android:textSize="@dimen/text_hero"
         android:textStyle="bold" />
 
@@ -39,7 +39,7 @@
         android:gravity="center"
         android:lineSpacingExtra="6dp"
         android:text="DeepSeek Harness 一键启动器\n\n内置 Linux 环境，无需 Termux，\n自动安装并启动，开箱即用。"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/dshaTextSecondary"
         android:textSize="@dimen/text_body" />
 
     <View
@@ -52,6 +52,6 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="仅支持 arm64-v8a · Android 8.0+ · 免 ROOT"
-        android:textColor="@color/text_muted"
+        android:textColor="?attr/dshaTextMuted"
         android:textSize="@dimen/text_caption" />
 </LinearLayout>

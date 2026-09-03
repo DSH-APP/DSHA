@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="?attr/dshaSurface"
     android:fillViewport="true">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="四个页面"
-            android:textColor="@color/text"
+            android:textColor="?attr/dshaText"
             android:textSize="@dimen/text_display"
             android:textStyle="bold" />
 
@@ -28,7 +28,7 @@
             android:layout_marginTop="@dimen/gap_tight"
             android:layout_marginBottom="@dimen/gap_section"
             android:text="启动、终端、市场、设置，底栏一切换"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_label" />
 
         <LinearLayout
@@ -39,10 +39,10 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="@dimen/card_pad">
-            <TextView android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="@dimen/gap_control" android:background="@drawable/bg_chip" android:gravity="center" android:text="1" android:textColor="@color/primary" android:textStyle="bold" />
+            <TextView android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="@dimen/gap_control" android:background="@drawable/bg_chip" android:gravity="center" android:text="1" android:textColor="?attr/dshaPrimary" android:textStyle="bold" />
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="启动" android:textColor="@color/text" android:textSize="@dimen/text_body" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="启动 Web UI，点「进入」在软件里打开" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="启动" android:textColor="?attr/dshaText" android:textSize="@dimen/text_body" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="启动 Web UI，点「进入」在软件里打开" android:textColor="?attr/dshaTextMuted" android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </LinearLayout>
 
@@ -54,10 +54,10 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="@dimen/card_pad">
-            <TextView android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="@dimen/gap_control" android:background="@drawable/bg_chip" android:gravity="center" android:text="2" android:textColor="@color/primary" android:textStyle="bold" />
+            <TextView android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="@dimen/gap_control" android:background="@drawable/bg_chip" android:gravity="center" android:text="2" android:textColor="?attr/dshaPrimary" android:textStyle="bold" />
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="终端" android:textColor="@color/text" android:textSize="@dimen/text_body" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="进 Linux 环境敲命令" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="终端" android:textColor="?attr/dshaText" android:textSize="@dimen/text_body" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="进 Linux 环境敲命令" android:textColor="?attr/dshaTextMuted" android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </LinearLayout>
 
@@ -69,10 +69,10 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="@dimen/card_pad">
-            <TextView android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="@dimen/gap_control" android:background="@drawable/bg_chip" android:gravity="center" android:text="3" android:textColor="@color/primary" android:textStyle="bold" />
+            <TextView android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="@dimen/gap_control" android:background="@drawable/bg_chip" android:gravity="center" android:text="3" android:textColor="?attr/dshaPrimary" android:textStyle="bold" />
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="市场" android:textColor="@color/text" android:textSize="@dimen/text_body" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="浏览、安装、开关插件" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="市场" android:textColor="?attr/dshaText" android:textSize="@dimen/text_body" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="浏览、安装、开关插件" android:textColor="?attr/dshaTextMuted" android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </LinearLayout>
 
@@ -84,10 +84,10 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="@dimen/card_pad">
-            <TextView android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="@dimen/gap_control" android:background="@drawable/bg_chip" android:gravity="center" android:text="4" android:textColor="@color/primary" android:textStyle="bold" />
+            <TextView android:layout_width="36dp" android:layout_height="36dp" android:layout_marginEnd="@dimen/gap_control" android:background="@drawable/bg_chip" android:gravity="center" android:text="4" android:textColor="?attr/dshaPrimary" android:textStyle="bold" />
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="设置" android:textColor="@color/text" android:textSize="@dimen/text_body" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="API key、安装、工作区、备份" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="设置" android:textColor="?attr/dshaText" android:textSize="@dimen/text_body" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="API key、安装、工作区、备份" android:textColor="?attr/dshaTextMuted" android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

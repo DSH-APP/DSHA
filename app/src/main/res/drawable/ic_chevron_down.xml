@@ -4,7 +4,7 @@
     android:height="20dp"
     android:viewportWidth="24"
     android:viewportHeight="24"
-    android:tint="@color/text_muted">
+    android:tint="?attr/dshaTextMuted">
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M7.4,9.6 L12,14.2 L16.6,9.6 L18,11 L12,17 L6,11 Z" />

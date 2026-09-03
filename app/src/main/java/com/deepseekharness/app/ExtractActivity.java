@@ -21,6 +21,8 @@ public class ExtractActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        DshaTheme.apply(this);
+        DshaBackground.apply(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_extract);
 

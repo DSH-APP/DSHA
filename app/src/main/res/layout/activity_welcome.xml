@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="?attr/dshaSurface"
     android:orientation="vertical">
 
     <androidx.viewpager2.widget.ViewPager2
@@ -36,7 +36,7 @@
             android:background="@drawable/bg_btn_primary"
             android:text="下一步"
             android:textAllCaps="false"
-            android:textColor="@color/accent_on"
+            android:textColor="?attr/dshaAccentOn"
             android:textSize="@dimen/text_body" />
     </LinearLayout>
 </LinearLayout>

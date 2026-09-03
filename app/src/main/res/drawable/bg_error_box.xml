@@ -2,9 +2,9 @@
 <!-- 错误块：淡红底 + 同色描边，让报错像"一块内容"而不是飘在页面上的红字 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="@color/err_bg" />
+    <solid android:color="?attr/dshaErrBg" />
     <corners android:radius="@dimen/radius_control" />
     <stroke
         android:width="@dimen/stroke"
-        android:color="@color/err" />
+        android:color="?attr/dshaErr" />
 </shape>

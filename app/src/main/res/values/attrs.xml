@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  主题可换的颜色槽。
+
+  为什么要这一层：布局与 drawable 原先直接写 @color/card 这类硬引用，那是**编译期就
+  钉死的资源**，运行时换主题改不动它们（day/night 能切是因为系统按 uiMode 选目录，
+  不是因为引用可变）。把引用改成 ?attr/dshaCard 之后，颜色由当前主题决定，加一套配色
+  就只是多写一个 <style>，不用再碰 148 处引用。
+
+  命名沿用原来的语义（surface/card/raised/line/text/…），这样替换是机械的、可核对的：
+  @color/card → ?attr/dshaCard。
+
+  注意：drawable 里用 ?attr/ 需要在有主题的 Context 下加载（我们的用法都满足；
+  minSdk 26，不涉及 Android 5 那个已知的 drawable 主题解析问题）。
+-->
+<resources>
+    <!-- 底层与容器 -->
+    <attr name="dshaSurface" format="color" />
+    <attr name="dshaCard" format="color" />
+    <attr name="dshaRaised" format="color" />
+    <attr name="dshaLine" format="color" />
+    <attr name="dshaPreview" format="color" />
+
+    <!-- 文字三级 -->
+    <attr name="dshaText" format="color" />
+    <attr name="dshaTextSecondary" format="color" />
+    <attr name="dshaTextMuted" format="color" />
+
+    <!-- 强调与状态 -->
+    <attr name="dshaPrimary" format="color" />
+    <attr name="dshaAccentOn" format="color" />
+    <attr name="dshaOk" format="color" />
+    <attr name="dshaWarn" format="color" />
+    <attr name="dshaErr" format="color" />
+    <attr name="dshaErrBg" format="color" />
+
+    <!-- 交互态 -->
+    <attr name="dshaRipple" format="color" />
+    <attr name="dshaDisabled" format="color" />
+
+    <!-- 页面底衬。默认是纯色，玻璃主题下换成渐变 drawable ——
+         卡片半透明要有东西可透，纯色底上做模糊是看不出材质的。 -->
+    <attr name="dshaWindowBackground" format="reference|color" />
+</resources>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/card" />
+    <solid android:color="?attr/dshaCard" />
     <corners android:radius="@dimen/radius_card" />
-    <stroke android:width="@dimen/stroke" android:color="@color/line" />
+    <stroke android:width="@dimen/stroke" android:color="?attr/dshaLine" />
 </shape>

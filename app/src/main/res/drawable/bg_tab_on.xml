@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 选中的分段标签：主色描边 + 主色淡底，比只换描边更容易一眼看出选中 -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/ripple">
+    android:color="?attr/dshaRipple">
 
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
@@ -12,11 +12,11 @@
 
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/ripple" />
+            <solid android:color="?attr/dshaRipple" />
             <corners android:radius="@dimen/radius_small" />
             <stroke
                 android:width="2dp"
-                android:color="@color/primary" />
+                android:color="?attr/dshaPrimary" />
         </shape>
     </item>
 </ripple>

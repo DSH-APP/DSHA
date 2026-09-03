@@ -23,7 +23,7 @@
             android:ellipsize="middle"
             android:fontFamily="monospace"
             android:singleLine="true"
-            android:textColor="@color/text"
+            android:textColor="?attr/dshaText"
             android:textSize="@dimen/text_body"
             android:textStyle="bold" />
 
@@ -40,7 +40,7 @@
             android:paddingStart="@dimen/gap_control"
             android:paddingEnd="@dimen/gap_control"
             android:text="安装"
-            android:textColor="@color/primary"
+            android:textColor="?attr/dshaPrimary"
             android:textSize="@dimen/text_label"
             android:textStyle="bold" />
 
@@ -57,7 +57,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/gap_hair"
-        android:textColor="@color/warn"
+        android:textColor="?attr/dshaWarn"
         android:textSize="@dimen/text_caption" />
 
     <TextView
@@ -68,6 +68,6 @@
         android:ellipsize="end"
         android:lineSpacingExtra="2dp"
         android:maxLines="3"
-        android:textColor="@color/text_muted"
+        android:textColor="?attr/dshaTextMuted"
         android:textSize="@dimen/text_caption" />
 </LinearLayout>

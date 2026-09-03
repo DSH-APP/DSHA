@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="?attr/dshaSurface"
     android:fillViewport="true">
 
     <LinearLayout
@@ -21,7 +21,7 @@
             android:layout_marginBottom="@dimen/gap_control"
             android:text="模块"
             android:textAllCaps="true"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_caption"
             android:textStyle="bold" />
 
@@ -41,7 +41,7 @@
             android:layout_marginBottom="@dimen/gap_control"
             android:text="其他"
             android:textAllCaps="true"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_caption"
             android:textStyle="bold" />
 
@@ -68,7 +68,7 @@
                     android:background="@drawable/bg_chip"
                     android:gravity="center"
                     android:text="↻"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/dshaTextSecondary"
                     android:textSize="@dimen/text_title" />
 
                 <LinearLayout
@@ -82,7 +82,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="检查更新"
-                        android:textColor="@color/text"
+                        android:textColor="?attr/dshaText"
                         android:textSize="@dimen/text_body"
                         android:textStyle="bold" />
 
@@ -92,7 +92,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/gap_hair"
                         android:text="从 GitHub Releases 检查"
-                        android:textColor="@color/text_muted"
+                        android:textColor="?attr/dshaTextMuted"
                         android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
@@ -100,14 +100,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
-                    android:textColor="@color/text_muted"
+                    android:textColor="?attr/dshaTextMuted"
                     android:textSize="@dimen/text_title" />
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/stroke"
-                android:background="@color/line" />
+                android:background="?attr/dshaLine" />
 
             <LinearLayout
                 android:id="@+id/settings_selftest"
@@ -126,7 +126,7 @@
                     android:background="@drawable/bg_chip"
                     android:gravity="center"
                     android:text="✓"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/dshaTextSecondary"
                     android:textSize="@dimen/text_title" />
 
                 <LinearLayout
@@ -140,7 +140,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="自检 &amp; 修补"
-                        android:textColor="@color/text"
+                        android:textColor="?attr/dshaText"
                         android:textSize="@dimen/text_body"
                         android:textStyle="bold" />
 
@@ -149,7 +149,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/gap_hair"
                         android:text="桥 · 插件 · 会话 · 备份 · 版本标记"
-                        android:textColor="@color/text_muted"
+                        android:textColor="?attr/dshaTextMuted"
                         android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
@@ -157,14 +157,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
-                    android:textColor="@color/text_muted"
+                    android:textColor="?attr/dshaTextMuted"
                     android:textSize="@dimen/text_title" />
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/stroke"
-                android:background="@color/line" />
+                android:background="?attr/dshaLine" />
 
             <LinearLayout
                 android:id="@+id/settings_reextract"
@@ -183,7 +183,7 @@
                     android:background="@drawable/bg_chip"
                     android:gravity="center"
                     android:text="⟳"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/dshaTextSecondary"
                     android:textSize="@dimen/text_title" />
 
                 <LinearLayout
@@ -197,7 +197,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="重新解压内置环境"
-                        android:textColor="@color/text"
+                        android:textColor="?attr/dshaText"
                         android:textSize="@dimen/text_body"
                         android:textStyle="bold" />
 
@@ -206,7 +206,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/gap_hair"
                         android:text="dsh / npm 损坏时用；配置与对话记录会保留"
-                        android:textColor="@color/text_muted"
+                        android:textColor="?attr/dshaTextMuted"
                         android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
@@ -214,14 +214,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
-                    android:textColor="@color/text_muted"
+                    android:textColor="?attr/dshaTextMuted"
                     android:textSize="@dimen/text_title" />
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/stroke"
-                android:background="@color/line" />
+                android:background="?attr/dshaLine" />
 
             <LinearLayout
                 android:id="@+id/settings_about"
@@ -240,7 +240,7 @@
                     android:background="@drawable/bg_chip"
                     android:gravity="center"
                     android:text="i"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/dshaTextSecondary"
                     android:textSize="@dimen/text_title"
                     android:textStyle="bold" />
 
@@ -255,7 +255,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="关于 DSHA"
-                        android:textColor="@color/text"
+                        android:textColor="?attr/dshaText"
                         android:textSize="@dimen/text_body"
                         android:textStyle="bold" />
 
@@ -264,7 +264,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/gap_hair"
                         android:text="GitHub 仓库 · QQ 交流群 · 开源协议"
-                        android:textColor="@color/text_muted"
+                        android:textColor="?attr/dshaTextMuted"
                         android:textSize="@dimen/text_caption" />
                 </LinearLayout>
 
@@ -272,7 +272,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
-                    android:textColor="@color/text_muted"
+                    android:textColor="?attr/dshaTextMuted"
                     android:textSize="@dimen/text_title" />
             </LinearLayout>
         </LinearLayout>
@@ -285,7 +285,7 @@
             android:fontFamily="monospace"
             android:gravity="center"
             android:text="DSHA"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_caption" />
     </LinearLayout>
 </ScrollView>

@@ -7,7 +7,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="?attr/dshaSurface"
     android:clipToPadding="false">
 
     <LinearLayout
@@ -60,7 +60,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/gap_hair"
             android:layout_marginBottom="@dimen/gap_tight"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/dshaTextSecondary"
             android:text="改完这一节要按下面的「保存配置」" />
 
         <LinearLayout
@@ -156,7 +156,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="删除、格式化、卸载、重启这类命令会先弹窗问你" />
 
             <TextView
@@ -165,7 +165,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="" />
 
             <CheckBox
@@ -181,7 +181,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="agent 可以用 --su 提权。默认关，开了等于把整台机器交出去" />
 
             <CheckBox
@@ -197,7 +197,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="关掉更安全，代价是恢复到新设备后要重新填一次" />
 
             <CheckBox
@@ -213,7 +213,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="能定位到你本人，默认关闭" />
 
             <CheckBox
@@ -229,7 +229,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="环境光 / 加速度 / 磁力这些，没有隐私风险" />
 
         </LinearLayout>
@@ -260,7 +260,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="默认开启，启动快 5~6 倍。关掉则退回传统 proot" />
 
             <CheckBox
@@ -276,7 +276,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="系统 WebView 过旧时再开，更吃内存" />
 
             <CheckBox
@@ -321,6 +321,27 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <TextView
+                android:id="@+id/config_ui_theme"
+                style="@style/DshaText.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_clickable"
+                android:minHeight="@dimen/touch_min"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/gap_control"
+                android:paddingEnd="@dimen/gap_control"
+                android:text="🎨 外观 · 配色与材质" />
+
+            <TextView
+                style="@style/DshaText.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/gap_control"
+                android:layout_marginBottom="@dimen/gap_tight"
+                android:textColor="?attr/dshaTextSecondary"
+                android:text="默认蓝灰 · 樱花浅粉 · 玻璃深色半透明。切换后界面立即重建。" />
+
             <CheckBox
                 android:id="@+id/config_overlay_stream"
                 style="@style/DshaText.Body"
@@ -334,7 +355,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="需要悬浮窗权限。内容旁人看得见，注意场合" />
 
             <TextView
@@ -364,7 +385,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="预览时用桌面浏览器标识" />
 
         </LinearLayout>
@@ -395,7 +416,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="同网段的设备都能打开你的 WebUI，注意安全" />
 
         </LinearLayout>
@@ -421,7 +442,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/gap_hair"
             android:layout_marginBottom="@dimen/gap_tight"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/dshaTextSecondary"
             android:text="下面这些点一下就生效，不用保存" />
 
         <LinearLayout
@@ -443,7 +464,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="默认关闭。开了 agent 才能用 ADB 操作手机" />
 
             <TextView
@@ -452,7 +473,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="ADB 已关闭。不用无线调试就保持关闭。" />
 
             <Button
@@ -479,7 +500,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="" />
 
             <Button
@@ -497,7 +518,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="系统休眠会冻结后台网络，ADB 连接因此断掉且无法自动恢复。加入白名单后保活才真正生效。" />
 
             <CheckBox
@@ -515,7 +536,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="让已授权的 ADB 直接读状态、跑容器命令，用来在真机上定位问题。这是提权：有 ADB 授权的电脑就能执行任意容器命令。每次调用都记进活动日志，排查完请关掉。" />
 
         </LinearLayout>
@@ -556,7 +577,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:text="" />
 
         </LinearLayout>
@@ -571,7 +592,7 @@
             android:minHeight="@dimen/touch_min"
             android:clickable="true"
             android:focusable="true"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/dshaTextSecondary"
             android:text="DSHA" />
 
     </LinearLayout>

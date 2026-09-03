@@ -3,6 +3,6 @@
      旧版把 itemIconTint 和 itemTextColor 直接写成 @color/primary，四个 tab 全是蓝的，
      根本看不出当前在哪一页。 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_checked="true" android:color="@color/primary" />
-    <item android:color="@color/text_muted" />
+    <item android:state_checked="true" android:color="?attr/dshaPrimary" />
+    <item android:color="?attr/dshaTextMuted" />
 </selector>

@@ -125,6 +125,33 @@ public class DevBridgeProvider extends ContentProvider {
                     String out = hc.getProot().execAndRead(cmd, timeout);
                     return one("out", clip(out));
                 }
+                case "pref": {
+                    // 直接读写配置项。UI 自动化（input tap）在滚动列表上不可靠 —— 要点一个
+                    // 控件得先把它滑到可见，滑多少全凭猜，实测四次滑动才碰上一次。
+                    // 而验证 UI 效果的前提往往只是「把某个开关拨过去」，走这条一条命令就够。
+                    // 不算额外提权：这个通道本来就能在容器里跑任意命令。
+                    String k = uri.getQueryParameter("key");
+                    String v = uri.getQueryParameter("value");
+                    if (k == null || k.isEmpty()) return one("error", "缺 key 参数");
+                    android.content.SharedPreferences sp =
+                            ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE);
+                    if (v == null) {
+                        Object cur = sp.getAll().get(k);
+                        return one("value", cur == null ? "(未设置)" : String.valueOf(cur));
+                    }
+                    String type = uri.getQueryParameter("type");
+                    android.content.SharedPreferences.Editor e = sp.edit();
+                    if ("bool".equals(type)) {
+                        e.putBoolean(k, "true".equals(v) || "1".equals(v));
+                    } else if ("int".equals(type)) {
+                        e.putInt(k, Integer.parseInt(v));
+                    } else {
+                        e.putString(k, v);
+                    }
+                    e.apply();
+                    hc.logActivity("DevBridge 改配置（ADB 直连）: " + k + "=" + v);
+                    return one("ok", k + "=" + v);
+                }
                 case "read": {
                     String p = uri.getQueryParameter("path");
                     if (p == null || p.isEmpty()) return one("error", "缺 path 参数");
@@ -163,7 +190,7 @@ public class DevBridgeProvider extends ContentProvider {
                 }
                 default:
                     return one("error", "不认识的路径：" + path
-                            + "（可用：info / token / exec / read / ls）");
+                            + "（可用：info / token / exec / read / ls / pref）");
             }
         } catch (SecurityException e) {
             throw e;

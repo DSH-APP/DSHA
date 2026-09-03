@@ -4,21 +4,21 @@
 
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/card" />
+            <solid android:color="?attr/dshaCard" />
             <corners android:radius="@dimen/radius_control" />
             <stroke
                 android:width="2dp"
-                android:color="@color/primary" />
+                android:color="?attr/dshaPrimary" />
         </shape>
     </item>
 
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/surface" />
+            <solid android:color="?attr/dshaSurface" />
             <corners android:radius="@dimen/radius_control" />
             <stroke
                 android:width="@dimen/stroke"
-                android:color="@color/line" />
+                android:color="?attr/dshaLine" />
         </shape>
     </item>
 </selector>

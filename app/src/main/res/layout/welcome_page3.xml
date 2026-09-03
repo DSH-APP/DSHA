@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="?attr/dshaSurface"
     android:fillViewport="true">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="三步上手"
-            android:textColor="@color/text"
+            android:textColor="?attr/dshaText"
             android:textSize="@dimen/text_display"
             android:textStyle="bold" />
 
@@ -28,30 +28,30 @@
             android:layout_marginTop="@dimen/gap_tight"
             android:layout_marginBottom="@dimen/gap_section"
             android:text="内置环境会自动解压，填 key 就能用；没有 key 也能先装"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_label" />
 
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/gap_section" android:orientation="horizontal">
-            <TextView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_chip" android:gravity="center" android:text="1" android:textColor="@color/primary" android:textStyle="bold" />
+            <TextView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_chip" android:gravity="center" android:text="1" android:textColor="?attr/dshaPrimary" android:textStyle="bold" />
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_control" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="等环境解压完" android:textColor="@color/text" android:textSize="@dimen/text_body" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="下一页会自动解压内置 Linux 环境，不用自己装" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="等环境解压完" android:textColor="?attr/dshaText" android:textSize="@dimen/text_body" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="下一页会自动解压内置 Linux 环境，不用自己装" android:textColor="?attr/dshaTextMuted" android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </LinearLayout>
 
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/gap_section" android:orientation="horizontal">
-            <TextView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_chip" android:gravity="center" android:text="2" android:textColor="@color/primary" android:textStyle="bold" />
+            <TextView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_chip" android:gravity="center" android:text="2" android:textColor="?attr/dshaPrimary" android:textStyle="bold" />
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_control" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="填入 API key（可跳过）" android:textColor="@color/text" android:textSize="@dimen/text_body" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="到「设置 → 配置」填入；也可跳过，之后在 WebUI 里配置第三方 API" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="填入 API key（可跳过）" android:textColor="?attr/dshaText" android:textSize="@dimen/text_body" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="到「设置 → 配置」填入；也可跳过，之后在 WebUI 里配置第三方 API" android:textColor="?attr/dshaTextMuted" android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </LinearLayout>
 
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/gap_section" android:orientation="horizontal">
-            <TextView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_chip" android:gravity="center" android:text="3" android:textColor="@color/primary" android:textStyle="bold" />
+            <TextView android:layout_width="28dp" android:layout_height="28dp" android:background="@drawable/bg_chip" android:gravity="center" android:text="3" android:textColor="?attr/dshaPrimary" android:textStyle="bold" />
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_control" android:layout_weight="1" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="启动 Web UI" android:textColor="@color/text" android:textSize="@dimen/text_body" android:textStyle="bold" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="到「启动」页启动即可使用" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="启动 Web UI" android:textColor="?attr/dshaText" android:textSize="@dimen/text_body" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="到「启动」页启动即可使用" android:textColor="?attr/dshaTextMuted" android:textSize="@dimen/text_caption" />
             </LinearLayout>
         </LinearLayout>
 
@@ -60,7 +60,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="解压时请保持屏幕常亮，不要杀后台。"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_caption" />
 
         <Button
@@ -72,7 +72,7 @@
             android:background="?attr/selectableItemBackground"
             android:text="关于 DSHA · 加入交流"
             android:textAllCaps="false"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_label" />
     </LinearLayout>
 </ScrollView>

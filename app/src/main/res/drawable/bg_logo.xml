@@ -2,5 +2,5 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <gradient android:angle="135" android:startColor="@color/logo_top" android:endColor="@color/logo_bot" />
     <corners android:radius="@dimen/radius_card" />
-    <stroke android:width="@dimen/stroke" android:color="@color/line" />
+    <stroke android:width="@dimen/stroke" android:color="?attr/dshaLine" />
 </shape>

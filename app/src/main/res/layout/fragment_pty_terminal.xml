@@ -7,7 +7,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="?attr/dshaSurface"
     android:orientation="vertical"
     android:paddingStart="@dimen/page_pad"
     android:paddingEnd="@dimen/page_pad"
@@ -35,7 +35,7 @@
             android:paddingEnd="@dimen/gap_control"
             android:paddingBottom="7dp"
             android:text="Ubuntu · PTY"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/dshaTextSecondary"
             android:textSize="@dimen/text_caption" />
 
         <TextView
@@ -45,7 +45,7 @@
             android:layout_marginStart="@dimen/gap_tight"
             android:padding="6dp"
             android:text="A−"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_label" />
 
         <TextView
@@ -54,7 +54,7 @@
             android:layout_height="wrap_content"
             android:padding="6dp"
             android:text="A+"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_label" />
 
         <TextView
@@ -64,7 +64,7 @@
             android:layout_marginStart="@dimen/gap_tight"
             android:padding="6dp"
             android:text="简易"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_caption" />
     </LinearLayout>
 

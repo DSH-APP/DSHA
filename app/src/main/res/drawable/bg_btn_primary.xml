@@ -15,13 +15,13 @@
         <selector>
             <item android:state_enabled="false">
                 <shape android:shape="rectangle">
-                    <solid android:color="@color/disabled" />
+                    <solid android:color="?attr/dshaDisabled" />
                     <corners android:radius="@dimen/radius_control" />
                 </shape>
             </item>
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="@color/primary" />
+                    <solid android:color="?attr/dshaPrimary" />
                     <corners android:radius="@dimen/radius_control" />
                 </shape>
             </item>

@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface">
+    android:background="?attr/dshaSurface">
 
     <LinearLayout
         android:id="@+id/launch_home"
@@ -30,7 +30,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="●"
-                    android:textColor="@color/text_muted"
+                    android:textColor="?attr/dshaTextMuted"
                     android:textSize="@dimen/text_caption" />
 
                 <TextView
@@ -49,7 +49,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/gap_tight"
-                android:textColor="@color/text_muted" />
+                android:textColor="?attr/dshaTextMuted" />
 
             <ProgressBar
                 android:id="@+id/launch_busy"
@@ -58,7 +58,7 @@
                 android:layout_height="@dimen/progress_thin"
                 android:layout_marginTop="@dimen/gap_tight"
                 android:indeterminate="true"
-                android:indeterminateTint="@color/primary"
+                android:indeterminateTint="?attr/dshaPrimary"
                 android:visibility="gone" />
 
             <LinearLayout
@@ -76,7 +76,7 @@
                     android:background="@drawable/bg_btn_primary"
                     android:text="启动"
                     android:textAllCaps="false"
-                    android:textColor="@color/accent_on"
+                    android:textColor="?attr/dshaAccentOn"
                     android:textSize="@dimen/text_body" />
 
                 <Button
@@ -88,7 +88,7 @@
                     android:background="@drawable/bg_btn"
                     android:text="重启"
                     android:textAllCaps="false"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/dshaTextSecondary"
                     android:textSize="@dimen/text_body" />
 
                 <!-- 停止是破坏性操作：底色仍走次级按钮（不抢视觉），文字用告警色区分 -->
@@ -101,7 +101,7 @@
                     android:background="@drawable/bg_btn"
                     android:text="停止"
                     android:textAllCaps="false"
-                    android:textColor="@color/err"
+                    android:textColor="?attr/dshaErr"
                     android:textSize="@dimen/text_body" />
             </LinearLayout>
 
@@ -119,7 +119,7 @@
                 android:paddingTop="10dp"
                 android:paddingEnd="@dimen/gap_control"
                 android:paddingBottom="10dp"
-                android:textColor="@color/primary"
+                android:textColor="?attr/dshaPrimary"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -160,7 +160,7 @@
                     android:paddingEnd="@dimen/card_pad"
                     android:paddingBottom="@dimen/card_pad"
                     android:text="还没有日志。"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/dshaTextSecondary"
                     android:textIsSelectable="true" />
             </ScrollView>
         </LinearLayout>
@@ -170,7 +170,7 @@
         android:id="@+id/launch_web"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/surface"
+        android:background="?attr/dshaSurface"
         android:visibility="gone">
 
         <FrameLayout

@@ -54,6 +54,8 @@ public class ConfigFragment extends Fragment {
         lanModeCb = view.findViewById(R.id.config_lan_mode);
         View overlayStyle = view.findViewById(R.id.config_overlay_style);
         if (overlayStyle != null) overlayStyle.setOnClickListener(v -> showOverlayStyleDialog());
+        View uiTheme = view.findViewById(R.id.config_ui_theme);
+        if (uiTheme != null) uiTheme.setOnClickListener(v -> showAppearanceDialog());
         overlayStreamCb = view.findViewById(R.id.config_overlay_stream);
         if (overlayStreamCb != null) {
             // 勾上时才要权限：没授权就直接引导过去，别让用户勾了个不生效的开关
@@ -360,6 +362,164 @@ public class ConfigFragment extends Fragment {
     }
 
 
+
+    /** 外观选择。选完立刻 recreate —— 已经创建的窗口不会自己换主题，
+     *  而颜色槽是主题属性，只有重建才会重新解析。
+     *
+     *  <p>已被 {@link #showAppearanceDialog()} 取代（那个还带背景图与三个滑块），
+     *  保留是因为它是纯主题切换的最小实现，将来若要做「快速切换」入口可以直接用。 */
+    @SuppressWarnings("unused")
+    private void showThemeDialogSimple() {
+        int cur = DshaTheme.currentIndex(requireContext());
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle("外观")
+                .setSingleChoiceItems(DshaTheme.LABELS, cur, (d, which) -> {
+                    if (which == DshaTheme.currentIndex(requireContext())) {
+                        d.dismiss();
+                        return;                     // 选的就是当前那套，别白重建一次
+                    }
+                    DshaTheme.set(requireContext(), DshaTheme.VALUES[which]);
+                    d.dismiss();
+                    requireActivity().recreate();
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    /** 选背景图的请求码。放在这里而不是常量类：只有这一处用。 */
+    private static final int REQ_PICK_BG = 4301;
+
+    /** 外观面板：主题 + 背景图 + 三个滑块（卡片不透明度 / 背景压暗 / 背景模糊）。
+     *
+     *  <p>透明度和压暗<b>拖动时就地预览</b> —— 这几个值说不清好坏，只能看着调，
+     *  让用户"应用→看→再打开→再调"是最糟的交互。预览作用在 Activity 的 decorView 上，
+     *  所以对话框背后的整个界面会跟着变；点取消会还原成落盘的值。
+     *
+     *  <p>模糊例外：它做在 Bitmap 上（见 {@link DshaBackground}），必须重建界面才生效，
+     *  UI 上已经写明这一点。 */
+    private void showAppearanceDialog() {
+        final android.content.Context ctx = requireContext();
+        View v = android.view.LayoutInflater.from(ctx).inflate(R.layout.dialog_appearance, null);
+
+        final int[] ids = {R.id.ap_theme_default, R.id.ap_theme_sakura, R.id.ap_theme_glass};
+        final android.widget.RadioGroup group = v.findViewById(R.id.ap_theme_group);
+        group.check(ids[DshaTheme.currentIndex(ctx)]);
+
+        final TextView bgState = v.findViewById(R.id.ap_bg_state);
+        refreshBgState(bgState);
+        v.findViewById(R.id.ap_bg_pick).setOnClickListener(x -> pickBackground());
+        v.findViewById(R.id.ap_bg_clear).setOnClickListener(x -> {
+            DshaBackground.clear(ctx);
+            refreshBgState(bgState);
+            Toast.makeText(ctx, "已清除背景图，界面重建后生效", Toast.LENGTH_SHORT).show();
+        });
+
+        final android.widget.SeekBar alpha = v.findViewById(R.id.ap_alpha);
+        final android.widget.SeekBar dim = v.findViewById(R.id.ap_dim);
+        final android.widget.SeekBar blur = v.findViewById(R.id.ap_blur);
+        final TextView alphaLabel = v.findViewById(R.id.ap_alpha_label);
+        final TextView dimLabel = v.findViewById(R.id.ap_dim_label);
+        final TextView blurLabel = v.findViewById(R.id.ap_blur_label);
+        alpha.setProgress(DshaGlass.alpha(ctx));
+        dim.setProgress(DshaBackground.dim(ctx));
+        blur.setProgress(DshaBackground.blurPct(ctx));
+        alphaLabel.setText("卡片不透明度 " + alpha.getProgress() + "%");
+        dimLabel.setText("背景压暗 " + dim.getProgress() + "%");
+        blurLabel.setText("背景模糊 " + blur.getProgress() + "%");
+
+        final View decor = requireActivity().getWindow().getDecorView();
+        alpha.setOnSeekBarChangeListener(new SimpleSeek(p -> {
+            alphaLabel.setText("卡片不透明度 " + Math.max(20, p) + "%");
+            DshaGlass.preview(decor, p);
+        }));
+        dim.setOnSeekBarChangeListener(new SimpleSeek(p -> dimLabel.setText("背景压暗 " + p + "%")));
+        blur.setOnSeekBarChangeListener(new SimpleSeek(p -> blurLabel.setText("背景模糊 " + p + "%")));
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
+                .setTitle("外观")
+                .setView(v)
+                .setPositiveButton("应用", (d, w) -> {
+                    DshaGlass.setAlpha(ctx, alpha.getProgress());
+                    DshaBackground.setDim(ctx, dim.getProgress());
+                    DshaBackground.setBlur(ctx, blur.getProgress());
+                    int idx = 0;
+                    for (int i = 0; i < ids.length; i++) {
+                        if (group.getCheckedRadioButtonId() == ids[i]) idx = i;
+                    }
+                    DshaTheme.set(ctx, DshaTheme.VALUES[idx]);
+                    requireActivity().recreate();
+                })
+                .setNegativeButton("取消", (d, w) -> DshaGlass.apply(decor))
+                .setOnCancelListener(d -> DshaGlass.apply(decor))
+                .show();
+    }
+
+    private void refreshBgState(TextView tv) {
+        if (tv == null) return;
+        android.content.Context ctx = requireContext();
+        tv.setText(DshaBackground.exists(ctx)
+                ? "已设置 · " + (DshaBackground.file(ctx).length() / 1024) + " KB"
+                : "未设置（没有背景图时，玻璃外观只能透出主题自带的渐变）");
+    }
+
+    private void pickBackground() {
+        try {
+            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            i.addCategory(Intent.CATEGORY_OPENABLE);
+            i.setType("image/*");
+            startActivityForResult(i, REQ_PICK_BG);
+        } catch (Throwable t) {
+            Toast.makeText(requireContext(), "打不开图片选择器：" + t, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQ_PICK_BG) return;
+        if (resultCode != android.app.Activity.RESULT_OK || data == null || data.getData() == null) {
+            return;
+        }
+        // 复制进私有目录（不留 URI）：见 DshaBackground 的说明。
+        String err = DshaBackground.saveFrom(requireContext(), data.getData());
+        if (err != null) {
+            Toast.makeText(requireContext(), "背景设置失败：" + err, Toast.LENGTH_LONG).show();
+            return;
+        }
+        // 有了背景图，卡片还是全不透明的话什么都看不出来 —— 首次设图时给一个能看出效果的值。
+        if (DshaGlass.alpha(requireContext()) >= 100) {
+            DshaGlass.setAlpha(requireContext(), 72);
+        }
+        Toast.makeText(requireContext(), "背景已设置", Toast.LENGTH_SHORT).show();
+        requireActivity().recreate();
+    }
+
+    /** SeekBar 三个回调里只关心一个，剩下两个每次都要写空实现 —— 收一下。 */
+    private static final class SimpleSeek
+            implements android.widget.SeekBar.OnSeekBarChangeListener {
+        interface OnChange {
+            void accept(int progress);
+        }
+
+        private final OnChange fn;
+
+        SimpleSeek(OnChange fn) {
+            this.fn = fn;
+        }
+
+        @Override
+        public void onProgressChanged(android.widget.SeekBar s, int p, boolean fromUser) {
+            fn.accept(p);
+        }
+
+        @Override
+        public void onStartTrackingTouch(android.widget.SeekBar s) {
+        }
+
+        @Override
+        public void onStopTrackingTouch(android.widget.SeekBar s) {
+        }
+    }
 
     /** 开发者直连开关。即时生效、不等「保存配置」—— 它排在保存按钮下面那一组，
      *  那一组的约定就是点一下就生效。

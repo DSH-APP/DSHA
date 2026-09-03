@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 玻璃外观的页面底衬。
+     必须有明显层次：半透明卡片压在纯色上什么也看不出来，压在渐变上才有「透」的感觉。
+     角度取 160° 让亮部落在左上，和卡片的浅色描边同侧。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="160"
+        android:startColor="#131A2A"
+        android:centerColor="#0B0F16"
+        android:endColor="#161226"
+        android:type="linear" />
+</shape>

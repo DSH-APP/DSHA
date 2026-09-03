@@ -4,7 +4,7 @@
 
     <item android:id="@android:id/background">
         <shape android:shape="rectangle">
-            <solid android:color="@color/raised" />
+            <solid android:color="?attr/dshaRaised" />
             <corners android:radius="@dimen/radius_pill" />
         </shape>
     </item>
@@ -12,7 +12,7 @@
     <item android:id="@android:id/progress">
         <clip>
             <shape android:shape="rectangle">
-                <solid android:color="@color/primary" />
+                <solid android:color="?attr/dshaPrimary" />
                 <corners android:radius="@dimen/radius_pill" />
             </shape>
         </clip>

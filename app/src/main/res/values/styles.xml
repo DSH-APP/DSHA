@@ -9,7 +9,7 @@
     <style name="DshaText.Display" parent="">
         <item name="android:textSize">@dimen/text_display</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text</item>
+        <item name="android:textColor">?attr/dshaText</item>
         <item name="android:letterSpacing">-0.01</item>
     </style>
 
@@ -17,27 +17,27 @@
     <style name="DshaText.Title" parent="">
         <item name="android:textSize">@dimen/text_title</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text</item>
+        <item name="android:textColor">?attr/dshaText</item>
     </style>
 
     <!-- 正文 -->
     <style name="DshaText.Body" parent="">
         <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:textColor">@color/text</item>
+        <item name="android:textColor">?attr/dshaText</item>
         <item name="android:lineSpacingExtra">3dp</item>
     </style>
 
     <!-- 次要说明 -->
     <style name="DshaText.Label" parent="">
         <item name="android:textSize">@dimen/text_label</item>
-        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textColor">?attr/dshaTextSecondary</item>
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
     <!-- 辅助信息 / 脚注 -->
     <style name="DshaText.Caption" parent="">
         <item name="android:textSize">@dimen/text_caption</item>
-        <item name="android:textColor">@color/text_muted</item>
+        <item name="android:textColor">?attr/dshaTextMuted</item>
         <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
@@ -57,9 +57,9 @@
     <style name="Widget.DSHA.Button" parent="Widget.Material3.Button.TextButton">
         <item name="backgroundTint">@null</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:textColor">@color/text</item>
+        <item name="android:textColor">?attr/dshaText</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
-        <item name="rippleColor">@color/ripple</item>
+        <item name="rippleColor">?attr/dshaRipple</item>
     </style>
 </resources>

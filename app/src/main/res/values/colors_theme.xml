@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  可选外观的配色。不放进 colors.xml 是因为那份有 day/night 两版，
+  而这些颜色由主题直接选定、不跟随系统深浅 —— 混在一起会让人以为它们也有夜间版。
+-->
+<resources>
+    <!-- 樱花：浅色暖粉。取自一份参考设计的色板。 -->
+    <color name="sk_surface">#FDF5F7</color>
+    <color name="sk_card">#FFFFFF</color>
+    <color name="sk_raised">#FDF0F3</color>
+    <color name="sk_line">#F3E2E8</color>
+    <color name="sk_text">#5C3344</color>
+    <color name="sk_sub">#8C6576</color>
+    <color name="sk_muted">#B895A2</color>
+    <color name="sk_primary">#D4879E</color>
+    <color name="sk_ok">#7EC8A0</color>
+    <color name="sk_warn">#D4A76A</color>
+    <color name="sk_ripple">#22D4879E</color>
+
+    <!-- 玻璃：深色 + 半透明。
+         gl_card 带 alpha（0xB3 ≈ 70%）是这套外观的全部要点 —— 卡片透出底衬的渐变
+         才叫材质。gl_card_solid 是它的不透明版本，给 AlertDialog / Spinner 这类
+         系统控件用：那些控件后面没有我们的底衬，半透明会直接透到别的应用上去。
+         gl_line 用白色低透明度而不是某个灰，模拟玻璃边缘的高光。 -->
+    <color name="gl_surface">#0B0F16</color>
+    <color name="gl_card">#B3161B24</color>
+    <color name="gl_card_solid">#161B24</color>
+    <color name="gl_raised">#99202836</color>
+    <color name="gl_line">#33FFFFFF</color>
+    <color name="gl_text">#E8ECF4</color>
+    <color name="gl_sub">#A8B4C8</color>
+    <color name="gl_muted">#7A8698</color>
+    <color name="gl_primary">#8AB4F8</color>
+    <color name="gl_ripple">#338AB4F8</color>
+</resources>

@@ -2,6 +2,26 @@
 <resources>
     <style name="Theme.DeepseekHarness" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
+        <!-- 主题可换的颜色槽（声明在 attrs.xml）。这一份映射回原来的取值，
+             所以默认外观一个像素都不变；换主题时只有下面这些槽被覆盖。 -->
+        <item name="dshaSurface">@color/surface</item>
+        <item name="dshaCard">@color/card</item>
+        <item name="dshaRaised">@color/raised</item>
+        <item name="dshaLine">@color/line</item>
+        <item name="dshaPreview">@color/preview</item>
+        <item name="dshaText">@color/text</item>
+        <item name="dshaTextSecondary">@color/text_secondary</item>
+        <item name="dshaTextMuted">@color/text_muted</item>
+        <item name="dshaPrimary">@color/primary</item>
+        <item name="dshaAccentOn">@color/accent_on</item>
+        <item name="dshaOk">@color/ok</item>
+        <item name="dshaWarn">@color/warn</item>
+        <item name="dshaErr">@color/err</item>
+        <item name="dshaErrBg">@color/err_bg</item>
+        <item name="dshaRipple">@color/ripple</item>
+        <item name="dshaDisabled">@color/disabled</item>
+        <item name="dshaWindowBackground">@color/surface</item>
+
         <item name="colorOnPrimary">@color/accent_on</item>
         <item name="colorPrimaryContainer">@color/raised</item>
         <item name="colorOnPrimaryContainer">@color/primary</item>
@@ -73,5 +93,81 @@
     <style name="Shape.DSHA.Dialog" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">@dimen/radius_card</item>
+    </style>
+
+    <!-- ============ 可选外观 ============
+         都继承 Theme.DeepseekHarness，只覆盖颜色槽 —— 别在这里重复写
+         materialButtonStyle 之类的行为配置，那些一旦分叉就会两边不一致
+         （本项目在「同一份配置散落两处」上栽过几次）。 -->
+
+    <!-- 樱花：浅色暖粉。取色自一份参考设计（#d4879e 主色 / #5c3344 文字），
+         比原来的蓝灰更柔和，长时间看眼睛松一些。 -->
+    <style name="Theme.DeepseekHarness.Sakura" parent="Theme.DeepseekHarness">
+        <item name="dshaSurface">@color/sk_surface</item>
+        <item name="dshaCard">@color/sk_card</item>
+        <item name="dshaRaised">@color/sk_raised</item>
+        <item name="dshaLine">@color/sk_line</item>
+        <item name="dshaPreview">@color/sk_raised</item>
+        <item name="dshaText">@color/sk_text</item>
+        <item name="dshaTextSecondary">@color/sk_sub</item>
+        <item name="dshaTextMuted">@color/sk_muted</item>
+        <item name="dshaPrimary">@color/sk_primary</item>
+        <item name="dshaAccentOn">#FFFFFF</item>
+        <item name="dshaOk">@color/sk_ok</item>
+        <item name="dshaWarn">@color/sk_warn</item>
+        <item name="dshaErr">@color/sk_primary</item>
+        <item name="dshaRipple">@color/sk_ripple</item>
+        <item name="dshaWindowBackground">@drawable/bg_window_sakura</item>
+
+        <item name="colorPrimary">@color/sk_primary</item>
+        <item name="colorSurface">@color/sk_card</item>
+        <item name="colorOnSurface">@color/sk_text</item>
+        <item name="colorSurfaceVariant">@color/sk_raised</item>
+        <item name="colorOnSurfaceVariant">@color/sk_sub</item>
+        <item name="colorOutline">@color/sk_line</item>
+        <item name="colorOutlineVariant">@color/sk_line</item>
+        <item name="colorControlHighlight">@color/sk_ripple</item>
+        <item name="android:colorBackground">@color/sk_surface</item>
+        <item name="android:windowBackground">@drawable/bg_window_sakura</item>
+        <item name="android:statusBarColor">@color/sk_surface</item>
+        <item name="android:navigationBarColor">@color/sk_surface</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:textColorPrimary">@color/sk_text</item>
+        <item name="android:textColorSecondary">@color/sk_sub</item>
+        <item name="android:textColorHint">@color/sk_muted</item>
+    </style>
+
+    <!-- 玻璃：深色 + 半透明卡片 + 渐变底衬。卡片带 alpha 才有「材质」可言，
+         纯色底上做模糊是看不出来的，所以窗口底衬换成渐变。
+         Android 12+ 还会在代码里给卡片叠一层真模糊（RenderEffect）。 -->
+    <style name="Theme.DeepseekHarness.Glass" parent="Theme.DeepseekHarness">
+        <item name="dshaSurface">@color/gl_surface</item>
+        <item name="dshaCard">@color/gl_card</item>
+        <item name="dshaRaised">@color/gl_raised</item>
+        <item name="dshaLine">@color/gl_line</item>
+        <item name="dshaPreview">@color/gl_raised</item>
+        <item name="dshaText">@color/gl_text</item>
+        <item name="dshaTextSecondary">@color/gl_sub</item>
+        <item name="dshaTextMuted">@color/gl_muted</item>
+        <item name="dshaPrimary">@color/gl_primary</item>
+        <item name="dshaRipple">@color/gl_ripple</item>
+        <item name="dshaWindowBackground">@drawable/bg_window_glass</item>
+
+        <item name="colorPrimary">@color/gl_primary</item>
+        <item name="colorSurface">@color/gl_card_solid</item>
+        <item name="colorOnSurface">@color/gl_text</item>
+        <item name="colorSurfaceVariant">@color/gl_raised</item>
+        <item name="colorOnSurfaceVariant">@color/gl_sub</item>
+        <item name="colorOutline">@color/gl_line</item>
+        <item name="colorOutlineVariant">@color/gl_line</item>
+        <item name="colorControlHighlight">@color/gl_ripple</item>
+        <item name="android:colorBackground">@color/gl_surface</item>
+        <item name="android:windowBackground">@drawable/bg_window_glass</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:textColorPrimary">@color/gl_text</item>
+        <item name="android:textColorSecondary">@color/gl_sub</item>
+        <item name="android:textColorHint">@color/gl_muted</item>
     </style>
 </resources>

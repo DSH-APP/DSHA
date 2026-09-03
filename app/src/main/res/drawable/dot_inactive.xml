@@ -2,5 +2,5 @@
 <!-- 引导页非当前页指示 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
-    <solid android:color="@color/line" />
+    <solid android:color="?attr/dshaLine" />
 </shape>

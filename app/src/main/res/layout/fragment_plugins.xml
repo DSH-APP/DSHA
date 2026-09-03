@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="?attr/dshaSurface"
     android:orientation="vertical">
 
     <LinearLayout
@@ -23,7 +23,7 @@
             android:background="@drawable/bg_tab_on"
             android:gravity="center"
             android:text="插件市场"
-            android:textColor="@color/primary"
+            android:textColor="?attr/dshaPrimary"
             android:textSize="@dimen/text_label"
             android:textStyle="bold" />
 
@@ -36,7 +36,7 @@
             android:background="@drawable/bg_tab"
             android:gravity="center"
             android:text="插件管理"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_label"
             android:textStyle="bold" />
 
@@ -50,7 +50,7 @@
             android:paddingStart="@dimen/gap_control"
             android:paddingEnd="@dimen/gap_control"
             android:text="排序"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_caption" />
 
         <TextView
@@ -62,7 +62,7 @@
             android:paddingEnd="@dimen/gap_control"
             android:gravity="center"
             android:text="筛选"
-            android:textColor="@color/text"
+            android:textColor="?attr/dshaText"
             android:textSize="@dimen/text_label"
             android:background="@drawable/bg_btn" />
 
@@ -74,7 +74,7 @@
             android:background="@drawable/bg_tab"
             android:gravity="center"
             android:text="↻"
-            android:textColor="@color/text_muted"
+            android:textColor="?attr/dshaTextMuted"
             android:textSize="@dimen/text_body" />
     </LinearLayout>
 
@@ -96,7 +96,7 @@
             android:background="@drawable/bg_btn"
             android:gravity="center"
             android:text="导出插件包"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/dshaTextSecondary"
             android:textSize="@dimen/text_label" />
 
         <TextView
@@ -108,7 +108,7 @@
             android:background="@drawable/bg_btn"
             android:gravity="center"
             android:text="导入插件包"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/dshaTextSecondary"
             android:textSize="@dimen/text_label" />
     </LinearLayout>
 
@@ -117,9 +117,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/page_pad"
-        android:buttonTint="@color/primary"
+        android:buttonTint="?attr/dshaPrimary"
         android:text="隐藏自带插件（只看自己装的）"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/dshaTextSecondary"
         android:textSize="@dimen/text_label"
         android:visibility="gone" />
 
@@ -137,8 +137,8 @@
         android:paddingStart="@dimen/card_pad"
         android:paddingEnd="@dimen/card_pad"
         android:singleLine="true"
-        android:textColor="@color/text"
-        android:textColorHint="@color/text_muted"
+        android:textColor="?attr/dshaText"
+        android:textColorHint="?attr/dshaTextMuted"
         android:textSize="@dimen/text_body" />
 
     <!-- 多选操作条：长按插件卡片才进入多选，平时不占任何位置（不加常驻入口） -->
@@ -165,7 +165,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="已选 0 个"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:textSize="@dimen/text_label" />
 
             <TextView
@@ -176,7 +176,7 @@
                 android:gravity="center"
                 android:minWidth="64dp"
                 android:text="全选"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:textSize="@dimen/text_label" />
 
             <TextView
@@ -188,7 +188,7 @@
                 android:gravity="center"
                 android:minWidth="64dp"
                 android:text="退出"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:textSize="@dimen/text_label" />
         </LinearLayout>
 
@@ -206,7 +206,7 @@
                 android:background="@drawable/bg_btn"
                 android:gravity="center"
                 android:text="启用"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:textSize="@dimen/text_label" />
 
             <TextView
@@ -218,7 +218,7 @@
                 android:background="@drawable/bg_btn"
                 android:gravity="center"
                 android:text="禁用"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:textSize="@dimen/text_label" />
 
             <TextView
@@ -230,7 +230,7 @@
                 android:background="@drawable/bg_btn"
                 android:gravity="center"
                 android:text="导出"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:textSize="@dimen/text_label" />
 
             <TextView
@@ -242,7 +242,7 @@
                 android:background="@drawable/bg_btn"
                 android:gravity="center"
                 android:text="删除"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/dshaTextSecondary"
                 android:textSize="@dimen/text_label" />
         </LinearLayout>
     </LinearLayout>
@@ -260,7 +260,7 @@
         android:layout_width="match_parent"
         android:layout_height="3dp"
         android:indeterminate="true"
-        android:indeterminateTint="@color/primary"
+        android:indeterminateTint="?attr/dshaPrimary"
         android:visibility="gone" />
 
     <TextView
@@ -270,6 +270,6 @@
         android:gravity="center"
         android:padding="@dimen/gap_control"
         android:text="加载中…"
-        android:textColor="@color/text_muted"
+        android:textColor="?attr/dshaTextMuted"
         android:textSize="@dimen/text_caption" />
 </LinearLayout>

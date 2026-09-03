@@ -2,6 +2,26 @@
 <resources>
     <style name="Theme.DeepseekHarness" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
+        <!-- 主题可换的颜色槽（声明在 attrs.xml）。这一份映射回原来的取值，
+             所以默认外观一个像素都不变；换主题时只有下面这些槽被覆盖。 -->
+        <item name="dshaSurface">@color/surface</item>
+        <item name="dshaCard">@color/card</item>
+        <item name="dshaRaised">@color/raised</item>
+        <item name="dshaLine">@color/line</item>
+        <item name="dshaPreview">@color/preview</item>
+        <item name="dshaText">@color/text</item>
+        <item name="dshaTextSecondary">@color/text_secondary</item>
+        <item name="dshaTextMuted">@color/text_muted</item>
+        <item name="dshaPrimary">@color/primary</item>
+        <item name="dshaAccentOn">@color/accent_on</item>
+        <item name="dshaOk">@color/ok</item>
+        <item name="dshaWarn">@color/warn</item>
+        <item name="dshaErr">@color/err</item>
+        <item name="dshaErrBg">@color/err_bg</item>
+        <item name="dshaRipple">@color/ripple</item>
+        <item name="dshaDisabled">@color/disabled</item>
+        <item name="dshaWindowBackground">@color/surface</item>
+
         <item name="colorOnPrimary">@color/accent_on</item>
         <item name="colorPrimaryContainer">@color/raised</item>
         <item name="colorOnPrimaryContainer">@color/primary</item>

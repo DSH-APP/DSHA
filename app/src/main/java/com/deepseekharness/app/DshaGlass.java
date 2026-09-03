@@ -1,0 +1,94 @@
+package com.deepseekharness.app;
+
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.view.View;
+import android.view.ViewGroup;
+
+/**
+ * 卡片透明度：让界面元素按用户设定的强度透出背景。
+ *
+ * <p>为什么要遍历 View 而不是改主题：颜色槽（{@code ?attr/dshaCard} 那些）是**主题属性**，
+ * 主题在 Activity 创建时解析一次就定了，运行时拖滑块改不动它。而这个值恰恰是最需要
+ * 实时反馈的 —— 透明度合不合适只能看着调，让用户每拖一次就重建一次界面是不可接受的。
+ *
+ * <p>所以走 Drawable 层：卡片、按钮、输入框、芯片的背景都是 shape drawable，
+ * {@code setAlpha()} 直接生效，{@code invalidate()} 就能看见。
+ *
+ * <p>{@link #mutate()} 是必须的：drawable 资源默认在所有使用者之间共享同一个
+ * ConstantState，不 mutate 就会把 alpha 改到别的 View 上去（表现是「调了一个卡片，
+ * 整个 App 包括没显示的页面都变了，且退出重进后残留」）。
+ *
+ * <p>刻意不碰 {@code View.setAlpha()}：那个会把文字和图标一起变淡，读不清；
+ * 我们只要背景变透，前景照旧。
+ */
+final class DshaGlass {
+
+    /** 0~100。100 = 完全不透明（默认，与旧外观一致）。 */
+    static final String KEY_ALPHA = "ui_card_alpha";
+    static final int ALPHA_DEFAULT = 100;
+
+    private DshaGlass() {
+    }
+
+    static int alpha(Context ctx) {
+        int v = ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
+                .getInt(KEY_ALPHA, ALPHA_DEFAULT);
+        return Math.max(20, Math.min(100, v));   // 低于 20% 就完全看不清字了，挡住
+    }
+
+    static void setAlpha(Context ctx, int v) {
+        ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
+                .edit().putInt(KEY_ALPHA, Math.max(20, Math.min(100, v))).apply();
+    }
+
+    /** 给一棵 View 树应用当前透明度。Fragment 的 onViewCreated 末尾调一次即可。 */
+    static void apply(View root) {
+        if (root == null) return;
+        try {
+            int pct = alpha(root.getContext());
+            walk(root, (int) (pct / 100f * 255f));
+        } catch (Throwable t) {
+            android.util.Log.w("DSHA", "卡片透明度应用失败（不影响功能）: " + t);
+        }
+    }
+
+    /** 拖滑块时用：立即生效，不写 prefs（松手才写，避免每帧一次 IO）。 */
+    static void preview(View root, int pct) {
+        if (root == null) return;
+        try {
+            walk(root, (int) (Math.max(20, Math.min(100, pct)) / 100f * 255f));
+            root.invalidate();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void walk(View v, int alpha255) {
+        Drawable bg = v.getBackground();
+        if (bg != null && isShapeLike(bg)) {
+            Drawable m = bg.mutate();
+            m.setAlpha(alpha255);
+            // mutate() 返回的可能是新实例，设回去才对所有 Android 版本都成立
+            v.setBackground(m);
+        }
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                walk(g.getChildAt(i), alpha255);
+            }
+        }
+    }
+
+    /** 只动我们自己画的形状背景。
+     *
+     *  <p>把 ColorDrawable 也算进来是刻意的 —— 页面根节点的 {@code ?attr/dshaSurface}
+     *  就是纯色，不透它的话背景图只能从卡片缝隙里露出来，看着像贴纸而不是玻璃。
+     *
+     *  <p>不碰 BitmapDrawable / VectorDrawable：那是图标和图片，透了就是掉色。 */
+    private static boolean isShapeLike(Drawable d) {
+        return d instanceof android.graphics.drawable.GradientDrawable
+                || d instanceof android.graphics.drawable.ColorDrawable
+                || d instanceof android.graphics.drawable.RippleDrawable
+                || d instanceof android.graphics.drawable.LayerDrawable;
+    }
+}

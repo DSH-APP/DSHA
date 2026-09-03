@@ -54,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        DshaTheme.apply(this);          // 必须在 super 之前：晚了窗口属性已经按旧主题解析完
+        DshaBackground.apply(this);     // 自定义背景图（有的话）也要在窗口成形之前挂上
         super.onCreate(savedInstanceState);
         // 崩溃捕获已统一在 DshaApp 安装一次（防止 Activity 重建导致重复/覆盖 handler）
 
@@ -172,6 +174,9 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, f)
                 .commit();
+        // 新 Fragment 的 View 这会儿还不存在，post 到下一帧再套卡片透明度 ——
+        // DshaGlass 是遍历现有 View 树的，早了什么都遍历不到。
+        getWindow().getDecorView().post(() -> DshaGlass.apply(getWindow().getDecorView()));
     }
 
     /** 显示/隐藏底部导航栏（WebView 全屏时隐藏） */

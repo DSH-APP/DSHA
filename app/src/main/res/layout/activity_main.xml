@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface"
+    android:background="?attr/dshaSurface"
     android:orientation="vertical">
 
     <LinearLayout
@@ -26,7 +26,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_terminal"
-                android:tint="@color/primary" />
+                android:tint="?attr/dshaPrimary" />
         </FrameLayout>
 
         <TextView
@@ -58,8 +58,8 @@
             android:paddingStart="@dimen/gap_control"
             android:paddingEnd="@dimen/gap_control"
             android:singleLine="true"
-            android:textColor="@color/text"
-            android:textColorHint="@color/text_muted"
+            android:textColor="?attr/dshaText"
+            android:textColorHint="?attr/dshaTextMuted"
             android:textSize="@dimen/text_caption"
             android:visibility="gone" />
 
@@ -85,7 +85,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_about"
-                android:tint="@color/text_secondary" />
+                android:tint="?attr/dshaTextSecondary" />
         </FrameLayout>
     </LinearLayout>
 
@@ -99,13 +99,13 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="@dimen/stroke"
-        android:background="@color/line" />
+        android:background="?attr/dshaLine" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/card"
+        android:background="?attr/dshaCard"
         app:elevation="0dp"
         app:itemIconTint="@color/nav_item_tint"
         app:itemTextColor="@color/nav_item_tint"
