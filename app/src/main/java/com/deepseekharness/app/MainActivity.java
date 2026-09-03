@@ -294,7 +294,23 @@ public class MainActivity extends AppCompatActivity {
 
     private void maybeRequestAllFilesAccess() {
         try {
-            if (Build.VERSION.SDK_INT < 30) return;      // 老系统本来就能直写公共目录
+            if (Build.VERSION.SDK_INT < 30) {
+                // 「老系统本来就能直写公共目录」这句话只对了一半：WRITE_EXTERNAL_STORAGE
+                // 从 API 23 起就是运行时权限，不申请就是没有；Android 10 还额外受分区存储
+                // 限制，靠清单里的 requestLegacyExternalStorage 退回旧行为。
+                // 不申请的后果是「手机存储」工作区挂得上、进去却是空的或者 Permission denied。
+                // 这里用系统弹窗一次问完（不像 11+ 得跳设置页手动拉开关）。
+                SharedPreferences sp = getSharedPreferences("deepseekharness", MODE_PRIVATE);
+                if (!sp.getBoolean("asked_legacy_storage", false)
+                        && checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    sp.edit().putBoolean("asked_legacy_storage", true).apply();
+                    requestPermissions(new String[]{
+                            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            android.Manifest.permission.READ_EXTERNAL_STORAGE}, 4201);
+                }
+                return;
+            }
             // 恢复弹窗优先：它和我们要的是同一个权限，用户刚重装时恢复数据更紧急。
             // 直接 return 而不标记 asked_all_files —— 否则「只问一次」的额度
             // 会被这次让路白白用掉，等恢复流程结束就再也不问了。

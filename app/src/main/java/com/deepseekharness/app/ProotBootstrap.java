@@ -466,7 +466,17 @@ public class ProotBootstrap {
             new File(rootfsDir, "root/手机存储").mkdirs();
             new File(rootfsDir, "root/外部工作区").mkdirs();
             File readme = new File(d, "读我-这个目录能做什么.txt");
-            if (readme.isFile()) return;
+            // 已经有、但是旧版（缺权限那一节）时重写。老用户碰到的第一个问题往往就是
+            // 「目录怎么是空的」，而那一节正是答案 —— 不重写等于把答案锁在新装用户那儿。
+            if (readme.isFile()) {
+                try {
+                    String cur = new String(java.nio.file.Files.readAllBytes(readme.toPath()),
+                            java.nio.charset.StandardCharsets.UTF_8);
+                    if (cur.contains("看不到文件？")) return;
+                } catch (Throwable ignored) {
+                    return;
+                }
+            }
             String text = "容器里的 /root/手机存储 就是手机内部存储的根（整个 /storage/emulated/0），\n"
                     + "在 DSHA 的工作区选择里能看到「手机存储」这一项。这个文件夹是推荐的落脚点。\n"
                     + "\n"
@@ -483,7 +493,12 @@ public class ProotBootstrap {
                     + "· 大量小文件时明显比容器内慢（每次读写都要过一遍 FUSE）\n"
                     + "\n"
                     + "要跑 Node 项目或者用 git，请把工作区选在容器内的目录\n"
-                    + "（工作区列表里除「手机存储」以外的那些都在容器内）。\n";
+                    + "（工作区列表里除「手机存储」以外的那些都在容器内）。\n"
+                    + "\n"
+                    + "看不到文件？那是权限的事，不是挂载坏了\n"
+                    + "· Android 11 及以上：要在 DSHA 里授予「所有文件访问」（会跳系统设置拉开关）\n"
+                    + "· Android 8~10：第一次进 App 会弹一次存储权限，拒绝过的话去系统设置里给回来\n"
+                    + "没权限时这个目录照样挂得上、进得去，但里面看起来是空的，写入报 Permission denied。\n";
             java.nio.file.Files.write(readme.toPath(),
                     text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         } catch (Throwable ignored) {

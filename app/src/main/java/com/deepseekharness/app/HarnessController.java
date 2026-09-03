@@ -6092,12 +6092,19 @@ public class HarnessController {
     }
 
     /** 本次安装能否枚举到「别的安装写进公共目录的文件」。
-     *  Android 10 以下没有分区存储限制，一律 true；11+ 只有拿到「所有文件访问」才为 true。
+     *  API 30+ 要「所有文件访问」；30 以下没有分区存储那道墙，但
+     *  WRITE_EXTERNAL_STORAGE 是运行时权限，没授予时同样什么都扫不到。
      *  唯一用途：把「扫描到 0 个」解释成「真的没有」还是「看不见」。 */
     private boolean canSeeAllFiles() {
         try {
-            if (android.os.Build.VERSION.SDK_INT < 30) return true;
-            return android.os.Environment.isExternalStorageManager();
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                return android.os.Environment.isExternalStorageManager();
+            }
+            // 这里原先无条件返回 true —— 在 Android 8~10 上没授予存储权限时，
+            // 会把「没权限所以看不见」误报成「公共目录里真的没有备份」。
+            return appContext.checkSelfPermission(
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == android.content.pm.PackageManager.PERMISSION_GRANTED;
         } catch (Throwable t) {
             return false;
         }

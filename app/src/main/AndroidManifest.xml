@@ -9,8 +9,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 手机存储工作区的权限按版本分三档，缺一档就会在那一档系统上「目录在但读不了」：
+         · API 30+（Android 11 起）：MANAGE_EXTERNAL_STORAGE，要用户去系统设置拉开关；
+         · API 29（Android 10）：分区存储已经生效，靠 requestLegacyExternalStorage
+           退回旧行为 + WRITE_EXTERNAL_STORAGE 运行时权限（所以 maxSdkVersion 必须到 29，
+           写 28 的话 Android 10 就成了真空档 —— 新权限还没有、旧权限已被排除）；
+         · API 26~28：WRITE_EXTERNAL_STORAGE 运行时权限就够，本来就能直写公共目录。 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+        android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- WifiLock 用：熄屏后 WiFi 会进省电模式，3081 局域网桥与联网安装都会断 -->
@@ -53,6 +61,7 @@
     <application
         android:name=".DshaApp"
         android:allowBackup="true"
+        android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"
