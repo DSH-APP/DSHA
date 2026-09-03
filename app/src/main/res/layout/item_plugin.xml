@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.deepseekharness.app.GlassCard xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/page_pad"
@@ -70,4 +70,4 @@
         android:maxLines="3"
         android:textColor="?attr/dshaTextMuted"
         android:textSize="@dimen/text_caption" />
-</LinearLayout>
+</com.deepseekharness.app.GlassCard>

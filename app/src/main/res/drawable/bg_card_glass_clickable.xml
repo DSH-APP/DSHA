@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  可点击的玻璃卡片背景：涟漪 + 圆角描边，填充透明。
+
+  bg_card_glass 的可点击版本 —— 插件列表项要能点，换成不带 ripple 的背景会让点击
+  完全没有反馈。填充仍然必须透明，否则会盖住 BlurView 画好的模糊（见 bg_card_glass）。
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/dshaRipple">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="@dimen/radius_card" />
+            <stroke android:width="@dimen/stroke" android:color="?attr/dshaLine" />
+        </shape>
+    </item>
+</ripple>

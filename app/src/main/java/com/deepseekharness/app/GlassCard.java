@@ -43,12 +43,18 @@ public class GlassCard extends BlurView {
     }
 
     private void init() {
+        // XML 里给的背景决定这张卡片要不要涟漪 —— 列表项是可点的，换成不带 ripple 的
+        // 背景会让点击毫无反馈。super(context, attrs) 已经把 XML 背景应用上了，
+        // 所以这里能直接判断。
+        boolean ripple = getBackground() instanceof android.graphics.drawable.RippleDrawable;
         // 玻璃开着时，背景只能留圆角和描边、填充必须透明 —— BlurView 的绘制顺序是
         // 「先画模糊 + overlay，再 super.draw() 画 background 和子 View」，不透明的
         // background 会把刚画好的模糊整块盖住（症状：卡片看着毫无效果）。
         // 玻璃关着时它就是一张普通卡片，照旧用不透明底。
         boolean glass = DshaGlass.enabled(getContext());
-        setBackgroundResource(glass ? R.drawable.bg_card_glass : R.drawable.bg_card);
+        setBackgroundResource(glass
+                ? (ripple ? R.drawable.bg_card_glass_clickable : R.drawable.bg_card_glass)
+                : (ripple ? R.drawable.bg_card_clickable : R.drawable.bg_card));
         int pad = getResources().getDimensionPixelSize(R.dimen.card_pad);
         setPadding(pad, pad, pad, pad);
         // 圆角：BlurView 自己画模糊，不裁的话四个角会溢出方形的模糊块
