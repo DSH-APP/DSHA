@@ -178,10 +178,14 @@ public class MainActivity extends AppCompatActivity {
                     public void onFragmentViewCreated(
                             androidx.fragment.app.FragmentManager fm,
                             androidx.fragment.app.Fragment f, View v, Bundle s) {
+                        // 作用在 decorView 而不是这个 Fragment 的 v —— 顶栏、底栏、以及它们里面的
+                        // logo 圆和「关于」按钮都不属于任何 Fragment，只处理 v 的话那些地方永远
+                        // 不透明（就是左上角那个圆一直很实的原因）。
+                        //
                         // **同步**应用，不要 post：这个回调发生在 View 树建好、首帧绘制之前，
                         // 这时候改 alpha 用户看不到过程。post 到下一帧的话，第一帧是不透明的、
                         // 第二帧才变透明 —— 那就是「打开二级页面会闪一下」的原因。
-                        DshaGlass.apply(v);
+                        DshaGlass.apply(getWindow().getDecorView());
                     }
                 }, true);
         if (savedInstanceState == null) {

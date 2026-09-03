@@ -54,8 +54,6 @@ public final class PtyTerminalFragment extends Fragment
      * 手机软键盘没有 Esc、Ctrl 和方向键，缺了这排 TUI 基本没法用。
      */
     private static final String[][] KEYS = {
-            {"中文", null},
-            {"粘贴", null},
             {"ESC", "\033"},
             {"TAB", "\t"},
             {"CTRL", null},
@@ -189,13 +187,7 @@ public final class PtyTerminalFragment extends Fragment
             b.setLayoutParams(lp);
             final String seq = k[1];
             final String label = k[0];
-            if ("中文".equals(label)) {
-                b.setOnClickListener(v -> promptTextInput());
-            } else if ("粘贴".equals(label)) {
-                // 库自带的粘贴要先长按进选择模式再点菜单，真机上那条路不一定出得来 ——
-                // 直接给个键调同一段逻辑（onPasteRequest 就是从剪贴板读出来写进 PTY）
-                b.setOnClickListener(v -> onPasteRequest());
-            } else if (seq == null) {
+            if  (seq == null) {
                 if ("CTRL".equals(label)) ctrlBtn = b;
                 else altBtn = b;
                 b.setOnClickListener(v -> toggleModifier(label));

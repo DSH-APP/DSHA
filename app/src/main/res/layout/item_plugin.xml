@@ -62,6 +62,7 @@
 
     <TextView
         android:id="@+id/pluginDesc"
+        android:minLines="3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/gap_hair"
