@@ -64,6 +64,64 @@ final class DshaBackground {
     }
 
 
+    /** Telegram 式的「填充背景」：不必手上有合适照片也能个性化。
+     *
+     *  <p>Telegram 的壁纸有四类（图片 / 图案 / 纯色填充 / 频道），填充类型又分纯色、
+     *  双色渐变（可转 45° 的倍数）和 3~4 色自由渐变。这里抄它的思路但只给预设组合 ——
+     *  自定义取色器是另一套 UI，而预设已经能覆盖绝大多数需求，也不会被用户配出
+     *  文字看不清的组合。配色取深色友好的低饱和，白字压得住。 */
+    static final String KEY_FILL = "ui_bg_fill";
+
+    static final String[] FILL_NAMES = {
+            "不用 · 跟随主题或图片",
+            "夜蓝 · 双色渐变",
+            "暮紫 · 三色渐变",
+            "墨绿 · 双色渐变",
+            "灰岩 · 纯色",
+            "曙光 · 四色渐变",
+            "海雾 · 三色渐变",
+    };
+
+    private static final int[][] FILL_COLORS = {
+            {},
+            {0xFF1B2A3A, 0xFF0C131C},
+            {0xFF2C2140, 0xFF1B2836, 0xFF0F1A24},
+            {0xFF14302A, 0xFF0A1A16},
+            {0xFF181C22},
+            {0xFF3A2438, 0xFF2A2440, 0xFF16263A, 0xFF0C1620},
+            {0xFF1E3440, 0xFF172A38, 0xFF101C26},
+    };
+
+    static int fillIndex(Context ctx) {
+        try {
+            int i = ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
+                    .getInt(KEY_FILL, 0);
+            return (i >= 0 && i < FILL_NAMES.length) ? i : 0;
+        } catch (Throwable t) {
+            return 0;
+        }
+    }
+
+    static void setFillIndex(Context ctx, int i) {
+        ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
+                .edit().putInt(KEY_FILL, Math.max(0, Math.min(FILL_NAMES.length - 1, i))).apply();
+    }
+
+    /** 当前填充背景对应的 Drawable；选「不用」时返回 null。 */
+    static android.graphics.drawable.Drawable fillDrawable(Context ctx) {
+        int i = fillIndex(ctx);
+        if (i <= 0) return null;
+        int[] cs = FILL_COLORS[i];
+        if (cs.length == 0) return null;
+        if (cs.length == 1) return new android.graphics.drawable.ColorDrawable(cs[0]);
+        android.graphics.drawable.GradientDrawable g =
+                new android.graphics.drawable.GradientDrawable(
+                        android.graphics.drawable.GradientDrawable.Orientation.TL_BR, cs);
+        g.setGradientType(android.graphics.drawable.GradientDrawable.LINEAR_GRADIENT);
+        return g;
+    }
+
+    /** 背景图滤镜相关已移除，见 git 历史。 */
     private static final String FILE = "ui-background.jpg";
 
     private DshaBackground() {
@@ -188,10 +246,22 @@ final class DshaBackground {
         if (iv == null) return;
         try {
             if (!exists(iv.getContext())) {
-                iv.setVisibility(android.view.View.GONE);
-                iv.setImageDrawable(null);
+                // 没有照片时试「填充背景」（纯色 / 渐变）—— 个性化不该以「手上正好有张
+                // 合适的照片」为前提，Telegram 的 fill wallpaper 就是这个思路。
+                android.graphics.drawable.Drawable fill = fillDrawable(iv.getContext());
+                if (fill != null) {
+                    // GradientDrawable 没有固有尺寸，centerCrop 下不保证铺满，得换 FIT_XY。
+                    iv.setScaleType(android.widget.ImageView.ScaleType.FIT_XY);
+                    iv.setImageDrawable(fill);
+                    iv.setImageAlpha(255);      // 填充色是自己挑的，不用再淡一次
+                    iv.setVisibility(android.view.View.VISIBLE);
+                } else {
+                    iv.setVisibility(android.view.View.GONE);
+                    iv.setImageDrawable(null);
+                }
                 return;
             }
+            iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
             Bitmap bm = BitmapFactory.decodeFile(file(iv.getContext()).getAbsolutePath());
             if (bm == null) {
                 iv.setVisibility(android.view.View.GONE);

@@ -72,13 +72,13 @@ public class WorkspaceFragment extends Fragment {
             if (!wd.isEmpty()) {
                 c.setWorkdir(wd);
                 refreshInfo();
-                Toast.makeText(requireContext(), "工作区已更新", Toast.LENGTH_SHORT).show();
+                DshaSnack.show(WorkspaceFragment.this, "工作区已更新");
             }
         });
 
         shizukuAuthBtn.setOnClickListener(v -> {
             if (!ShizukuShell.isAvailable()) {
-                Toast.makeText(requireContext(), "请先安装并启动 Shizuku", Toast.LENGTH_LONG).show();
+                DshaSnack.showLong(WorkspaceFragment.this, "请先安装并启动 Shizuku");
                 return;
             }
             ShizukuShell.requestPermission((code, grantResult) -> refreshShizukuStatus());
@@ -88,7 +88,7 @@ public class WorkspaceFragment extends Fragment {
         clearBtn.setOnClickListener(v -> {
             c.getProot().uninstall();
             refreshInfo();
-            Toast.makeText(requireContext(), "已清除环境", Toast.LENGTH_SHORT).show();
+            DshaSnack.show(WorkspaceFragment.this, "已清除环境");
         });
 
         backupBtn.setOnClickListener(v -> promptBackupScope());
@@ -98,7 +98,7 @@ public class WorkspaceFragment extends Fragment {
                 .setMessage("将删除 settings.yaml 和 .env（对话记录保留），并重新写入 .env。")
                 .setPositiveButton("重置", (d, w) -> {
                     String r = c.resetConfig();
-                    Toast.makeText(requireContext(), r, Toast.LENGTH_LONG).show();
+                    DshaSnack.showLong(WorkspaceFragment.this, r);
                 })
                 .setNegativeButton("取消", null)
                 .show());
@@ -114,7 +114,7 @@ public class WorkspaceFragment extends Fragment {
                             + "（不删除，可恢复）。用于修复「历史加载失败 / resume failed」。\n\n"
                             + "建议先停止 Web UI 再清理。")
                     .setPositiveButton("清理", (d, w) -> {
-                        Toast.makeText(requireContext(), "正在清理损坏会话…", Toast.LENGTH_SHORT).show();
+                        DshaSnack.show(WorkspaceFragment.this, "正在清理损坏会话…");
                         new Thread(() -> {
                             String r = c.cleanCorruptSessions();
                             // lambda 真正执行时 Fragment 可能已 detach，
@@ -160,7 +160,7 @@ public class WorkspaceFragment extends Fragment {
                     .setMessage("对话记录可能正在写入。建议先停止 Web UI 再备份，避免备份到半截文件。\n\n仍要继续备份吗？")
                     .setPositiveButton("停止后备份", (d, w) -> {
                         // 用同步深停（等端口关透）再备份，避免异步 stopWeb 期间 tar 到写入中的文件
-                        Toast.makeText(requireContext(), "正在停止 Web 并备份…", Toast.LENGTH_SHORT).show();
+                        DshaSnack.show(WorkspaceFragment.this, "正在停止 Web 并备份…");
                         new Thread(() -> {
                             try {
                                 c.stopWebAndWait();
@@ -170,13 +170,13 @@ public class WorkspaceFragment extends Fragment {
                         }).start();
                     })
                     .setNegativeButton("直接备份", (d, w) -> {
-                        Toast.makeText(requireContext(), "正在备份（可能含写入中的会话）…", Toast.LENGTH_SHORT).show();
+                        DshaSnack.show(WorkspaceFragment.this, "正在备份（可能含写入中的会话）…");
                         new Thread(() -> doBackup(scope)).start();
                     })
                     .setNeutralButton("取消", null)
                     .show();
         } else {
-            Toast.makeText(requireContext(), "正在备份，请稍候…", Toast.LENGTH_SHORT).show();
+            DshaSnack.show(WorkspaceFragment.this, "正在备份，请稍候…");
             new Thread(() -> doBackup(scope)).start();
         }
     }
@@ -206,7 +206,7 @@ public class WorkspaceFragment extends Fragment {
                                 .getSystemService(Context.CLIPBOARD_SERVICE);
                         if (cm != null) {
                             cm.setPrimaryClip(ClipData.newPlainText("backup", path));
-                            Toast.makeText(requireContext(), "路径已复制", Toast.LENGTH_SHORT).show();
+                            DshaSnack.show(WorkspaceFragment.this, "路径已复制");
                         }
                     })
                     .setNegativeButton("好", null)
@@ -236,7 +236,7 @@ public class WorkspaceFragment extends Fragment {
 
     /** 停止 Web 后恢复（后台线程深停 → 恢复） */
     private void doRestoreWithStop(final Uri uri) {
-        Toast.makeText(requireContext(), "正在停止 Web 并恢复，请稍候…", Toast.LENGTH_SHORT).show();
+        DshaSnack.show(WorkspaceFragment.this, "正在停止 Web 并恢复，请稍候…");
         new Thread(() -> {
             try {
                 c.stopWebAndWait();

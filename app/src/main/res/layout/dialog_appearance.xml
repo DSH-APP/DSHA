@@ -212,6 +212,26 @@
              普通容器仍然全不透明 —— 用户看到的就是"大部分组件吃不到玻璃效果"。
              通透度对人来说是一个概念，合成一个滑块（玻璃浓度）统管。 -->
 
+        <TextView
+            android:id="@+id/ap_fill"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/touch_min"
+            android:paddingStart="@dimen/gap_control"
+            android:paddingEnd="@dimen/gap_control"
+            android:text="填充背景 · 不用" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="没选图片时用纯色或渐变当底衬。选了图片以图片为准。" />
+
         <CheckBox
             android:id="@+id/ap_bg_glass"
             style="@style/DshaText.Body"

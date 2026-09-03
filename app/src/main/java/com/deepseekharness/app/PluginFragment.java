@@ -832,7 +832,7 @@ public class PluginFragment extends Fragment {
                     android.content.ClipboardManager cm = (android.content.ClipboardManager)
                             requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
                     cm.setPrimaryClip(android.content.ClipData.newPlainText("url", it[MarketCol.URL]));
-                    Toast.makeText(requireContext(), "链接已复制", Toast.LENGTH_SHORT).show();
+                    DshaSnack.show(PluginFragment.this, "链接已复制");
                 })
                 .setNegativeButton("关闭", null)
                 .show();
@@ -1041,7 +1041,7 @@ public class PluginFragment extends Fragment {
                 return;
             }
             say("这条市场记录的链接解析不了：" + it[MarketCol.URL]);
-            Toast.makeText(requireContext(), "链接格式不认识，装不了", Toast.LENGTH_LONG).show();
+            DshaSnack.showLong(PluginFragment.this, "链接格式不认识，装不了");
             return;
         }
         if (!gr.hasSubdir()) {
@@ -1148,7 +1148,7 @@ public class PluginFragment extends Fragment {
                             if (cm != null) {
                                 cm.setPrimaryClip(
                                         android.content.ClipData.newPlainText("url", it[MarketCol.URL]));
-                                Toast.makeText(requireContext(), "链接已复制", Toast.LENGTH_SHORT).show();
+                                DshaSnack.show(PluginFragment.this, "链接已复制");
                             }
                         })
                         .setNegativeButton("算了", null);
@@ -1186,7 +1186,7 @@ public class PluginFragment extends Fragment {
             Toast.makeText(requireContext(), "已复制" + (what == null ? "" : what),
                     Toast.LENGTH_SHORT).show();
         } catch (Throwable t) {
-            Toast.makeText(requireContext(), "复制失败：" + t, Toast.LENGTH_SHORT).show();
+            DshaSnack.show(PluginFragment.this, "复制失败：" + t);
         }
     }
 

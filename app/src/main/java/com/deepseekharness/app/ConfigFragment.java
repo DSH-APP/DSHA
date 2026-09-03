@@ -164,14 +164,14 @@ public class ConfigFragment extends Fragment {
         if (adbPairBtn != null) {
             adbPairBtn.setOnClickListener(v -> {
                 if (!DeviceBridgeService.isAdbEnabled(requireContext())) {
-                    Toast.makeText(requireContext(), "先勾选「启用 ADB」并保存", Toast.LENGTH_LONG).show();
+                    DshaSnack.showLong(ConfigFragment.this, "先勾选「启用 ADB」并保存");
                     return;
                 }
                 try {
                     DeviceBridgeService.apply(requireContext());
                     showAdbPairNotification();
                 } catch (Throwable t) {
-                    Toast.makeText(requireContext(), "无法打开 ADB 配对：" + t.getMessage(), Toast.LENGTH_LONG).show();
+                    DshaSnack.showLong(ConfigFragment.this, "无法打开 ADB 配对：" + t.getMessage());
                 }
             });
         }
@@ -316,7 +316,7 @@ public class ConfigFragment extends Fragment {
         Button btn = view == null ? null : view.findViewById(R.id.config_runtime_update);
         if (btn == null) return;
         btn.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "正在检查脚本更新…", Toast.LENGTH_SHORT).show();
+            DshaSnack.show(ConfigFragment.this, "正在检查脚本更新…");
             final android.content.Context appCtx = requireContext().getApplicationContext();
             new Thread(() -> {
                 RuntimeUpdater.Result probe =
@@ -422,7 +422,7 @@ public class ConfigFragment extends Fragment {
         v.findViewById(R.id.ap_bg_clear).setOnClickListener(x -> {
             DshaBackground.clear(ctx);
             refreshBgState(bgState);
-            Toast.makeText(ctx, "已清除背景图，界面重建后生效", Toast.LENGTH_SHORT).show();
+            DshaSnack.show(ConfigFragment.this, "已清除背景图，界面重建后生效");
         });
 
         final android.widget.SeekBar dim = v.findViewById(R.id.ap_dim);
@@ -439,6 +439,23 @@ public class ConfigFragment extends Fragment {
 
         final android.widget.CheckBox bgGlass = v.findViewById(R.id.ap_bg_glass);
         bgGlass.setChecked(DshaBackground.bgGlass(ctx));
+
+        // 填充背景（抄 Telegram 的 fill wallpaper）：没照片也能个性化。
+        // 收成一行、点开再选 —— 七个选项摆开会把面板撑得很长。
+        final TextView fillRow = v.findViewById(R.id.ap_fill);
+        final int[] fillSel = {DshaBackground.fillIndex(ctx)};
+        fillRow.setText("填充背景 · " + DshaBackground.FILL_NAMES[fillSel[0]]);
+        fillRow.setOnClickListener(x ->
+                new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
+                        .setTitle("填充背景")
+                        .setSingleChoiceItems(DshaBackground.FILL_NAMES, fillSel[0],
+                                (d2, w2) -> {
+                                    fillSel[0] = w2;
+                                    fillRow.setText("填充背景 · " + DshaBackground.FILL_NAMES[w2]);
+                                    d2.dismiss();
+                                })
+                        .setNegativeButton("取消", null)
+                        .show());
 
         final TextView ovlLabel = v.findViewById(R.id.ap_overlay_label);
         final TextView radLabel = v.findViewById(R.id.ap_radius_label);
@@ -485,6 +502,7 @@ public class ConfigFragment extends Fragment {
                     DshaGlass.setNoise(ctx, noise.isChecked());
                     DshaGlass.setStroke(ctx, strokeCb.isChecked());
                     DshaBackground.setBgGlass(ctx, bgGlass.isChecked());
+                    DshaBackground.setFillIndex(ctx, fillSel[0]);
                     DshaGlass.setCornerDp(ctx, corner.getProgress());
                     DshaBackground.setDim(ctx, dim.getProgress());
                     int idx = 0;
@@ -514,7 +532,7 @@ public class ConfigFragment extends Fragment {
             i.setType("image/*");
             startActivityForResult(i, REQ_PICK_BG);
         } catch (Throwable t) {
-            Toast.makeText(requireContext(), "打不开图片选择器：" + t, Toast.LENGTH_LONG).show();
+            DshaSnack.showLong(ConfigFragment.this, "打不开图片选择器：" + t);
         }
     }
 
@@ -528,14 +546,14 @@ public class ConfigFragment extends Fragment {
         // 复制进私有目录（不留 URI）：见 DshaBackground 的说明。
         String err = DshaBackground.saveFrom(requireContext(), data.getData());
         if (err != null) {
-            Toast.makeText(requireContext(), "背景设置失败：" + err, Toast.LENGTH_LONG).show();
+            DshaSnack.showLong(ConfigFragment.this, "背景设置失败：" + err);
             return;
         }
         // 有了背景图，卡片还是全不透明的话什么都看不出来 —— 首次设图时给一个能看出效果的值。
         if (DshaGlass.alpha(requireContext()) >= 100) {
             DshaGlass.setAlpha(requireContext(), 72);
         }
-        Toast.makeText(requireContext(), "背景已设置", Toast.LENGTH_SHORT).show();
+        DshaSnack.show(ConfigFragment.this, "背景已设置");
         requireActivity().recreate();
     }
 
@@ -747,7 +765,7 @@ public class ConfigFragment extends Fragment {
     }
 
     private void doRuntimeUpdate(final android.content.Context appCtx) {
-        Toast.makeText(requireContext(), "下载中…", Toast.LENGTH_SHORT).show();
+        DshaSnack.show(ConfigFragment.this, "下载中…");
         new Thread(() -> {
             RuntimeUpdater.Result r = RuntimeUpdater.checkAndApply(appCtx, c, false);
             // 这里是真正的下载，耗时更长，用户离开页面的概率更高。
@@ -914,10 +932,10 @@ public class ConfigFragment extends Fragment {
         // 用户在系统弹窗里选了「不允许」：开关必须跟着退回去。
         // 只看 grantResults 不够 —— 用户可能只给了「大致位置」，那也算能用。
         if (locationGranted()) {
-            Toast.makeText(requireContext(), "定位权限已授予，记得点「保存配置」", Toast.LENGTH_SHORT).show();
+            DshaSnack.show(ConfigFragment.this, "定位权限已授予，记得点「保存配置」");
         } else {
             capLocationCb.setChecked(false);
-            Toast.makeText(requireContext(), "未授予定位权限，该能力保持关闭", Toast.LENGTH_LONG).show();
+            DshaSnack.showLong(ConfigFragment.this, "未授予定位权限，该能力保持关闭");
         }
     }
 
@@ -986,7 +1004,7 @@ public class ConfigFragment extends Fragment {
             if (Build.VERSION.SDK_INT >= 33
                     && ctx.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
                     != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(ctx, "需要通知权限才能显示配对卡片，请在系统弹窗中允许", Toast.LENGTH_LONG).show();
+                DshaSnack.showLong(ConfigFragment.this, "需要通知权限才能显示配对卡片，请在系统弹窗中允许");
                 requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 100);
                 return;
             }

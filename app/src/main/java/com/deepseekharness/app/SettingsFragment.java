@@ -97,7 +97,7 @@ public class SettingsFragment extends Fragment {
                                 | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(i);
                     } catch (Throwable t) {
-                        Toast.makeText(requireContext(), "打不开解压页：" + t, Toast.LENGTH_LONG).show();
+                        DshaSnack.showLong(SettingsFragment.this, "打不开解压页：" + t);
                     }
                 })
                 .setNegativeButton("算了", null)
@@ -107,7 +107,7 @@ public class SettingsFragment extends Fragment {
     /** 一键自检 & 修补：后台跑检查并顺手修掉能自动修的（补链接 / 修空壳 /
      *  修坏掉的 patch.yml 等），结果用可滚动弹窗展示（可一键复制发给开发者） */
     private void runSelfTest() {
-        Toast.makeText(requireContext(), "正在自检并修补，约 10~30 秒…", Toast.LENGTH_SHORT).show();
+        DshaSnack.show(SettingsFragment.this, "正在自检并修补，约 10~30 秒…");
         final android.content.Context app = requireContext().getApplicationContext();
         new Thread(() -> {
             // 运行时兼容性要第一个查，而且必须在 App 侧查：selftest.py 本身是 python，
@@ -156,7 +156,7 @@ public class SettingsFragment extends Fragment {
                             requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
                     if (cm != null) {
                         cm.setPrimaryClip(android.content.ClipData.newPlainText("DSHA 自检 & 修补", report));
-                        Toast.makeText(requireContext(), "已复制自检 & 修补结果", Toast.LENGTH_SHORT).show();
+                        DshaSnack.show(SettingsFragment.this, "已复制自检 & 修补结果");
                     }
                 })
                 .setNegativeButton("关闭", null)
@@ -231,7 +231,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void checkUpdate() {
-        Toast.makeText(requireContext(), "正在检查更新…", Toast.LENGTH_SHORT).show();
+        DshaSnack.show(SettingsFragment.this, "正在检查更新…");
         // 网络请求最长 16 秒（两个源各 8 秒），这段时间里用户很可能已经离开设置页。
         // 所以凡是需要 Fragment 还 attached 的东西，全在这里（UI 线程、必然 attached）
         // 先取好：requireContext() 一旦在后台线程或延迟到 UI 回调里执行，

@@ -211,7 +211,7 @@ public final class PtyTerminalFragment extends Fragment
     private void promptTextInput() {
         PtySession s = session;
         if (s == null || !s.isRunning()) {
-            Toast.makeText(requireContext(), "会话已结束，切走再回来可重开", Toast.LENGTH_SHORT).show();
+            DshaSnack.show(PtyTerminalFragment.this, "会话已结束，切走再回来可重开");
             return;
         }
         final android.widget.EditText et = new android.widget.EditText(requireContext());
@@ -268,7 +268,7 @@ public final class PtyTerminalFragment extends Fragment
     private void send(String seq) {
         PtySession s = session;
         if (s == null || !s.isRunning()) {
-            Toast.makeText(requireContext(), "会话已结束，切走再回来可重开", Toast.LENGTH_SHORT).show();
+            DshaSnack.show(PtyTerminalFragment.this, "会话已结束，切走再回来可重开");
             return;
         }
         s.write(seq);
@@ -302,7 +302,7 @@ public final class PtyTerminalFragment extends Fragment
 
     private void switchToSimple() {
         prefs(requireContext()).edit().putBoolean(KEY_PTY, false).apply();
-        Toast.makeText(requireContext(), "已切到简易终端（PTY 会话仍在后台）", Toast.LENGTH_SHORT).show();
+        DshaSnack.show(PtyTerminalFragment.this, "已切到简易终端（PTY 会话仍在后台）");
         try {
             // 容器 id 动态取，不硬编码 MainActivity 的布局细节
             int containerId = ((ViewGroup) requireView().getParent()).getId();
@@ -310,7 +310,7 @@ public final class PtyTerminalFragment extends Fragment
                     .replace(containerId, new TerminalFragment())
                     .commit();
         } catch (Throwable e) {
-            Toast.makeText(requireContext(), "请退出终端页再进来", Toast.LENGTH_SHORT).show();
+            DshaSnack.show(PtyTerminalFragment.this, "请退出终端页再进来");
         }
     }
 
@@ -399,7 +399,7 @@ public final class PtyTerminalFragment extends Fragment
                     // 上游 1.2 在这里也套了 redact，但那样用户在终端里选中一段带
                     // token=… 的文本，粘贴出来会变成 <redacted>，等于改写了他复制的东西。
                     cm.setPrimaryClip(android.content.ClipData.newPlainText("term", text));
-                    Toast.makeText(requireContext(), "已复制", Toast.LENGTH_SHORT).show();
+                    DshaSnack.show(PtyTerminalFragment.this, "已复制");
                 }
             } catch (Throwable ignored) {
             }

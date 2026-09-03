@@ -136,7 +136,7 @@ public class LaunchFragment extends Fragment {
             }
             if (goExtractIfNeeded()) return;
             if (!c.getProot().isOfflineExtracted()) {
-                Toast.makeText(requireContext(), "内置环境尚未就绪，请先等解压完成", Toast.LENGTH_LONG).show();
+                DshaSnack.showLong(LaunchFragment.this, "内置环境尚未就绪，请先等解压完成");
                 return;
             }
             starting = true;
@@ -608,7 +608,7 @@ public class LaunchFragment extends Fragment {
             Toast.makeText(requireContext(), label + "已复制（里面的 token 相当于密码，别外发）",
                     Toast.LENGTH_LONG).show();
         } catch (Throwable e) {
-            Toast.makeText(requireContext(), "复制失败：" + addr, Toast.LENGTH_LONG).show();
+            DshaSnack.showLong(LaunchFragment.this, "复制失败：" + addr);
         }
     }
 

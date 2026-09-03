@@ -118,12 +118,12 @@ public class InstallFragment extends Fragment {
         copyBtn.setOnClickListener(v -> {
             String err = c.getError();
             if (err == null || err.isEmpty()) {
-                Toast.makeText(requireContext(), "当前没有报错内容", Toast.LENGTH_SHORT).show();
+                DshaSnack.show(InstallFragment.this, "当前没有报错内容");
                 return;
             }
             ClipboardManager cm = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
             cm.setPrimaryClip(ClipData.newPlainText("dsh_error", err));
-            Toast.makeText(requireContext(), "报错内容已复制", Toast.LENGTH_SHORT).show();
+            DshaSnack.show(InstallFragment.this, "报错内容已复制");
         });
         // 状态列表点击 → 手动刷新（切模块回来不自动刷，需要时点这里）
         stepStatusText.setOnClickListener(v -> {
@@ -134,7 +134,7 @@ public class InstallFragment extends Fragment {
         crashBtn.setOnClickListener(v -> {
             java.io.File f = new java.io.File(requireContext().getFilesDir(), "crash.log");
             if (!f.exists() || f.length() == 0) {
-                Toast.makeText(requireContext(), "没有崩溃日志（尚未发生过闪退）", Toast.LENGTH_SHORT).show();
+                DshaSnack.show(InstallFragment.this, "没有崩溃日志（尚未发生过闪退）");
                 return;
             }
             String content;
@@ -156,15 +156,15 @@ public class InstallFragment extends Fragment {
                     .setNegativeButton("复制", (d, w) -> {
                         ClipboardManager cm = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
                         cm.setPrimaryClip(ClipData.newPlainText("dsh_crash", finalContent));
-                        Toast.makeText(requireContext(), "已复制，发给开发者即可", Toast.LENGTH_SHORT).show();
+                        DshaSnack.show(InstallFragment.this, "已复制，发给开发者即可");
                     })
                     .setNeutralButton("清空日志", (d, w) -> {
                         try {
                             java.io.FileOutputStream fo = new java.io.FileOutputStream(f, false);
                             fo.close();
-                            Toast.makeText(requireContext(), "崩溃日志已清空", Toast.LENGTH_SHORT).show();
+                            DshaSnack.show(InstallFragment.this, "崩溃日志已清空");
                         } catch (Exception e) {
-                            Toast.makeText(requireContext(), "清空失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            DshaSnack.show(InstallFragment.this, "清空失败: " + e.getMessage());
                         }
                     })
                     .setPositiveButton("关闭", null)
