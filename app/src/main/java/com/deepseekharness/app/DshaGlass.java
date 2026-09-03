@@ -64,6 +64,15 @@ final class DshaGlass {
     }
 
     private static void walk(View v, int alpha255) {
+        // 三类东西不能透，遇到就整棵子树跳过：
+        // · 终端 —— Termux 的 ANSI 前景是白色，背景一透就成了浅底白字；
+        // · WebView / GeckoView —— 里面是网页自己的排版，透了会让背景图串在正文后面；
+        // · 显式标了 no-glass 的（留给以后不想被透的地方，不用改这里的判断）。
+        if ("no-glass".equals(v.getTag())) return;
+        String cls = v.getClass().getName();
+        if (cls.contains("TerminalView") || cls.contains("WebView") || cls.contains("GeckoView")) {
+            return;
+        }
         Drawable bg = v.getBackground();
         if (bg != null && isShapeLike(bg)) {
             Drawable m = bg.mutate();

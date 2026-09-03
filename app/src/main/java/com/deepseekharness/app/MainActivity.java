@@ -147,24 +147,38 @@ public class MainActivity extends AppCompatActivity {
             Fragment f;
             if (id == R.id.nav_launch) {
                 f = new LaunchFragment();
-                setAppTitle("启动");
+                setAppTitle("启动", R.drawable.ic_launch);
             } else if (id == R.id.nav_terminal) {
                 // 两套终端并存：默认 PTY 那套（跑得了 vim / htop / tmux），页内点「简易」
                 // 可以退回旧的 TextView 版本 —— 新终端万一在某些机型上出问题，
                 // 用户不至于连命令行都没了。选择记在 PtyTerminalFragment.KEY_PTY。
                 f = PtyTerminalFragment.preferred(this)
                         ? new PtyTerminalFragment() : new TerminalFragment();
-                setAppTitle("终端");
+                setAppTitle("终端", R.drawable.ic_terminal);
             } else if (id == R.id.nav_plugins) {
                 f = new PluginFragment();
-                setAppTitle("市场");
+                setAppTitle("市场", R.drawable.ic_plugins);
             } else {
                 f = new SettingsFragment();
-                setAppTitle("设置");
+                setAppTitle("设置", R.drawable.ic_settings);
             }
             switchFragment(f);
             return true;
         });
+        // 卡片透明度要覆盖**所有层级**的 Fragment。原先只在 switchFragment 里调一次，
+        // 于是二级页面全漏了 —— 工作区、备份恢复、终端子页、市场详情，一共五处
+        // beginTransaction 分散在四个 Fragment 里。逐处去补必然再漏（以后新增页面也一样），
+        // 所以挂在 FragmentManager 的生命周期回调上：View 一创建就套。
+        // 第二个参数 true = 连子 FragmentManager 里的 Fragment 一起管。
+        getSupportFragmentManager().registerFragmentLifecycleCallbacks(
+                new androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
+                    @Override
+                    public void onFragmentViewCreated(
+                            androidx.fragment.app.FragmentManager fm,
+                            androidx.fragment.app.Fragment f, View v, Bundle s) {
+                        v.post(() -> DshaGlass.apply(v));
+                    }
+                }, true);
         if (savedInstanceState == null) {
             nav.setSelectedItemId(R.id.nav_launch);
         }
@@ -187,9 +201,25 @@ public class MainActivity extends AppCompatActivity {
         if (bar != null) bar.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
-    private void setAppTitle(String title) {
+    /** 顶栏：标题 + 当前模块图标。
+     *
+     *  <p>图标原先写死在布局里（{@code src="@drawable/ic_terminal"}），所以不管在哪一页
+     *  都显示终端那个；着色用的是 ImageView 的 {@code android:tint="?attr/…"}，
+     *  那个属性引主题属性并不保证解析，换主题时颜色也不跟着走。两件事一起改成代码控制。 */
+    private void setAppTitle(String title, int iconRes) {
         android.widget.TextView t = findViewById(R.id.app_title);
         if (t != null) t.setText(title);
+        android.widget.ImageView ic = findViewById(R.id.app_bar_icon);
+        if (ic != null) {
+            ic.setImageResource(iconRes);
+            android.util.TypedValue tv = new android.util.TypedValue();
+            if (getTheme().resolveAttribute(R.attr.dshaPrimary, tv, true)) {
+                int c = tv.resourceId != 0
+                        ? androidx.core.content.ContextCompat.getColor(this, tv.resourceId)
+                        : tv.data;
+                ic.setColorFilter(c);
+            }
+        }
     }
 
     /** 崩溃自愈提示：上次有未处理崩溃时，读 crash.log 首条摘要告知用户（不阻塞，仅提示） */
