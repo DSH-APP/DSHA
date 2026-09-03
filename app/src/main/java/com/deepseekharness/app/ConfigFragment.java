@@ -431,6 +431,9 @@ public class ConfigFragment extends Fragment {
         final android.widget.CheckBox strokeCb = v.findViewById(R.id.ap_stroke);
         strokeCb.setChecked(DshaGlass.stroke(ctx));
 
+        final android.widget.CheckBox bgGlass = v.findViewById(R.id.ap_bg_glass);
+        bgGlass.setChecked(DshaBackground.bgGlass(ctx));
+
         // 背景滤镜。七个选项做成 RadioGroup 会把面板撑得很长，所以收成一行、点开再选。
         final TextView filterRow = v.findViewById(R.id.ap_filter);
         final int[] filterSel = {DshaBackground.filterIndex(ctx)};
@@ -491,6 +494,7 @@ public class ConfigFragment extends Fragment {
                     DshaGlass.setNoise(ctx, noise.isChecked());
                     DshaGlass.setStroke(ctx, strokeCb.isChecked());
                     DshaBackground.setFilterIndex(ctx, filterSel[0]);
+                    DshaBackground.setBgGlass(ctx, bgGlass.isChecked());
                     DshaGlass.setCornerDp(ctx, corner.getProgress());
                     DshaBackground.setDim(ctx, dim.getProgress());
                     int idx = 0;

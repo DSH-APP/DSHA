@@ -42,6 +42,27 @@ final class DshaBackground {
     static final String KEY_BLUR = "ui_bg_blur";        // 0~100，模糊强度
     static final int BLUR_DEFAULT = 0;
 
+    /** 背景图本身要不要跟着做玻璃处理（模糊）。
+     *
+     *  <p>默认**关** —— 玻璃的观感来自「清晰的背景 + 糊掉的玻璃块」这个对比，把背景也糊了
+     *  整屏就剩一团雾。但有人就想要通篇朦胧的效果，所以留个开关；关着就是原图，
+     *  除了「背景淡化」不做任何处理。 */
+    static final String KEY_BG_GLASS = "ui_bg_glass";
+
+    static boolean bgGlass(Context ctx) {
+        try {
+            return ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
+                    .getBoolean(KEY_BG_GLASS, false);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    static void setBgGlass(Context ctx, boolean on) {
+        ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
+                .edit().putBoolean(KEY_BG_GLASS, on).apply();
+    }
+
     /** 背景图滤镜，存的是 {@link #FILTER_NAMES} 的下标。0 = 原图（不加任何处理）。 */
     static final String KEY_FILTER = "ui_bg_filter";
 
@@ -251,7 +272,9 @@ final class DshaBackground {
                 iv.setVisibility(android.view.View.GONE);
                 return;
             }
-            iv.setImageBitmap(bm);
+            iv.setImageBitmap(bgGlass(iv.getContext())
+                    ? blur(bm, Math.min(100, DshaGlass.radius(iv.getContext()) * 5 / 2))
+                    : bm);
             // 半透明，而不是叠一层黑：叠黑只是把图压暗，它仍然是一张「实」的图压在界面底下；
             // 降低不透明度会让它和主题底色相融，观感轻得多。
             iv.setColorFilter(colorFilter(iv.getContext()));   // null = 原图

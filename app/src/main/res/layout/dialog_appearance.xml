@@ -203,6 +203,22 @@
              普通容器仍然全不透明 —— 用户看到的就是"大部分组件吃不到玻璃效果"。
              通透度对人来说是一个概念，合成一个滑块（玻璃浓度）统管。 -->
 
+        <CheckBox
+            android:id="@+id/ap_bg_glass"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:minHeight="@dimen/touch_min"
+            android:text="背景图也做玻璃处理（需重开界面）" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="勾上后连背景一起模糊，整屏朦胧；不勾就是原图 —— 玻璃的层次来自清晰背景与糊掉的玻璃块之间的对比。" />
+
         <TextView
             android:id="@+id/ap_filter"
             style="@style/DshaText.Body"
