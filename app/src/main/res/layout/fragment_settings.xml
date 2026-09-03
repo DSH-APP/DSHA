@@ -45,7 +45,7 @@
             android:textSize="@dimen/text_caption"
             android:textStyle="bold" />
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card"
@@ -275,7 +275,7 @@
                     android:textColor="?attr/dshaTextMuted"
                     android:textSize="@dimen/text_title" />
             </LinearLayout>
-        </LinearLayout>
+        </com.deepseekharness.app.GlassCard>
 
         <TextView
             android:id="@+id/settings_ver"

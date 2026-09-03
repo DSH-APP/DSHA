@@ -419,16 +419,12 @@ public class ConfigFragment extends Fragment {
             Toast.makeText(ctx, "已清除背景图，界面重建后生效", Toast.LENGTH_SHORT).show();
         });
 
-        final android.widget.SeekBar alpha = v.findViewById(R.id.ap_alpha);
         final android.widget.SeekBar dim = v.findViewById(R.id.ap_dim);
         final android.widget.SeekBar blur = v.findViewById(R.id.ap_blur);
-        final TextView alphaLabel = v.findViewById(R.id.ap_alpha_label);
         final TextView dimLabel = v.findViewById(R.id.ap_dim_label);
         final TextView blurLabel = v.findViewById(R.id.ap_blur_label);
-        alpha.setProgress(DshaGlass.alpha(ctx));
         dim.setProgress(DshaBackground.dim(ctx));
         blur.setProgress(DshaBackground.blurPct(ctx));
-        alphaLabel.setText("卡片不透明度 " + alpha.getProgress() + "%");
         dimLabel.setText("背景压暗 " + dim.getProgress() + "%");
         blurLabel.setText("背景模糊 " + blur.getProgress() + "%");
 
@@ -455,10 +451,6 @@ public class ConfigFragment extends Fragment {
         cornerLabel.setText("圆角 " + corner.getProgress() + "dp");
 
         final View decor = requireActivity().getWindow().getDecorView();
-        alpha.setOnSeekBarChangeListener(new SimpleSeek(p -> {
-            alphaLabel.setText("卡片不透明度 " + Math.max(20, p) + "%");
-            DshaGlass.preview(decor, p);
-        }));
         dim.setOnSeekBarChangeListener(new SimpleSeek(p -> dimLabel.setText("背景压暗 " + p + "%")));
         blur.setOnSeekBarChangeListener(new SimpleSeek(p -> blurLabel.setText("背景模糊 " + p + "%")));
         // 玻璃浓度与模糊强度都能运行时改（BlurView 的 setter 支持），所以直接预览；
@@ -480,7 +472,6 @@ public class ConfigFragment extends Fragment {
                 .setTitle("外观")
                 .setView(v)
                 .setPositiveButton("应用", (d, w) -> {
-                    DshaGlass.setAlpha(ctx, alpha.getProgress());
                     DshaGlass.setEnabled(ctx, glass.isChecked());
                     DshaGlass.setOverlayPct(ctx, ovl.getProgress());
                     DshaGlass.setRadius(ctx, rad.getProgress());

@@ -170,7 +170,11 @@ final class DshaGlass {
             boolean glass = enabled(root.getContext());
             int corner = cornerPx(root.getContext());
             if (!glass && corner < 0) return;      // 两样都不用改，省一次全树遍历
-            int a255 = glass ? (int) (alpha(root.getContext()) / 100f * 255f) : 255;
+            // 用 overlayPct 而不是另一个"卡片透明度"：这两个分开之后，用户拖玻璃浓度时
+            // 只有能装 BlurView 的顶栏底栏和卡片在变，终端页、设置页、插件页那些普通容器
+            // 仍是 100% 不透明 —— 表现就是"大部分组件吃不到玻璃效果"。
+            // 通透度对用户来说是一个概念，就该由一个参数管。
+            int a255 = glass ? (int) (overlayPct(root.getContext()) / 100f * 255f) : 255;
             walk(root, a255, corner);
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "卡片透明度应用失败（不影响功能）: " + t);
@@ -199,15 +203,16 @@ final class DshaGlass {
         }
     }
 
-    /** 模糊强度与玻璃浓度的实时预览：遍历找到所有 BlurView 直接改参数。
+    /** 玻璃浓度 / 模糊强度的实时预览。
      *
-     *  <p>能这么做是因为 BlurView 的 setBlurRadius / setOverlayColor 都是运行时可改的，
-     *  不必重建界面。噪点开关例外 —— 它只在 setupWith 时能指定。 */
+     *  <p>同一个动作要改两处：能装 BlurView 的（顶栏底栏、GlassCard）改它的 radius 与
+     *  overlay；其余普通容器改背景 alpha。分开调的话用户拖一次只有一半界面在变。 */
     static void previewBlur(View root, int radius, int overlayPct) {
         if (root == null) return;
         try {
             int a = (int) (clamp(overlayPct, 20, 100) / 100f * 255f);
             walkBlur(root, clamp(radius, 4, 40), a);
+            walk(root, a, cornerPx(root.getContext()));
             root.invalidate();
         } catch (Throwable ignored) {
         }

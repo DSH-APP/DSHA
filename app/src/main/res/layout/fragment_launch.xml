@@ -123,7 +123,7 @@
                 android:visibility="gone" />
         </com.deepseekharness.app.GlassCard>
 
-        <com.deepseekharness.app.GlassCard
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="@dimen/gap_control"
@@ -163,7 +163,7 @@
                     android:textColor="?attr/dshaTextSecondary"
                     android:textIsSelectable="true" />
             </ScrollView>
-        </com.deepseekharness.app.GlassCard>
+        </LinearLayout>
     </LinearLayout>
 
     <FrameLayout

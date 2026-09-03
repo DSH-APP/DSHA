@@ -189,26 +189,11 @@
         </LinearLayout>
 
         <!-- ── 三个滑块 ── -->
-        <TextView
-            android:id="@+id/ap_alpha_label"
-            style="@style/DshaText.Body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="卡片不透明度" />
-
-        <TextView
-            style="@style/DshaText.Caption"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="?attr/dshaTextSecondary"
-            android:text="调低了才透得出背景。太低会看不清字，下限 20%。" />
-
-        <SeekBar
-            android:id="@+id/ap_alpha"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="100" />
+        <!-- ── 背景图之后直接是玻璃区 ──
+             原先这里还有一个「卡片不透明度」滑块，和玻璃区的「玻璃浓度」是两个键。
+             拆开的结果是：拖玻璃浓度只有顶栏底栏和卡片在变，终端页、设置页、插件页那些
+             普通容器仍然全不透明 —— 用户看到的就是"大部分组件吃不到玻璃效果"。
+             通透度对人来说是一个概念，合成一个滑块（玻璃浓度）统管。 -->
 
         <TextView
             android:id="@+id/ap_dim_label"
