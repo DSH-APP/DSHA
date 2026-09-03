@@ -434,21 +434,6 @@ public class ConfigFragment extends Fragment {
         final android.widget.CheckBox bgGlass = v.findViewById(R.id.ap_bg_glass);
         bgGlass.setChecked(DshaBackground.bgGlass(ctx));
 
-        // 背景滤镜。七个选项做成 RadioGroup 会把面板撑得很长，所以收成一行、点开再选。
-        final TextView filterRow = v.findViewById(R.id.ap_filter);
-        final int[] filterSel = {DshaBackground.filterIndex(ctx)};
-        filterRow.setText("滤镜 · " + DshaBackground.FILTER_NAMES[filterSel[0]]);
-        filterRow.setOnClickListener(x ->
-                new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
-                        .setTitle("背景滤镜")
-                        .setSingleChoiceItems(DshaBackground.FILTER_NAMES, filterSel[0],
-                                (d2, w2) -> {
-                                    filterSel[0] = w2;
-                                    filterRow.setText("滤镜 · " + DshaBackground.FILTER_NAMES[w2]);
-                                    d2.dismiss();
-                                })
-                        .setNegativeButton("取消", null)
-                        .show());
         final TextView ovlLabel = v.findViewById(R.id.ap_overlay_label);
         final TextView radLabel = v.findViewById(R.id.ap_radius_label);
         final TextView cornerLabel = v.findViewById(R.id.ap_corner_label);
@@ -493,7 +478,6 @@ public class ConfigFragment extends Fragment {
                     DshaGlass.setRadius(ctx, rad.getProgress());
                     DshaGlass.setNoise(ctx, noise.isChecked());
                     DshaGlass.setStroke(ctx, strokeCb.isChecked());
-                    DshaBackground.setFilterIndex(ctx, filterSel[0]);
                     DshaBackground.setBgGlass(ctx, bgGlass.isChecked());
                     DshaGlass.setCornerDp(ctx, corner.getProgress());
                     DshaBackground.setDim(ctx, dim.getProgress());

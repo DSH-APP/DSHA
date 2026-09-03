@@ -220,26 +220,6 @@
             android:text="勾上后连背景一起模糊，整屏朦胧；不勾就是原图 —— 玻璃的层次来自清晰背景与糊掉的玻璃块之间的对比。" />
 
         <TextView
-            android:id="@+id/ap_filter"
-            style="@style/DshaText.Body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_card_clickable"
-            android:gravity="center_vertical"
-            android:minHeight="@dimen/touch_min"
-            android:paddingStart="@dimen/gap_control"
-            android:paddingEnd="@dimen/gap_control"
-            android:text="滤镜 · 原图（不处理）" />
-
-        <TextView
-            style="@style/DshaText.Caption"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="?attr/dshaTextSecondary"
-            android:text="黑白 / 低饱和 / 复古 / 冷暖调。选「原图」就完全不处理。" />
-
-        <TextView
             android:id="@+id/ap_dim_label"
             style="@style/DshaText.Body"
             android:layout_width="match_parent"

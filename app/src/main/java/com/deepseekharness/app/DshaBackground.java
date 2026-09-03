@@ -63,82 +63,7 @@ final class DshaBackground {
                 .edit().putBoolean(KEY_BG_GLASS, on).apply();
     }
 
-    /** 背景图滤镜，存的是 {@link #FILTER_NAMES} 的下标。0 = 原图（不加任何处理）。 */
-    static final String KEY_FILTER = "ui_bg_filter";
 
-    static final String[] FILTER_NAMES = {
-            "原图（不处理）",
-            "黑白",
-            "淡雅 · 低饱和",
-            "鲜艳 · 高饱和",
-            "复古 · 棕调",
-            "冷调 · 偏蓝",
-            "暖调 · 偏橙",
-    };
-
-    static int filterIndex(Context ctx) {
-        try {
-            int i = ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
-                    .getInt(KEY_FILTER, 0);
-            return (i >= 0 && i < FILTER_NAMES.length) ? i : 0;
-        } catch (Throwable t) {
-            return 0;
-        }
-    }
-
-    static void setFilterIndex(Context ctx, int i) {
-        ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
-                .edit().putInt(KEY_FILTER, Math.max(0, Math.min(FILTER_NAMES.length - 1, i)))
-                .apply();
-    }
-
-    /** 当前滤镜对应的 ColorFilter；原图返回 null。
-     *
-     *  <p>全部用 ColorMatrix 表达 —— 一次矩阵乘法，GPU 直接吃，比预处理位图省内存也省时间，
-     *  而且换滤镜不用重新解码图片。 */
-    static android.graphics.ColorFilter colorFilter(Context ctx) {
-        int i = filterIndex(ctx);
-        if (i == 0) return null;
-        android.graphics.ColorMatrix m = new android.graphics.ColorMatrix();
-        switch (i) {
-            case 1:
-                m.setSaturation(0f);
-                break;
-            case 2:
-                m.setSaturation(0.45f);
-                break;
-            case 3:
-                m.setSaturation(1.7f);
-                break;
-            case 4:
-                // 棕调：先去色再压进棕黄通道，比直接给 RGB 加权更接近旧照片
-                m.setSaturation(0f);
-                android.graphics.ColorMatrix sepia = new android.graphics.ColorMatrix(new float[]{
-                        1.07f, 0, 0, 0, 12,
-                        0, 0.96f, 0, 0, 4,
-                        0, 0, 0.74f, 0, -6,
-                        0, 0, 0, 1, 0});
-                m.postConcat(sepia);
-                break;
-            case 5:
-                m.postConcat(new android.graphics.ColorMatrix(new float[]{
-                        0.88f, 0, 0, 0, 0,
-                        0, 0.96f, 0, 0, 0,
-                        0, 0, 1.18f, 0, 8,
-                        0, 0, 0, 1, 0}));
-                break;
-            case 6:
-                m.postConcat(new android.graphics.ColorMatrix(new float[]{
-                        1.16f, 0, 0, 0, 8,
-                        0, 1.0f, 0, 0, 0,
-                        0, 0, 0.82f, 0, -4,
-                        0, 0, 0, 1, 0}));
-                break;
-            default:
-                return null;
-        }
-        return new android.graphics.ColorMatrixColorFilter(m);
-    }
     private static final String FILE = "ui-background.jpg";
 
     private DshaBackground() {
@@ -277,7 +202,6 @@ final class DshaBackground {
                     : bm);
             // 半透明，而不是叠一层黑：叠黑只是把图压暗，它仍然是一张「实」的图压在界面底下；
             // 降低不透明度会让它和主题底色相融，观感轻得多。
-            iv.setColorFilter(colorFilter(iv.getContext()));   // null = 原图
             iv.setImageAlpha(255 - (int) (dim(iv.getContext()) / 100f * 255f));
             iv.setVisibility(android.view.View.VISIBLE);
         } catch (Throwable t) {
@@ -315,21 +239,15 @@ final class DshaBackground {
             if (cropped != scaled) scaled.recycle();
 
             Bitmap out = blur(cropped, Math.min(100, DshaGlass.radius(ctx) * 5 / 2));
-            // 滤镜和压暗一起画进去。滤镜必须也作用在玻璃底图上 —— 否则背景图换了色调，
-            // 玻璃里透出来的还是原色，两边对不上。压暗则是玻璃内部专属（文字要好读）。
-            android.graphics.ColorFilter cf = colorFilter(ctx);
+            // 压暗烘进底图，省得每个元素各画一层。这是玻璃内部专属的（文字要好读），
+            // 背景图那边用的是 alpha 淡化，两回事。
             int dim = dim(ctx);
-            if (cf == null && dim <= 0) return out;
-            Bitmap dst = Bitmap.createBitmap(out.getWidth(), out.getHeight(), Bitmap.Config.ARGB_8888);
-            android.graphics.Canvas c = new android.graphics.Canvas(dst);
-            android.graphics.Paint p = new android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG);
-            if (cf != null) p.setColorFilter(cf);
-            c.drawBitmap(out, 0, 0, p);
-            if (dim > 0) {
-                c.drawColor(Color.argb((int) (dim / 100f * 255), 0, 0, 0));
-            }
-            out.recycle();
-            return dst;
+            if (dim <= 0) return out;
+            Bitmap mutable = out.isMutable() ? out : out.copy(Bitmap.Config.ARGB_8888, true);
+            if (mutable != out) out.recycle();
+            android.graphics.Canvas c = new android.graphics.Canvas(mutable);
+            c.drawColor(Color.argb((int) (dim / 100f * 255), 0, 0, 0));
+            return mutable;
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "玻璃底图生成失败: " + t);
             return null;
