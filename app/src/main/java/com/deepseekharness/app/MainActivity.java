@@ -178,7 +178,10 @@ public class MainActivity extends AppCompatActivity {
                     public void onFragmentViewCreated(
                             androidx.fragment.app.FragmentManager fm,
                             androidx.fragment.app.Fragment f, View v, Bundle s) {
-                        v.post(() -> DshaGlass.apply(v));
+                        // **同步**应用，不要 post：这个回调发生在 View 树建好、首帧绘制之前，
+                        // 这时候改 alpha 用户看不到过程。post 到下一帧的话，第一帧是不透明的、
+                        // 第二帧才变透明 —— 那就是「打开二级页面会闪一下」的原因。
+                        DshaGlass.apply(v);
                     }
                 }, true);
         if (savedInstanceState == null) {
@@ -190,9 +193,8 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, f)
                 .commit();
-        // 新 Fragment 的 View 这会儿还不存在，post 到下一帧再套卡片透明度 ——
-        // DshaGlass 是遍历现有 View 树的，早了什么都遍历不到。
-        getWindow().getDecorView().post(() -> DshaGlass.apply(getWindow().getDecorView()));
+        // 卡片透明度不在这里管 —— onFragmentViewCreated 回调已经覆盖所有层级，
+        // 而且它是在首帧之前同步跑的。这里再 post 一次只会让画面多变一次（闪）。
     }
 
     /** 显示/隐藏底部导航栏（WebView 全屏时隐藏） */
