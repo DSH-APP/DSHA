@@ -420,13 +420,9 @@ public class ConfigFragment extends Fragment {
         });
 
         final android.widget.SeekBar dim = v.findViewById(R.id.ap_dim);
-        final android.widget.SeekBar blur = v.findViewById(R.id.ap_blur);
         final TextView dimLabel = v.findViewById(R.id.ap_dim_label);
-        final TextView blurLabel = v.findViewById(R.id.ap_blur_label);
         dim.setProgress(DshaBackground.dim(ctx));
-        blur.setProgress(DshaBackground.blurPct(ctx));
-        dimLabel.setText("背景压暗 " + dim.getProgress() + "%");
-        blurLabel.setText("背景模糊 " + blur.getProgress() + "%");
+        dimLabel.setText("背景淡化 " + dim.getProgress() + "%");
 
         final android.widget.SeekBar ovl = v.findViewById(R.id.ap_overlay);
         final android.widget.SeekBar rad = v.findViewById(R.id.ap_radius);
@@ -451,8 +447,7 @@ public class ConfigFragment extends Fragment {
         cornerLabel.setText("圆角 " + corner.getProgress() + "dp");
 
         final View decor = requireActivity().getWindow().getDecorView();
-        dim.setOnSeekBarChangeListener(new SimpleSeek(p -> dimLabel.setText("背景压暗 " + p + "%")));
-        blur.setOnSeekBarChangeListener(new SimpleSeek(p -> blurLabel.setText("背景模糊 " + p + "%")));
+        dim.setOnSeekBarChangeListener(new SimpleSeek(p -> dimLabel.setText("背景淡化 " + p + "%")));
         // 玻璃浓度与模糊强度都能运行时改（BlurView 的 setter 支持），所以直接预览；
         // 噪点只在 setupWith 时能定，改了得重建界面。
         ovl.setOnSeekBarChangeListener(new SimpleSeek(p -> {
@@ -478,7 +473,6 @@ public class ConfigFragment extends Fragment {
                     DshaGlass.setNoise(ctx, noise.isChecked());
                     DshaGlass.setCornerDp(ctx, corner.getProgress());
                     DshaBackground.setDim(ctx, dim.getProgress());
-                    DshaBackground.setBlur(ctx, blur.getProgress());
                     int idx = 0;
                     for (int i = 0; i < ids.length; i++) {
                         if (group.getCheckedRadioButtonId() == ids[i]) idx = i;

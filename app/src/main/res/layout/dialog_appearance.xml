@@ -201,14 +201,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="背景压暗" />
+            android:text="背景淡化" />
 
         <TextView
             style="@style/DshaText.Caption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="?attr/dshaTextSecondary"
-            android:text="亮照片上的浅色文字会看不清，压暗一点更稳。" />
+            android:text="让背景图与主题底色相融，别抢走注意力。拖到最左是原图。" />
 
         <SeekBar
             android:id="@+id/ap_dim"
@@ -216,26 +216,8 @@
             android:layout_height="wrap_content"
             android:max="80" />
 
-        <TextView
-            android:id="@+id/ap_blur_label"
-            style="@style/DshaText.Body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="背景模糊" />
-
-        <TextView
-            style="@style/DshaText.Caption"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:textColor="?attr/dshaTextSecondary"
-            android:text="糊掉细节，界面上的字更好读。改这一项要重开界面才看得到。" />
-
-        <SeekBar
-            android:id="@+id/ap_blur"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="100" />
+        <!-- 原先这里还有一个「背景模糊」滑块。它把背景图本身糊掉了，而玻璃的观感恰恰来自
+             「清晰的背景 + 糊掉的玻璃区域」这个对比 —— 全糊之后整屏就剩一团雾。
+             元素玻璃的模糊程度现在由上面的「模糊强度」一并决定。 -->
     </LinearLayout>
 </ScrollView>

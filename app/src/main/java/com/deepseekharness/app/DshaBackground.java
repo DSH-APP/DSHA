@@ -142,7 +142,6 @@ final class DshaBackground {
             if (!exists(a)) return;
             Bitmap bm = BitmapFactory.decodeFile(file(a).getAbsolutePath());
             if (bm == null) return;
-            bm = blur(bm, blurPct(a));
             BitmapDrawable pic = new BitmapDrawable(a.getResources(), bm);
             // 铺满并裁切，不拉伸变形
             pic.setGravity(android.view.Gravity.FILL);
@@ -175,10 +174,11 @@ final class DshaBackground {
                 iv.setVisibility(android.view.View.GONE);
                 return;
             }
-            bm = blur(bm, blurPct(iv.getContext()));
             iv.setImageBitmap(bm);
-            int a = (int) (dim(iv.getContext()) / 100f * 255);
-            iv.setColorFilter(Color.argb(a, 0, 0, 0), android.graphics.PorterDuff.Mode.SRC_ATOP);
+            // 半透明，而不是叠一层黑：叠黑只是把图压暗，它仍然是一张「实」的图压在界面底下；
+            // 降低不透明度会让它和主题底色相融，观感轻得多。
+            iv.clearColorFilter();
+            iv.setImageAlpha(255 - (int) (dim(iv.getContext()) / 100f * 255f));
             iv.setVisibility(android.view.View.VISIBLE);
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "背景图挂到 View 失败: " + t);
@@ -214,7 +214,7 @@ final class DshaBackground {
                     Math.min(w, sw - dx), Math.min(h, sh - dy));
             if (cropped != scaled) scaled.recycle();
 
-            Bitmap out = blur(cropped, Math.min(100, blurPct(ctx) / 2 + 45));
+            Bitmap out = blur(cropped, Math.min(100, DshaGlass.radius(ctx) * 5 / 2));
             // 压暗直接烘进去，省得每个元素各画一层
             int dim = dim(ctx);
             if (dim > 0) {
