@@ -41,4 +41,11 @@
     <!-- 页面底衬。默认是纯色，玻璃主题下换成渐变 drawable ——
          卡片半透明要有东西可透，纯色底上做模糊是看不出材质的。 -->
     <attr name="dshaWindowBackground" format="reference|color" />
+
+    <declare-styleable name="GlassCard">
+        <!-- 这张卡片的玻璃厚度，相对全局「玻璃浓度」的倍率（默认 1.0）。
+             给插件列表这种文字密的卡片调到 1.2~1.4 会明显好读 —— 全局值要照顾
+             大片留白的页面，不能一味调厚。上限由代码钳到 255。 -->
+        <attr name="glassFactor" format="float" />
+    </declare-styleable>
 </resources>

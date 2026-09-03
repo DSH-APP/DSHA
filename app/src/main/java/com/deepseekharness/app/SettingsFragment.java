@@ -37,7 +37,11 @@ public class SettingsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         c = HarnessController.get(requireContext());
-        LinearLayout tabs = view.findViewById(R.id.settings_tabs);
+        // 类型写 ViewGroup 而不是 LinearLayout：这个容器要换成 GlassCard（BlurView 的子类，
+        // 也就是 FrameLayout），findViewById 的泛型隐式 cast 会直接 ClassCastException
+        // —— 之前就是这么崩的。下面添子 View 用的 LinearLayout.LayoutParams 仍然成立，
+        // 因为 GlassCard 把 addView 转发给它内部那个竖向 LinearLayout。
+        android.view.ViewGroup tabs = view.findViewById(R.id.settings_tabs);
         for (int i = 0; i < TAB_OPTIONS.length; i++) {
             if (i > 0) {
                 View divider = new View(requireContext());

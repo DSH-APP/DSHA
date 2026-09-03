@@ -26,6 +26,8 @@ public class GlassCard extends BlurView {
 
     private LinearLayout inner;
     private boolean wired;
+    /** 玻璃厚度倍率，见 attrs.xml 的 GlassCard_glassFactor。 */
+    private float factor = 1f;
 
     public GlassCard(Context context) {
         super(context);
@@ -34,12 +36,26 @@ public class GlassCard extends BlurView {
 
     public GlassCard(Context context, AttributeSet attrs) {
         super(context, attrs);
+        readFactor(context, attrs);
         init();
     }
 
     public GlassCard(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        readFactor(context, attrs);
         init();
+    }
+
+    private void readFactor(Context context, AttributeSet attrs) {
+        if (attrs == null) return;
+        android.content.res.TypedArray a = null;
+        try {
+            a = context.obtainStyledAttributes(attrs, R.styleable.GlassCard);
+            factor = a.getFloat(R.styleable.GlassCard_glassFactor, 1f);
+        } catch (Throwable ignored) {
+        } finally {
+            if (a != null) a.recycle();
+        }
     }
 
     private void init() {
@@ -55,8 +71,14 @@ public class GlassCard extends BlurView {
         setBackgroundResource(glass
                 ? (ripple ? R.drawable.bg_card_glass_clickable : R.drawable.bg_card_glass)
                 : (ripple ? R.drawable.bg_card_clickable : R.drawable.bg_card));
-        int pad = getResources().getDimensionPixelSize(R.dimen.card_pad);
-        setPadding(pad, pad, pad, pad);
+        // 只在 XML 没给 padding 时补默认值。init() 跑在 super(context, attrs) 之后，
+        // 无脑 setPadding 会把布局里写的值覆盖掉 —— 设置页那个「模块」容器写的是 2dp，
+        // 被改成 card_pad 的话三行内容会突然缩进一大截。
+        if (getPaddingTop() == 0 && getPaddingLeft() == 0
+                && getPaddingRight() == 0 && getPaddingBottom() == 0) {
+            int pad = getResources().getDimensionPixelSize(R.dimen.card_pad);
+            setPadding(pad, pad, pad, pad);
+        }
         // 圆角：BlurView 自己画模糊，不裁的话四个角会溢出方形的模糊块
         setOutlineProvider(android.view.ViewOutlineProvider.BACKGROUND);
         setClipToOutline(true);
@@ -98,7 +120,7 @@ public class GlassCard extends BlurView {
             // 半径取用户设定的 85% —— 卡片面积小，和栏用同一个值会糊成一团。
             setupWith(target, 8f, DshaGlass.noise(getContext()))
                     .setBlurRadius(DshaGlass.radius(getContext()) * 0.85f)
-                    .setOverlayColor(DshaGlass.overlayColor(getContext(), 1f));
+                    .setOverlayColor(DshaGlass.overlayColor(getContext(), factor));
             wired = true;
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "卡片玻璃装配失败（退化成普通卡片）: " + t);

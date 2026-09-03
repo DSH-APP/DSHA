@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:background="?attr/dshaSurface">
 
-    <LinearLayout
+    <com.deepseekharness.app.GlassCard
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -152,5 +152,5 @@
             android:lineSpacingExtra="4dp"
             android:text="安装流程（分 6 步，可单独安装/重装/更新）：\n① Linux 环境（rootfs）\n② 基础工具（apt 国内源 + curl/git/python3 等）\n③ Node.js\n④ Node 附加工具（pnpm/node-gyp）\n⑤ deepseek-harness（npm 最新 RC：@deepseek-ai/dsh@rc）\n⑥ 安全与补丁（守卫/危险命令确认）\n\n每个下载源都有多个镜像，自动测速选最快；\n每一步都能单独重装，比如只更新 deepseek-harness 就点第 5 步。\nharness 默认安装 npm 最新 RC 版（@deepseek-ai/dsh@rc），无需手动选择。\n\n全程约 5~15 分钟，请保持网络与屏幕常亮。"
             android:textSize="@dimen/text_label" />
-    </LinearLayout>
+    </com.deepseekharness.app.GlassCard>
 </ScrollView>

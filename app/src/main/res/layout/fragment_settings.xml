@@ -25,7 +25,7 @@
             android:textSize="@dimen/text_caption"
             android:textStyle="bold" />
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             android:id="@+id/settings_tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
