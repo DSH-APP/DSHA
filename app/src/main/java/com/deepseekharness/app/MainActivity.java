@@ -229,10 +229,10 @@ public class MainActivity extends AppCompatActivity {
                 eightbitlab.com.blurview.BlurView bv = findViewById(id);
                 if (bv == null) continue;
                 // scaleFactor 5：栏是常驻的，每帧都要重算，降采样狠一点省 GPU；
-                // 反正模糊本身就不需要精确。半径 24 是在这个缩放下试出来的观感。
-                bv.setupWith(target, 5f, true)
+                // 反正模糊本身就不需要精确。半径与噪点由用户在外观面板里调。
+                bv.setupWith(target, 5f, DshaGlass.noise(this))
                         .setFrameClearDrawable(getWindow().getDecorView().getBackground())
-                        .setBlurRadius(24f)
+                        .setBlurRadius(DshaGlass.radius(this))
                         .setOverlayColor(overlay);
             }
         } catch (Throwable t) {

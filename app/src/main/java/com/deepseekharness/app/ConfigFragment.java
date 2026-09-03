@@ -432,6 +432,28 @@ public class ConfigFragment extends Fragment {
         dimLabel.setText("背景压暗 " + dim.getProgress() + "%");
         blurLabel.setText("背景模糊 " + blur.getProgress() + "%");
 
+        final android.widget.SeekBar ovl = v.findViewById(R.id.ap_overlay);
+        final android.widget.SeekBar rad = v.findViewById(R.id.ap_radius);
+        final android.widget.SeekBar corner = v.findViewById(R.id.ap_corner);
+        final android.widget.CheckBox noise = v.findViewById(R.id.ap_noise);
+        final TextView ovlLabel = v.findViewById(R.id.ap_overlay_label);
+        final TextView radLabel = v.findViewById(R.id.ap_radius_label);
+        final TextView cornerLabel = v.findViewById(R.id.ap_corner_label);
+        ovl.setProgress(DshaGlass.overlayPct(ctx));
+        rad.setProgress(DshaGlass.radius(ctx));
+        noise.setChecked(DshaGlass.noise(ctx));
+        int cdp = DshaGlass.cornerDp(ctx);
+        if (cdp < 0) {
+            // 没设过 → 滑块停在布局里的原值上，这样用户一拖就是相对现状微调，
+            // 而不是从 0 开始重新找。
+            cdp = (int) (ctx.getResources().getDimension(R.dimen.radius_card)
+                    / ctx.getResources().getDisplayMetrics().density);
+        }
+        corner.setProgress(cdp);
+        ovlLabel.setText("玻璃浓度 " + ovl.getProgress() + "%");
+        radLabel.setText("模糊强度 " + rad.getProgress());
+        cornerLabel.setText("圆角 " + corner.getProgress() + "dp");
+
         final View decor = requireActivity().getWindow().getDecorView();
         alpha.setOnSeekBarChangeListener(new SimpleSeek(p -> {
             alphaLabel.setText("卡片不透明度 " + Math.max(20, p) + "%");
@@ -439,6 +461,20 @@ public class ConfigFragment extends Fragment {
         }));
         dim.setOnSeekBarChangeListener(new SimpleSeek(p -> dimLabel.setText("背景压暗 " + p + "%")));
         blur.setOnSeekBarChangeListener(new SimpleSeek(p -> blurLabel.setText("背景模糊 " + p + "%")));
+        // 玻璃浓度与模糊强度都能运行时改（BlurView 的 setter 支持），所以直接预览；
+        // 噪点只在 setupWith 时能定，改了得重建界面。
+        ovl.setOnSeekBarChangeListener(new SimpleSeek(p -> {
+            ovlLabel.setText("玻璃浓度 " + Math.max(20, p) + "%");
+            DshaGlass.previewBlur(decor, rad.getProgress(), p);
+        }));
+        rad.setOnSeekBarChangeListener(new SimpleSeek(p -> {
+            radLabel.setText("模糊强度 " + Math.max(4, p));
+            DshaGlass.previewBlur(decor, p, ovl.getProgress());
+        }));
+        corner.setOnSeekBarChangeListener(new SimpleSeek(p -> {
+            cornerLabel.setText("圆角 " + p + "dp");
+            DshaGlass.previewCorner(decor, p);
+        }));
 
         new com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
                 .setTitle("外观")
@@ -446,6 +482,10 @@ public class ConfigFragment extends Fragment {
                 .setPositiveButton("应用", (d, w) -> {
                     DshaGlass.setAlpha(ctx, alpha.getProgress());
                     DshaGlass.setEnabled(ctx, glass.isChecked());
+                    DshaGlass.setOverlayPct(ctx, ovl.getProgress());
+                    DshaGlass.setRadius(ctx, rad.getProgress());
+                    DshaGlass.setNoise(ctx, noise.isChecked());
+                    DshaGlass.setCornerDp(ctx, corner.getProgress());
                     DshaBackground.setDim(ctx, dim.getProgress());
                     DshaBackground.setBlur(ctx, blur.getProgress());
                     int idx = 0;

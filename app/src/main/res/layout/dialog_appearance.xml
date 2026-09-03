@@ -71,6 +71,75 @@
             android:textColor="?attr/dshaTextSecondary"
             android:text="顶栏、底栏与卡片会模糊各自背后的内容。叠加在任一配色上，配一张背景图效果最明显。" />
 
+        <TextView
+            android:id="@+id/ap_overlay_label"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="玻璃浓度" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="着色的厚度。低了通透但字难读，高了接近实色。" />
+
+        <SeekBar
+            android:id="@+id/ap_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
+
+        <TextView
+            android:id="@+id/ap_radius_label"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="模糊强度" />
+
+        <SeekBar
+            android:id="@+id/ap_radius"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="40" />
+
+        <CheckBox
+            android:id="@+id/ap_noise"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/touch_min"
+            android:text="细噪点（少一点塑料感 · 需重开界面）" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/stroke"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/dshaLine" />
+
+        <TextView
+            android:id="@+id/ap_corner_label"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="圆角" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="卡片、按钮、输入框统一改。拖到最左是直角。" />
+
+        <SeekBar
+            android:id="@+id/ap_corner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="32" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="@dimen/stroke"

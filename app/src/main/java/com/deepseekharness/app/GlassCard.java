@@ -87,12 +87,11 @@ public class GlassCard extends BlurView {
             View root = getRootView();
             BlurTarget target = root == null ? null : root.findViewById(R.id.bg_blur_target);
             if (target == null) return;              // 不在主界面里，就当普通卡片
-            // 卡片糊的只有背景图（静态内容），所以可以把降采样开大、半径也放开：
-            // scaleFactor 8 + radius 20 出来的是一片干净的色雾，文字压在上面很好读。
-            // 之前 radius 14 配默认 scaleFactor 4，糊得不够，背景纹样还能看出形状，
-            // 反而干扰阅读 —— 那就是「配置页模糊要优化」的症状。
-            setupWith(target, 8f, true)
-                    .setBlurRadius(20f)
+            // 卡片糊的只有背景图（静态内容），所以降采样可以开得比栏更大：
+            // scaleFactor 8 出来的是一片干净的色雾，文字压在上面很好读。
+            // 半径取用户设定的 85% —— 卡片面积小，和栏用同一个值会糊成一团。
+            setupWith(target, 8f, DshaGlass.noise(getContext()))
+                    .setBlurRadius(DshaGlass.radius(getContext()) * 0.85f)
                     .setOverlayColor(DshaGlass.overlayColor(getContext(), 1f));
             wired = true;
         } catch (Throwable t) {

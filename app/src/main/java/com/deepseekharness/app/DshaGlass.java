@@ -57,6 +57,72 @@ final class DshaGlass {
                 .edit().putBoolean(KEY_ENABLED, on).apply();
     }
 
+    // ── 玻璃的四个可调项 ──────────────────────────────────────────
+    // 都各自独立成键，不复用 KEY_ALPHA：那个管的是"没开玻璃时卡片透多少"，
+    // 和"玻璃着色浓度"是两回事，混用会导致关掉玻璃后卡片跟着变淡。
+
+    /** 玻璃浓度 20~100：BlurView overlay 的不透明度。低=通透但字难读，高=接近实色。 */
+    static final String KEY_OVERLAY = "ui_glass_overlay";
+    static final int OVERLAY_DEFAULT = 72;
+
+    /** 模糊强度 4~40（对应 BlurView 的 blurRadius）。 */
+    static final String KEY_RADIUS = "ui_glass_radius";
+    static final int RADIUS_DEFAULT = 24;
+
+    /** 细噪点。BlurView 自带的蓝噪声纹理，压掉纯模糊那种"塑料感"。改了要重建界面。 */
+    static final String KEY_NOISE = "ui_glass_noise";
+
+    /** 卡片圆角 0~32dp。不是玻璃专属，但归在同一个面板里调更顺手。 */
+    static final String KEY_CORNER = "ui_corner";
+    static final int CORNER_DEFAULT = -1;          // -1 = 用布局里的 radius_card，不干预
+
+    static int overlayPct(Context ctx) {
+        return clamp(pref(ctx).getInt(KEY_OVERLAY, OVERLAY_DEFAULT), 20, 100);
+    }
+
+    static void setOverlayPct(Context ctx, int v) {
+        pref(ctx).edit().putInt(KEY_OVERLAY, clamp(v, 20, 100)).apply();
+    }
+
+    static int radius(Context ctx) {
+        return clamp(pref(ctx).getInt(KEY_RADIUS, RADIUS_DEFAULT), 4, 40);
+    }
+
+    static void setRadius(Context ctx, int v) {
+        pref(ctx).edit().putInt(KEY_RADIUS, clamp(v, 4, 40)).apply();
+    }
+
+    static boolean noise(Context ctx) {
+        return pref(ctx).getBoolean(KEY_NOISE, true);
+    }
+
+    static void setNoise(Context ctx, boolean on) {
+        pref(ctx).edit().putBoolean(KEY_NOISE, on).apply();
+    }
+
+    /** @return 圆角像素；负数表示"别改，用布局原值"。 */
+    static int cornerPx(Context ctx) {
+        int dp = pref(ctx).getInt(KEY_CORNER, CORNER_DEFAULT);
+        if (dp < 0) return -1;
+        return (int) (dp * ctx.getResources().getDisplayMetrics().density);
+    }
+
+    static int cornerDp(Context ctx) {
+        return pref(ctx).getInt(KEY_CORNER, CORNER_DEFAULT);
+    }
+
+    static void setCornerDp(Context ctx, int dp) {
+        pref(ctx).edit().putInt(KEY_CORNER, clamp(dp, 0, 32)).apply();
+    }
+
+    private static android.content.SharedPreferences pref(Context ctx) {
+        return ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE);
+    }
+
+    private static int clamp(int v, int lo, int hi) {
+        return Math.max(lo, Math.min(hi, v));
+    }
+
     private DshaGlass() {
     }
 
@@ -87,7 +153,7 @@ final class DshaGlass {
             }
         } catch (Throwable ignored) {
         }
-        int a = (int) (alpha(ctx) / 100f * 255f * factor);
+        int a = (int) (overlayPct(ctx) / 100f * 255f * factor);
         a = Math.max(0, Math.min(255, a));
         return android.graphics.Color.argb(a,
                 android.graphics.Color.red(base),
@@ -95,13 +161,17 @@ final class DshaGlass {
                 android.graphics.Color.blue(base));
     }
 
-    /** 给一棵 View 树应用当前透明度。Fragment 的 onViewCreated 末尾调一次即可。 */
+    /** 给一棵 View 树应用当前外观参数（卡片透明度 + 圆角）。
+     *
+     *  <p>圆角和透明度分开判断：圆角是纯视觉偏好，玻璃关着也该生效；透明度只在玻璃开着时动。 */
     static void apply(View root) {
         if (root == null) return;
         try {
-            if (!enabled(root.getContext())) return;   // 玻璃没开 → 一切保持不透明
-            int pct = alpha(root.getContext());
-            walk(root, (int) (pct / 100f * 255f));
+            boolean glass = enabled(root.getContext());
+            int corner = cornerPx(root.getContext());
+            if (!glass && corner < 0) return;      // 两样都不用改，省一次全树遍历
+            int a255 = glass ? (int) (alpha(root.getContext()) / 100f * 255f) : 255;
+            walk(root, a255, corner);
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "卡片透明度应用失败（不影响功能）: " + t);
         }
@@ -111,13 +181,58 @@ final class DshaGlass {
     static void preview(View root, int pct) {
         if (root == null) return;
         try {
-            walk(root, (int) (Math.max(20, Math.min(100, pct)) / 100f * 255f));
+            walk(root, (int) (clamp(pct, 20, 100) / 100f * 255f), cornerPx(root.getContext()));
             root.invalidate();
         } catch (Throwable ignored) {
         }
     }
 
-    private static void walk(View v, int alpha255) {
+    /** 圆角滑块的实时预览。 */
+    static void previewCorner(View root, int dp) {
+        if (root == null) return;
+        try {
+            int px = (int) (clamp(dp, 0, 32) * root.getResources().getDisplayMetrics().density);
+            boolean glass = enabled(root.getContext());
+            walk(root, glass ? (int) (alpha(root.getContext()) / 100f * 255f) : 255, px);
+            root.invalidate();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 模糊强度与玻璃浓度的实时预览：遍历找到所有 BlurView 直接改参数。
+     *
+     *  <p>能这么做是因为 BlurView 的 setBlurRadius / setOverlayColor 都是运行时可改的，
+     *  不必重建界面。噪点开关例外 —— 它只在 setupWith 时能指定。 */
+    static void previewBlur(View root, int radius, int overlayPct) {
+        if (root == null) return;
+        try {
+            int a = (int) (clamp(overlayPct, 20, 100) / 100f * 255f);
+            walkBlur(root, clamp(radius, 4, 40), a);
+            root.invalidate();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void walkBlur(View v, int radius, int alpha255) {
+        if (v instanceof eightbitlab.com.blurview.BlurView) {
+            eightbitlab.com.blurview.BlurView bv = (eightbitlab.com.blurview.BlurView) v;
+            int base = overlayColor(v.getContext(), 1f);
+            int c = android.graphics.Color.argb(alpha255,
+                    android.graphics.Color.red(base),
+                    android.graphics.Color.green(base),
+                    android.graphics.Color.blue(base));
+            bv.setBlurRadius(radius);
+            bv.setOverlayColor(c);
+        }
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                walkBlur(g.getChildAt(i), radius, alpha255);
+            }
+        }
+    }
+
+    private static void walk(View v, int alpha255, int cornerPx) {
         // 三类东西不能透，遇到就整棵子树跳过：
         // · 终端 —— Termux 的 ANSI 前景是白色，背景一透就成了浅底白字；
         // · WebView / GeckoView —— 里面是网页自己的排版，透了会让背景图串在正文后面；
@@ -129,17 +244,37 @@ final class DshaGlass {
         }
         Drawable bg = v.getBackground();
         // GlassCard 自己就是 BlurView，透明度由它的 overlayColor 决定；
-        // 再给背景 setAlpha 会把圆角描边一起弄淡。只跳过它本身，子 View 照常遍历。
-        if (bg != null && !(v instanceof GlassCard) && isShapeLike(bg)) {
+        // 再给背景 setAlpha 会把圆角描边一起弄淡。只跳过它的 alpha，圆角照样要改。
+        if (bg != null && isShapeLike(bg)) {
             Drawable m = bg.mutate();
-            m.setAlpha(alpha255);
-            // mutate() 返回的可能是新实例，设回去才对所有 Android 版本都成立
+            if (!(v instanceof GlassCard)) m.setAlpha(alpha255);
+            applyCorner(m, cornerPx);
             v.setBackground(m);
+            if (v instanceof GlassCard && cornerPx >= 0) {
+                v.invalidateOutline();       // clipToOutline 用的是背景的 outline，得重算
+            }
         }
         if (v instanceof ViewGroup) {
             ViewGroup g = (ViewGroup) v;
             for (int i = 0; i < g.getChildCount(); i++) {
-                walk(g.getChildAt(i), alpha255);
+                walk(g.getChildAt(i), alpha255, cornerPx);
+            }
+        }
+    }
+
+    /** 统一圆角。
+     *
+     *  <p>只有 shape drawable 认这个 —— 圆点（oval）不受影响，图标与图片也不碰。
+     *  Ripple 继承 LayerDrawable，所以枚举子层这一条把两种情况都覆盖了。 */
+    private static void applyCorner(Drawable d, int px) {
+        if (px < 0 || d == null) return;
+        if (d instanceof android.graphics.drawable.GradientDrawable) {
+            ((android.graphics.drawable.GradientDrawable) d).setCornerRadius(px);
+        } else if (d instanceof android.graphics.drawable.LayerDrawable) {
+            android.graphics.drawable.LayerDrawable ld =
+                    (android.graphics.drawable.LayerDrawable) d;
+            for (int i = 0; i < ld.getNumberOfLayers(); i++) {
+                applyCorner(ld.getDrawable(i), px);
             }
         }
     }
