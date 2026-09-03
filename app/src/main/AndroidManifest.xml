@@ -171,6 +171,16 @@
              的 rootfs。android:permission 是 MANAGE_DOCUMENTS —— 那是 signature 级权限，
              只有系统 DocumentsUI 持有，所以第三方 App 只能经系统的选择器间接访问，
              不能直接绑我们的 provider。暴露范围也只有 files/linux/ubuntu/root 这一棵树。 -->
+        <!-- 开发者直连：只接受 adb shell（uid 2000）与 system 的调用，代码里每个入口方法
+             都自己核对一次 UID。刻意没有用 android:permission —— 没有哪个现成权限能表达
+             「只允许 adb」（signature 级第三方也可能持有，normal/dangerous 级谁都能申请），
+             所以防线在 DevBridgeProvider.guard() 里。开关默认关，见配置页。 -->
+        <provider
+            android:name=".DevBridgeProvider"
+            android:authorities="${applicationId}.dev"
+            android:exported="true"
+            android:grantUriPermissions="false" />
+
         <provider
             android:name=".DshaDocumentsProvider"
             android:authorities="${applicationId}.documents"

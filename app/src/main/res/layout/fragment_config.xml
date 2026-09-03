@@ -500,6 +500,24 @@
                 android:textColor="@color/text_secondary"
                 android:text="系统休眠会冻结后台网络，ADB 连接因此断掉且无法自动恢复。加入白名单后保活才真正生效。" />
 
+            <CheckBox
+                android:id="@+id/config_dev_bridge"
+                style="@style/DshaText.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/gap_tight"
+                android:minHeight="@dimen/touch_min"
+                android:text="开发者直连（ADB）" />
+
+            <TextView
+                style="@style/DshaText.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/gap_control"
+                android:layout_marginBottom="@dimen/gap_tight"
+                android:textColor="@color/text_secondary"
+                android:text="让已授权的 ADB 直接读状态、跑容器命令，用来在真机上定位问题。这是提权：有 ADB 授权的电脑就能执行任意容器命令。每次调用都记进活动日志，排查完请关掉。" />
+
         </LinearLayout>
 
         <TextView

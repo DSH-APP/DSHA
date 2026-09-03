@@ -1436,6 +1436,31 @@ public class HarnessController {
         }
     }
 
+    /** 把 assets 下某个内置插件的整棵树铺到 rootfs 里的实体目录，写完核对文件数。
+     *
+     *  <p>取代原先每个 {@code ensureXxx} 里手写一串 {@code writeAssetTo} 的做法 ——
+     *  那种写法在插件加文件时必然漏，而且漏了没人知道：dsh-web-mobile 升到 2.3.0 时
+     *  多了 {@code lib/compress.js}（index.js 会 import 它）和 LICENSE，那个清单
+     *  没跟着改，于是实体永远缺两个文件。dsh 按 dependencies 里的 {@code link:} 走到
+     *  实体时就是 ERR_MODULE_NOT_FOUND，整棵 plugin tree 崩掉。
+     *
+     *  @return 是否写满。没写满时调用方应该丢掉 marker，下次启动重来。 */
+    private boolean placeBuiltinEntity(String assetDir, java.io.File dstDir) {
+        try {
+            dstDir.mkdirs();
+            int wrote = writeAssetTree(assetDir, dstDir);
+            int want = countAssetTree(assetDir);
+            if (want > 0 && wrote < want) {
+                android.util.Log.w("DSHA", assetDir + " 实体只写了 " + wrote + "/" + want + " 个文件");
+                return false;
+            }
+            return true;
+        } catch (Throwable t) {
+            android.util.Log.w("DSHA", assetDir + " 实体写入失败: " + t);
+            return false;
+        }
+    }
+
     /** assets 下某个目录里应该有多少个文件。与 {@link #writeAssetTree} 的返回值对照。 */
     private int countAssetTree(String assetDir) {
         try {
@@ -3724,10 +3749,8 @@ public class HarnessController {
             java.io.File aDir = new java.io.File(proot.getRootfsDir(), "root/dsha-web-mobile");
             aDir.mkdirs();
             // 实体始终更新（幂等，秒级）
-            writeAssetTo("dsh-web-mobile/lib/client.js", new java.io.File(aDir, "lib/client.js"));
-            writeAssetTo("dsh-web-mobile/lib/index.js", new java.io.File(aDir, "lib/index.js"));
-            writeAssetTo("dsh-web-mobile/cordis.patch.yml", new java.io.File(aDir, "cordis.patch.yml"));
-            writeAssetTo("dsh-web-mobile/package.json", new java.io.File(aDir, "package.json"));
+            // 整棵树一起铺，不再逐个列文件 —— 见 placeBuiltinEntity 的说明。
+            boolean full = placeBuiltinEntity("dsh-web-mobile", aDir);
             if (userDisabled) {
                 android.util.Log.i("DSHA", "dsh-web-mobile 已被用户禁用：仅更新实体，跳过注册/注入");
                 return;
@@ -3755,9 +3778,11 @@ public class HarnessController {
             // 照样 touch 出 marker（源里的入口在 lib/ 下，它却按根目录拷），于是
             // 「已装好」的凭证配着一个只有 package.json 的空壳，dsh 加载必然失败，
             // 而 App 因为看见 marker 永远不会来补。所以实体不完整时先把 marker 删掉。
+            // 判据从「client.js 与 index.js 在且非空」升成「文件数写满」：前者放过了
+             // 缺 lib/compress.js 的实体，而 index.js 一 import 它整棵 plugin tree 就崩。
             java.io.File clientJs = new java.io.File(aDir, "lib/client.js");
             java.io.File indexJs = new java.io.File(aDir, "lib/index.js");
-            if (!clientJs.isFile() || clientJs.length() == 0
+            if (!full || !clientJs.isFile() || clientJs.length() == 0
                     || !indexJs.isFile() || indexJs.length() == 0) {
                 proot.execAndRead("rm -f /root/dsha-web-mobile-installed; echo dropped");
                 android.util.Log.w("DSHA", "dsh-web-mobile 实体不完整（client.js/index.js 缺失或为空）→ 已丢弃 marker 重注入");
@@ -3896,9 +3921,8 @@ public class HarnessController {
                     "root/dsha-status-overlay-installed");
             if (userDisabledPlugin(NAME)) {
                 // 用户禁用 → 只更新实体（重新启用时拿到的是新版），不注册
-                writeAssetTo("status-overlay/package.json", new java.io.File(realDir, "package.json"));
-                writeAssetTo("status-overlay/cordis.patch.yml", new java.io.File(realDir, "cordis.patch.yml"));
-                writeAssetTo("status-overlay/lib/index.js", new java.io.File(realDir, "lib/index.js"));
+                // 整棵树一起铺，不逐个列文件 —— 见 placeBuiltinEntity 的说明
+                placeBuiltinEntity("status-overlay", realDir);
                 return;
             }
             if (marker.exists() && nmLink.exists()) {
@@ -3948,9 +3972,8 @@ public class HarnessController {
             java.io.File marker = new java.io.File(proot.getRootfsDir(), "root/dsha-task-notifier-installed");
             // 用户禁用 → 仅更新实体不注册
             if (userDisabledPlugin(NAME)) {
-                writeAssetTo("task-notifier/package.json", new java.io.File(realDir, "package.json"));
-                writeAssetTo("task-notifier/cordis.patch.yml", new java.io.File(realDir, "cordis.patch.yml"));
-                writeAssetTo("task-notifier/lib/index.js", new java.io.File(realDir, "lib/index.js"));
+                // 整棵树一起铺，不逐个列文件 —— 见 placeBuiltinEntity 的说明
+                placeBuiltinEntity("task-notifier", realDir);
                 return;
             }
             if (marker.exists() && nmLink.exists()) {
@@ -4108,9 +4131,8 @@ public class HarnessController {
             if (userDisabledPlugin(NAME)) {
                 // 仅更新实体文件（assets 新版本写到实体目录，重新启用时拿到新版），
                 // 不 touch marker / 不注册 / 不建链接
-                writeAssetTo("device-shell-guide/package.json", new java.io.File(realDir, "package.json"));
-                writeAssetTo("device-shell-guide/cordis.patch.yml", new java.io.File(realDir, "cordis.patch.yml"));
-                writeAssetTo("device-shell-guide/lib/index.js", new java.io.File(realDir, "lib/index.js"));
+                // 整棵树一起铺，不逐个列文件 —— 见 placeBuiltinEntity 的说明
+                placeBuiltinEntity("device-shell-guide", realDir);
                 android.util.Log.i("DSHA", "device-shell-guide 已被用户禁用：仅更新实体，跳过注册");
                 return;
             }
@@ -4622,7 +4644,7 @@ public class HarnessController {
      *  资产内容变更时 +1（marker 存在会导致重跑⑥时跳过重注入，
      *  必须靠版本标记删 marker 强制重注入，老用户才能拿到新资产）。
      *  与 STEP6_VERSION 一起写入 builtin-assets.version（installGuard 末尾）。 */
-    private static final String BUILTIN_ASSET_VERSION = "26";
+    private static final String BUILTIN_ASSET_VERSION = "28";
 
     /** 内置插件资产版本自愈（检查 + 删 marker；版本标记写入在 installGuard
      *  末尾 runStep 里——若中途失败版本未写，下次启动版本不一致会重跑⑥重注入，

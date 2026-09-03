@@ -188,19 +188,23 @@ restore() {
 }
 
 # ── 6. 降级构建 ────────────────────────────────────────────────
+# **入口必须用相对路径**：传绝对路径时 esbuild 会把它当模块说明符去解析，然后报
+# `Could not resolve "<那个绝对路径>"`（esbuild 0.28.2 实测，容器里的 Ubuntu 24.04）。
+# 所以先 cd 进 dist，再用 ./assets/xxx.js。输出也用相对路径 —— 写 /tmp 会 permission denied，
+# 而 dist/assets 我们本来就有写权限。
 # --format=iife：老 WebView 不认 <script type="module">
 # --target=chrome61：可选链、空值合并、async/await、类字段都会被转译掉
 #   （比参考实现的 chrome51 略高：Android 8.0 自带的 WebView 就是 Chrome 61，
 #     再往下压会让产物更大而我们的 minSdk 是 26，跑不到那些机器上）
 # --banner:js：polyfill 必须在 bundle 之前执行
-if ! "$ESBUILD" "$ENTRY_ABS" \
+cd "$DIST" || { log "进不去 dist：$DIST"; exit 2; }
+if ! "$ESBUILD" ".$ENTRY" \
       --bundle \
       --format=iife \
       --target=chrome61 \
       --minify \
-      --loader:.js=jsx \
       --banner:js="$(cat "$POLYFILL")" \
-      --outfile="$DIST/assets/index.legacy.js" \
+      --outfile="assets/index.legacy.js" \
       --log-level=warning
 then
   restore

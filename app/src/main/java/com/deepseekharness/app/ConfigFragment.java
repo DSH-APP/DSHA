@@ -138,6 +138,7 @@ public class ConfigFragment extends Fragment {
         rootShellCb = view.findViewById(R.id.config_root_shell);
         saveBtn = view.findViewById(R.id.config_save);
         repoLink = view.findViewById(R.id.config_repo_link);
+        bindDevBridgeSwitch(view);
         SubPageBack.bind(this, view);
         setupCommonControls(); // 模式 spinner / 保存 / 关于
         // 工作区（文件/备份恢复/环境管理）→ 二级页面
@@ -359,6 +360,26 @@ public class ConfigFragment extends Fragment {
     }
 
 
+
+    /** 开发者直连开关。即时生效、不等「保存配置」—— 它排在保存按钮下面那一组，
+     *  那一组的约定就是点一下就生效。
+     *
+     *  <p>开着的时候，已授权的 ADB 可以通过 {@link DevBridgeProvider} 直接跑容器命令。
+     *  这是提权（adb 本来读不了私有目录，也没有容器内的 root），所以默认关、提示写明白、
+     *  每次调用记活动日志。 */
+    private void bindDevBridgeSwitch(View view) {
+        android.widget.CheckBox cb = view.findViewById(R.id.config_dev_bridge);
+        if (cb == null) return;
+        final android.content.SharedPreferences sp = requireContext()
+                .getSharedPreferences("deepseekharness", android.content.Context.MODE_PRIVATE);
+        cb.setChecked(sp.getBoolean(DevBridgeProvider.KEY_ENABLED, false));
+        cb.setOnCheckedChangeListener((v, on) -> {
+            sp.edit().putBoolean(DevBridgeProvider.KEY_ENABLED, on).apply();
+            Toast.makeText(requireContext(), on
+                    ? "已开启 —— 已授权的 ADB 现在能跑容器命令，排查完记得关掉"
+                    : "已关闭开发者直连", Toast.LENGTH_SHORT).show();
+        });
+    }
 
     /** 悬浮条的外观与行为。做成独立对话框而不是往配置页里塞七个控件：
      *  这些项只有开了悬浮条的人才关心，摊在主页面上是给所有人添噪声。 */
