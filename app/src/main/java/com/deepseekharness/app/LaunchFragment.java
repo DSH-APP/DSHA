@@ -326,12 +326,23 @@ public class LaunchFragment extends Fragment {
         // → 强制用 GeckoView（内置内核，版本新）。用户也可手动开 gecko_core。
         if (!useGecko) {
             try {
-                String ua = WebSettings.getDefaultUserAgent(requireContext());
-                java.util.regex.Matcher cm = java.util.regex.Pattern.compile("Chrome/(\\d+)").matcher(ua);
-                if (cm.find() && Integer.parseInt(cm.group(1)) < 118) {
-                    android.util.Log.w("DSHA", "系统 WebView 过旧 (Chrome/" + cm.group(1)
-                            + " < 118)，自动切换 GeckoView");
-                    useGecko = true;
+                int major = HarnessController.systemWebViewMajor(requireContext());
+                if (major > 0 && major < 118) {
+                    // 前端已经降级过（legacy-frontend-patch.sh 把 Vite 产物转成了
+                    // 非 module 的 IIFE + polyfill）→ 系统内核就能跑，不必再起 GeckoView。
+                    // 这条路省的是一整份浏览器引擎的内存，而需要它的正是老机器。
+                    boolean legacyReady = requireContext()
+                            .getSharedPreferences("deepseekharness",
+                                    android.content.Context.MODE_PRIVATE)
+                            .getBoolean("legacy_frontend_ready", false);
+                    if (legacyReady) {
+                        android.util.Log.i("DSHA", "系统 WebView 偏旧 (Chrome/" + major
+                                + ")，但前端已降级，继续用系统内核");
+                    } else {
+                        android.util.Log.w("DSHA", "系统 WebView 过旧 (Chrome/" + major
+                                + " < 118) 且前端未降级，切 GeckoView");
+                        useGecko = true;
+                    }
                 }
             } catch (Throwable ignored) {
             }

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated": "2026-09-02T16:39:40Z",
+  "generated": "2026-09-03T04:40:57Z",
   "note": "只含脚本层增量；rootfs 与 .so 随 APK 发布，不在此清单内",
   "files": [
     {
@@ -188,6 +188,17 @@
         "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/main/app/src/main/assets/lan-bind-patch.sh",
         "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@main/app/src/main/assets/lan-bind-patch.sh",
         "https://ghproxy.net/https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/main/app/src/main/assets/lan-bind-patch.sh"
+      ]
+    },
+    {
+      "path": "app/src/main/assets/legacy-frontend-patch.sh",
+      "asset": "legacy-frontend-patch.sh",
+      "size": 10437,
+      "sha256": "82e1245896cde7a88b332079154bd1274d3ed0a48cabdf5d3394623874fadcb1",
+      "urls": [
+        "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/main/app/src/main/assets/legacy-frontend-patch.sh",
+        "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@main/app/src/main/assets/legacy-frontend-patch.sh",
+        "https://ghproxy.net/https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/main/app/src/main/assets/legacy-frontend-patch.sh"
       ]
     },
     {

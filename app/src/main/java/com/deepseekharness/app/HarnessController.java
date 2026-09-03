@@ -3335,6 +3335,10 @@ public class HarnessController {
             }, 120_000);
         } catch (Throwable ignored) {
         }
+        // 老 WebView 兼容：系统内核太旧时先把前端降级，成功的话就不必起 GeckoView
+        // （省一整份浏览器引擎的内存）。放在 patch 那批之后：它改的是前端产物，
+        // 与 profile / bundles 无关，但要在 Web 起来之前做完。
+        ensureLegacyFrontendIfNeeded();
         // 局域网访问：deepseek-harness 官方 CLI 默认拒绝 --host 0.0.0.0，
         // 需先打 lan-bind-patch.sh 放行（失败则回落到 127.0.0.1，服务保证能起）。
         boolean lan = appContext.getSharedPreferences("deepseekharness", android.content.Context.MODE_PRIVATE)
@@ -4618,7 +4622,7 @@ public class HarnessController {
      *  资产内容变更时 +1（marker 存在会导致重跑⑥时跳过重注入，
      *  必须靠版本标记删 marker 强制重注入，老用户才能拿到新资产）。
      *  与 STEP6_VERSION 一起写入 builtin-assets.version（installGuard 末尾）。 */
-    private static final String BUILTIN_ASSET_VERSION = "25";
+    private static final String BUILTIN_ASSET_VERSION = "26";
 
     /** 内置插件资产版本自愈（检查 + 删 marker；版本标记写入在 installGuard
      *  末尾 runStep 里——若中途失败版本未写，下次启动版本不一致会重跑⑥重注入，
@@ -5483,6 +5487,55 @@ public class HarnessController {
         int i = out.indexOf("SESSION_HEALED");
         logActivity("会话自愈：" + out.substring(i, Math.min(out.length(), i + 60)).trim()
                 + "（原文件留 .pre-fix 备份）");
+    }
+
+    /** 系统 WebView 的 Chromium 主版本号，取不到返回 -1。
+     *
+     *  <p>刻意用 indexOf 而不是正则：解析 UA 这种半结构化文本时，Android 的
+     *  java.util.regex 比桌面 JVM 严格，而我们的纯逻辑测试跑在桌面 JVM 上测不到那一层
+     *  （曾因一个单独的右花括号在真机抛 PatternSyntaxException，桌面全绿）。 */
+    static int systemWebViewMajor(Context ctx) {
+        try {
+            String ua = android.webkit.WebSettings.getDefaultUserAgent(ctx);
+            int i = ua.indexOf("Chrome/");
+            if (i < 0) return -1;
+            int j = i + "Chrome/".length();
+            int k = j;
+            while (k < ua.length() && Character.isDigit(ua.charAt(k))) k++;
+            return k > j ? Integer.parseInt(ua.substring(j, k)) : -1;
+        } catch (Throwable t) {
+            return -1;
+        }
+    }
+
+    /** 系统 WebView 太旧时，把 dsh 前端降级成老内核能跑的 IIFE bundle。
+     *
+     *  <p>为什么值得做：前端是 Vite 现代产物，Chrome &lt; 118 的机器上会因为
+     *  AbortSignal.any 之类的新 API 直接白屏。原先唯一的兜底是切 GeckoView，
+     *  但那要多一份浏览器引擎的内存 —— 而需要兜底的恰恰是 2~3GB 内存的老机器。
+     *  降级这条路不需要额外内核。
+     *
+     *  <p>脚本幂等，做完写 {@code /root/.dsh/.legacy-frontend-ok}；
+     *  {@link LaunchFragment} 读这个标记决定还要不要退回 GeckoView。 */
+    private void ensureLegacyFrontendIfNeeded() {
+        try {
+            int major = systemWebViewMajor(appContext);
+            if (major <= 0 || major >= 118) return;
+            java.io.File mark = rootfsFile("root/.dsh/.legacy-frontend-ok");
+            boolean done = mark.isFile();
+            if (!done) {
+                logActivity("系统 WebView 偏旧（Chrome " + major + "），正在降级前端以免用上内置内核");
+                runAssetScripts(new String[][]{
+                        {"legacy-frontend-patch.sh", "dsha-legacy-frontend.sh"},
+                }, 240_000);
+                done = mark.isFile();
+                logActivity(done ? "前端降级完成，系统内核可直接打开 WebUI"
+                                 : "前端降级没成功，仍用内置内核（更吃内存）");
+            }
+            prefs.edit().putBoolean("legacy_frontend_ready", done).apply();
+        } catch (Throwable t) {
+            android.util.Log.w("DSHA", "前端降级失败（不致命，回落 GeckoView）: " + t);
+        }
     }
 
     /** 从 profile 的 cordis.patch.yml 里摘掉旧名那条 insert 条目。

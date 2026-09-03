@@ -68,6 +68,10 @@ else
 fi
 command -v pnpm >/dev/null 2>&1 || npm install -g pnpm@11.7.0
 command -v node-gyp >/dev/null 2>&1 || npm install -g node-gyp
+# esbuild：老 WebView 上把 dsh 前端降级成非 module 的 IIFE bundle
+# （assets/legacy-frontend-patch.sh 用它）。装进离线包是为了那条路不依赖网络 ——
+# 需要它的恰恰是老设备，而老设备的网络往往也差。约 10MB，rootfs 本来就 300MB+。
+command -v esbuild >/dev/null 2>&1 || npm install -g esbuild --no-audit --no-fund
 # 会话修复自愈需要 zstandard（解压 session.jsonl.zstd）：
 # 有 pip 就直接装，装不上不阻塞（自愈时会再尝试）
 if command -v pip >/dev/null 2>&1 || python3 -m pip --version >/dev/null 2>&1; then
