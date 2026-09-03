@@ -1,114 +1,152 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  重叠布局，为的是让顶栏和底栏成为真玻璃。
+
+  原先是竖直 LinearLayout（顶栏 / 内容 / 底栏 上下排开），那样顶栏背后什么都没有，
+  再怎么半透明也只是"淡一点的色块"。真玻璃的观感来自**内容从它背后滚过去**，
+  所以改成 FrameLayout 叠放：内容铺满全屏、上下各留出栏高的 padding
+  （clipToPadding=false，内容会滚进这块区域而不是被裁掉），顶栏底栏浮在上面。
+
+  BlurTarget 里的东西才会被模糊，所以背景图和内容区都在里面；两个 BlurView 自己在外面
+  （它的子 View 不参与模糊，否则文字也会糊）。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/dshaSurface"
-    android:orientation="vertical">
+    android:background="?attr/dshaSurface">
 
-    <LinearLayout
-        android:id="@+id/app_bar"
+    <eightbitlab.com.blurview.BlurTarget
+        android:id="@+id/blur_target"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/page_pad"
-        android:paddingEnd="@dimen/gap_control">
+        android:layout_height="match_parent">
 
-        <FrameLayout
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@drawable/bg_logo">
-
-            <ImageView
-                android:id="@+id/app_bar_icon"
-                android:layout_width="17dp"
-                android:layout_height="17dp"
-                android:layout_gravity="center"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_launch" />
-        </FrameLayout>
-
-        <TextView
-            android:id="@+id/app_title"
-            style="@style/DshaText.Title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/gap_control"
-            android:text="启动" />
-
-        <!-- 插件页的 GitHub 链接输入框：嵌在标题与「关于」之间。
-             默认 gone，切到插件页时由 MainActivity 显示 ——
-             它在 app_bar 里而不是 fragment 里，是为了不让插件页
-             再为一个输入框单独占一行。 -->
-        <EditText
-            android:id="@+id/appbar_github_input"
-            android:layout_width="0dp"
-            android:layout_height="34dp"
-            android:layout_marginStart="@dimen/gap_control"
-            android:layout_marginEnd="@dimen/gap_tight"
-            android:layout_weight="1"
-            android:background="@drawable/bg_input"
-            android:ellipsize="end"
-            android:hint="🔗 粘贴 GitHub 链接"
-            android:imeOptions="actionGo"
-            android:importantForAutofill="no"
-            android:inputType="textUri"
-            android:maxLines="1"
-            android:paddingStart="@dimen/gap_control"
-            android:paddingEnd="@dimen/gap_control"
-            android:singleLine="true"
-            android:textColor="?attr/dshaText"
-            android:textColorHint="?attr/dshaTextMuted"
-            android:textSize="@dimen/text_caption"
+        <!-- 自定义背景图。默认 gone —— 没设图时留给主题的窗口底衬，
+             多一个全屏 ImageView 白画一层没意义。 -->
+        <ImageView
+            android:id="@+id/app_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
             android:visibility="gone" />
 
-        <!-- 标题右侧的弹性占位：没有输入框时把「关于」挤到最右 -->
-        <View
-            android:id="@+id/appbar_spacer"
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
         <FrameLayout
-            android:id="@+id/btn_about"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@drawable/bg_chip_clickable"
-            android:clickable="true"
-            android:contentDescription="关于"
-            android:focusable="true">
+            android:id="@+id/fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="@dimen/app_bar_height"
+            android:paddingBottom="@dimen/bottom_nav_height" />
+    </eightbitlab.com.blurview.BlurTarget>
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_about"
-                android:tint="?attr/dshaTextSecondary" />
-        </FrameLayout>
-    </LinearLayout>
-
-    <FrameLayout
-        android:id="@+id/fragment_container"
+    <!-- ── 玻璃顶栏 ── -->
+    <eightbitlab.com.blurview.BlurView
+        android:id="@+id/top_glass"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="@dimen/app_bar_height"
+        android:layout_gravity="top">
 
-    <!-- 底栏与内容区之间的分界线：没有它底栏会和页面糊在一起 -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/stroke"
-        android:background="?attr/dshaLine" />
+        <LinearLayout
+            android:id="@+id/app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/page_pad"
+            android:paddingEnd="@dimen/gap_control">
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_nav"
+            <FrameLayout
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_logo">
+
+                <ImageView
+                    android:id="@+id/app_bar_icon"
+                    android:layout_width="17dp"
+                    android:layout_height="17dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_launch" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/app_title"
+                style="@style/DshaText.Title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/gap_control"
+                android:text="启动" />
+
+            <!-- 插件页的 GitHub 链接输入框：嵌在标题与「关于」之间。
+                 默认 gone，切到插件页时由 MainActivity 显示 ——
+                 它在 app_bar 里而不是 fragment 里，是为了不让插件页
+                 再为一个输入框单独占一行。 -->
+            <EditText
+                android:id="@+id/appbar_github_input"
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="@dimen/gap_control"
+                android:layout_marginEnd="@dimen/gap_tight"
+                android:layout_weight="1"
+                android:background="@drawable/bg_input"
+                android:ellipsize="end"
+                android:hint="🔗 粘贴 GitHub 链接"
+                android:imeOptions="actionGo"
+                android:importantForAutofill="no"
+                android:inputType="textUri"
+                android:maxLines="1"
+                android:paddingStart="@dimen/gap_control"
+                android:paddingEnd="@dimen/gap_control"
+                android:singleLine="true"
+                android:textColor="?attr/dshaText"
+                android:textColorHint="?attr/dshaTextMuted"
+                android:textSize="@dimen/text_caption"
+                android:visibility="gone" />
+
+            <!-- 标题右侧的弹性占位：没有输入框时把「关于」挤到最右 -->
+            <View
+                android:id="@+id/appbar_spacer"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <FrameLayout
+                android:id="@+id/btn_about"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_chip_clickable"
+                android:clickable="true"
+                android:contentDescription="关于"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_about"
+                    android:tint="?attr/dshaTextSecondary" />
+            </FrameLayout>
+        </LinearLayout>
+    </eightbitlab.com.blurview.BlurView>
+
+    <!-- ── 玻璃底栏 ── -->
+    <eightbitlab.com.blurview.BlurView
+        android:id="@+id/bottom_glass"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/dshaCard"
-        app:elevation="0dp"
-        app:itemIconTint="@color/nav_item_tint"
-        app:itemTextColor="@color/nav_item_tint"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav_menu" />
-</LinearLayout>
+        android:layout_height="@dimen/bottom_nav_height"
+        android:layout_gravity="bottom">
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_nav"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            app:elevation="0dp"
+            app:itemIconTint="@color/nav_item_tint"
+            app:itemTextColor="@color/nav_item_tint"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/bottom_nav_menu" />
+    </eightbitlab.com.blurview.BlurView>
+</FrameLayout>

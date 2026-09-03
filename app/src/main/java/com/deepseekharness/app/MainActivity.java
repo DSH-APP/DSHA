@@ -55,7 +55,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         DshaTheme.apply(this);          // 必须在 super 之前：晚了窗口属性已经按旧主题解析完
-        DshaBackground.apply(this);     // 自定义背景图（有的话）也要在窗口成形之前挂上
+        // 背景图这里刻意**不**走 window 层：主界面把它放进 BlurTarget 里的 ImageView
+        // （见 setupGlass），否则玻璃栏糊不到它。window 背景仍留给其他三个 Activity 用。
         super.onCreate(savedInstanceState);
         // 崩溃捕获已统一在 DshaApp 安装一次（防止 Activity 重建导致重复/覆盖 handler）
 
@@ -165,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
             switchFragment(f);
             return true;
         });
+        setupGlass();
         // 卡片透明度要覆盖**所有层级**的 Fragment。原先只在 switchFragment 里调一次，
         // 于是二级页面全漏了 —— 工作区、备份恢复、终端子页、市场详情，一共五处
         // beginTransaction 分散在四个 Fragment 里。逐处去补必然再漏（以后新增页面也一样），
@@ -197,8 +199,59 @@ public class MainActivity extends AppCompatActivity {
     public void setBottomNavVisible(boolean visible) {
         BottomNavigationView nav = findViewById(R.id.bottom_nav);
         if (nav != null) nav.setVisibility(visible ? View.VISIBLE : View.GONE);
-        View bar = findViewById(R.id.app_bar);
+        // 藏的必须是外层那个 BlurView：内层 app_bar 设 GONE 的话，
+        // 玻璃容器还占着 56dp，界面上就多出一条空白。
+        View bar = findViewById(R.id.top_glass);
         if (bar != null) bar.setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+
+    /** 顶栏与底栏的真玻璃。
+     *
+     *  <p>上一版是「半透明色块 + 把整张背景图糊一遍」，差在两点：模糊是全局静态的
+     *  （不随内容滚动变化），而色块压在清晰内容上没有层次。BlurView 做的是
+     *  「只糊这块区域背后的东西、并且实时跟着变」—— 也就是 CSS backdrop-filter 的行为，
+     *  API 31+ 由系统 RenderThread 走 RenderEffect 完成，快照零开销。
+     *
+     *  <p>{@code setFrameClearDrawable} 是必须的：内容区有大片透明，不先铺一层不透明底
+     *  会得到"半透明的模糊"，看着发灰。 */
+    private void setupGlass() {
+        try {
+            eightbitlab.com.blurview.BlurTarget target = findViewById(R.id.blur_target);
+            if (target == null) return;
+            DshaBackground.applyTo(findViewById(R.id.app_background));
+
+            int overlay = glassOverlay();
+            int[] ids = {R.id.top_glass, R.id.bottom_glass};
+            for (int id : ids) {
+                eightbitlab.com.blurview.BlurView bv = findViewById(id);
+                if (bv == null) continue;
+                bv.setupWith(target)
+                        .setFrameClearDrawable(getWindow().getDecorView().getBackground())
+                        .setBlurRadius(24f)
+                        .setOverlayColor(overlay);
+            }
+        } catch (Throwable t) {
+            android.util.Log.w("DSHA", "玻璃栏初始化失败（退化成普通栏，功能不受影响）: " + t);
+        }
+    }
+
+    /** 玻璃层的着色：主题卡片色 + 用户设定的不透明度。
+     *
+     *  <p>完全不透明就看不见模糊，完全透明则文字压在花纹上读不清 —— 中间那一档才叫玻璃。
+     *  常驻的栏比内容卡片再透一点（×0.82），压太实等于没做。 */
+    private int glassOverlay() {
+        int base = 0xFF161B24;
+        android.util.TypedValue tv = new android.util.TypedValue();
+        if (getTheme().resolveAttribute(R.attr.dshaCard, tv, true)) {
+            base = tv.resourceId != 0
+                    ? androidx.core.content.ContextCompat.getColor(this, tv.resourceId)
+                    : tv.data;
+        }
+        int a = (int) (DshaGlass.alpha(this) / 100f * 255f * 0.82f);
+        return android.graphics.Color.argb(a,
+                android.graphics.Color.red(base),
+                android.graphics.Color.green(base),
+                android.graphics.Color.blue(base));
     }
 
     /** 顶栏：标题 + 当前模块图标。

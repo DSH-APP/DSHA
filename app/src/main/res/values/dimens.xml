@@ -57,4 +57,9 @@
     <!-- 描边 -->
     <dimen name="stroke">1dp</dimen>
 
+    <!-- 顶栏/底栏高度。布局改成重叠之后这两个值同时被三处用到：
+         栏自身的高度、内容区上下的 padding。写死在这里免得三处对不上
+         （对不上的表现是内容被栏压住或者底下多一条空白）。 -->
+    <dimen name="app_bar_height">56dp</dimen>
+    <dimen name="bottom_nav_height">64dp</dimen>
 </resources>

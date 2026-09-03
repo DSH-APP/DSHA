@@ -154,6 +154,38 @@ final class DshaBackground {
         }
     }
 
+    /** 把背景图挂到 View 层（给 MainActivity 用）。
+     *
+     *  <p>为什么不能只用 window 背景：BlurView 只模糊 {@code BlurTarget} 内部的内容，
+     *  而 window 背景在 BlurTarget 外面 —— 挂在那儿的图，玻璃栏是糊不到的，
+     *  于是顶栏底栏看着还是"淡色块压在清晰的图上"。所以主界面把图放进 BlurTarget 的
+     *  第一个子 View。
+     *
+     *  <p>压暗用 ColorFilter 而不是再叠一个 View：少一层就少一次全屏合成。 */
+    static void applyTo(android.widget.ImageView iv) {
+        if (iv == null) return;
+        try {
+            if (!exists(iv.getContext())) {
+                iv.setVisibility(android.view.View.GONE);
+                iv.setImageDrawable(null);
+                return;
+            }
+            Bitmap bm = BitmapFactory.decodeFile(file(iv.getContext()).getAbsolutePath());
+            if (bm == null) {
+                iv.setVisibility(android.view.View.GONE);
+                return;
+            }
+            bm = blur(bm, blurPct(iv.getContext()));
+            iv.setImageBitmap(bm);
+            int a = (int) (dim(iv.getContext()) / 100f * 255);
+            iv.setColorFilter(Color.argb(a, 0, 0, 0), android.graphics.PorterDuff.Mode.SRC_ATOP);
+            iv.setVisibility(android.view.View.VISIBLE);
+        } catch (Throwable t) {
+            android.util.Log.w("DSHA", "背景图挂到 View 失败: " + t);
+            iv.setVisibility(android.view.View.GONE);
+        }
+    }
+
     static int blurPct(Context ctx) {
         int v = ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
                 .getInt(KEY_BLUR, BLUR_DEFAULT);

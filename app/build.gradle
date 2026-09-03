@@ -178,6 +178,11 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.fragment:fragment:1.6.2'
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    // 真·背景模糊（backdrop-filter 的 Android 等价物）。Apache 2.0，纯 Java，4k★。
+    // API 31+ 走 RenderNode + RenderEffect，由系统 RenderThread 做，快照零开销；
+    // 更低版本回落 RenderScript。自制的「把背景图整体糊一遍」做不出这个效果 ——
+    // 那是全局模糊，玻璃要的是「只糊卡片盖住的那一块，且随内容滚动实时变」。
+    implementation 'com.github.Dimezis:BlurView:version-3.2.0'
     implementation 'dev.rikka.shizuku:api:13.1.5'
     implementation 'dev.rikka.shizuku:provider:13.1.5'
     implementation 'org.mozilla.geckoview:geckoview-arm64-v8a:126.0.20240526221752'
