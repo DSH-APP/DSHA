@@ -201,14 +201,32 @@ public class SettingsFragment extends Fragment {
         TextView chev = new TextView(requireContext());
         chev.setText("›");
         chev.setTextSize(18);
-        chev.setTextColor(requireContext().getColor(R.color.text_muted));
+        // 用主题槽而不是写死的 @color —— 写死的话换配色（樱花 / 壁纸取色）时这个箭头不跟着变。
+        android.util.TypedValue muted = new android.util.TypedValue();
+        chev.setTextColor(requireContext().getTheme().resolveAttribute(R.attr.dshaTextMuted, muted, true)
+                ? muted.data : requireContext().getColor(R.color.text_muted));
 
         row.addView(body);
         row.addView(chev);
-        row.setOnClickListener(v -> requireActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, opt.factory.get())
-                .addToBackStack("settings")
-                .commit());
+        row.setOnClickListener(v -> {
+            // Material Motion 的「共享 Z 轴」：设置 → 二级页是明确的层级前进关系，
+            // forward=true 时新页放大淡入、旧页缩小淡出；返回时反向。四个方向都得设，
+            // 少了 return/reenter 那两个，按返回键那一下就没有动效、显得跳。
+            androidx.fragment.app.Fragment target = opt.factory.get();
+            setExitTransition(new com.google.android.material.transition.MaterialSharedAxis(
+                    com.google.android.material.transition.MaterialSharedAxis.Z, true));
+            setReenterTransition(new com.google.android.material.transition.MaterialSharedAxis(
+                    com.google.android.material.transition.MaterialSharedAxis.Z, false));
+            target.setEnterTransition(new com.google.android.material.transition.MaterialSharedAxis(
+                    com.google.android.material.transition.MaterialSharedAxis.Z, true));
+            target.setReturnTransition(new com.google.android.material.transition.MaterialSharedAxis(
+                    com.google.android.material.transition.MaterialSharedAxis.Z, false));
+            requireActivity().getSupportFragmentManager().beginTransaction()
+                    .setReorderingAllowed(true)
+                    .replace(R.id.fragment_container, target)
+                    .addToBackStack("settings")
+                    .commit();
+        });
         return row;
     }
 

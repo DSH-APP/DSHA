@@ -194,7 +194,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchFragment(Fragment f) {
+        // Material Motion 的「淡出后淡入」（fade through）。底栏这四个页面之间没有层级或
+        // 顺序关系，官方规范对这种情况给的正是 fade through：旧内容先淡出，新内容淡入
+        // 并带一点放大。比直接 replace 的硬切自然，也不像左右滑动那样暗示它们有前后次序。
+        // 两个都设在新 fragment 上：enter 这次生效，exit 等它下次被替换时生效，
+        // 这样每个页面都带上了，不用在别处补。
+        f.setEnterTransition(new com.google.android.material.transition.MaterialFadeThrough());
+        f.setExitTransition(new com.google.android.material.transition.MaterialFadeThrough());
         getSupportFragmentManager().beginTransaction()
+                .setReorderingAllowed(true)
                 .replace(R.id.fragment_container, f)
                 .commit();
         // 卡片透明度不在这里管 —— onFragmentViewCreated 回调已经覆盖所有层级，
