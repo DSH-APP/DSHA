@@ -137,4 +137,38 @@
         <item name="android:textColorHint">@color/sk_muted</item>
     </style>
 
+
+    <!-- 跟随系统壁纸取色（Material You / Dynamic Color，Android 12+）。
+         这是 Android 官方从 12 开始的标配做法：系统从壁纸抽一个主色，推导出
+         Primary/Secondary/Tertiary/Neutral 五组关键色、每组 13 个色阶，
+         应用只要用语义 token 取色就自动跟着走。一行
+         DynamicColors.applyToActivityIfAvailable 即可，比我们自己维护配色靠谱得多
+         —— 之前只有两套固定配色，这一档是同行早就有而我们缺的。
+
+         做法：把自己的颜色槽转指到 Material 3 的语义 token 上，系统覆盖 token，
+         我们的槽就跟着变。attr 指向 attr 在主题里是合法的。
+         状态色（ok/warn/err）保持固定 —— Material 没有对应语义，
+         而「成功=绿、危险=红」不该随壁纸乱跑。 -->
+    <style name="Theme.DeepseekHarness.Dynamic" parent="Theme.DeepseekHarness">
+        <item name="dshaSurface">?attr/colorSurface</item>
+        <item name="dshaCard">?attr/colorSurfaceContainer</item>
+        <item name="dshaRaised">?attr/colorSurfaceContainerHigh</item>
+        <item name="dshaLine">?attr/colorOutlineVariant</item>
+        <item name="dshaPreview">?attr/colorSurfaceContainerLow</item>
+        <item name="dshaText">?attr/colorOnSurface</item>
+        <item name="dshaTextSecondary">?attr/colorOnSurfaceVariant</item>
+        <item name="dshaTextMuted">?attr/colorOutline</item>
+        <item name="dshaPrimary">?attr/colorPrimary</item>
+        <item name="dshaAccentOn">?attr/colorOnPrimary</item>
+        <item name="dshaRipple">?attr/colorSecondaryContainer</item>
+        <item name="dshaWindowBackground">?attr/colorSurface</item>
+
+        <item name="android:colorBackground">?attr/colorSurface</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="android:textColorPrimary">?attr/colorOnSurface</item>
+        <item name="android:textColorSecondary">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textColorHint">?attr/colorOutline</item>
+    </style>
 </resources>

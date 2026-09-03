@@ -401,8 +401,14 @@ public class ConfigFragment extends Fragment {
         final android.content.Context ctx = requireContext();
         View v = android.view.LayoutInflater.from(ctx).inflate(R.layout.dialog_appearance, null);
 
-        final int[] ids = {R.id.ap_theme_default, R.id.ap_theme_sakura};
+        final int[] ids = {R.id.ap_theme_default, R.id.ap_theme_sakura, R.id.ap_theme_dynamic};
         final android.widget.RadioGroup group = v.findViewById(R.id.ap_theme_group);
+        // 壁纸取色（Material You）只有 Android 12+ 有 —— 低版本藏起来，
+        // 列一个选了没反应的选项比不列更糟。
+        View dyn = v.findViewById(R.id.ap_theme_dynamic);
+        if (dyn != null) {
+            dyn.setVisibility(DshaTheme.dynamicAvailable() ? View.VISIBLE : View.GONE);
+        }
         group.check(ids[DshaTheme.currentIndex(ctx)]);
 
         // 玻璃是叠加开关，不是第三套配色 —— 这样它能配任一配色，

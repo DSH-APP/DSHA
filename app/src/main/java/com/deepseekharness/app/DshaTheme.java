@@ -24,14 +24,27 @@ final class DshaTheme {
 
     static final String DEFAULT = "default";
     static final String SAKURA = "sakura";
+    /** 跟随系统壁纸取色（Material You）。仅 Android 12+ 可用。 */
+    static final String DYNAMIC = "dynamic";
     /** 历史值。玻璃改成叠加开关之后，读到它就迁移。 */
     private static final String LEGACY_GLASS = "glass";
 
     static final String[] LABELS = {
             "默认 · 蓝灰",
             "樱花 · 暖粉",
+            "跟随壁纸取色 · Material You",
     };
-    static final String[] VALUES = {DEFAULT, SAKURA};
+    static final String[] VALUES = {DEFAULT, SAKURA, DYNAMIC};
+
+    /** 系统是否支持壁纸取色。Android 12 以下没有这个能力，那一档要藏起来 ——
+     *  列一个选了没反应的选项比不列更糟。 */
+    static boolean dynamicAvailable() {
+        try {
+            return com.google.android.material.color.DynamicColors.isDynamicColorAvailable();
+        } catch (Throwable t) {
+            return false;
+        }
+    }
 
     private DshaTheme() {
     }
@@ -70,8 +83,14 @@ final class DshaTheme {
     /** 在 Activity 的 onCreate 最开头调用（super 之前）。 */
     static void apply(Activity a) {
         try {
-            if (SAKURA.equals(current(a))) {
+            String t = current(a);
+            if (SAKURA.equals(t)) {
                 a.setTheme(R.style.Theme_DeepseekHarness_Sakura);
+            } else if (DYNAMIC.equals(t) && dynamicAvailable()) {
+                // 先切到把颜色槽指向 Material token 的那套主题，再让系统把 token 覆盖成
+                // 壁纸取色 —— 顺序反了的话 overlay 会被 setTheme 冲掉。
+                a.setTheme(R.style.Theme_DeepseekHarness_Dynamic);
+                com.google.android.material.color.DynamicColors.applyToActivityIfAvailable(a);
             }
             // 默认不用管：清单里的 android:theme 已经是 Theme.DeepseekHarness
         } catch (Throwable ignored) {

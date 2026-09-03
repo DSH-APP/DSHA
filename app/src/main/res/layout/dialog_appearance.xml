@@ -39,6 +39,15 @@
                 android:layout_height="wrap_content"
                 android:minHeight="@dimen/touch_min"
                 android:text="樱花 · 暖粉" />
+
+            <RadioButton
+                android:id="@+id/ap_theme_dynamic"
+                style="@style/DshaText.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/touch_min"
+                android:text="跟随壁纸取色 · Material You"
+                android:visibility="gone" />
         </RadioGroup>
 
         <TextView
