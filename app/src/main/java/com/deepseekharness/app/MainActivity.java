@@ -222,7 +222,6 @@ public class MainActivity extends AppCompatActivity {
             if (target == null) return;
             DshaBackground.applyTo(findViewById(R.id.app_background));
 
-            int overlay = glassOverlay();
             int[] ids = {R.id.top_glass, R.id.bottom_glass};
             for (int id : ids) {
                 eightbitlab.com.blurview.BlurView bv = findViewById(id);
@@ -230,31 +229,13 @@ public class MainActivity extends AppCompatActivity {
                 bv.setupWith(target)
                         .setFrameClearDrawable(getWindow().getDecorView().getBackground())
                         .setBlurRadius(24f)
-                        .setOverlayColor(overlay);
+                        .setOverlayColor(DshaGlass.overlayColor(this, 0.82f));
             }
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "玻璃栏初始化失败（退化成普通栏，功能不受影响）: " + t);
         }
     }
 
-    /** 玻璃层的着色：主题卡片色 + 用户设定的不透明度。
-     *
-     *  <p>完全不透明就看不见模糊，完全透明则文字压在花纹上读不清 —— 中间那一档才叫玻璃。
-     *  常驻的栏比内容卡片再透一点（×0.82），压太实等于没做。 */
-    private int glassOverlay() {
-        int base = 0xFF161B24;
-        android.util.TypedValue tv = new android.util.TypedValue();
-        if (getTheme().resolveAttribute(R.attr.dshaCard, tv, true)) {
-            base = tv.resourceId != 0
-                    ? androidx.core.content.ContextCompat.getColor(this, tv.resourceId)
-                    : tv.data;
-        }
-        int a = (int) (DshaGlass.alpha(this) / 100f * 255f * 0.82f);
-        return android.graphics.Color.argb(a,
-                android.graphics.Color.red(base),
-                android.graphics.Color.green(base),
-                android.graphics.Color.blue(base));
-    }
 
     /** 顶栏：标题 + 当前模块图标。
      *

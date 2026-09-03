@@ -42,6 +42,30 @@ final class DshaGlass {
                 .edit().putInt(KEY_ALPHA, Math.max(20, Math.min(100, v))).apply();
     }
 
+    /** 玻璃层的着色：主题卡片色 + 用户设定的不透明度。
+     *
+     *  <p>完全不透明就看不见模糊，完全透明则文字压在花纹上读不清 —— 中间那一档才叫玻璃。
+     *
+     *  @param factor 再乘一档，用来让常驻的顶栏底栏比内容卡片更透（压太实等于没做）。 */
+    static int overlayColor(Context ctx, float factor) {
+        int base = 0xFF161B24;
+        try {
+            android.util.TypedValue tv = new android.util.TypedValue();
+            if (ctx.getTheme().resolveAttribute(R.attr.dshaCard, tv, true)) {
+                base = tv.resourceId != 0
+                        ? androidx.core.content.ContextCompat.getColor(ctx, tv.resourceId)
+                        : tv.data;
+            }
+        } catch (Throwable ignored) {
+        }
+        int a = (int) (alpha(ctx) / 100f * 255f * factor);
+        a = Math.max(0, Math.min(255, a));
+        return android.graphics.Color.argb(a,
+                android.graphics.Color.red(base),
+                android.graphics.Color.green(base),
+                android.graphics.Color.blue(base));
+    }
+
     /** 给一棵 View 树应用当前透明度。Fragment 的 onViewCreated 末尾调一次即可。 */
     static void apply(View root) {
         if (root == null) return;
@@ -74,7 +98,9 @@ final class DshaGlass {
             return;
         }
         Drawable bg = v.getBackground();
-        if (bg != null && isShapeLike(bg)) {
+        // GlassCard 自己就是 BlurView，透明度由它的 overlayColor 决定；
+        // 再给背景 setAlpha 会把圆角描边一起弄淡。只跳过它本身，子 View 照常遍历。
+        if (bg != null && !(v instanceof GlassCard) && isShapeLike(bg)) {
             Drawable m = bg.mutate();
             m.setAlpha(alpha255);
             // mutate() 返回的可能是新实例，设回去才对所有 Android 版本都成立

@@ -14,7 +14,7 @@
         android:paddingEnd="@dimen/page_pad"
         android:paddingBottom="@dimen/gap_control">
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             style="@style/DshaCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -121,7 +121,7 @@
                 android:paddingBottom="10dp"
                 android:textColor="?attr/dshaPrimary"
                 android:visibility="gone" />
-        </LinearLayout>
+        </com.deepseekharness.app.GlassCard>
 
         <LinearLayout
             android:layout_width="match_parent"

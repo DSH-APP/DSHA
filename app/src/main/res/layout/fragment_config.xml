@@ -63,7 +63,7 @@
             android:textColor="?attr/dshaTextSecondary"
             android:text="改完这一节要按下面的「保存配置」" />
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             style="@style/DshaCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -128,7 +128,7 @@
 
             </LinearLayout>
 
-        </LinearLayout>
+        </com.deepseekharness.app.GlassCard>
 
         <TextView
             style="@style/DshaText.Title"
@@ -137,7 +137,7 @@
             android:layout_marginTop="@dimen/gap_section"
             android:text="安全" />
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             style="@style/DshaCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -232,7 +232,7 @@
                 android:textColor="?attr/dshaTextSecondary"
                 android:text="环境光 / 加速度 / 磁力这些，没有隐私风险" />
 
-        </LinearLayout>
+        </com.deepseekharness.app.GlassCard>
 
         <TextView
             style="@style/DshaText.Title"
@@ -241,7 +241,7 @@
             android:layout_marginTop="@dimen/gap_section"
             android:text="运行时" />
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             style="@style/DshaCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -306,7 +306,7 @@
                 android:text="5"
                 android:hint="5" />
 
-        </LinearLayout>
+        </com.deepseekharness.app.GlassCard>
 
         <TextView
             style="@style/DshaText.Title"
@@ -315,7 +315,7 @@
             android:layout_marginTop="@dimen/gap_section"
             android:text="显示与交互" />
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             style="@style/DshaCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -388,7 +388,7 @@
                 android:textColor="?attr/dshaTextSecondary"
                 android:text="预览时用桌面浏览器标识" />
 
-        </LinearLayout>
+        </com.deepseekharness.app.GlassCard>
 
         <TextView
             style="@style/DshaText.Title"
@@ -397,7 +397,7 @@
             android:layout_marginTop="@dimen/gap_section"
             android:text="网络" />
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             style="@style/DshaCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -419,7 +419,7 @@
                 android:textColor="?attr/dshaTextSecondary"
                 android:text="同网段的设备都能打开你的 WebUI，注意安全" />
 
-        </LinearLayout>
+        </com.deepseekharness.app.GlassCard>
 
         <Button
             android:id="@+id/config_save"
@@ -445,7 +445,7 @@
             android:textColor="?attr/dshaTextSecondary"
             android:text="下面这些点一下就生效，不用保存" />
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             style="@style/DshaCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -539,7 +539,7 @@
                 android:textColor="?attr/dshaTextSecondary"
                 android:text="让已授权的 ADB 直接读状态、跑容器命令，用来在真机上定位问题。这是提权：有 ADB 授权的电脑就能执行任意容器命令。每次调用都记进活动日志，排查完请关掉。" />
 
-        </LinearLayout>
+        </com.deepseekharness.app.GlassCard>
 
         <TextView
             style="@style/DshaText.Title"
@@ -548,7 +548,7 @@
             android:layout_marginTop="@dimen/gap_section"
             android:text="更新与维护" />
 
-        <LinearLayout
+        <com.deepseekharness.app.GlassCard
             style="@style/DshaCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -580,7 +580,7 @@
                 android:textColor="?attr/dshaTextSecondary"
                 android:text="" />
 
-        </LinearLayout>
+        </com.deepseekharness.app.GlassCard>
 
         <TextView
             android:id="@+id/config_repo_link"
