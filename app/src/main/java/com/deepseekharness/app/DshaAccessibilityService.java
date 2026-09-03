@@ -367,15 +367,40 @@ public class DshaAccessibilityService extends AccessibilityService {
             android.os.Bundle args = new android.os.Bundle();
             args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text);
             boolean ok;
+            boolean viaPaste = false;
             try {
                 ok = target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args);
+                if (!ok) {
+                    // WebView 里的网页输入框、以及部分自绘输入控件，无障碍节点不认
+                    // ACTION_SET_TEXT —— 那个动作只对原生 EditText 的实现有效，而 WebView
+                    // 内的 input 是渲染出来的，节点没有实现它。但它们基本都认 ACTION_PASTE。
+                    // 所以失败后走剪贴板兜底（竞品 woaiys3/deepseek-harness-android-app 的
+                    // android_type 用 paste:true 处理同一问题，MIT，思路一致）。
+                    // 副作用是覆盖用户的剪贴板，因此只在 SET_TEXT 失败之后才用，不主动走。
+                    try {
+                        android.content.ClipboardManager cb = (android.content.ClipboardManager)
+                                s.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                        if (cb != null) {
+                            cb.setPrimaryClip(android.content.ClipData.newPlainText("dsha", text));
+                            target.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                            ok = target.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+                            viaPaste = ok;
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }
             } finally {
                 try {
                     target.recycle();
                 } catch (Throwable ignored) {
                 }
             }
-            return ok ? "OK 已输入 " + text.length() + " 个字符" : "[ERR] 输入被系统拒绝";
+            if (ok) {
+                return "OK 已输入 " + text.length() + " 个字符"
+                        + (viaPaste ? "（这个输入框不支持直接设值，走了剪贴板粘贴 ——"
+                                    + " 原剪贴板内容已被覆盖）" : "");
+            }
+            return "[ERR] 输入被系统拒绝（直接设值与剪贴板粘贴都没成功）";
         } catch (Throwable t) {
             return "[ERR] 输入失败：" + t;
         } finally {
