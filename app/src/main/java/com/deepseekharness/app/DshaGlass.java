@@ -161,6 +161,135 @@ final class DshaGlass {
                 android.graphics.Color.blue(base));
     }
 
+    // ── 元素级玻璃（GlassDrawable）───────────────────────────────
+    // BlurView 只能覆盖少数容器，容器里的按钮、状态行、输入框全是干的 —— 这是观感上最扎眼的
+    // 问题。但那些元素背后基本只有静态背景图，没必要每帧重算：糊好一份全屏底图共用，
+    // 每个元素按自己的窗口坐标取对应区域，纯 drawable 绘制，开销和普通色块一样。
+
+    private static android.graphics.Bitmap sBackdrop;
+    private static int sBackdropW;
+    private static int sBackdropH;
+    /** 已经铺了玻璃背景的 View → 它的 drawable，用来在 preDraw 时刷新位置。弱引用避免泄漏。 */
+    private static final java.util.WeakHashMap<View, GlassDrawable> LIVE = new java.util.WeakHashMap<>();
+    private static View sHooked;
+
+    /** 准备共用底图。没有自定义背景图时返回 false —— 那种情况下退回原来的 setAlpha 路子，
+     *  因为主题底衬本身就是纯色或渐变，糊它没有意义。 */
+    private static boolean ensureBackdrop(View root) {
+        try {
+            if (!DshaBackground.exists(root.getContext())) return false;
+            int w = root.getWidth() > 0 ? root.getWidth()
+                    : root.getResources().getDisplayMetrics().widthPixels;
+            int h = root.getHeight() > 0 ? root.getHeight()
+                    : root.getResources().getDisplayMetrics().heightPixels;
+            if (sBackdrop != null && !sBackdrop.isRecycled() && sBackdropW == w && sBackdropH == h) {
+                return true;
+            }
+            android.graphics.Bitmap bm = DshaBackground.loadBackdrop(root.getContext(), w, h);
+            if (bm == null) return false;
+            sBackdrop = bm;
+            sBackdropW = w;
+            sBackdropH = h;
+            return true;
+        } catch (Throwable t) {
+            android.util.Log.w("DSHA", "玻璃底图准备失败（退回半透明）: " + t);
+            return false;
+        }
+    }
+
+    /** 每帧刷新一次所有玻璃元素的窗口坐标。
+     *
+     *  <p>Drawable 拿不到宿主 View 的位置，硬件加速下 canvas.getMatrix() 也不可靠，所以从
+     *  外面喂。挂在 decorView 的 preDraw 上：滚动、展开、键盘弹出都会触发，位置始终对得上。
+     *  遍历的是几十个元素的 getLocationInWindow，一次几十微秒。 */
+    private static void hookPreDraw(View root) {
+        final View decor = root.getRootView();
+        if (decor == null || decor == sHooked) return;
+        sHooked = decor;
+        decor.getViewTreeObserver().addOnPreDrawListener(() -> {
+            if (LIVE.isEmpty()) return true;
+            int[] xy = new int[2];
+            for (java.util.Map.Entry<View, GlassDrawable> e : LIVE.entrySet()) {
+                View v = e.getKey();
+                if (v == null || e.getValue() == null || !v.isAttachedToWindow()) continue;
+                v.getLocationInWindow(xy);
+                e.getValue().setWindowOffset(xy[0], xy[1]);
+            }
+            return true;
+        });
+    }
+
+    /** 把一个 shape 背景换成玻璃背景。
+     *
+     *  @return true 表示换成功了（调用方就不用再走 setAlpha）。 */
+    private static boolean applyGlassBg(View v, Drawable bg, int alpha255, int cornerPx) {
+        if (sBackdrop == null || sBackdrop.isRecycled()) return false;
+        try {
+            float corner = cornerPx >= 0 ? cornerPx : readCorner(bg, v);
+            int tint = android.graphics.Color.argb(alpha255,
+                    android.graphics.Color.red(overlayColor(v.getContext(), 1f)),
+                    android.graphics.Color.green(overlayColor(v.getContext(), 1f)),
+                    android.graphics.Color.blue(overlayColor(v.getContext(), 1f)));
+            int line = resolveColor(v.getContext(), R.attr.dshaLine, 0x33FFFFFF);
+            float sw = v.getResources().getDimension(R.dimen.stroke);
+            GlassDrawable gd = new GlassDrawable(sBackdrop, tint, line, corner, sw);
+
+            if (bg instanceof android.graphics.drawable.RippleDrawable) {
+                // 只换内容层，保住涟漪 —— 整个换掉的话可点击元素点下去毫无反馈。
+                android.graphics.drawable.RippleDrawable rd =
+                        (android.graphics.drawable.RippleDrawable) bg.mutate();
+                if (rd.getNumberOfLayers() > 0) {
+                    rd.setDrawable(0, gd);
+                    v.setBackground(rd);
+                } else {
+                    v.setBackground(gd);
+                }
+            } else {
+                v.setBackground(gd);
+            }
+            LIVE.put(v, gd);
+            int[] xy = new int[2];
+            v.getLocationInWindow(xy);
+            gd.setWindowOffset(xy[0], xy[1]);
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** 沿用原背景的圆角，这样按钮、输入框、卡片各自的形状差异不会被抹平。 */
+    private static float readCorner(Drawable d, View v) {
+        try {
+            if (d instanceof android.graphics.drawable.GradientDrawable) {
+                float r = ((android.graphics.drawable.GradientDrawable) d).getCornerRadius();
+                if (r > 0) return r;
+            }
+            if (d instanceof android.graphics.drawable.LayerDrawable) {
+                android.graphics.drawable.LayerDrawable ld =
+                        (android.graphics.drawable.LayerDrawable) d;
+                for (int i = 0; i < ld.getNumberOfLayers(); i++) {
+                    float r = readCorner(ld.getDrawable(i), v);
+                    if (r > 0) return r;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return v.getResources().getDimension(R.dimen.radius_card);
+    }
+
+    private static int resolveColor(Context ctx, int attr, int fallback) {
+        try {
+            android.util.TypedValue tv = new android.util.TypedValue();
+            if (ctx.getTheme().resolveAttribute(attr, tv, true)) {
+                return tv.resourceId != 0
+                        ? androidx.core.content.ContextCompat.getColor(ctx, tv.resourceId)
+                        : tv.data;
+            }
+        } catch (Throwable ignored) {
+        }
+        return fallback;
+    }
+
     /** 给一棵 View 树应用当前外观参数（卡片透明度 + 圆角）。
      *
      *  <p>圆角和透明度分开判断：圆角是纯视觉偏好，玻璃关着也该生效；透明度只在玻璃开着时动。 */
@@ -175,6 +304,12 @@ final class DshaGlass {
             // 仍是 100% 不透明 —— 表现就是"大部分组件吃不到玻璃效果"。
             // 通透度对用户来说是一个概念，就该由一个参数管。
             int a255 = glass ? (int) (overlayPct(root.getContext()) / 100f * 255f) : 255;
+            // 有自定义背景图时走元素级玻璃（GlassDrawable）；没有就退回单纯的半透明。
+            if (glass && ensureBackdrop(root)) {
+                hookPreDraw(root);
+            } else {
+                sBackdrop = null;
+            }
             walk(root, a255, corner);
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "卡片透明度应用失败（不影响功能）: " + t);
@@ -251,12 +386,17 @@ final class DshaGlass {
         // GlassCard 自己就是 BlurView，透明度由它的 overlayColor 决定；
         // 再给背景 setAlpha 会把圆角描边一起弄淡。只跳过它的 alpha，圆角照样要改。
         if (bg != null && isShapeLike(bg)) {
-            Drawable m = bg.mutate();
-            if (!(v instanceof GlassCard)) m.setAlpha(alpha255);
-            applyCorner(m, cornerPx);
-            v.setBackground(m);
-            if (v instanceof GlassCard && cornerPx >= 0) {
-                v.invalidateOutline();       // clipToOutline 用的是背景的 outline，得重算
+            // 先试元素级玻璃：把背景换成「预糊底图的对应区域 + 着色」。这一条让按钮、
+            // 状态行、输入框这些容器里的组件也真的有玻璃，而不只是变淡。
+            boolean done = !(v instanceof GlassCard) && applyGlassBg(v, bg, alpha255, cornerPx);
+            if (!done) {
+                Drawable m = bg.mutate();
+                if (!(v instanceof GlassCard)) m.setAlpha(alpha255);
+                applyCorner(m, cornerPx);
+                v.setBackground(m);
+                if (v instanceof GlassCard && cornerPx >= 0) {
+                    v.invalidateOutline();   // clipToOutline 用的是背景的 outline，得重算
+                }
             }
         }
         if (v instanceof ViewGroup) {

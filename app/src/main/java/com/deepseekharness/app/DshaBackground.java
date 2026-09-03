@@ -186,6 +186,51 @@ final class DshaBackground {
         }
     }
 
+    /** 元素级玻璃用的共用底图：按窗口尺寸解码、糊开、压暗。
+     *
+     *  <p>和 {@link #applyTo} 那份的区别是这里必须精确匹配窗口尺寸 —— 每个元素按自己的
+     *  窗口坐标从这张图上取样，尺寸对不上就会错位。
+     *
+     *  <p>模糊强度沿用「背景模糊」那个滑块的一半再加固定量：元素级玻璃要的是糊到看不出
+     *  形状（否则纹样会干扰文字），比整页底衬需要更狠。 */
+    static Bitmap loadBackdrop(Context ctx, int w, int h) {
+        if (w <= 0 || h <= 0) return null;
+        try {
+            if (!exists(ctx)) return null;
+            BitmapFactory.Options opt = new BitmapFactory.Options();
+            opt.inPreferredConfig = Bitmap.Config.RGB_565;
+            Bitmap raw = BitmapFactory.decodeFile(file(ctx).getAbsolutePath(), opt);
+            if (raw == null) return null;
+
+            // centerCrop 到窗口尺寸：先按比例缩到能盖满，再居中裁
+            float scale = Math.max(w / (float) raw.getWidth(), h / (float) raw.getHeight());
+            int sw = Math.max(1, Math.round(raw.getWidth() * scale));
+            int sh = Math.max(1, Math.round(raw.getHeight() * scale));
+            Bitmap scaled = Bitmap.createScaledBitmap(raw, sw, sh, true);
+            if (scaled != raw) raw.recycle();
+            int dx = Math.max(0, (sw - w) / 2);
+            int dy = Math.max(0, (sh - h) / 2);
+            Bitmap cropped = Bitmap.createBitmap(scaled, dx, dy,
+                    Math.min(w, sw - dx), Math.min(h, sh - dy));
+            if (cropped != scaled) scaled.recycle();
+
+            Bitmap out = blur(cropped, Math.min(100, blurPct(ctx) / 2 + 45));
+            // 压暗直接烘进去，省得每个元素各画一层
+            int dim = dim(ctx);
+            if (dim > 0) {
+                Bitmap mutable = out.isMutable() ? out : out.copy(Bitmap.Config.ARGB_8888, true);
+                if (mutable != out) out.recycle();
+                android.graphics.Canvas c = new android.graphics.Canvas(mutable);
+                c.drawColor(Color.argb((int) (dim / 100f * 255), 0, 0, 0));
+                return mutable;
+            }
+            return out;
+        } catch (Throwable t) {
+            android.util.Log.w("DSHA", "玻璃底图生成失败: " + t);
+            return null;
+        }
+    }
+
     static int blurPct(Context ctx) {
         int v = ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
                 .getInt(KEY_BLUR, BLUR_DEFAULT);
