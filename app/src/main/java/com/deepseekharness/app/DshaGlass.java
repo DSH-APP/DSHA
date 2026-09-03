@@ -100,6 +100,18 @@ final class DshaGlass {
         pref(ctx).edit().putBoolean(KEY_NOISE, on).apply();
     }
 
+    /** 玻璃元素要不要描边。默认要 —— 没有边界的半透明块会和背景糊在一起、
+     *  分不清哪里是可点的区域；但有人就喜欢那种干净，所以给个开关。 */
+    static final String KEY_STROKE = "ui_glass_stroke";
+
+    static boolean stroke(Context ctx) {
+        return pref(ctx).getBoolean(KEY_STROKE, true);
+    }
+
+    static void setStroke(Context ctx, boolean on) {
+        pref(ctx).edit().putBoolean(KEY_STROKE, on).apply();
+    }
+
     /** @return 圆角像素；负数表示"别改，用布局原值"。 */
     static int cornerPx(Context ctx) {
         int dp = pref(ctx).getInt(KEY_CORNER, CORNER_DEFAULT);
@@ -230,7 +242,8 @@ final class DshaGlass {
                     android.graphics.Color.red(overlayColor(v.getContext(), 1f)),
                     android.graphics.Color.green(overlayColor(v.getContext(), 1f)),
                     android.graphics.Color.blue(overlayColor(v.getContext(), 1f)));
-            int line = resolveColor(v.getContext(), R.attr.dshaLine, 0x33FFFFFF);
+            int line = stroke(v.getContext())
+                    ? resolveColor(v.getContext(), R.attr.dshaLine, 0x33FFFFFF) : 0;
             float sw = v.getResources().getDimension(R.dimen.stroke);
             GlassDrawable gd = new GlassDrawable(sBackdrop, tint, line, corner, sw);
 

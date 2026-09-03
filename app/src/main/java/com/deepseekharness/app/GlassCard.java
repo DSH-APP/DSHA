@@ -71,6 +71,22 @@ public class GlassCard extends BlurView {
         setBackgroundResource(glass
                 ? (ripple ? R.drawable.bg_card_glass_clickable : R.drawable.bg_card_glass)
                 : (ripple ? R.drawable.bg_card_clickable : R.drawable.bg_card));
+        if (glass && !DshaGlass.stroke(getContext())) {
+            // 描边关掉时 GlassDrawable 那边也不描，这里得跟上 —— 否则卡片有边框、
+            // 卡片里的按钮没有，比两边都有边更难看。代码建而不是再加一份 drawable：
+            // 只差一个 stroke，为它多两个 xml 不值得。
+            android.graphics.drawable.GradientDrawable g =
+                    new android.graphics.drawable.GradientDrawable();
+            g.setColor(android.graphics.Color.TRANSPARENT);
+            g.setCornerRadius(getResources().getDimension(R.dimen.radius_card));
+            if (ripple) {
+                setBackground(new android.graphics.drawable.RippleDrawable(
+                        android.content.res.ColorStateList.valueOf(
+                                DshaGlass.overlayColor(getContext(), 0.45f)), g, null));
+            } else {
+                setBackground(g);
+            }
+        }
         // 只在 XML 没给 padding 时补默认值。init() 跑在 super(context, attrs) 之后，
         // 无脑 setPadding 会把布局里写的值覆盖掉 —— 设置页那个「模块」容器写的是 2dp，
         // 被改成 card_pad 的话三行内容会突然缩进一大截。

@@ -113,6 +113,14 @@
             android:minHeight="@dimen/touch_min"
             android:text="细噪点（少一点塑料感 · 需重开界面）" />
 
+        <CheckBox
+            android:id="@+id/ap_stroke"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/touch_min"
+            android:text="玻璃描边（勾掉更干净 · 需重开界面）" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="@dimen/stroke"
@@ -194,6 +202,26 @@
              拆开的结果是：拖玻璃浓度只有顶栏底栏和卡片在变，终端页、设置页、插件页那些
              普通容器仍然全不透明 —— 用户看到的就是"大部分组件吃不到玻璃效果"。
              通透度对人来说是一个概念，合成一个滑块（玻璃浓度）统管。 -->
+
+        <TextView
+            android:id="@+id/ap_filter"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_card_clickable"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/touch_min"
+            android:paddingStart="@dimen/gap_control"
+            android:paddingEnd="@dimen/gap_control"
+            android:text="滤镜 · 原图（不处理）" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="黑白 / 低饱和 / 复古 / 冷暖调。选「原图」就完全不处理。" />
 
         <TextView
             android:id="@+id/ap_dim_label"
