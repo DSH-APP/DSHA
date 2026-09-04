@@ -131,54 +131,59 @@ public class MainActivity extends AppCompatActivity {
             about.setOnClickListener(v -> AboutDialog.show(this));
         }
 
+        final androidx.viewpager2.widget.ViewPager2 pager = findViewById(R.id.pager);
+        pager.setAdapter(new androidx.viewpager2.adapter.FragmentStateAdapter(this) {
+            @Override
+            public int getItemCount() {
+                return 4;
+            }
+
+            @NonNull
+            @Override
+            public Fragment createFragment(int pos) {
+                switch (pos) {
+                    case 0:
+                        return new LaunchFragment();
+                    case 1:
+                        return new PluginFragment();
+                    case 2:
+                        return new SettingsFragment();
+                    default:
+                        // 两套终端并存：默认 PTY 那套（跑得了 vim / htop / tmux），页内点「简易」
+                        // 可以退回旧的 TextView 版本 —— 新终端万一在某些机型上出问题，
+                        // 用户不至于连命令行都没了。选择记在 PtyTerminalFragment.KEY_PTY。
+                        return PtyTerminalFragment.preferred(MainActivity.this)
+                                ? new PtyTerminalFragment() : new TerminalFragment();
+                }
+            }
+        });
+        // 手势滑动和点底栏最终都汇到这里，标题、图标、底栏选中态、插件页输入框都在这更新。
+        pager.registerOnPageChangeCallback(
+                new androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback() {
+                    @Override
+                    public void onPageSelected(int position) {
+                        onTabShown(position);
+                    }
+                });
         nav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            // GitHub 链接输入框只在插件页有意义：切走就藏起来并清空，
-            // 否则它会顶着别的页面的标题栏，还留着上次的内容。
-            android.widget.EditText ghIn = findViewById(R.id.appbar_github_input);
-            View spacer = findViewById(R.id.appbar_spacer);
-            if (ghIn != null) {
-                boolean onPlugins = id == R.id.nav_plugins;
-                ghIn.setVisibility(onPlugins ? View.VISIBLE : View.GONE);
-                if (spacer != null) spacer.setVisibility(onPlugins ? View.GONE : View.VISIBLE);
-                if (!onPlugins) ghIn.setText("");
-            }
-            getSupportFragmentManager().popBackStack(null,
-                    androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            Fragment f;
-            if (id == R.id.nav_launch) {
-                f = new LaunchFragment();
-                setAppTitle("启动", R.drawable.ic_launch);
-            } else if (id == R.id.nav_terminal) {
-                // 两套终端并存：默认 PTY 那套（跑得了 vim / htop / tmux），页内点「简易」
-                // 可以退回旧的 TextView 版本 —— 新终端万一在某些机型上出问题，
-                // 用户不至于连命令行都没了。选择记在 PtyTerminalFragment.KEY_PTY。
-                f = PtyTerminalFragment.preferred(this)
-                        ? new PtyTerminalFragment() : new TerminalFragment();
-                setAppTitle("终端", R.drawable.ic_terminal);
-            } else if (id == R.id.nav_plugins) {
-                f = new PluginFragment();
-                setAppTitle("市场", R.drawable.ic_plugins);
-            } else {
-                f = new SettingsFragment();
-                setAppTitle("设置", R.drawable.ic_settings);
-            }
-            switchFragment(f, tabIndex(id));
+            // 在二级页时点底栏：先退出二级页，再切 tab。
+            closeSecondary();
+            // smoothScroll=true 才是真平移（跟手那套滚动的程序化版本）。
+            pager.setCurrentItem(tabIndex(item.getItemId()), true);
             return true;
         });
         setupGlass();
-        // 从二级页按返回键回到四大页时，顶栏标题要跟着退回去 —— 否则会一直挂着
-        // 「安装」这种二级页的名字。按 curTab 恢复而不是记录「进来之前是什么」：
-        // 四大页互相切换时也会 popBackStack（清掉可能残留的二级页），
-        // 那次也会触发这个回调，按 curTab 算出来的正是刚切过去的那一页，不会覆盖错。
+        // 二级页退栈时收尾：内容容器淡出隐藏、pager 淡回来、面包屑的「· 子标题」淡出。
         getSupportFragmentManager().addOnBackStackChangedListener(() -> {
             if (getSupportFragmentManager().getBackStackEntryCount() != 0) return;
-            switch (curTab) {
-                case 0: setAppTitle("启动", R.drawable.ic_launch); break;
-                case 1: setAppTitle("市场", R.drawable.ic_plugins); break;
-                case 3: setAppTitle("终端", R.drawable.ic_terminal); break;
-                default: setAppTitle("设置", R.drawable.ic_settings); break;
+            final View sec = findViewById(R.id.fragment_container);
+            View pg = findViewById(R.id.pager);
+            if (sec != null) {
+                sec.animate().alpha(0f).setDuration(160)
+                        .withEndAction(() -> sec.setVisibility(View.GONE)).start();
             }
+            if (pg != null) pg.animate().alpha(1f).setDuration(160).start();
+            clearBreadcrumb(true);
         });
         // 卡片透明度要覆盖**所有层级**的 Fragment。原先只在 switchFragment 里调一次，
         // 于是二级页面全漏了 —— 工作区、备份恢复、终端子页、市场详情，一共五处
@@ -199,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
                         // 这时候改 alpha 用户看不到过程。post 到下一帧的话，第一帧是不透明的、
                         // 第二帧才变透明 —— 那就是「打开二级页面会闪一下」的原因。
                         DshaGlass.apply(getWindow().getDecorView());
+                        padForBars(f, v);
                     }
                 }, true);
         if (savedInstanceState == null) {
@@ -212,8 +218,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** 底栏四个页面在视觉上的先后顺序，用来决定横向平移的方向。
-     *  和 menu 里的排列一致：启动 → 插件 → 设置 → 终端。序号变大算「前进」。 */
+    /** 底栏四个页面的顺序，和 ViewPager2 的 position 一一对应：启动 0、插件 1、设置 2、终端 3。 */
     private static int tabIndex(int id) {
         if (id == R.id.nav_launch) return 0;
         if (id == R.id.nav_plugins) return 1;
@@ -221,118 +226,200 @@ public class MainActivity extends AppCompatActivity {
         return 2;
     }
 
-    /** 当前所在的 tab 序号，只用于判断平移方向。 */
+    /** 当前所在的 tab。 */
     private int curTab = 0;
 
-    private void switchFragment(Fragment f, int toTab) {
-        boolean forward = toTab >= curTab;
-        curTab = toTab;
-        getSupportFragmentManager().beginTransaction()
-                // 横向平移 + 淡入淡出。前进（序号变大）时新页从右侧滑入、旧页向左滑出；
-                // 后退反向。四个 anim 时长一致且同时开始，两层不透明度之和始终接近 1,
-                // 所以任何一帧都有内容盖着背景图 —— 这是不用 MaterialSharedAxis 的原因，
-                // 规范版是「先出后入」，中间那段间隙会露出底图原图。
-                .setCustomAnimations(
-                        forward ? R.anim.dsha_slide_in_right : R.anim.dsha_slide_in_left,
-                        forward ? R.anim.dsha_slide_out_left : R.anim.dsha_slide_out_right)
-                .setReorderingAllowed(true)
-                .replace(R.id.fragment_container, f)
-                .commit();
-        // 卡片透明度不在这里管 —— onFragmentViewCreated 回调已经覆盖所有层级，
-        // 而且它是在首帧之前同步跑的。这里再 post 一次只会让画面多变一次（闪）。
+    private static String titleOf(int pos) {
+        switch (pos) {
+            case 0: return "启动";
+            case 1: return "市场";
+            case 3: return "终端";
+            default: return "设置";
+        }
     }
 
-    /** 「标题飞进顶栏」：设置页点进二级页时用的转场。
+    private static int iconOf(int pos) {
+        switch (pos) {
+            case 0: return R.drawable.ic_launch;
+            case 1: return R.drawable.ic_plugins;
+            case 3: return R.drawable.ic_terminal;
+            default: return R.drawable.ic_settings;
+        }
+    }
+
+    private static int navIdOf(int pos) {
+        switch (pos) {
+            case 0: return R.id.nav_launch;
+            case 1: return R.id.nav_plugins;
+            case 3: return R.id.nav_terminal;
+            default: return R.id.nav_settings;
+        }
+    }
+
+    /** 某个 tab 成为当前页时的收尾。手势滑动和点底栏都会走到这里。 */
+    private void onTabShown(int pos) {
+        curTab = pos;
+        // GitHub 链接输入框只在插件页有意义：切走就藏起来并清空，
+        // 否则它会顶着别的页面的标题栏，还留着上次的内容。
+        android.widget.EditText ghIn = findViewById(R.id.appbar_github_input);
+        View spacer = findViewById(R.id.appbar_spacer);
+        if (ghIn != null) {
+            boolean onPlugins = pos == 1;
+            ghIn.setVisibility(onPlugins ? View.VISIBLE : View.GONE);
+            if (spacer != null) spacer.setVisibility(onPlugins ? View.GONE : View.VISIBLE);
+            if (!onPlugins) ghIn.setText("");
+        }
+        // 底栏选中态跟上手势滑动。用 setChecked 而不是 setSelectedItemId ——
+        // 后者会再触发一次 OnItemSelectedListener，那里又去 setCurrentItem，兜成一个圈。
+        BottomNavigationView nav = findViewById(R.id.bottom_nav);
+        if (nav != null) {
+            android.view.MenuItem mi = nav.getMenu().findItem(navIdOf(pos));
+            if (mi != null && !mi.isChecked()) mi.setChecked(true);
+        }
+        setAppTitle(titleOf(pos), iconOf(pos));
+        clearBreadcrumb(false);
+    }
+
+    /** 面包屑的「· 子标题」淡入。 */
+    private void setBreadcrumb(String sub) {
+        android.widget.TextView dot = findViewById(R.id.app_title_dot);
+        android.widget.TextView s = findViewById(R.id.app_title_sub);
+        if (s != null) {
+            s.setText(sub);
+            s.animate().alpha(1f).setDuration(180).start();
+        }
+        if (dot != null) dot.animate().alpha(1f).setDuration(180).start();
+    }
+
+    /** 面包屑淡出。切 tab 时不带动画（那是瞬间换页，渐变反而拖影）。 */
+    private void clearBreadcrumb(boolean animated) {
+        android.widget.TextView dot = findViewById(R.id.app_title_dot);
+        android.widget.TextView s = findViewById(R.id.app_title_sub);
+        for (View v : new View[]{dot, s}) {
+            if (v == null) continue;
+            if (animated) v.animate().alpha(0f).setDuration(160).start();
+            else { v.animate().cancel(); v.setAlpha(0f); }
+        }
+    }
+
+    /** 「标题飞到面包屑位置」：设置页点进二级页时的转场。
      *
-     *  <p>效果是内容区整体淡出、被点那一行的标题文字平移并放大到顶栏标题的位置、
-     *  然后新页元素淡入。
+     *  <p>效果：pager 淡出、被点那行的标题文字平移放大到顶栏「设置」后面、
+     *  「·」与它一起淡入，然后二级页元素淡入。返回时「· 子标题」淡出消失。
      *
-     *  <p><b>为什么自己做而不用 Fragment 的共享元素转场。</b>共享元素要求源和目标
-     *  都在参与这次 transaction 的 fragment 里，而顶栏标题（{@code app_title}）
-     *  属于 Activity 的布局、根本不在 fragment 中 —— addSharedElement 找不到它。
-     *  把顶栏搬进每个 fragment 是更大的改动（四个页面都要复制一份栏，还要处理
-     *  BlurView 的取样层级），不值得。
+     *  <p><b>为什么自己做而不用 Fragment 的共享元素转场。</b>共享元素要求源和目标都在
+     *  参与这次 transaction 的 fragment 里，而顶栏标题属于 Activity 的布局 ——
+     *  addSharedElement 找不到它。把顶栏搬进每个 fragment 是更大的改动（四页各复制一份栏、
+     *  还要重接 BlurView 的取样层级），不值得。所以用替身 TextView 飞过去。
      *
-     *  <p>所以这里在 Activity 的 content 上放一个**临时 TextView** 当替身：
-     *  起点取源 view 在窗口里的实际坐标、终点取顶栏标题的坐标，飞完就销毁。
-     *  期间真正的顶栏标题先隐藏，等替身落地再换文字显示，看起来就是同一个字飞过去了。
-     *
-     *  @param src   被点那一行的标题 TextView（提供起点坐标、文字、字号）
-     *  @param title 落地后顶栏要显示的标题
-     *  @param icon  落地后顶栏的模块图标
-     *  @param next  要打开的二级页
+     *  <p><b>上一版为什么会闪。</b>它把内容容器整体 animate 到 alpha=0，然后在飞行结束的
+     *  withEndAction 里立刻 setAlpha(1f) —— 那一刻旧页还在容器里（replace 还没提交），
+     *  于是旧页整块瞬间全亮。这一版不再碰任何已有 view 的 alpha 恢复：pager 淡出后就一直
+     *  是 0，直到退栈时才淡回来；新页在自己的容器里从 0 淡入。
      */
-    void flyTitleTo(final android.widget.TextView src, final String title,
-                    final int icon, final Fragment next) {
-        final android.widget.TextView dst = findViewById(R.id.app_title);
-        final View content = findViewById(R.id.fragment_container);
+    void flyTitleTo(final android.widget.TextView src, final String sub, final Fragment next) {
+        final android.widget.TextView dst = findViewById(R.id.app_title_sub);
         final android.widget.FrameLayout root = findViewById(android.R.id.content);
-        // 少任何一个就退回无动画的直接替换 —— 动画是锦上添花，不能让它挡住功能。
-        if (src == null || dst == null || content == null || root == null) {
-            openSecondary(next, title, icon, false);
+        if (src == null || dst == null || root == null) {
+            setBreadcrumb(sub);
+            openSecondary(next);
             return;
         }
+        // 先把文字放进去（alpha 还是 0，看不见），让它参与一次布局 ——
+        // 否则拿到的是上一次的宽度，终点位置会偏。
+        dst.setText(sub);
+        dst.post(() -> {
+            int[] a = new int[2], b = new int[2], r = new int[2];
+            src.getLocationInWindow(a);
+            dst.getLocationInWindow(b);
+            root.getLocationInWindow(r);
 
-        int[] a = new int[2], b = new int[2], r = new int[2];
-        src.getLocationInWindow(a);
-        dst.getLocationInWindow(b);
-        root.getLocationInWindow(r);
+            final android.widget.TextView ghost = new android.widget.TextView(this);
+            ghost.setText(src.getText());
+            ghost.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, src.getTextSize());
+            ghost.setTextColor(src.getCurrentTextColor());
+            ghost.setTypeface(src.getTypeface());
+            ghost.setMaxLines(1);
+            android.widget.FrameLayout.LayoutParams lp =
+                    new android.widget.FrameLayout.LayoutParams(
+                            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT);
+            lp.leftMargin = a[0] - r[0];
+            lp.topMargin = a[1] - r[1];
+            ghost.setLayoutParams(lp);
+            root.addView(ghost);
 
-        // 替身：复制源文字的样子，绝对定位在 content 上（FrameLayout 的 margin 当坐标用）
-        final android.widget.TextView ghost = new android.widget.TextView(this);
-        ghost.setText(src.getText());
-        ghost.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, src.getTextSize());
-        ghost.setTextColor(src.getCurrentTextColor());
-        ghost.setTypeface(src.getTypeface());
-        ghost.setMaxLines(1);
-        android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
-                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT);
-        lp.leftMargin = a[0] - r[0];
-        lp.topMargin = a[1] - r[1];
-        ghost.setLayoutParams(lp);
-        root.addView(ghost);
+            // 目标字号 / 源字号 = 放大倍数。pivot 放左上角，缩放才不会把位移带偏。
+            final float scale = src.getTextSize() > 0 ? dst.getTextSize() / src.getTextSize() : 1f;
+            ghost.setPivotX(0f);
+            ghost.setPivotY(0f);
+            final int dx = (b[0] - r[0]) - lp.leftMargin;
+            final int dy = (b[1] - r[1]) - lp.topMargin
+                    + (dst.getHeight() - Math.round(src.getHeight() * scale)) / 2;
 
-        // 目标字号 / 源字号 = 该放大多少倍。pivot 设在左上角，这样缩放不会把位移带偏。
-        final float scale = src.getTextSize() > 0 ? dst.getTextSize() / src.getTextSize() : 1f;
-        ghost.setPivotX(0f);
-        ghost.setPivotY(0f);
+            View pg = findViewById(R.id.pager);
+            if (pg != null) pg.animate().alpha(0f).setDuration(180).start();
+            // 「·」跟着飞行一起淡入，落地时刚好显形
+            android.widget.TextView dot = findViewById(R.id.app_title_dot);
+            if (dot != null) dot.animate().alpha(1f).setDuration(240).start();
 
-        final int dx = (b[0] - r[0]) - lp.leftMargin;
-        // 竖直方向按基线附近对齐：两个 view 高度不同，用中心对中心更稳
-        final int dy = (b[1] - r[1]) - lp.topMargin
-                + (dst.getHeight() - Math.round(src.getHeight() * scale)) / 2;
-
-        dst.setAlpha(0f);
-        content.animate().alpha(0f).setDuration(170).start();
-        ghost.animate()
-                .translationX(dx).translationY(dy)
-                .scaleX(scale).scaleY(scale)
-                .setDuration(280)
-                .setInterpolator(new android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
-                .withEndAction(() -> {
-                    root.removeView(ghost);
-                    content.setAlpha(1f);
-                    setAppTitle(title, icon);
-                    dst.setAlpha(0f);
-                    dst.animate().alpha(1f).setDuration(140).start();
-                    openSecondary(next, title, icon, true);
-                })
-                .start();
+            ghost.animate()
+                    .translationX(dx).translationY(dy)
+                    .scaleX(scale).scaleY(scale)
+                    .setDuration(280)
+                    .setInterpolator(new android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
+                    .withEndAction(() -> {
+                        root.removeView(ghost);
+                        dst.setAlpha(1f);
+                        openSecondary(next);
+                    })
+                    .start();
+        });
     }
 
-    /** 打开二级页。{@code animated=false} 时连淡入都不做（给 flyTitleTo 的退化路径用）。 */
-    void openSecondary(Fragment next, String title, int icon, boolean afterFly) {
-        if (!afterFly) setAppTitle(title, icon);
-        androidx.fragment.app.FragmentTransaction tx =
-                getSupportFragmentManager().beginTransaction();
-        // 只给新页淡入：旧页此刻已经被 flyTitleTo 手动淡到透明了，再叠一遍出场动画
-        // 会让它「淡出两次」——第二次是从 alpha=0 开始，观感上等于凭空闪一下。
-        tx.setCustomAnimations(R.anim.dsha_fade_in, 0, R.anim.dsha_fade_in, R.anim.dsha_fade_out);
-        tx.setReorderingAllowed(true)
+    /** 打开二级页：装进叠在 pager 上的 fragment_container，并淡入。 */
+    void openSecondary(Fragment next) {
+        final View sec = findViewById(R.id.fragment_container);
+        if (sec != null) {
+            sec.setVisibility(View.VISIBLE);
+            sec.setAlpha(0f);
+            sec.animate().alpha(1f).setDuration(180).start();
+        }
+        View pg = findViewById(R.id.pager);
+        if (pg != null && pg.getAlpha() > 0f) pg.animate().alpha(0f).setDuration(180).start();
+        getSupportFragmentManager().beginTransaction()
+                .setReorderingAllowed(true)
                 .replace(R.id.fragment_container, next)
-                .addToBackStack("settings")
+                .addToBackStack("secondary")
                 .commit();
+    }
+
+    /** 关掉二级页（点底栏时用）。没有二级页就什么都不做。 */
+    void closeSecondary() {
+        if (getSupportFragmentManager().getBackStackEntryCount() == 0) return;
+        getSupportFragmentManager().popBackStack(null,
+                androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
+    }
+
+    /** 给 pager 里的页面补上避开顶栏底栏的 padding。
+     *
+     *  <p>padding 不能加在 ViewPager2 上：那样 item 的高度会被限制在两条栏之间，
+     *  内容再也穿不到半透明的栏后面 —— 玻璃栏糊的就是滚动内容，穿不过去这效果就没了。
+     *  所以加在每个页面自己的 root 上，并 clipToPadding=false 放开绘制。
+     *
+     *  <p>二级页不处理：它们在 fragment_container 里，那个容器自带 padding。
+     *  判据是 {@code f.getId()} —— fragment 的 id 等于它所在容器的 id，
+     *  用 replace(R.id.fragment_container, …) 装进去的就等于那个 id，
+     *  而 FragmentStateAdapter 给 pager 建的容器是另一个动态 id。 */
+    private void padForBars(Fragment f, View v) {
+        if (v == null || f == null || f.getId() == R.id.fragment_container) return;
+        int top = getResources().getDimensionPixelSize(R.dimen.app_bar_height);
+        int bot = getResources().getDimensionPixelSize(R.dimen.bottom_nav_height);
+        v.setPadding(v.getPaddingLeft(), v.getPaddingTop() + top,
+                v.getPaddingRight(), v.getPaddingBottom() + bot);
+        if (v instanceof android.view.ViewGroup) {
+            ((android.view.ViewGroup) v).setClipToPadding(false);
+        }
     }
 
     /** 显示/隐藏底部导航栏（WebView 全屏时隐藏） */

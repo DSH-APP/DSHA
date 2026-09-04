@@ -515,6 +515,20 @@ final class DshaGlass {
             return;
         }
         Drawable bg = v.getBackground();
+        // 顶栏与底栏整个跳过背景处理。
+        //
+        // 上一轮想「不给栏加圆角」，改的是下面 if(!done) 分支里的 applyCorner —— 完全没生效，
+        // 因为栏走的是**另一条路**：它的背景是 shape-like，又不是 GlassCard，于是被
+        // applyGlassBg 换成了 GlassDrawable（预糊底图的对应区域 + 着色，自带圆角）。
+        // 后果有两个，都能在截图上看到：
+        //   · 那个圆角矩形浅灰块根本不是 BlurView 的实时模糊，是一张静态糊图；
+        //   · GlassDrawable 不透明，把 BlurView 刚画好的实时模糊整块盖掉了。
+        // 也就是说顶栏从加 BlurView 起就没真正糊过内容，一直在拿静态底图充数,
+        // 描边（直角）和它（圆角）自然对不上。
+        //
+        // 栏的观感该由它自己那套负责：模糊 = setupWith + setBlurRadius，
+        // 通透 = setOverlayColor，分界 = bg_bar_line_* 那条描边。walk 一律不插手。
+        if (v.getId() == R.id.top_glass || v.getId() == R.id.bottom_glass) bg = null;
         // GlassCard 自己就是 BlurView，透明度由它的 overlayColor 决定；
         // 再给背景 setAlpha 会把圆角描边一起弄淡。只跳过它的 alpha，圆角照样要改。
         if (bg != null && isShapeLike(bg)) {
@@ -541,12 +555,7 @@ final class DshaGlass {
                         m.setAlpha(alpha255);
                     }
                 }
-                // 顶栏与底栏是贴着屏幕边的满宽元素，不该有圆角：
-                // 一是贴边处的圆角会在屏幕四角露出背景；二是 BlurView **不会**按 outline
-                // 裁剪自己的模糊区域，那块模糊永远是矩形 —— 描边一旦带上圆角，
-                // 两者就对不上（反馈：「半透明效果是矩形，与带圆角的描边不一致」）。
-                boolean bar = v.getId() == R.id.top_glass || v.getId() == R.id.bottom_glass;
-                applyCorner(m, bar ? 0 : cornerPx);
+                applyCorner(m, cornerPx);
                 v.setBackground(m);
                 if (v instanceof GlassCard && cornerPx >= 0) {
                     v.invalidateOutline();   // clipToOutline 用的是背景的 outline，得重算

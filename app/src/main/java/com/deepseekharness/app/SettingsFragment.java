@@ -215,7 +215,7 @@ public class SettingsFragment extends Fragment {
             // 图标沿用设置那个：二级页仍在设置这一支下面，换图标反而让人以为跳了模块。
             androidx.fragment.app.FragmentActivity act = requireActivity();
             if (act instanceof MainActivity) {
-                ((MainActivity) act).flyTitleTo(title, opt.title, R.drawable.ic_settings, target);
+                ((MainActivity) act).flyTitleTo(title, opt.title, target);
             } else {
                 act.getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(R.anim.dsha_fade_in, R.anim.dsha_fade_out,

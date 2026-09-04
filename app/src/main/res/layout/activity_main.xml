@@ -44,13 +44,28 @@
                 android:visibility="gone" />
         </eightbitlab.com.blurview.BlurTarget>
 
+        <!-- 四大页：ViewPager2。
+             换掉原来的「replace 到 FrameLayout + 平移动画」——那种做法页面是先整块淡出
+             再淡入，位移只是障眼法，手指划不动。ViewPager2 是并排布置 + 跟手滚动，
+             左右滑屏本身就能切页。
+             padding 不加在这里：加了 item 高度就被限制在两条栏之间，内容再也穿不到
+             半透明的栏后面，玻璃就没意义了。改由 MainActivity 在 onFragmentViewCreated
+             里给每个页面的 root 补 padding + clipToPadding=false。 -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- 二级页容器：叠在 pager 之上，只在打开二级页时可见。
+             二级页不进 pager —— 它们不是同级页面，也不该能被左右划到。 -->
         <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingTop="@dimen/app_bar_height"
-            android:paddingBottom="@dimen/bottom_nav_height" />
+            android:paddingBottom="@dimen/bottom_nav_height"
+            android:visibility="gone" />
     </eightbitlab.com.blurview.BlurTarget>
 
     <!-- ── 玻璃顶栏 ── -->
@@ -83,13 +98,43 @@
                     android:src="@drawable/ic_launch" />
             </FrameLayout>
 
-            <TextView
-                android:id="@+id/app_title"
-                style="@style/DshaText.Title"
+            <!-- 标题区做成面包屑：[模块名] · [二级页名]。
+                 点和子标题默认透明（不是 gone —— 保持占位会让「设置」的位置在动画期间
+                 跳一下；alpha=0 的 view 仍然参与布局，位置是稳定的）。
+                 进二级页时点与子标题淡入，返回时淡出。 -->
+            <LinearLayout
+                android:id="@+id/app_title_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/gap_control"
-                android:text="启动" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/app_title"
+                    style="@style/DshaText.Title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="启动" />
+
+                <TextView
+                    android:id="@+id/app_title_dot"
+                    style="@style/DshaText.Title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:alpha="0"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:text="·" />
+
+                <TextView
+                    android:id="@+id/app_title_sub"
+                    style="@style/DshaText.Title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:alpha="0"
+                    android:maxLines="1" />
+            </LinearLayout>
 
             <!-- 插件页的 GitHub 链接输入框：嵌在标题与「关于」之间。
                  默认 gone，切到插件页时由 MainActivity 显示 ——
