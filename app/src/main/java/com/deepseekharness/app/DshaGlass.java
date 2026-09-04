@@ -541,7 +541,12 @@ final class DshaGlass {
                         m.setAlpha(alpha255);
                     }
                 }
-                applyCorner(m, cornerPx);
+                // 顶栏与底栏是贴着屏幕边的满宽元素，不该有圆角：
+                // 一是贴边处的圆角会在屏幕四角露出背景；二是 BlurView **不会**按 outline
+                // 裁剪自己的模糊区域，那块模糊永远是矩形 —— 描边一旦带上圆角，
+                // 两者就对不上（反馈：「半透明效果是矩形，与带圆角的描边不一致」）。
+                boolean bar = v.getId() == R.id.top_glass || v.getId() == R.id.bottom_glass;
+                applyCorner(m, bar ? 0 : cornerPx);
                 v.setBackground(m);
                 if (v instanceof GlassCard && cornerPx >= 0) {
                     v.invalidateOutline();   // clipToOutline 用的是背景的 outline，得重算
