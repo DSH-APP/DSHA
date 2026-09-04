@@ -454,6 +454,32 @@ final class DshaGlass {
         }
     }
 
+    /**
+     * 图层契约（**这是唯一定义，改任何一层前先读完**）。
+     *
+     * <p>之所以写死在这里：这块逻辑被反复改过四次，每次都只按当下看到的现象打补丁 ——
+     * 底衬在「透明 / 半透明 / 铺糊底图」之间来回翻，结果是修好一个现象、冒出另一个。
+     * 从下到上：
+     *
+     * <pre>
+     * ① 背景图 ImageView（app_background）
+     *      「背景淡化」「背景模糊」**只**作用于这一层。原图默认完全可见。
+     * ② 页面底衬（ColorDrawable，各 Fragment 根 ScrollView 的 ?attr/dshaSurface）
+     *      有背景图时 **alpha = 0，完全让路**。可读性由 ③ 负责，不准在这一层盖任何东西
+     *      —— 半透明会遮住背景图（表现为「滑块没作用」），铺糊底图会让人以为背景被糊了
+     *      （表现为「模糊 0% 却还生效」）。没有背景图时保持不透明，否则一片全黑。
+     * ③ 卡片（GlassCard / BlurView）
+     *      真模糊，取样 bg_blur_target（那里只有背景图）。文字下面必须有卡片 ——
+     *      每个页面都得有，workspace 与 install 就是为此补的。
+     * ④ 卡片内的元素
+     *      纯色叠加（比卡片实一档），**不透**背景图。否则同一张卡片里会同时出现
+     *      毛玻璃和清晰纹理，材质割裂。
+     * ⑤ 不在卡片内的 shape 元素
+     *      GlassDrawable：取样预糊底图的对应区域。
+     * ⑥ 顶栏 / 底栏（BlurView）
+     *      真模糊，取样 blur_target（含内容区），所以滚动时纹样会跟着动。
+     * </pre>
+     */
     private static void walk(View v, int alpha255, int cornerPx) {
         // 三类东西不能透，遇到就整棵子树跳过：
         // · 终端 —— Termux 的 ANSI 前景是白色，背景一透就成了浅底白字；
@@ -478,9 +504,15 @@ final class DshaGlass {
                 Drawable m = bg.mutate();
                 if (!(v instanceof GlassCard)) {
                     if (inGlass) {
-                        // 卡片表面上的一层：比卡片本身实一档，靠明度差表达层次，
-                        // 不再透出背景图 —— 否则同一张卡片里会同时出现毛玻璃和清晰纹理。
+                        // ④ 卡片内：叠一层，比卡片实一档，不透背景图。
                         m.setAlpha(Math.min(255, alpha255 + 55));
+                    } else if (m instanceof android.graphics.drawable.ColorDrawable
+                            && hasBackdropSource(v.getContext())) {
+                        // ② 页面底衬：完全让路。给它任何不透明度都会遮住背景图 ——
+                        // 「淡化和模糊的滑块只作用到顶栏和卡片」就是这么来的：滑块改的是
+                        // 背景图，而背景图被这层 72% 的深色幕布挡着；顶栏卡片取样的是
+                        // bg_blur_target（不含这层幕布），所以只有它们如实反映了变化。
+                        m.setAlpha(0);
                     } else {
                         m.setAlpha(alpha255);
                     }
