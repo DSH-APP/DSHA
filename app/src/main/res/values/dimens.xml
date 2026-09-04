@@ -61,5 +61,9 @@
          栏自身的高度、内容区上下的 padding。写死在这里免得三处对不上
          （对不上的表现是内容被栏压住或者底下多一条空白）。 -->
     <dimen name="app_bar_height">56dp</dimen>
+    <!-- 顶栏底栏浮块与屏幕边、与内容区之间的间距。
+         栏做成悬浮的圆角块（贴边的话圆角会在屏幕四角露出难看的缝），
+         这个值同时被 MainActivity#padForBars 用来算内容区该避开多少。 -->
+    <dimen name="bar_margin">10dp</dimen>
     <dimen name="bottom_nav_height">64dp</dimen>
 </resources>

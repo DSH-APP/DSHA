@@ -527,7 +527,7 @@ final class DshaGlass {
         // 描边（直角）和它（圆角）自然对不上。
         //
         // 栏的观感该由它自己那套负责：模糊 = setupWith + setBlurRadius，
-        // 通透 = setOverlayColor，分界 = bg_bar_line_* 那条描边。walk 一律不插手。
+        // 通透 = setOverlayColor，圆角与描边 = bg_bar_glass + clipToOutline。walk 一律不插手。
         if (v.getId() == R.id.top_glass || v.getId() == R.id.bottom_glass) bg = null;
         // GlassCard 自己就是 BlurView，透明度由它的 overlayColor 决定；
         // 再给背景 setAlpha 会把圆角描边一起弄淡。只跳过它的 alpha，圆角照样要改。

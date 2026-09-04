@@ -415,8 +415,10 @@ public class MainActivity extends AppCompatActivity {
         if (v == null || f == null || f.getId() == R.id.fragment_container) return;
         int top = getResources().getDimensionPixelSize(R.dimen.app_bar_height);
         int bot = getResources().getDimensionPixelSize(R.dimen.bottom_nav_height);
-        v.setPadding(v.getPaddingLeft(), v.getPaddingTop() + top,
-                v.getPaddingRight(), v.getPaddingBottom() + bot);
+        // 栏是悬浮的圆角块，占位 = 它自己的 margin + 栏高；再留一份 margin 当内容与栏的间距。
+        int m = getResources().getDimensionPixelSize(R.dimen.bar_margin);
+        v.setPadding(v.getPaddingLeft(), v.getPaddingTop() + top + m * 2,
+                v.getPaddingRight(), v.getPaddingBottom() + bot + m * 2);
         if (v instanceof android.view.ViewGroup) {
             ((android.view.ViewGroup) v).setClipToPadding(false);
         }
@@ -453,12 +455,14 @@ public class MainActivity extends AppCompatActivity {
             for (int id : ids) {
                 eightbitlab.com.blurview.BlurView bv = findViewById(id);
                 if (bv == null) continue;
-                // 一条描边把栏和内容区分开。顶栏画下边、底栏画上边（满宽的栏如果四边都描，
-                // 屏幕左右缘会冒出两条短竖线）。填充是透明的 —— BlurView 的 background
-                // 在模糊之后才画，不透明就会把模糊盖掉。
-                bv.setBackgroundResource(id == R.id.top_glass
-                        ? R.drawable.bg_bar_line_bottom
-                        : R.drawable.bg_bar_line_top);
+                // 圆角浮块：透明填充 + 圆角 + 四周描边（bg_bar_glass），
+                // 再 clipToOutline 让 BlurView 的实时模糊按同一个圆角裁掉四个角。
+                // 上一版只改了描边、没裁材质，于是「描边是圆的、模糊是方的」——
+                // 反馈说的「材质作用范围为矩形」就是这个。outline 从 background 取，
+                // 所以那张图必须是单个带 corners 的 shape（LayerDrawable 的 outline 不可靠）。
+                bv.setBackgroundResource(R.drawable.bg_bar_glass);
+                bv.setOutlineProvider(android.view.ViewOutlineProvider.BACKGROUND);
+                bv.setClipToOutline(true);
                 // scaleFactor 5：栏是常驻的，每帧都要重算，降采样狠一点省 GPU；
                 // 反正模糊本身就不需要精确。半径与噪点由用户在外观面板里调。
                 bv.setupWith(target, 5f, DshaGlass.noise(this))

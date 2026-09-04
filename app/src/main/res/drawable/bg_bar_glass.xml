@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  顶栏 / 底栏的圆角浮块底：透明填充 + 圆角 + 四周描边。
+
+  **为什么是单个 shape 而不是 layer-list。**这张图还要当 outline 的来源 ——
+  栏设了 clipToOutline=true，让 BlurView 的实时模糊按圆角裁掉四个角
+  （否则就是「圆角的描边 + 矩形的材质」，反馈说的正是这个）。
+  默认的 ViewOutlineProvider.BACKGROUND 从 background 取 outline，
+  而 LayerDrawable 的 outline 取自它的图层、inset 过的图层给出的边界不可靠。
+  单个带 corners 的 shape 的 outline 就是那个圆角矩形，干净。
+
+  **填充必须透明。**BlurView 的绘制顺序是「先画模糊 + overlayColor，
+  再 super.draw() 画 background」—— background 一旦不透明，就把模糊整块盖掉。
+  这个坑踩过两次：bg_card_glass 的注释里记过一次，
+  另一次是 walk 用 GlassDrawable 换掉栏的背景，害得顶栏几个版本里一直在拿静态糊图充数。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+    <corners android:radius="@dimen/radius_card" />
+    <stroke
+        android:width="@dimen/stroke"
+        android:color="?attr/dshaLine" />
+</shape>

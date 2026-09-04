@@ -73,7 +73,10 @@
         android:id="@+id/top_glass"
         android:layout_width="match_parent"
         android:layout_height="@dimen/app_bar_height"
-        android:layout_gravity="top">
+        android:layout_gravity="top"
+        android:layout_marginStart="@dimen/bar_margin"
+        android:layout_marginTop="@dimen/bar_margin"
+        android:layout_marginEnd="@dimen/bar_margin">
 
         <LinearLayout
             android:id="@+id/app_bar"
@@ -194,7 +197,10 @@
         android:id="@+id/bottom_glass"
         android:layout_width="match_parent"
         android:layout_height="@dimen/bottom_nav_height"
-        android:layout_gravity="bottom">
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/bar_margin"
+        android:layout_marginEnd="@dimen/bar_margin"
+        android:layout_marginBottom="@dimen/bar_margin">
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_nav"
