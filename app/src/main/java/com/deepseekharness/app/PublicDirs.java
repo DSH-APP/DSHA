@@ -33,6 +33,10 @@ final class PublicDirs {
     static final String PLUGINS = "插件";
     /** WebUI 里触发的文件下载。 */
     static final String DOWNLOADS = "下载";
+    /** 分享进来的东西（ShareInboxActivity）。放公开目录而不是 rootfs：
+     *  容器已把 /storage/emulated/0 挂到 /root/手机存储，agent 读得到，
+     *  而用户自己也能在文件管理器里确认东西真的进来了。 */
+    static final String INBOX = "收件";
     /** 老版本的位置：DSHA 根目录，没有子目录。 */
     static final String LEGACY = "";
 
@@ -70,7 +74,7 @@ final class PublicDirs {
 
     /** 所有会被 DSHA 写入的子目录（自检与「打开目录」入口用）。 */
     static String[] allSubdirs() {
-        return new String[] { ARCHIVES, PLUGINS, DOWNLOADS };
+        return new String[] { ARCHIVES, PLUGINS, DOWNLOADS, INBOX };
     }
 
     /** 把插件包名变成能当文件名用的形式：{@code @scope/name} 里的斜杠会被当路径分隔符。 */

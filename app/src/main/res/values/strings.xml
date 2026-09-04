@@ -4,4 +4,12 @@
     <string name="accessibility_desc">两个用途：① 自动读取系统「无线调试」的配对码，省掉手抄（配对码两分钟就失效）；② 让 AI 助手能读屏、点按、输入、按键，从而在没有 ADB 和 Shizuku 的情况下也能操作手机。
 
 DSHA 不做任何后台屏幕记录：读屏只发生在助手明确请求的那一刻，结果直接回到对话里，不落盘也不上传；配对码只在你点过「自动读配对码」后的两分钟内读取。</string>
+    <!-- 长按启动器图标的快捷方式（res/xml/shortcuts.xml）。short 显示在图标下方、
+         有 10 个字符左右的显示预算；long 是长按菜单里的完整文案。 -->
+    <string name="shortcut_terminal_short">终端</string>
+    <string name="shortcut_terminal_long">打开终端</string>
+    <string name="shortcut_plugins_short">插件</string>
+    <string name="shortcut_plugins_long">插件与市场</string>
+    <string name="shortcut_launch_short">启动</string>
+    <string name="shortcut_launch_long">启动 / 进入 WebUI</string>
 </resources>

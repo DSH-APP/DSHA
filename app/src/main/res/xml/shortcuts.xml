@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 长按启动器图标出来的快捷方式。
+     官方把「跳到 App 的某个页面」这类操作划给 Shortcuts 而不是快捷设置磁贴，
+     所以这里放的是三个页面入口，启停 dsh 那种高频开关交给磁贴。
+     全部是静态快捷方式：写在 XML 里，零 Java 代码，也不用管动态注册的生命周期。 -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="terminal"
+        android:enabled="true"
+        android:icon="@drawable/ic_terminal"
+        android:shortcutShortLabel="@string/shortcut_terminal_short"
+        android:shortcutLongLabel="@string/shortcut_terminal_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.dsh.client"
+            android:targetClass="com.deepseekharness.app.MainActivity">
+            <extra
+                android:name="goto"
+                android:value="terminal" />
+        </intent>
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="plugins"
+        android:enabled="true"
+        android:icon="@drawable/ic_plugins"
+        android:shortcutShortLabel="@string/shortcut_plugins_short"
+        android:shortcutLongLabel="@string/shortcut_plugins_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.dsh.client"
+            android:targetClass="com.deepseekharness.app.MainActivity">
+            <extra
+                android:name="goto"
+                android:value="plugins" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="launch"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_launch_short"
+        android:shortcutLongLabel="@string/shortcut_launch_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.dsh.client"
+            android:targetClass="com.deepseekharness.app.MainActivity">
+            <extra
+                android:name="goto"
+                android:value="launch" />
+        </intent>
+    </shortcut>
+</shortcuts>

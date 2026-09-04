@@ -25,6 +25,17 @@ public class HarnessService extends Service {
     public static final String ACTION_STOP = "com.deepseekharness.app.STOP";
     public static final String ACTION_RESTART = "com.deepseekharness.app.RESTART";
 
+    /** 服务是否活着。给快捷设置磁贴用。
+     *
+     *  <p>磁贴的 onStartListening 在主线程被频繁调用，往里塞「连一下 3080 端口」会卡住
+     *  下拉面板，所以读这个静态标记 —— 同进程，零成本。代价是「服务活着但 dsh 进程死了」
+     *  时磁贴仍显示运行中，那是自愈逻辑该管的事。 */
+    private static volatile boolean sRunning;
+
+    public static boolean isRunning() {
+        return sRunning;
+    }
+
     private static final String CHANNEL_ID = "dsh_harness_channel";
     private static final int NOTIF_ID = 1001;
 
@@ -81,7 +92,9 @@ public class HarnessService extends Service {
         } catch (Throwable e) {
             android.util.Log.w("DSHA", "onStartCommand 里 startForeground 失败: " + e);
         }
+        sRunning = true;
         if (intent != null && ACTION_STOP.equals(intent.getAction())) {
+            sRunning = false;
             c.stopWeb();
             stopKeepAlive();
             // 设备桥（127.0.0.1:3090）也一起停 —— 它是独立的后台服务，不跟着前台服务走。

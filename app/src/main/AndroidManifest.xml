@@ -77,6 +77,11 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- 长按启动器图标的快捷方式。官方把「跳到 App 的某个页面」划给 Shortcuts，
+                 高频开关（启停 dsh）才交给快捷设置磁贴。 -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <activity
@@ -96,9 +101,45 @@
             android:label="ADB 无线配对"
             android:theme="@style/Theme.AppCompat.Dialog" />
 
+        <!-- 分享目标：从任何 App 把文本、链接、文件送进 agent 能读到的目录。
+             exported 必须为 true（分享目标的性质如此）——所以只做「写文件」这一件事，
+             不解析、不执行、不据此启动任何东西。文件名会过滤路径分隔符与控制字符。
+             无界面：透明主题 + noHistory + 立刻 finish，分享是动作不是页面。 -->
+        <activity
+            android:name=".ShareInboxActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:label="DSHA · 交给 agent"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+
+        <!-- 快捷设置磁贴：下拉通知栏一键启停 dsh。
+             label 有 18 字符预算，icon 必须是 24×24dp 纯白矢量。
+             permission 那行是系统要求的，少了系统不认。 -->
         <service
-            android:name=".HarnessService"
-            android:exported="false"
+            android:name=".DshTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_dsh"
+            android:label="DSH"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".HarnessService"            android:exported="false"
             android:foregroundServiceType="dataSync" />
 
         <!-- 无障碍服务：只用来读系统「无线调试」弹窗里的配对码（配对码 2 分钟失效，

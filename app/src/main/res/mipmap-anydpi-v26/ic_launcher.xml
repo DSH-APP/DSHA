@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自适应图标（API 26+）。做这层的真正目的是拿到 <monochrome> —— Android 13 的
+     「主题图标」只认 adaptive-icon 里的这个图层，而我们之前只有一张方形 png，
+     所以桌面上开了主题图标的用户看到的 DSHA 是一块跟系统格格不入的方图。
+     这和刚接入的 Material You 壁纸取色是同一套体系，图标不跟着变反而不一致。
+
+     前景刻意仍用原来那张位图（复制成 ic_launcher_fg，不能直接引用 @mipmap/ic_launcher
+     —— 那是本文件自己，会自引用）。inset 14% 是为了避开各家启动器的形状蒙版：
+     adaptive icon 的安全区只有中间 66/108，原图是满幅方形，不缩进去边角会被裁掉。
+     代价是图标在桌面上比以前略小一点。
+
+     API 26 以下不受影响：那些系统读不到 anydpi-v26，仍然用 mipmap-*/ic_launcher.png。
+     想整个撤掉的话，删掉本文件与 ic_launcher_fg.png 即可。 -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_bg" />
+    <foreground>
+        <inset
+            android:drawable="@mipmap/ic_launcher_fg"
+            android:inset="14%" />
+    </foreground>
+    <monochrome android:drawable="@drawable/ic_launcher_mono" />
+</adaptive-icon>

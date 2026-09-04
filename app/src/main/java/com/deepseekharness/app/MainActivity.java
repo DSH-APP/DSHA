@@ -189,7 +189,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }, true);
         if (savedInstanceState == null) {
-            nav.setSelectedItemId(R.id.nav_launch);
+            // 长按启动器图标的快捷方式会带 goto 进来，指定落到哪个页面。
+            // 认不出的值就走默认（启动页）—— 外部传进来的东西不能直接当 id 用。
+            String go = getIntent() == null ? null : getIntent().getStringExtra("goto");
+            int start = R.id.nav_launch;
+            if ("terminal".equals(go)) start = R.id.nav_terminal;
+            else if ("plugins".equals(go)) start = R.id.nav_plugins;
+            nav.setSelectedItemId(start);
         }
     }
 

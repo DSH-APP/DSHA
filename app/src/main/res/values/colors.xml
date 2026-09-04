@@ -26,4 +26,6 @@
     <color name="disabled">#E9ECF2</color>
     <!-- 状态色的浅底（用于状态条/标签背景，不刺眼） -->
     <color name="err_bg">#14C45A5A</color>
+    <!-- 自适应图标的背景层。取主题里最深的那档底色，保证前景的浅色图形压得住。 -->
+    <color name="ic_launcher_bg">#0E1620</color>
 </resources>
