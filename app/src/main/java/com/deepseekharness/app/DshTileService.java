@@ -46,12 +46,29 @@ public class DshTileService extends TileService {
             } else {
                 startForegroundService(it);
             }
+            // 立刻把磁贴翻到目标状态，别等服务回调 —— 用户点完看到没反应会以为没生效。
+            // 真实状态会在下一次 onStartListening 校正。
+            updateTile(!running);
         } catch (Throwable t) {
-            android.util.Log.w("DSHA", "磁贴操作失败: " + t);
+            // Android 12 起对「后台启动前台服务」收得很紧，磁贴点击是否算豁免各版本不一。
+            // 抛了就退回打开 App —— 让用户在启动页自己点，总比点了磁贴毫无反应好。
+            android.util.Log.w("DSHA", "磁贴直接启停失败，退回打开 App: " + t);
+            try {
+                Intent open = new Intent(this, MainActivity.class)
+                        .putExtra("goto", "launch")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                if (android.os.Build.VERSION.SDK_INT >= 34) {
+                    startActivityAndCollapse(android.app.PendingIntent.getActivity(
+                            this, 0, open,
+                            android.app.PendingIntent.FLAG_IMMUTABLE
+                                    | android.app.PendingIntent.FLAG_UPDATE_CURRENT));
+                } else {
+                    startActivityAndCollapse(open);
+                }
+            } catch (Throwable t2) {
+                android.util.Log.w("DSHA", "退回打开 App 也失败: " + t2);
+            }
         }
-        // 立刻把磁贴翻到目标状态，别等服务回调 —— 用户点完看到没反应会以为没生效。
-        // 真实状态会在下一次 onStartListening 校正。
-        updateTile(!running);
     }
 
     private void refresh() {

@@ -5,7 +5,7 @@
      这和刚接入的 Material You 壁纸取色是同一套体系，图标不跟着变反而不一致。
 
      前景刻意仍用原来那张位图（复制成 ic_launcher_fg，不能直接引用 @mipmap/ic_launcher
-     —— 那是本文件自己，会自引用）。inset 14% 是为了避开各家启动器的形状蒙版：
+     —— 那是本文件自己，会自引用）。inset 15dp（108dp 画布的 ~14%）是为了避开各家启动器的形状蒙版：
      adaptive icon 的安全区只有中间 66/108，原图是满幅方形，不缩进去边角会被裁掉。
      代价是图标在桌面上比以前略小一点。
 
@@ -16,7 +16,7 @@
     <foreground>
         <inset
             android:drawable="@mipmap/ic_launcher_fg"
-            android:inset="14%" />
+            android:inset="15dp" />
     </foreground>
     <monochrome android:drawable="@drawable/ic_launcher_mono" />
 </adaptive-icon>

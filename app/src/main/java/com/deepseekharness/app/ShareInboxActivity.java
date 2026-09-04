@@ -34,23 +34,36 @@ import java.util.Locale;
  */
 public class ShareInboxActivity extends Activity {
 
+    /** 单个文件的上限。分享来的东西大小不受我们控制，而 rootfs 在 App 私有目录 ——
+     *  一个几个 G 的视频灌进来会把用户的存储和整个环境一起拖死。 */
+    private static final long MAX_BYTES = 512L * 1024 * 1024;
+
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
-        String result;
-        try {
-            result = handle(getIntent());
-        } catch (Throwable t) {
-            android.util.Log.w("DSHA", "接收分享失败: " + t);
-            result = "接收失败：" + t;
-        }
-        Toast.makeText(this, result, Toast.LENGTH_LONG).show();
+        final Intent it = getIntent();
+        // 用 application context：这个 Activity 下一行就 finish 了，之后再用它的
+        // ContentResolver 是未定义行为。线程也因此不持有 Activity。
+        final android.content.Context app = getApplicationContext();
+        // 复制必须离开主线程 —— 分享一个几百 MB 的视频，在主线程上做就是 ANR。
+        new Thread(() -> {
+            String result;
+            try {
+                result = handle(app, it);
+            } catch (Throwable t) {
+                android.util.Log.w("DSHA", "接收分享失败: " + t);
+                result = "接收失败：" + t;
+            }
+            final String msg = result;
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
+                    Toast.makeText(app, msg, Toast.LENGTH_LONG).show());
+        }, "dsha-share-inbox").start();
         finish();
     }
 
-    private String handle(Intent it) throws Exception {
+    private String handle(android.content.Context ctx, Intent it) throws Exception {
         if (it == null) return "没有收到内容";
-        File dir = inboxDir();
+        File dir = inboxDir(ctx);
         if (dir == null) return "收件目录不可用（环境还没解压好？）";
 
         String action = it.getAction();
@@ -73,18 +86,37 @@ public class ShareInboxActivity extends Activity {
 
         String stamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(new Date());
         int files = 0;
+        int skipped = 0;
         for (int i = 0; i < uris.size(); i++) {
-            String name = displayName(uris.get(i));
+            String name = displayName(ctx, uris.get(i));
             if (name == null || name.isEmpty()) {
                 name = "文件-" + stamp + (uris.size() > 1 ? "-" + (i + 1) : "");
             }
             File out = unique(dir, name);
-            try (InputStream in = getContentResolver().openInputStream(uris.get(i));
+            try (InputStream in = ctx.getContentResolver().openInputStream(uris.get(i));
                  OutputStream os = new FileOutputStream(out)) {
                 if (in == null) continue;
                 byte[] buf = new byte[64 * 1024];
                 int n;
-                while ((n = in.read(buf)) > 0) os.write(buf, 0, n);
+                long total = 0;
+                boolean tooBig = false;
+                while ((n = in.read(buf)) > 0) {
+                    total += n;
+                    if (total > MAX_BYTES) {
+                        tooBig = true;
+                        break;
+                    }
+                    os.write(buf, 0, n);
+                }
+                if (tooBig) {
+                    os.close();
+                    // 半成品不留下 —— 否则用户看到文件在那儿，实际是截断的
+                    if (!out.delete()) {
+                        android.util.Log.w("DSHA", "超限文件删除失败: " + out);
+                    }
+                    skipped++;
+                    continue;
+                }
             }
             files++;
         }
@@ -105,9 +137,13 @@ public class ShareInboxActivity extends Activity {
             wroteText = true;
         }
 
-        if (files == 0 && !wroteText) return "没有可保存的内容";
+        if (files == 0 && !wroteText) {
+            return skipped > 0 ? "文件超过 512MB，没有保存" : "没有可保存的内容";
+        }
         StringBuilder msg = new StringBuilder("已放进工作区的「收件」");
         if (files > 0) msg.append("　文件 ").append(files).append(" 个");
+        if (skipped > 0) msg.append("　跳过 ").append(skipped)
+                .append(" 个（超过 512MB）");
         if (wroteText) msg.append("　文本 1 份");
         msg.append("\n容器内路径：~/收件/");
         return msg.toString();
@@ -122,12 +158,12 @@ public class ShareInboxActivity extends Activity {
      *
      *  <p>写进 rootfs 反而干净：App 私有内部目录，无需任何权限，agent 在容器里就是
      *  {@code ~/<工作区>/收件/}，路径最短。用户想看的话走 DSHA 自己的文件共享入口。 */
-    private File inboxDir() {
+    private File inboxDir(android.content.Context ctx) {
         try {
-            String workdir = getSharedPreferences("deepseekharness", MODE_PRIVATE)
+            String workdir = ctx.getSharedPreferences("deepseekharness", MODE_PRIVATE)
                     .getString("workdir", "deepseek-harness");
             if (workdir == null || workdir.trim().isEmpty()) workdir = "deepseek-harness";
-            File dir = new File(getFilesDir(),
+            File dir = new File(ctx.getFilesDir(),
                     "linux/ubuntu/root/" + workdir + "/" + PublicDirs.INBOX);
             if (!dir.exists() && !dir.mkdirs()) return null;
             return dir.isDirectory() ? dir : null;
@@ -138,9 +174,9 @@ public class ShareInboxActivity extends Activity {
     }
 
     /** 从 content Uri 取原始文件名。取不到就返回 null，交给调用方兜底命名。 */
-    private String displayName(Uri u) {
+    private String displayName(android.content.Context ctx, Uri u) {
         if (u == null) return null;
-        try (android.database.Cursor c = getContentResolver().query(u, null, null, null, null)) {
+        try (android.database.Cursor c = ctx.getContentResolver().query(u, null, null, null, null)) {
             if (c != null && c.moveToFirst()) {
                 int idx = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
                 if (idx >= 0) return sanitize(c.getString(idx));

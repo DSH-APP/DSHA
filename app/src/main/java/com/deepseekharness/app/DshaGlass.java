@@ -183,7 +183,8 @@ final class DshaGlass {
     private static int sBackdropH;
     /** 已经铺了玻璃背景的 View → 它的 drawable，用来在 preDraw 时刷新位置。弱引用避免泄漏。 */
     private static final java.util.WeakHashMap<View, GlassDrawable> LIVE = new java.util.WeakHashMap<>();
-    private static View sHooked;
+    /** 挂过 preDraw 的 decorView。**弱引用** —— 静态字段强持有 decorView 就是泄漏整个 Activity。 */
+    private static java.lang.ref.WeakReference<View> sHooked;
 
     /** 准备共用底图。没有自定义背景图时返回 false —— 那种情况下退回原来的 setAlpha 路子，
      *  因为主题底衬本身就是纯色或渐变，糊它没有意义。 */
@@ -199,14 +200,36 @@ final class DshaGlass {
             }
             android.graphics.Bitmap bm = DshaBackground.loadBackdrop(root.getContext(), w, h);
             if (bm == null) return false;
+            // 换掉旧底图之前先放掉它。全屏 ARGB_8888 一张就是 10MB 上下，改一次参数漏一张，
+            // 在外观面板里拖几下滑块就能把堆吃掉。
+            // 注意：不能直接 recycle —— 已有的 GlassDrawable 还拿着它画，
+            // recycle 掉会当场 "Canvas: trying to use a recycled bitmap"。
+            // 所以只解引用，剩下的交给 GC；同时把旧 drawable 全部换到新底图上。
+            android.graphics.Bitmap old = sBackdrop;
             sBackdrop = bm;
             sBackdropW = w;
             sBackdropH = h;
+            if (old != null && old != bm) {
+                for (GlassDrawable gd : snapshotLive()) {
+                    if (gd != null) gd.setBackdrop(bm);
+                }
+            }
             return true;
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "玻璃底图准备失败（退回半透明）: " + t);
             return false;
         }
+    }
+
+    /** LIVE 的快照。WeakHashMap 在遍历过程中会清理已被回收的 key，直接迭代 entrySet
+     *  可能撞上 ConcurrentModificationException —— 每帧都跑的代码不能有这种概率崩。 */
+    private static java.util.List<GlassDrawable> snapshotLive() {
+        java.util.List<GlassDrawable> out = new java.util.ArrayList<>(LIVE.size() + 4);
+        try {
+            out.addAll(LIVE.values());
+        } catch (Throwable ignored) {
+        }
+        return out;
     }
 
     /** 每帧刷新一次所有玻璃元素的窗口坐标。
@@ -216,16 +239,25 @@ final class DshaGlass {
      *  遍历的是几十个元素的 getLocationInWindow，一次几十微秒。 */
     private static void hookPreDraw(View root) {
         final View decor = root.getRootView();
-        if (decor == null || decor == sHooked) return;
-        sHooked = decor;
+        if (decor == null) return;
+        if (sHooked != null && sHooked.get() == decor) return;
+        sHooked = new java.lang.ref.WeakReference<>(decor);
         decor.getViewTreeObserver().addOnPreDrawListener(() -> {
             if (LIVE.isEmpty()) return true;
             int[] xy = new int[2];
-            for (java.util.Map.Entry<View, GlassDrawable> e : LIVE.entrySet()) {
-                View v = e.getKey();
-                if (v == null || e.getValue() == null || !v.isAttachedToWindow()) continue;
+            // 同样先取快照再遍历，理由见 snapshotLive。
+            java.util.List<View> views;
+            try {
+                views = new java.util.ArrayList<>(LIVE.keySet());
+            } catch (Throwable t) {
+                return true;
+            }
+            for (View v : views) {
+                if (v == null || !v.isAttachedToWindow()) continue;
+                GlassDrawable gd = LIVE.get(v);
+                if (gd == null) continue;
                 v.getLocationInWindow(xy);
-                e.getValue().setWindowOffset(xy[0], xy[1]);
+                gd.setWindowOffset(xy[0], xy[1]);
             }
             return true;
         });

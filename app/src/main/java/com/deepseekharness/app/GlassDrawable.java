@@ -26,12 +26,16 @@ import android.graphics.drawable.Drawable;
  */
 final class GlassDrawable extends Drawable {
 
-    private final Bitmap blurred;
+    private Bitmap blurred;
     private final Paint bmpPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Paint tintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF rf = new RectF();
     private final Rect src = new Rect();
+    /** 圆角裁切路径。**复用**：draw 每帧都跑，每个元素每帧 new 一个 Path，一屏二十个元素
+     *  就是每秒上千个短命对象，白给 GC 添压力。只在尺寸或圆角变了时重建。 */
+    private final android.graphics.Path clip = new android.graphics.Path();
+    private boolean clipDirty = true;
 
     private float corner;
     private int offsetX;
@@ -63,7 +67,23 @@ final class GlassDrawable extends Drawable {
     void setCorner(float px) {
         if (px < 0 || px == corner) return;
         corner = px;
+        clipDirty = true;
         invalidateSelf();
+    }
+
+    /** 换共用底图。参数变了会重新糊一张，旧的那张不能 recycle（还有 drawable 正拿着它画，
+     *  recycle 掉当场就是 "trying to use a recycled bitmap"），所以由 DshaGlass 统一把所有
+     *  实例切到新图上，旧图交给 GC。 */
+    void setBackdrop(Bitmap bm) {
+        if (bm == null || bm == blurred) return;
+        blurred = bm;
+        invalidateSelf();
+    }
+
+    @Override
+    protected void onBoundsChange(Rect bounds) {
+        super.onBoundsChange(bounds);
+        clipDirty = true;
     }
 
     /** 改着色。刻意不叫 setTint —— 那是 Drawable 的公开方法，签名撞上会编译不过，
@@ -82,9 +102,14 @@ final class GlassDrawable extends Drawable {
         int save = canvas.save();
         // 圆角裁切。用 clipPath 而不是给 bitmap 套 shader + rounded rect，是因为要同时裁
         // 图和着色两层，clip 一次比两次各自做圆角省事，也不会在边缘出现半像素的错位。
-        android.graphics.Path p = new android.graphics.Path();
-        p.addRoundRect(rf, corner, corner, android.graphics.Path.Direction.CW);
-        canvas.clipPath(p);
+        // Path 复用：draw 每帧都跑，每个元素每帧 new 一个，一屏二十个元素就是每秒上千个
+        // 短命对象。只在尺寸或圆角变了时重建。
+        if (clipDirty) {
+            clip.reset();
+            clip.addRoundRect(rf, corner, corner, android.graphics.Path.Direction.CW);
+            clipDirty = false;
+        }
+        canvas.clipPath(clip);
 
         if (blurred != null && !blurred.isRecycled()) {
             // 从整张模糊图里取自己这块。offset 是窗口坐标，图也是按窗口尺寸糊的，

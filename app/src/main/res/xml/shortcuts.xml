@@ -19,7 +19,6 @@
                 android:name="goto"
                 android:value="terminal" />
         </intent>
-        <categories android:name="android.shortcut.conversation" />
     </shortcut>
 
     <shortcut
