@@ -433,8 +433,39 @@ public class ConfigFragment extends Fragment {
         final android.widget.CheckBox strokeCb = v.findViewById(R.id.ap_stroke);
         strokeCb.setChecked(DshaGlass.stroke(ctx));
 
-        final android.widget.CheckBox bgGlass = v.findViewById(R.id.ap_bg_glass);
-        bgGlass.setChecked(DshaBackground.bgGlass(ctx));
+        // 背景淡化与背景模糊都开放成滑块，默认 0（原图），拖动实时预览。
+        // 「糊多少 / 淡多少合适」取决于那张图本身，替用户定死不如让他自己拖。
+        final android.widget.SeekBar dim = v.findViewById(R.id.ap_dim);
+        final TextView dimLabel = v.findViewById(R.id.ap_dim_label);
+        final android.widget.SeekBar bgBlur = v.findViewById(R.id.ap_bgblur);
+        final TextView bgBlurLabel = v.findViewById(R.id.ap_bgblur_label);
+        dim.setProgress(DshaBackground.dim(ctx));
+        bgBlur.setProgress(DshaBackground.bgBlur(ctx));
+        dimLabel.setText("背景淡化 " + dim.getProgress() + "%");
+        bgBlurLabel.setText("背景模糊 " + bgBlur.getProgress() + "%");
+        final Runnable previewBg = () -> {
+            View bgIv = requireActivity().findViewById(R.id.app_background);
+            if (!(bgIv instanceof android.widget.ImageView)) return;
+            android.widget.ImageView im = (android.widget.ImageView) bgIv;
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                int bb = bgBlur.getProgress();
+                // RenderEffect 是 GPU 高斯模糊：改半径不用重算像素，所以能跟着滑块实时走。
+                im.setRenderEffect(bb > 0
+                        ? android.graphics.RenderEffect.createBlurEffect(
+                                bb / 100f * 60f, bb / 100f * 60f,
+                                android.graphics.Shader.TileMode.CLAMP)
+                        : null);
+            }
+            im.setImageAlpha(255 - (int) (dim.getProgress() / 100f * 255f));
+        };
+        dim.setOnSeekBarChangeListener(new SimpleSeek(p -> {
+            dimLabel.setText("背景淡化 " + p + "%");
+            previewBg.run();
+        }));
+        bgBlur.setOnSeekBarChangeListener(new SimpleSeek(p -> {
+            bgBlurLabel.setText("背景模糊 " + p + "%");
+            previewBg.run();
+        }));
 
         // 填充背景（抄 Telegram 的 fill wallpaper）：没照片也能个性化。
         // 收成一行、点开再选 —— 七个选项摆开会把面板撑得很长。
@@ -496,7 +527,8 @@ public class ConfigFragment extends Fragment {
                     DshaGlass.setRadius(ctx, rad.getProgress());
                     DshaGlass.setNoise(ctx, noise.isChecked());
                     DshaGlass.setStroke(ctx, strokeCb.isChecked());
-                    DshaBackground.setBgGlass(ctx, bgGlass.isChecked());
+                    DshaBackground.setDim(ctx, dim.getProgress());
+                    DshaBackground.setBgBlur(ctx, bgBlur.getProgress());
                     DshaBackground.setFillIndex(ctx, fillSel[0]);
                     DshaGlass.setCornerDp(ctx, corner.getProgress());
                     int idx = 0;
@@ -506,7 +538,13 @@ public class ConfigFragment extends Fragment {
                     DshaTheme.set(ctx, DshaTheme.VALUES[idx]);
                     requireActivity().recreate();
                 })
-                .setNegativeButton("取消", (d, w) -> DshaGlass.apply(decor))
+                .setNegativeButton("取消", (d, w) -> {
+                    DshaGlass.apply(decor);
+                    // 淡化与模糊是实时预览的，取消要把背景图恢复成已保存的值 ——
+                    // 否则拖了一半点取消，界面就停在那个没保存的样子。
+                    DshaBackground.applyBlurAndDim(
+                            requireActivity().findViewById(R.id.app_background));
+                })
                 .setOnCancelListener(d -> DshaGlass.apply(decor))
                 .show();
     }

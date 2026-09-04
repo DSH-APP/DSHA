@@ -232,21 +232,47 @@
             android:textColor="?attr/dshaTextSecondary"
             android:text="没选图片时用纯色或渐变当底衬。选了图片以图片为准。" />
 
-        <CheckBox
-            android:id="@+id/ap_bg_glass"
+        <TextView
+            android:id="@+id/ap_dim_label"
             style="@style/DshaText.Body"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:minHeight="@dimen/touch_min"
-            android:text="背景图也做玻璃处理（需重开界面）" />
+            android:text="背景淡化 0%" />
 
         <TextView
             style="@style/DshaText.Caption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="?attr/dshaTextSecondary"
-            android:text="勾上后连背景一起模糊，整屏朦胧；不勾就是原图 —— 玻璃的层次来自清晰背景与糊掉的玻璃块之间的对比。" />
+            android:text="默认 0（原图）。深色配色下淡化等价于变暗 —— 图变淡露出的是接近黑的底色。" />
+
+        <SeekBar
+            android:id="@+id/ap_dim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="80" />
+
+        <TextView
+            android:id="@+id/ap_bgblur_label"
+            style="@style/DshaText.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="背景模糊 0%" />
+
+        <TextView
+            style="@style/DshaText.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/dshaTextSecondary"
+            android:text="默认 0（原图）。糊掉背景能让文字更好读，但玻璃的层次本来靠「清晰背景 + 糊掉的玻璃块」的对比。" />
+
+        <SeekBar
+            android:id="@+id/ap_bgblur"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
 
         <!-- 原先这里还有一个「背景模糊」滑块。它把背景图本身糊掉了，而玻璃的观感恰恰来自
              「清晰的背景 + 糊掉的玻璃区域」这个对比 —— 全糊之后整屏就剩一团雾。

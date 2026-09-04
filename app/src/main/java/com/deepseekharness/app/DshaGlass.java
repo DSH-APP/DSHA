@@ -268,19 +268,20 @@ final class DshaGlass {
      *  @return true 表示换成功了（调用方就不用再走 setAlpha）。 */
     private static boolean applyGlassBg(View v, Drawable bg, int alpha255, int cornerPx) {
         if (sBackdrop == null || sBackdrop.isRecycled()) return false;
-        // **纯色背景不参与元素级玻璃。**
-        // ColorDrawable 表达的是「整片底衬」，不是一个元素：activity_main 的根 FrameLayout、
-        // 各 Fragment 的根 ScrollView 都是 ?attr/dshaSurface。给它们铺上糊过的底图，等于在
-        // 整屏最底下垫了一层雾 —— 而背景图 ImageView 因为「背景淡化」本身是半透明的，
-        // 那层雾就从清晰的图后面透出来，看着就是「背景怎么还是糊的」。
-        // 有形状的元素（卡片、按钮、输入框，也就是 GradientDrawable / Ripple / Layer）才该有玻璃。
+        // **纯色底衬不参与元素级玻璃。**
+        // ColorDrawable 是「整片底衬」（activity_main 的根 FrameLayout、各 Fragment 的根
+        // ScrollView 都是 ?attr/dshaSurface）。给它铺一张糊过的底图，等于在整屏垫一层雾 ——
+        // 而且那层雾的浓度受「模糊强度」控制，用户以为那是卡片的参数，于是出现
+        // 「背景模糊明明是 0%，背景却还是糊的」。
+        // 可读性该由卡片解决（文字下面有卡片、卡片之外露出清晰背景），不该用全屏蒙层绕过。
         if (bg instanceof android.graphics.drawable.ColorDrawable) return false;
         try {
             float corner = cornerPx >= 0 ? cornerPx : readCorner(bg, v);
+            int base = overlayColor(v.getContext(), 1f);
             int tint = android.graphics.Color.argb(alpha255,
-                    android.graphics.Color.red(overlayColor(v.getContext(), 1f)),
-                    android.graphics.Color.green(overlayColor(v.getContext(), 1f)),
-                    android.graphics.Color.blue(overlayColor(v.getContext(), 1f)));
+                    android.graphics.Color.red(base),
+                    android.graphics.Color.green(base),
+                    android.graphics.Color.blue(base));
             int line = stroke(v.getContext())
                     ? resolveColor(v.getContext(), R.attr.dshaLine, 0x33FFFFFF) : 0;
             float sw = v.getResources().getDimension(R.dimen.stroke);
@@ -340,6 +341,35 @@ final class DshaGlass {
         } catch (Throwable ignored) {
         }
         return fallback;
+    }
+
+    /** 这个 View 在玻璃卡片（BlurView / GlassCard）内部吗。
+     *
+     *  <p>卡片内的元素**不该**再去取样背景图：它背后已经是一块糊过的卡片，再糊一次等于把
+     *  两种材质叠在一起 —— 而且两者的模糊来源还不同（BlurView 糊实时内容、GlassDrawable
+     *  糊静态底图），位置和虚化程度都对不上。屏幕上就会出现「外层是毛玻璃、里面的行却透出
+     *  清晰的背景纹理」这种割裂感。
+     *
+     *  <p>卡片内的元素应该表现为「卡片表面上的一层」——Material 里就是 surface 加一档
+     *  elevation tint 的做法，层次靠明度差表达，而不是靠再透一层。 */
+    private static boolean insideGlass(View v) {
+        android.view.ViewParent p = v.getParent();
+        int guard = 0;
+        while (p instanceof View && guard++ < 32) {
+            if (p instanceof eightbitlab.com.blurview.BlurView) return true;
+            p = p.getParent();
+        }
+        return false;
+    }
+
+    /** 底下有没有东西可透 —— 自定义背景图或填充背景。
+     *  两者都没有的时候，纯色底衬得留着（透了就是一片全黑，什么层次都没有）。 */
+    private static boolean hasBackdropSource(Context ctx) {
+        try {
+            return DshaBackground.exists(ctx) || DshaBackground.fillIndex(ctx) > 0;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     /** 给一棵 View 树应用当前外观参数（卡片透明度 + 圆角）。
@@ -440,10 +470,21 @@ final class DshaGlass {
         if (bg != null && isShapeLike(bg)) {
             // 先试元素级玻璃：把背景换成「预糊底图的对应区域 + 着色」。这一条让按钮、
             // 状态行、输入框这些容器里的组件也真的有玻璃，而不只是变淡。
-            boolean done = !(v instanceof GlassCard) && applyGlassBg(v, bg, alpha255, cornerPx);
+            boolean inGlass = insideGlass(v);
+            // 卡片内的元素不参与元素级玻璃（理由见 insideGlass）。
+            boolean done = !(v instanceof GlassCard) && !inGlass
+                    && applyGlassBg(v, bg, alpha255, cornerPx);
             if (!done) {
                 Drawable m = bg.mutate();
-                if (!(v instanceof GlassCard)) m.setAlpha(alpha255);
+                if (!(v instanceof GlassCard)) {
+                    if (inGlass) {
+                        // 卡片表面上的一层：比卡片本身实一档，靠明度差表达层次，
+                        // 不再透出背景图 —— 否则同一张卡片里会同时出现毛玻璃和清晰纹理。
+                        m.setAlpha(Math.min(255, alpha255 + 55));
+                    } else {
+                        m.setAlpha(alpha255);
+                    }
+                }
                 applyCorner(m, cornerPx);
                 v.setBackground(m);
                 if (v instanceof GlassCard && cornerPx >= 0) {
