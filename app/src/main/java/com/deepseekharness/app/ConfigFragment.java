@@ -521,7 +521,12 @@ public class ConfigFragment extends Fragment {
                     DshaTheme.set(ctx, DshaTheme.VALUES[idx]);
                     requireActivity().recreate();
                 })
-                .setNegativeButton("取消", (d, w) -> DshaGlass.apply(decor))
+                .setNegativeButton("取消", (d, w) -> {
+                    DshaGlass.apply(decor);
+                    // 淡化是实时预览的，取消时要把背景图恢复成已保存的值 ——
+                    // 否则拖了一半点取消，界面就一直停在那个没保存的样子。
+                    DshaBackground.applyTo(requireActivity().findViewById(R.id.app_background));
+                })
                 .setOnCancelListener(d -> DshaGlass.apply(decor))
                 .show();
     }
