@@ -164,12 +164,25 @@ public class MainActivity extends AppCompatActivity {
                     public void onPageSelected(int position) {
                         onTabShown(position);
                     }
+
+                    /** 横向滑动期间停掉卡片的模糊刷新。
+                     *  滑动时画面在飞，糊的是哪一块看不出来；一屏十几张卡各自逐帧重算
+                     *  才是掉帧的主因。IDLE 时恢复并立刻重算一帧。 */
+                    @Override
+                    public void onPageScrollStateChanged(int state) {
+                        GlassCard.setBlurUpdating(
+                                state == androidx.viewpager2.widget.ViewPager2.SCROLL_STATE_IDLE);
+                    }
                 });
         nav.setOnItemSelectedListener(item -> {
             // 在二级页时点底栏：先退出二级页，再切 tab。
             closeSecondary();
-            // smoothScroll=true 才是真平移（跟手那套滚动的程序化版本）。
-            pager.setCurrentItem(tabIndex(item.getItemId()), true);
+            int to = tabIndex(item.getItemId());
+            // **只有相邻页才平滑滚动。**ViewPager2 的 smoothScroll 是真的滚过去，
+            // 路过的位置会被创建并渲染一遍 —— 从「启动」点「终端」会顺路把插件页和设置页
+            // 全建出来（每页首次都要 inflate + 走一遍 walk + 装配所有卡片的 BlurView）,
+            // 这就是首次切页那一下卡的来源。跨页直接跳，不给中间页曝光的机会。
+            pager.setCurrentItem(to, Math.abs(to - curTab) <= 1);
             return true;
         });
         setupGlass();
@@ -185,9 +198,9 @@ public class MainActivity extends AppCompatActivity {
                 sec.postDelayed(() -> {
                     sec.setAlpha(1f);
                     sec.setVisibility(View.GONE);
-                }, 210);
+                }, 260);
             }
-            if (pg != null) pg.animate().alpha(1f).setDuration(160).start();
+            if (pg != null) pg.animate().alpha(1f).setDuration(240).start();
             clearBreadcrumb(true);
         });
         // 卡片透明度要覆盖**所有层级**的 Fragment。原先只在 switchFragment 里调一次，
@@ -378,7 +391,7 @@ public class MainActivity extends AppCompatActivity {
 
             // 「·」跟着飞行一起淡入，落地时刚好显形
             android.widget.TextView dot = findViewById(R.id.app_title_dot);
-            if (dot != null) dot.animate().alpha(1f).setDuration(260).start();
+            if (dot != null) dot.animate().alpha(1f).setDuration(340).start();
 
             // 二级页**立刻**开始进场，和飞行完全重叠（pager 的淡出也在 openSecondary 里）。
             // 上一版是等飞行结束才开始，两段串起来就是 200+110ms 的空窗，
@@ -389,7 +402,7 @@ public class MainActivity extends AppCompatActivity {
             ghost.animate()
                     .translationX(dx).translationY(dy)
                     .scaleX(scale).scaleY(scale)
-                    .setDuration(220)
+                    .setDuration(300)
                     .setInterpolator(new android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
                     .withEndAction(() -> {
                         root.removeView(ghost);
@@ -405,10 +418,10 @@ public class MainActivity extends AppCompatActivity {
         if (sec != null) {
             sec.setVisibility(View.VISIBLE);
             sec.setAlpha(0f);
-            sec.animate().alpha(1f).setDuration(260).start();
+            sec.animate().alpha(1f).setDuration(340).start();
         }
         View pg = findViewById(R.id.pager);
-        if (pg != null && pg.getAlpha() > 0f) pg.animate().alpha(0f).setDuration(200).start();
+        if (pg != null && pg.getAlpha() > 0f) pg.animate().alpha(0f).setDuration(260).start();
         getSupportFragmentManager().beginTransaction()
                 // 只设 popExit：返回时二级页得自己淡出。
                 // 容器那个 alpha 动画管不到这一步 —— 退栈时 fragment 先被移除、容器里

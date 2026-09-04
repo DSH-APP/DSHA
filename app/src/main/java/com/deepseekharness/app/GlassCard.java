@@ -134,12 +134,49 @@ public class GlassCard extends BlurView {
             // 卡片糊的只有背景图（静态内容），所以降采样可以开得比栏更大：
             // scaleFactor 8 出来的是一片干净的色雾，文字压在上面很好读。
             // 半径取用户设定的 85% —— 卡片面积小，和栏用同一个值会糊成一团。
-            setupWith(target, 8f, DshaGlass.noise(getContext()))
+            facade = setupWith(target, 8f, DshaGlass.noise(getContext()))
                     .setBlurRadius(DshaGlass.radius(getContext()) * 0.85f)
                     .setOverlayColor(DshaGlass.overlayColor(getContext(), factor));
+            // 登记自己，好让页面横向滑动时统一停掉模糊刷新（见 setBlurUpdating）。
+            synchronized (sCards) {
+                sCards.add(new java.lang.ref.WeakReference<>(this));
+            }
             wired = true;
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "卡片玻璃装配失败（退化成普通卡片）: " + t);
+        }
+    }
+
+    private eightbitlab.com.blurview.BlurViewFacade facade;
+
+    /** 所有装配过玻璃的卡片。弱引用 —— 卡片跟着 Fragment 反复创建销毁，
+     *  强引用会把整棵 View 树连 Activity 一起钉在内存里。 */
+    private static final java.util.List<java.lang.ref.WeakReference<GlassCard>> sCards =
+            new java.util.ArrayList<>();
+
+    /** 批量开关卡片的模糊刷新。
+     *
+     *  <p>给页面横向滑动用：一屏十几张卡，每张都在逐帧重算模糊，在 120Hz 的 8.3ms 帧预算里
+     *  是主要超支来源。滑动过程中画面本身在飞，糊的是哪一块根本看不出来，
+     *  停掉刷新只会保留进入滑动那一刻的快照 —— 停下来再打开就立刻对上。
+     *
+     *  <p><b>不能永久关掉。</b>卡片跟着列表上下滚时，它背后对应的背景图区域是在变的，
+     *  快照不更新就成了一张贴纸，滚动时能明显看出错位。 */
+    static void setBlurUpdating(boolean on) {
+        synchronized (sCards) {
+            java.util.Iterator<java.lang.ref.WeakReference<GlassCard>> it = sCards.iterator();
+            while (it.hasNext()) {
+                GlassCard c = it.next().get();
+                if (c == null) {
+                    it.remove();               // 顺手清掉已回收的
+                    continue;
+                }
+                try {
+                    if (c.facade != null) c.facade.setBlurAutoUpdate(on);
+                    if (on) c.invalidate();    // 恢复时立刻重算一帧，别等下一次触发
+                } catch (Throwable ignored) {
+                }
+            }
         }
     }
 }
