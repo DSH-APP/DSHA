@@ -209,10 +209,15 @@ public class SettingsFragment extends Fragment {
         row.addView(body);
         row.addView(chev);
         row.setOnClickListener(v -> {
-            // 同样不加转场动画：shared axis Z 也是「旧页缩小淡出、新页放大淡入」，
-            // 中间那几帧会露出背景图（底衬是完全透明的，见 DshaGlass#walk 的图层契约）。
             androidx.fragment.app.Fragment target = opt.factory.get();
             requireActivity().getSupportFragmentManager().beginTransaction()
+                    // crossfade：淡入淡出**完整重叠**，任何一帧都有内容盖着背景图。
+                    // 不用 MaterialSharedAxis —— 它是「旧页缩小淡出、新页放大淡入」，
+                    // 中间那段间隙会露出背景图原图（底衬是透明的，见图层契约 ②）。
+                    // 四个参数依次是 enter / exit / popEnter / popExit，
+                    // 后两个不填按返回键就没有动效。
+                    .setCustomAnimations(R.anim.dsha_fade_in, R.anim.dsha_fade_out,
+                            R.anim.dsha_fade_in, R.anim.dsha_fade_out)
                     .setReorderingAllowed(true)
                     .replace(R.id.fragment_container, target)
                     .addToBackStack("settings")

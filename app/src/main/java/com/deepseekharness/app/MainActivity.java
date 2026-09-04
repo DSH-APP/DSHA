@@ -200,13 +200,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchFragment(Fragment f) {
-        // 刻意**不加**转场动画。
-        // 试过 Material Motion 的 fade through（规范给「无层级关系的页面之间」用的那个），
-        // 它的定义就是「旧内容先淡出、新内容再淡入」—— 中间那几帧两者都接近透明，
-        // 而页面底衬现在是完全透明的（图层契约 ②），于是直接露出背景图原图，
-        // 观感是一次闪烁。要么让底衬不透明（那就遮住背景图，绕回老问题），
-        // 要么不做这个动画。选后者。
         getSupportFragmentManager().beginTransaction()
+                // crossfade：淡入与淡出同时开始、同样时长，两层不透明度之和始终接近 1，
+                // 所以任何一帧都有内容盖着背景图。
+                // 不用 MaterialFadeThrough —— 规范里它是「旧页在前 45% 淡出、新页在后 55%
+                // 淡入」，中间那段两者都接近透明的间隙会露出背景图原图（底衬是完全透明的，
+                // 见 DshaGlass#walk 的图层契约 ②），表现为一次闪烁。
+                .setCustomAnimations(R.anim.dsha_fade_in, R.anim.dsha_fade_out)
                 .setReorderingAllowed(true)
                 .replace(R.id.fragment_container, f)
                 .commit();
@@ -245,6 +245,12 @@ public class MainActivity extends AppCompatActivity {
             for (int id : ids) {
                 eightbitlab.com.blurview.BlurView bv = findViewById(id);
                 if (bv == null) continue;
+                // 一条描边把栏和内容区分开。顶栏画下边、底栏画上边（满宽的栏如果四边都描，
+                // 屏幕左右缘会冒出两条短竖线）。填充是透明的 —— BlurView 的 background
+                // 在模糊之后才画，不透明就会把模糊盖掉。
+                bv.setBackgroundResource(id == R.id.top_glass
+                        ? R.drawable.bg_bar_line_bottom
+                        : R.drawable.bg_bar_line_top);
                 // scaleFactor 5：栏是常驻的，每帧都要重算，降采样狠一点省 GPU；
                 // 反正模糊本身就不需要精确。半径与噪点由用户在外观面板里调。
                 bv.setupWith(target, 5f, DshaGlass.noise(this))

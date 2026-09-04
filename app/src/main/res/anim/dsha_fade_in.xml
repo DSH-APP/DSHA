@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  页面切换的淡入。
+
+  和 MaterialFadeThrough 的区别是关键：那个规范动画把时间轴切成两半 —— 旧页在前 45%
+  淡出、新页在后 55% 淡入，中间有一段两者都接近透明的间隙。页面底衬现在是完全透明的
+  （见 DshaGlass#walk 的图层契约 ②），那段间隙就直接露出背景图原图，表现为一次闪烁。
+
+  这里让淡入和淡出**完整重叠**（同样的时长、同时开始），也就是 crossfade：
+  两层的不透明度之和始终接近 1，任何一帧都有内容盖着背景图。
+-->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="200"
+    android:fromAlpha="0.0"
+    android:interpolator="@android:interpolator/fast_out_slow_in"
+    android:toAlpha="1.0" />
