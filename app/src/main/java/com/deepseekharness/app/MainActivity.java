@@ -196,14 +196,26 @@ public class MainActivity extends AppCompatActivity {
                     public void onFragmentViewCreated(
                             androidx.fragment.app.FragmentManager fm,
                             androidx.fragment.app.Fragment f, View v, Bundle s) {
-                        // 作用在 decorView 而不是这个 Fragment 的 v —— 顶栏、底栏、以及它们里面的
-                        // logo 圆和「关于」按钮都不属于任何 Fragment，只处理 v 的话那些地方永远
-                        // 不透明（就是左上角那个圆一直很实的原因）。
+                        // 两次 apply，作用范围不同，都不能少：
                         //
-                        // **同步**应用，不要 post：这个回调发生在 View 树建好、首帧绘制之前，
-                        // 这时候改 alpha 用户看不到过程。post 到下一帧的话，第一帧是不透明的、
-                        // 第二帧才变透明 —— 那就是「打开二级页面会闪一下」的原因。
+                        // ① decorView —— 顶栏、底栏、以及它们里面的 logo 圆和「关于」按钮
+                        //    都不属于任何 Fragment，只处理 v 的话那些地方永远不透明。
+                        //
+                        // ② 这个 Fragment 自己的 v —— **此刻它可能还没 attach 到 window**。
+                        //    换 ViewPager2 之后暴露出来的：FragmentStateAdapter 是先
+                        //    onCreateView、再把 view add 进 holder 的容器，而这个回调发生在
+                        //    add 之前，所以从 decorView 走下来遍历不到它。后果是页面底衬
+                        //    没被设成透明，不透明的 dshaSurface 盖住整张背景图 ——
+                        //    「首次进来一片黑、切几下页面背景图才出来」就是这么来的
+                        //    （切页时新 fragment 的 view 早已在树里，那次就正常了）。
+                        //    以前用 replace(R.id.fragment_container, …) 没这问题，
+                        //    FragmentManager 是先 add view 再回调。
+                        //
+                        // **同步**应用，不要 post：这个回调发生在首帧绘制之前，这时候改 alpha
+                        // 用户看不到过程。post 到下一帧的话，第一帧不透明、第二帧才变透明 ——
+                        // 那就是「打开二级页面会闪一下」的原因。
                         DshaGlass.apply(getWindow().getDecorView());
+                        DshaGlass.apply(v);
                         padForBars(f, v);
                     }
                 }, true);
