@@ -93,7 +93,26 @@ final class DshaBackground {
                             android.graphics.Shader.TileMode.CLAMP)
                     : null);
         }
-        iv.setImageAlpha(255 - (int) (dim(ctx) / 100f * 255f));
+        iv.setImageAlpha(255);
+        iv.setColorFilter(dimFilter(ctx));
+    }
+
+    /** 压暗用的 ColorMatrix；0% 返回 null（原图）。
+     *
+     *  <p><b>为什么不用 alpha。</b>之前是 setImageAlpha —— 那是让图**半透明**，透出下面的
+     *  window 底衬。数学上在深色底上确实会变暗，但同时把对比度一起拉低了：图发灰、发脏，
+     *  层次糊掉。反馈「淡化效果没以前好」说的就是这个。
+     *
+     *  <p>现在按亮度等比缩放 RGB（setScale(s,s,s,1)），也就是真正的「压暗」：每个像素
+     *  乘同一个系数，明暗关系、饱和度、边缘锐度全部保留，只是整体变暗。图本身仍然是
+     *  不透明的，不会混进底衬的颜色。 */
+    static android.graphics.ColorFilter dimFilter(Context ctx) {
+        int d = dim(ctx);
+        if (d <= 0) return null;
+        float s = 1f - d / 100f;
+        android.graphics.ColorMatrix cm = new android.graphics.ColorMatrix();
+        cm.setScale(s, s, s, 1f);
+        return new android.graphics.ColorMatrixColorFilter(cm);
     }
 
     /** Telegram 式的「填充背景」：不必手上有合适照片也能个性化。

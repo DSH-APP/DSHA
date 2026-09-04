@@ -166,11 +166,35 @@ final class DshaGlass {
         } catch (Throwable ignored) {
         }
         int a = (int) (overlayPct(ctx) / 100f * 255f * factor);
+        // 浅色配色 + 深色背景图是天然冲突：文字是深色、需要浅底衬，而图本身是深的。
+        // 白色 overlay 得更实一档才压得住，不然整屏灰蒙蒙 —— 反馈里的「浅色模式异常昏暗」
+        // 就是这么来的（同一个 76% 浓度，在深色配色下够用，浅色配色下远远不够）。
+        if (isLightTheme(ctx)) a = (int) (a * 1.3f);
         a = Math.max(0, Math.min(255, a));
         return android.graphics.Color.argb(a,
                 android.graphics.Color.red(base),
                 android.graphics.Color.green(base),
                 android.graphics.Color.blue(base));
+    }
+
+    /** 当前是不是浅色配色。按 dshaCard 的亮度判断，比读系统深浅色模式准 ——
+     *  用户可能在浅色系统里选了樱花深色那套，或者反过来。 */
+    private static boolean isLightTheme(Context ctx) {
+        try {
+            android.util.TypedValue tv = new android.util.TypedValue();
+            if (ctx.getTheme().resolveAttribute(R.attr.dshaCard, tv, true)) {
+                int c = tv.resourceId != 0
+                        ? androidx.core.content.ContextCompat.getColor(ctx, tv.resourceId)
+                        : tv.data;
+                // 简单亮度：浅色卡片的三通道都接近 255
+                int lum = (android.graphics.Color.red(c) * 30
+                        + android.graphics.Color.green(c) * 59
+                        + android.graphics.Color.blue(c) * 11) / 100;
+                return lum > 140;
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 
     // ── 元素级玻璃（GlassDrawable）───────────────────────────────

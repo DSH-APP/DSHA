@@ -441,7 +441,7 @@ public class ConfigFragment extends Fragment {
         final TextView bgBlurLabel = v.findViewById(R.id.ap_bgblur_label);
         dim.setProgress(DshaBackground.dim(ctx));
         bgBlur.setProgress(DshaBackground.bgBlur(ctx));
-        dimLabel.setText("背景淡化 " + dim.getProgress() + "%");
+        dimLabel.setText("背景压暗 " + dim.getProgress() + "%");
         bgBlurLabel.setText("背景模糊 " + bgBlur.getProgress() + "%");
         final Runnable previewBg = () -> {
             View bgIv = requireActivity().findViewById(R.id.app_background);
@@ -456,10 +456,21 @@ public class ConfigFragment extends Fragment {
                                 android.graphics.Shader.TileMode.CLAMP)
                         : null);
             }
-            im.setImageAlpha(255 - (int) (dim.getProgress() / 100f * 255f));
+            im.setImageAlpha(255);
+            // 压暗走 ColorMatrix 等比缩放 RGB，不是 alpha —— alpha 会让图混进底衬、
+            // 连对比度一起拉低（发灰）。见 DshaBackground#dimFilter。
+            int d = dim.getProgress();
+            if (d <= 0) {
+                im.setColorFilter(null);
+            } else {
+                float s = 1f - d / 100f;
+                android.graphics.ColorMatrix cm = new android.graphics.ColorMatrix();
+                cm.setScale(s, s, s, 1f);
+                im.setColorFilter(new android.graphics.ColorMatrixColorFilter(cm));
+            }
         };
         dim.setOnSeekBarChangeListener(new SimpleSeek(p -> {
-            dimLabel.setText("背景淡化 " + p + "%");
+            dimLabel.setText("背景压暗 " + p + "%");
             previewBg.run();
         }));
         bgBlur.setOnSeekBarChangeListener(new SimpleSeek(p -> {

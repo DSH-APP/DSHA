@@ -209,18 +209,9 @@ public class SettingsFragment extends Fragment {
         row.addView(body);
         row.addView(chev);
         row.setOnClickListener(v -> {
-            // Material Motion 的「共享 Z 轴」：设置 → 二级页是明确的层级前进关系，
-            // forward=true 时新页放大淡入、旧页缩小淡出；返回时反向。四个方向都得设，
-            // 少了 return/reenter 那两个，按返回键那一下就没有动效、显得跳。
+            // 同样不加转场动画：shared axis Z 也是「旧页缩小淡出、新页放大淡入」，
+            // 中间那几帧会露出背景图（底衬是完全透明的，见 DshaGlass#walk 的图层契约）。
             androidx.fragment.app.Fragment target = opt.factory.get();
-            setExitTransition(new com.google.android.material.transition.MaterialSharedAxis(
-                    com.google.android.material.transition.MaterialSharedAxis.Z, true));
-            setReenterTransition(new com.google.android.material.transition.MaterialSharedAxis(
-                    com.google.android.material.transition.MaterialSharedAxis.Z, false));
-            target.setEnterTransition(new com.google.android.material.transition.MaterialSharedAxis(
-                    com.google.android.material.transition.MaterialSharedAxis.Z, true));
-            target.setReturnTransition(new com.google.android.material.transition.MaterialSharedAxis(
-                    com.google.android.material.transition.MaterialSharedAxis.Z, false));
             requireActivity().getSupportFragmentManager().beginTransaction()
                     .setReorderingAllowed(true)
                     .replace(R.id.fragment_container, target)

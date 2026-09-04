@@ -238,14 +238,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="背景淡化 0%" />
+            android:text="背景压暗 0%" />
 
         <TextView
             style="@style/DshaText.Caption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="?attr/dshaTextSecondary"
-            android:text="默认 0（原图）。深色配色下淡化等价于变暗 —— 图变淡露出的是接近黑的底色。" />
+            android:text="默认 0（原图）。按亮度等比压暗，明暗关系与锐度全部保留，不会像半透明那样发灰。" />
 
         <SeekBar
             android:id="@+id/ap_dim"
