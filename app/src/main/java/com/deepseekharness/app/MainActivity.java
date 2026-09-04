@@ -179,8 +179,13 @@ public class MainActivity extends AppCompatActivity {
             final View sec = findViewById(R.id.fragment_container);
             View pg = findViewById(R.id.pager);
             if (sec != null) {
-                sec.animate().alpha(0f).setDuration(160)
-                        .withEndAction(() -> sec.setVisibility(View.GONE)).start();
+                // 不淡出容器 —— 二级页 fragment 自己带 popExit 淡出（见 openSecondary），
+                // 容器再淡一遍等于叠两层，而且退栈那一刻容器里已经空了、淡的是空白。
+                // 这里只负责等 fragment 的动画跑完再把容器藏起来。
+                sec.postDelayed(() -> {
+                    sec.setAlpha(1f);
+                    sec.setVisibility(View.GONE);
+                }, 210);
             }
             if (pg != null) pg.animate().alpha(1f).setDuration(160).start();
             clearBreadcrumb(true);
@@ -215,7 +220,9 @@ public class MainActivity extends AppCompatActivity {
                         // 用户看不到过程。post 到下一帧的话，第一帧不透明、第二帧才变透明 ——
                         // 那就是「打开二级页面会闪一下」的原因。
                         DshaGlass.apply(getWindow().getDecorView());
-                        DshaGlass.apply(v);
+                        // 只有 v 还没 attach 到 window 时才单独补一次 —— 否则等于把同一棵
+                        // 子树遍历两遍，页面越大越明显（反馈「有点小卡」的一部分）。
+                        if (v.getWindowToken() == null) DshaGlass.apply(v);
                         padForBars(f, v);
                     }
                 }, true);
@@ -378,7 +385,7 @@ public class MainActivity extends AppCompatActivity {
             ghost.animate()
                     .translationX(dx).translationY(dy)
                     .scaleX(scale).scaleY(scale)
-                    .setDuration(280)
+                    .setDuration(200)
                     .setInterpolator(new android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
                     .withEndAction(() -> {
                         root.removeView(ghost);
@@ -395,11 +402,15 @@ public class MainActivity extends AppCompatActivity {
         if (sec != null) {
             sec.setVisibility(View.VISIBLE);
             sec.setAlpha(0f);
-            sec.animate().alpha(1f).setDuration(180).start();
+            sec.animate().alpha(1f).setDuration(110).start();
         }
         View pg = findViewById(R.id.pager);
-        if (pg != null && pg.getAlpha() > 0f) pg.animate().alpha(0f).setDuration(180).start();
+        if (pg != null && pg.getAlpha() > 0f) pg.animate().alpha(0f).setDuration(130).start();
         getSupportFragmentManager().beginTransaction()
+                // 只设 popExit：返回时二级页得自己淡出。
+                // 容器那个 alpha 动画管不到这一步 —— 退栈时 fragment 先被移除、容器里
+                // 已经是空的，淡的是一片空白，看起来就是「返回没有动画」。
+                .setCustomAnimations(0, 0, 0, R.anim.dsha_fade_out)
                 .setReorderingAllowed(true)
                 .replace(R.id.fragment_container, next)
                 .addToBackStack("secondary")
