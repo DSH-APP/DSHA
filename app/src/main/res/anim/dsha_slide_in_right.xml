@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  底栏四个页面之间「前进」时的新页入场：从右侧一小段距离滑入，同时淡入。
+
+  这四个文件是一组，时长必须完全一致（240ms）——「入场」和「出场」同时开始、同时结束，
+  两层的不透明度之和始终接近 1。任何一帧都有内容盖着背景图，所以不会露出底图原图
+  （页面底衬是完全透明的，见 DshaGlass#walk 的图层契约 ②）。
+  这也是不直接用 MaterialSharedAxis 的原因：规范版把时间轴切成两半（先出后入），
+  中间那段间隙就是之前反馈的「切页闪烁」。
+
+  位移只有父容器宽度的 6%（约 20dp）—— 平移是用来暗示方向的，不是真的把页面推过去，
+  幅度大了会显得拖沓，而且滑动中的半透明内容叠在一起会糊。
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:interpolator/fast_out_slow_in">
+    <alpha
+        android:duration="240"
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0" />
+    <translate
+        android:duration="240"
+        android:fromXDelta="6%p"
+        android:toXDelta="0%p" />
+</set>

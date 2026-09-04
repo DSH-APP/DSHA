@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 「后退」时的旧页出场：向右滑出并淡出。与 dsha_slide_in_left 成对。 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:interpolator/fast_out_slow_in">
+    <alpha
+        android:duration="240"
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0" />
+    <translate
+        android:duration="240"
+        android:fromXDelta="0%p"
+        android:toXDelta="6%p" />
+</set>

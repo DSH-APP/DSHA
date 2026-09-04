@@ -163,10 +163,23 @@ public class MainActivity extends AppCompatActivity {
                 f = new SettingsFragment();
                 setAppTitle("设置", R.drawable.ic_settings);
             }
-            switchFragment(f);
+            switchFragment(f, tabIndex(id));
             return true;
         });
         setupGlass();
+        // 从二级页按返回键回到四大页时，顶栏标题要跟着退回去 —— 否则会一直挂着
+        // 「安装」这种二级页的名字。按 curTab 恢复而不是记录「进来之前是什么」：
+        // 四大页互相切换时也会 popBackStack（清掉可能残留的二级页），
+        // 那次也会触发这个回调，按 curTab 算出来的正是刚切过去的那一页，不会覆盖错。
+        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+            if (getSupportFragmentManager().getBackStackEntryCount() != 0) return;
+            switch (curTab) {
+                case 0: setAppTitle("启动", R.drawable.ic_launch); break;
+                case 1: setAppTitle("市场", R.drawable.ic_plugins); break;
+                case 3: setAppTitle("终端", R.drawable.ic_terminal); break;
+                default: setAppTitle("设置", R.drawable.ic_settings); break;
+            }
+        });
         // 卡片透明度要覆盖**所有层级**的 Fragment。原先只在 switchFragment 里调一次，
         // 于是二级页面全漏了 —— 工作区、备份恢复、终端子页、市场详情，一共五处
         // beginTransaction 分散在四个 Fragment 里。逐处去补必然再漏（以后新增页面也一样），
@@ -199,19 +212,127 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void switchFragment(Fragment f) {
+    /** 底栏四个页面在视觉上的先后顺序，用来决定横向平移的方向。
+     *  和 menu 里的排列一致：启动 → 插件 → 设置 → 终端。序号变大算「前进」。 */
+    private static int tabIndex(int id) {
+        if (id == R.id.nav_launch) return 0;
+        if (id == R.id.nav_plugins) return 1;
+        if (id == R.id.nav_terminal) return 3;
+        return 2;
+    }
+
+    /** 当前所在的 tab 序号，只用于判断平移方向。 */
+    private int curTab = 0;
+
+    private void switchFragment(Fragment f, int toTab) {
+        boolean forward = toTab >= curTab;
+        curTab = toTab;
         getSupportFragmentManager().beginTransaction()
-                // crossfade：淡入与淡出同时开始、同样时长，两层不透明度之和始终接近 1，
-                // 所以任何一帧都有内容盖着背景图。
-                // 不用 MaterialFadeThrough —— 规范里它是「旧页在前 45% 淡出、新页在后 55%
-                // 淡入」，中间那段两者都接近透明的间隙会露出背景图原图（底衬是完全透明的，
-                // 见 DshaGlass#walk 的图层契约 ②），表现为一次闪烁。
-                .setCustomAnimations(R.anim.dsha_fade_in, R.anim.dsha_fade_out)
+                // 横向平移 + 淡入淡出。前进（序号变大）时新页从右侧滑入、旧页向左滑出；
+                // 后退反向。四个 anim 时长一致且同时开始，两层不透明度之和始终接近 1,
+                // 所以任何一帧都有内容盖着背景图 —— 这是不用 MaterialSharedAxis 的原因，
+                // 规范版是「先出后入」，中间那段间隙会露出底图原图。
+                .setCustomAnimations(
+                        forward ? R.anim.dsha_slide_in_right : R.anim.dsha_slide_in_left,
+                        forward ? R.anim.dsha_slide_out_left : R.anim.dsha_slide_out_right)
                 .setReorderingAllowed(true)
                 .replace(R.id.fragment_container, f)
                 .commit();
         // 卡片透明度不在这里管 —— onFragmentViewCreated 回调已经覆盖所有层级，
         // 而且它是在首帧之前同步跑的。这里再 post 一次只会让画面多变一次（闪）。
+    }
+
+    /** 「标题飞进顶栏」：设置页点进二级页时用的转场。
+     *
+     *  <p>效果是内容区整体淡出、被点那一行的标题文字平移并放大到顶栏标题的位置、
+     *  然后新页元素淡入。
+     *
+     *  <p><b>为什么自己做而不用 Fragment 的共享元素转场。</b>共享元素要求源和目标
+     *  都在参与这次 transaction 的 fragment 里，而顶栏标题（{@code app_title}）
+     *  属于 Activity 的布局、根本不在 fragment 中 —— addSharedElement 找不到它。
+     *  把顶栏搬进每个 fragment 是更大的改动（四个页面都要复制一份栏，还要处理
+     *  BlurView 的取样层级），不值得。
+     *
+     *  <p>所以这里在 Activity 的 content 上放一个**临时 TextView** 当替身：
+     *  起点取源 view 在窗口里的实际坐标、终点取顶栏标题的坐标，飞完就销毁。
+     *  期间真正的顶栏标题先隐藏，等替身落地再换文字显示，看起来就是同一个字飞过去了。
+     *
+     *  @param src   被点那一行的标题 TextView（提供起点坐标、文字、字号）
+     *  @param title 落地后顶栏要显示的标题
+     *  @param icon  落地后顶栏的模块图标
+     *  @param next  要打开的二级页
+     */
+    void flyTitleTo(final android.widget.TextView src, final String title,
+                    final int icon, final Fragment next) {
+        final android.widget.TextView dst = findViewById(R.id.app_title);
+        final View content = findViewById(R.id.fragment_container);
+        final android.widget.FrameLayout root = findViewById(android.R.id.content);
+        // 少任何一个就退回无动画的直接替换 —— 动画是锦上添花，不能让它挡住功能。
+        if (src == null || dst == null || content == null || root == null) {
+            openSecondary(next, title, icon, false);
+            return;
+        }
+
+        int[] a = new int[2], b = new int[2], r = new int[2];
+        src.getLocationInWindow(a);
+        dst.getLocationInWindow(b);
+        root.getLocationInWindow(r);
+
+        // 替身：复制源文字的样子，绝对定位在 content 上（FrameLayout 的 margin 当坐标用）
+        final android.widget.TextView ghost = new android.widget.TextView(this);
+        ghost.setText(src.getText());
+        ghost.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, src.getTextSize());
+        ghost.setTextColor(src.getCurrentTextColor());
+        ghost.setTypeface(src.getTypeface());
+        ghost.setMaxLines(1);
+        android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT);
+        lp.leftMargin = a[0] - r[0];
+        lp.topMargin = a[1] - r[1];
+        ghost.setLayoutParams(lp);
+        root.addView(ghost);
+
+        // 目标字号 / 源字号 = 该放大多少倍。pivot 设在左上角，这样缩放不会把位移带偏。
+        final float scale = src.getTextSize() > 0 ? dst.getTextSize() / src.getTextSize() : 1f;
+        ghost.setPivotX(0f);
+        ghost.setPivotY(0f);
+
+        final int dx = (b[0] - r[0]) - lp.leftMargin;
+        // 竖直方向按基线附近对齐：两个 view 高度不同，用中心对中心更稳
+        final int dy = (b[1] - r[1]) - lp.topMargin
+                + (dst.getHeight() - Math.round(src.getHeight() * scale)) / 2;
+
+        dst.setAlpha(0f);
+        content.animate().alpha(0f).setDuration(170).start();
+        ghost.animate()
+                .translationX(dx).translationY(dy)
+                .scaleX(scale).scaleY(scale)
+                .setDuration(280)
+                .setInterpolator(new android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
+                .withEndAction(() -> {
+                    root.removeView(ghost);
+                    content.setAlpha(1f);
+                    setAppTitle(title, icon);
+                    dst.setAlpha(0f);
+                    dst.animate().alpha(1f).setDuration(140).start();
+                    openSecondary(next, title, icon, true);
+                })
+                .start();
+    }
+
+    /** 打开二级页。{@code animated=false} 时连淡入都不做（给 flyTitleTo 的退化路径用）。 */
+    void openSecondary(Fragment next, String title, int icon, boolean afterFly) {
+        if (!afterFly) setAppTitle(title, icon);
+        androidx.fragment.app.FragmentTransaction tx =
+                getSupportFragmentManager().beginTransaction();
+        // 只给新页淡入：旧页此刻已经被 flyTitleTo 手动淡到透明了，再叠一遍出场动画
+        // 会让它「淡出两次」——第二次是从 alpha=0 开始，观感上等于凭空闪一下。
+        tx.setCustomAnimations(R.anim.dsha_fade_in, 0, R.anim.dsha_fade_in, R.anim.dsha_fade_out);
+        tx.setReorderingAllowed(true)
+                .replace(R.id.fragment_container, next)
+                .addToBackStack("settings")
+                .commit();
     }
 
     /** 显示/隐藏底部导航栏（WebView 全屏时隐藏） */

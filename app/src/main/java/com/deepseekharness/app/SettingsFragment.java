@@ -210,18 +210,21 @@ public class SettingsFragment extends Fragment {
         row.addView(chev);
         row.setOnClickListener(v -> {
             androidx.fragment.app.Fragment target = opt.factory.get();
-            requireActivity().getSupportFragmentManager().beginTransaction()
-                    // crossfade：淡入淡出**完整重叠**，任何一帧都有内容盖着背景图。
-                    // 不用 MaterialSharedAxis —— 它是「旧页缩小淡出、新页放大淡入」，
-                    // 中间那段间隙会露出背景图原图（底衬是透明的，见图层契约 ②）。
-                    // 四个参数依次是 enter / exit / popEnter / popExit，
-                    // 后两个不填按返回键就没有动效。
-                    .setCustomAnimations(R.anim.dsha_fade_in, R.anim.dsha_fade_out,
-                            R.anim.dsha_fade_in, R.anim.dsha_fade_out)
-                    .setReorderingAllowed(true)
-                    .replace(R.id.fragment_container, target)
-                    .addToBackStack("settings")
-                    .commit();
+            // 「标题飞进顶栏」的转场由 Activity 做 —— 顶栏标题在 Activity 的布局里，
+            // fragment 的共享元素转场碰不到它。详见 MainActivity#flyTitleTo。
+            // 图标沿用设置那个：二级页仍在设置这一支下面，换图标反而让人以为跳了模块。
+            androidx.fragment.app.FragmentActivity act = requireActivity();
+            if (act instanceof MainActivity) {
+                ((MainActivity) act).flyTitleTo(title, opt.title, R.drawable.ic_settings, target);
+            } else {
+                act.getSupportFragmentManager().beginTransaction()
+                        .setCustomAnimations(R.anim.dsha_fade_in, R.anim.dsha_fade_out,
+                                R.anim.dsha_fade_in, R.anim.dsha_fade_out)
+                        .setReorderingAllowed(true)
+                        .replace(R.id.fragment_container, target)
+                        .addToBackStack("settings")
+                        .commit();
+            }
         });
         return row;
     }
