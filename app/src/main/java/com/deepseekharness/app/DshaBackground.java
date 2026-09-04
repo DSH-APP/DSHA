@@ -37,11 +37,6 @@ import java.io.OutputStream;
  */
 final class DshaBackground {
 
-    static final String KEY_DIM = "ui_bg_dim";          // 0~80，淡化百分比
-    /** 默认 20%。这个值原先是 45 —— 那是「背景压暗」时代留下的（当时是叠一层 45% 的黑）。
-     *  改成 alpha 淡化之后 45% 反而更暗：图变淡露出的是主题底色，而深色配色下的底色
-     *  本来就接近黑，所以「淡化」在数学上等价于「混入黑色」。45% 会把照片压得看不出内容。 */
-    static final int DIM_DEFAULT = 20;
     static final String KEY_BLUR = "ui_bg_blur";        // 0~100，模糊强度
     static final int BLUR_DEFAULT = 0;
 
@@ -139,16 +134,7 @@ final class DshaBackground {
         return f.isFile() && f.length() > 0;
     }
 
-    static int dim(Context ctx) {
-        int v = ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
-                .getInt(KEY_DIM, DIM_DEFAULT);
-        return Math.max(0, Math.min(80, v));
-    }
 
-    static void setDim(Context ctx, int v) {
-        ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
-                .edit().putInt(KEY_DIM, Math.max(0, Math.min(80, v))).apply();
-    }
 
     static void clear(Context ctx) {
         try {
@@ -229,9 +215,10 @@ final class DshaBackground {
             BitmapDrawable pic = new BitmapDrawable(a.getResources(), bm);
             // 铺满并裁切，不拉伸变形
             pic.setGravity(android.view.Gravity.FILL);
-            int alpha = (int) (dim(a) / 100f * 255);
-            Drawable[] layers = {pic, new ColorDrawable(Color.argb(alpha, 0, 0, 0))};
-            a.getWindow().setBackgroundDrawable(new LayerDrawable(layers));
+            // 不再叠任何暗化层：原先这里压一层黑（「背景淡化」那个参数），实测怎么调都嫌暗
+            // —— 深色配色下淡化等价于混入黑色，等于把照片本身毁掉。图就按原样铺，
+            // 可读性交给玻璃块的着色去管。
+            a.getWindow().setBackgroundDrawable(pic);
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "自定义背景应用失败（回落主题底衬）: " + t);
         }
@@ -256,7 +243,6 @@ final class DshaBackground {
                     // GradientDrawable 没有固有尺寸，centerCrop 下不保证铺满，得换 FIT_XY。
                     iv.setScaleType(android.widget.ImageView.ScaleType.FIT_XY);
                     iv.setImageDrawable(fill);
-                    iv.setImageAlpha(255);      // 填充色是自己挑的，不用再淡一次
                     iv.setVisibility(android.view.View.VISIBLE);
                 } else {
                     iv.setVisibility(android.view.View.GONE);
@@ -273,9 +259,6 @@ final class DshaBackground {
             iv.setImageBitmap(bgGlass(iv.getContext())
                     ? blur(bm, Math.min(100, DshaGlass.radius(iv.getContext()) * 5 / 2))
                     : bm);
-            // 半透明，而不是叠一层黑：叠黑只是把图压暗，它仍然是一张「实」的图压在界面底下；
-            // 降低不透明度会让它和主题底色相融，观感轻得多。
-            iv.setImageAlpha(255 - (int) (dim(iv.getContext()) / 100f * 255f));
             iv.setVisibility(android.view.View.VISIBLE);
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "背景图挂到 View 失败: " + t);
@@ -312,15 +295,7 @@ final class DshaBackground {
             if (cropped != scaled) scaled.recycle();
 
             Bitmap out = blur(cropped, Math.min(100, DshaGlass.radius(ctx) * 5 / 2));
-            // 压暗烘进底图，省得每个元素各画一层。这是玻璃内部专属的（文字要好读），
-            // 背景图那边用的是 alpha 淡化，两回事。
-            int dim = dim(ctx);
-            if (dim <= 0) return out;
-            Bitmap mutable = out.isMutable() ? out : out.copy(Bitmap.Config.ARGB_8888, true);
-            if (mutable != out) out.recycle();
-            android.graphics.Canvas c = new android.graphics.Canvas(mutable);
-            c.drawColor(Color.argb((int) (dim / 100f * 255), 0, 0, 0));
-            return mutable;
+            return out;
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "玻璃底图生成失败: " + t);
             return null;

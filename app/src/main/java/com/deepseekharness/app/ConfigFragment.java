@@ -425,10 +425,6 @@ public class ConfigFragment extends Fragment {
             DshaSnack.show(ConfigFragment.this, "已清除背景图，界面重建后生效");
         });
 
-        final android.widget.SeekBar dim = v.findViewById(R.id.ap_dim);
-        final TextView dimLabel = v.findViewById(R.id.ap_dim_label);
-        dim.setProgress(DshaBackground.dim(ctx));
-        dimLabel.setText("背景淡化 " + dim.getProgress() + "%");
 
         final android.widget.SeekBar ovl = v.findViewById(R.id.ap_overlay);
         final android.widget.SeekBar rad = v.findViewById(R.id.ap_radius);
@@ -476,16 +472,6 @@ public class ConfigFragment extends Fragment {
         cornerLabel.setText("圆角 " + corner.getProgress() + "dp");
 
         final View decor = requireActivity().getWindow().getDecorView();
-        dim.setOnSeekBarChangeListener(new SimpleSeek(p -> {
-            dimLabel.setText("背景淡化 " + p + "%");
-            // 实时预览。原先要关掉对话框、重开界面才看得到效果，等于让人闭着眼睛调 ——
-            // 而「淡化多少合适」完全取决于具体那张图的明暗，只能边拖边看。
-            // 对话框是居中带边距的，屏幕边缘那圈背景图能看见变化。
-            View bgIv = requireActivity().findViewById(R.id.app_background);
-            if (bgIv instanceof android.widget.ImageView) {
-                ((android.widget.ImageView) bgIv).setImageAlpha(255 - (int) (p / 100f * 255f));
-            }
-        }));
         // 玻璃浓度与模糊强度都能运行时改（BlurView 的 setter 支持），所以直接预览；
         // 噪点只在 setupWith 时能定，改了得重建界面。
         ovl.setOnSeekBarChangeListener(new SimpleSeek(p -> {
@@ -513,7 +499,6 @@ public class ConfigFragment extends Fragment {
                     DshaBackground.setBgGlass(ctx, bgGlass.isChecked());
                     DshaBackground.setFillIndex(ctx, fillSel[0]);
                     DshaGlass.setCornerDp(ctx, corner.getProgress());
-                    DshaBackground.setDim(ctx, dim.getProgress());
                     int idx = 0;
                     for (int i = 0; i < ids.length; i++) {
                         if (group.getCheckedRadioButtonId() == ids[i]) idx = i;
@@ -521,12 +506,7 @@ public class ConfigFragment extends Fragment {
                     DshaTheme.set(ctx, DshaTheme.VALUES[idx]);
                     requireActivity().recreate();
                 })
-                .setNegativeButton("取消", (d, w) -> {
-                    DshaGlass.apply(decor);
-                    // 淡化是实时预览的，取消时要把背景图恢复成已保存的值 ——
-                    // 否则拖了一半点取消，界面就一直停在那个没保存的样子。
-                    DshaBackground.applyTo(requireActivity().findViewById(R.id.app_background));
-                })
+                .setNegativeButton("取消", (d, w) -> DshaGlass.apply(decor))
                 .setOnCancelListener(d -> DshaGlass.apply(decor))
                 .show();
     }

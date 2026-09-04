@@ -248,27 +248,6 @@
             android:textColor="?attr/dshaTextSecondary"
             android:text="勾上后连背景一起模糊，整屏朦胧；不勾就是原图 —— 玻璃的层次来自清晰背景与糊掉的玻璃块之间的对比。" />
 
-        <TextView
-            android:id="@+id/ap_dim_label"
-            style="@style/DshaText.Body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="背景淡化" />
-
-        <TextView
-            style="@style/DshaText.Caption"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="?attr/dshaTextSecondary"
-            android:text="让背景图退到后面。⚠️ 深色配色下「淡化」就等于变暗（图变淡露出的是接近黑的底色），想让图更清楚就往左拖到 0。" />
-
-        <SeekBar
-            android:id="@+id/ap_dim"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="80" />
-
         <!-- 原先这里还有一个「背景模糊」滑块。它把背景图本身糊掉了，而玻璃的观感恰恰来自
              「清晰的背景 + 糊掉的玻璃区域」这个对比 —— 全糊之后整屏就剩一团雾。
              元素玻璃的模糊程度现在由上面的「模糊强度」一并决定。 -->
