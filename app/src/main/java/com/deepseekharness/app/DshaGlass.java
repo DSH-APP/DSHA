@@ -212,33 +212,55 @@ final class DshaGlass {
 
     /** 准备共用底图。没有自定义背景图时返回 false —— 那种情况下退回原来的 setAlpha 路子，
      *  因为主题底衬本身就是纯色或渐变，糊它没有意义。 */
+    private static volatile boolean sBackdropLoading = false;
+
     private static boolean ensureBackdrop(View root) {
         try {
             if (!DshaBackground.exists(root.getContext())) return false;
-            int w = root.getWidth() > 0 ? root.getWidth()
+            final int w = root.getWidth() > 0 ? root.getWidth()
                     : root.getResources().getDisplayMetrics().widthPixels;
-            int h = root.getHeight() > 0 ? root.getHeight()
+            final int h = root.getHeight() > 0 ? root.getHeight()
                     : root.getResources().getDisplayMetrics().heightPixels;
             if (sBackdrop != null && !sBackdrop.isRecycled() && sBackdropW == w && sBackdropH == h) {
                 return true;
             }
-            android.graphics.Bitmap bm = DshaBackground.loadBackdrop(root.getContext(), w, h);
-            if (bm == null) return false;
-            // 换掉旧底图之前先放掉它。全屏 ARGB_8888 一张就是 10MB 上下，改一次参数漏一张，
-            // 在外观面板里拖几下滑块就能把堆吃掉。
-            // 注意：不能直接 recycle —— 已有的 GlassDrawable 还拿着它画，
-            // recycle 掉会当场 "Canvas: trying to use a recycled bitmap"。
-            // 所以只解引用，剩下的交给 GC；同时把旧 drawable 全部换到新底图上。
-            android.graphics.Bitmap old = sBackdrop;
-            sBackdrop = bm;
-            sBackdropW = w;
-            sBackdropH = h;
-            if (old != null && old != bm) {
-                for (GlassDrawable gd : snapshotLive()) {
-                    if (gd != null) gd.setBackdrop(bm);
-                }
+            // **底图在后台线程生成。**即便降采样之后，解码 + 缩放 + 裁剪 + 三次 box blur
+            // 也是几十到上百毫秒的活，放在主线程就是一个必然掉的长帧
+            // （gfxinfo 里 99 分位那几百毫秒的帧）。
+            // 这一帧先返回 false —— 元素退回单纯的半透明，等底图好了再 apply 一遍换成玻璃。
+            // 只在首次和换图/换尺寸时会看到这一次跳变。
+            if (!sBackdropLoading) {
+                sBackdropLoading = true;
+                final Context appCtx = root.getContext().getApplicationContext();
+                final View r = root;
+                Thread t = new Thread(() -> {
+                    android.graphics.Bitmap bm = null;
+                    try {
+                        bm = DshaBackground.loadBackdrop(appCtx, w, h);
+                    } catch (Throwable ignored) {
+                    }
+                    final android.graphics.Bitmap result = bm;
+                    r.post(() -> {
+                        sBackdropLoading = false;
+                        if (result == null) return;
+                        // 换掉旧底图之前先解引用。不能直接 recycle —— 已有的 GlassDrawable
+                        // 还拿着它画，recycle 掉会当场 "Canvas: trying to use a recycled bitmap"。
+                        android.graphics.Bitmap old = sBackdrop;
+                        sBackdrop = result;
+                        sBackdropW = w;
+                        sBackdropH = h;
+                        if (old != null && old != result) {
+                            for (GlassDrawable gd : snapshotLive()) {
+                                if (gd != null) gd.setBackdrop(result);
+                            }
+                        }
+                        apply(r);
+                    });
+                }, "dsha-backdrop");
+                t.setPriority(Thread.MIN_PRIORITY);
+                t.start();
             }
-            return true;
+            return false;
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "玻璃底图准备失败（退回半透明）: " + t);
             return false;

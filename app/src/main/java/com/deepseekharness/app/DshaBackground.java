@@ -304,7 +304,8 @@ final class DshaBackground {
                 return;
             }
             iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
-            Bitmap bm = BitmapFactory.decodeFile(file(iv.getContext()).getAbsolutePath());
+            android.util.DisplayMetrics dm = iv.getResources().getDisplayMetrics();
+            Bitmap bm = decodeScaled(iv.getContext(), dm.widthPixels, dm.heightPixels);
             if (bm == null) {
                 iv.setVisibility(android.view.View.GONE);
                 return;
@@ -325,28 +326,61 @@ final class DshaBackground {
      *
      *  <p>模糊强度沿用「背景模糊」那个滑块的一半再加固定量：元素级玻璃要的是糊到看不出
      *  形状（否则纹样会干扰文字），比整页底衬需要更狠。 */
+    /** 按目标尺寸降采样解码本地那张背景图。
+     *
+     *  <p>选图时已经压到「屏幕量级」存成 JPEG，但那仍然是 2800×1260 这种尺寸 ——
+     *  用默认 ARGB_8888 全尺寸解出来是 14MB，解码本身几百毫秒，还要再上传成 GPU 纹理。
+     *  gfxinfo 抓到的 600ms / 1150ms 长帧、89 次 high input latency、
+     *  以及两次 Slow bitmap uploads，都是这么来的（50 分位只有 7ms —— 平时渲染是够快的，
+     *  卡的是这几下主线程长阻塞）。
+     *
+     *  <p>RGB_565 是刻意的：背景图不需要 alpha 通道，省一半内存和一半上传带宽。 */
+    private static Bitmap decodeScaled(Context ctx, int reqW, int reqH) {
+        java.io.File f = file(ctx);
+        if (f == null || !f.isFile()) return null;
+        BitmapFactory.Options probe = new BitmapFactory.Options();
+        probe.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(f.getAbsolutePath(), probe);
+        if (probe.outWidth <= 0 || probe.outHeight <= 0) return null;
+        int sample = 1;
+        // 两边都还能再减半才减 —— 否则会把短边压到低于需要的尺寸，放大后发虚
+        while (probe.outWidth / (sample * 2) >= reqW && probe.outHeight / (sample * 2) >= reqH) {
+            sample *= 2;
+        }
+        BitmapFactory.Options opt = new BitmapFactory.Options();
+        opt.inSampleSize = sample;
+        opt.inPreferredConfig = Bitmap.Config.RGB_565;
+        return BitmapFactory.decodeFile(f.getAbsolutePath(), opt);
+    }
+
     static Bitmap loadBackdrop(Context ctx, int w, int h) {
         if (w <= 0 || h <= 0) return null;
         try {
             if (!exists(ctx)) return null;
-            BitmapFactory.Options opt = new BitmapFactory.Options();
-            opt.inPreferredConfig = Bitmap.Config.RGB_565;
-            Bitmap raw = BitmapFactory.decodeFile(file(ctx).getAbsolutePath(), opt);
+            // **在半尺寸上算完再放大。**这张底图是给玻璃当材质的，出来就是一片糊，
+            // 半分辨率放大回去看不出任何差别；而解码、缩放、裁剪、三次 box blur
+            // 每一步的成本都跟像素数成正比 —— 减半边长就是省掉 3/4 的工作量。
+            int hw = Math.max(1, w / 2), hh = Math.max(1, h / 2);
+            Bitmap raw = decodeScaled(ctx, hw, hh);
             if (raw == null) return null;
 
-            // centerCrop 到窗口尺寸：先按比例缩到能盖满，再居中裁
-            float scale = Math.max(w / (float) raw.getWidth(), h / (float) raw.getHeight());
+            // centerCrop 到目标尺寸：先按比例缩到能盖满，再居中裁
+            float scale = Math.max(hw / (float) raw.getWidth(), hh / (float) raw.getHeight());
             int sw = Math.max(1, Math.round(raw.getWidth() * scale));
             int sh = Math.max(1, Math.round(raw.getHeight() * scale));
             Bitmap scaled = Bitmap.createScaledBitmap(raw, sw, sh, true);
             if (scaled != raw) raw.recycle();
-            int dx = Math.max(0, (sw - w) / 2);
-            int dy = Math.max(0, (sh - h) / 2);
+            int dx = Math.max(0, (sw - hw) / 2);
+            int dy = Math.max(0, (sh - hh) / 2);
             Bitmap cropped = Bitmap.createBitmap(scaled, dx, dy,
-                    Math.min(w, sw - dx), Math.min(h, sh - dy));
+                    Math.min(hw, sw - dx), Math.min(hh, sh - dy));
             if (cropped != scaled) scaled.recycle();
 
-            Bitmap out = blur(cropped, Math.min(100, DshaGlass.radius(ctx) * 5 / 2));
+            Bitmap small = blur(cropped, Math.min(100, DshaGlass.radius(ctx) * 5 / 2));
+            if (small == null) return null;
+            // 放大到窗口尺寸：GlassDrawable 按屏幕坐标从这张图上取自己那一块，尺寸必须对得上。
+            Bitmap out = Bitmap.createScaledBitmap(small, w, h, true);
+            if (out != small) small.recycle();
             return out;
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "玻璃底图生成失败: " + t);
