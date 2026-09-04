@@ -376,21 +376,24 @@ public class MainActivity extends AppCompatActivity {
             final int dy = (b[1] - r[1]) - lp.topMargin
                     + (dst.getHeight() - Math.round(src.getHeight() * scale)) / 2;
 
-            View pg = findViewById(R.id.pager);
-            if (pg != null) pg.animate().alpha(0f).setDuration(180).start();
             // 「·」跟着飞行一起淡入，落地时刚好显形
             android.widget.TextView dot = findViewById(R.id.app_title_dot);
-            if (dot != null) dot.animate().alpha(1f).setDuration(240).start();
+            if (dot != null) dot.animate().alpha(1f).setDuration(260).start();
+
+            // 二级页**立刻**开始进场，和飞行完全重叠（pager 的淡出也在 openSecondary 里）。
+            // 上一版是等飞行结束才开始，两段串起来就是 200+110ms 的空窗，
+            // 观感是「先看着字飞、然后才慢慢出内容」。现在改成同时进行：
+            // 进场时刻大幅提前，时长反而放长到 260ms —— 慢而早，比快而晚显得从容。
+            openSecondary(next);
 
             ghost.animate()
                     .translationX(dx).translationY(dy)
                     .scaleX(scale).scaleY(scale)
-                    .setDuration(200)
+                    .setDuration(220)
                     .setInterpolator(new android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
                     .withEndAction(() -> {
                         root.removeView(ghost);
                         dst.setAlpha(1f);
-                        openSecondary(next);
                     })
                     .start();
         });
@@ -402,10 +405,10 @@ public class MainActivity extends AppCompatActivity {
         if (sec != null) {
             sec.setVisibility(View.VISIBLE);
             sec.setAlpha(0f);
-            sec.animate().alpha(1f).setDuration(110).start();
+            sec.animate().alpha(1f).setDuration(260).start();
         }
         View pg = findViewById(R.id.pager);
-        if (pg != null && pg.getAlpha() > 0f) pg.animate().alpha(0f).setDuration(130).start();
+        if (pg != null && pg.getAlpha() > 0f) pg.animate().alpha(0f).setDuration(200).start();
         getSupportFragmentManager().beginTransaction()
                 // 只设 popExit：返回时二级页得自己淡出。
                 // 容器那个 alpha 动画管不到这一步 —— 退栈时 fragment 先被移除、容器里

@@ -131,6 +131,22 @@ public final class PtyTerminalFragment extends Fragment
             title.setText("环境未安装 —— 先到「安装」页装完再回来");
             return;
         }
+        // PTY 不在这里起 —— 见 onResume。
+    }
+
+    /** PTY 在这里才真正启动。
+     *
+     *  <p>原来放在 onViewCreated：在 ViewPager2 里那意味着**预加载相邻页时就会 fork 一个
+     *  shell**。用户滑到设置页，终端页作为相邻页被创建，PTY 连带 proot 一起起来 ——
+     *  首次滑到那一带明显发涩（反馈「四大页首次启动卡，终端最卡」）。
+     *
+     *  <p>FragmentStateAdapter 用 setMaxLifecycle(STARTED) 压住非当前页，
+     *  onResume 只在这一页真正成为当前页时才走，正好是我们要的时机。
+     *  attachOrStart 本身是幂等的（已有会话就接回去），重复调用没有副作用。 */
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (view == null || c == null || !c.getProot().isInstalled()) return;
         attachOrStart();
     }
 
