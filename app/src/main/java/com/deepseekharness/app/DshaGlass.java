@@ -268,6 +268,13 @@ final class DshaGlass {
      *  @return true 表示换成功了（调用方就不用再走 setAlpha）。 */
     private static boolean applyGlassBg(View v, Drawable bg, int alpha255, int cornerPx) {
         if (sBackdrop == null || sBackdrop.isRecycled()) return false;
+        // **纯色背景不参与元素级玻璃。**
+        // ColorDrawable 表达的是「整片底衬」，不是一个元素：activity_main 的根 FrameLayout、
+        // 各 Fragment 的根 ScrollView 都是 ?attr/dshaSurface。给它们铺上糊过的底图，等于在
+        // 整屏最底下垫了一层雾 —— 而背景图 ImageView 因为「背景淡化」本身是半透明的，
+        // 那层雾就从清晰的图后面透出来，看着就是「背景怎么还是糊的」。
+        // 有形状的元素（卡片、按钮、输入框，也就是 GradientDrawable / Ripple / Layer）才该有玻璃。
+        if (bg instanceof android.graphics.drawable.ColorDrawable) return false;
         try {
             float corner = cornerPx >= 0 ? cornerPx : readCorner(bg, v);
             int tint = android.graphics.Color.argb(alpha255,

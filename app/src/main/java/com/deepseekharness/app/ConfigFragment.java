@@ -476,7 +476,16 @@ public class ConfigFragment extends Fragment {
         cornerLabel.setText("圆角 " + corner.getProgress() + "dp");
 
         final View decor = requireActivity().getWindow().getDecorView();
-        dim.setOnSeekBarChangeListener(new SimpleSeek(p -> dimLabel.setText("背景淡化 " + p + "%")));
+        dim.setOnSeekBarChangeListener(new SimpleSeek(p -> {
+            dimLabel.setText("背景淡化 " + p + "%");
+            // 实时预览。原先要关掉对话框、重开界面才看得到效果，等于让人闭着眼睛调 ——
+            // 而「淡化多少合适」完全取决于具体那张图的明暗，只能边拖边看。
+            // 对话框是居中带边距的，屏幕边缘那圈背景图能看见变化。
+            View bgIv = requireActivity().findViewById(R.id.app_background);
+            if (bgIv instanceof android.widget.ImageView) {
+                ((android.widget.ImageView) bgIv).setImageAlpha(255 - (int) (p / 100f * 255f));
+            }
+        }));
         // 玻璃浓度与模糊强度都能运行时改（BlurView 的 setter 支持），所以直接预览；
         // 噪点只在 setupWith 时能定，改了得重建界面。
         ovl.setOnSeekBarChangeListener(new SimpleSeek(p -> {

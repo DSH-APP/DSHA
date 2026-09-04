@@ -37,8 +37,11 @@ import java.io.OutputStream;
  */
 final class DshaBackground {
 
-    static final String KEY_DIM = "ui_bg_dim";          // 0~80，压暗百分比
-    static final int DIM_DEFAULT = 45;
+    static final String KEY_DIM = "ui_bg_dim";          // 0~80，淡化百分比
+    /** 默认 20%。这个值原先是 45 —— 那是「背景压暗」时代留下的（当时是叠一层 45% 的黑）。
+     *  改成 alpha 淡化之后 45% 反而更暗：图变淡露出的是主题底色，而深色配色下的底色
+     *  本来就接近黑，所以「淡化」在数学上等价于「混入黑色」。45% 会把照片压得看不出内容。 */
+    static final int DIM_DEFAULT = 20;
     static final String KEY_BLUR = "ui_bg_blur";        // 0~100，模糊强度
     static final int BLUR_DEFAULT = 0;
 

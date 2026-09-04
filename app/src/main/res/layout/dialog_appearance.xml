@@ -261,7 +261,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="?attr/dshaTextSecondary"
-            android:text="让背景图与主题底色相融，别抢走注意力。拖到最左是原图。" />
+            android:text="让背景图退到后面。⚠️ 深色配色下「淡化」就等于变暗（图变淡露出的是接近黑的底色），想让图更清楚就往左拖到 0。" />
 
         <SeekBar
             android:id="@+id/ap_dim"
