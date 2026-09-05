@@ -98,12 +98,27 @@ final class OverlayController {
     /** 就地回话：输入栏那一行、输入框本身，以及用户已按发送、等着插件来取的文本。 */
     private static LinearLayout replyRow;
     private static android.widget.EditText replyInput;
+    /** 只登记一次的输入监听（每轮 done 都重装会叠成一串，越用越慢）。 */
+    private static android.text.TextWatcher replyWatcher;
     /** 队列而不是单个字段：用户可能连按两次发送，后一条不该把前一条挤掉。
      *  插件取走即出队，取不到就是 EMPTY —— 桥那一侧不做等待，长轮询在插件里做。 */
-    private static final java.util.ArrayDeque<String> PENDING_REPLIES = new java.util.ArrayDeque<>();
+    private static final java.util.ArrayDeque<String[]> PENDING_REPLIES = new java.util.ArrayDeque<>();
     private static final int MAX_PENDING_REPLIES = 8;
     /** 输入栏正显示 —— 与 confirming 同性质：这期间不许自动淡出、不许被流式内容顶掉。 */
     private static boolean replying;
+    /** 输入栏的自愈定时器。见 REPLY_IDLE_MS 的说明 —— 没有它这条子会永久挂在屏幕上。 */
+    private static Runnable replyIdleTask;
+    /**
+     * 输入栏无人操作多久自动收起。
+     *
+     * <p><b>为什么必须有这个。</b>就地批准那边不需要 —— 它的请求本身带超时，
+     * 到点了 HttpShellService 会来 dismissConfirm。而回话是纯粹等用户，没有任何一方会
+     * 来收场：{@code replying} 一置起来就挡住自动淡出，用户要是没点发送（这是常态：
+     * 看一眼、不想回、切走了），悬浮条就**永久停在屏幕顶部**。
+     *
+     * <p>每次打字都会把这个计时重置，所以不会打断正在输入的人。
+     */
+    private static final long REPLY_IDLE_MS = 45_000;
     private static Runnable hideTask;
     private static String activeKey = "";
     /** 确认进行中：这期间不自动淡出、也不让流式内容盖掉命令。 */
@@ -299,7 +314,27 @@ final class OverlayController {
                 // 点输入框才真正接焦点。窗口默认带 FLAG_NOT_FOCUSABLE（否则悬浮条一出现
                 // 就抢走当前 App 的输入焦点），而输入法只对可聚焦窗口弹出 ——
                 // 所以这里临时摘掉那个 flag，收工再加回去。
-                replyInput.setOnClickListener(v -> setFocusable(ctx, true));
+                replyInput.setOnClickListener(v -> {
+                    setFocusable(ctx, true);
+                    armReplyIdle(ctx);
+                });
+                // **失焦就交还焦点。**用户点了输入框（窗口这时是可聚焦的）又改主意去用别的
+                // 应用，如果不在这里收回来，悬浮条会一直霸着输入焦点 —— 他在微信里就打不了字。
+                replyInput.setOnFocusChangeListener((v, has) -> {
+                    if (!has) setFocusable(ctx, false);
+                });
+                // 正在打字就别把人家收掉：每敲一下重新计时
+                if (replyWatcher == null) {
+                    replyWatcher = new android.text.TextWatcher() {
+                        @Override public void beforeTextChanged(CharSequence s0, int a, int b, int c) { }
+                        @Override public void onTextChanged(CharSequence s0, int a, int b, int c) { }
+                        @Override public void afterTextChanged(android.text.Editable e) {
+                            armReplyIdle(ctx);
+                        }
+                    };
+                    replyInput.addTextChangedListener(replyWatcher);
+                }
+                armReplyIdle(ctx);
                 replyInput.setOnEditorActionListener((v, actionId, ev) -> {
                     if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND) {
                         submitReply(ctx);
@@ -325,11 +360,26 @@ final class OverlayController {
             synchronized (LOCK) {
                 // 满了丢最旧的：留着一堆过期的话没有意义，用户等的是最近这句
                 while (PENDING_REPLIES.size() >= MAX_PENDING_REPLIES) PENDING_REPLIES.pollFirst();
-                PENDING_REPLIES.addLast(t);
+                // **带上会话标识。**dsh 可以同时跑多个会话，每个都会在说完时开一个取件循环；
+                // 队列不分会话的话，谁先轮到谁取走 —— 用户明明在看 A 的输出、回的话
+                // 却发进了 B。activeKey 就是此刻条子上显示的那个会话，用户回的就是它。
+                PENDING_REPLIES.addLast(new String[]{activeKey == null ? "" : activeKey, t});
             }
             replyInput.setText("");
         }
         dismissReply(ctx);
+    }
+
+    /** 重置「无人操作」计时。每次交互都调一次，到点自动收起输入栏。 */
+    private static void armReplyIdle(Context ctx) {
+        Handler h = mainHandler();
+        if (replyIdleTask != null) h.removeCallbacks(replyIdleTask);
+        replyIdleTask = () -> {
+            // 输入框里的字**不清**：用户可能只是被别的事打断，切回来还想接着发。
+            // 收起来的只是这一行控件，条子按正常规则淡出。
+            dismissReply(ctx);
+        };
+        h.postDelayed(replyIdleTask, REPLY_IDLE_MS);
     }
 
     /** 收起输入栏并交还焦点。下一轮 done 时会再露出来。 */
@@ -337,6 +387,10 @@ final class OverlayController {
         mainHandler().post(() -> {
             try {
                 replying = false;
+                if (replyIdleTask != null) {
+                    mainHandler().removeCallbacks(replyIdleTask);
+                    replyIdleTask = null;
+                }
                 setFocusable(ctx, false);
                 if (replyRow != null) replyRow.setVisibility(View.GONE);
                 // 收起后按正常规则淡出，不要一直挂在屏幕上
@@ -352,10 +406,24 @@ final class OverlayController {
      * <p>取走即出队 —— 这条通路上「取到了但没发出去」和「没取到」对用户是同一件事
      * （话丢了），而重复发送是更糟的结果（agent 会答两遍）。所以选不重发。
      */
-    static String takePendingReply() {
+    static String takePendingReply(String wantKey) {
         synchronized (LOCK) {
-            return PENDING_REPLIES.pollFirst();
+            for (java.util.Iterator<String[]> it = PENDING_REPLIES.iterator(); it.hasNext(); ) {
+                String[] e = it.next();
+                // 空 key 一律给（单会话时插件可能不带 session 参数，别让话卡在队列里）
+                if (wantKey == null || wantKey.isEmpty()
+                        || e[0].isEmpty() || e[0].equals(wantKey)) {
+                    it.remove();
+                    return e[1];
+                }
+            }
+            return null;
         }
+    }
+
+    /** 输入栏这会儿摆出来了吗 —— 插件据此决定还要不要继续轮询。 */
+    static boolean replyBarShown() {
+        return replying;
     }
 
     /**
@@ -400,6 +468,9 @@ final class OverlayController {
      */
     static void askConfirm(Context ctx, String cmd, Runnable onAllow, Runnable onDeny) {
         if (ctx == null || !enabled(ctx) || !permitted(ctx) || !confirmOnOverlay(ctx)) return;
+        // 批准优先：把回话的输入栏先收掉，两组控件叠在一条子上又挤又容易误点。
+        // 批准有超时、回话没有，所以让回话让位（它下一轮 done 还会再来）。
+        if (replying) dismissReply(ctx);
         confirming = true;
         final String text = "⚠ 请求执行：" + collapse(cmd);
         mainHandler().post(() -> {

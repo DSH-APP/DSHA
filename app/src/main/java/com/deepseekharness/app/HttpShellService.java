@@ -474,7 +474,7 @@ public final class HttpShellService {
             } else if (path.startsWith("/app/overlay/reply")) {
                 // 就地回话的取件口。**必须排在 /app/overlay 前面** ——
                 // 那条用的是 startsWith，放后面永远轮不到（这类顺序坑本项目栽过）。
-                result = appOverlayReply();
+                result = appOverlayReply(path);
             } else if (path.startsWith("/app/overlay")) {
                 result = appOverlay(path);
             } else if (path.startsWith("/app/location")) {
@@ -860,13 +860,17 @@ public final class HttpShellService {
      * 插件据此停止轮询。<b>不在这里做长轮询</b>：桥是单线程 accept 的小服务，
      * 挂住一个连接几十秒会连带影响别的端点，等待放在插件侧（它有事件循环）。
      */
-    private String appOverlayReply() {
+    private String appOverlayReply(String path) {
         try {
             if (!OverlayController.enabled(ctx)) return "DISABLED";
             if (!OverlayController.replyEnabled(ctx)) return "DISABLED";
-            String t = OverlayController.takePendingReply();
-            if (t == null || t.isEmpty()) return "EMPTY";
-            return "TEXT " + t;
+            String want = getParam(queryOf(path), "session", "");
+            String t = OverlayController.takePendingReply(want);
+            if (t != null && !t.isEmpty()) return "TEXT " + t;
+            // 没话可取，而且输入栏也已经收了（用户 45 秒没动，或者按了发送）——
+            // 让插件停掉轮询，别对着一个已经关掉的窗口敲三分钟。
+            if (!OverlayController.replyBarShown()) return "CLOSED";
+            return "EMPTY";
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
         }

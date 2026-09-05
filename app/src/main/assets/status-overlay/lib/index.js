@@ -239,12 +239,14 @@ function startReplyPoll(ctx, key, session) {
       return
     }
     try {
-      const res = await fetch(`${REPLY_URL}?token=${encodeURIComponent(tok)}`, {
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      })
+      const res = await fetch(
+        `${REPLY_URL}?token=${encodeURIComponent(tok)}&session=${encodeURIComponent(key)}`,
+        { signal: AbortSignal.timeout(TIMEOUT_MS) })
       const body = (await res.text()).trim()
-      if (body === 'DISABLED') {
-        stopReplyPoll(key)                    // 用户把开关关了
+      if (body === 'DISABLED' || body === 'CLOSED') {
+        // DISABLED=开关关了；CLOSED=输入栏已经收起（用户按了发送，或 45 秒没动）。
+        // 两种都没有继续轮询的意义 —— 下一轮 done 会重新开窗口。
+        stopReplyPoll(key)
         return
       }
       if (!body.startsWith('TEXT ')) return   // EMPTY：还没打完
