@@ -178,11 +178,14 @@ public class MainActivity extends AppCompatActivity {
             // 在二级页时点底栏：先退出二级页，再切 tab。
             closeSecondary();
             int to = tabIndex(item.getItemId());
-            // **只有相邻页才平滑滚动。**ViewPager2 的 smoothScroll 是真的滚过去，
-            // 路过的位置会被创建并渲染一遍 —— 从「启动」点「终端」会顺路把插件页和设置页
-            // 全建出来（每页首次都要 inflate + 走一遍 walk + 装配所有卡片的 BlurView）,
-            // 这就是首次切页那一下卡的来源。跨页直接跳，不给中间页曝光的机会。
-            pager.setCurrentItem(to, Math.abs(to - curTab) <= 1);
+            // 一律平滑滚动，跨几页都滚过去 —— 那个「顺路划过中间页」的过程本身就是好看的。
+            //
+            // 曾经改成跨页直接跳（smoothScroll=false），因为滚过去会把路过的页面创建并渲染
+            // 一遍，当时以为那是首次切页卡顿的原因。后来 gfxinfo 量出来真凶是主线程上的
+            // Bitmap 解码与模糊（99 分位 600ms 的长帧，GPU 其实一直闲着，见
+            // DshaBackground#decodeScaled 与 DshaGlass#ensureBackdrop 的注释）。
+            // 那两处修掉之后，中间页的创建成本已经吃得下，所以把动画还回来。
+            pager.setCurrentItem(to, true);
             return true;
         });
         setupGlass();
