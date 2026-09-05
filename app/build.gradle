@@ -64,8 +64,8 @@ android {
         applicationId "com.dsh.client"
         minSdk 26
         targetSdk 34
-        versionCode 102
-        versionName "1.1.10"
+        versionCode 103
+        versionName "1.1.11"
         ndk {
             abiFilters 'arm64-v8a'
         }
