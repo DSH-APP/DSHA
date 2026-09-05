@@ -112,34 +112,48 @@
             android:textSize="@dimen/text_label" />
     </LinearLayout>
 
-    <CheckBox
-        android:id="@+id/chkHideBuiltin"
+    <!-- 搜索框与「只看自装」同一行。
+         那个复选框原先是 match_parent 单占一整行，只为一个开关吃掉一条行高 ——
+         它还默认 gone（只在「插件管理」这个 tab 显示），显示时页面会整体往下跳一下。
+         放进这一行：搜索框吃剩余宽度，复选框 wrap_content 靠右；
+         gone 的时候 weight 重算，搜索框自然占满，跟原来一模一样。
+         文案从「隐藏自带插件（只看自己装的）」缩成「只看自装」—— 同行放不下那么长，
+         而「自装」和「自带」的对立关系够清楚。 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/page_pad"
-        android:buttonTint="?attr/dshaPrimary"
-        android:text="隐藏自带插件（只看自己装的）"
-        android:textColor="?attr/dshaTextSecondary"
-        android:textSize="@dimen/text_label"
-        android:visibility="gone" />
-
-
-    <EditText
-        android:id="@+id/pluginSearch"
-        android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:layout_marginStart="@dimen/page_pad"
         android:layout_marginEnd="@dimen/page_pad"
         android:layout_marginBottom="@dimen/gap_tight"
-        android:background="@drawable/bg_input"
-        android:hint="搜索插件名称…"
-        android:imeOptions="actionSearch"
-        android:paddingStart="@dimen/card_pad"
-        android:paddingEnd="@dimen/card_pad"
-        android:singleLine="true"
-        android:textColor="?attr/dshaText"
-        android:textColorHint="?attr/dshaTextMuted"
-        android:textSize="@dimen/text_body" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/pluginSearch"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input"
+            android:hint="搜索插件名称…"
+            android:imeOptions="actionSearch"
+            android:paddingStart="@dimen/card_pad"
+            android:paddingEnd="@dimen/card_pad"
+            android:singleLine="true"
+            android:textColor="?attr/dshaText"
+            android:textColorHint="?attr/dshaTextMuted"
+            android:textSize="@dimen/text_body" />
+
+        <CheckBox
+            android:id="@+id/chkHideBuiltin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/gap_tight"
+            android:buttonTint="?attr/dshaPrimary"
+            android:text="只看自装"
+            android:textColor="?attr/dshaTextSecondary"
+            android:textSize="@dimen/text_label"
+            android:visibility="gone" />
+    </LinearLayout>
 
     <!-- 多选操作条：长按插件卡片才进入多选，平时不占任何位置（不加常驻入口） -->
     <LinearLayout

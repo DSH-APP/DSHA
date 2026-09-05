@@ -246,7 +246,14 @@ class PluginController {
      * 用户打开「隐藏自带插件」还是看见它们。
      */
     private static boolean isBuiltinName(String name, java.util.Set<String> builtin) {
-        if (name == null || name.isEmpty() || builtin == null) return false;
+        if (name == null || name.isEmpty()) return false;
+        // **dsh 官方作用域一律算自带。**@deepseek-ai/* 是内核与官方插件（dsh-base、
+        // dsh-web-app 这些），随环境一起装进来的，用户不可能自己装。
+        // 光靠快照名单指望不上它们 —— readBuiltinSnapshot 记的是首次安装那一刻的目录清单，
+        // 后来被 dsh 自己升级或补装的官方包就漏在名单外，于是勾了「隐藏自带插件」
+        // 还留着两个 @deepseek 开头的条目（正是反馈里那两个）。
+        if (name.startsWith("@deepseek-ai/") || name.startsWith("@deepseek/")) return true;
+        if (builtin == null) return false;
         if (builtin.contains(name)) return true;
         if (name.startsWith("@")) {
             int slash = name.indexOf('/');
