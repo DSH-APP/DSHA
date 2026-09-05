@@ -106,11 +106,24 @@ public class PluginFragment extends Fragment {
             java.util.function.Consumer<String> doParse = (link) -> {
                 String u = link == null ? "" : link.trim();
                 if (u.isEmpty()) {
-                    // 清空 → 恢复市场列表
+                    // 清空 → 按**当前模式**恢复列表。
+                    //
+                    // 这里原来是无条件 setData(空) 之后只 `if (mode == MARKET) showMarket()` ——
+                    // 停在「插件管理」时列表被清空却没人重填，卡片就永远不见了。
+                    // 而触发它的不是用户：MainActivity#onTabShown 切走插件页时会
+                    // ghIn.setText("") 清空那个 GitHub 输入框，TextWatcher 照样响，
+                    // 防抖 600ms 之后（用户已经切到别的页了）跑到这里把列表清空。
+                    // 于是「从其他页返回插件管理，卡片全不见、搜索框和 tab 还在」——
+                    // 就是主人看到的那个提示「已恢复插件市场」露的马脚：
+                    // 明明停在插件管理，恢复的却是市场。
                     parsedRef.set(null);
-                    adapter.setData(new ArrayList<>(), true);
-                    if (mode == Mode.MARKET) showMarket();
-                    say("已恢复插件市场");
+                    if (mode == Mode.MARKET) {
+                        adapter.setData(new ArrayList<>(), true);
+                        showMarket();
+                        say("已恢复插件市场");
+                    } else {
+                        showInstalled();
+                    }
                     return;
                 }
                 String[] info = c.parseGithubUrl(u);

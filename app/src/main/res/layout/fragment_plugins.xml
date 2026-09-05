@@ -117,8 +117,7 @@
          它还默认 gone（只在「插件管理」这个 tab 显示），显示时页面会整体往下跳一下。
          放进这一行：搜索框吃剩余宽度，复选框 wrap_content 靠右；
          gone 的时候 weight 重算，搜索框自然占满，跟原来一模一样。
-         文案从「隐藏自带插件（只看自己装的）」缩成「只看自装」—— 同行放不下那么长，
-         而「自装」和「自带」的对立关系够清楚。 -->
+         文案从「隐藏自带插件（只看自己装的）」缩成「过滤原装」—— 同行放不下那么长。 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -149,7 +148,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/gap_tight"
             android:buttonTint="?attr/dshaPrimary"
-            android:text="只看自装"
+            android:text="过滤原装"
             android:textColor="?attr/dshaTextSecondary"
             android:textSize="@dimen/text_label"
             android:visibility="gone" />
