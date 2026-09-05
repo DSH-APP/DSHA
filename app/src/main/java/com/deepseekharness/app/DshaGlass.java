@@ -177,7 +177,11 @@ final class DshaGlass {
             // 浅色配色配深色背景图确实需要实一点才压得住，但必须留出能看见背景的余量。
             a = Math.min((int) (a * 1.12f), 216);
         }
-        a = Math.max(0, Math.min(255, a));
+        // **统一封顶 235（≈92%）。**上面两个乘数（调用方给的 factor、浅色配色的加成）
+        // 都是直接乘在 alpha 上的，任何一个偏大就会把卡片顶成不透明 —— 玻璃当场作废，
+        // 而且症状看起来像「这个控件没做玻璃」，很难往回追到一个乘数上。
+        // 插件卡片的 glassFactor=1.3 和浅色加成 1.3 都是这么翻的车，所以在出口处兜一道。
+        a = Math.max(0, Math.min(235, a));
         return android.graphics.Color.argb(a,
                 android.graphics.Color.red(base),
                 android.graphics.Color.green(base),

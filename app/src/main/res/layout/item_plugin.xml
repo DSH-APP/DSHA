@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.deepseekharness.app.GlassCard xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:glassFactor="1.3"
+    <!-- glassFactor 保持 1.0。曾经写 1.3 想让列表项实一点、文字更好读，
+         但那是直接乘在 overlay 的 alpha 上的：默认浓度 76% × 1.3 = 99%，
+         卡片直接成了不透明底，玻璃全废（反馈「插件市场卡片还是不透明底」）。
+         要更好读应该调文字颜色或加阴影，不该把整块底堵死。 -->
+    app:glassFactor="1.0"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/page_pad"
