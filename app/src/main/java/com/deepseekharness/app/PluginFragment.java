@@ -1276,6 +1276,13 @@ public class PluginFragment extends Fragment {
         public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_plugin, parent, false);
+            // 列表项要自己套一次玻璃。
+            // DshaGlass.apply 是在 onFragmentViewCreated 时对整棵树跑的，那一刻 RecyclerView
+            // 里一个 item 都还没有 —— item 是滚到才 inflate 的，所以插件卡片一直是纯色，
+            // 而别处布局里写死的卡片都有玻璃（反馈：「插件市场的卡片为什么没有玻璃材质」）。
+            // 这里只走一张卡这么小的子树，成本可以忽略；底图晚到的情况由
+            // ensureBackdrop 完成后那次 apply(decorView) 兜住（那时 item 已经 attach）。
+            DshaGlass.apply(v);
             return new VH(v);
         }
 
