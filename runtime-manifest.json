@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated": "2026-09-05T11:43:40Z",
+  "generated": "2026-09-05T16:06:22Z",
   "note": "只含脚本层增量；rootfs 与 .so 随 APK 发布，不在此清单内",
   "files": [
     {
@@ -204,8 +204,8 @@
     {
       "path": "app/src/main/assets/migrate-public-data.sh",
       "asset": "migrate-public-data.sh",
-      "size": 4112,
-      "sha256": "e8a670d8b1cb319630bd872722fda05a26c17ea3b61944f3226d5af0035ec15b",
+      "size": 4628,
+      "sha256": "038249a254967c938c2adbdb07713536ec4c6e4a645b92f9cdf63f3f665eecec",
       "urls": [
         "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/migrate-public-data.sh",
         "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@stable/app/src/main/assets/migrate-public-data.sh",
@@ -254,6 +254,28 @@
         "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/selftest.py",
         "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@stable/app/src/main/assets/selftest.py",
         "https://ghproxy.net/https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/selftest.py"
+      ]
+    },
+    {
+      "path": "app/src/main/assets/session-home.sh",
+      "asset": "session-home.sh",
+      "size": 7286,
+      "sha256": "b26f2f3823480668c6d02c787962d1f21dea2bf3471d7934f419af22f07813c3",
+      "urls": [
+        "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/session-home.sh",
+        "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@stable/app/src/main/assets/session-home.sh",
+        "https://ghproxy.net/https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/session-home.sh"
+      ]
+    },
+    {
+      "path": "app/src/main/assets/session-lock-patch.sh",
+      "asset": "session-lock-patch.sh",
+      "size": 4447,
+      "sha256": "63326bd53358f2307cd56987ece0bf03cc017bb8b7a3bfe6e5cbd4d09569c2ec",
+      "urls": [
+        "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/session-lock-patch.sh",
+        "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@stable/app/src/main/assets/session-lock-patch.sh",
+        "https://ghproxy.net/https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/session-lock-patch.sh"
       ]
     },
     {

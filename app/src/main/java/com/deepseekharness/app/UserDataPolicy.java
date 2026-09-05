@@ -41,6 +41,21 @@ final class UserDataPolicy {
             "root/.dsh/builtin-assets.version",
     };
 
+    /**
+     * 按<b>文件名</b>判定的本机专属文件（出现在任何目录下都算）。
+     *
+     * <p>与上面那份精确路径列表互补：有些文件的位置是运行时才决定的，写不成固定路径。
+     * {@code session.lock} 就是这种 —— dsh 0.1.3 起每个会话目录里都有一个，
+     * 路径形如 {@code .dsh/sessions/<项目目录>/<会话 id>/session.lock}。
+     *
+     * <p>它必须被排除的理由与 {@code .bridge_token} 完全同类：<b>它描述的是「本机哪个进程
+     * 正在写这个会话」</b>，跟着备份跑到另一台机器、或者跟着镜像恢复回来，都只会是一个
+     * 陈旧的空壳。锁本身由内核按 inode 维护，文件内容没有任何可迁移的含义。
+     */
+    static final String[] MACHINE_LOCAL_NAMES = {
+            "session.lock",
+    };
+
     private UserDataPolicy() {
     }
 
@@ -52,6 +67,10 @@ final class UserDataPolicy {
         for (String m : MACHINE_LOCAL_PATHS) {
             if (p.equals(m)) return true;
         }
+        String name = p.substring(p.lastIndexOf('/') + 1);
+        for (String n : MACHINE_LOCAL_NAMES) {
+            if (name.equals(n)) return true;
+        }
         return false;
     }
 
@@ -62,10 +81,14 @@ final class UserDataPolicy {
      * 这个前缀转换本身也在纯逻辑断言覆盖范围内 —— 写错了备份就会带上凭据而没人发现。
      */
     static String[] tarExcludePatterns() {
-        String[] out = new String[MACHINE_LOCAL_PATHS.length];
+        String[] out = new String[MACHINE_LOCAL_PATHS.length + MACHINE_LOCAL_NAMES.length];
         for (int i = 0; i < MACHINE_LOCAL_PATHS.length; i++) {
             out[i] = stripRootPrefix(MACHINE_LOCAL_PATHS[i]);
         }
+        // 名字型条目直接给 tar：它的 --exclude 默认是 unanchored 的，
+        // 单独一个 session.lock 就能匹配任意深度目录下的同名文件。
+        System.arraycopy(MACHINE_LOCAL_NAMES, 0, out, MACHINE_LOCAL_PATHS.length,
+                MACHINE_LOCAL_NAMES.length);
         return out;
     }
 
@@ -87,6 +110,22 @@ final class UserDataPolicy {
      */
     static String[] purgeAfterRestore() {
         return MACHINE_LOCAL_PATHS.clone();
+    }
+
+    /**
+     * 恢复之后要按名字清理的文件，以及从哪个子树开始找。
+     *
+     * <p>{@link #purgeAfterRestore()} 那份是固定路径，直接 delete 就行；这份的位置是
+     * 运行时才定的（每个会话目录里一个 {@code session.lock}），所以调用方需要递归。
+     * 限定搜索根是刻意的 —— 全 rootfs 扫一遍名字既慢又容易误伤。
+     */
+    static String purgeNamesSearchRoot() {
+        return "root/.dsh/sessions";
+    }
+
+    /** 与 {@link #purgeNamesSearchRoot()} 配对：在那棵子树下按名字删掉这些文件。 */
+    static String[] purgeAfterRestoreNames() {
+        return MACHINE_LOCAL_NAMES.clone();
     }
 
     private static String normalize(String p) {

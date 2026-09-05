@@ -1786,6 +1786,10 @@ public class HarnessController {
      *  不补这一下，就得等下次启动才生效，而用户此刻正期待「数据已经安全了」。 */
     public void migratePublicDataNow() {
         String out = runAssetScript("migrate-public-data.sh", "dsha-migrate-public.sh", 60_000);
+        // sessions 的落点由 session-home.sh 单独管（它要留在私有目录），
+        // 但公开镜像这时候才第一次可写 —— 顺手建起来，别等下次启动。
+        ensureSessionHome();
+        syncSessionMirror();
         if (out == null) return;
         if (out.contains("已迁移") || out.contains("接回公开副本")) {
             logActivity("已获授权，会话数据迁到公开目录（卸载重装不再丢）");
@@ -3247,6 +3251,66 @@ public class HarnessController {
         }
     }
 
+    /** 会话落点脚本在 rootfs 里的常驻名（{@code sync} 要反复调，不能每次重新注入）。 */
+    private static final String SESSION_HOME_SCRIPT = "dsha-session-home.sh";
+
+    /**
+     * 保证 {@code .dsh/sessions} 是 <b>App 私有目录里的实体目录</b>，必要时从公开目录搬回。
+     *
+     * <p><b>为什么必须这样</b>：dsh 0.1.3 起每个会话目录里有一个 {@code session.lock}，
+     * 由 fs-ext 做非阻塞 {@code flock(2)}。真机实测（V2352A）：App 私有目录（ext4）上
+     * flock 成功且互斥生效，而公开目录是 FUSE —— 一律返回 <b>ENOSYS</b>。dsh 的 lease
+     * 只把 EAGAIN 当「别人持锁」、其它 errno 直接往上抛，所以 sessions 留在公开目录
+     * 就是「会话根本打不开」。
+     *
+     * <p>必须在 dsh 启动<b>之前</b>跑完：搬动的是会话目录本身，边跑边写会撕。
+     */
+    void ensureSessionHome() {
+        String out = runAssetScript("session-home.sh", SESSION_HOME_SCRIPT, 120_000);
+        if (out == null) return;
+        if (out.contains("SESSIONS_MIGRATED")) {
+            logActivity("会话数据已搬回 App 私有目录（新版 dsh 的会话锁在公开目录上不工作），"
+                    + "公开目录保留一份镜像用于重装恢复");
+        } else if (out.contains("SESSIONS_RESTORED")) {
+            logActivity("已从公开目录的镜像恢复会话数据");
+        } else if (out.contains("SESSIONS_FAIL")) {
+            logActivity("会话目录就位失败，数据没动，详见日志：" + SensitiveData.redact(out.trim()));
+        }
+        // 脚本被 runAssetScript 跑完删掉了，这里再落一份常驻副本供 sync 使用
+        try {
+            String script = readAsset("session-home.sh");
+            if (script != null && !script.isEmpty()) {
+                java.io.File f = new java.io.File(proot.getRootfsDir(), "root/" + SESSION_HOME_SCRIPT);
+                if (f.getParentFile() != null) f.getParentFile().mkdirs();
+                java.nio.file.Files.write(f.toPath(), script.getBytes(StandardCharsets.UTF_8));
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * 把私有目录里的会话增量同步到公开镜像 —— 卸载重装后靠它恢复。
+     *
+     * <p>刻意只增不删：删除不可逆，而「重装后多回来几个已删会话」远比同步逻辑误删轻。
+     * 调用时机是「一段工作结束」而不是定时轮询：停 Web、进后台、自动备份那条线上各一次。
+     */
+    void syncSessionMirror() {
+        try {
+            if (!proot.isInstalled()) return;
+            java.io.File f = new java.io.File(proot.getRootfsDir(), "root/" + SESSION_HOME_SCRIPT);
+            if (!f.isFile()) {
+                ensureSessionHome();
+                if (!f.isFile()) return;
+            }
+            String out = proot.execAndRead("bash /root/" + SESSION_HOME_SCRIPT + " sync", 120_000);
+            if (out != null && out.contains("SYNC_PARTIAL")) {
+                android.util.Log.w("DSHA", "会话镜像同步不完整: " + out.trim());
+            }
+        } catch (Throwable e) {
+            android.util.Log.w("DSHA", "会话镜像同步失败（不影响使用）: " + e);
+        }
+    }
+
     /**
      * 一次容器会话里顺序跑多个 assets 脚本，返回每个脚本各自的输出（key = assetName）。
      *
@@ -3399,7 +3463,12 @@ public class HarnessController {
                     {"webui-origin-port-patch.sh", "dsha-origin-port-patch.sh"},
                     // write 工具新建文件变悬空链接（l2s 与 dsh 的 link 发布冲突）
                     {"fs-write-patch.sh", "dsha-fs-write-patch.sh"},
-            }, 210_000);
+                    // 会话锁兜底：落点不支持 flock(2) 时视为已持锁。正主是 session-home.sh
+                    // （把 sessions 放在 flock 可用的私有目录），这条管兜不住的路径 ——
+                    // 迁移中间态、从镜像恢复、用户手改配置、别家 ROM 挂载差异。
+                    // dsh 0.1.3 之前没有 fs-ext，脚本会明确报 NOTARGET。
+                    {"session-lock-patch.sh", "dsha-session-lock-patch.sh"},
+            }, 240_000);
             noteFsWritePatchResult(r1.get("fs-write-patch.sh"));
         } catch (Throwable ignored) {
         }
@@ -3420,6 +3489,12 @@ public class HarnessController {
                     // 清理无法解析的 stale bundle（防 cannot resolve profile bundle 启动崩溃）
                     {"fix-stale-bundles.sh", "dsha-fix-stale-bundles.sh"},
             }, 120_000);
+        } catch (Throwable ignored) {
+        }
+        // 会话落点：sessions 必须是私有实体目录（新版 dsh 的会话锁在公开目录 FUSE 上
+        // 返回 ENOSYS）。**必须在 dsh 起来之前**做完 —— 它搬的是会话目录本身。
+        try {
+            ensureSessionHome();
         } catch (Throwable ignored) {
         }
         // 老 WebView 兼容：系统内核太旧时先把前端降级，成功的话就不必起 GeckoView
@@ -4706,7 +4781,7 @@ public class HarnessController {
      *  资产内容变更时 +1（marker 存在会导致重跑⑥时跳过重注入，
      *  必须靠版本标记删 marker 强制重注入，老用户才能拿到新资产）。
      *  与 STEP6_VERSION 一起写入 builtin-assets.version（installGuard 末尾）。 */
-    private static final String BUILTIN_ASSET_VERSION = "30";
+    private static final String BUILTIN_ASSET_VERSION = "31";
 
     /** 内置插件资产版本自愈（检查 + 删 marker；版本标记写入在 installGuard
      *  末尾 runStep 里——若中途失败版本未写，下次启动版本不一致会重跑⑥重注入，
@@ -5268,6 +5343,9 @@ public class HarnessController {
                 String out = proot.execAndRead(stopWebCommand());
                 // Web 停了桥也没用：停桥（幂等）
                 LanProxyService.stop();
+                // 没人在写会话了 —— 这是把私有目录同步到公开镜像最安全的时机。
+                // 镜像是卸载重装后唯一的恢复来源，所以每次干净停止都要更新它。
+                syncSessionMirror();
                 // 眼见为实：以前不管杀没杀掉都显示「已停止」，于是 dsh 还在跑、
                 // 端口还占着，用户却以为停了 —— 这正是「停止用不了」的体验来源。
                 int left = parseKvInt(out, "STOP_LEFT");
@@ -6132,6 +6210,9 @@ public class HarnessController {
                     // 安装写的（唯一可读），于是自动恢复反而会挑中它、覆盖掉本可手动恢复的
                     // 真数据 —— 比不备份更糟。
                     if (proot.isInstalled() && hasUserDataInDsh()) {
+                        // 先把会话同步到公开镜像，再打备份包：两条恢复路径（镜像、备份）
+                        // 更新于同一时刻，事后追查「哪份更新」时不必猜。
+                        syncSessionMirror();
                         String p = BackupManager.backupToExternalAuto(appContext, HarnessController.this);
                         if (p != null) {
                             logActivity("第 " + n + " 次启动，已自动备份");

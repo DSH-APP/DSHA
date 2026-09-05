@@ -1223,6 +1223,11 @@ public class ProotBootstrap {
                     android.util.Log.i("DSHA", "还原后清掉本机专属文件: " + rel);
                 }
             }
+            // 名字型条目（会话锁）位置是运行时定的，得在指定子树里递归找。
+            // 留着陈旧的锁文件不会让 dsh 报错（锁是按 inode 而不是内容判定的），
+            // 但它会跟着下一次备份继续扩散，而且掩盖「这台机器上谁在写」这件事。
+            purgeNamesUnder(new java.io.File(rootfsDir, UserDataPolicy.purgeNamesSearchRoot()),
+                    UserDataPolicy.purgeAfterRestoreNames(), 0);
             HttpShellService.resetTokenAfterRestore();
             if (deleteAfter && failed == 0) {
                 deleteRecursively(dataBak);
@@ -1236,6 +1241,37 @@ public class ProotBootstrap {
         } catch (Throwable e) {
             android.util.Log.w("DSHA", "还原用户数据失败: " + e);
             return "还原过程出错：" + e + "（保护目录没有删，可以再试一次）";
+        }
+    }
+
+    /**
+     * 在给定子树下按<b>文件名</b>删除本机专属文件（会话锁那类位置不固定的）。
+     *
+     * <p>刻意不跟随符号链接：{@code .dsh/sessions} 在老版本里可能还是指向公开目录的软链，
+     * 跟着走就会在 FUSE 上递归，既慢又可能删到镜像里去（镜像那侧由 session-home.sh 管）。
+     * 深度上限 6 —— 真实布局是 {@code sessions/<项目目录>/<会话 id>/session.lock}，
+     * 给足余量的同时不给「循环链接把这里变成死循环」留机会。
+     */
+    private void purgeNamesUnder(java.io.File dir, String[] names, int depth) {
+        if (depth > 6 || dir == null || !dir.isDirectory()) return;
+        if (depth == 0 && FileCopy.isSymlink(dir)) return;
+        java.io.File[] kids = dir.listFiles();
+        if (kids == null) return;
+        for (java.io.File k : kids) {
+            if (FileCopy.isSymlink(k)) continue;
+            if (k.isDirectory()) {
+                purgeNamesUnder(k, names, depth + 1);
+                continue;
+            }
+            for (String n : names) {
+                if (k.getName().equals(n)) {
+                    //noinspection ResultOfMethodCallIgnored
+                    k.delete();
+                    android.util.Log.i("DSHA", "还原后清掉本机专属文件: " + k.getName()
+                            + "（在 " + dir.getName() + " 里）");
+                    break;
+                }
+            }
         }
     }
 

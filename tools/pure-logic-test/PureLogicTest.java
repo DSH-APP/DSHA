@@ -414,17 +414,33 @@ public final class PureLogicTest {
                 !UserDataPolicy.isMachineLocal("root/deepseek-harness/.env"));
         ok("policy: null 与空串不误判",
                 !UserDataPolicy.isMachineLocal(null) && !UserDataPolicy.isMachineLocal(""));
-        // 派生列表必须等长且逐项同源 —— tar 用的模式就是去掉 root/ 前缀的同一个路径
-        eqi("policy: 两个派生列表等长",
-                UserDataPolicy.purgeAfterRestore().length,
-                UserDataPolicy.tarExcludePatterns().length);
+        // 派生列表必须逐项同源 —— tar 用的模式就是去掉 root/ 前缀的同一个路径。
+        // 2026-09-05 起多了一类「按名字」的条目（session.lock 那种位置运行时才定的），
+        // 所以 tar 模式 = 路径型（去前缀）+ 名字型，两段都要对得上。
         String[] purge = UserDataPolicy.purgeAfterRestore();
+        String[] policyNames = UserDataPolicy.purgeAfterRestoreNames();
         String[] pats = UserDataPolicy.tarExcludePatterns();
-        boolean paired = purge.length == pats.length;
+        eqi("policy: tar 模式 = 路径型 + 名字型，长度必须相加",
+                purge.length + policyNames.length, pats.length);
+        boolean paired = purge.length + policyNames.length == pats.length;
         for (int i = 0; paired && i < purge.length; i++) {
             if (!purge[i].equals("root/" + pats[i])) paired = false;
         }
+        for (int i = 0; paired && i < policyNames.length; i++) {
+            if (!policyNames[i].equals(pats[purge.length + i])) paired = false;
+        }
         ok("policy: 排除项与清理项逐项同源（定义不可分裂）", paired);
+        // 名字型：位置不固定，任意深度同名都算本机专属
+        ok("policy: 会话锁在任意深度都算本机专属",
+                UserDataPolicy.isMachineLocal("root/.dsh/sessions/proj-a/sess-1/session.lock")
+                        && UserDataPolicy.isMachineLocal("root/.dsh/sessions/session.lock"));
+        ok("policy: 会话日志本身仍是用户数据（别把整个会话目录排除掉）",
+                !UserDataPolicy.isMachineLocal("root/.dsh/sessions/proj-a/sess-1/session.jsonl")
+                        && !UserDataPolicy.isMachineLocal("root/.dsh/sessions/proj-a/sess-1/session.v2.jsonl"));
+        ok("policy: 名字型条目进了 tar 排除模式（unanchored 才能匹配任意深度）",
+                UserDataPolicy.tarExcludeArgs().contains("--exclude='session.lock' "));
+        ok("policy: 按名字清理有明确的搜索根（不许全 rootfs 扫名字）",
+                UserDataPolicy.purgeNamesSearchRoot().equals("root/.dsh/sessions"));
         String tarArgs = UserDataPolicy.tarExcludeArgs();
         ok("policy: tar 参数带引号且以空格结尾（直接拼进命令不粘连）",
                 tarArgs.contains("--exclude='.dsh/.bridge_token' ") && tarArgs.endsWith(" "));

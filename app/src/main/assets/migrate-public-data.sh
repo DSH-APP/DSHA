@@ -1,7 +1,13 @@
 #!/system/bin/sh
 # DSH_HOME 里的热数据迁移到公开目录（/sdcard/Documents/dshdata），原位留私有符号
-# 链接指向公开副本。会话/设置/附件在文件管理器里可见、可备份、卸载重装不丢
+# 链接指向公开副本。设置/附件/storages 在文件管理器里可见、可备份、卸载重装不丢
 # （前提是用户保留 Documents 目录）。
+#
+# ⚠️ **sessions 刻意不在这里**（2026-09-05 起）：dsh 0.1.3 给每个会话加了跨进程写锁，
+# fs-ext 对 <session目录>/session.lock 做非阻塞 flock(2)，而公开目录是 FUSE ——
+# 真机实测 flock 在那里返回 **ENOSYS**，且 dsh 的 lease.ts 只把 EAGAIN 当「别人持锁」、
+# 其它 errno 直接往上抛 → 会话根本打不开。sessions 的落点改由 session-home.sh 管：
+# 私有实体目录（ext4，flock 正常）+ 公开镜像（卸载重装靠它恢复）。
 #
 # 安全约束（来自 deepcode-lab 踩过的坑，照搬规避）：
 #   · DSH_HOME 本身必须留私有 —— profiles/web/node_modules 是 dsh 自己维护的
@@ -26,7 +32,7 @@ set -u
 PUB="/sdcard/Documents/dshdata"
 HOME_DIR="/root/.dsh"
 
-ITEMS="sessions storages attachments settings.yaml"
+ITEMS="storages attachments settings.yaml"
 
 mkdir -p "$PUB" 2>/dev/null || { echo "MIG: 无法创建公开目录 $PUB"; exit 0; }
 
