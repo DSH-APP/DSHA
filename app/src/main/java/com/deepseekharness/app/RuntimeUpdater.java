@@ -76,6 +76,9 @@ public final class RuntimeUpdater {
             "raw.githubusercontent.com", "cdn.jsdelivr.net", "ghproxy.net",
     };
 
+    /** 单个热更新资产的硬上限。assets 脚本与内置插件源码不该大于这个量级。 */
+    private static final int MAX_RUNTIME_ASSET_BYTES = 16 * 1024 * 1024;
+
     /** 覆盖层目录：readAsset 优先读这里 */
     public static File overlayDir(Context ctx) {
         return new File(ctx.getFilesDir(), "runtime-overlay");
@@ -128,43 +131,35 @@ public final class RuntimeUpdater {
         byte[] raw = null;
         String json = null;
         String from = "";
-        for (String u : MANIFEST_URLS) {
-            // 保留原始字节：签名是对清单字节做的，重新序列化会破坏验签
-            raw = httpGetBytes(u, 8000, 15000, 1 << 20);
-            if (raw != null) {
-                String body = new String(raw, StandardCharsets.UTF_8);
-                if (body.contains("\"files\"")) {
-                    json = body;
-                    from = hostOf(u);
-                    break;
-                }
-            }
-            raw = null;
+        boolean sawManifest = false;
+        boolean sawSignature = false;
+        // 清单与签名必须从同一个镜像成对取。旧实现先拿第一个清单、再拿第一个签名，
+        // CDN 刷新不同步时就把 A 的新清单配 B 的旧签名，明明有可用源却必然验签失败。
+        for (int i = 0; i < MANIFEST_URLS.length && i < SIG_URLS.length; i++) {
+            byte[] candidate = httpGetBytes(MANIFEST_URLS[i], 8000, 15000, 1 << 20);
+            if (candidate == null) continue;
+            String body = new String(candidate, StandardCharsets.UTF_8);
+            if (!body.contains("\"files\"")) continue;
+            sawManifest = true;
+            String sig = httpGet(SIG_URLS[i], 8000, 15000);
+            if (sig == null || sig.trim().length() <= 64) continue;
+            sawSignature = true;
+            if (!verifyManifest(ctx, candidate, sig.trim())) continue;
+            raw = candidate;
+            json = body;
+            from = hostOf(MANIFEST_URLS[i]);
+            break;
         }
         if (json == null || raw == null) {
-            r.message = "拉不到更新清单（三个源都失败）——网络不通时这个功能直接跳过，不影响使用";
-            return r;
-        }
-
-        // 验签：这是唯一能防住「仓库被攻破」的一层。sha256 只保证下载内容与清单一致，
-        // 清单本身是谁发的、只有签名能证明。验不过就整批拒绝，不做任何降级放行。
-        String sig = null;
-        for (String u : SIG_URLS) {
-            String b = httpGet(u, 8000, 15000);
-            if (b != null && b.trim().length() > 64) {
-                sig = b.trim();
-                break;
+            if (!sawManifest) {
+                r.message = "拉不到更新清单（三个源都失败）——网络不通时这个功能直接跳过，不影响使用";
+            } else if (!sawSignature) {
+                r.message = "拿不到与清单同源的签名，已放弃这次更新。\n"
+                        + "（增量更新是一条远程代码通道，没有签名就不应用 —— 不影响现有功能）";
+            } else {
+                r.message = "所有镜像的清单签名都验证失败，已拒绝这次更新。\n"
+                        + "可能是镜像缓存不一致，稍后再试；若持续失败请到 GitHub 反馈。";
             }
-        }
-        if (sig == null) {
-            r.message = "拿不到清单签名，已放弃这次更新。\n"
-                    + "（增量更新是一条远程代码通道，没有签名就不应用 —— 不影响现有功能）";
-            return r;
-        }
-        if (!verifyManifest(ctx, raw, sig)) {
-            r.message = "清单签名验证失败，已拒绝这次更新。\n"
-                    + "可能是镜像缓存了不匹配的新旧组合，稍后再试；"
-                    + "若持续失败请到 GitHub 反馈（这也可能意味着内容被篡改）";
             return r;
         }
         List<Item> items = parse(json);
@@ -231,7 +226,7 @@ public final class RuntimeUpdater {
             if (!hostAllowed(u)) {
                 continue;   // 清单指向未授权主机：跳过，不是下载失败而是拒绝
             }
-            byte[] body = httpGetBytes(u, 8000, 20000, Math.max(it.size * 4, 1 << 20));
+            byte[] body = httpGetBytes(u, 8000, 20000, it.size);
             if (body == null) {
                 continue;
             }
@@ -239,7 +234,9 @@ public final class RuntimeUpdater {
             if (!got.equalsIgnoreCase(it.sha256)) {
                 continue;   // 内容与清单不符：可能是镜像缓存了旧版，换下一个源
             }
-            File tmp = new File(parent, "." + dst.getName() + ".part");
+            File tmp;
+            try { tmp = File.createTempFile("runtime-", ".part", parent); }
+            catch (java.io.IOException e) { continue; }
             try (FileOutputStream fo = new FileOutputStream(tmp)) {
                 fo.write(body);
                 fo.getFD().sync();   // 先落盘再改名，防断电留半个文件
@@ -248,17 +245,13 @@ public final class RuntimeUpdater {
                 tmp.delete();
                 continue;
             }
-            if (tmp.renameTo(dst)) {
+            try {
+                SafeFiles.replace(tmp, dst);
                 return true;
+            } catch (java.io.IOException e) {
+                // 不删旧版本。更新失败与旧版本损坏是两件完全不同的事。
+                tmp.delete();
             }
-            // 目标已存在时某些机型 rename 会失败：删掉再试一次
-            //noinspection ResultOfMethodCallIgnored
-            dst.delete();
-            if (tmp.renameTo(dst)) {
-                return true;
-            }
-            //noinspection ResultOfMethodCallIgnored
-            tmp.delete();
         }
         return false;
     }
@@ -343,7 +336,8 @@ public final class RuntimeUpdater {
                 // 缺字段的条目直接丢：宁可少更新，不要写入来源不明的内容。
                 // asset 名还要过一次路径校验 —— 它会被当成覆盖层下的相对路径直接落盘，
                 // 带 ../ 就能写到私有目录别处（shared_prefs 里有 API key 密文和 LAN token）。
-                if (!it.asset.isEmpty() && it.sha256.length() == 64 && !it.urls.isEmpty()
+                if (!it.asset.isEmpty() && it.sha256.matches("[0-9a-fA-F]{64}")
+                        && it.size > 0 && it.size <= MAX_RUNTIME_ASSET_BYTES && !it.urls.isEmpty()
                         && AssetPath.isSafe(it.asset)) {
                     out.add(it);
                 }

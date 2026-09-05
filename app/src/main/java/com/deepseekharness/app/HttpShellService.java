@@ -102,7 +102,7 @@ public final class HttpShellService {
     private ServerSocket server6;
     private volatile boolean running;
     /** 连接处理线程池（请求可能阻塞等用户确认 60s，必须并发处理，否则一个确认卡死全部请求） */
-    private java.util.concurrent.ExecutorService pool;
+    private BridgeLimits.Workers pool;
     /** 鉴权 token（随机生成，rootfs 内 agent 通过它访问；外部网络无法到达 127.0.0.1）。
      *  每次 start 都会和 rootfs 文件对账：文件存在则沿用，缺失/内容异常则轮换重写，
      *  防止重解压 rootfs 后内存 token 与文件不一致导致 agent 无法认证。 */
@@ -229,6 +229,19 @@ public final class HttpShellService {
         }
     }
 
+    /** IPv4 主监听没起来时撤销全部「已启动」状态，让保活层下次能真的重试。 */
+    private void primaryBindFailed() {
+        running = false;
+        try { if (server != null) server.close(); } catch (IOException ignored) { }
+        try { if (server6 != null) server6.close(); } catch (IOException ignored) { }
+        BridgeLimits.Workers workers = pool;
+        pool = null;
+        if (workers != null) workers.shutdownNow();
+        if (instance == this) instance = null;
+        owner = false;
+        STARTED.set(false);
+    }
+
     public void start() {
         if (running) return;
         // 跨实例互斥：已经有桥在监听就直接返回，别去抢端口把活着的那个搞坏
@@ -241,11 +254,7 @@ public final class HttpShellService {
         instance = this;
         ensureToken();
         // 固定小线程池：请求可能挂起等用户确认（60s），串行处理会互相阻塞
-        pool = java.util.concurrent.Executors.newFixedThreadPool(4, r -> {
-            Thread t = new Thread(r, "http-shell");
-            t.setDaemon(true);
-            return t;
-        });
+        pool = new BridgeLimits.Workers(4, "http-shell");
         Thread t = new Thread(() -> {
             try {
                 // 安全：仅绑定回环（loopback），外部网络无法访问！
@@ -262,8 +271,10 @@ public final class HttpShellService {
             } catch (java.net.BindException e) {
                 noteBindError("端口 " + PORT + " 已被其它应用占用（" + safeError(e)
                         + "）—— 关掉占用它的应用，或重启手机后重开 DSHA");
+                primaryBindFailed();
             } catch (IOException e) {
                 noteBindError(e.getClass().getSimpleName() + ": " + safeError(e));
+                primaryBindFailed();
             }
         }, "http-shell-accept");
         t.setDaemon(true);
@@ -276,6 +287,10 @@ public final class HttpShellService {
                 server6.setReuseAddress(true);
                 server6.bind(new java.net.InetSocketAddress(
                         java.net.InetAddress.getByName("::1"), PORT));
+                if (!running) {
+                    server6.close();
+                    return;
+                }
                 acceptLoop(server6);
             } catch (Throwable e) {
                 // IPv6 绑不上不算故障（有些设备没有 IPv6 栈），IPv4 那条是主通道
@@ -297,12 +312,12 @@ public final class HttpShellService {
                 // 4 个「连上不说话」的连接就能让桥停摆两分钟，agent 的确认弹窗和
                 // 命令全部超时。请求头 15 秒到不齐的客户端本来也不正常。
                 client.setSoTimeout(15_000);
-                java.util.concurrent.ExecutorService p = pool;
+                BridgeLimits.Workers p = pool;
                 if (p == null) {
                     try { client.close(); } catch (IOException ignored) { }
                     return;
                 }
-                p.execute(() -> handle(client));
+                p.submitSocket(client, () -> handle(client));
             } catch (IOException e) {
                 if (!running) return;
             }
@@ -388,13 +403,15 @@ public final class HttpShellService {
 
     private void handle(Socket client) {
         try (Socket c = client) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
+            BridgeLimits.HeaderReader reader = new BridgeLimits.HeaderReader(
+                    new BufferedReader(new InputStreamReader(c.getInputStream(), java.nio.charset.StandardCharsets.UTF_8)));
             String line = reader.readLine();
             if (line == null) return;
             String[] parts = line.split(" ");
             String path = parts.length > 1 ? parts[1] : "/";
+            String route = Query.path(path);
             String cmd = "";
-            if (path.startsWith("/exec") || path.startsWith("/confirm")) {
+            if (route.equals("/exec") || route.equals("/confirm")) {
                 // 走统一的查询串解析（Query.param）：值要截断到 &，参数名要精确匹配。
                 // 旧实现是 path.indexOf("cmd=") —— 值截断修过了，但参数名边界一直没有，
                 // 于是 ?xcmd=junk&cmd=真命令 会取到 junk。/confirm 的 cmd 是<b>给用户看的
@@ -436,64 +453,64 @@ public final class HttpShellService {
             String result;
             if (!authed) {
                 result = "[UNAUTHORIZED]";
-            } else if (path.startsWith("/app/notify")) {
+            } else if (route.equals("/app/notify")) {
                 // agent 通过 App 发通知栏提醒（App 层交互）
                 result = appNotify(path);
-            } else if (path.startsWith("/app/toast")) {
+            } else if (route.equals("/app/toast")) {
                 // agent 弹 App 内 Toast
                 result = appToast(path);
-            } else if (path.startsWith("/app/readfile")) {
+            } else if (route.equals("/app/readfile")) {
                 // agent 读外部文件（rootfs 挂载 /sdcard 的补充；支持路径参数）
                 result = appReadFile(path);
-            } else if (path.startsWith("/health")) {
+            } else if (route.equals("/health")) {
                 result = "OK"; // 存活探测（仍需 token）：客户端可据此区分「桥没起」与「命令失败」
-            } else if (path.startsWith("/app/ui/")) {
+            } else if (route.startsWith("/app/ui/")) {
                 result = appUi(path);
-            } else if (path.startsWith("/app/device")) {
+            } else if (route.equals("/app/device")) {
                 result = appDevice();
-            } else if (path.startsWith("/app/apps")) {
+            } else if (route.equals("/app/apps")) {
                 result = appList(path);
-            } else if (path.startsWith("/app/launch")) {
+            } else if (route.equals("/app/launch")) {
                 result = appLaunch(path);
-            } else if (path.startsWith("/app/clip")) {
+            } else if (route.equals("/app/clip")) {
                 result = appClip(path);
-            } else if (path.startsWith("/app/share")) {
+            } else if (route.equals("/app/share")) {
                 result = appShare(path);
-            } else if (path.startsWith("/app/open")) {
+            } else if (route.equals("/app/open")) {
                 result = appOpen(path);
-            } else if (path.startsWith("/app/vibrate")) {
+            } else if (route.equals("/app/vibrate")) {
                 result = appVibrate(path);
-            } else if (path.startsWith("/app/ask")) {
+            } else if (route.equals("/app/ask")) {
                 result = appAsk(path);
-            } else if (path.startsWith("/app/version")) {
+            } else if (route.equals("/app/version")) {
                 result = appVersion();
-            } else if (path.startsWith("/app/help")) {
+            } else if (route.equals("/app/help")) {
                 result = appHelp();
-            } else if (path.startsWith("/app/plugins")) {
+            } else if (route.equals("/app/plugins")) {
                 result = appPlugins(path);
-            } else if (path.startsWith("/app/overlay/reply")) {
+            } else if (route.equals("/app/overlay/reply")) {
                 // 就地回话的取件口。**必须排在 /app/overlay 前面** ——
                 // 那条用的是 startsWith，放后面永远轮不到（这类顺序坑本项目栽过）。
                 result = appOverlayReply(path);
-            } else if (path.startsWith("/app/overlay")) {
+            } else if (route.equals("/app/overlay")) {
                 result = appOverlay(path);
-            } else if (path.startsWith("/app/location")) {
+            } else if (route.equals("/app/location")) {
                 // 位置 / 传感器 / 手电：手机相对服务器真正独有的那几样能力。
                 // 顺序要紧 —— /app/sensors 必须在 /app/sensor 之前判，
                 // 否则 startsWith 会让「列表」被「读单个」抢走。
                 result = DeviceSense.location(ctx, "1".equals(getParam(queryOf(path), "fresh", "")));
-            } else if (path.startsWith("/app/sensors")) {
+            } else if (route.equals("/app/sensors")) {
                 result = DeviceSense.sensorList(ctx);
-            } else if (path.startsWith("/app/sensor")) {
+            } else if (route.equals("/app/sensor")) {
                 result = DeviceSense.sensorRead(ctx, getParam(queryOf(path), "name", "light"));
-            } else if (path.startsWith("/app/torch")) {
+            } else if (route.equals("/app/torch")) {
                 String on = getParam(queryOf(path), "on", "1");
                 result = DeviceSense.torch(ctx, !"0".equals(on) && !"off".equalsIgnoreCase(on));
-            } else if (path.startsWith("/app/export")) {
+            } else if (route.equals("/app/export")) {
                 result = appExport(path);
             } else if (cmd.isEmpty()) {
                 result = "[NO_CMD]";
-            } else if (path.startsWith("/confirm")) {
+            } else if (route.equals("/confirm")) {
                 // rootfs 内包装器请求的确认：只弹窗，不执行
                 // force=1（adb-shell 报备）→ 所有命令都确认；否则仅危险命令
                 boolean force = path.contains("force=1");
@@ -628,13 +645,14 @@ public final class HttpShellService {
     }
 
     private String appUi(String path) {
+        String route = Query.path(path);
         String q = queryOf(path);
         try {
-            if (path.startsWith("/app/ui/dump")) {
+            if (route.equals("/app/ui/dump")) {
                 if (!uiAuthorized("读取当前屏幕上的文字与控件")) return "[ERR] 你拒绝了这次屏幕读取";
                 return DshaAccessibilityService.uiDump();
             }
-            if (path.startsWith("/app/ui/tap")) {
+            if (route.equals("/app/ui/tap")) {
                 String text = getParam(q, "text", "");
                 // 有文字就按文字点：控件位置会随滚动和动画变，文字不会
                 if (!text.isEmpty()) {
@@ -647,7 +665,7 @@ public final class HttpShellService {
                 if (!uiAuthorized("点击坐标 (" + x + "," + y + ")")) return "[ERR] 你拒绝了这次点击";
                 return DshaAccessibilityService.uiTap(x, y);
             }
-            if (path.startsWith("/app/ui/input")) {
+            if (route.equals("/app/ui/input")) {
                 String text = getParam(q, "text", "");
                 if (text.isEmpty()) return "[ERR] 需要 ?text=";
                 if (!uiAuthorized("在输入框里填入「" + shortText(text) + "」")) {
@@ -655,17 +673,17 @@ public final class HttpShellService {
                 }
                 return DshaAccessibilityService.uiInput(text);
             }
-            if (path.startsWith("/app/ui/key")) {
+            if (route.equals("/app/ui/key")) {
                 String k = getParam(q, "name", "");
                 if (!uiAuthorized("按下系统按键 " + shortText(k))) return "[ERR] 你拒绝了这次按键";
                 return DshaAccessibilityService.uiKey(k);
             }
-            if (path.startsWith("/app/ui/screenshot") || path.startsWith("/app/ui/shot")) {
+            if (route.equals("/app/ui/screenshot") || route.equals("/app/ui/shot")) {
                 // 截屏会把当前画面留到磁盘，等于一份可被后续读取的隐私快照
                 if (!uiAuthorized("截取当前屏幕并保存为图片")) return "[ERR] 你拒绝了这次截屏";
                 return DshaAccessibilityService.uiScreenshot();
             }
-            if (path.startsWith("/app/ui/swipe")) {
+            if (route.equals("/app/ui/swipe")) {
                 int x1 = intParam(q, "x1", -1);
                 int y1 = intParam(q, "y1", -1);
                 int x2 = intParam(q, "x2", -1);
@@ -869,7 +887,7 @@ public final class HttpShellService {
             if (t != null && !t.isEmpty()) return "TEXT " + t;
             // 没话可取，而且输入栏也已经收了（用户 45 秒没动，或者按了发送）——
             // 让插件停掉轮询，别对着一个已经关掉的窗口敲三分钟。
-            if (!OverlayController.replyBarShown()) return "CLOSED";
+            if (!OverlayController.replyBarShown(want)) return "CLOSED";
             return "EMPTY";
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
@@ -926,8 +944,7 @@ public final class HttpShellService {
             String p = getParam(queryOf(path), "path", "");
             if (p.isEmpty()) return "NO_PATH";
             String lower = p.toLowerCase();
-            if (lower.endsWith("/.env") || lower.contains("/.env/")
-                    || lower.contains(".bridge_token") || lower.contains("settings.yaml")) {
+            if (isSensitiveReadablePath(lower)) {
                 return "FORBIDDEN: 凭据文件不可读（.env/.bridge_token/settings.yaml）";
             }
             java.io.File f = new java.io.File(p);
@@ -939,14 +956,12 @@ public final class HttpShellService {
             } catch (Exception e) {
                 return "FORBIDDEN: 路径无法解析（" + p + "）";
             }
-            // 前缀匹配必须带路径分隔符，否则 /sdcardEVIL/x、/storage/emulated/0abc/x
-            // 这类路径会被当成外部存储放行。原实现算了 external 又不用它，
-            // 实际生效的是下面那个不带斜杠的宽松判断 —— 等于白名单形同虚设。
-            // （TarGzipExtractor.linkSafeWithin 里的同类校验就做对了：前缀 + 分隔符）
-            boolean external = canon.equals("/sdcard") || canon.startsWith("/sdcard/")
-                    || canon.equals("/storage/emulated/0") || canon.startsWith("/storage/emulated/0/");
+            boolean external = SafeFiles.isPrimaryExternalPath(canon);
             if (!external) {
                 return "FORBIDDEN: 仅允许读取 /sdcard 外部存储（" + p + "）";
+            }
+            if (isSensitiveReadablePath(canon.toLowerCase())) {
+                return "FORBIDDEN: 凭据文件不可读（.env/.bridge_token/settings.yaml）";
             }
             if (!f.isFile()) return "NOT_FOUND: " + p;
             if (f.length() > 256 * 1024) return "TOO_LARGE: " + f.length();
@@ -1124,15 +1139,19 @@ public final class HttpShellService {
             String file = getParam(q, "path", "");
             android.content.Intent send = new android.content.Intent(android.content.Intent.ACTION_SEND);
             if (!file.isEmpty()) {
-                java.io.File f = new java.io.File(file);
-                if (!f.isFile()) return "NOT_FOUND: " + file;
-                // 只允许分享外部存储里的文件（App 私有目录需要 FileProvider 授权）
-                String canon = f.getCanonicalPath();
-                if (!canon.startsWith("/sdcard") && !canon.startsWith("/storage/emulated/0")) {
+                java.io.File requested = new java.io.File(file);
+                String canon = requested.getCanonicalPath();
+                java.io.File f = new java.io.File(canon);
+                if (!f.isFile()) return "NOT_FOUND: " + safeDisplay(file);
+                // 只允许主外部存储。canonical 后再判，软链不能把 App 私有文件带出去。
+                if (!SafeFiles.isPrimaryExternalPath(canon)) {
                     return "FORBIDDEN: 只能分享 /sdcard 下的文件";
                 }
+                android.net.Uri shareUri = androidx.core.content.FileProvider.getUriForFile(ctx,
+                        ctx.getPackageName() + ".share", f);
                 send.setType("*/*");
-                send.putExtra(android.content.Intent.EXTRA_STREAM, android.net.Uri.fromFile(f));
+                send.putExtra(android.content.Intent.EXTRA_STREAM, shareUri);
+                send.setClipData(android.content.ClipData.newRawUri("DSHA 文件", shareUri));
                 send.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 if (!text.isEmpty()) send.putExtra(android.content.Intent.EXTRA_TEXT, text);
             } else {
@@ -1265,28 +1284,27 @@ public final class HttpShellService {
         }
     }
 
-    /** /app/export?path=/root/x.md&name=x.md ：把文件导出到 Download/DSHA（走 MediaStore，用户可直接在文件管理器看到） */
+    /** /app/export?path=/root/x.md&name=x.md ：把 rootfs 内产物导出到 Download/DSHA。 */
     private String appExport(String path) {
         try {
             String q = queryOf(path);
             String src = getParam(q, "path", "");
             if (src.isEmpty()) return "NO_PATH";
-            String name = getParam(q, "name", "");
-            java.io.File f = new java.io.File(src);
-            if (!f.isFile()) {
-                // 允许传 rootfs 内的 guest 路径（/root/... → 映射到 App 私有目录）
-                try {
-                    HarnessController hc = HarnessController.get(ctx);
-                    java.io.File guess = new java.io.File(hc.getProot().getRootfsDir(),
-                            src.startsWith("/") ? src.substring(1) : src);
-                    if (guess.isFile()) f = guess;
-                } catch (Throwable ignored) {
-                }
+            // 这个端点的契约是 guest 路径，不是「让 App 以自身 uid 打开任意宿主路径」。
+            // 先 new File(src) 再 fallback 的旧写法让 /data/user/0/...、甚至 /../../shared_prefs
+            // 都能被 MediaStore 导出，等于把 bridge token 变成 App 私有数据读权限。
+            if (!src.equals("/root") && !src.startsWith("/root/")) {
+                return "FORBIDDEN: 只允许导出容器内 /root/ 下的文件";
             }
+            HarnessController hc = HarnessController.get(ctx);
+            java.io.File guestRoot = new java.io.File(hc.getProot().getRootfsDir(), "root");
+            String relative = src.length() == "/root".length() ? "" : src.substring("/root/".length());
+            java.io.File f = SafeFiles.inside(guestRoot, relative);
             if (!f.isFile()) return "NOT_FOUND: " + SensitiveData.redact(src);
             if (f.length() > 64L * 1024 * 1024) return "TOO_LARGE: " + f.length();
+            String name = getParam(q, "name", "");
             if (name.isEmpty()) name = f.getName();
-            if (name.contains("/") || name.contains("..")) return "BAD_NAME";
+            name = DownloadSink.sanitize(name);
             String out = BackupManager.exportToDownloads(ctx, f, name);
             return out == null ? "ERROR: 导出失败（存储权限或空间不足）"
                     : "OK: " + SensitiveData.redact(out);
@@ -1294,6 +1312,11 @@ public final class HttpShellService {
             return "ERROR: " + safeError(e);
         }
     }
+
+private static boolean isSensitiveReadablePath(String lowerPath) {
+    return lowerPath.endsWith("/.env") || lowerPath.contains("/.env/")
+            || lowerPath.contains(".bridge_token") || lowerPath.contains("settings.yaml");
+}
 
 /** 从（仅含 query 的）查询串提取参数。调用方务必先截取 '?' 之后的内容。 */
     private static String getParam(String q, String key, String def) {

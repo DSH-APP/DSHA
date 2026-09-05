@@ -370,6 +370,7 @@ public class LaunchFragment extends Fragment {
                     gs.open(GeckoRuntime.getDefault(requireContext()));
                     gv.setSession(gs);
                 }
+                attachGeckoNavigation(gs);
                 attachGeckoDownload(gs);
                 gs.loadUri(uiUrl());
                 return; // GeckoView 加载，不走 WebView
@@ -382,10 +383,9 @@ public class LaunchFragment extends Fragment {
             WebSettings ws = webView.getSettings();
             ws.setJavaScriptEnabled(true);
             ws.setDomStorageEnabled(true);
-            // 现代前端特性：混合内容（http 页面加载资源）+ 数据库 + 多窗口
-            // 我们只加载 http://127.0.0.1:<port>，不需要混合内容全放行。
-            // ALWAYS_ALLOW 会让页面内任何 https 框架都能拉 http 资源（可被中间人注入）。
-            ws.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+            // WebUI 本身就是 http 回环页，资源同源，不需要允许 HTTPS 页面加载 HTTP 子资源。
+            ws.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+            ws.setSafeBrowsingEnabled(true);
             // API 29 及以下 allowFileAccess 默认为 true：显式关掉。
             // WebUI 全部走 http，用不到 file://，留着只是多一条攻击面。
             ws.setAllowFileAccess(false);
@@ -402,22 +402,38 @@ public class LaunchFragment extends Fragment {
                 ws.setUserAgentString("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                         + "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
             }
-            webView.setWebViewClient(new WebViewClient());
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view,
+                                                        android.webkit.WebResourceRequest request) {
+                    return leaveEmbeddedWeb(request == null ? null : request.getUrl());
+                }
+
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    return leaveEmbeddedWeb(url == null ? null : Uri.parse(url));
+                }
+            });
             // 系统 WebView 的下载：DownloadListener 只给 URL，得自己再发一次请求。
-            // 产物与 GeckoView 那条路落同一个目录（Download/DSHA/下载/）。
+            // 只接本机 WebUI 的下载；外站导航已经交给系统浏览器，不把嵌入页变成 App 权限的下载代理。
             webView.setDownloadListener((url, ua, cd, mime, len) -> {
                 final android.content.Context appCtx = requireContext().getApplicationContext();
+                if (!isLocalUiUrl(url)) {
+                    openOutside(url);
+                    return;
+                }
+                final String cookie = android.webkit.CookieManager.getInstance().getCookie(url);
                 android.widget.Toast.makeText(appCtx, "开始下载…",
                         android.widget.Toast.LENGTH_SHORT).show();
                 new Thread(() -> {
                     String name = DownloadSink.guessName(url, cd, "download");
-                    String path = DownloadSink.download(appCtx, url, name, mime);
+                    String path = DownloadSink.download(appCtx, url, name, mime, ua, cookie);
                     final String msg = path == null
                             ? "下载失败：" + name : "已保存到 " + path;
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
                             android.widget.Toast.makeText(appCtx, msg,
                                     android.widget.Toast.LENGTH_LONG).show());
-                }).start();
+                }, "dsha-web-download").start();
             });
             webView.setWebChromeClient(new WebChromeClient() {
                 @Override
@@ -483,6 +499,57 @@ public class LaunchFragment extends Fragment {
         return base;
     }
 
+    /** 嵌入内核只承载本机 WebUI；外部页面交给系统浏览器，隔开不受信任页面与 App WebView。 */
+    private boolean leaveEmbeddedWeb(Uri uri) {
+        if (uri != null && isLocalUiUrl(uri.toString())) return false;
+        if (uri != null) openOutside(uri.toString());
+        return true;
+    }
+
+    private boolean isLocalUiUrl(String raw) {
+        try {
+            Uri uri = Uri.parse(raw);
+            String host = uri.getHost();
+            return "http".equalsIgnoreCase(uri.getScheme())
+                    && ("127.0.0.1".equals(host) || "localhost".equalsIgnoreCase(host)
+                        || "::1".equals(host))
+                    && uri.getPort() == c.getPortInt();
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private void openOutside(String raw) {
+        try {
+            Uri uri = Uri.parse(raw);
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase();
+            if (!"http".equals(scheme) && !"https".equals(scheme) && !"mailto".equals(scheme)
+                    && !"tel".equals(scheme) && !"geo".equals(scheme) && !"market".equals(scheme)) {
+                return;
+            }
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            requireContext().getApplicationContext().startActivity(intent);
+        } catch (Throwable e) {
+            android.util.Log.w("DSHA", "打开外部链接失败: "
+                    + SensitiveData.redact(String.valueOf(e)));
+        }
+    }
+
+    private void attachGeckoNavigation(GeckoSession gs) {
+        gs.setNavigationDelegate(new GeckoSession.NavigationDelegate() {
+            @Override
+            public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.AllowOrDeny> onLoadRequest(
+                    GeckoSession session, GeckoSession.NavigationDelegate.LoadRequest request) {
+                if (request != null && isLocalUiUrl(request.uri)) {
+                    return org.mozilla.geckoview.GeckoResult.allow();
+                }
+                if (request != null) openOutside(request.uri);
+                return org.mozilla.geckoview.GeckoResult.deny();
+            }
+        });
+    }
+
     /**
      * 给 GeckoSession 接上下载。
      *
@@ -498,6 +565,14 @@ public class LaunchFragment extends Fragment {
             @Override
             public void onExternalResponse(@NonNull GeckoSession session,
                                            @NonNull org.mozilla.geckoview.WebResponse response) {
+                if (!isLocalUiUrl(response.uri)) {
+                    openOutside(response.uri);
+                    try {
+                        if (response.body != null) response.body.close();
+                    } catch (Throwable ignored) {
+                    }
+                    return;
+                }
                 new Thread(() -> {
                     String cd = headerOf(response.headers, "Content-Disposition");
                     String mime = headerOf(response.headers, "Content-Type");
@@ -508,13 +583,14 @@ public class LaunchFragment extends Fragment {
                             path = DownloadSink.save(appCtx, response.body, name, mime);
                         }
                     } catch (Throwable t) {
-                        android.util.Log.w("DSHA", "GeckoView 下载失败: " + t);
+                        android.util.Log.w("DSHA", "GeckoView 下载失败: "
+                                + SensitiveData.redact(String.valueOf(t)));
                     }
                     final String msg = path == null ? "下载失败：" + name : "已保存到 " + path;
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
                             android.widget.Toast.makeText(appCtx, msg,
                                     android.widget.Toast.LENGTH_LONG).show());
-                }).start();
+                }, "dsha-gecko-download").start();
             }
         });
     }

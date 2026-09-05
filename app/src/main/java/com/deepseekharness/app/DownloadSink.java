@@ -25,6 +25,9 @@ import java.io.OutputStream;
  */
 final class DownloadSink {
 
+    /** 即使是本机 WebUI 的响应，也不能让一次导出耗尽手机存储。 */
+    private static final long MAX_DOWNLOAD_BYTES = 512L * 1024 * 1024;
+
     private DownloadSink() {
     }
 
@@ -50,8 +53,9 @@ final class DownloadSink {
         if (ctx == null || in == null) return null;
         String name = sanitize(fileName);
         final String base = Environment.DIRECTORY_DOWNLOADS;
-        // Android 10+：MediaStore，不需要任何存储权限
+        // Android 10+：先以 pending 行写入；只有完整、未超限的文件才对文件管理器可见。
         if (Build.VERSION.SDK_INT >= 29) {
+            Uri uri = null;
             try {
                 ContentValues cv = new ContentValues();
                 cv.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
@@ -59,47 +63,69 @@ final class DownloadSink {
                         mime == null || mime.isEmpty() ? "application/octet-stream" : mime);
                 cv.put(MediaStore.MediaColumns.RELATIVE_PATH,
                         PublicDirs.relative(base, PublicDirs.DOWNLOADS));
-                Uri uri = ctx.getContentResolver().insert(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+                cv.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                uri = ctx.getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
                 if (uri != null) {
                     try (OutputStream os = ctx.getContentResolver().openOutputStream(uri)) {
-                        if (os == null) return null;
+                        if (os == null) throw new java.io.IOException("无法打开下载目标");
                         pump(in, os);
                     }
+                    ContentValues done = new ContentValues();
+                    done.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                    ctx.getContentResolver().update(uri, done, null, null);
                     return PublicDirs.display(Environment.getExternalStorageDirectory()
                             .getAbsolutePath(), base, PublicDirs.DOWNLOADS) + "/" + name;
                 }
             } catch (Throwable e) {
-                android.util.Log.w("DSHA", "下载写 MediaStore 失败，改直写: "
+                if (uri != null) {
+                    try { ctx.getContentResolver().delete(uri, null, null); } catch (Throwable ignored) { }
+                    // 流已经可能读了一部分，不能拿半截流再走旧路径。
+                    android.util.Log.w("DSHA", "下载写 MediaStore 失败: "
+                            + SensitiveData.redact(String.valueOf(e)));
+                    return null;
+                }
+                android.util.Log.w("DSHA", "创建下载目标失败，尝试旧存储路径: "
                         + SensitiveData.redact(String.valueOf(e)));
             }
         }
-        // Android 9-，或已授予「所有文件访问」
+        // Android 9-，或 MediaStore 根本没有给出 Uri：原子预留名字，失败删半成品。
+        File dst = null;
         try {
             File dir = new File(Environment.getExternalStoragePublicDirectory(base),
                     PublicDirs.ROOT + "/" + PublicDirs.DOWNLOADS);
-            if (dir.isDirectory() || dir.mkdirs()) {
-                File dst = new File(dir, name);
-                try (OutputStream os = new FileOutputStream(dst)) {
-                    pump(in, os);
-                }
-                return dst.getAbsolutePath();
+            if (!dir.isDirectory() && !dir.mkdirs()) return null;
+            dst = SafeFiles.reserve(dir, name);
+            try (OutputStream os = new FileOutputStream(dst)) {
+                pump(in, os);
             }
+            return dst.getAbsolutePath();
         } catch (Throwable e) {
+            if (dst != null) dst.delete();
             android.util.Log.w("DSHA", "下载直写失败: "
                     + SensitiveData.redact(String.valueOf(e)));
+            return null;
         }
-        return null;
     }
 
-    /** 自己去拉一次 URL 再落盘（系统 WebView 的 DownloadListener 只给 URL）。 */
-    static String download(Context ctx, String url, String fileName, String mime) {
+    /** 自己去拉一次本机 WebUI URL 再落盘（系统 WebView 的 DownloadListener 只给 URL）。 */
+    static String download(Context ctx, String url, String fileName, String mime,
+                           String userAgent, String cookie) {
         java.net.HttpURLConnection conn = null;
         try {
-            conn = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+            java.net.URL parsed = new java.net.URL(url);
+            String host = parsed.getHost();
+            if (!"http".equalsIgnoreCase(parsed.getProtocol())
+                    || !("127.0.0.1".equals(host) || "localhost".equalsIgnoreCase(host)
+                        || "::1".equals(host))) {
+                return null;
+            }
+            conn = (java.net.HttpURLConnection) parsed.openConnection();
             conn.setConnectTimeout(15000);
             conn.setReadTimeout(60000);
-            conn.setInstanceFollowRedirects(true);
+            // 不跟随重定向：下载 URL 持有 dsh token，不能被重定向到别的主机。
+            conn.setInstanceFollowRedirects(false);
+            if (userAgent != null && !userAgent.isEmpty()) conn.setRequestProperty("User-Agent", userAgent);
+            if (cookie != null && !cookie.isEmpty()) conn.setRequestProperty("Cookie", cookie);
             if (conn.getResponseCode() / 100 != 2) return null;
             String cd = conn.getHeaderField("Content-Disposition");
             String name = guessName(url, cd, fileName);
@@ -108,7 +134,7 @@ final class DownloadSink {
                         ? mime : conn.getContentType());
             }
         } catch (Throwable e) {
-            // Download URLs can carry the dsh BrowserAuth/LAN token.  Never put
+            // Download URLs can carry the dsh BrowserAuth/LAN token. Never put
             // the raw URL (or an exception that embeds it) into logcat.
             android.util.Log.w("DSHA", "下载失败 "
                     + SensitiveData.redact(String.valueOf(url)) + ": "
@@ -211,10 +237,19 @@ final class DownloadSink {
         return hay.toLowerCase(java.util.Locale.US).indexOf(needle.toLowerCase(java.util.Locale.US));
     }
 
-    private static void pump(InputStream in, OutputStream out) throws java.io.IOException {
+    private static long pump(InputStream in, OutputStream out) throws java.io.IOException {
         byte[] buf = new byte[65536];
+        long total = 0;
         int n;
-        while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+        while ((n = in.read(buf)) != -1) {
+            if (n == 0) continue;
+            if (total + n > MAX_DOWNLOAD_BYTES) {
+                throw new java.io.IOException("下载超过 512MB 上限");
+            }
+            out.write(buf, 0, n);
+            total += n;
+        }
         out.flush();
+        return total;
     }
 }

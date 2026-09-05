@@ -34,11 +34,11 @@ EXTS = (".py", ".sh", ".js", ".json")
 # 这些不发：要么是本地缓存，要么体积巨大
 SKIP_DIRS = ("__pycache__",)
 SKIP_NAMES = ("offline-rootfs.bin",)
-# 下载源：raw 直连 + 两个常用镜像。客户端按顺序试，任一成功即止。
+# 与 RuntimeUpdater 一样只指向 stable：main 是 1.2 alpha 线，不能让 1.1.x 清单下载它的资产。
 URL_TEMPLATES = (
-    "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/main/{path}",
-    "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@main/{path}",
-    "https://ghproxy.net/https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/main/{path}",
+    "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/{path}",
+    "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@stable/{path}",
+    "https://ghproxy.net/https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/{path}",
 )
 
 
@@ -107,8 +107,9 @@ def main():
             return 1
         with open(OUT, encoding="utf-8") as f:
             old = json.load(f)
-        oldmap = {i["asset"]: i["sha256"] for i in old.get("files", [])}
-        newmap = {i["asset"]: i["sha256"] for i in items}
+        oldmap = {i["asset"]: (i.get("sha256"), i.get("size"), tuple(i.get("urls", [])))
+                  for i in old.get("files", [])}
+        newmap = {i["asset"]: (i["sha256"], i["size"], tuple(i["urls"])) for i in items}
         stale = [k for k, v in newmap.items() if oldmap.get(k) != v]
         gone = [k for k in oldmap if k not in newmap]
         if stale or gone:

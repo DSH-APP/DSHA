@@ -25,18 +25,18 @@ import java.util.Locale;
  * 而 rootfs 在私有目录，普通文件管理器根本进不去。挂上系统的分享菜单之后，浏览器、
  * 聊天软件、相册里选「分享到 DSHA」就完事。
  *
- * <p>落地位置选公开的 {@code Download/DSHA/收件/}，不是 rootfs 里的工作区。两个原因：
- * 一是容器已经把 {@code /storage/emulated/0} 整根挂到 {@code /root/手机存储}，
- * agent 读得到；二是用户自己也能在文件管理器里看到、确认东西真的进来了 ——
- * 写进私有目录的话「分享成功」只能靠一句提示，出问题无从排查。
+ * <p>落地在 rootfs 当前工作区的 {@code 收件/}。容器能直接读取，不需要额外存储权限；
+ * 用户若要查看或转出，走 DSHA 的文件共享/导出入口。
  *
  * <p>没有界面（透明主题 + 立刻 finish）。分享是个动作，不该为它开一个页面让人再点一次确认。
  */
 public class ShareInboxActivity extends Activity {
 
-    /** 单个文件的上限。分享来的东西大小不受我们控制，而 rootfs 在 App 私有目录 ——
-     *  一个几个 G 的视频灌进来会把用户的存储和整个环境一起拖死。 */
+    /** 单个文件、整次分享与文本的硬上限：分享目标是外部输入，不能被一串 URI 灌满私有存储。 */
     private static final long MAX_BYTES = 512L * 1024 * 1024;
+    private static final long MAX_TOTAL_BYTES = 512L * 1024 * 1024;
+    private static final int MAX_FILES = 32;
+    private static final int MAX_TEXT_CHARS = 256 * 1024;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -51,8 +51,9 @@ public class ShareInboxActivity extends Activity {
             try {
                 result = handle(app, it);
             } catch (Throwable t) {
-                android.util.Log.w("DSHA", "接收分享失败: " + t);
-                result = "接收失败：" + t;
+                android.util.Log.w("DSHA", "接收分享失败: "
+                        + SensitiveData.redact(String.valueOf(t)));
+                result = "接收失败：无法读取分享内容";
             }
             final String msg = result;
             new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
@@ -67,11 +68,14 @@ public class ShareInboxActivity extends Activity {
         if (dir == null) return "收件目录不可用（环境还没解压好？）";
 
         String action = it.getAction();
+        if (!Intent.ACTION_SEND.equals(action) && !Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+            return "不支持的分享动作";
+        }
         List<Uri> uris = new ArrayList<>();
         if (Intent.ACTION_SEND.equals(action)) {
             Uri u = it.getParcelableExtra(Intent.EXTRA_STREAM);
             if (u != null) uris.add(u);
-        } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+        } else {
             ArrayList<Uri> list = it.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
             if (list != null) uris.addAll(list);
         }
@@ -87,64 +91,104 @@ public class ShareInboxActivity extends Activity {
         String stamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(new Date());
         int files = 0;
         int skipped = 0;
+        int rejected = 0;
+        long copied = 0;
         for (int i = 0; i < uris.size(); i++) {
-            String name = displayName(ctx, uris.get(i));
+            if (i >= MAX_FILES || copied >= MAX_TOTAL_BYTES) {
+                skipped += uris.size() - i;
+                break;
+            }
+            Uri uri = uris.get(i);
+            if (!shareUriAllowed(ctx, it, uri)) {
+                rejected++;
+                continue;
+            }
+            String name = displayName(ctx, uri);
             if (name == null || name.isEmpty()) {
                 name = "文件-" + stamp + (uris.size() > 1 ? "-" + (i + 1) : "");
             }
-            File out = unique(dir, name);
-            try (InputStream in = ctx.getContentResolver().openInputStream(uris.get(i));
-                 OutputStream os = new FileOutputStream(out)) {
-                if (in == null) continue;
-                byte[] buf = new byte[64 * 1024];
-                int n;
-                long total = 0;
-                boolean tooBig = false;
-                while ((n = in.read(buf)) > 0) {
-                    total += n;
-                    if (total > MAX_BYTES) {
-                        tooBig = true;
-                        break;
-                    }
-                    os.write(buf, 0, n);
-                }
-                if (tooBig) {
-                    os.close();
-                    // 半成品不留下 —— 否则用户看到文件在那儿，实际是截断的
-                    if (!out.delete()) {
-                        android.util.Log.w("DSHA", "超限文件删除失败: " + out);
-                    }
+            File out = SafeFiles.reserve(dir, name);
+            boolean kept = false;
+            try (InputStream in = ctx.getContentResolver().openInputStream(uri)) {
+                if (in == null) {
                     skipped++;
                     continue;
                 }
+                long fileBytes = 0;
+                boolean tooBig = false;
+                try (OutputStream os = new FileOutputStream(out)) {
+                    byte[] buf = new byte[64 * 1024];
+                    int n;
+                    int emptyReads = 0;
+                    while ((n = in.read(buf)) != -1) {
+                        if (n == 0) {
+                            if (++emptyReads > 3) throw new java.io.IOException("分享流没有进展");
+                            continue;
+                        }
+                        emptyReads = 0;
+                        if (fileBytes + n > MAX_BYTES || copied + fileBytes + n > MAX_TOTAL_BYTES) {
+                            tooBig = true;
+                            break;
+                        }
+                        os.write(buf, 0, n);
+                        fileBytes += n;
+                    }
+                }
+                if (tooBig) {
+                    skipped++;
+                    continue;
+                }
+                copied += fileBytes;
+                files++;
+                kept = true;
+            } catch (Throwable e) {
+                skipped++;
+                android.util.Log.w("DSHA", "读取分享文件失败: "
+                        + SensitiveData.redact(String.valueOf(e)));
+            } finally {
+                // reserve() 已经创建了目标文件；任何失败、拒绝或超限都不能留下假文件。
+                if (!kept && out.exists() && !out.delete()) {
+                    android.util.Log.w("DSHA", "未完成的分享文件删除失败");
+                }
             }
-            files++;
         }
 
         CharSequence text = it.getCharSequenceExtra(Intent.EXTRA_TEXT);
         String subject = it.getStringExtra(Intent.EXTRA_SUBJECT);
         boolean wroteText = false;
+        boolean textTruncated = false;
         if (text != null && text.length() > 0) {
-            // 存成 markdown 而不是 txt：链接与引用能直接读，agent 也更容易解析结构。
-            File out = unique(dir, "分享-" + stamp + ".md");
-            StringBuilder sb = new StringBuilder();
-            if (subject != null && !subject.isEmpty()) sb.append("# ").append(subject).append("\n\n");
-            sb.append(text);
-            sb.append("\n");
-            try (OutputStream os = new FileOutputStream(out)) {
-                os.write(sb.toString().getBytes("UTF-8"));
+            String body = text.toString();
+            if (body.length() > MAX_TEXT_CHARS) {
+                body = body.substring(0, MAX_TEXT_CHARS);
+                textTruncated = true;
             }
-            wroteText = true;
+            if (subject != null && subject.length() > 4096) subject = subject.substring(0, 4096);
+            // 存成 markdown 而不是 txt：链接与引用能直接读，agent 也更容易解析结构。
+            File out = SafeFiles.reserve(dir, "分享-" + stamp + ".md");
+            boolean kept = false;
+            try (OutputStream os = new FileOutputStream(out)) {
+                StringBuilder sb = new StringBuilder();
+                if (subject != null && !subject.isEmpty()) sb.append("# ").append(subject).append("\n\n");
+                sb.append(body).append("\n");
+                os.write(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                kept = true;
+                wroteText = true;
+            } finally {
+                if (!kept) out.delete();
+            }
         }
 
         if (files == 0 && !wroteText) {
-            return skipped > 0 ? "文件超过 512MB，没有保存" : "没有可保存的内容";
+            if (rejected > 0) return "分享内容没有授予读取权限，未保存";
+            return skipped > 0 ? "文件超过限制或无法读取，没有保存" : "没有可保存的内容";
         }
         StringBuilder msg = new StringBuilder("已放进工作区的「收件」");
         if (files > 0) msg.append("　文件 ").append(files).append(" 个");
-        if (skipped > 0) msg.append("　跳过 ").append(skipped)
-                .append(" 个（超过 512MB）");
+        if (skipped > 0) msg.append("　跳过 ").append(skipped).append(" 个（超过限制或无法读取）");
+        if (rejected > 0) msg.append("　拒绝 ").append(rejected).append(" 个（没有读取授权）");
         if (wroteText) msg.append("　文本 1 份");
+        if (textTruncated) msg.append("（文本已截到 256KB）");
         msg.append("\n容器内路径：~/收件/");
         return msg.toString();
     }
@@ -160,17 +204,28 @@ public class ShareInboxActivity extends Activity {
      *  {@code ~/<工作区>/收件/}，路径最短。用户想看的话走 DSHA 自己的文件共享入口。 */
     private File inboxDir(android.content.Context ctx) {
         try {
-            String workdir = ctx.getSharedPreferences("deepseekharness", MODE_PRIVATE)
-                    .getString("workdir", "deepseek-harness");
-            if (workdir == null || workdir.trim().isEmpty()) workdir = "deepseek-harness";
-            File dir = new File(ctx.getFilesDir(),
-                    "linux/ubuntu/root/" + workdir + "/" + PublicDirs.INBOX);
+            HarnessController hc = HarnessController.get(ctx);
+            String workdir = hc.getWorkdir(); // 统一走已有的工作区白名单与旧值修复
+            File root = new File(ctx.getFilesDir(), "linux/ubuntu/root");
+            File dir = SafeFiles.inside(root, workdir + "/" + PublicDirs.INBOX);
             if (!dir.exists() && !dir.mkdirs()) return null;
             return dir.isDirectory() ? dir : null;
         } catch (Throwable t) {
-            android.util.Log.w("DSHA", "收件目录不可用: " + t);
+            android.util.Log.w("DSHA", "收件目录不可用: "
+                    + SensitiveData.redact(String.valueOf(t)));
             return null;
         }
+    }
+
+    /** 外部分享只能读被系统授予的 content Uri，且绝不反向打开自己的 provider。 */
+    private static boolean shareUriAllowed(android.content.Context ctx, Intent intent, Uri uri) {
+        if (ctx == null || intent == null || uri == null) return false;
+        boolean grantFlag = (intent.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION) != 0;
+        boolean granted = grantFlag || ctx.checkUriPermission(uri, android.os.Process.myPid(),
+                android.os.Process.myUid(), Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                == android.content.pm.PackageManager.PERMISSION_GRANTED;
+        return SafeFiles.shareSourceAllowed(uri.getScheme(), uri.getAuthority(),
+                ctx.getPackageName(), granted);
     }
 
     /** 从 content Uri 取原始文件名。取不到就返回 null，交给调用方兜底命名。 */
@@ -179,34 +234,11 @@ public class ShareInboxActivity extends Activity {
         try (android.database.Cursor c = ctx.getContentResolver().query(u, null, null, null, null)) {
             if (c != null && c.moveToFirst()) {
                 int idx = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
-                if (idx >= 0) return sanitize(c.getString(idx));
+                if (idx >= 0) return SafeFiles.cleanName(c.getString(idx));
             }
         } catch (Throwable ignored) {
         }
         String last = u.getLastPathSegment();
-        return last == null ? null : sanitize(last);
-    }
-
-    private String sanitize(String s) {
-        if (s == null) return null;
-        // 路径分隔符与控制字符一律换掉 —— 分享来的文件名是外部输入，不能直接拼路径。
-        return s.replaceAll("[/\\\\\\x00-\\x1f]", "_").trim();
-    }
-
-    /** 同名时加序号，不覆盖已有文件。 */
-    private File unique(File dir, String name) {
-        File f = new File(dir, name);
-        if (!f.exists()) return f;
-        String base = name, ext = "";
-        int dot = name.lastIndexOf('.');
-        if (dot > 0) {
-            base = name.substring(0, dot);
-            ext = name.substring(dot);
-        }
-        for (int i = 2; i < 1000; i++) {
-            File c = new File(dir, base + "-" + i + ext);
-            if (!c.exists()) return c;
-        }
-        return new File(dir, base + "-" + System.currentTimeMillis() + ext);
+        return last == null ? null : SafeFiles.cleanName(last);
     }
 }

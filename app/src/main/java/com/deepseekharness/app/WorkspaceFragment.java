@@ -295,8 +295,7 @@ public class WorkspaceFragment extends Fragment {
                         if (line.startsWith("DEEPSEEK_API_KEY=")) {
                             String key = line.substring("DEEPSEEK_API_KEY=".length()).trim();
                             if (!key.isEmpty()) {
-                                c.setApiKey(key);
-                                keySynced = true;
+                                keySynced = c.setApiKey(key);
                             }
                             break;
                         }
@@ -314,8 +313,7 @@ public class WorkspaceFragment extends Fragment {
                             // 当 key 写进配置，对话必然鉴权失败而界面看着「已填」
                             String plain = c.decryptKeyFromBackup(k2);
                             if (plain != null) {
-                                c.setApiKey(plain);
-                                keySynced = true;
+                                keySynced = c.setApiKey(plain);
                             } else {
                                 keyUndecryptable = true;
                             }

@@ -1114,7 +1114,7 @@ public class ConfigFragment extends Fragment {
         }
 
         saveBtn.setOnClickListener(v -> {
-            c.setApiKey(apiKeyEdit.getText().toString().trim());
+            boolean keySaved = c.setApiKey(apiKeyEdit.getText().toString().trim());
             c.setPort(portEdit.getText().toString().trim());
             requireContext().getSharedPreferences("deepseekharness", android.content.Context.MODE_PRIVATE)
                     .edit().putBoolean("confirm_shell", confirmShellCb.isChecked())
@@ -1147,9 +1147,10 @@ public class ConfigFragment extends Fragment {
             DeviceBridgeService.apply(requireContext());
             // 能力开关变了就重写清单 —— agent 的能力说明按它拼。
             boolean capsChanged = c.writeCapsFile();
-            Toast.makeText(requireContext(),
-                    (adbCb != null && adbCb.isChecked()) ? "配置已保存（ADB 已开）" : "配置已保存（ADB 已关）",
-                    Toast.LENGTH_SHORT).show();
+            String saved = (adbCb != null && adbCb.isChecked())
+                    ? "配置已保存（ADB 已开）" : "配置已保存（ADB 已关）";
+            if (!keySaved) saved += "；API key 未保存（Android Keystore 不可用）";
+            Toast.makeText(requireContext(), saved, Toast.LENGTH_SHORT).show();
             if (capsChanged) {
                 // 提示词是插件在 dsh 启动时读的，光保存不重启，当前会话里 agent 手上还是旧的那份。
                 // 这一句不说，用户会以为关掉位置权限之后 agent 立刻就不知道位置接口了。

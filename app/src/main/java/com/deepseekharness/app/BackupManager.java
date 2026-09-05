@@ -163,16 +163,21 @@ public final class BackupManager {
                         //noinspection ResultOfMethodCallIgnored
                         kf.getParentFile().mkdirs();
                     }
-                    // 加密：base64(iv):base64(ct) 的格式，恢复时 dsh 自身不读这个文件，
-                    // 它只是「备份里带 key」的便利；恢复脚本会在导入后重新走 setApiKey 加密存储。
+                    // 加密：GCM 格式；恢复时 dsh 自身不读这个文件，它只是「备份里带 key」的便利。
                     String enc = c.encryptKeyForBackup(bkKey);
-                    java.nio.file.Files.write(kf.toPath(),
-                            enc.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                    try {
-                        java.nio.file.Files.setPosixFilePermissions(kf.toPath(),
-                                java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
-                    } catch (Throwable e) {
-                        android.util.Log.w("DSHA", "API key 备份权限设置失败（不影响）: " + e);
+                    if (enc == null || enc.isEmpty()) {
+                        // 不能以「备份方便」为由把 key 明文放进公共 Download；旧残留也要删掉。
+                        if (kf.exists()) kf.delete();
+                        c.logActivity("备份未包含 API key：Android Keystore 不可用，已跳过以免写入明文");
+                    } else {
+                        java.nio.file.Files.write(kf.toPath(),
+                                enc.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        try {
+                            java.nio.file.Files.setPosixFilePermissions(kf.toPath(),
+                                    java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
+                        } catch (Throwable e) {
+                            android.util.Log.w("DSHA", "API key 备份权限设置失败（不影响）: " + e);
+                        }
                     }
                 } catch (Throwable e) {
                     android.util.Log.w("DSHA", "写 API key 备份文件失败（备份继续）: " + e);

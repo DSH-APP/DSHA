@@ -66,7 +66,7 @@ public final class LanProxyService {
     private static Thread acceptThread;
     private static volatile boolean running;
     /** 连接处理线程池（限制并发，防线程耗尽） */
-    private static java.util.concurrent.ExecutorService pool;
+    private static BridgeLimits.Workers pool;
     /** 启动时缓存局域网 IP（仅用于日志/就绪提示；Location 重写已改为实时取
      *  getLanAddress()，WiFi 切换后重定向地址依然正确，不依赖本缓存） */
     private static volatile String lanIp = "";
@@ -98,11 +98,7 @@ public final class LanProxyService {
         getLanToken(ctx);
         running = true;
         // 连接线程池：固定 8 线程（防局域网扫描/大量连接耗尽），daemon 线程
-        pool = java.util.concurrent.Executors.newFixedThreadPool(8, r -> {
-            Thread t = new Thread(r, "lanproxy");
-            t.setDaemon(true);
-            return t;
-        });
+        pool = new BridgeLimits.Workers(8, "lanproxy");
         lanIp = HarnessController.getLanAddress();
         log("LAN 桥启动中: 0.0.0.0:" + LAN_PORT + " → 127.0.0.1:" + backend + " (LAN IP=" + lanIp + ")");
         acceptThread = new Thread(() -> {
@@ -115,15 +111,21 @@ public final class LanProxyService {
                     // 端口被占时说清是谁的问题，否则表现成「局域网打不开」很难查
                     log("LAN 桥启动失败：端口 " + LAN_PORT + " 已被其它应用占用（" + be.getMessage() + "）");
                     android.util.Log.e("DSHA", "LAN 桥端口 " + LAN_PORT + " 被占用: " + be);
+                    running = false;
+                    BridgeLimits.Workers workers = pool;
+                    if (workers != null) workers.shutdownNow();
+                    pool = null;
                     return;
                 }
                 log("LAN 桥已就绪 ✓ 访问地址: http://" + (lanIp.isEmpty() ? "<手机IP>" : lanIp) + ":" + LAN_PORT + "/");
                 while (running) {
                     try {
                         Socket client = server.accept();
-                        client.setSoTimeout(120000);
+                        client.setSoTimeout(15_000);
                         // 固定线程池：限制并发连接线程数（防局域网扫描/大量连接耗尽线程）
-                        pool.execute(() -> handle(client));
+                        BridgeLimits.Workers workers = pool;
+                        if (workers == null) client.close();
+                        else workers.submitSocket(client, () -> handle(client));
                     } catch (IOException e) {
                         if (running) log("accept 异常: " + e.getMessage());
                     }
@@ -222,6 +224,9 @@ public final class LanProxyService {
                 // 1. 读请求头（到 \r\n\r\n）
                 int headLen = readHeader(cin, reqHead);
                 if (headLen <= 0) break; // EOF / 超时
+                // 防慢请求头只需较短超时；真正的上传仍按原来的两分钟预算走，
+                // 否则大附件在慢 Wi-Fi 上会被我们自己切断。
+                clientSock.setSoTimeout(120000);
                 String head = new String(reqHead, 0, headLen, java.nio.charset.StandardCharsets.ISO_8859_1);
                 int nl = head.indexOf('\n');
                 if (nl < 0) break; // 畸形请求头：无换行直接断开，防 substring 越界
@@ -316,7 +321,7 @@ public final class LanProxyService {
                     if (auth == LanAuth.AUTH_OK_SET_COOKIE) {
                         outHead = outHead.replace("\r\n\r\n",
                                 "\r\nSet-Cookie: " + LanAuth.COOKIE_NAME + "=" + lanToken
-                                        + "; Path=/; SameSite=Strict; Max-Age=2592000\r\n\r\n");
+                                        + "; Path=/; SameSite=Strict; HttpOnly; Max-Age=2592000\r\n\r\n");
                     }
                     cout.write(outHead.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));
                     cout.flush();
@@ -348,7 +353,7 @@ public final class LanProxyService {
 
     // ================= IO 工具 =================
 
-    /** 读头部直到 \r\n\r\n（或 \n\n），返回字节数；EOF 返回 -1；超长截断后放行 */
+    /** 读头部直到 \r\n\r\n（或 \n\n），返回字节数；EOF 返回 -1；超长一律拒绝。 */
     private static int readHeader(InputStream in, byte[] buf) throws IOException {
         int pos = 0, matched = 0;
         while (pos < buf.length) {
@@ -362,7 +367,7 @@ public final class LanProxyService {
             else if (matched == 2 && b == '\n') return pos; // 兼容 \n\n
             else matched = 0;
         }
-        return pos;
+        throw new IOException("请求头超过 64KB");
     }
 
     private static void pipeBytes(InputStream in, OutputStream out, long n) throws IOException {

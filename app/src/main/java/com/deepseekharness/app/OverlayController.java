@@ -105,15 +105,9 @@ final class OverlayController {
     private static final java.util.ArrayDeque<String[]> PENDING_REPLIES = new java.util.ArrayDeque<>();
     private static final int MAX_PENDING_REPLIES = 8;
     /** 输入栏正显示 —— 与 confirming 同性质：这期间不许自动淡出、不许被流式内容顶掉。 */
-    private static boolean replying;
-    /**
-     * 输入栏是为哪个会话摆出来的。
-     *
-     * <p><b>不能在发送那一刻读 activeKey。</b>用户在看 A 的输出、输入栏露出来了，
-     * 这期间 B 会话吐出新内容 → push 把 activeKey 换成 B → 用户按发送，话进了 B。
-     * 所以在摆出输入栏那一刻就把会话钉住。
-     */
-    private static String replyForKey = "";
+    private static volatile boolean replying;
+    /** 输入栏是为哪个会话摆出来的；HTTP 取件线程也会读它。 */
+    private static volatile String replyForKey = "";
     /** 输入栏的自愈定时器。见 REPLY_IDLE_MS 的说明 —— 没有它这条子会永久挂在屏幕上。 */
     private static Runnable replyIdleTask;
     /**
@@ -440,9 +434,10 @@ final class OverlayController {
         }
     }
 
-    /** 输入栏这会儿摆出来了吗 —— 插件据此决定还要不要继续轮询。 */
-    static boolean replyBarShown() {
-        return replying;
+    /** 输入栏是否正为这个会话摆着。别让别的会话为一条不属于它的输入栏空轮三分钟。 */
+    static boolean replyBarShown(String wantKey) {
+        return replying && (wantKey == null || wantKey.isEmpty()
+                || replyForKey == null || replyForKey.isEmpty() || replyForKey.equals(wantKey));
     }
 
     /**
@@ -676,9 +671,18 @@ final class OverlayController {
         mainHandler().post(() -> {
             synchronized (LOCK) {
                 BUFFERS.clear();
+                LAST_SEEN.clear();
+                PENDING_REPLIES.clear();
                 activeKey = "";
             }
             confirming = false;
+            replying = false;
+            replyForKey = "";
+            Handler h = mainHandler();
+            if (hideTask != null) h.removeCallbacks(hideTask);
+            if (replyIdleTask != null) h.removeCallbacks(replyIdleTask);
+            hideTask = null;
+            replyIdleTask = null;
             try {
                 if (wm != null && root != null) wm.removeViewImmediate(root);
             } catch (Throwable ignored) {
@@ -687,6 +691,9 @@ final class OverlayController {
             label = null;
             confirmRow = null;
             confirmHint = null;
+            replyRow = null;
+            replyInput = null;
+            replyWatcher = null;
             wm = null;
         });
     }

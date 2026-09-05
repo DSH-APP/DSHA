@@ -656,12 +656,14 @@ public class HarnessController {
      *  App 都读得到）—— 这是个真实的泄露面。
      *
      *  参考 dsh-mobile（Apache-2.0）的做法：密钥经 Android Keystore 加密。
-     *  这里用 Keystore 里的 AES 密钥 + 随机 IV 做 AES/CBC/PKCS5，密钥不出 Keystore。
+     *  这里用 Keystore 里的 AES-GCM 密钥 + 随机 nonce 做认证加密，密钥不出 Keystore。
+     *  旧版 CBC 只保留读取迁移；新写入绝不降级成明文。
      *
      *  兼容迁移：旧版明文 "api_key" 仍在时，第一次读取会自动加密并清掉明文。
      *  解密失败（如用户清除 App 数据导致 Keystore 密钥丢失）回退空串，
      *  不崩、不卡死启动。 */
-    private static final String KS_ALIAS = "dsha_apikey";
+    private static final String KS_ALIAS = "dsha_apikey";          // 旧版 CBC，仅用于读迁移
+    private static final String KS_ALIAS_GCM = "dsha_apikey_gcm";  // 新写入：认证加密
     private static final Object ksLock = new Object();
 
     private javax.crypto.SecretKey getOrCreateKey() throws Exception {
@@ -688,36 +690,75 @@ public class HarnessController {
         }
     }
 
-    private String encryptKey(String plain) {
-        try {
-            javax.crypto.SecretKey key = getOrCreateKey();
-            javax.crypto.Cipher c = javax.crypto.Cipher.getInstance("AES/CBC/PKCS7Padding");
-            c.init(javax.crypto.Cipher.ENCRYPT_MODE, key);
-            byte[] iv = c.getIV();
-            byte[] enc = c.doFinal(plain.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            // 存成 base64(iv) : base64(ct)
-            return android.util.Base64.encodeToString(iv, android.util.Base64.NO_WRAP)
-                    + ":" + android.util.Base64.encodeToString(enc, android.util.Base64.NO_WRAP);
-        } catch (Throwable e) {
-            android.util.Log.w("DSHA", "加密 API key 失败，回落明文: " + e);
-            return "PLAIN:" + plain;       // 加密失败不阻断主流程，但标记明文
+    /** 新写入一律使用 GCM：旧 CBC 密钥的 block-mode 限制不能原地升级，故用独立 alias。 */
+    private javax.crypto.SecretKey getOrCreateGcmKey() throws Exception {
+        synchronized (ksLock) {
+            java.security.KeyStore ks = java.security.KeyStore.getInstance("AndroidKeyStore");
+            ks.load(null);
+            if (ks.containsAlias(KS_ALIAS_GCM)) {
+                return (javax.crypto.SecretKey) ks.getKey(KS_ALIAS_GCM, null);
+            }
+            android.security.keystore.KeyGenParameterSpec spec =
+                    new android.security.keystore.KeyGenParameterSpec.Builder(
+                            KS_ALIAS_GCM,
+                            android.security.keystore.KeyProperties.PURPOSE_ENCRYPT
+                                    | android.security.keystore.KeyProperties.PURPOSE_DECRYPT)
+                            .setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
+                            .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
+                            .setUserAuthenticationRequired(false)
+                            .build();
+            javax.crypto.KeyGenerator kg = javax.crypto.KeyGenerator.getInstance(
+                    android.security.keystore.KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+            kg.init(spec);
+            return kg.generateKey();
         }
     }
 
+    /**
+     * 新密钥用 AES-GCM（带认证标签）；Keystore 不可用时返回 null，绝不降级成明文。
+     * 用户可以稍后重试输入，明文落进 SharedPreferences 或公共备份却无法收回。
+     */
+    private String encryptKey(String plain) {
+        try {
+            javax.crypto.Cipher c = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");
+            c.init(javax.crypto.Cipher.ENCRYPT_MODE, getOrCreateGcmKey());
+            byte[] iv = c.getIV();
+            byte[] enc = c.doFinal(plain.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return "GCM:" + android.util.Base64.encodeToString(iv, android.util.Base64.NO_WRAP)
+                    + ":" + android.util.Base64.encodeToString(enc, android.util.Base64.NO_WRAP);
+        } catch (Throwable e) {
+            android.util.Log.w("DSHA", "加密 API key 失败，未保存该密钥: " + e.getClass().getSimpleName());
+            return null;
+        }
+    }
+
+    /** 兼容读取旧 CBC 格式；写入只走上面的 GCM。 */
     private String decryptKey(String stored) {
         if (stored == null || stored.isEmpty()) return "";
-        if (stored.startsWith("PLAIN:")) return stored.substring(6);
+        if (stored.startsWith("PLAIN:")) return stored.substring(6); // 历史版本的失败降级，读后会迁移
         try {
+            if (stored.startsWith("GCM:")) {
+                String[] parts = stored.split(":", -1);
+                if (parts.length != 3) return "";
+                byte[] iv = android.util.Base64.decode(parts[1], android.util.Base64.NO_WRAP);
+                byte[] enc = android.util.Base64.decode(parts[2], android.util.Base64.NO_WRAP);
+                javax.crypto.Cipher c = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");
+                c.init(javax.crypto.Cipher.DECRYPT_MODE, getOrCreateGcmKey(),
+                        new javax.crypto.spec.GCMParameterSpec(128, iv));
+                return new String(c.doFinal(enc), java.nio.charset.StandardCharsets.UTF_8);
+            }
+            // 旧版 AES-CBC；保留只读迁移，不再生成这类缺认证标签的密文。
             int sep = stored.indexOf(':');
+            if (sep <= 0 || sep == stored.length() - 1) return "";
             byte[] iv = android.util.Base64.decode(stored.substring(0, sep), android.util.Base64.NO_WRAP);
             byte[] enc = android.util.Base64.decode(stored.substring(sep + 1), android.util.Base64.NO_WRAP);
-            javax.crypto.SecretKey key = getOrCreateKey();
             javax.crypto.Cipher c = javax.crypto.Cipher.getInstance("AES/CBC/PKCS7Padding");
-            c.init(javax.crypto.Cipher.DECRYPT_MODE, key, new javax.crypto.spec.IvParameterSpec(iv));
-            byte[] pt = c.doFinal(enc);
-            return new String(pt, java.nio.charset.StandardCharsets.UTF_8);
+            c.init(javax.crypto.Cipher.DECRYPT_MODE, getOrCreateKey(),
+                    new javax.crypto.spec.IvParameterSpec(iv));
+            return new String(c.doFinal(enc), java.nio.charset.StandardCharsets.UTF_8);
         } catch (Throwable e) {
-            android.util.Log.w("DSHA", "解密 API key 失败（Keystore 密钥可能已丢）: " + e);
+            android.util.Log.w("DSHA", "解密 API key 失败（Keystore 密钥可能已丢）: "
+                    + e.getClass().getSimpleName());
             return "";
         }
     }
@@ -725,25 +766,41 @@ public class HarnessController {
     public String getApiKey() {
         String stored = prefs.getString("api_key_enc", null);
         if (stored == null) {
-            // 兼容旧版明文迁移
+            // 兼容旧版明文迁移：加密失败时保留旧值，不能一边报错一边把用户的 key 清掉。
             String legacy = prefs.getString("api_key", "");
             if (!legacy.isEmpty()) {
-                prefs.edit().putString("api_key_enc", encryptKey(legacy)).apply();
-                prefs.edit().remove("api_key").apply();
+                String encrypted = encryptKey(legacy);
+                if (encrypted != null) {
+                    prefs.edit().putString("api_key_enc", encrypted).remove("api_key").apply();
+                }
             }
             return legacy;
         }
         String dec = decryptKey(stored);
-        return dec == null ? "" : dec;
+        // PLAIN/CBC 是历史格式：能读到就立即尝试迁到 GCM；迁移失败仍可本次使用，
+        // 但不再把任何新明文/旧 CBC 写回去。
+        if (!dec.isEmpty() && !stored.startsWith("GCM:")) {
+            String encrypted = encryptKey(dec);
+            if (encrypted != null) {
+                prefs.edit().putString("api_key_enc", encrypted).remove("api_key").apply();
+            }
+        }
+        return dec;
     }
 
-    public void setApiKey(String v) {
-        if (v == null) v = "";
-        prefs.edit().putString("api_key_enc", v.isEmpty() ? "" : encryptKey(v)).apply();
-        prefs.edit().remove("api_key").apply();   // 清掉任何遗留明文
+    /** @return 是否已安全落盘；Keystore 不可用时拒绝保存，绝不退化为明文。 */
+    public boolean setApiKey(String v) {
+        if (v == null || v.isEmpty()) {
+            prefs.edit().putString("api_key_enc", "").remove("api_key").apply();
+            return true;
+        }
+        String encrypted = encryptKey(v);
+        if (encrypted == null) return false;
+        prefs.edit().putString("api_key_enc", encrypted).remove("api_key").apply();
+        return true;
     }
 
-    /** 给备份用的加密（与本地存储同一把 Keystore 密钥，格式 base64(iv):base64(ct)）。 */
+    /** 给备份用的认证加密；失败返回 null，调用方必须明确跳过而不是写明文。 */
     public String encryptKeyForBackup(String plain) {
         return plain == null || plain.isEmpty() ? "" : encryptKey(plain);
     }
@@ -765,17 +822,22 @@ public class HarnessController {
         if (raw == null) return null;
         String t = raw.trim();
         if (t.isEmpty()) return null;
-        if (!looksEncryptedKey(t)) return t;      // 老备份：明文，直接用
+        if (t.startsWith("PLAIN:")) return t.substring(6); // 历史失败降级，兼容读取后不再写出
+        if (!looksEncryptedKey(t)) return t;      // 更早的备份：明文，直接用
         String dec = decryptKey(t);
         return dec == null || dec.isEmpty() ? null : dec;
     }
 
-    /** 是否是 encryptKey 产出的密文形状：{@code base64(iv):base64(ct)}，两段都是 base64。
-     *  真实的 API key（sk-… / 十六进制串）不含 {@code :}，所以这个判据足够分开两者。 */
+    /** 是否是本 App 写出的 GCM 或历史 CBC 密文。 */
     private static boolean looksEncryptedKey(String s) {
+        if (s.startsWith("GCM:")) {
+            String[] p = s.split(":", -1);
+            return p.length == 3 && p[1].matches("[A-Za-z0-9+/=]{8,}")
+                    && p[2].matches("[A-Za-z0-9+/=]{16,}");
+        }
         int i = s.indexOf(':');
         if (i <= 0 || i == s.length() - 1) return false;
-        if (s.indexOf(':', i + 1) >= 0) return false;    // 只允许一个分隔符
+        if (s.indexOf(':', i + 1) >= 0) return false;    // CBC 旧格式只允许一个分隔符
         String iv = s.substring(0, i), ct = s.substring(i + 1);
         return iv.matches("[A-Za-z0-9+/=]{8,}") && ct.matches("[A-Za-z0-9+/=]{8,}");
     }
@@ -6491,6 +6553,9 @@ public class HarnessController {
                 // 配置去对话，只会收到查不出原因的鉴权失败
                 body += "\n· 备份里的 API key 无法解密（换了设备或清过 App 数据），"
                         + "请到「配置」页重新填写";
+            } else if ("store_failed".equals(keyState)) {
+                body += "\n· API key 已从备份读出，但 Android Keystore 不可用，未以明文保存；"
+                        + "请稍后到「配置」页重新填写";
             }
             return (ok ? "恢复完成" : "恢复完成（部分内容已跳过，详见下方）")
                     + (body.isEmpty() ? "" : "\n" + body)
@@ -6542,7 +6607,7 @@ public class HarnessController {
      *  .env 只在「在线安装」最后一步写，离线包用户恢复后没有它，key 在备份的 .dsh/.dsha-apikey 里。
      *
      *  @return 空串 = 备份里没有 key（或不像 key）；{@code "ok"} = 已回填；
-     *          {@code "undecryptable"} = 有但解不开（换机 / Keystore 重置），需要用户重填。 */
+     *          {@code "undecryptable"} = 有但解不开；{@code "store_failed"} = 读到了但无法安全保存。 */
     private String syncApiKeyFromRootfs() {
         try {
             String k = proot.execAndRead("cat /root/.dsh/.dsha-apikey 2>/dev/null");
@@ -6558,7 +6623,10 @@ public class HarnessController {
                 android.util.Log.w("DSHA", "备份里的 API key 解不开（换机或 Keystore 重置）—— 不回填，等用户重填");
                 return "undecryptable";
             }
-            setApiKey(plain);
+            if (!setApiKey(plain)) {
+                android.util.Log.w("DSHA", "恢复后 API key 无法安全保存（Android Keystore 不可用）");
+                return "store_failed";
+            }
             android.util.Log.i("DSHA", "恢复后已从 .dsha-apikey 回填 API key（issue #22）");
             return "ok";
         } catch (Throwable ignored) {

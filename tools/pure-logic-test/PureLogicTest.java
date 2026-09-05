@@ -486,6 +486,51 @@ public final class PureLogicTest {
         // token 走同一份解析（LanAuth 只在外面补了 trim）
         eq("query: token 解析与桥参数同源",
                 "T", LanAuth.queryTokenFromTarget("/p?xtoken=junk&token=T"));
+        eq("query: 路由剥掉查询串，分发可精确匹配", "/app/overlay/reply",
+                Query.path("/app/overlay/reply?token=T&session=A"));
+        eq("query: 没有查询串的路由原样保留", "/app/device", Query.path("/app/device"));
+
+        // ===== SafeFiles / BridgeLimits：外部路径、原子命名与本机 HTTP 头边界 =====
+        java.io.File safeRoot = null;
+        try {
+            safeRoot = java.nio.file.Files.createTempDirectory("dsha-safe-files-").toFile();
+            java.io.File first = SafeFiles.reserve(safeRoot, "报告.md");
+            java.io.File second = SafeFiles.reserve(safeRoot, "报告.md");
+            ok("files: reserve 原子占名且保留扩展名",
+                    first.getName().equals("报告.md") && second.getName().equals("报告-2.md"));
+            ok("files: ../ 不能逃出根目录", rejectsInside(safeRoot, "../outside.txt"));
+            ok("files: 同前缀兄弟目录不能算在根内",
+                    !SafeFiles.isInside(safeRoot, new java.io.File(safeRoot.getPath() + "-old/x")));
+            eq("files: 文件名清理路径分隔符与控制字符", "a_b_c", SafeFiles.cleanName("a/b\\c\u0001"));
+        } catch (Exception e) {
+            ok("files: 临时目录往返", false, String.valueOf(e));
+        } finally {
+            if (safeRoot != null) deleteRec(safeRoot);
+        }
+        ok("files: 分享只接受获授权的外部 content Uri",
+                SafeFiles.shareSourceAllowed("content", "media", "com.dsh.client", true)
+                        && !SafeFiles.shareSourceAllowed("file", "", "com.dsh.client", true)
+                        && !SafeFiles.shareSourceAllowed("content", "com.dsh.client.documents", "com.dsh.client", true)
+                        && !SafeFiles.shareSourceAllowed("content", "media", "com.dsh.client", false));
+        ok("files: 外部存储前缀必须是完整目录段",
+                SafeFiles.isPrimaryExternalPath("/storage/emulated/0/Download/x")
+                        && !SafeFiles.isPrimaryExternalPath("/storage/emulated/0evil/x"));
+        try {
+            BridgeLimits.HeaderReader hr = new BridgeLimits.HeaderReader(
+                    new java.io.StringReader("GET / HTTP/1.1\r\nX: y\r\n"));
+            ok("bridge: HeaderReader 保留逐行 HTTP 头", "GET / HTTP/1.1".equals(hr.readLine())
+                    && "X: y".equals(hr.readLine()));
+        } catch (Exception e) {
+            ok("bridge: HeaderReader 正常头", false, String.valueOf(e));
+        }
+        try {
+            BridgeLimits.HeaderReader hr = new BridgeLimits.HeaderReader(
+                    new java.io.StringReader("A".repeat(16 * 1024 + 8)));
+            hr.readLine();
+            ok("bridge: HeaderReader 拒绝超长单行", false);
+        } catch (java.io.IOException expected) {
+            ok("bridge: HeaderReader 拒绝超长单行", true);
+        }
 
         // ===== BackupScope：备份范围的唯一定义 =====
         // 两条关键断言：① 部分备份的文件名前缀绝不能是 DSHA-backup-（老版本按这个前缀
@@ -1117,6 +1162,15 @@ public final class PureLogicTest {
     private static void put(byte[] buf, int off, String s) {
         byte[] b = s.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
         System.arraycopy(b, 0, buf, off, b.length);
+    }
+
+    private static boolean rejectsInside(java.io.File root, String relative) {
+        try {
+            SafeFiles.inside(root, relative);
+            return false;
+        } catch (java.io.IOException expected) {
+            return true;
+        }
     }
 
     private static void deleteRec(java.io.File f) {

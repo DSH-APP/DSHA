@@ -31,6 +31,13 @@ final class Query {
         return i >= 0 ? target.substring(i + 1) : "";
     }
 
+    /** 请求目标中不带查询串的路由部分。端点分发必须精确匹配，不能用 startsWith。 */
+    static String path(String target) {
+        if (target == null) return "";
+        int i = target.indexOf('?');
+        return i >= 0 ? target.substring(0, i) : target;
+    }
+
     /**
      * 取参数原值（<b>不做 URL 解码</b>），没有该参数返回 {@code null}。
      *

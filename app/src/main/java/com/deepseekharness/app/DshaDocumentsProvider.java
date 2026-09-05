@@ -43,16 +43,18 @@ public final class DshaDocumentsProvider extends DocumentsProvider {
     /** documentId → 真实文件。canonical 之后必须仍在 base 内，否则拒绝（防 ../ 与软链逃逸）。 */
     private File file(String id) throws FileNotFoundException {
         if (id == null || id.isEmpty() || ROOT.equals(id)) return base();
-        File f = new File(base(), id);
         try {
-            String b = base().getCanonicalPath(), p = f.getCanonicalPath();
-            if (!p.equals(b) && !p.startsWith(b + File.separator)) throw new SecurityException("outside root");
-            return f;
-        } catch (java.io.IOException e) { throw new FileNotFoundException("invalid document"); }
+            return SafeFiles.inside(base(), id);
+        } catch (java.io.IOException e) {
+            throw new FileNotFoundException("invalid document");
+        }
     }
     private String id(File f) throws java.io.IOException {
-        String b = base().getCanonicalPath(), p = f.getCanonicalPath();
-        return p.equals(b) ? ROOT : p.substring(b.length() + 1).replace(File.separatorChar, '/');
+        File b = base().getCanonicalFile();
+        File p = f.getCanonicalFile();
+        if (!SafeFiles.isInside(b, p)) throw new java.io.IOException("outside root");
+        return p.equals(b) ? ROOT : p.getPath().substring(b.getPath().length() + 1)
+                .replace(File.separatorChar, '/');
     }
     @Override public Cursor queryRoots(String[] projection) {
         MatrixCursor c = new MatrixCursor(projection == null ? ROOT_PROJECTION : projection);
@@ -75,7 +77,13 @@ public final class DshaDocumentsProvider extends DocumentsProvider {
             throws FileNotFoundException {
         MatrixCursor c = new MatrixCursor(projection == null ? DOC_PROJECTION : projection);
         File p = file(parentId); File[] fs = p.listFiles();
-        if (fs != null) for (File f : fs) try { include(c, f, id(f)); } catch (Exception ignored) {}
+        if (fs != null) {
+            int shown = 0;
+            for (File f : fs) {
+                if (shown >= 5000) break; // 恶意/损坏目录不能一次塞爆 Binder Cursor
+                try { include(c, f, id(f)); shown++; } catch (Exception ignored) { }
+            }
+        }
         return c;
     }
     private void include(MatrixCursor c, File f, String id) {
@@ -95,10 +103,28 @@ public final class DshaDocumentsProvider extends DocumentsProvider {
                 ParcelFileDescriptor.parseMode(mode == null || mode.isEmpty() ? "r" : mode));
     }
     @Override public String createDocument(String parentId, String mimeType, String displayName) throws FileNotFoundException {
-        File p = file(parentId); File out = new File(p, displayName);
-        try { if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType) ? !out.mkdirs() : !out.createNewFile()) throw new java.io.IOException(); return id(out); }
-        catch (Exception e) { throw new FileNotFoundException("cannot create document"); }
+        File p = file(parentId);
+        if (!p.isDirectory()) throw new FileNotFoundException("parent is not a directory");
+        try {
+            // DocumentsUI 的 displayName 也是外部输入。先清理、再 canonicalize，创建之前就
+            // 把 ../ 与软链逃逸挡住，不能等 id(out) 时才发现已经在目录外写过了。
+            String name = SafeFiles.cleanName(displayName);
+            if (name.isEmpty() || ".".equals(name) || "..".equals(name)) {
+                throw new java.io.IOException("invalid display name");
+            }
+            File out = SafeFiles.inside(p, name);
+            boolean made = DocumentsContract.Document.MIME_TYPE_DIR.equals(mimeType)
+                    ? out.mkdir() : out.createNewFile();
+            if (!made) throw new java.io.IOException("exists or create failed");
+            return id(out);
+        } catch (Exception e) {
+            throw new FileNotFoundException("cannot create document");
+        }
     }
-    @Override public void deleteDocument(String id) throws FileNotFoundException { File f=file(id); if (!f.delete()) throw new FileNotFoundException("cannot delete document"); }
+    @Override public void deleteDocument(String id) throws FileNotFoundException {
+        if (id == null || id.isEmpty() || ROOT.equals(id)) throw new FileNotFoundException("cannot delete root");
+        File f = file(id);
+        if (!f.delete()) throw new FileNotFoundException("cannot delete document");
+    }
     @Override public String getDocumentType(String id) throws FileNotFoundException { File f=file(id); return f.isDirectory() ? DocumentsContract.Document.MIME_TYPE_DIR : "application/octet-stream"; }
 }

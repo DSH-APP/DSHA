@@ -26,6 +26,7 @@
  *    所有 IO 与解析都包在 try/catch 里，失败就静默降级。
  */
 import { readFileSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 
 /** 桥地址（App 侧只监听回环，容器与宿主共享网络命名空间，所以直接连得上）。 */
 const BRIDGE = 'http://127.0.0.1:3090/app/overlay'
@@ -91,13 +92,24 @@ function toolDetail(argsJson) {
   }
 }
 
-let token
-function bridgeToken() {
-  if (token !== undefined) return token
+let token = ''
+let tokenReadAt = 0
+const TOKEN_RETRY_MS = 5_000
+
+/**
+ * Token 文件在桥启动、rootfs 重解压或恢复后都可能晚于插件出现。
+ * 不能把第一次读到的空串永久缓存，否则插件会在启动竞态后整次 Web 运行都失效；
+ * 回话轮询则显式强制重读，避免三分钟窗口拿着旧 token 空转。
+ */
+function bridgeToken(force = false) {
+  const now = Date.now()
+  if (!force && token && now - tokenReadAt < TOKEN_RETRY_MS) return token
+  if (!force && !token && now - tokenReadAt < TOKEN_RETRY_MS) return ''
+  tokenReadAt = now
   try {
     token = readFileSync(TOKEN_PATH, 'utf8').trim()
   } catch {
-    token = ''    // 桥没起来 / 桌面环境：整个功能静默停用
+    token = ''
   }
   return token
 }
@@ -113,9 +125,11 @@ let skipReasoningUntil = 0
 
 function sessionKey(session) {
   try {
+    // App 只把末两位画到条子上（OverlayController.shortTag），这里必须保留完整 id：
+    // 截成 8 位会给多会话回话留下可碰撞的错误投递键。
     const raw = session?.id ?? session?.sessionId ?? session?.key ?? ''
     const s = String(raw)
-    return s ? s.slice(-8) : '-'
+    return s || '-'
   } catch {
     return '-'
   }
@@ -203,50 +217,34 @@ const REPLY_WINDOW_MS = 180_000
 const replyPollers = new Map()
 
 /**
- * 把用户的话喂回 session。
+ * 用 dsh 0.1.1-rc.2 实际提供的 ApiProxy 发送一条排队消息。
  *
- * **这里刻意排了四条路依次试。** dsh 的会话 API 在不同版本里叫法不一样，而这个插件要
- * 跟着一整条 1.1.x 的用户群跑；写死一个方法名等于把功能绑在某个小版本上。
- * 四条都不通时把原因回显到悬浮条 —— 用户至少知道话没送出去，而不是干等一个永远不来的回复。
- * 首次成功后记住是哪条（successfulRoute），后面直接走它，不再每次都从头试。
+ * 这不是 Session 实例方法。上个实现猜了 prompt/send/append 四条路，最后一条还会手写
+ * user/message，缺少 dsh 要求的消息 id 时能让整段历史无法加载。ApiProxy 是 host 明确
+ * 暴露给 Cordis Context 的服务；它负责创建带 id 的消息、持久化并驱动 Agent。
  */
-let successfulRoute = ''
-
 async function deliverReply(ctx, session, text) {
-  const routes = [
-    ['session.prompt', () => session?.prompt?.(text)],
-    ['session.send', () => session?.send?.(text)],
-    ['api.sessions.prompt', () => {
-      const api = ctx?.get?.('api') ?? ctx?.api
-      const id = session?.id ?? session?.key ?? session?.sessionId
-      return api?.sessions?.prompt?.({ session: id, content: text })
-    }],
-    ['session.append', () => {
-      // 最后的兜底：直接往事件日志里追一条 user/message。
-      // 语义上这是「注入一条用户消息」，能不能立刻触发一轮回复取决于 dsh 的驱动器 ——
-      // 但至少内容进了会话，用户切回 App 就能看到并接着说。
-      const r = session?.append?.('user/message', {
-        message: { role: 'user', content: [{ type: 'text', text }] },
-      }, { surfaceOp: 'append' })
-      return r ?? (session?.run?.() ?? session?.continue?.())
-    }],
-  ]
-  const ordered = successfulRoute
-    ? routes.filter(([n]) => n === successfulRoute).concat(routes.filter(([n]) => n !== successfulRoute))
-    : routes
-  let lastErr = ''
-  for (const [name, fn] of ordered) {
-    try {
-      const r = fn()
-      if (r === undefined) continue          // 这条路上的方法不存在，换下一条
-      await r
-      successfulRoute = name
-      return name
-    } catch (e) {
-      lastErr = `${name}: ${e?.message || e}`
-    }
+  const sessionId = String(session?.id || '')
+  if (!sessionId) return 'FAILED 当前会话没有 id'
+  const api = ctx?.get?.('apiProxy') ?? ctx?.apiProxy
+  if (!api?.sessions?.prompt) return 'FAILED dsh 没有 apiProxy.sessions.prompt'
+  try {
+    const reply = await api.sessions.prompt({
+      rpcId: randomUUID(),
+      payload: {
+        sessionId,
+        mode: 'queue',
+        content: [{ type: 'text', text }],
+      },
+    })
+    if (reply?.result?.ok && reply.result.value?.accepted === true) return 'OK'
+    const error = reply?.result?.error
+    return 'FAILED ' + (error?.code
+      ? `${error.code}: ${error.message || 'prompt 被拒绝'}`
+      : 'dsh 返回了无效的 prompt 结果')
+  } catch (e) {
+    return `FAILED ${e?.message || e}`
   }
-  return lastErr ? `FAILED ${lastErr}` : 'FAILED 会话没有可用的发送入口'
 }
 
 /** 在 done 之后开一段取件窗口。同一 session 只开一个。 */
@@ -254,16 +252,18 @@ function startReplyPoll(ctx, key, session) {
   if (replyPollers.has(key)) return
   if (!bridgeToken()) return
   const deadline = Date.now() + REPLY_WINDOW_MS
+  let inFlight = false
   const timer = setInterval(async () => {
     if (Date.now() > deadline) {
       stopReplyPoll(key)
       return
     }
+    // fetch 超时本该在 1.5 秒内结束，但实现/网络栈失常时不能让 interval 并发叠请求。
+    if (inFlight) return
+    inFlight = true
     try {
-      // 每次重新读 token，不用闭包里那份：这个窗口有三分钟，中间 Web 重启过的话
-      // 旧 token 就是废票，而症状是「回话永远没反应」——从外面完全看不出原因。
-      // 读的是一个几十字节的本地文件，比一次 fetch 便宜得多。
-      const tok = bridgeToken()
+      // 这条窗口最长三分钟，强制重读以应对恢复/重解压后桥 token 轮换。
+      const tok = bridgeToken(true)
       if (!tok) return
       const res = await fetch(
         `${REPLY_URL}?token=${encodeURIComponent(tok)}&session=${encodeURIComponent(key)}`,
@@ -288,6 +288,8 @@ function startReplyPoll(ctx, key, session) {
       }
     } catch {
       // 桥没起或超时：下个周期再试，不必特殊处理
+    } finally {
+      inFlight = false
     }
   }, REPLY_POLL_MS)
   replyPollers.set(key, timer)
@@ -307,7 +309,12 @@ function bucket(key) {
     // 会话数量不该无限涨（异常情况下也就几十个）
     if (state.size > 16) {
       const oldest = state.keys().next().value
-      if (oldest !== key) state.delete(oldest)
+      if (oldest !== key) {
+        const old = state.get(oldest)
+        if (old?.timer) clearTimeout(old.timer)
+        state.delete(oldest)
+        stopReplyPoll(oldest)
+      }
     }
   }
   return b

@@ -43,7 +43,7 @@ public class DevBridgeProvider extends ContentProvider {
     static final String KEY_ENABLED = "dev_bridge";
 
     /** 单次输出上限。Binder 事务大概 1MB 就会炸，留足余量；更大的输出让调用方分片取。 */
-    private static final int MAX_OUT = 512 * 1024;
+    private static final int MAX_OUT = 128 * 1024;
 
     /** 命令默认超时。可以用 ?timeout= 覆盖，上限 10 分钟。 */
     private static final long DEFAULT_TIMEOUT_MS = 30_000L;
@@ -149,7 +149,7 @@ public class DevBridgeProvider extends ContentProvider {
                         e.putString(k, v);
                     }
                     e.apply();
-                    hc.logActivity("DevBridge 改配置（ADB 直连）: " + k + "=" + v);
+                    hc.logActivity("DevBridge 改配置（ADB 直连）: " + k);
                     return one("ok", k + "=" + v);
                 }
                 case "read": {
@@ -159,11 +159,8 @@ public class DevBridgeProvider extends ContentProvider {
                     // 它能读的东西本来就不该靠这一层来限制；但要挡住 .. 逃出 rootfs，
                     // 免得把「读 rootfs 里的文件」变成「读 App 私有目录任意文件」。
                     java.io.File root = hc.getProot().getRootfsDir();
-                    java.io.File f = new java.io.File(root, p);
+                    java.io.File f = SafeFiles.inside(root, p);
                     String canon = f.getCanonicalPath();
-                    if (!canon.startsWith(root.getCanonicalPath())) {
-                        return one("error", "路径逃出 rootfs：" + p);
-                    }
                     if (!f.isFile()) return one("error", "不是文件或不存在：" + canon);
                     if (f.length() > MAX_OUT) {
                         return one("error", "文件太大（" + f.length() + " 字节），用 exec 分片读");
@@ -174,7 +171,7 @@ public class DevBridgeProvider extends ContentProvider {
                 case "ls": {
                     String p = uri.getQueryParameter("path");
                     java.io.File root = hc.getProot().getRootfsDir();
-                    java.io.File d = (p == null || p.isEmpty()) ? root : new java.io.File(root, p);
+                    java.io.File d = SafeFiles.inside(root, p == null ? "" : p);
                     if (!d.isDirectory()) return one("error", "不是目录：" + d);
                     java.io.File[] kids = d.listFiles();
                     StringBuilder sb = new StringBuilder();

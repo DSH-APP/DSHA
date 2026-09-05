@@ -42,5 +42,30 @@ for (const [input, want, why] of cases) {
   }
 }
 if (bad) { console.error(`✗ unwrap ${bad}/${cases.length} 条不通过`); process.exit(1) }
-console.log(`✓ unwrap ${cases.length} 条断言通过`)
+
+// dsh 0.1.1-rc.2 的 ApiProxy 是唯一允许把消息写进会话的边界。
+// 这里以前是四条猜测路径，最后一条手写 user/message 缺 id 会损坏整个历史。
+const mustContain = [
+  "ctx?.get?.('apiProxy')",
+  'rpcId: randomUUID()',
+  'sessionId,',
+  "mode: 'queue'",
+  "content: [{ type: 'text', text }]",
+  'reply?.result?.ok',
+]
+const forbidden = ['session?.append?.(', 'session?.prompt?.(', 'session?.send?.(', "ctx?.get?.('api')"]
+for (const needle of mustContain) {
+  if (!src.includes(needle)) {
+    console.error(`✗ 回话协议缺少 ${needle}`)
+    bad++
+  }
+}
+for (const needle of forbidden) {
+  if (src.includes(needle)) {
+    console.error(`✗ 回话仍在猜测/手写 session API：${needle}`)
+    bad++
+  }
+}
+if (bad) { console.error(`✗ 悬浮条回话 ${bad} 条不通过`); process.exit(1) }
+console.log(`✓ unwrap ${cases.length} 条断言与 ApiProxy 协议断言通过`)
 JS
