@@ -5758,6 +5758,44 @@ public class HarnessController {
         }
     }
 
+    /**
+     * 从 profile 的 {@code cordis.patch.yml} 里删掉注册指定插件的<b>整块</b>。
+     *
+     * <p>与 {@link #stripOldPatchRow()} 的区别在匹配方式：那个只看 {@code - id:} 行里
+     * 有没有插件名，因此只治得了「id 恰好等于插件名」的行。而 dsh 自己写进 profile 的
+     * 行用的是<b>随机 id</b>（真机上遇到的是 {@code d8828179}），插件名在块内的
+     * {@code name:} 上 —— 所以必须把整块读出来判断。
+     *
+     * <p><b>为什么这一份可以删</b>：内置插件的注册来自 bundle 自带的
+     * {@code node_modules/<插件>/cordis.patch.yml}，那是 dsh 的标准机制。profile 里再有
+     * 一行就是第二份注册，两份都会加载，于是报
+     * {@code locale namespace "mobileNav" already has locale "zh"}
+     * （同一个插件的 locale 命名空间注册了两遍，后一个直接冲突）→ 插件整个加载失败。
+     * 删掉 profile 那份、留下 bundle 那份，功能一点不少。
+     *
+     * <p>安全阀：<b>只有在 bundle 自带 patch 确实存在时才动手</b>。否则 profile 里那行
+     * 可能是唯一的注册来源，删了插件就彻底不见了。
+     */
+    private boolean stripDuplicateProfileRows(String pluginName) {
+        try {
+            java.io.File pf = rootfsFile("root/.dsh/profiles/web/cordis.patch.yml");
+            if (!pf.isFile()) return false;
+            java.io.File bundlePatch = rootfsFile("root/.dsh/profiles/web/node_modules/"
+                    + pluginName + "/cordis.patch.yml");
+            if (!bundlePatch.isFile()) return false;      // 没有第二份注册，别乱删
+            String txt = new String(java.nio.file.Files.readAllBytes(pf.toPath()),
+                    StandardCharsets.UTF_8);
+            String neu = PatchYaml.stripBlocksContaining(txt, pluginName);
+            if (neu == null) return false;
+            java.nio.file.Files.write(pf.toPath(), neu.getBytes(StandardCharsets.UTF_8));
+            android.util.Log.i("DSHA", "清掉 profile 里重复注册 " + pluginName + " 的行");
+            return true;
+        } catch (Throwable t) {
+            android.util.Log.w("DSHA", "清重复 profile 注册失败（不致命）: " + t);
+            return false;
+        }
+    }
+
     /** dsh-web-mobile 改名迁移（原 {@code @dsh-external/dsh-mobile-nav}）。
      *
      *  <p>上游 2026-08-30 把包名换成 dsh-web-mobile，旧 npm 名整包撤下（issue #40）。
@@ -5806,6 +5844,13 @@ public class HarnessController {
                 }
             }
             if (stripOldPatchRow()) had = true;
+            // 新名字的重复注册：dsh 自己往 profile 写的行用随机 id，上面那个函数按
+            // id 匹配抓不到。真机症状是插件加载失败并报 locale 命名空间冲突。
+            if (stripDuplicateProfileRows("dsh-web-mobile")) {
+                had = true;
+                logActivity("清掉了 profile 里重复注册 dsh-web-mobile 的一行 —— "
+                        + "bundle 自己已经注册过，两份同时加载会报 locale 命名空间冲突");
+            }
             java.io.File pf = rootfsFile("root/.dsh/profiles/web/package.json");
             if (pf.isFile()) {
                 String txt = new String(java.nio.file.Files.readAllBytes(pf.toPath()),
@@ -6616,6 +6661,30 @@ public class HarnessController {
                 if (mig != null && mig.contains("conflict-")) {
                     logActivity("恢复后公开数据归位：发现冲突，旧公开副本已存为 .conflict-*");
                 }
+            } catch (Throwable ignored) {
+            }
+            // ===== 恢复之后必须重跑的自愈 =====
+            // 这一组的共同前提：**恢复会把环境改回一个旧状态，但不会改动任何
+            // 「已经处理过」的标记**。于是所有「按版本/时间戳门槛决定要不要跑」的
+            // 自愈逻辑都会认为无事可做，而恰恰是恢复引入了需要它们处理的状态。
+            // 已经为此付过三次代价（同一个形状）：
+            //   · 恢复带回指向公开目录的软链，目标不可达 → dsh 对它 mkdir 得到 ENOENT
+            //     → 插件树加载失败、完全起不来；
+            //   · 恢复带回旧内置插件实体（node_modules 里那份），与新版同时加载
+            //     → locale namespace "mobileNav" already has locale "zh"；
+            //   · 恢复带回旧 patch 标记 → 补丁按「已是最新」跳过，实际没打上。
+            // 所以这里不看任何门槛，无条件重跑一遍。都是幂等的。
+            try {
+                ensureSessionHome();          // sessions 落点 + 三项软链体检
+            } catch (Throwable ignored) {
+            }
+            try {
+                // 清掉 patch 时间戳，下次启动重打一遍补丁（恢复很可能带回了旧的 profile）
+                prefs.edit().remove("patch_stamp").apply();
+            } catch (Throwable ignored) {
+            }
+            try {
+                ensureBuiltinPluginsReady();  // 含 migrateMobileNavRename：清旧插件实体
             } catch (Throwable ignored) {
             }
             invalidateSteps();

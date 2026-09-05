@@ -136,9 +136,21 @@ public class TerminalFragment extends Fragment {
                 c.ensureDangerGuard();
             } catch (Throwable ignored) {
             }
+            // 起进程与读输出**必须分成两段 catch**。以前它们共用一个，于是每次
+            // 正常关闭终端（切页、退出、重启会话）都会看到
+            //   终端启动失败：read interrupted by close() on another thread
+            // —— 那是另一个线程 close 了流之后 read 抛出来的，属于正常关闭路径，
+            // 却被报成启动失败，用户以为终端坏了。真正的启动失败只有第一段会抛。
             try {
                 shell = c.getProot().execRootfsInteractive();
-                running = true;
+            } catch (Exception e) {
+                final String why = e.getMessage() == null ? e.toString() : e.getMessage();
+                mainHandler.post(() -> appendLine("终端启动失败：" + why));
+                shellStarting = false;
+                return;
+            }
+            running = true;
+            try {
                 // 用 InputStreamReader 流式解码：固定 8192 字节块按 UTF-8 硬解会切断
                 // 多字节字符（中文 3 字节）产生乱码 �；Reader 内部缓冲正确处理跨边界
                 java.io.Reader reader = new java.io.InputStreamReader(
@@ -151,8 +163,19 @@ public class TerminalFragment extends Fragment {
                 }
                 mainHandler.post(() -> appendLine("\n[会话已退出]"));
             } catch (Exception e) {
-                mainHandler.post(() -> appendLine("终端启动失败：" + e.getMessage()));
+                // running 已经是 false = 我们自己停的；带 "interrupted by close" 的
+                // 同样是自己关流导致的。两种都不是故障。
+                final boolean selfStopped = !running;
+                final String msg = e.getMessage() == null ? e.toString() : e.getMessage();
+                mainHandler.post(() -> {
+                    if (selfStopped || msg.contains("interrupted by close")) {
+                        appendLine("\n[会话已关闭]");
+                    } else {
+                        appendLine("\n[会话中断：" + msg + "]");
+                    }
+                });
             } finally {
+                running = false;
                 shellStarting = false;
             }
         }, "term-read").start();

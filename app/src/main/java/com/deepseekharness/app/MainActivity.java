@@ -472,10 +472,13 @@ public class MainActivity extends AppCompatActivity {
 
     /** 显示/隐藏底部导航栏（WebView 全屏时隐藏） */
     public void setBottomNavVisible(boolean visible) {
+        // 藏的必须是**外层那个 BlurView**，两条栏都一样：内层的 bottom_nav / app_bar
+        // 设 GONE 的话，玻璃容器还在，材质与描边照样画在屏幕上 —— 用户看到的就是
+        // 「全屏了但底栏那块玻璃还在」。顶栏当初踩过这个坑，底栏漏了同一步。
+        View navGlass = findViewById(R.id.bottom_glass);
+        if (navGlass != null) navGlass.setVisibility(visible ? View.VISIBLE : View.GONE);
         BottomNavigationView nav = findViewById(R.id.bottom_nav);
         if (nav != null) nav.setVisibility(visible ? View.VISIBLE : View.GONE);
-        // 藏的必须是外层那个 BlurView：内层 app_bar 设 GONE 的话，
-        // 玻璃容器还占着 56dp，界面上就多出一条空白。
         View bar = findViewById(R.id.top_glass);
         if (bar != null) bar.setVisibility(visible ? View.VISIBLE : View.GONE);
     }

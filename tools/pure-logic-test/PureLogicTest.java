@@ -449,6 +449,53 @@ public final class PureLogicTest {
         ok("policy: 清单不为空（清空它等于悄悄关掉这层保护）",
                 UserDataPolicy.MACHINE_LOCAL_PATHS.length >= 2);
 
+        // ---------- PatchYaml：删 profile 里重复注册的插件行 ----------
+        // 真机故障：dsh 往 profile 写的注册行用随机 id（见到的是 d8828179），
+        // 与 bundle 自带的 cordis.patch.yml 各注册一次 → 两份都加载 →
+        // locale namespace "mobileNav" already has locale "zh" → 插件整个加载失败。
+        // 这段代码改的是**用户 profile 里的配置文件**，写坏了 dsh 直接起不来，
+        // 所以每条分支都要有断言。
+        String twoRows = "- insert:\n"
+                + "    - id: d8828179\n"
+                + "      name: 'dsh-web-mobile'\n"
+                + "      config:\n"
+                + "        theme: dark\n"
+                + "    - id: keepme\n"
+                + "      name: 'other-plugin'\n";
+        String stripped = PatchYaml.stripBlocksContaining(twoRows, "dsh-web-mobile");
+        ok("patchyaml: 随机 id 的块也能按块内 name 删掉",
+                stripped != null && !stripped.contains("dsh-web-mobile"));
+        ok("patchyaml: 别人的块留着（含它自己的 id 与 name）",
+                stripped != null && stripped.contains("keepme") && stripped.contains("other-plugin"));
+        ok("patchyaml: 被删块的缩进子项跟着一起走（不留 config/theme 这种孤儿）",
+                stripped != null && !stripped.contains("theme: dark"));
+        ok("patchyaml: 顶层键还在（下面还有别的项）",
+                stripped != null && stripped.contains("- insert:"));
+        // 删空之后必须连键一起删：留一个没有子项的 - insert: ，dsh 解析出来是 null，
+        // 等于把这个 bug 换成另一个
+        String onlyRow = "- insert:\n"
+                + "    - id: d8828179\n"
+                + "      name: 'dsh-web-mobile'\n";
+        String emptied = PatchYaml.stripBlocksContaining(onlyRow, "dsh-web-mobile");
+        ok("patchyaml: 删空之后连 - insert: 一起删（不留空键）",
+                emptied != null && !emptied.contains("insert"));
+        ok("patchyaml: 没命中就返回 null（调用方据此决定不写盘）",
+                PatchYaml.stripBlocksContaining(onlyRow, "不存在的插件") == null
+                        && PatchYaml.stripBlocksContaining(null, "x") == null
+                        && PatchYaml.stripBlocksContaining(onlyRow, "") == null);
+        // 注释与顺序不能被重排 —— 刻意不引 YAML 库就是为了这个
+        String withComment = "# 用户自己写的注释\n"
+                + "- insert:\n"
+                + "    - id: mine\n"
+                + "      name: 'my-plugin'\n"
+                + "    - id: xx\n"
+                + "      name: 'dsh-web-mobile'\n";
+        String kept = PatchYaml.stripBlocksContaining(withComment, "dsh-web-mobile");
+        ok("patchyaml: 用户的注释与其余行原样保留",
+                kept != null && kept.startsWith("# 用户自己写的注释")
+                        && kept.contains("my-plugin") && !kept.contains("dsh-web-mobile"));
+        eqi("patchyaml: 缩进计算", 4, PatchYaml.indent("    - id: x"));
+
         // ===== ShellQuote：拼进 bash -c 之前的转义 =====
         // 断言方式刻意不比字符串长相，而是做 round-trip：把转义结果按 POSIX 单引号规则
         // 反解一遍，看 shell 最终会拿到什么。长相对不对不重要，语义对不对才重要。
