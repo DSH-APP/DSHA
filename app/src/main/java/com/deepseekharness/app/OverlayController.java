@@ -301,8 +301,7 @@ final class OverlayController {
     /** 用户开了「回复完成后可就地回话」吗。 */
     static boolean replyEnabled(Context ctx) {
         try {
-            return ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
-                    .getBoolean(K_REPLY, false);
+            return prefs(ctx).getBoolean(K_REPLY, false);
         } catch (Throwable e) {
             return false;
         }

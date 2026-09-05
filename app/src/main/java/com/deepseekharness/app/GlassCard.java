@@ -140,7 +140,9 @@ public class GlassCard extends BlurView {
         super.onVisibilityAggregated(isVisible);
         // 变可见时踢一帧。上面那条管的是「装的时候没尺寸」，这条管「装好了但快照是空的」——
         // 离屏时取样区域还没绘制，快照就是一片空白，而 BlurView 不会因为自己变可见就重算。
-        if (isVisible && facade != null) {
+        // sBlurAllowed 那一道必须在这儿判：不判的话滑动过程中任何一次可见性变化
+        // 都会把这张卡片的刷新偷偷打开，等于绕过了 setBlurUpdating(false)。
+        if (isVisible && facade != null && sBlurAllowed) {
             try {
                 facade.setBlurAutoUpdate(true);
             } catch (Throwable ignored) {
@@ -167,6 +169,9 @@ public class GlassCard extends BlurView {
             facade = setupWith(target, 8f, DshaGlass.noise(getContext()))
                     .setBlurRadius(DshaGlass.radius(getContext()) * 0.85f)
                     .setOverlayColor(DshaGlass.overlayColor(getContext(), factor));
+            // 正在滑动时建出来的卡片也得跟着停 —— 否则它一出生就在每帧重算模糊，
+            // 而滑动恰好是新卡片最多的时刻（相邻页在建 item）。
+            if (!sBlurAllowed) facade.setBlurAutoUpdate(false);
             // 登记自己，好让页面横向滑动时统一停掉模糊刷新（见 setBlurUpdating）。
             synchronized (sCards) {
                 sCards.add(new java.lang.ref.WeakReference<>(this));
@@ -192,7 +197,18 @@ public class GlassCard extends BlurView {
      *
      *  <p><b>不能永久关掉。</b>卡片跟着列表上下滚时，它背后对应的背景图区域是在变的，
      *  快照不更新就成了一张贴纸，滚动时能明显看出错位。 */
+    /**
+     * 当前是否允许卡片自己刷新模糊。
+     *
+     * <p><b>为什么要记这个状态。</b>setBlurUpdating 只是把命令广播给当时在册的卡片，
+     * 之后新登记的卡片、或者刚变可见的卡片都不知道「现在正在滑动、别刷」——
+     * 它们会各自把 autoUpdate 打开，把「滑动期间停卡片模糊」这个优化一点点蚀空。
+     * 横向滑动时恰好就是新卡片最多的时刻（相邻页在建 item），所以这不是边缘情况。
+     */
+    private static volatile boolean sBlurAllowed = true;
+
     static void setBlurUpdating(boolean on) {
+        sBlurAllowed = on;
         synchronized (sCards) {
             java.util.Iterator<java.lang.ref.WeakReference<GlassCard>> it = sCards.iterator();
             while (it.hasNext()) {

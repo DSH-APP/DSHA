@@ -446,16 +446,6 @@ public class PluginFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // 重新可见时让列表重走一遍 onBindViewHolder。
-        // 三条修法里最外层的一道保险：如果卡片消失是因为 adapter 的 view 状态坏了
-        // （而不是 BlurView 的快照或尺寸问题），重 bind 能把它们拉回来；
-        // 数据本身在内存里，这一步不查容器目录，成本只是几次 setText。
-        if (adapter != null) {
-            try {
-                adapter.notifyDataSetChanged();
-            } catch (Throwable ignored) {
-            }
-        }
         // 内置插件的注册可能被 dsh 的 initProfile 覆盖掉（首次启动时最常见）。
         // 打开插件页正是用户「发现插件不见了」的那一刻，在这里静默修掉最直接 ——
         // 否则用户只能看着自检报错，然后去终端手改 package.json，那不叫修好。
