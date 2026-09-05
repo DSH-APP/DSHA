@@ -24,8 +24,13 @@ package com.deepseekharness.app;
  */
 final class PublicDirs {
 
-    /** 一级目录名。 */
-    static final String ROOT = "DSHA";
+    /** 一级目录名。
+     *
+     *  <p>不是 {@code final}：内测变体（{@code -PdshaBeta}）用 {@code DSHA-beta}，
+     *  这样它与正式版装在同一台机器上时不会往同一个公开目录里写。值由
+     *  {@link DshaApp} 在 {@code onCreate} 里按 {@code BuildConfig.PUBLIC_ROOT} 设定 ——
+     *  刻意不在这里直接引用 BuildConfig，那样纯逻辑测试就得给它造一个假的。 */
+    static String ROOT = "DSHA";
 
     /** 备份（存档）。 */
     static final String ARCHIVES = "存档";
@@ -40,6 +45,19 @@ final class PublicDirs {
     static final String INBOX = "收件";
     /** 老版本的位置：DSHA 根目录，没有子目录。 */
     static final String LEGACY = "";
+
+    /**
+     * {@code Documents} 下的公开数据目录名（会话镜像、设置、附件的主体都在这里）。
+     *
+     * <p>与 {@link #ROOT} 同理：内测变体用 {@code dshdata-beta}，否则两个包会往同一份
+     * 数据上写。值由 {@link DshaApp} 按 {@code BuildConfig.PUBLIC_DATA_DIR} 设定。
+     */
+    static String DATA_DIR = "dshdata";
+
+    /** 公开数据目录的<b>容器内</b>路径，直接拼进脚本命令。 */
+    static String dataDirGuestPath() {
+        return "/sdcard/Documents/" + DATA_DIR;
+    }
 
     private PublicDirs() {
     }

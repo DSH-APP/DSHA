@@ -335,7 +335,7 @@ public final class BackupManager {
     private static void repairDshaSymlinks(HarnessController c) {
         try {
             String script = "cd /root/.dsh 2>/dev/null || exit 0\n"
-                    + "PUB=/sdcard/Documents/dshdata\n"
+                    + "PUB=" + PublicDirs.dataDirGuestPath() + "\n"
                     + "for name in sessions storages attachments settings.yaml; do\n"
                     + "  if [ -L \"$name\" ]; then\n"          // 是软链
                     + "    tgt=$(readlink \"$name\")\n"

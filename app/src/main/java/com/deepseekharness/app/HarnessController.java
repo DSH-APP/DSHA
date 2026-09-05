@@ -3243,8 +3243,11 @@ public class HarnessController {
             java.io.File f = new java.io.File(proot.getRootfsDir(), "root/" + remoteName);
             if (f.getParentFile() != null) f.getParentFile().mkdirs();
             java.nio.file.Files.write(f.toPath(), script.getBytes(StandardCharsets.UTF_8));
+            // 公开目录名随变体而变（内测包用 dshdata-beta），脚本不能自己写死 ——
+            // 两个包共用一份公开数据的后果是互相覆盖会话镜像与备份。
             return proot.execAndRead(
-                    "bash /root/" + remoteName + "; rm -f /root/" + remoteName, timeoutMs);
+                    "export DSH_PUB_DIR=" + ShellQuote.arg(PublicDirs.dataDirGuestPath()) + "; "
+                            + "bash /root/" + remoteName + "; rm -f /root/" + remoteName, timeoutMs);
         } catch (Throwable e) {
             android.util.Log.w("DSHA", "脚本 " + assetName + " 执行失败（不影响主流程）: " + e);
             return null;
@@ -3302,7 +3305,9 @@ public class HarnessController {
                 ensureSessionHome();
                 if (!f.isFile()) return;
             }
-            String out = proot.execAndRead("bash /root/" + SESSION_HOME_SCRIPT + " sync", 120_000);
+            String out = proot.execAndRead(
+                    "export DSH_PUB_DIR=" + ShellQuote.arg(PublicDirs.dataDirGuestPath()) + "; "
+                            + "bash /root/" + SESSION_HOME_SCRIPT + " sync", 120_000);
             if (out != null && out.contains("SYNC_PARTIAL")) {
                 android.util.Log.w("DSHA", "会话镜像同步不完整: " + out.trim());
             }
@@ -3349,7 +3354,9 @@ public class HarnessController {
         if (assetNames.isEmpty()) return new java.util.LinkedHashMap<>();
         String sep = AssetBatch.newSeparator();
         long t0 = System.currentTimeMillis();
-        String all = proot.execAndRead(AssetBatch.buildCommand(sep, remoteNames), timeoutMs);
+        String all = proot.execAndRead(
+                "export DSH_PUB_DIR=" + ShellQuote.arg(PublicDirs.dataDirGuestPath()) + "; "
+                        + AssetBatch.buildCommand(sep, remoteNames), timeoutMs);
         lastSelfHealMs += System.currentTimeMillis() - t0;
         lastSelfHealSessions++;
         return AssetBatch.splitOutput(sep, assetNames, all);

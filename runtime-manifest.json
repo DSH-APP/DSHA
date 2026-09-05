@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated": "2026-09-05T16:06:22Z",
+  "generated": "2026-09-05T16:20:12Z",
   "note": "只含脚本层增量；rootfs 与 .so 随 APK 发布，不在此清单内",
   "files": [
     {
@@ -204,8 +204,8 @@
     {
       "path": "app/src/main/assets/migrate-public-data.sh",
       "asset": "migrate-public-data.sh",
-      "size": 4628,
-      "sha256": "038249a254967c938c2adbdb07713536ec4c6e4a645b92f9cdf63f3f665eecec",
+      "size": 4644,
+      "sha256": "57fe4cbddd1ac37cd739bebc6c3f1eeef3187230c2eaf5a04d3aca9024e1ceb3",
       "urls": [
         "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/migrate-public-data.sh",
         "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@stable/app/src/main/assets/migrate-public-data.sh",

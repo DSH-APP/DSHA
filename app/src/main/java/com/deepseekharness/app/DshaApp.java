@@ -140,6 +140,10 @@ public class DshaApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        // 公开目录名要在任何人用到它之前定下来：内测变体（-PdshaBeta）走 DSHA-beta，
+        // 否则它与正式版装在同一台机器上时会往同一个公开目录里写备份与会话镜像。
+        PublicDirs.ROOT = BuildConfig.PUBLIC_ROOT;
+        PublicDirs.DATA_DIR = BuildConfig.PUBLIC_DATA_DIR;
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         if (CRASH_HOOK_INSTALLED.compareAndSet(false, true)) {
             Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();

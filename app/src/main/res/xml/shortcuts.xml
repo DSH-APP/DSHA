@@ -13,7 +13,7 @@
         android:shortcutLongLabel="@string/shortcut_terminal_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.dsh.client"
+            android:targetPackage="@string/dsha_package"
             android:targetClass="com.deepseekharness.app.MainActivity">
             <extra
                 android:name="goto"
@@ -29,7 +29,7 @@
         android:shortcutLongLabel="@string/shortcut_plugins_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.dsh.client"
+            android:targetPackage="@string/dsha_package"
             android:targetClass="com.deepseekharness.app.MainActivity">
             <extra
                 android:name="goto"
@@ -45,7 +45,7 @@
         android:shortcutLongLabel="@string/shortcut_launch_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.dsh.client"
+            android:targetPackage="@string/dsha_package"
             android:targetClass="com.deepseekharness.app.MainActivity">
             <extra
                 android:name="goto"

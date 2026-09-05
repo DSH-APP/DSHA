@@ -29,7 +29,7 @@
 # 那是真实的数据丢失。宁可留一份 .conflict 让用户自己选。
 
 set -u
-PUB="/sdcard/Documents/dshdata"
+PUB="${DSH_PUB_DIR:-/sdcard/Documents/dshdata}"
 HOME_DIR="/root/.dsh"
 
 ITEMS="storages attachments settings.yaml"

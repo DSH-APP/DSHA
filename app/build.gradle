@@ -60,15 +60,33 @@ android {
     namespace 'com.deepseekharness.app'
     compileSdk 34
 
+    // ── 内测变体：`gradle -PdshaBeta …` 或 `ORG_GRADLE_PROJECT_dshaBeta=1` ──
+    // 换 applicationId 而不是加 buildType/flavor：包名一变就是**另一个应用**，
+    // 能与正在用的正式版并存装在同一台机器上，互不覆盖、数据各自独立。
+    // manifest 里四个 provider 的 authority 全用 ${applicationId}，所以不会撞
+    // authority（撞了的话第二个包根本装不上）。
+    //
+    // 公开目录也必须跟着分开：两个包共用 /sdcard/Documents/dshdata 与
+    // Download/DSHA 的话，内测包的会话镜像与备份会覆盖正式版那份 —— 那是真实的
+    // 数据丢失，而不只是「文件混在一起」。
+    def dshaBeta = project.hasProperty('dshaBeta')
+    def dshaAppId = dshaBeta ? 'client.dsh.android' : 'com.dsh.client'
+
     defaultConfig {
-        applicationId "com.dsh.client"
+        applicationId dshaAppId
         minSdk 26
         targetSdk 34
         versionCode 103
-        versionName "1.1.11"
+        versionName dshaBeta ? "1.1.11-beta" : "1.1.11"
         ndk {
             abiFilters 'arm64-v8a'
         }
+        // 给 res/xml/shortcuts.xml 用：那里的 targetPackage 以前写死 com.dsh.client，
+        // 换包名之后内测包的快捷方式会指到正式版去。
+        resValue "string", "dsha_package", dshaAppId
+        // 公开目录名。正式版保持历史值不变（用户手机上已有的备份都在 Download/DSHA）。
+        buildConfigField "String", "PUBLIC_ROOT", dshaBeta ? '"DSHA-beta"' : '"DSHA"'
+        buildConfigField "String", "PUBLIC_DATA_DIR", dshaBeta ? '"dshdata-beta"' : '"dshdata"'
     }
 
     signingConfigs {
