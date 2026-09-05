@@ -317,7 +317,7 @@ public class LaunchFragment extends Fragment {
         webPane.setVisibility(View.VISIBLE);
         backToHome.setEnabled(true);
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).setBottomNavVisible(false);
+            ((MainActivity) getActivity()).setWebFullscreen(true, getView());
         }
         boolean useGecko = requireContext()
                 .getSharedPreferences("deepseekharness", android.content.Context.MODE_PRIVATE)
@@ -460,7 +460,7 @@ public class LaunchFragment extends Fragment {
         homePane.setVisibility(View.VISIBLE);
         backToHome.setEnabled(false);
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).setBottomNavVisible(true);
+            ((MainActivity) getActivity()).setWebFullscreen(false, getView());
         }
     }
 
@@ -751,7 +751,9 @@ public class LaunchFragment extends Fragment {
         mainHandler.removeCallbacks(tick);
         if (c != null) c.removeStateListener(stateListener);
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).setBottomNavVisible(true);
+            // 页面被销毁时也要收干净：不恢复的话滑页会一直是禁用状态，
+            // 用户回到别的 tab 才发现「怎么滑不动了」
+            ((MainActivity) getActivity()).setWebFullscreen(false, getView());
         }
         if (webView != null) {
             webBox.removeAllViews();

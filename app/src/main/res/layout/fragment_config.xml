@@ -343,6 +343,20 @@
                 android:text="默认蓝灰 · 樱花浅粉 · 玻璃深色半透明。切换后界面立即重建。" />
 
             <CheckBox
+                android:id="@+id/config_web_immersive"
+                style="@style/DshaText.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/touch_min"
+                android:text="WebUI 全屏时也隐藏系统状态栏" />
+            <TextView
+                style="@style/DshaText.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/gap_control"
+                android:text="默认保留状态栏，能看时间与电量。打开后 WebUI 占满整屏，从屏幕边缘上滑可临时呼出系统栏。" />
+
+            <CheckBox
                 android:id="@+id/config_overlay_stream"
                 style="@style/DshaText.Body"
                 android:layout_width="match_parent"

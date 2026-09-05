@@ -480,6 +480,77 @@ public class MainActivity extends AppCompatActivity {
         if (bar != null) bar.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
+    private int savedPageTopPad = -1;
+    private int savedPageBottomPad = -1;
+
+    /**
+     * WebUI 全屏。<b>三件事必须一起做</b>，少一件用户都会觉得「没全屏干净」：
+     *
+     * <ol>
+     *   <li>藏顶栏底栏（{@link #setBottomNavVisible}）；</li>
+     *   <li><b>去掉页面为两条栏预留的 padding</b> —— {@link #padForBars} 给每个页面的
+     *       root 加了 top/bottom padding，栏藏了这份留白还在，屏幕上下各空一条，
+     *       看起来就像栏没藏掉。这是「WebUI 无法正常全屏」的真正来源；</li>
+     *   <li>关掉左右滑页 —— WebUI 占满整屏之后，从边缘横滑会切到插件页，
+     *       而用户以为是网页在响应自己的手势。</li>
+     * </ol>
+     *
+     * @param on       进入还是退出全屏
+     * @param pageRoot WebUI 所在页面的 root（padding 加在它身上）；传 null 就只做另两件
+     */
+    public void setWebFullscreen(boolean on, View pageRoot) {
+        setBottomNavVisible(!on);
+        androidx.viewpager2.widget.ViewPager2 pager = findViewById(R.id.pager);
+        if (pager != null) pager.setUserInputEnabled(!on);
+        if (pageRoot != null) {
+            if (on) {
+                // 只在第一次记：全屏中途重复调用不能把 0 当成原值存下来
+                if (savedPageTopPad < 0) {
+                    savedPageTopPad = pageRoot.getPaddingTop();
+                    savedPageBottomPad = pageRoot.getPaddingBottom();
+                }
+                pageRoot.setPadding(pageRoot.getPaddingLeft(), 0, pageRoot.getPaddingRight(), 0);
+            } else if (savedPageTopPad >= 0) {
+                pageRoot.setPadding(pageRoot.getPaddingLeft(), savedPageTopPad,
+                        pageRoot.getPaddingRight(), savedPageBottomPad);
+                savedPageTopPad = -1;
+                savedPageBottomPad = -1;
+            }
+        } else if (!on) {
+            // onDestroyView 里 getView() 已经是 null，这时也要把记下的值丢掉 ——
+            // 留着的话下次进全屏不会重新记录，退出时恢复的是上一个 view 的数值。
+            savedPageTopPad = -1;
+            savedPageBottomPad = -1;
+        }
+        // 系统状态栏默认保留：跟 AI 干活动辄几十分钟，看不到时间和电量很别扭。
+        // 想彻底沉浸的到「配置 → 显示与交互」里打开。
+        boolean immersive = getSharedPreferences("deepseekharness", MODE_PRIVATE)
+                .getBoolean("web_immersive", false);
+        if (immersive) {
+            setSystemBarsHidden(on);
+        } else if (!on) {
+            // 用户可能是在全屏期间关掉这个开关的，退出时统一恢复一次
+            setSystemBarsHidden(false);
+        }
+    }
+
+    /** 藏/显系统栏。藏起来时保留「从边缘上滑临时呼出」，否则用户没法回到桌面。 */
+    private void setSystemBarsHidden(boolean hidden) {
+        try {
+            androidx.core.view.WindowInsetsControllerCompat c =
+                    androidx.core.view.WindowCompat.getInsetsController(
+                            getWindow(), getWindow().getDecorView());
+            if (hidden) {
+                c.setSystemBarsBehavior(androidx.core.view.WindowInsetsControllerCompat
+                        .BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                c.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+            } else {
+                c.show(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
     /** 顶栏与底栏的真玻璃。
      *
      *  <p>上一版是「半透明色块 + 把整张背景图糊一遍」，差在两点：模糊是全局静态的

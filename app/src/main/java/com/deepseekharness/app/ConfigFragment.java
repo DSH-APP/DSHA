@@ -56,6 +56,15 @@ public class ConfigFragment extends Fragment {
         if (overlayStyle != null) overlayStyle.setOnClickListener(v -> showOverlayStyleDialog());
         View uiTheme = view.findViewById(R.id.config_ui_theme);
         if (uiTheme != null) uiTheme.setOnClickListener(v -> showAppearanceDialog());
+        android.widget.CheckBox immersiveCb = view.findViewById(R.id.config_web_immersive);
+        if (immersiveCb != null) {
+            android.content.SharedPreferences sp = requireContext()
+                    .getSharedPreferences("deepseekharness", android.content.Context.MODE_PRIVATE);
+            immersiveCb.setChecked(sp.getBoolean("web_immersive", false));
+            // 下次进 WebUI 生效就够了：配置页与 WebUI 不可能同时在前台
+            immersiveCb.setOnCheckedChangeListener((btn, checked) ->
+                    sp.edit().putBoolean("web_immersive", checked).apply());
+        }
         overlayStreamCb = view.findViewById(R.id.config_overlay_stream);
         if (overlayStreamCb != null) {
             // 勾上时才要权限：没授权就直接引导过去，别让用户勾了个不生效的开关
