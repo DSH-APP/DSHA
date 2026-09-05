@@ -207,6 +207,10 @@ final class DshaGlass {
     private static int sBackdropH;
     /** 已经铺了玻璃背景的 View → 它的 drawable，用来在 preDraw 时刷新位置。弱引用避免泄漏。 */
     private static final java.util.WeakHashMap<View, GlassDrawable> LIVE = new java.util.WeakHashMap<>();
+
+    /** preDraw 回调里复用的两个缓冲。只在主线程用，不需要同步。 */
+    private static final java.util.ArrayList<View> sPreDrawBuf = new java.util.ArrayList<>(32);
+    private static final int[] sPreDrawXY = new int[2];
     /** 挂过 preDraw 的 decorView。**弱引用** —— 静态字段强持有 decorView 就是泄漏整个 Activity。 */
     private static java.lang.ref.WeakReference<View> sHooked;
 
@@ -290,21 +294,33 @@ final class DshaGlass {
         sHooked = new java.lang.ref.WeakReference<>(decor);
         decor.getViewTreeObserver().addOnPreDrawListener(() -> {
             if (LIVE.isEmpty()) return true;
-            int[] xy = new int[2];
-            // 同样先取快照再遍历，理由见 snapshotLive。
-            java.util.List<View> views;
+            // **这个回调每帧都跑**，一屏二十来个元素，任何分配都会被乘以帧率。
+            // 原来每帧 new 一个 ArrayList 装快照、再 new 一个 int[2]，
+            // 在 120Hz 下就是每秒 240 个短命对象 + 相应的 GC 压力；
+            // gfxinfo 里 CPU 50 分位 10~17ms（帧预算只有 8.3ms）有一部分出在这里。
+            // 缓冲改成复用的静态字段 —— OnPreDrawListener 一定在主线程，不需要同步。
+            sPreDrawBuf.clear();
             try {
-                views = new java.util.ArrayList<>(LIVE.keySet());
+                // 仍然要拷一份再遍历：WeakHashMap 在迭代过程中会顺手清理被回收的 key，
+                // 直接迭代 keySet 可能撞上 ConcurrentModificationException。
+                sPreDrawBuf.addAll(LIVE.keySet());
             } catch (Throwable t) {
+                sPreDrawBuf.clear();
                 return true;
             }
-            for (View v : views) {
-                if (v == null || !v.isAttachedToWindow()) continue;
+            for (int i = 0; i < sPreDrawBuf.size(); i++) {
+                View v = sPreDrawBuf.get(i);
+                // isShown 只是沿父链查几个 flag，很便宜；getLocationInWindow 要沿树累加
+                // 每一层的偏移与矩阵，贵得多。先筛一遍，能挡掉已经 detach 或 GONE 的。
+                if (v == null || !v.isShown()) continue;
                 GlassDrawable gd = LIVE.get(v);
                 if (gd == null) continue;
-                v.getLocationInWindow(xy);
-                gd.setWindowOffset(xy[0], xy[1]);
+                v.getLocationInWindow(sPreDrawXY);
+                // setWindowOffset 自己会判「值没变就不 invalidate」，这里不用再比一次。
+                gd.setWindowOffset(sPreDrawXY[0], sPreDrawXY[1]);
             }
+            // 必须清空：留着强引用会让 WeakHashMap 里的 key 永远回收不掉。
+            sPreDrawBuf.clear();
             return true;
         });
     }
