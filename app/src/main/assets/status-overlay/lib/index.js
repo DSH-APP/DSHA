@@ -136,6 +136,28 @@ function tail(s) {
   return one.slice(from)
 }
 
+/**
+ * 从桥的响应里取出真正的结果字符串。
+ *
+ * **桥返回的是 JSON**：`{"result":"OK"}`。这个插件原来直接把整段 body 拿去和 'DISABLED'
+ * 做等值比较 —— 永远不成立。后果是**冷却机制从来没生效过**：用户没开悬浮条、
+ * 或者没给悬浮窗权限时，插件照样每 120ms 发一次 HTTP，白烧电烧到会话结束。
+ * 就地回话更严重，它的每一个判断（TEXT/CLOSED/DISABLED）都靠这个返回值。
+ *
+ * 解析失败时原样返回：将来桥要是改成纯文本，这里不用跟着改。
+ */
+function unwrap(raw) {
+  const s = (raw || '').trim()
+  if (!s) return ''
+  try {
+    const j = JSON.parse(s)
+    if (j && typeof j.result === 'string') return j.result.trim()
+  } catch {
+    // 不是 JSON —— 当纯文本用
+  }
+  return s
+}
+
 async function send(key, kind, text) {
   const tok = bridgeToken()
   if (!tok) return
@@ -148,7 +170,7 @@ async function send(key, kind, text) {
       headers: { 'X-Token': tok },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
-    const body = (await res.text()).trim()
+    const body = unwrap(await res.text())
     if (body === 'DISABLED' || body === 'NO_PERMISSION') {
       // 用户没开这个功能或没授权 —— 进冷却，别一直敲一扇关着的门
       cooldownUntil = Date.now() + COOLDOWN_MS
@@ -230,8 +252,7 @@ async function deliverReply(ctx, session, text) {
 /** 在 done 之后开一段取件窗口。同一 session 只开一个。 */
 function startReplyPoll(ctx, key, session) {
   if (replyPollers.has(key)) return
-  const tok = bridgeToken()
-  if (!tok) return
+  if (!bridgeToken()) return
   const deadline = Date.now() + REPLY_WINDOW_MS
   const timer = setInterval(async () => {
     if (Date.now() > deadline) {
@@ -239,10 +260,15 @@ function startReplyPoll(ctx, key, session) {
       return
     }
     try {
+      // 每次重新读 token，不用闭包里那份：这个窗口有三分钟，中间 Web 重启过的话
+      // 旧 token 就是废票，而症状是「回话永远没反应」——从外面完全看不出原因。
+      // 读的是一个几十字节的本地文件，比一次 fetch 便宜得多。
+      const tok = bridgeToken()
+      if (!tok) return
       const res = await fetch(
         `${REPLY_URL}?token=${encodeURIComponent(tok)}&session=${encodeURIComponent(key)}`,
         { signal: AbortSignal.timeout(TIMEOUT_MS) })
-      const body = (await res.text()).trim()
+      const body = unwrap(await res.text())
       if (body === 'DISABLED' || body === 'CLOSED') {
         // DISABLED=开关关了；CLOSED=输入栏已经收起（用户按了发送，或 45 秒没动）。
         // 两种都没有继续轮询的意义 —— 下一轮 done 会重新开窗口。

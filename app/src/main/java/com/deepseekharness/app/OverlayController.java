@@ -106,6 +106,14 @@ final class OverlayController {
     private static final int MAX_PENDING_REPLIES = 8;
     /** 输入栏正显示 —— 与 confirming 同性质：这期间不许自动淡出、不许被流式内容顶掉。 */
     private static boolean replying;
+    /**
+     * 输入栏是为哪个会话摆出来的。
+     *
+     * <p><b>不能在发送那一刻读 activeKey。</b>用户在看 A 的输出、输入栏露出来了，
+     * 这期间 B 会话吐出新内容 → push 把 activeKey 换成 B → 用户按发送，话进了 B。
+     * 所以在摆出输入栏那一刻就把会话钉住。
+     */
+    private static String replyForKey = "";
     /** 输入栏的自愈定时器。见 REPLY_IDLE_MS 的说明 —— 没有它这条子会永久挂在屏幕上。 */
     private static Runnable replyIdleTask;
     /**
@@ -216,12 +224,23 @@ final class OverlayController {
         final String key = sessionKey == null || sessionKey.isEmpty() ? "-" : sessionKey;
         // 确认进行中：命令和按钮不能被流式内容顶掉（用户正要点它）
         if (confirming && !"clear".equals(k)) return;
+        // agent 又开始说话了 → 输入栏让位。
+        // 那条输入栏是「上一轮说完了，回一句吗」的意思；新一轮已经在跑，用户此刻发出去的话
+        // 会插到这一轮中间（dsh 要么排队要么打断，两种都不是他按发送时想要的）。
+        // 'text' 不在其中 —— 那是我们自己回显「已发送」用的，不该把刚摆好的栏又收掉。
+        if (replying && ("delta".equals(k) || "reasoning".equals(k) || "tool".equals(k))) {
+            dismissReply(ctx);
+        }
 
         String line;
         synchronized (LOCK) {
             if ("clear".equals(k)) {
                 BUFFERS.remove(key);
                 if (key.equals(activeKey)) activeKey = "";
+                // 输入栏也要收：hideNow 只把整条设 GONE，replying 会一直挂着 true ——
+                // 那之后所有自动淡出都被挡住（直到 45 秒的 idle 兜底才自愈），
+                // 而 replyRow 仍是 VISIBLE，下一次有内容时输入栏会莫名其妙地又出现。
+                if (replying) dismissReply(ctx);
                 hideNow();
                 return;
             }
@@ -307,6 +326,7 @@ final class OverlayController {
                 ensureView(ctx);
                 if (root == null || replyRow == null || replyInput == null) return;
                 replying = true;
+                replyForKey = activeKey == null ? "" : activeKey;
                 replyRow.setVisibility(View.VISIBLE);
                 root.setVisibility(View.VISIBLE);
                 if (hideTask != null) mainHandler().removeCallbacks(hideTask);   // 等用户，不淡出
@@ -363,7 +383,7 @@ final class OverlayController {
                 // **带上会话标识。**dsh 可以同时跑多个会话，每个都会在说完时开一个取件循环；
                 // 队列不分会话的话，谁先轮到谁取走 —— 用户明明在看 A 的输出、回的话
                 // 却发进了 B。activeKey 就是此刻条子上显示的那个会话，用户回的就是它。
-                PENDING_REPLIES.addLast(new String[]{activeKey == null ? "" : activeKey, t});
+                PENDING_REPLIES.addLast(new String[]{replyForKey == null ? "" : replyForKey, t});
             }
             replyInput.setText("");
         }
