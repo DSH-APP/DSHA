@@ -119,6 +119,36 @@ public class GlassCard extends BlurView {
         if (!wired) wire();
     }
 
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        // **尺寸从 0 变成有效值时重装一次。**
+        // RecyclerView 在 ViewPager2 的离屏页里预建 item 时，卡片 attach 了但还没量过，
+        // 宽高是 0；wire() 那一刻 BlurView 算不出有效的缩放尺寸，它的 controller 会停在
+        // 「没准备好」的状态，而且之后不会自己恢复。症状是切回这一页时卡片整块空白 ——
+        // 连里面的文字都不见，因为 BlurView 的 draw 是「先画模糊、再 super.draw() 画
+        // background 和子 View」，前半段短路就把子 View 一起跳过了。
+        // （反馈：从其他页返回插件管理，列表里的卡片全不见，搜索框和 tab 还在。）
+        if (wired && w > 0 && h > 0 && (oldw <= 0 || oldh <= 0)) {
+            wired = false;
+            wire();
+        }
+    }
+
+    @Override
+    public void onVisibilityAggregated(boolean isVisible) {
+        super.onVisibilityAggregated(isVisible);
+        // 变可见时踢一帧。上面那条管的是「装的时候没尺寸」，这条管「装好了但快照是空的」——
+        // 离屏时取样区域还没绘制，快照就是一片空白，而 BlurView 不会因为自己变可见就重算。
+        if (isVisible && facade != null) {
+            try {
+                facade.setBlurAutoUpdate(true);
+            } catch (Throwable ignored) {
+            }
+            invalidate();
+        }
+    }
+
     private void wire() {
         try {
             if (!DshaGlass.enabled(getContext())) return;   // 玻璃没开 → 就是一张普通卡片

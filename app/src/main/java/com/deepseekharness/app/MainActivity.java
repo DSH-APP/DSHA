@@ -204,6 +204,10 @@ public class MainActivity extends AppCompatActivity {
                 }, 260);
             }
             if (pg != null) pg.animate().alpha(1f).setDuration(240).start();
+            // 卡片的模糊刷新平时只在 pager 停止滚动（onPageScrollStateChanged=IDLE）时恢复,
+            // 而从二级页退栈回来根本不经过 pager 滑动 —— 那个事件不会来。
+            // 这里补一次，顺带 invalidate（setBlurUpdating 里带）。
+            GlassCard.setBlurUpdating(true);
             clearBreadcrumb(true);
         });
         // 卡片透明度要覆盖**所有层级**的 Fragment。原先只在 switchFragment 里调一次，
