@@ -1,7 +1,7 @@
 {
   "name": "dsh-status-overlay",
   "description": "DSHA builtin plugin: stream the agent's output to a floating bar at the top of the phone screen (lyric-style), and turn tool calls into human-readable status lines",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

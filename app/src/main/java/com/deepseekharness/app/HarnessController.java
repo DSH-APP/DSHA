@@ -4644,7 +4644,7 @@ public class HarnessController {
      *  资产内容变更时 +1（marker 存在会导致重跑⑥时跳过重注入，
      *  必须靠版本标记删 marker 强制重注入，老用户才能拿到新资产）。
      *  与 STEP6_VERSION 一起写入 builtin-assets.version（installGuard 末尾）。 */
-    private static final String BUILTIN_ASSET_VERSION = "28";
+    private static final String BUILTIN_ASSET_VERSION = "29";
 
     /** 内置插件资产版本自愈（检查 + 删 marker；版本标记写入在 installGuard
      *  末尾 runStep 里——若中途失败版本未写，下次启动版本不一致会重跑⑥重注入，

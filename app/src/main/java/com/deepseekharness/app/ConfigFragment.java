@@ -712,6 +712,18 @@ public class ConfigFragment extends Fragment {
         confirmHere.setChecked(sp.getBoolean(OverlayController.K_CONFIRM, true));
         box.addView(confirmHere);
 
+        final CheckBox replyHere = new CheckBox(requireContext());
+        replyHere.setText("回复完成后可在悬浮条直接回话（露出输入栏）");
+        replyHere.setChecked(sp.getBoolean(OverlayController.K_REPLY, false));
+        box.addView(replyHere);
+
+        final TextView replyNote = new TextView(requireContext());
+        replyNote.setText("默认关：输入栏会占掉条子下面一行，而且点它时悬浮条要临时接一下"
+                + "输入焦点（当前应用的输入会短暂中断）。");
+        replyNote.setTextSize(11f);
+        replyNote.setTextColor(0xFF9AA4B2);
+        box.addView(replyNote);
+
         android.widget.ScrollView scroll = new android.widget.ScrollView(requireContext());
         scroll.addView(box);
 
@@ -723,6 +735,7 @@ public class ConfigFragment extends Fragment {
                 .putInt(OverlayController.K_TEXT_SP, Math.max(6, wide.getProgress()))
                 .putInt(OverlayController.K_HOLD, Math.max(2, hold.getProgress()))
                 .putBoolean(OverlayController.K_REASONING, think.isChecked())
+                .putBoolean(OverlayController.K_REPLY, replyHere.isChecked())
                 .putBoolean(OverlayController.K_COMMAND, cmd.isChecked())
                 .putBoolean(OverlayController.K_CONFIRM, confirmHere.isChecked())
                 .apply();

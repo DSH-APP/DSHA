@@ -471,6 +471,10 @@ public final class HttpShellService {
                 result = appHelp();
             } else if (path.startsWith("/app/plugins")) {
                 result = appPlugins(path);
+            } else if (path.startsWith("/app/overlay/reply")) {
+                // 就地回话的取件口。**必须排在 /app/overlay 前面** ——
+                // 那条用的是 startsWith，放后面永远轮不到（这类顺序坑本项目栽过）。
+                result = appOverlayReply();
             } else if (path.startsWith("/app/overlay")) {
                 result = appOverlay(path);
             } else if (path.startsWith("/app/location")) {
@@ -849,6 +853,25 @@ public final class HttpShellService {
         }
     }
 
+    /**
+     * {@code /app/overlay/reply} —— 插件来取用户在悬浮条上打的话。
+     *
+     * <p>返回一行文本，没有就返回 {@code EMPTY}；用户没开这个功能返回 {@code DISABLED}，
+     * 插件据此停止轮询。<b>不在这里做长轮询</b>：桥是单线程 accept 的小服务，
+     * 挂住一个连接几十秒会连带影响别的端点，等待放在插件侧（它有事件循环）。
+     */
+    private String appOverlayReply() {
+        try {
+            if (!OverlayController.enabled(ctx)) return "DISABLED";
+            if (!OverlayController.replyEnabled(ctx)) return "DISABLED";
+            String t = OverlayController.takePendingReply();
+            if (t == null || t.isEmpty()) return "EMPTY";
+            return "TEXT " + t;
+        } catch (Throwable e) {
+            return "ERROR: " + safeError(e);
+        }
+    }
+
     private String appOverlay(String path) {
         try {
             String q = queryOf(path);
@@ -863,6 +886,12 @@ public final class HttpShellService {
                 return "SKIP_REASONING";
             }
             OverlayController.push(ctx, session, kind, displayText);
+            // agent 说完一轮 → 露出输入栏。返回值带上 REPLY_ON，插件据此决定要不要
+            // 开始轮询 /app/overlay/reply —— 用户没开这个开关时一次多余的轮询都不发。
+            if ("done".equals(kind) && OverlayController.replyEnabled(ctx)) {
+                OverlayController.showReply(ctx);
+                return "OK REPLY_ON";
+            }
             return OverlayController.showCommand(ctx) ? "OK" : "OK_NO_CMD";
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);

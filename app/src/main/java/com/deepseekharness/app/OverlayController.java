@@ -53,6 +53,7 @@ final class OverlayController {
     static final String K_REASONING = "overlay_show_reasoning";  // 显示思考过程
     static final String K_COMMAND = "overlay_show_command";      // 工具调用带上命令原文
     static final String K_CONFIRM = "overlay_confirm";           // 危险命令就地批准
+    static final String K_REPLY = "overlay_reply";               // 回复完成后就地回话
 
     // 默认 3 行：1 行永远只看得到最后半句，流式内容根本读不了 —— 这个功能的用处
     // 就是扫一眼 agent 在说什么，太窄等于没有。
@@ -94,6 +95,15 @@ final class OverlayController {
     private static TextView label;
     private static LinearLayout confirmRow;
     private static TextView confirmHint;
+    /** 就地回话：输入栏那一行、输入框本身，以及用户已按发送、等着插件来取的文本。 */
+    private static LinearLayout replyRow;
+    private static android.widget.EditText replyInput;
+    /** 队列而不是单个字段：用户可能连按两次发送，后一条不该把前一条挤掉。
+     *  插件取走即出队，取不到就是 EMPTY —— 桥那一侧不做等待，长轮询在插件里做。 */
+    private static final java.util.ArrayDeque<String> PENDING_REPLIES = new java.util.ArrayDeque<>();
+    private static final int MAX_PENDING_REPLIES = 8;
+    /** 输入栏正显示 —— 与 confirming 同性质：这期间不许自动淡出、不许被流式内容顶掉。 */
+    private static boolean replying;
     private static Runnable hideTask;
     private static String activeKey = "";
     /** 确认进行中：这期间不自动淡出、也不让流式内容盖掉命令。 */
@@ -250,6 +260,134 @@ final class OverlayController {
         int sp = s.indexOf(' ', from);
         if (sp > 0 && sp - from < 40) from = sp + 1;
         return s.substring(from);
+    }
+
+    // ================= 就地回话 =================
+
+    /** 用户开了「回复完成后可就地回话」吗。 */
+    static boolean replyEnabled(Context ctx) {
+        try {
+            return ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
+                    .getBoolean(K_REPLY, false);
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+
+    /**
+     * agent 说完一轮（{@code kind=done}）→ 在条子下面露出输入栏。
+     *
+     * <p><b>为什么只在说完之后。</b>agent 正在生成时插话，dsh 那边要么排队要么打断，
+     * 两种都不是用户按下发送时期待的事；而「它说完了、我看一眼、直接接一句」是这个
+     * 功能真正的用处 —— 用户此刻在别的 App 里，不必切回来。
+     *
+     * <p>不自动聚焦：一露出来就弹输入法会把用户当前在做的事（看视频、打字）打断。
+     * 要等用户主动点输入框 —— 那一下才是「我要回话」的明确意思。
+     */
+    static void showReply(Context ctx) {
+        if (ctx == null || !enabled(ctx) || !permitted(ctx) || !replyEnabled(ctx)) return;
+        if (confirming) return;              // 批准优先，别把两组控件同时摆出来
+        mainHandler().post(() -> {
+            try {
+                ensureView(ctx);
+                if (root == null || replyRow == null || replyInput == null) return;
+                replying = true;
+                replyRow.setVisibility(View.VISIBLE);
+                root.setVisibility(View.VISIBLE);
+                if (hideTask != null) mainHandler().removeCallbacks(hideTask);   // 等用户，不淡出
+
+                // 点输入框才真正接焦点。窗口默认带 FLAG_NOT_FOCUSABLE（否则悬浮条一出现
+                // 就抢走当前 App 的输入焦点），而输入法只对可聚焦窗口弹出 ——
+                // 所以这里临时摘掉那个 flag，收工再加回去。
+                replyInput.setOnClickListener(v -> setFocusable(ctx, true));
+                replyInput.setOnEditorActionListener((v, actionId, ev) -> {
+                    if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND) {
+                        submitReply(ctx);
+                        return true;
+                    }
+                    return false;
+                });
+                android.view.View send = root.findViewById(R.id.overlay_reply_send);
+                if (send != null) send.setOnClickListener(v -> submitReply(ctx));
+            } catch (Throwable e) {
+                android.util.Log.w("DSHA", "悬浮条输入栏显示失败: "
+                        + SensitiveData.redact(String.valueOf(e)));
+                replying = false;
+            }
+        });
+    }
+
+    /** 把输入框里的话入队，交给插件下次轮询时取走。空文本当作「收起」。 */
+    private static void submitReply(Context ctx) {
+        if (replyInput == null) return;
+        String t = String.valueOf(replyInput.getText()).trim();
+        if (!t.isEmpty()) {
+            synchronized (LOCK) {
+                // 满了丢最旧的：留着一堆过期的话没有意义，用户等的是最近这句
+                while (PENDING_REPLIES.size() >= MAX_PENDING_REPLIES) PENDING_REPLIES.pollFirst();
+                PENDING_REPLIES.addLast(t);
+            }
+            replyInput.setText("");
+        }
+        dismissReply(ctx);
+    }
+
+    /** 收起输入栏并交还焦点。下一轮 done 时会再露出来。 */
+    static void dismissReply(Context ctx) {
+        mainHandler().post(() -> {
+            try {
+                replying = false;
+                setFocusable(ctx, false);
+                if (replyRow != null) replyRow.setVisibility(View.GONE);
+                // 收起后按正常规则淡出，不要一直挂在屏幕上
+                scheduleHide(ctx);
+            } catch (Throwable ignored) {
+            }
+        });
+    }
+
+    /**
+     * 插件取走一条待发文本；没有就返回 null。
+     *
+     * <p>取走即出队 —— 这条通路上「取到了但没发出去」和「没取到」对用户是同一件事
+     * （话丢了），而重复发送是更糟的结果（agent 会答两遍）。所以选不重发。
+     */
+    static String takePendingReply() {
+        synchronized (LOCK) {
+            return PENDING_REPLIES.pollFirst();
+        }
+    }
+
+    /**
+     * 临时切换窗口能不能接焦点。
+     *
+     * <p>输入法只对可聚焦窗口弹出，而悬浮条平时必须是 NOT_FOCUSABLE —— 否则它一出现
+     * 就把用户当前 App 的输入焦点抢走（正在微信打字会突然打不动）。
+     * 所以只在用户点了输入框那一下摘掉 flag，发送或收起时立刻加回去。
+     *
+     * <p>{@code SOFT_INPUT_STATE_VISIBLE} 让输入法跟着这次 update 一起弹出来，
+     * 不必再手动调 showSoftInput（那个在悬浮窗上时好时坏，取决于 ROM）。
+     */
+    private static void setFocusable(Context ctx, boolean on) {
+        if (root == null || wm == null) return;
+        try {
+            android.view.ViewGroup.LayoutParams raw = root.getLayoutParams();
+            if (!(raw instanceof WindowManager.LayoutParams)) return;
+            WindowManager.LayoutParams lp = (WindowManager.LayoutParams) raw;
+            if (on) {
+                lp.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+                lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+                        | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
+            } else {
+                lp.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+                lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED;
+                if (replyInput != null) replyInput.clearFocus();
+            }
+            wm.updateViewLayout(root, lp);
+        } catch (Throwable e) {
+            android.util.Log.w("DSHA", "悬浮条焦点切换失败: "
+                    + SensitiveData.redact(String.valueOf(e)));
+        }
     }
 
     // ================= 危险命令就地批准 =================
@@ -435,7 +573,8 @@ final class OverlayController {
     private static void hideNow() {
         mainHandler().post(() -> {
             try {
-                if (confirming) return;      // 有待批准的命令时不许自己消失
+                // 有待批准的命令、或用户正在打字时不许自己消失
+                if (confirming || replying) return;
                 if (root != null) root.setVisibility(View.GONE);
             } catch (Throwable ignored) {
             }
@@ -526,9 +665,41 @@ final class OverlayController {
         row.addView(actionButton(app, R.id.overlay_confirm_deny, "拒绝", 0xFF8E2A2A));
         box.addView(row);
 
+        // 就地回话那一行：输入框 + 发送。默认 GONE，只在 agent 说完一轮（turn/end）时露出来。
+        LinearLayout rr = new LinearLayout(app);
+        rr.setOrientation(LinearLayout.HORIZONTAL);
+        rr.setGravity(Gravity.CENTER_VERTICAL);
+        rr.setVisibility(View.GONE);
+        android.widget.EditText in = new android.widget.EditText(app);
+        in.setId(R.id.overlay_reply_input);
+        in.setHint("回一句…");
+        in.setHintTextColor(0x99FFFFFF);
+        in.setTextColor(Color.WHITE);
+        in.setTextSize(13f);
+        in.setMaxLines(3);
+        in.setSingleLine(false);
+        // IME_ACTION_SEND：软键盘上直接出「发送」，不用去点右边那个按钮。
+        in.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_SEND);
+        in.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        GradientDrawable inBg = new GradientDrawable();
+        inBg.setCornerRadius(dp(app, 10));
+        inBg.setColor(0x33FFFFFF);
+        in.setBackground(inBg);
+        int ip = dp(app, 8);
+        in.setPadding(ip, dp(app, 4), ip, dp(app, 4));
+        LinearLayout.LayoutParams inLp = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        inLp.topMargin = dp(app, 4);
+        inLp.rightMargin = dp(app, 8);
+        rr.addView(in, inLp);
+        rr.addView(actionButton(app, R.id.overlay_reply_send, "发送", 0xFF1E5AA8));
+        box.addView(rr);
+
         // 点条子本身收起（确认时不收 —— 那两个按钮才是出口）
         box.setOnClickListener(v -> {
-            if (!confirming) v.setVisibility(View.GONE);
+            // 回话期间也不收：用户正要打字，点空白处把整条收掉等于把输入清了
+            if (!confirming && !replying) v.setVisibility(View.GONE);
         });
 
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
@@ -555,6 +726,8 @@ final class OverlayController {
             label = tv;
             confirmRow = row;
             confirmHint = hint;
+            replyRow = rr;
+            replyInput = in;
             applyStyle(app);
         } catch (Throwable e) {
             // 权限被撤或某些 ROM 拒绝 → 安静降级，不影响 agent 干活

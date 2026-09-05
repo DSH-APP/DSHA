@@ -156,10 +156,119 @@ async function send(key, kind, text) {
       // 功能开着，只是这会儿不看思考过程：别整段冷却，只停这一类，而且**要带时效**
       skipReasoningUntil = Date.now() + REASONING_RETRY_MS
     }
+    return body
   } catch {
     // 桥没起、超时、被拒：这功能不重要，静默降级
     cooldownUntil = Date.now() + 5000
   }
+  return ''
+}
+
+// ================= 就地回话 =================
+// agent 说完一轮后，用户可以直接在悬浮条上打一句话回过来（不必切回 App）。
+// App 侧把用户按下发送的文本存进队列，这里轮询取走再喂回 session。
+//
+// **为什么轮询而不是让 App 主动推**：反向连接要在 dsh 进程里开一个监听端口，
+// 那是新的攻击面，也要处理端口冲突与 rootfs 重启后的注册；而这里等的是人打字，
+// 秒级延迟完全无感。轮询只在「刚说完一轮」这段窗口里跑，平时一个请求都不发。
+
+const REPLY_URL = 'http://127.0.0.1:3090/app/overlay/reply'
+/** 取件间隔。人打字以秒计，1.2 秒足够灵敏又不至于烧电。 */
+const REPLY_POLL_MS = 1200
+/** 一轮说完后最多守 3 分钟。用户这会儿不回，那就是不打算回了 —— 下一轮 done 会再开窗口。 */
+const REPLY_WINDOW_MS = 180_000
+/** 每个 session 一个取件循环，避免多会话时互相重复取。 */
+const replyPollers = new Map()
+
+/**
+ * 把用户的话喂回 session。
+ *
+ * **这里刻意排了四条路依次试。** dsh 的会话 API 在不同版本里叫法不一样，而这个插件要
+ * 跟着一整条 1.1.x 的用户群跑；写死一个方法名等于把功能绑在某个小版本上。
+ * 四条都不通时把原因回显到悬浮条 —— 用户至少知道话没送出去，而不是干等一个永远不来的回复。
+ * 首次成功后记住是哪条（successfulRoute），后面直接走它，不再每次都从头试。
+ */
+let successfulRoute = ''
+
+async function deliverReply(ctx, session, text) {
+  const routes = [
+    ['session.prompt', () => session?.prompt?.(text)],
+    ['session.send', () => session?.send?.(text)],
+    ['api.sessions.prompt', () => {
+      const api = ctx?.get?.('api') ?? ctx?.api
+      const id = session?.id ?? session?.key ?? session?.sessionId
+      return api?.sessions?.prompt?.({ session: id, content: text })
+    }],
+    ['session.append', () => {
+      // 最后的兜底：直接往事件日志里追一条 user/message。
+      // 语义上这是「注入一条用户消息」，能不能立刻触发一轮回复取决于 dsh 的驱动器 ——
+      // 但至少内容进了会话，用户切回 App 就能看到并接着说。
+      const r = session?.append?.('user/message', {
+        message: { role: 'user', content: [{ type: 'text', text }] },
+      }, { surfaceOp: 'append' })
+      return r ?? (session?.run?.() ?? session?.continue?.())
+    }],
+  ]
+  const ordered = successfulRoute
+    ? routes.filter(([n]) => n === successfulRoute).concat(routes.filter(([n]) => n !== successfulRoute))
+    : routes
+  let lastErr = ''
+  for (const [name, fn] of ordered) {
+    try {
+      const r = fn()
+      if (r === undefined) continue          // 这条路上的方法不存在，换下一条
+      await r
+      successfulRoute = name
+      return name
+    } catch (e) {
+      lastErr = `${name}: ${e?.message || e}`
+    }
+  }
+  return lastErr ? `FAILED ${lastErr}` : 'FAILED 会话没有可用的发送入口'
+}
+
+/** 在 done 之后开一段取件窗口。同一 session 只开一个。 */
+function startReplyPoll(ctx, key, session) {
+  if (replyPollers.has(key)) return
+  const tok = bridgeToken()
+  if (!tok) return
+  const deadline = Date.now() + REPLY_WINDOW_MS
+  const timer = setInterval(async () => {
+    if (Date.now() > deadline) {
+      stopReplyPoll(key)
+      return
+    }
+    try {
+      const res = await fetch(`${REPLY_URL}?token=${encodeURIComponent(tok)}`, {
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      })
+      const body = (await res.text()).trim()
+      if (body === 'DISABLED') {
+        stopReplyPoll(key)                    // 用户把开关关了
+        return
+      }
+      if (!body.startsWith('TEXT ')) return   // EMPTY：还没打完
+      const text = body.slice(5)
+      if (!text) return
+      // 取到就停：这一轮的窗口用掉了，下一次 done 会重新开
+      stopReplyPoll(key)
+      const r = await deliverReply(ctx, session, text)
+      if (r.startsWith('FAILED')) {
+        void send(key, 'text', '⚠ 这句没送出去：' + r.slice(7))
+      } else {
+        void send(key, 'text', '↩ 已发送：' + text)
+      }
+    } catch {
+      // 桥没起或超时：下个周期再试，不必特殊处理
+    }
+  }, REPLY_POLL_MS)
+  replyPollers.set(key, timer)
+}
+
+function stopReplyPoll(key) {
+  const t = replyPollers.get(key)
+  if (t) clearInterval(t)
+  replyPollers.delete(key)
 }
 
 function bucket(key) {
@@ -254,8 +363,14 @@ export function apply(ctx) {
           clearTimeout(b.timer)
           b.timer = undefined
         }
-        // 留着最后一句让它自然淡出（App 侧几秒后自己收起来）
-        void send(key, 'done', b.line)
+        // 留着最后一句让它自然淡出（App 侧几秒后自己收起来）。
+        // 返回 'OK REPLY_ON' 说明用户开了就地回话、App 已经把输入栏摆出来了 ——
+        // 那就开一段取件窗口等他打字。没开这个开关时一个轮询请求都不会发。
+        void send(key, 'done', b.line).then((body) => {
+          if (typeof body === 'string' && body.includes('REPLY_ON')) {
+            startReplyPoll(ctx, key, session)
+          }
+        }).catch(() => {})
         state.delete(key)
       }
     } catch {
@@ -264,6 +379,8 @@ export function apply(ctx) {
   })
 
   ctx.on('dispose', () => {
+    // 取件循环是 setInterval，不清就会在插件卸载后继续敲桥
+    for (const k of Array.from(replyPollers.keys())) stopReplyPoll(k)
     try {
       for (const [key, b] of state) {
         if (b.timer) clearTimeout(b.timer)

@@ -2,4 +2,6 @@
 <resources>
     <item name="overlay_confirm_allow" type="id" />
     <item name="overlay_confirm_deny" type="id" />
+    <item name="overlay_reply_input" type="id" />
+    <item name="overlay_reply_send" type="id" />
 </resources>
