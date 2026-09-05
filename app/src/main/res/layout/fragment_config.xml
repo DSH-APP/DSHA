@@ -370,7 +370,7 @@
                 android:gravity="center_vertical"
                 android:paddingStart="@dimen/gap_tight"
                 android:paddingEnd="@dimen/gap_tight"
-                android:text="悬浮条外观与行为 ▸ 底色 / 透明度 / 行数 / 停留 / 思考过程 / 就地批准" />
+                android:text="悬浮条外观与行为 ▸ 底色 / 透明度 / 行数 / 停留 / 思考过程 / 就地批准与回话" />
 
             <CheckBox
                 android:id="@+id/config_desktop_mode"

@@ -698,7 +698,7 @@ public class ConfigFragment extends Fragment {
                 sp.getInt(OverlayController.K_HOLD, OverlayController.DEF_HOLD), " 秒");
 
         final CheckBox think = new CheckBox(requireContext());
-        think.setText("显示思考过程（reasoning，会明显更吵）");
+        think.setText("连思考过程一起显示（条子会一直在滚）");
         think.setChecked(sp.getBoolean(OverlayController.K_REASONING, false));
         box.addView(think);
 
@@ -713,13 +713,13 @@ public class ConfigFragment extends Fragment {
         box.addView(confirmHere);
 
         final CheckBox replyHere = new CheckBox(requireContext());
-        replyHere.setText("回复完成后可在悬浮条直接回话（露出输入栏）");
+        replyHere.setText("AI 说完后在悬浮条上直接回话（不必切回 App）");
         replyHere.setChecked(sp.getBoolean(OverlayController.K_REPLY, false));
         box.addView(replyHere);
 
         final TextView replyNote = new TextView(requireContext());
-        replyNote.setText("默认关：输入栏会占掉条子下面一行，而且点它时悬浮条要临时接一下"
-                + "输入焦点（当前应用的输入会短暂中断）。");
+        replyNote.setText("默认关。点输入框的那一下会把输入法接过来，"
+                + "你正在别处打的字会断一下；45 秒没动就自动收起。");
         replyNote.setTextSize(11f);
         replyNote.setTextColor(0xFF9AA4B2);
         box.addView(replyNote);
@@ -753,7 +753,7 @@ public class ConfigFragment extends Fragment {
                 .setNeutralButton("预览", (d, w) -> {
                     save.run();
                     if (!OverlayController.permitted(requireContext())) {
-                        Toast.makeText(requireContext(), "还没给悬浮窗权限，先勾上面那个开关授权",
+                        Toast.makeText(requireContext(), "还没给悬浮窗权限 —— 回配置页勾「屏幕顶部流式显示 AI 输出」，会有授权提示",
                                 Toast.LENGTH_LONG).show();
                         return;
                     }
