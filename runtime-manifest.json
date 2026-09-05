@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated": "2026-09-05T16:20:12Z",
+  "generated": "2026-09-05T17:06:17Z",
   "note": "只含脚本层增量；rootfs 与 .so 随 APK 发布，不在此清单内",
   "files": [
     {
@@ -204,8 +204,8 @@
     {
       "path": "app/src/main/assets/migrate-public-data.sh",
       "asset": "migrate-public-data.sh",
-      "size": 4644,
-      "sha256": "57fe4cbddd1ac37cd739bebc6c3f1eeef3187230c2eaf5a04d3aca9024e1ceb3",
+      "size": 5816,
+      "sha256": "8bb17890ce48be438d1a635c2ae1b2cba554ca4e11e4e96eaef140ab34631473",
       "urls": [
         "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/migrate-public-data.sh",
         "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@stable/app/src/main/assets/migrate-public-data.sh",
@@ -259,8 +259,8 @@
     {
       "path": "app/src/main/assets/session-home.sh",
       "asset": "session-home.sh",
-      "size": 7286,
-      "sha256": "b26f2f3823480668c6d02c787962d1f21dea2bf3471d7934f419af22f07813c3",
+      "size": 9099,
+      "sha256": "ed284b565e713755bfabe6726efeadf4748a25a824f4e954d6418cec380eba94",
       "urls": [
         "https://raw.githubusercontent.com/qiannianhuanxiang/DSHA/stable/app/src/main/assets/session-home.sh",
         "https://cdn.jsdelivr.net/gh/qiannianhuanxiang/DSHA@stable/app/src/main/assets/session-home.sh",

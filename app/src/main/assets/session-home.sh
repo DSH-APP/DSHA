@@ -20,8 +20,9 @@
 #   · 公开侧 sessions    → 镜像副本，由 sync 增量更新，卸载重装时靠它恢复
 #
 # 用法：
-#   session-home.sh ensure   保证 sessions 是私有实体（必要时搬回/拷回），幂等
+#   session-home.sh ensure   保证 sessions 是私有实体（必要时搬回/拷回）+ 体检其余三项的软链，幂等
 #   session-home.sh sync     把私有 sessions 增量同步到公开镜像
+#   session-home.sh links    只做软链体检（storages / attachments / settings.yaml）
 #   session-home.sh status   报告当前状态（给自检与 UI 用）
 #
 # 环境变量（测试用，默认值是真机路径）：
@@ -148,6 +149,38 @@ sync_out() {
   echo "SYNC_OK 已同步 $n 项到 $MIRROR"
 }
 
+# ---------- links ----------
+# 其余三项（storages / attachments / settings.yaml）仍然软链到公开目录，
+# 但**悬空的软链会让 dsh 直接起不来**：storage 后端对它 mkdir(recursive) 得到的是
+# ENOENT（对悬空软链 mkdir 就是这个错），插件树加载失败、启动中断。
+# 真实触发：恢复备份带回一条指向公开目录的软链，而这台机器访问不到那个目标 ——
+# 换设备、删了 Documents、存储权限被撤、内测包用的是另一个公开目录名。
+#
+# 这段刻意与 migrate-public-data.sh 重复：那个脚本受 patch 时间戳门槛控制，
+# 启动路径上可能整批跳过；而这里是无条件跑的。同一个故障有两道防线不算冗余，
+# 因为它的后果是「dsh 完全起不来」。
+LINK_ITEMS="storages attachments settings.yaml"
+
+heal_links() {
+  healed=0
+  for name in $LINK_ITEMS; do
+    p="$HOME_DIR/$name"
+    [ -L "$p" ] || continue          # 只管软链；实体目录与不存在都交给 dsh 自己
+    [ -e "$p" ] && continue          # 有效
+    target="$PUB/$name"
+    if nonempty "$target"; then
+      ln -sf "$target" "$p" 2>/dev/null \
+        && { echo "LINK_REPAIRED $name 重新指向公开副本"; healed=$((healed + 1)); }
+      continue
+    fi
+    # 目标不可达：删掉悬空软链，dsh 启动时会自己建实体目录。
+    # 留着它 = 永远起不来；删掉最坏只是这一项从空开始。
+    rm -f "$p" 2>/dev/null \
+      && { echo "LINK_CLEARED $name 悬空软链已清除（目标不可达，dsh 会自建）"; healed=$((healed + 1)); }
+  done
+  echo "LINKS_OK 处理 $healed 项"
+}
+
 # ---------- status ----------
 status() {
   if [ -L "$SRC" ]; then
@@ -168,8 +201,9 @@ status() {
 }
 
 case "${1:-ensure}" in
-  ensure) ensure ;;
+  ensure) ensure; heal_links ;;
   sync)   sync_out ;;
+  links)  heal_links ;;
   status) status ;;
-  *) echo "用法: session-home.sh ensure|sync|status"; exit 2 ;;
+  *) echo "用法: session-home.sh ensure|sync|links|status"; exit 2 ;;
 esac

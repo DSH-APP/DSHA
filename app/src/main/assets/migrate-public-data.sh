@@ -52,8 +52,23 @@ migrate_one() {
   src="$HOME_DIR/$name"
   dst="$PUB/$name"
 
-  # ① 已是软链 → 幂等跳过
-  [ -L "$src" ] && return 0
+  # ① 软链：**必须先看它还有效没有**。
+  #    旧实现是「是软链就跳过」，于是一条悬空软链会一直留在原地 ——
+  #    而 dsh 的 storage 后端启动时对它 mkdir(recursive) 拿到的是 ENOENT
+  #    （对悬空软链 mkdir 就是这个错，不是 EEXIST），整个插件树加载失败、
+  #    dsh 起不来。真实触发路径：恢复备份带回一条指向公开目录的软链，
+  #    而这台机器/这个包访问不到那个目录（换设备、删了 Documents、
+  #    存储权限被撤、内测包用的是另一个公开目录名）。
+  if [ -L "$src" ]; then
+    [ -e "$src" ] && return 0                      # 有效软链 → 幂等跳过
+    if nonempty "$dst"; then                       # 悬空但公开侧有数据 → 重新指过去
+      ln -sf "$dst" "$src" 2>/dev/null && echo "MIG: $name 悬空软链已重新指向公开副本"
+      return 0
+    fi
+    # 悬空且公开侧也没有 → 删掉它，让下面的分支重建，或者交给 dsh 自己 mkdir。
+    # 留着它 = dsh 永远起不来；删掉它最坏也只是这一项回到空目录。
+    rm -f "$src" 2>/dev/null && echo "MIG: $name 悬空软链已清除（目标不可达）"
+  fi
 
   # ② 源不存在 + 公开侧有数据 → 建链接回（重装场景）
   if [ ! -e "$src" ] && nonempty "$dst"; then

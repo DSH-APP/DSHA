@@ -117,6 +117,56 @@ out=$(run status)
 case "$out" in *"kind=dir"*) ok "status：报告 kind=dir";; *) bad "status：报告 kind=dir" "$out";; esac
 case "$out" in *"pub="*) ok "status：报告公开目录可写性";; *) bad "status：报告公开目录可写性" "$out";; esac
 
+# ---- 11 悬空软链（真机故障回归：dsh 因此起不来）----
+# storages/attachments/settings.yaml 仍然软链到公开目录。软链一旦悬空，
+# dsh 的 storage 后端对它 mkdir(recursive) 得到 ENOENT（不是 EEXIST），
+# 插件树加载失败、整个 dsh 起不来。旧实现「是软链就跳过」正好把这条漏掉。
+mkdirok() {  # 模拟 dsh 实际做的事：fs.mkdir(path, { recursive: true })
+  node -e "
+    const fs=require('fs');
+    try { fs.mkdirSync(process.argv[1],{recursive:true}); console.log('OK'); }
+    catch(e){ console.log(e.code); }
+  " "$1" 2>/dev/null
+}
+
+fresh
+run ensure >/dev/null
+ln -s "$B/pub/nonexistent/storages" "$B/home/storages"
+chk "悬空软链：先确认它真的会让 dsh 的 mkdir 失败" "$(mkdirok "$B/home/storages")" "ENOENT"
+out=$(run links)
+case "$out" in *LINK_CLEARED*) ok "悬空软链：目标不可达时被清除";; *) bad "悬空软链：应被清除" "$out";; esac
+chk "悬空软链：清除后 dsh 能建目录了" "$(mkdirok "$B/home/storages")" "OK"
+
+# ---- 12 悬空但公开侧有数据 → 重新指过去，不能丢数据 ----
+fresh
+run ensure >/dev/null
+mkdir -p "$B/pub/storages"
+echo 'keep-me' > "$B/pub/storages/unit.json"
+ln -s "$B/pub/wrong-path/storages" "$B/home/storages"
+out=$(run links)
+case "$out" in *LINK_REPAIRED*) ok "悬空软链：公开侧有数据时重新指过去";; *) bad "悬空软链：应重新指向" "$out";; esac
+chk "悬空软链：公开侧数据没丢" "$(cat "$B/home/storages/unit.json" 2>/dev/null)" 'keep-me'
+
+# ---- 13 有效软链与实体目录都不该被动 ----
+fresh
+run ensure >/dev/null
+mkdir -p "$B/pub/attachments"; echo 'a' > "$B/pub/attachments/x"
+ln -s "$B/pub/attachments" "$B/home/attachments"
+mkdir -p "$B/home/storages"; echo 'b' > "$B/home/storages/y"
+run links >/dev/null
+[ -L "$B/home/attachments" ] && [ -e "$B/home/attachments/x" ] \
+  && ok "有效软链：原样保留" || bad "有效软链：原样保留"
+[ -d "$B/home/storages" ] && [ ! -L "$B/home/storages" ] && [ -f "$B/home/storages/y" ] \
+  && ok "实体目录：原样保留" || bad "实体目录：原样保留"
+
+# ---- 14 ensure 顺带做软链体检（启动路径上只调一次）----
+fresh
+ln -s "$B/pub/gone/settings.yaml" "$B/home/settings.yaml"
+out=$(run ensure)
+case "$out" in *LINKS_OK*) ok "ensure：顺带跑了软链体检";; *) bad "ensure：应顺带跑软链体检" "$out";; esac
+[ ! -L "$B/home/settings.yaml" ] \
+  && ok "ensure：悬空的 settings.yaml 已清除" || bad "ensure：悬空的 settings.yaml 已清除"
+
 rm -rf "$B"
 echo "----------------------------------------------"
 if [ "$fail" -gt 0 ]; then
