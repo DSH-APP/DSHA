@@ -43,7 +43,7 @@ public final class AdbBridge {
     }
 
     /** 当前 assets 脚本版本：每次改脚本 +1，旧版 APK 的残留脚本会因版本不符被强制重注入 */
-    private static final String SCRIPT_VERSION = "12";
+    private static final String SCRIPT_VERSION = "13";
 
     /** 供自检/诊断读取期望版本（包内可见，避免把常量再抄一份） */
     static String scriptVersion() {
@@ -186,7 +186,8 @@ public final class AdbBridge {
             // 表现成「开机自动开无线调试」莫名不工作，却查不到原因
             String pkg = BuildConfig.APPLICATION_ID;
             // pm grant 是幂等的，重复执行无害，所以不必先查一次
-            String r = proot.execAndRead("DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py pm grant " + pkg
+            String r = proot.execAndRead("DSH_INTERNAL=" + HttpShellService.mintInternalTicket()
+                    + " python3 /root/.dsh/adb-shell.py pm grant " + pkg
                     + " android.permission.WRITE_SECURE_SETTINGS 2>&1 | head -2");
             android.util.Log.i("DSHA-ADB", "WRITE_SECURE_SETTINGS 授权结果: " + r);
         } catch (Throwable t) {

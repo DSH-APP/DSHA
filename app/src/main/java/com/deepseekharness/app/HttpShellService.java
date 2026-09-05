@@ -511,11 +511,17 @@ public final class HttpShellService {
             } else if (cmd.isEmpty()) {
                 result = "[NO_CMD]";
             } else if (route.equals("/confirm")) {
-                // rootfs 内包装器请求的确认：只弹窗，不执行
-                // force=1（adb-shell 报备）→ 所有命令都确认；否则仅危险命令
-                boolean force = path.contains("force=1");
-                boolean needConfirm = force || (confirmEnabled() && DangerShellGuard.isDangerous(cmd));
-                result = needConfirm ? (requestUserConfirm(cmd) ? "YES" : "NO") : "YES";
+                // rootfs 内包装器请求的确认：只弹窗，不执行。
+                // internal= 是 App 自己铸的一次性票（保活探活不能弹窗）；伪造的票不成立。
+                if (consumeInternalTicket(getParam(queryOf(path), "internal", ""))) {
+                    result = "YES";
+                } else {
+                    // force=1（adb-shell 报备）→ 所有命令都确认；否则仅危险命令
+                    boolean force = "1".equals(getParam(queryOf(path), "force", ""));
+                    boolean needConfirm = force
+                            || (confirmEnabled() && DangerShellGuard.isDangerous(cmd));
+                    result = needConfirm ? (requestUserConfirm(cmd) ? "YES" : "NO") : "YES";
+                }
             } else if (DangerShellGuard.isDangerous(cmd) && confirmEnabled()) {
                 result = awaitConfirm(cmd);
             } else {
@@ -820,8 +826,13 @@ public final class HttpShellService {
             + "照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n"
             + "\n"
             + "== 元信息 ==\n"
+            + "/health                               桥存活探测（仍需 token）\n"
             + "/app/version                          桥协议版本 + App 版本（特性检测用）\n"
             + "/app/help                             本清单\n"
+            + "\n"
+            + "== 内置插件专用（列在这里只为清单完整，agent 不必手动调）==\n"
+            + "/app/overlay                          流式悬浮条推送（dsh-status-overlay 用）\n"
+            + "/app/overlay/reply                    取用户在悬浮条上打的回话\n"
             + "\n"
             + "== 插件状态 ==\n"
             + "/app/plugins                          读回上次上报的加载状态\n"
@@ -1312,6 +1323,40 @@ public final class HttpShellService {
             return "ERROR: " + safeError(e);
         }
     }
+
+/**
+ * App 自己发起的设备命令用的一次性票。
+ *
+ * <p>之前的判据是脚本里的 {@code DSH_INTERNAL=1} —— 而那是<b>容器内任何进程都能自设</b>
+ * 的环境变量，等于给拿到容器 shell 的 agent 留了一条免确认执行 ADB 命令的通道
+ * （保活探活每分钟一次，不能弹窗，所以这个绕过必须存在）。现在判据搬到 App 侧：
+ * 票由 App 现场铸出、只能用一次、60 秒过期；伪造的票在这里不成立，照常弹窗。
+ */
+private static final java.util.Map<String, Long> INTERNAL_TICKETS =
+        new java.util.concurrent.ConcurrentHashMap<>();
+private static final long INTERNAL_TICKET_TTL_MS = 60_000L;
+
+/** 铸一张票。桥没起来也照样铸 —— 那种情况下确认请求本来就到不了桥。 */
+static String mintInternalTicket() {
+    byte[] raw = new byte[24];
+    new java.security.SecureRandom().nextBytes(raw);
+    StringBuilder sb = new StringBuilder(raw.length * 2);
+    for (byte b : raw) sb.append(Character.forDigit((b >> 4) & 0xf, 16))
+            .append(Character.forDigit(b & 0xf, 16));
+    String ticket = sb.toString();
+    long now = System.currentTimeMillis();
+    INTERNAL_TICKETS.entrySet().removeIf(e -> now - e.getValue() > INTERNAL_TICKET_TTL_MS);
+    if (INTERNAL_TICKETS.size() > 64) INTERNAL_TICKETS.clear();   // 异常情况下不无限涨
+    INTERNAL_TICKETS.put(ticket, now);
+    return ticket;
+}
+
+/** 消费一张票；无效/过期/重放一律 false。 */
+private static boolean consumeInternalTicket(String ticket) {
+    if (ticket == null || ticket.length() != 48) return false;
+    Long at = INTERNAL_TICKETS.remove(ticket);
+    return at != null && System.currentTimeMillis() - at <= INTERNAL_TICKET_TTL_MS;
+}
 
 private static boolean isSensitiveReadablePath(String lowerPath) {
     return lowerPath.endsWith("/.env") || lowerPath.contains("/.env/")

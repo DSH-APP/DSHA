@@ -9,7 +9,7 @@ DSHA is the **DeepSeek Harness Android launcher**: it runs the `@deepseek-ai/dsh
 
 ## One-paragraph picture
 
-The APK ships the Termux `proot` binary (in `jniLibs/arm64-v8a`, shipped as `libproot.so`) plus an offline **Ubuntu 24.04 arm64** rootfs. On first run the rootfs is extracted into app-private storage; afterwards `proot` chroots into it, where **Node 24 + pnpm + `@deepseek-ai/dsh` (rc.8 by default)** run the harness. The native UI (pure Java, Material3, bottom nav) drives the install/start/stop and hosts the Web UI preview in a system WebView (optional GeckoView).
+The APK ships the Termux `proot` binary (in `jniLibs/arm64-v8a`, shipped as `libproot.so`) plus an offline **Ubuntu 24.04 arm64** rootfs. On first run the rootfs is extracted into app-private storage; afterwards the container runtime chroots into it, where **Node 24 + pnpm + `@deepseek-ai/dsh`** run the harness. The default runtime is **proroot** (no ptrace); `proot` stays as the fallback the self-heal ladder falls back to — see `ContainerRuntime` / `ProotBootstrap.runtime()`, and never assume the shipped binary in use. The native UI (pure Java, Material3, bottom nav) drives the install/start/stop and hosts the Web UI preview in a system WebView (optional GeckoView).
 
 ## Tech constraints (design around these)
 
@@ -176,10 +176,12 @@ exactly as before — the change is purely additive.
 | `/app/share?text=` \| `?path=` | System share sheet (files must live under `/sdcard`) |
 | `/app/open?url=` | Open a link (http/https/geo/tel/mailto/market only) |
 | `/app/vibrate?ms=` | Haptic ping when a long task finishes |
-| `/app/export?path=&name=` | Copy a file into `Download/DSHA` via MediaStore (accepts guest paths like `/root/x.md`) |
-| `/app/readfile?path=` | Read a text file under `/sdcard` (credential files are refused) |
+| `/app/export?path=&name=` | Copy a file into `Download/DSHA` via MediaStore. **Guest paths only** (`/root/…`, canonicalized against the rootfs) — the earlier "try the host path first" fallback let the bridge token read any file the App itself could, `shared_prefs` included |
+| `/app/readfile?path=` | Read a text file under primary external storage (`/sdcard`, full-segment prefix check after canonicalization; credential files are refused both before and after resolving symlinks) |
+| `/app/overlay`, `/app/overlay/reply` | Used by the builtin `dsh-status-overlay` plugin (streaming bar + in-place reply pickup) |
+| `/health` | Liveness probe (still token-gated) |
 
-Rules when adding endpoints: keep them **token-gated**, refuse paths outside `/sdcard` for file access, never expose credential files, and return plain text — `handle()` wraps whatever you return in `{"result":"…"}`, so nested JSON gets double-escaped. Read parameters **only** through `getParam`/`intParam` (they delegate to `Query`, the single query-string parser in the tree — never hand-roll `indexOf("key=")`, it has no parameter-name boundary and any parameter *ending* with your key hijacks it). Blocking endpoints must have a timeout and a single-flight guard that is an `AtomicBoolean` with `compareAndSet` (see `askBusy` / `confirmBusy`) — a `volatile boolean` plus "check then set" is not atomic, and two requests will trample each other's state. Dialogs that gate a blocking call must not `countDown` from `OnDismiss` (see traps).
+Rules when adding endpoints: keep them **token-gated**, dispatch on the request target with the query string stripped (`Query.path`) and match the route **exactly** — a `startsWith` route silently swallows every longer path and makes correctness depend on declaration order. Refuse paths outside the documented root for file access, never expose credential files, and return plain text — `handle()` wraps whatever you return in `{"result":"…"}`, so nested JSON gets double-escaped. Read parameters **only** through `getParam`/`intParam` (they delegate to `Query`, the single query-string parser in the tree — never hand-roll `indexOf("key=")`, it has no parameter-name boundary and any parameter *ending* with your key hijacks it). Blocking endpoints must have a timeout and a single-flight guard that is an `AtomicBoolean` with `compareAndSet` (see `askBusy` / `confirmBusy`) — a `volatile boolean` plus "check then set" is not atomic, and two requests will trample each other's state. Dialogs that gate a blocking call must not `countDown` from `OnDismiss` (see traps).
 
 ## Upgrade compatibility (old installs must upgrade in place)
 
@@ -257,7 +259,20 @@ single-flight guard, and never lower `SCRIPT_VERSION` — old installs keep thei
 - `./build.sh` points APK signing at the publish key automatically (after the manifest is
   signed), so locally built packages can be installed over an official release.
 
-## Coding conventions
+## Security invariants (do not weaken)
+
+Every one of these replaced something that looked fine and was exploitable from outside the App:
+
+- **Bridge routing matches exactly.** `Query.path` strips the query string; endpoints compare with `equals` (only the `/app/ui/` dispatch prefix uses `startsWith`). Order-dependent routing is not a defence.
+- **Local sockets are hostile.** Anything on the device can dial 127.0.0.1, and anything on the Wi-Fi can dial 3081. Both bridges share `BridgeLimits`: bounded worker queue (rejection closes the socket), per-line and total request-header caps, and `shutdownNow()` closes queued *and* running sockets so a blocked read cannot outlive the bridge.
+- **File writes reserve names atomically.** `SafeFiles.reserve` creates the file with `Files.createFile` instead of `exists()`-then-write, so a dangling symlink or a racing writer cannot be followed; `SafeFiles.replace` uses `ATOMIC_MOVE` and **fails** rather than deleting the destination first.
+- **Path boundaries compare whole segments.** `SafeFiles.isInside` / `isPrimaryExternalPath`: `/sdcard-old` is not inside `/sdcard`.
+- **Credentials are authenticated-encrypted or not stored.** API keys use AES-GCM through Keystore; there is deliberately **no plaintext fallback** — `setApiKey` returns `false` and the UI says so. Backups skip the key rather than writing it in the clear (backups land in public `Download/`).
+- **The update manifest and its signature come from the same mirror.** Taking whichever manifest and whichever signature answered first turns any CDN skew into a permanent verification failure.
+- **Confirmation authority lives in the App.** No container-side flag can waive it; internal calls carry a single-use ticket minted by `HttpShellService`.
+- **Embedded browsers only load the local Web UI.** Both WebView and GeckoView route anything else to the system browser, and downloads only accept the loopback origin.
+
+
 
 - Comments and UI strings are **Chinese**; commit messages are Chinese with a `type:` prefix that explains **why** (match `git log`).
 - `HarnessController.java` is huge — apply the smallest patch that works; don't rewrite the file.
@@ -274,7 +289,7 @@ single-flight guard, and never lower `SCRIPT_VERSION` — old installs keep thei
 - **确认弹窗要和通知一起发，而且别拿 dismiss 当拒绝.** 早期实现是「前台弹窗 / 后台通知」二选一：Activity 一被 pause，用户就再也看不到弹窗，只能干等 60s 超时被拒 —— 这正是「确认框有时不出现」的由来。现在两条都发（通知是权威渠道），弹窗用 `setCancelable(false)` 且**不在** `OnCancel`/`OnDismiss` 里 `countDown`（pause 造成的 dismiss 会被误判成用户拒绝）。在 finishing 的 Activity 上 `show()` 会抛 `BadTokenException`，那是主线程，异常不在 `handle()` 的 catch 范围内，必须自己 try 住。**这套约定对每一个阻塞式对话框都成立** —— `/app/ask` 曾经原样犯了一遍（`OnDismiss` 里 `countDown`，于是旋屏、切深色模式、Activity 被回收都会给 agent 送回一句「用户关掉了提问框」，而用户什么都没做）。修法是只认 `OnCancel`（用户主动取消）、不认 `OnDismiss`；代价是 Activity 重建时那次提问要等满超时，宁可让 agent 多等也不要给它假答案。
 - **确认要带 epoch.** 锁屏残留通知、通知历史、手表转发上的旧「允许」按钮，会把授权决定打到**下一个**请求上（等于一次点击授权了另一条命令）。每次确认递增 `confirmEpoch`，回调校验 epoch 并认领 latch，过期点击直接丢弃。`confirmBusy` 必须是 `AtomicBoolean`：「检查后置位」不原子的话两个请求会互相覆盖 `pendingLatch`。清理顺序也有讲究 —— 先清 latch/弹窗/通知，最后才放开 `confirmBusy`，否则下一个请求抢先发出的通知会被本轮的 `cancelConfirmNotification()`（固定通知 ID）取消掉。
 - **3090 桥要跨实例互斥.** `HarnessService` 与 `DeviceBridgeService` 各 new 一个 `HttpShellService` 都调 `start()`，实例字段 `running` 挡不住跨实例重复启动：第二个实例绑定失败，却会把活着的那个从 `instance` 抹掉，通知按钮全废。用静态 `STARTED` + 实例 `owner`，只有持有者的 `stop()` 才做清理。反过来，`stopWeb` 关掉桥后 ADB 开关仍开着，所以保活探测里要检查 `instance() == null` 并补起来。
-- **App 自己调 `adb-shell.py` 必须带 `DSH_INTERNAL=1`.** 脚本内有 fail-closed 确认关卡，而保活探测每分钟（断线时每 3 秒）跑一次 `id` —— 漏了这个前缀就会不停弹确认框。目前六个内部调用点（保活 3、ADB 自愈 1、配置页状态 1、`pm grant` 1）都带了。
+- **App 自己调 `adb-shell.py` 要带一次性票，不是 `DSH_INTERNAL=1`.** 脚本内有 fail-closed 确认关卡，而保活探测每分钟（断线时每 3 秒）跑一次 `id` —— 不给它一条免打扰通道就会不停弹确认框。但判据不能放在脚本里：`DSH_INTERNAL` 是环境变量，**容器内任何进程都能自设**，等于给拿到容器 shell 的 agent 留一条免确认执行 ADB 命令的路。现在 App 侧 `HttpShellService.mintInternalTicket()` 现场铸票（一次性、60 秒过期），六个内部调用点用 `DSH_INTERNAL=<票>` 传进去，脚本原样转给 `/confirm?internal=`，由桥消费校验；伪造的票在桥侧不成立，照常弹窗给用户。`id` 本来就在只读白名单里，所以那四个探活点连确认请求都不发。改动 `is_readonly_cmd` 或票机制时跑 `python3 tools/adb-guard-test.py`（22 条断言，含「`dumpsys deviceidle whitelist +pkg` 不算只读」）。
 - **A bundle needs both `bundles` and `dependencies`.** dsh's reconcile drops any entry that is listed in `dsh.profile.bundles` but has no matching entry in `dependencies` — it cannot resolve it, so it prunes it. `ensureBuiltinBundles` used to restore only the bundle name and the `node_modules` symlink, producing an endless restore→prune loop: the user just sees the plugin never taking effect. A real field capture looked like this — entity dir present, symlink present, **both** `bundles` and `dependencies` missing the plugin, while `dsh-client-ui-mobile-adapt` (whose dependency entry survived) stayed registered. Always write `dependencies[name] = "link:<real path>"` alongside the bundle entry, and treat "registered" as *both* present.
 
 - **Don't write an installed-marker before verifying.** `ensureDeviceShellGuide` wrote `dsha-device-shell-guide-installed` unconditionally, but its registration block is guarded by `if (profiles/web/package.json exists)` and step ⑥ usually runs *before* dsh first creates the web profile. The marker then made every later run skip the work. Markers must be written only after a positive check (`guideRegistered`).

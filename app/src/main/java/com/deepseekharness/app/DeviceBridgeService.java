@@ -337,7 +337,8 @@ public class DeviceBridgeService extends Service {
             onProbeOk(reason);
             return;
         }
-        String r = c.getProot().execAndRead("DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py id 2>&1 | head -3");
+        String r = c.getProot().execAndRead("DSH_INTERNAL=" + HttpShellService.mintInternalTicket()
+                + " python3 /root/.dsh/adb-shell.py id 2>&1 | head -3");
         if (r != null && r.contains("uid=")) lastFullVerifyAt = System.currentTimeMillis();
         if (r != null && r.contains("uid=")) {
             onProbeOk(reason);
@@ -354,7 +355,8 @@ public class DeviceBridgeService extends Service {
         if (connPort > 0) {
             saveConnectPort(connPort);
             String r2 = c.getProot().execAndRead(
-                    "DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py --port " + connPort + " id 2>&1 | head -3");
+                    "DSH_INTERNAL=" + HttpShellService.mintInternalTicket()
+                            + " python3 /root/.dsh/adb-shell.py --port " + connPort + " id 2>&1 | head -3");
             if (r2 != null && r2.contains("uid=")) {
                 android.util.Log.i("DSHA-ADB", "保活：已重连端口 " + connPort + "（" + reason + "）");
                 onProbeOk("重连端口 " + connPort);
@@ -387,7 +389,8 @@ public class DeviceBridgeService extends Service {
             if (p2 > 0) {
                 saveConnectPort(p2);
                 String r3 = c.getProot().execAndRead(
-                        "DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py --port " + p2 + " id 2>&1 | head -1");
+                        "DSH_INTERNAL=" + HttpShellService.mintInternalTicket()
+                                + " python3 /root/.dsh/adb-shell.py --port " + p2 + " id 2>&1 | head -1");
                 if (r3 != null && r3.contains("uid=")) {
                     onProbeOk("自动重开无线调试后重连");
                     return;

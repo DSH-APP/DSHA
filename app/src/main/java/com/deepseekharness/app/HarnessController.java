@@ -5228,7 +5228,8 @@ public class HarnessController {
                     "cmd appops set " + pkg + " RUN_IN_BACKGROUND allow",
             };
             for (String cmd : cmds) {
-                String r = proot.execAndRead("DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py "
+                String r = proot.execAndRead("DSH_INTERNAL=" + HttpShellService.mintInternalTicket()
+                        + " python3 /root/.dsh/adb-shell.py "
                         + cmd + " 2>&1 | tail -2", 45_000);
                 log.append(cmd).append(" → ")
                    .append(r == null ? "无输出" : r.replace('\n', ' ').trim()).append('\n');
@@ -6091,7 +6092,8 @@ public class HarnessController {
                     }
                     // 4) 有密钥有依赖 → 探一次连接（失败交给看门狗周期重连）
                     if (AdbBridge.keyPresent(proot) && AdbBridge.depsOk(proot)) {
-                        String r = proot.execAndRead("DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py id 2>&1 | head -2");
+                        String r = proot.execAndRead("DSH_INTERNAL=" + HttpShellService.mintInternalTicket()
+                                + " python3 /root/.dsh/adb-shell.py id 2>&1 | head -2");
                         if (r != null && r.contains("uid=")) {
                             android.util.Log.i("DSHA-ADB", "启动体检：ADB 连接正常");
                         } else {

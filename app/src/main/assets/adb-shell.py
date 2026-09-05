@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# DSHA_ADB_SCRIPT_VERSION=12
+# DSHA_ADB_SCRIPT_VERSION=13
 """
 DSHA 设备 shell 工具（ADB 无线通道，免 Shizuku）。
 用法：
@@ -18,11 +18,13 @@ KEY = KEYDIR + '/adbkey'
 KEYPUB = KEY + '.pub'
 
 # 免确认的只读命令（见 is_readonly_cmd）。只放「无论参数怎么给都不改设备状态」的命令。
+# dumpsys 刻意不在这里：`dumpsys deviceidle whitelist +pkg`、`dumpsys battery set` 都会改
+# 系统状态，而白名单按命令名匹配 —— 放进来等于给这些写操作免掉确认。
 READONLY_CMDS = frozenset((
-    'getprop', 'dumpsys', 'logcat', 'id', 'ps', 'df', 'free', 'uptime', 'date',
+    'getprop', 'logcat', 'id', 'ps', 'df', 'free', 'uptime', 'date',
     'whoami', 'getevent', 'ls', 'stat', 'wc', 'head', 'tail', 'grep', 'cat',
     'md5sum', 'sha1sum', 'printenv', 'env', 'pwd', 'which', 'true', 'echo'))
-# 命令名本身可写，只有这些子命令算只读（pm uninstall/settings put/input tap 都要确认）
+# 这些命令名本身可写，只有满足附加条件时才算只读。
 READONLY_SUB = {
     'pm': frozenset(('list', 'path', 'dump')),
     'settings': frozenset(('get', 'list')),
@@ -32,6 +34,10 @@ READONLY_SUB = {
     'input': frozenset(),
     'svc': frozenset(),
 }
+# dumpsys 的写动词：出现其中任何一个就必须走确认。
+DUMPSYS_WRITE_WORDS = frozenset((
+    'set', 'unset', 'whitelist', 'enable', 'disable', 'reset', 'force',
+    'add', 'remove', 'put', 'start', 'stop', 'clear', 'send', 'trim'))
 
 
 def main():
@@ -86,11 +92,14 @@ def main():
     # 通过 3090 桥 /confirm 弹窗（App 前台）或通知（后台）让用户确认；
     # 命令里 # 后的注释作为「理由」展示。未确认/超时默认拒绝。
     # 只读命令（getprop/dumpsys 等以只读开头）直接放行，减少打扰。
-    # DSH_INTERNAL=1：App 自己的调用（保活探活、pm grant 授权）跳过确认关卡 ——
-    # 否则六层保活每分钟探一次活，就会不停弹确认框。（吸收上游 PR#24 的做法）
+    #
+    # **DSH_INTERNAL 不再是「等于 1 就跳过」**：那是个任何容器内进程都能自设的环境变量，
+    # 也就是说 agent 只要写 `DSH_INTERNAL=1 python3 adb-shell.py ...` 就能免掉整个确认关卡。
+    # 现在它携带 App 现场铸出的一次性票，判据完全在 App 侧（唯一可信的一端）：
+    # 票有效 → 桥自己回 YES 不弹窗；票是伪造的 → 照常弹窗给用户看。
     confirm_reason = cmd.split('#', 1)[1].strip() if '#' in cmd else ''
-    if os.environ.get('DSH_INTERNAL') != '1' and not is_readonly_cmd(cmd):
-        ok = request_confirm(cmd, confirm_reason)
+    if not is_readonly_cmd(cmd):
+        ok = request_confirm(cmd, confirm_reason, os.environ.get('DSH_INTERNAL', ''))
         if not ok:
             print('USER_REJECTED: 未获授权，命令未执行')
             print('  命令：%s' % cmd)
@@ -243,14 +252,20 @@ def is_readonly_cmd(cmd):
     if name == 'find':  # find -delete / -exec 会改盘
         return not any(a.startswith('-delete') or a.startswith('-exec')
                        or a.startswith('-fprint') or a.startswith('-fls') for a in parts[1:])
+    if name == 'dumpsys':
+        # dumpsys 大多数子命令只读，但 deviceidle whitelist / battery set 这类会改状态。
+        return not any(a.lstrip('-+').lower() in DUMPSYS_WRITE_WORDS for a in parts[1:])
     if name in READONLY_SUB:
         return len(parts) > 1 and parts[1] in READONLY_SUB[name]
     return name in READONLY_CMDS
 
 
-def request_confirm(cmd, reason=''):
+def request_confirm(cmd, reason='', internal_ticket=''):
     """请求用户确认执行设备命令（3090 桥 /confirm，App 弹窗/通知）。
-    返回 True=允许。失败/超时默认拒绝（安全优先）。"""
+    返回 True=允许。失败/超时默认拒绝（安全优先）。
+
+    internal_ticket 是 App 现场铸出的一次性票：桥认得它就自动放行、不打扰用户
+    （保活探活每分钟一次，不能弹窗）。伪造的票在桥侧不成立，会照常弹给用户。"""
     import urllib.request
     import urllib.parse
     import urllib.error
@@ -273,6 +288,7 @@ def request_confirm(cmd, reason=''):
     # 认出 `adb … shell/exec-out/exec-in` 之后对**后面那截真实命令**判危。
     # force=1 一直把它短路掉，那段代码从写下来就没生效过。
     q = ('/confirm?cmd=' + urllib.parse.quote(display)
+         + ('&internal=' + urllib.parse.quote(internal_ticket) if internal_ticket else '')
          + '&token=' + urllib.parse.quote(token))
     # 桥的监听地址取决于 App 版本：新版绑 127.0.0.1（并附加 ::1），
     # 老版 getLoopbackAddress() 在 Android 上只绑 [::1] → IPv4 连不上。两个都试。

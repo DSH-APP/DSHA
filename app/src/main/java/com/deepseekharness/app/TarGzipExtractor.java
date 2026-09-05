@@ -233,10 +233,21 @@ public final class TarGzipExtractor {
                     // rootfs 解压（rejectLinks=false）时把它转换成 dest 内相对链接。
                     // 外部/备份归档仍拒绝绝对链接，避免任何路径逃逸。
                     String symlinkTarget = safeSymlinkTarget(dest, out, linkname, rejectLinks);
-                    if (symlinkTarget != null) {
+                    if (symlinkTarget == null) {
+                        // 目标越界或不可用：记下来。静默跳过会解出一个「命令文件不见了」
+                        // 的 rootfs，而现场只有一条没人看的日志。
+                        noteSkip(name + "(软链目标不安全)");
+                    } else {
+                        try {
+                            // 同名残留会让 symlink 直接 EEXIST，那正是「解压看着成功、
+                            // 实际少了一条链」的来源。
+                            java.nio.file.Files.deleteIfExists(out.toPath());
+                        } catch (Throwable ignored) {
+                        }
                         try {
                             Os.symlink(symlinkTarget, out.getAbsolutePath());
-                        } catch (Throwable ignored) {
+                        } catch (Throwable e) {
+                            noteSkip(name + "(软链创建失败)");
                         }
                     }
                     skipPadding(in, size);
@@ -251,8 +262,13 @@ public final class TarGzipExtractor {
                     if (linkSafeWithin(dest, out, linkname, true)) {
                         try {
                             Os.link(new File(dest, linkname).getAbsolutePath(), out.getAbsolutePath());
-                        } catch (Throwable ignored) {
+                        } catch (Throwable e) {
+                            // App 私有目录不支持硬链接（SELinux）—— 这是常态，
+                            // 但结果是那个文件不存在，必须可见而不是静默。
+                            noteSkip(name + "(硬链接创建失败)");
                         }
+                    } else {
+                        noteSkip(name + "(硬链接目标越界)");
                     }
                     skipPadding(in, size);
                     break;
@@ -321,6 +337,16 @@ public final class TarGzipExtractor {
     private static void writeFile(InputStream in, File out, long size, int mode, byte[] buf)
             throws IOException {
         if (out.getParentFile() != null) out.getParentFile().mkdirs();
+        // 目标已是符号链接时先摘掉链接本身再写。跟随链接写等于让归档里
+        // 「先放一条软链、再放一个同名文件」的组合把内容写到链接指向的地方去
+        // （公开数据目录下的 sessions/storages 就是这种链接）。tar 里那条文件条目
+        // 表达的是「这里应该是一个普通文件」，覆盖链接才是忠实还原。
+        try {
+            if (java.nio.file.Files.isSymbolicLink(out.toPath())) {
+                java.nio.file.Files.delete(out.toPath());
+            }
+        } catch (Throwable ignored) {
+        }
         try (FileOutputStream fos = new FileOutputStream(out)) {
             long remaining = size;
             while (remaining > 0) {

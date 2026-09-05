@@ -221,7 +221,8 @@ public class ConfigFragment extends Fragment {
         new Thread(() -> {
             try {
                 // 探测 adb 是否真实可用（用 rootfs 里的 adb-shell 实际跑一下，最准）
-                String r = c.getProot().execAndRead("DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py id 2>&1 | head -2");
+                String r = c.getProot().execAndRead("DSH_INTERNAL=" + HttpShellService.mintInternalTicket()
+                        + " python3 /root/.dsh/adb-shell.py id 2>&1 | head -2");
                 final boolean connected = r != null && r.contains("uid=");
                 final String detail = r == null ? "" : r.replace("\n", " ").trim();
                 // 轮询线程每隔几秒回来一次，而 requireActivity() 在 Fragment detach 后
