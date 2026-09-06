@@ -6101,52 +6101,10 @@ public class HarnessController {
     }
 
     /** 解析单个版本字符串（X.Y.Z-rc.N）为分数 */
-    private static long scoreOf(String v) {
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile(
-                "(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?.*?rc\\.(\\d+)").matcher(v);
-        if (m.find()) {
-            long major = Long.parseLong(m.group(1));
-            long minor = m.group(2) == null ? 0 : Long.parseLong(m.group(2));
-            long patch = m.group(3) == null ? 0 : Long.parseLong(m.group(3));
-            long rc = Long.parseLong(m.group(4));
-            return ((major * 1000 + minor) * 1000 + patch) * 1000 + rc;
-        }
-        return 0;
-    }
-
-    /** 解析 dsh 版本为可比较的整数分数：主版本段 * 1000 + rc 号（rc 号权重最大）。 */
+    /** dsh 版本分数。实现在 {@link DshVersion} —— 那里能被纯逻辑断言覆盖，
+     *  而这个判断的后果是「自动重装 dsh」，认错了就是把 0.1.3 降级成 0.1.2。 */
     private static long dshVersionScore(String v) {
-        if (v == null) return 0;
-        String t = v.trim().toLowerCase();
-        // 剥离 ANSI 颜色码（[...m）——部分 dsh 版本 --version 带颜色输出
-        t = t.replaceAll("\\x1B\\[[0-9;]*[a-zA-Z]", "");
-        // 找所有形如 X.Y.Z-rc.N 的完整版本段，取【最大】的（dsh 可能输出多个版本，
-        // 如 "0.1.1-rc.2 (compat 0.1.0-rc.8)" —— 取第一个会误判旧版）
-        java.util.regex.Matcher full = java.util.regex.Pattern.compile(
-                "(\\d+\\.\\d+\\.\\d+-rc\\.\\d+)").matcher(t);
-        String best = null;
-        long bestScore = -1;
-        while (full.find()) {
-            long sc = scoreOf(full.group(1));
-            if (sc > bestScore) { bestScore = sc; best = full.group(1); }
-        }
-        if (best != null) t = best;
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile(
-                "(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?.*?rc\\.(\\d+)").matcher(t);
-        if (m.find()) {
-            long major = Long.parseLong(m.group(1));
-            long minor = m.group(2) == null ? 0 : Long.parseLong(m.group(2));
-            long patch = m.group(3) == null ? 0 : Long.parseLong(m.group(3));
-            long rc = Long.parseLong(m.group(4));
-            return ((major * 1000 + minor) * 1000 + patch) * 1000 + rc;
-        }
-        // 无 rc 段（如 stable 版本）：按纯数字段比较
-        String[] parts = t.replaceAll("[^0-9.]", "").split("\\.");
-        long score = 0;
-        for (int i = 0; i < Math.min(3, parts.length); i++) {
-            if (!parts[i].isEmpty()) score = score * 1000 + Long.parseLong(parts[i]);
-        }
-        return score * 1000; // rc 段视为 0（stable 高于同版本 rc）
+        return DshVersion.score(v);
     }
 
 

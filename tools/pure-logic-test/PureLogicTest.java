@@ -496,6 +496,39 @@ public final class PureLogicTest {
                         && kept.contains("my-plugin") && !kept.contains("dsh-web-mobile"));
         eqi("patchyaml: 缩进计算", 4, PatchYaml.indent("    - id: x"));
 
+        // ---------- DshVersion：版本比较（错了会自动降级 dsh）----------
+        // 原实现只认 X.Y.Z-rc.N，alpha 一律算 0 分 → 装了 0.1.3-alpha.1 的机器会认为
+        // 「本地 0 < npm 上的 0.1.2-rc.1」，自动把 dsh「升级」成 0.1.2，
+        // 把离线包里装好的 0.1.3 覆盖掉。降级比不升级糟得多，所以这组断言是硬要求。
+        ok("dshver: 0.1.3-alpha.1 必须高于 0.1.2-rc.1（否则会被自动降级）",
+                DshVersion.score("0.1.3-alpha.1") > DshVersion.score("0.1.2-rc.1"));
+        ok("dshver: 0.1.3-alpha.1 高于我们原来装的 0.1.1-rc.2",
+                DshVersion.score("0.1.3-alpha.1") > DshVersion.score("0.1.1-rc.2"));
+        ok("dshver: 预发布顺序 alpha < beta < rc < 正式版",
+                DshVersion.score("0.1.3-alpha.1") < DshVersion.score("0.1.3-beta.1")
+                        && DshVersion.score("0.1.3-beta.1") < DshVersion.score("0.1.3-rc.1")
+                        && DshVersion.score("0.1.3-rc.1") < DshVersion.score("0.1.3"));
+        ok("dshver: 同标记按序号比",
+                DshVersion.score("0.1.3-alpha.2") > DshVersion.score("0.1.3-alpha.1"));
+        ok("dshver: 主次修订号照常参与比较",
+                DshVersion.score("0.2.0-alpha.1") > DshVersion.score("0.1.9-rc.9")
+                        && DshVersion.score("1.0.0-alpha.1") > DshVersion.score("0.9.9"));
+        // 一行里有多个版本时取最大 —— 取第一个会把兼容声明当成本体版本
+        ok("dshver: 一行多个版本取最大（compat 声明不能当本体）",
+                DshVersion.score("0.1.1-rc.2 (compat 0.1.0-rc.8)")
+                        == DshVersion.score("0.1.1-rc.2"));
+        ok("dshver: 带 ANSI 颜色码也认",
+                DshVersion.score("\u001B[32m0.1.3-alpha.1\u001B[0m")
+                        == DshVersion.score("0.1.3-alpha.1"));
+        ok("dshver: 认不出返回 0，且 isNewer 在两边都认不出时不动手",
+                DshVersion.score("no version here") == 0
+                        && DshVersion.score(null) == 0
+                        && !DshVersion.isNewer("garbage", "also garbage")
+                        && !DshVersion.isNewer(null, "0.1.1-rc.2"));
+        ok("dshver: isNewer 的方向",
+                DshVersion.isNewer("0.1.3-alpha.1", "0.1.1-rc.2")
+                        && !DshVersion.isNewer("0.1.1-rc.2", "0.1.3-alpha.1"));
+
         // ===== ShellQuote：拼进 bash -c 之前的转义 =====
         // 断言方式刻意不比字符串长相，而是做 round-trip：把转义结果按 POSIX 单引号规则
         // 反解一遍，看 shell 最终会拿到什么。长相对不对不重要，语义对不对才重要。
