@@ -123,6 +123,7 @@ public final class RuntimeUpdater {
         public int skipped;
         public int failed;
         public final List<String> changed = new ArrayList<>();
+        public final List<String> failedFiles = new ArrayList<>();
     }
 
     /** 拉清单 → 比对 → 下载有差异的。返回给 UI 直接展示的结果。 */
@@ -184,6 +185,7 @@ public final class RuntimeUpdater {
                 r.updated++;
             } else {
                 r.failed++;
+                r.failedFiles.add(it.asset);
             }
         }
         r.ok = r.failed == 0;

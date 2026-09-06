@@ -72,6 +72,10 @@ public final class LanProxyService {
     private static volatile String lanIp = "";
     /** rootfs 日志路径（终端可 tail /root/dsh-lan.log 查看桥状态） */
     private static volatile String logPath = "";
+    /** dsh 0.1.3 BrowserAuth launch credential. It only ever goes to loopback. */
+    private static volatile String upstreamLaunchToken = "";
+    /** dsh stdout is the source of the per-process BrowserAuth URL. */
+    private static volatile String webLogPath = "";
 
     private LanProxyService() {}
 
@@ -93,6 +97,8 @@ public final class LanProxyService {
         if (backend == LAN_PORT) backend = 3080; // 与桥监听端口冲突时回退默认（配置页已拦截，这里兜底）
         backendPort = backend;
         logPath = rootfsDir + "/root/dsh-lan.log";
+        webLogPath = rootfsDir + "/root/dsh-web.log";
+        clearUpstreamLaunchUrl();
         // 无条件初始化 token：鉴权是 fail-closed 的，空 token 会让桥拒绝一切请求。
         // getLanToken 内部已容忍 ctx == null（退化为内存 token，本次会话仍可用）。
         getLanToken(ctx);
@@ -157,6 +163,51 @@ public final class LanProxyService {
     }
 
     public static boolean isRunning() { return running; }
+
+    /** Accept only a strict loopback URL parsed from dsh's own stdout. */
+    static void setUpstreamLaunchUrl(String url, int expectedPort) {
+        String token = WebLaunchUrl.tokenFromUrl(url, expectedPort);
+        upstreamLaunchToken = token;
+    }
+
+    /** A new dsh process gets a new launch token; never reuse the previous one's. */
+    static void clearUpstreamLaunchUrl() {
+        upstreamLaunchToken = "";
+    }
+
+    /**
+     * The launch page normally populates the token within one heartbeat. Read
+     * the same local stdout as a fallback so a LAN request can still bootstrap
+     * after Android recreated only the proxy service.
+     */
+    private static String upstreamTokenForBackend() {
+        String token = upstreamLaunchToken;
+        if (WebLaunchUrl.isValidToken(token)) return token;
+        String path = webLogPath;
+        if (path.isEmpty()) return "";
+        try {
+            java.io.File f = new java.io.File(path);
+            if (!f.isFile() || f.length() == 0) return "";
+            long start = Math.max(0, f.length() - 24576);
+            byte[] data = new byte[(int) (f.length() - start)];
+            try (java.io.RandomAccessFile raf = new java.io.RandomAccessFile(f, "r")) {
+                raf.seek(start);
+                int off = 0;
+                while (off < data.length) {
+                    int n = raf.read(data, off, data.length - off);
+                    if (n < 0) break;
+                    off += n;
+                }
+                String log = new String(data, 0, off, java.nio.charset.StandardCharsets.UTF_8);
+                String url = WebLaunchUrl.fromDshWebLog(log, backendPort);
+                token = WebLaunchUrl.tokenFromUrl(url, backendPort);
+                if (!token.isEmpty()) upstreamLaunchToken = token;
+                return token;
+            }
+        } catch (Throwable ignored) {
+            return "";
+        }
+    }
 
     /** 日志上限与连接日志节流。
      *
@@ -280,7 +331,7 @@ public final class LanProxyService {
                         || reqLine.contains("HTTP/1.1") && containsIgnoreCase(head, "Connection: Upgrade");
 
                 // 2. 改写 Host 头 → 127.0.0.1:<backendPort>
-                String rewritten = rewriteHost(head);
+                String rewritten = rewriteHost(head, auth == LanAuth.AUTH_OK_SET_COOKIE);
                 byte[] headBytes = rewritten.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
 
                 // 3. 连接后端
@@ -477,9 +528,10 @@ public final class LanProxyService {
         return idx >= 0;
     }
 
-    /** 重写请求 Host 头为 127.0.0.1:<backendPort>（后端 Host 校验放行） */
-        private static String rewriteHost(String head) {
+    /** Rewrites Host for the loopback backend and exchanges LAN auth for BrowserAuth on /. */
+        private static String rewriteHost(String head, boolean exchangeRequested) {
                 StringBuilder sb = new StringBuilder();
+                String upstreamToken = upstreamTokenForBackend();
                 boolean hostDone = false;
                 boolean first = true;
                 for (String l : head.split("\\r?\\n")) {
@@ -488,8 +540,11 @@ public final class LanProxyService {
                     String key = i > 0 ? l.substring(0, i).trim() : "";
                     if (first) {
                         first = false;
-                        // 请求行：剥离 token 查询参数（LAN 鉴权 token 不转发给后端）
-                        sb.append(LanAuth.stripTokenFromRequestLine(l)).append("\r\n");
+                        // The LAN token authenticates only this proxy. Strip it
+                        // before forwarding, then add dsh's per-process token only
+                        // to GET / so BrowserAuth can mint its HttpOnly cookie.
+                        sb.append(LanAuth.withUpstreamTokenForRootRequest(
+                                l, upstreamToken, exchangeRequested)).append("\r\n");
                         continue;
                     }
                     if (key.equalsIgnoreCase("Host")) {
@@ -520,8 +575,9 @@ public final class LanProxyService {
                 sb.append(joined.endsWith("\r\n") ? "\r\n" : "\r\n\r\n");
             }
             if (!hostDone) sb.insert(0, "Host: 127.0.0.1:" + backendPort + "\r\n");
-            // 后端 dsh 现在要求 token（webserver-auth-patch.sh）。局域网来的请求
-            // 自带的是本代理的鉴权 token（已在上面剥离），这里补上后端要的那个。
+            // Legacy dsh instances still use DSHA's host-webserver patch. Keep
+            // its loopback-only header for that compatibility path; BrowserAuth
+            // ignores it and uses the root query token above instead.
             String bt = HttpShellService.currentToken();
             if (!bt.isEmpty() && !containsIgnoreCase(sb.toString(), "X-Dsha-Token")) {
                 int end = sb.lastIndexOf("\r\n\r\n");

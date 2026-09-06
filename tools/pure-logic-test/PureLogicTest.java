@@ -79,6 +79,32 @@ public final class PureLogicTest {
                         && !jsonRedacted.contains("json-cookie")
                         && jsonRedacted.contains("\"ToKeN\":\"<redacted>\""));
 
+        // ---------- WebLaunchUrl: upstream BrowserAuth launch URL ----------
+        String launchToken = "Abc-def_01234567890123456789012345678901234";
+        String launchLog = "booting\n"
+                + "dsh web: http://127.0.0.1:3080/?token=" + launchToken + "\n";
+        eq("launch: parse current loopback URL", "http://127.0.0.1:3080/?token=" + launchToken,
+                WebLaunchUrl.fromDshWebLog(launchLog, 3080));
+        eq("launch: localhost is normalized to loopback", "http://127.0.0.1:3080/?token=" + launchToken,
+                WebLaunchUrl.fromDshWebLog("dsh web: http://localhost:3080/?token=" + launchToken + "\n", 3080));
+        eq("launch: LAN suffix does not invalidate printed local URL",
+                "http://127.0.0.1:3080/?token=" + launchToken,
+                WebLaunchUrl.fromDshWebLog("dsh web: http://127.0.0.1:3080/?token=" + launchToken
+                        + " (LAN: http://192.168.1.2:3080/)\n", 3080));
+        eq("launch: last matching process line wins", "http://127.0.0.1:3080/?token=" + launchToken,
+                WebLaunchUrl.fromDshWebLog("dsh web: http://127.0.0.1:3080/?token="
+                        + "Other_token_0123456789012345678901234567\n" + launchLog, 3080));
+        eq("launch: reject mismatched port", "",
+                WebLaunchUrl.fromDshWebLog(launchLog, 3081));
+        eq("launch: reject non-loopback host", "", WebLaunchUrl.fromDshWebLog(
+                "dsh web: http://192.168.1.8:3080/?token=" + launchToken + "\n", 3080));
+        eq("launch: reject extra untrusted query", "", WebLaunchUrl.fromDshWebLog(
+                "dsh web: http://127.0.0.1:3080/?token=" + launchToken + "&x=1\n", 3080));
+        eq("launch: token extraction accepts only reconstructed URL", launchToken,
+                WebLaunchUrl.tokenFromUrl("http://127.0.0.1:3080/?token=" + launchToken, 3080));
+        eq("launch: token extraction rejects a different URL", "", WebLaunchUrl.tokenFromUrl(
+                "http://localhost:3080/?token=" + launchToken, 3080));
+
         // ---------- stripTokenFromRequestLine ----------
         // 回归：token 是唯一参数时，原实现把 HTTP 版本一起吃掉（→ "GET /"），
         // 后端 Node parser 当畸形请求直接 400。这是最常见的场景：打开首页。
@@ -101,6 +127,21 @@ public final class PureLogicTest {
                 LanAuth.stripTokenFromRequestLine("POST /api/x?token=t HTTP/1.1"));
         eq("strip: 只有方法和目标（无版本）", "GET /a",
                 LanAuth.stripTokenFromRequestLine("GET /a?token=t"));
+
+        // LAN proxy first validates its own query token, then exchanges it for
+        // dsh's BrowserAuth token on GET /. API paths must not receive it.
+        eq("LAN upstream: root gets BrowserAuth token", "GET /?token=" + launchToken + " HTTP/1.1",
+                LanAuth.withUpstreamTokenForRootRequest("GET /?token=lan-secret HTTP/1.1", launchToken, true));
+        eq("LAN upstream: preserve non-token query", "GET /?x=1&token=" + launchToken + " HTTP/1.1",
+                LanAuth.withUpstreamTokenForRootRequest("GET /?token=lan-secret&x=1 HTTP/1.1", launchToken, true));
+        eq("LAN upstream: cookie request stays clean (no redirect loop)", "GET / HTTP/1.1",
+                LanAuth.withUpstreamTokenForRootRequest("GET /?token=lan-secret HTTP/1.1", launchToken, false));
+        eq("LAN upstream: API only strips proxy token", "GET /api/x?x=1 HTTP/1.1",
+                LanAuth.withUpstreamTokenForRootRequest("GET /api/x?token=lan-secret&x=1 HTTP/1.1", launchToken, true));
+        eq("LAN upstream: non-GET only strips proxy token", "POST / HTTP/1.1",
+                LanAuth.withUpstreamTokenForRootRequest("POST /?token=lan-secret HTTP/1.1", launchToken, true));
+        eq("LAN upstream: invalid backend token is never injected", "GET / HTTP/1.1",
+                LanAuth.withUpstreamTokenForRootRequest("GET /?token=lan-secret HTTP/1.1", "bad", true));
 
         // ---------- queryToken ----------
         eq("query: 正常取值", "abc123", LanAuth.queryToken("GET /?token=abc123 HTTP/1.1"));
@@ -128,8 +169,8 @@ public final class PureLogicTest {
         eqi("auth: Referer 里的 token 不算凭据", LanAuth.AUTH_DENY,
                 LanAuth.tokenOk(req("GET /api/x",
                         "Referer: http://192.168.1.5:3081/?token=" + T), T));
-        eqi("auth: 换过 token 时旧 Cookie 不挡新地址", LanAuth.AUTH_OK_SET_COOKIE,
-                LanAuth.tokenOk(req("GET /?token=" + T, "Cookie: dsha_token=stale"), T));
+        eqi("auth: query 优先于旧的有效 Cookie", LanAuth.AUTH_OK_SET_COOKIE,
+                LanAuth.tokenOk(req("GET /?token=" + T, "Cookie: dsha_token=" + T), T));
         eqi("auth: 无凭据", LanAuth.AUTH_DENY, LanAuth.tokenOk(req("GET /", ""), T));
         eqi("auth: 显式头错值", LanAuth.AUTH_DENY,
                 LanAuth.tokenOk(req("GET /", "X-DSHA-Token: wrong"), T));

@@ -834,28 +834,43 @@ public class ConfigFragment extends Fragment {
         DshaSnack.show(ConfigFragment.this, "下载中…");
         new Thread(() -> {
             RuntimeUpdater.Result r = RuntimeUpdater.checkAndApply(appCtx, c, false);
+            final String resultMessage = runtimeResultMessage(r);
             // 这里是真正的下载，耗时更长，用户离开页面的概率更高。
             android.app.Activity act = getActivity();
             if (act == null || !isAdded()) {
                 // 结果不能悄悄丢掉：更新已经落盘了，至少让用户看到一次
                 new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
-                        Toast.makeText(appCtx, r.message, Toast.LENGTH_LONG).show());
+                        Toast.makeText(appCtx, resultMessage, Toast.LENGTH_LONG).show());
                 return;
             }
             act.runOnUiThread(() -> {
                 android.app.Activity a2 = getActivity();
                 if (a2 == null || a2.isFinishing() || !isAdded()) {
-                    Toast.makeText(appCtx, r.message, Toast.LENGTH_LONG).show();
+                    Toast.makeText(appCtx, resultMessage, Toast.LENGTH_LONG).show();
                     return;
                 }
                 new androidx.appcompat.app.AlertDialog.Builder(a2)
                         .setTitle(r.ok ? "更新完成" : "部分失败")
-                        .setMessage(r.message)
+                        .setMessage(resultMessage)
                         .setPositiveButton("知道了", null)
                         .show();
                 refreshRuntimeStatus();
             });
         }, "dsha-runtime-apply").start();
+    }
+
+    private static String runtimeResultMessage(RuntimeUpdater.Result r) {
+        if (r == null || r.failedFiles.isEmpty()) return r == null ? "更新失败" : r.message;
+        StringBuilder details = new StringBuilder(r.message).append("\n\n失败文件：\n");
+        int n = 0;
+        for (String f : r.failedFiles) {
+            if (n++ >= 12) {
+                details.append("  … 还有 ").append(r.failedFiles.size() - 12).append(" 个\n");
+                break;
+            }
+            details.append("  ").append(f).append('\n');
+        }
+        return details.toString().trim();
     }
 
     private void refreshRuntimeStatus() {

@@ -63,6 +63,8 @@ public class LaunchFragment extends Fragment {
     /** 日志文件指纹（size+mtime），未变化则跳过重读（每 1.5s 轮询时省一次文件 IO） */
     private long lastLogSize = -1;
     private long lastLogMtime = -1;
+    /** 0.1.3+ prints a per-process launch URL; it mints the browser cookie. */
+    private volatile String upstreamLaunchUrl = "";
 
     private ValueCallback<Uri[]> filePathCallback;
 
@@ -140,6 +142,8 @@ public class LaunchFragment extends Fragment {
                 return;
             }
             starting = true;
+            upstreamLaunchUrl = "";
+            LanProxyService.clearUpstreamLaunchUrl();
             enterWhenReady = true;
             startingAt = System.currentTimeMillis();
             prewarmWebCore();
@@ -157,6 +161,8 @@ public class LaunchFragment extends Fragment {
             if (goExtractIfNeeded()) return;
             closeWeb();
             starting = true;
+            upstreamLaunchUrl = "";
+            LanProxyService.clearUpstreamLaunchUrl();
             enterWhenReady = true; // 重启完成后自动回到预览页
             startingAt = System.currentTimeMillis();
             prewarmWebCore();
@@ -217,12 +223,20 @@ public class LaunchFragment extends Fragment {
     }
 
     private void tickOnce() {
-        if (!isAdded()) return;        new Thread(() -> {
-            final boolean up = httpOk(uiUrl());
+        if (!isAdded()) return;
+        new Thread(() -> {
+            // dsh 0.1.3+ protects the index with a per-process launch token. Read
+            // the log before probing: a bare / returns 401 by design and is not
+            // evidence that the server failed to start.
             final String log = readWebLogTail();
+            final String launch = WebLaunchUrl.fromDshWebLog(log, c.getPortInt());
+            if (!launch.isEmpty()) LanProxyService.setUpstreamLaunchUrl(launch, c.getPortInt());
+            final String probeUrl = launch.isEmpty() ? legacyUiUrl() : launch;
+            final boolean up = httpOk(probeUrl);
             if (!isAdded()) return;
             mainHandler.post(() -> {
                 if (!isAdded()) return;
+                upstreamLaunchUrl = launch;
                 if (up) {
                     starting = false;
                     startingAt = 0;
@@ -241,8 +255,9 @@ public class LaunchFragment extends Fragment {
                     // 而它恰恰是「Web 打不开」最常见的原因。认出来就把结论摆在日志上方，
                     // 别让用户对着栈猜、更别让他去清数据重装（有人这么试过，白费）。
                     String hint = PluginErrorHint.describe(log);
+                    String visibleLog = SensitiveData.redact(log);
                     if (!hint.isEmpty()) {
-                        logText.setText(hint + "\n\n———— 原始日志 ————\n" + log);
+                        logText.setText(hint + "\n\n———— 原始日志 ————\n" + visibleLog);
                         if (!hint.equals(lastPluginHint)) {
                             lastPluginHint = hint;
                             // 记进活动日志：用户过后回想「刚才到底怎么了」还能查到
@@ -253,7 +268,7 @@ public class LaunchFragment extends Fragment {
                             }
                         }
                     } else {
-                        logText.setText(log.isEmpty() ? "还没有日志。" : log);
+                        logText.setText(visibleLog.isEmpty() ? "还没有日志。" : visibleLog);
                     }
                     logScroll.post(() -> logScroll.fullScroll(View.FOCUS_DOWN));
                 }
@@ -607,10 +622,13 @@ public class LaunchFragment extends Fragment {
     }
 
     private String uiUrl() {
+        String upstream = upstreamLaunchUrl;
+        return upstream.isEmpty() ? legacyUiUrl() : upstream;
+    }
+
+    /** Legacy dsh used DSHA's host-webserver patch; 0.1.3 uses {@link #uiUrl()} above. */
+    private String legacyUiUrl() {
         String base = "http://127.0.0.1:" + c.getPort() + "/";
-        // dsh 的 Web 服务加了 token 鉴权（本机任何 App 都能访问 127.0.0.1，
-        // 上游只绑回环、没有鉴权层）。首帧带上 token，服务端回设 Cookie，
-        // 之后的静态资源、XHR 与 WebSocket 都自动带，页面里不必到处拼。
         String t = HttpShellService.currentToken();
         return t.isEmpty() ? base : base + "?dsha_t=" + android.net.Uri.encode(t);
     }
@@ -705,9 +723,13 @@ public class LaunchFragment extends Fragment {
             HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
             conn.setConnectTimeout(1200);
             conn.setReadTimeout(1200);
+            // BrowserAuth returns a 303 for the one-time launch URL. HttpURLConnection
+            // does not persist that HttpOnly cookie, so following it would turn this
+            // correct ready response into a synthetic 401 on the redirected request.
+            conn.setInstanceFollowRedirects(false);
             int code = conn.getResponseCode();
             conn.disconnect();
-            return code >= 200 && code < 500;
+            return code >= 200 && code < 400;
         } catch (Exception e) {
             return false;
         }

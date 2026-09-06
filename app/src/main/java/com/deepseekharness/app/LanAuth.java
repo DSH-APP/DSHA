@@ -47,6 +47,8 @@ final class LanAuth {
         if (head == null || token == null || token.isEmpty()) return AUTH_DENY;
         int nl = head.indexOf('\n');
         String reqLine = nl >= 0 ? head.substring(0, nl) : head;
+        String q = queryToken(reqLine);
+        if (q != null && constantTimeEquals(token, q)) return AUTH_OK_SET_COOKIE;
         for (String l : head.split("\\r?\\n")) {
             int i = l.indexOf(':');
             if (i <= 0) continue;
@@ -62,13 +64,11 @@ final class LanAuth {
                             && constantTimeEquals(token, c.substring(COOKIE_NAME.length() + 1))) {
                         return AUTH_OK;
                     }
-                    // Cookie 在但不对（换过 token / 别的实例发的）不在这里结案，
-                    // 继续看 query，否则用户拿着新地址也进不来。
+                    // Cookie 在但不对（换过 token / 别的实例发的）继续看其它认证头；
+                    // 有效的 query 已在遍历头之前优先处理。
                 }
             }
         }
-        String q = queryToken(reqLine);
-        if (q != null && constantTimeEquals(token, q)) return AUTH_OK_SET_COOKIE;
         return AUTH_DENY;
     }
 
@@ -141,6 +141,37 @@ final class LanAuth {
         }
         String rebuilt = kept.length() > 0 ? path + "?" + kept + frag : path + frag;
         return head + rebuilt + tail;
+    }
+
+    /**
+     * Replaces the proxy's query token with a validated upstream BrowserAuth
+     * token for an index request. The proxy token must never reach dsh logs;
+     * the upstream token is only needed once to mint the authority-bound cookie.
+     * Non-root/API requests stay token-free after the proxy token is stripped.
+     */
+    static String withUpstreamTokenForRootRequest(String line, String upstreamToken,
+                                                   boolean exchangeRequested) {
+        String stripped = stripTokenFromRequestLine(line);
+        if (!exchangeRequested || !WebLaunchUrl.isValidToken(upstreamToken) || stripped == null) {
+            return stripped;
+        }
+        int sp1 = stripped.indexOf(' ');
+        if (sp1 < 0) return stripped;
+        int sp2 = stripped.indexOf(' ', sp1 + 1);
+        String method = stripped.substring(0, sp1);
+        if (!"GET".equalsIgnoreCase(method)) return stripped;
+        String target = sp2 > sp1 ? stripped.substring(sp1 + 1, sp2) : stripped.substring(sp1 + 1);
+        String tail = sp2 > sp1 ? stripped.substring(sp2) : "";
+        int hash = target.indexOf('#');
+        String beforeFragment = hash >= 0 ? target.substring(0, hash) : target;
+        String fragment = hash >= 0 ? target.substring(hash) : "";
+        int q = beforeFragment.indexOf('?');
+        String path = q >= 0 ? beforeFragment.substring(0, q) : beforeFragment;
+        if (!"/".equals(path)) return stripped;
+        String query = q >= 0 ? beforeFragment.substring(q + 1) : "";
+        String rebuilt = query.isEmpty() ? "/?token=" + upstreamToken
+                : "/?" + query + "&token=" + upstreamToken;
+        return method + " " + rebuilt + fragment + tail;
     }
 
     /** 定长比较，避免按前缀长度泄漏信息。 */

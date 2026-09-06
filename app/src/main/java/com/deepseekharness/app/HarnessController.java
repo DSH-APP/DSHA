@@ -3436,9 +3436,48 @@ public class HarnessController {
     }
 
 
+    /**
+     * Remove the retired host-webserver auth layer when dsh owns BrowserAuth.
+     * This runs before the patch stamp check so an upgraded installation cannot
+     * keep an old overlay or an already injected copy indefinitely.
+     */
+    private void retireLegacyWebAuthForUpstream() {
+        String probe = "CONN=$(find /usr/local/lib/node_modules/@deepseek-ai /root "
+                + "-path '*dsh-client-connection/lib/index.js' -type f 2>/dev/null | head -1); "
+                + "if [ -z \"$CONN\" ] || ! grep -q 'TOKEN_QUERY' \"$CONN\" || ! grep -q '\"token\"' \"$CONN\"; then "
+                + "echo LEGACY_WEB_AUTH; exit 0; fi; "
+                + "echo UPSTREAM_WEB_AUTH; "
+                + "find /usr/local/lib/node_modules/@deepseek-ai /root "
+                + "-path '*dsh-host-webserver/lib/index.js' -type f 2>/dev/null | "
+                + "while IFS= read -r W; do "
+                + "if grep -q 'DSHA_WEB_AUTH' \"$W\"; then "
+                + "B=\"$W.dsha-bak\"; "
+                + "if [ -f \"$B\" ] && ! grep -q 'DSHA_WEB_AUTH' \"$B\"; then "
+                + "T=$(mktemp \"$W.dsha-restore.XXXXXX\") || continue; "
+                + "cp -f \"$B\" \"$T\" && mv -f \"$T\" \"$W\" && rm -f \"$B\"; "
+                + "echo RESTORED_WEB_AUTH; fi; fi; done";
+        String out = proot.execAndRead(probe);
+        if (out == null || !out.contains("UPSTREAM_WEB_AUTH")) return;
+        File overlay = RuntimeUpdater.overlayFile(appContext, "webserver-auth-patch.sh");
+        if (overlay.isFile() && !overlay.delete()) {
+            android.util.Log.w("DSHA", "无法删除旧 webserver-auth 热更新覆盖层: " + overlay);
+        } else if (!overlay.isFile()) {
+            android.util.Log.i("DSHA", "dsh 已有原生 BrowserAuth，未使用旧 webserver-auth 覆盖层");
+        }
+        if (out.contains("RESTORED_WEB_AUTH")) {
+            logActivity("检测到 dsh 原生 BrowserAuth，已撤销旧版 Web 鉴权补丁");
+        }
+    }
+
     public String startWebCommand() {
         // 启动前自愈：确保配置修复脚本已就位（纯文件写入，不进容器）
         ensureConfigFixAsset();
+        // dsh 0.1.3+ owns browser authentication. Reconcile old beta installs
+        // before the patch stamp can suppress this migration.
+        try {
+            retireLegacyWebAuthForUpstream();
+        } catch (Throwable ignored) {
+        }
         // ── 启动前自愈脚本：合并成一次容器会话 ──
         // 这四个原来是四次独立调用（webserver-auth / polyfill / origin-port 各一次，
         // fs-write 一次），也就是四次启动器 + bash 的固定开销，而它们绝大多数时候只是
@@ -4788,7 +4827,7 @@ public class HarnessController {
      *  资产内容变更时 +1（marker 存在会导致重跑⑥时跳过重注入，
      *  必须靠版本标记删 marker 强制重注入，老用户才能拿到新资产）。
      *  与 STEP6_VERSION 一起写入 builtin-assets.version（installGuard 末尾）。 */
-    private static final String BUILTIN_ASSET_VERSION = "32";
+    private static final String BUILTIN_ASSET_VERSION = "33";
 
     /** 内置插件资产版本自愈（检查 + 删 marker；版本标记写入在 installGuard
      *  末尾 runStep 里——若中途失败版本未写，下次启动版本不一致会重跑⑥重注入，

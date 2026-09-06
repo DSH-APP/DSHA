@@ -33,6 +33,23 @@ if [ -z "$W" ] || [ ! -f "$W" ]; then
   echo WEBAUTH_SKIP
   exit 0
 fi
+# dsh 0.1.3+ has its own BrowserAuth. Do not layer the legacy DSHA
+# dsha_t gate on top: that gate would reject the upstream ?token= launch URL
+# before BrowserAuth can mint its signed HttpOnly cookie. If an older beta
+# already patched this file, restore the exact pre-patch backup first.
+W_PKG=$(dirname "$(dirname "$W")")
+CONN="$W_PKG/../dsh-client-connection/lib/index.js"
+if [ -f "$CONN" ] && grep -q 'BrowserAuth\|authentication required; reopen' "$CONN"; then
+  if [ -f "$W.dsha-bak" ]; then
+    cp -f "$W.dsha-bak" "$W" 2>/dev/null || true
+    rm -f "$W.dsha-bak" 2>/dev/null || true
+    log "检测到 dsh 原生 BrowserAuth，已撤销旧版 DSHA 鉴权补丁：$W"
+  else
+    log "检测到 dsh 原生 BrowserAuth，不叠加旧版 DSHA 鉴权补丁"
+  fi
+  echo WEBAUTH_SKIP_UPSTREAM
+  exit 0
+fi
 if grep -q 'DSHA_WEB_AUTH' "$W"; then
   echo WEBAUTH_ALREADY
   exit 0

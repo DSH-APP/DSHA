@@ -76,8 +76,8 @@ android {
         applicationId dshaAppId
         minSdk 26
         targetSdk 34
-        versionCode 103
-        versionName dshaBeta ? "1.1.11-beta" : "1.1.11"
+        versionCode 104
+        versionName dshaBeta ? "1.1.12-beta" : "1.1.12"
         ndk {
             abiFilters 'arm64-v8a'
         }
