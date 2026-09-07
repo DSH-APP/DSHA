@@ -1,0 +1,56 @@
+name: Star history
+
+# 自己生成 star history 曲线，不依赖第三方服务。
+#
+# 起因：GitHub 从 2026-06-30 起把 stargazers API（谁在什么时候 star 的）限制成
+# 只有仓库的 admin/collaborator 能读。star-history.com 的服务器不是我们的
+# collaborator，所以 README 里那种「打开页面时实时拉取」的嵌入图对几乎所有仓库都挂了
+# —— 图位置会显示「GitHub 限制了对星标数据的访问」。他们给的变通办法是把一个能读你
+# 仓库的 token 加密后塞进 URL；那要去第三方网站操作，还等于把凭据托管在别人那里。
+#
+# 这里换成：在自己的 Actions 里用 GITHUB_TOKEN 拉数据（它对本仓库天然有读权限），
+# 把曲线画成仓库内的静态 SVG 提交回来。图永远显示得出来、数据在自己手里、
+# 不受第三方服务与限流影响。代价是按计划刷新（每周一次），不是实时的。
+#
+# 万一哪天 GITHUB_TOKEN 也读不了这个接口：配一个能读本仓库的 PAT 到
+# secret STAR_HISTORY_TOKEN，下面会优先用它，工作流本身不用改。
+
+on:
+  schedule:
+    # 每周一 03:17 UTC（北京时间 11:17）。错开整点，避开 GitHub 的调度高峰。
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: star-history
+  cancel-in-progress: false
+
+jobs:
+  chart:
+    name: 刷新 star history 曲线
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 生成 SVG
+        env:
+          GITHUB_TOKEN: ${{ secrets.STAR_HISTORY_TOKEN || secrets.GITHUB_TOKEN }}
+        run: python3 tools/gen-star-history.py
+
+      - name: 有变化才提交
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/star-history.svg docs/star-history-dark.svg docs/star-history.json
+          if git diff --cached --quiet; then
+            echo "曲线没变化，不提交"
+            exit 0
+          fi
+          STARS=$(python3 -c "import json;print(json.load(open('docs/star-history.json'))['total'])")
+          git commit -m "chore(star-history): 刷新曲线（${STARS} stars，自动提交）"
+          git push
