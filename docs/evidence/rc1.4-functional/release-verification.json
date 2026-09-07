@@ -1,0 +1,44 @@
+{
+  "standard": {
+    "filename": "dsha-1.2.0-rc1.4.apk",
+    "bytes": 223208350,
+    "MiB": 212.87,
+    "sha256": "2431f5ced86d7de16c65d8b7ca48b3ab4ab7b5977fc2551cb794dfe72d84b450",
+    "zip_integrity": "PASS",
+    "zipalign_16K": "PASS (separate command)",
+    "debug_audit_classes": "absent",
+    "credential_pattern": "absent",
+    "original_rootfs": "identical to prior rc1.4",
+    "unit_suites": 43,
+    "unit": {
+      "tests": 263,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    "lint": {
+      "Warning": 421
+    }
+  },
+  "low": {
+    "filename": "dsha-1.2.0-rc1.4low.apk",
+    "bytes": 303760199,
+    "MiB": 289.69,
+    "sha256": "bc28e4f893bc2cfa3c4adafa5a59e2e6452d9e9fcedfb28b3118efac9c187c06",
+    "zip_integrity": "PASS",
+    "zipalign_16K": "PASS (separate command)",
+    "debug_audit_classes": "absent",
+    "credential_pattern": "absent",
+    "original_rootfs": "identical to prior rc1.4",
+    "unit_suites": 43,
+    "unit": {
+      "tests": 263,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    "lint": {
+      "Warning": 378
+    }
+  }
+}

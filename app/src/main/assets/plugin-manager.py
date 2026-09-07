@@ -5,15 +5,18 @@
 """
 import importlib.util
 import json
+import contextlib
 import os
 import re
 import shutil
 import ssl
 import stat
 import subprocess
+import signal
 import sys
 import tarfile
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -32,6 +35,71 @@ MAX_EXPANDED = 768 * 1024 * 1024
 MAX_FILES = 50000
 
 _lifecycle = None
+_last_progress = 0
+
+
+class PluginCancelled(Exception):
+    pass
+
+
+def task_file(suffix):
+    key = os.environ.get('DSHA_PLUGIN_TASK', '')
+    return local('/root/.dsha-plugin-task-' + key + suffix) if re.fullmatch('[a-f0-9]{32}', key) else ''
+
+
+def check_cancel():
+    path = task_file('.cancel')
+    if path and os.path.exists(path):
+        raise PluginCancelled('已取消；尚未提交的插件数据已清理')
+
+
+def progress(stage, message, current=0, total=0, cancellable=True):
+    global _last_progress
+    if cancellable:
+        check_cancel()
+    now = time.monotonic()
+    if current and now - _last_progress < .3 and current != total:
+        return
+    _last_progress = now
+    path = task_file('.json')
+    if path:
+        write_json(path, dict(stage=stage, message=message, current=current, total=total, cancellable=cancellable))
+
+
+@contextlib.contextmanager
+def committing(message):
+    # 仅在进入事务前响应取消。切换期间完成提交或回滚，不能杀死 proot/容器。
+    check_cancel()
+    progress('commit', message, cancellable=False)
+    try:
+        yield
+    finally:
+        progress('committed', '本项变更已处理', cancellable=False)
+
+
+def run_package_command(argv, cwd, timeout=120):
+    check_cancel()
+    # 只终止本次启动的 npm/pnpm 子进程组；stdout/stderr 放临时文件避免管道填满。
+    with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
+        process = subprocess.Popen(argv, cwd=cwd, stdout=out, stderr=err, start_new_session=os.name != 'nt')
+        deadline = time.monotonic() + timeout
+        try:
+            while process.poll() is None:
+                check_cancel()
+                if time.monotonic() > deadline:
+                    raise ValueError('包管理操作超时，请检查网络后重试')
+                time.sleep(.15)
+        except Exception:
+            if os.name != 'nt':
+                try: os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError: pass
+            else:
+                process.kill()
+            process.wait()
+            raise
+        out.seek(0); err.seek(0)
+        return subprocess.CompletedProcess(argv, process.returncode, out.read(1024 * 1024).decode('utf-8', 'replace'),
+                                           err.read(1024 * 1024).decode('utf-8', 'replace'))
 
 
 def lifecycle():
@@ -93,12 +161,14 @@ def safe_target(root, name):
 
 
 def extract_archive(path, staging):
+    progress('extract', '正在校验并解压插件包…')
     """先校验所有条目，再解包；内部软链接延迟建立，不允许链接写出暂存目录。"""
     size, count, links = 0, 0, []
     os.makedirs(staging, exist_ok=True)
 
     def check(name, length):
         nonlocal size, count
+        check_cancel()
         target = safe_target(staging, name)
         size += length
         count += 1
@@ -111,13 +181,19 @@ def extract_archive(path, staging):
         if os.path.lexists(target):
             raise ValueError("归档包含重复文件：" + os.path.relpath(target, staging))
         with open(target, "wb") as dst:
-            shutil.copyfileobj(src, dst, 65536)
+            while True:
+                check_cancel()
+                chunk = src.read(65536)
+                if not chunk:
+                    break
+                dst.write(chunk)
         os.chmod(target, 0o755 if mode & 0o111 else 0o644)
 
     if zipfile.is_zipfile(path):
         with zipfile.ZipFile(path) as archive:
             entries = [(i, check(i.filename, i.file_size)) for i in archive.infolist()]
             for entry, target in entries:
+                check_cancel()
                 mode = entry.external_attr >> 16
                 if entry.is_dir():
                     os.makedirs(target, exist_ok=True)
@@ -132,6 +208,7 @@ def extract_archive(path, staging):
         with tarfile.open(path, "r:*") as archive:
             entries = [(i, check(i.name, i.size)) for i in archive]
             for entry, target in entries:
+                check_cancel()
                 if entry.isdir():
                     os.makedirs(target, exist_ok=True)
                 elif entry.isfile():
@@ -209,6 +286,7 @@ def find_plugin_roots(staging, subdir=""):
 
 
 def prepare_dependencies(root, pkg):
+    progress('dependencies', '正在准备插件依赖：' + str(pkg.get('name', '')))
     deps = pkg.get("dependencies") or {}
     if not isinstance(deps, dict) or any(not builtin.valid_name(n) for n in deps):
         raise ValueError("插件 dependencies 格式无效")
@@ -224,14 +302,13 @@ def prepare_dependencies(root, pkg):
         write_json(os.path.join(work, "package.json"), {
             "name": "dsha-plugin-deps", "private": True, "dependencies": deps,
             "optionalDependencies": pkg.get("optionalDependencies") or {}})
-        process = subprocess.run(["pnpm", "install", "--prod", "--ignore-scripts",
+        process = run_package_command(["pnpm", "install", "--prod", "--ignore-scripts",
                                   "--no-frozen-lockfile", "--config.node-linker=hoisted",
                                   "--config.package-import-method=copy",
                                   "--config.auto-install-peers=false", "--reporter=append-only"],
-                                 cwd=work, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                 text=True, timeout=120)
+                                 cwd=work)
         if process.returncode:
-            detail = (process.stdout or "")[-1200:].strip()
+            detail = (process.stderr or process.stdout or "")[-1200:].strip()
             raise ValueError("插件依赖安装失败：" + detail)
         modules = os.path.join(root, "node_modules")
         # root 是本次独立解包目录，绝不移除正在使用的插件依赖。
@@ -264,7 +341,7 @@ def register_plugin(root, source, expected_version=None):
                     safe_target(prepared, os.path.relpath(candidate, prepared))
         old = os.path.join(work, "old")
         history_change = None
-        with builtin.operation_lock():
+        with builtin.operation_lock(check_cancel), committing('正在登记插件：' + name):
             builtin.ensure_runtime_modules()
             if expected_version is not None:
                 current_dir = resolve_plugin_dir(name)
@@ -354,6 +431,10 @@ def cmd_import(archive, subdir="", source="", expected_versions=None):
             try:
                 name = read_json(os.path.join(root, 'package.json'), {}).get('name')
                 names.append(register_plugin(root, source, (expected_versions or {}).get(name)))
+            except PluginCancelled:
+                result('partial' if names else 'cancelled',
+                       ('已安装 ' + '、'.join(names) + '；' if names else '') + '已取消其余安装，未提交的插件保持原状态', installed=names)
+                return 1
             except Exception as error:
                 failures.append(os.path.basename(root) + "：" + str(error))
         status = "partial" if names and failures else ("error" if failures else "ok")
@@ -377,6 +458,7 @@ def resolve_plugin_dir(name):
 
 
 def cmd_export(names, out):
+    progress('export', '正在打包插件…')
     names = json.loads(names)
     if not isinstance(names, list) or not names or len(names) > 30:
         raise ValueError("请选择 1–30 个插件")
@@ -386,6 +468,7 @@ def cmd_export(names, out):
 
     def add_tree(archive, path, arc, ancestors):
         nonlocal total, count
+        progress('export', '正在打包：' + arc, count)
         real = os.path.realpath(path)
         if real in ancestors:
             raise ValueError("插件依赖含循环链接，无法导出：" + arc)
@@ -432,7 +515,7 @@ def cmd_delete(name):
         raise ValueError("无效的插件名称")
     if name in builtin.OFFICIAL_BUNDLES or name in builtin.builtin_names():
         raise ValueError("官方核心和内置插件请使用禁用开关，不能删除")
-    with builtin.operation_lock():
+    with builtin.operation_lock(check_cancel), committing('正在删除插件：' + name):
         doc = builtin.read_manifest()
         if doc is None:
             raise ValueError("插件配置不存在")
@@ -484,6 +567,7 @@ def cmd_delete(name):
 
 
 def open_url(url):
+    check_cancel()
     parsed = urllib.parse.urlsplit(url)
     if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
         raise ValueError("下载地址必须是 HTTPS 链接")
@@ -510,11 +594,14 @@ def archive_download_url(url):
 
 
 def download(url, target):
+    progress('download', '正在下载插件包…')
     with open_url(archive_download_url(url)) as response, open(target, "wb") as stream:
-        if int(response.headers.get("Content-Length", "0")) > MAX_DOWNLOAD:
+        total = int(response.headers.get("Content-Length", "0"))
+        if total > MAX_DOWNLOAD:
             raise ValueError("插件包超过 256 MiB")
         size = 0
         while True:
+            check_cancel()
             data = response.read(65536)
             if not data:
                 break
@@ -522,6 +609,9 @@ def download(url, target):
             if size > MAX_DOWNLOAD:
                 raise ValueError("插件包超过 256 MiB")
             stream.write(data)
+            progress('download', '正在下载插件包…', size, total)
+        if total and size != total:
+            raise ValueError('下载未完成，请重新尝试')
 
 
 def cmd_download(url, subdir="", source="", *, consume=None):
@@ -531,7 +621,7 @@ def cmd_download(url, subdir="", source="", *, consume=None):
         return (consume or cmd_import)(target, subdir, source or url)
 
 
-def cmd_github(owner, repo, tree="", *, consume=None):
+def github_revision(owner, repo, tree=""):
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}", owner) or not re.fullmatch(
             r"[A-Za-z0-9_.-]+", repo) or repo in (".", ".."):
         raise ValueError("无效的 GitHub 仓库")
@@ -556,6 +646,16 @@ def cmd_github(owner, repo, tree="", *, consume=None):
                     raise
         else:
             raise ValueError("GitHub 分支或标签不存在")
+    else:
+        with open_url('https://api.github.com/repos/%s/%s/commits/HEAD' % (owner, repo)) as response:
+            revision = json.loads(response.read(1024 * 1024))['sha']
+    if not re.fullmatch('[a-f0-9]{40,64}', revision):
+        raise ValueError('GitHub 未返回有效提交')
+    return revision, subdir
+
+
+def cmd_github(owner, repo, tree="", *, consume=None):
+    revision, subdir = github_revision(owner, repo, tree)
     url = "https://codeload.github.com/%s/%s/tar.gz/%s" % (
         owner, repo, urllib.parse.quote(revision, safe=""))
     source = "https://github.com/%s/%s" % (owner, repo) + ("/tree/" + tree if tree else "")
@@ -626,8 +726,8 @@ def cmd_npm(package, *, consume=None):
     if not shutil.which("npm"):
         raise ValueError("npm 尚未就绪，请关闭终端后重新打开")
     with tempfile.TemporaryDirectory(prefix="plugin-npm-", dir=local(DSH_HOME)) as staging:
-        process = subprocess.run(["npm", "pack", "--json", "--ignore-scripts", "--pack-destination", staging, "--", spec],
-                                 cwd=staging, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
+        progress('download', '正在获取 npm 发布包…')
+        process = run_package_command(["npm", "pack", "--json", "--ignore-scripts", "--pack-destination", staging, "--", spec], cwd=staging)
         if process.returncode:
             raise ValueError("npm 插件下载失败：" + (process.stderr or process.stdout)[-1600:].strip())
         packed = json.loads(process.stdout)
@@ -644,6 +744,7 @@ def main():
     os.makedirs(local(DSH_HOME), exist_ok=True)
     args = sys.argv[1:]
     try:
+        check_cancel()
         if args[0] == "inspect" and len(args) == 2:
             return lifecycle().inspect(args[1])
         if args[0] == "install-preview" and len(args) == 2:
@@ -654,6 +755,8 @@ def main():
             return lifecycle().discard_preview(args[1])
         if args[0] == "check-updates" and len(args) in (1, 2):
             return lifecycle().check_updates(args[1] if len(args) == 2 else '')
+        if args[0] == "prepare-update" and len(args) == 2:
+            return lifecycle().prepare_update(args[1])
         if args[0] == "rollback" and len(args) in (2, 3):
             return lifecycle().rollback(*args[1:])
         if args[0] == "safe-mode" and len(args) == 2:
@@ -661,7 +764,7 @@ def main():
         if args[0] == "import" and len(args) == 2:
             return cmd_import(args[1])
         if args[0] == "export" and len(args) == 3:
-            with builtin.operation_lock():
+            with builtin.operation_lock(check_cancel):
                 return cmd_export(args[1], args[2])
         if args[0] == "delete" and len(args) == 2:
             return cmd_delete(args[1])
@@ -674,9 +777,11 @@ def main():
         if args[0] == "release" and len(args) == 4:
             return cmd_release(*args[1:])
         if args[0] == "list":
-            with builtin.operation_lock():
+            with builtin.operation_lock(check_cancel):
                 return cmd_list()
         raise ValueError("不支持的插件操作")
+    except PluginCancelled as error:
+        result('cancelled', str(error))
     except urllib.error.HTTPError as error:
         hint = {403: "访问受限或 GitHub API 额度已用完", 404: "链接或指定版本不存在",
                 429: "请求过于频繁，请稍后重试"}.get(error.code, "服务器返回错误")

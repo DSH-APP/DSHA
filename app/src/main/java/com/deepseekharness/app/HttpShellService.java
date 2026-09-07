@@ -5,8 +5,10 @@ import com.deepseekharness.app.util.Constants;
 import com.deepseekharness.app.util.Query;
 import com.deepseekharness.app.core.HarnessController;
 import com.deepseekharness.app.runtime.TarGzipExtractor;
-import com.deepseekharness.app.ui.MainActivity;
 import com.deepseekharness.app.util.SensitiveData;
+import com.deepseekharness.app.util.BridgeLifecycle;
+import com.deepseekharness.app.util.BridgeQuestions;
+import com.deepseekharness.app.util.BoundedUiCall;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -57,17 +59,14 @@ public final class HttpShellService {
     }
 
     private static volatile HttpShellService instance;
-    /** 全局「已有桥在监听」标志。HarnessService 与 DeviceBridgeService 各自 new 一个
-     *  实例并都调 start()，实例字段 running 挡不住跨实例的重复启动 —— 第二个实例会
-     *  因端口占用绑定失败，进而把活着的那个从 instance 里抹掉（通知按钮全废）。
-     *  （吸收上游 PR#24） */
-    private static final java.util.concurrent.atomic.AtomicBoolean STARTED =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
-    /** 本实例是否真正持有监听：只有持有者的 stop() 才做清理，
-     *  否则那个没绑上端口的实例一被销毁就会把真桥的状态清掉。 */
-    private volatile boolean owner;
+    /** 启动占位与已绑定状态分开；资源清理结束后才允许下一次重试。 */
+    private static final BridgeLifecycle LIFECYCLE = new BridgeLifecycle();
 
     private final Context ctx;
+    private final java.io.File fixtureTokenFile;
+    private final java.util.function.Consumer<BridgeAskDialog> fixtureAskObserver;
+    /** 绑定前也必须知道本轮 token 的文件归属；instance 仍仅发布已经就绪的监听。 */
+    private static volatile HttpShellService tokenOwner;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private volatile CountDownLatch pendingLatch;
     private volatile boolean pendingAllow;
@@ -92,25 +91,21 @@ public final class HttpShellService {
             new java.util.concurrent.atomic.AtomicLong();
     /** 当前挂起的弹窗：setCancelable(false) 后它自己关不掉，确认完必须主动 dismiss */
     private volatile androidx.appcompat.app.AlertDialog pendingDialog;
-    /** /app/ask 的一次性问答状态（同一时刻只允许一个提问在等待）。
-     *  askBusy 用 AtomicBoolean 而不是 volatile boolean —— 与 confirmBusy 同理：
-     *  「检查后置位」不原子的话两个请求会同时通过检查，各自弹一个对话框、
-     *  共写同一个 askAnswer，用户答 A 的值会被 B 那次请求读走。
-     *
-     *  <p>这里刻意<b>没有</b>与 pendingLatch 对应的 askLatch：确认那边需要字段，是因为
-     *  通知与悬浮条的按钮回调要从外部认领同一个 latch；提问只有对话框一条渠道，
-     *  回调直接闭包捕获 latch 就够了。曾经有过一个只写不读的 askLatch 字段，
-     *  它会让人误以为存在外部唤醒路径。 */
-    private volatile String askAnswer = "";
-    private final java.util.concurrent.atomic.AtomicBoolean askBusy =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
-
-    private ServerSocket server;
-    /** IPv6 回环监听（兼容脚本用 localhost 解析成 ::1 的场景；绑不上则忽略） */
-    private ServerSocket server6;
+    private final BridgeQuestions questions = new BridgeQuestions();
     private volatile boolean running;
-    /** 连接处理线程池（请求可能阻塞等用户确认 60s，必须并发处理，否则一个确认卡死全部请求） */
-    private java.util.concurrent.ExecutorService pool;
+    private volatile BridgeRun activeRun;
+
+    /** 每一轮监听独立持有 socket/线程池，迟到的旧线程只能清理自己的资源。 */
+    private static final class BridgeRun {
+        final long generation;
+        volatile ServerSocket server, server6;
+        final java.util.Set<Socket> clients = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
+        final java.util.concurrent.ExecutorService pool = new java.util.concurrent.ThreadPoolExecutor(
+                4, 4, 0, TimeUnit.MILLISECONDS, new java.util.concurrent.ArrayBlockingQueue<>(16), r -> {
+                    Thread t = new Thread(r, "http-shell"); t.setDaemon(true); return t;
+                });
+        BridgeRun(long generation) { this.generation = generation; }
+    }
     /** 鉴权 token（随机生成，rootfs 内 agent 通过它访问；外部网络无法到达 127.0.0.1）。
      *  每次 start 都会和 rootfs 文件对账：文件存在则沿用，缺失/内容异常则轮换重写，
      *  防止重解压 rootfs 后内存 token 与文件不一致导致 agent 无法认证。 */
@@ -118,12 +113,40 @@ public final class HttpShellService {
     /** token 持久化位置（rootfs 内 agent 可读，建议 0600） */
 
     public HttpShellService(Context ctx) {
-        this.ctx = ctx;
+        this(ctx, null);
+    }
+
+    /** debug 自插桩使用隔离文件；正式构造仍走原来的 rootfs token。 */
+    HttpShellService(Context ctx, java.io.File fixtureTokenFile) {
+        this(ctx, fixtureTokenFile, null);
+    }
+
+    /** 仅观察 debug fixture 的真实默认 HTTP 提问，不替换其前台宿主选择。 */
+    HttpShellService(Context ctx, java.io.File fixtureTokenFile,
+                     java.util.function.Consumer<BridgeAskDialog> fixtureAskObserver) {
+        if (fixtureTokenFile != null && !BuildConfig.DEBUG) throw new IllegalStateException("仅 debug 可注入 token 文件");
+        if (fixtureAskObserver != null && (!BuildConfig.DEBUG || fixtureTokenFile == null))
+            throw new IllegalStateException("仅隔离 debug fixture 可观察提问窗口");
+        this.ctx = ctx.getApplicationContext();
+        this.fixtureTokenFile = fixtureTokenFile;
+        this.fixtureAskObserver = fixtureAskObserver;
     }
 
     public static HttpShellService instance() {
-        return instance;
+        synchronized (LIFECYCLE) { return isReady() ? instance : null; }
     }
+
+    /** 供设备桥保活判断；仅 IPv4 主监听已绑定并存活才算就绪。 */
+    public static boolean isReady() {
+        synchronized (LIFECYCLE) {
+            HttpShellService current = instance;
+            BridgeRun run = current == null ? null : current.activeRun;
+            return LIFECYCLE.isReady() && current != null && current.running && run != null
+                    && run.server != null && run.server.isBound() && !run.server.isClosed();
+        }
+    }
+
+    public static boolean isStarting() { return LIFECYCLE.isStarting(); }
 
     /** 桥还没启动过时的兜底 Context。
      *
@@ -141,7 +164,10 @@ public final class HttpShellService {
     private static java.io.File tokenFileIfPossible() {
         Context c = null;
         try {
-            c = instance().ctx;
+            HttpShellService current = tokenOwner;
+            if (current == null) current = instance;
+            if (current != null && current.fixtureTokenFile != null) return current.fixtureTokenFile;
+            c = current == null ? null : current.ctx;
         } catch (Throwable ignored) {
         }
         if (c == null) c = tokenCtx;
@@ -216,9 +242,10 @@ public final class HttpShellService {
     }
 
     private void noteBindError(String why) {
-        bindError = why;
         String safe = safeDisplay(why);
+        bindError = safe;
         android.util.Log.e("DSHA", "3090 桥绑定失败：" + safe);
+        com.deepseekharness.app.core.DiagnosticLog.record(ctx, "BRIDGE_BIND", safe);
         writeBridgeStatus("fail " + safe);
     }
 
@@ -235,109 +262,131 @@ public final class HttpShellService {
     }
 
     public void start() {
-        if (running) return;
-        // 跨实例互斥：已经有桥在监听就直接返回，别去抢端口把活着的那个搞坏
-        if (!STARTED.compareAndSet(false, true)) {
-            android.util.Log.i("DSHA", "3090 桥已在运行，跳过重复启动");
-            return;
+        synchronized (LIFECYCLE) {
+            long generation = LIFECYCLE.beginStart();
+            if (generation < 0) return;
+            try {
+                BridgeRun run = new BridgeRun(generation);
+                activeRun = run;
+                tokenOwner = this;
+                bindTokenContext(ctx);
+                Thread t = new Thread(() -> bindAndServe(run), "http-shell-accept");
+                t.setDaemon(true);
+                t.start();
+            } catch (RuntimeException error) {
+                if (activeRun != null) finishRun(activeRun, safeError(error));
+                else { noteBindError(safeError(error)); LIFECYCLE.finish(generation); }
+            }
         }
-        owner = true;
-        running = true;
-        instance = this;
-        ensureToken();
-        // 固定小线程池：请求可能挂起等用户确认（60s），串行处理会互相阻塞
-        pool = java.util.concurrent.Executors.newFixedThreadPool(4, r -> {
-            Thread t = new Thread(r, "http-shell");
-            t.setDaemon(true);
-            return t;
-        });
-        Thread t = new Thread(() -> {
-            try {
-                // 安全：仅绑定回环（loopback），外部网络无法访问！
-                // 关键：必须显式绑 IPv4 127.0.0.1 —— InetAddress.getLoopbackAddress()
-                // 在 Android（IPv6 优先）上返回 ::1，桥只监听 [::1]:3090，而 rootfs 内
-                // 所有客户端（adb-shell.py / dsh-confirm.sh / 内置插件）都连 127.0.0.1
-                // → Connection refused → 确认弹窗永不出现，命令被判 USER_REJECTED。
-                server = new ServerSocket();
-                server.setReuseAddress(true);
-                server.bind(new java.net.InetSocketAddress(
-                        java.net.InetAddress.getByName("127.0.0.1"), PORT));
+    }
+
+    private void bindAndServe(BridgeRun run) {
+        String failure = null;
+        try {
+            synchronized (LIFECYCLE) {
+                if (!LIFECYCLE.isCurrent(run.generation) || activeRun != run) return;
+                ensureToken();
+                run.server = new ServerSocket();
+            }
+            // IPv4 是主通道；失败时不得启动仅 IPv6 的假就绪服务。
+            run.server.setReuseAddress(true);
+            run.server.bind(new java.net.InetSocketAddress(java.net.InetAddress.getByName("127.0.0.1"), PORT));
+            synchronized (LIFECYCLE) {
+                if (activeRun != run || !LIFECYCLE.publish(run.generation)) return;
+                running = true;
+                instance = this;
                 noteBindOk();
-                acceptLoop(server);
-            } catch (java.net.BindException e) {
-                noteBindError("端口 " + PORT + " 已被其它应用占用（" + safeError(e)
-                        + "）—— 关掉占用它的应用，或重启手机后重开 DSHA");
-            } catch (IOException e) {
-                noteBindError(e.getClass().getSimpleName() + ": " + safeError(e));
+                Thread t6 = new Thread(() -> serveIpv6(run), "http-shell-accept6");
+                t6.setDaemon(true);
+                t6.start();
             }
-        }, "http-shell-accept");
-        t.setDaemon(true);
-        t.start();
-        // 附加监听 [::1]:3090：脚本/插件若用 localhost（可能解析成 IPv6）也能命中。
-        // 绑不上（无 IPv6 栈/被占）时静默跳过，IPv4 主监听已足够。
-        Thread t6 = new Thread(() -> {
-            try {
-                server6 = new ServerSocket();
-                server6.setReuseAddress(true);
-                server6.bind(new java.net.InetSocketAddress(
-                        java.net.InetAddress.getByName("::1"), PORT));
-                acceptLoop(server6);
-            } catch (Throwable e) {
-                // IPv6 绑不上不算故障（有些设备没有 IPv6 栈），IPv4 那条是主通道
-                android.util.Log.i("DSHA", "3090 的 [::1] 附加监听未启用: " + safeError(e));
+            acceptLoop(run, run.server);
+        } catch (java.net.BindException error) {
+            failure = "端口 " + PORT + " 被占用；释放端口后设备桥会重试，也可重启 Web：" + safeError(error);
+        } catch (IOException | RuntimeException error) {
+            failure = safeError(error);
+        } finally {
+            finishRun(run, failure);
+        }
+    }
+
+    private void serveIpv6(BridgeRun run) {
+        try {
+            synchronized (LIFECYCLE) {
+                if (!running || activeRun != run || !LIFECYCLE.isCurrent(run.generation)) return;
+                run.server6 = new ServerSocket();
             }
-        }, "http-shell-accept6");
-        t6.setDaemon(true);
-        t6.start();
+            run.server6.setReuseAddress(true);
+            run.server6.bind(new java.net.InetSocketAddress(java.net.InetAddress.getByName("::1"), PORT));
+            acceptLoop(run, run.server6);
+        } catch (IOException | RuntimeException error) {
+            if (activeRun == run && running) android.util.Log.i("DSHA", "3090 的 IPv6 附加监听不可用：" + safeError(error));
+        } finally { closeSocket(run.server6); }
     }
 
     /** 接受连接并分发到线程池（IPv4/IPv6 两个监听共用） */
-    private void acceptLoop(ServerSocket ss) {
-        while (running) {
+    private void acceptLoop(BridgeRun run, ServerSocket ss) throws IOException {
+        while (running && activeRun == run) {
+            Socket client = ss.accept();
             try {
-                Socket client = ss.accept();
                 // 读超时 15 秒（原来 120 秒）。这个超时只管「读请求头」这一段 ——
                 // 命令执行与等用户点确认期间并不 read，不受影响。
                 // 而池子只有 4 个线程：同一台手机上任何 App 都能连 loopback，
                 // 4 个「连上不说话」的连接就能让桥停摆两分钟，agent 的确认弹窗和
                 // 命令全部超时。请求头 15 秒到不齐的客户端本来也不正常。
                 client.setSoTimeout(15_000);
-                java.util.concurrent.ExecutorService p = pool;
-                if (p == null) {
-                    try { client.close(); } catch (IOException ignored) { }
-                    return;
+                synchronized (LIFECYCLE) {
+                    if (!running || activeRun != run) { client.close(); return; }
+                    run.clients.add(client);
+                    run.pool.execute(() -> {
+                        try { handle(client); }
+                        finally { run.clients.remove(client); }
+                    });
                 }
-                p.execute(() -> handle(client));
-            } catch (IOException e) {
-                if (!running) return;
+            } catch (java.util.concurrent.RejectedExecutionException busy) {
+                run.clients.remove(client);
+                closeSocket(client); // 有界队列已满，不能无限积攒连接和文件描述符。
+            } catch (IOException | RuntimeException error) {
+                run.clients.remove(client);
+                closeSocket(client);
+                throw error;
             }
         }
     }
 
     public void stop() {
-        if (!owner) return; // 非持有者：什么都别动，否则会把真桥的状态清掉
-        owner = false;
-        running = false;
-        writeBridgeStatus("stopped");
-        instance = null;
-        try {
-            if (server != null) server.close();
-        } catch (IOException ignored) {
+        BridgeRun run = activeRun;
+        if (run != null) finishRun(run, null);
+    }
+
+    private void finishRun(BridgeRun run, String failure) {
+        synchronized (LIFECYCLE) {
+            // 旧 accept 线程的 finally 可以迟到，但不能清空新实例的就绪状态。
+            if (activeRun != run || !LIFECYCLE.isCurrent(run.generation)) return;
+            running = false;
+            if (instance == this) instance = null;
+            closeSocket(run.server);
+            closeSocket(run.server6);
+            for (Socket client : run.clients) closeSocket(client);
+            run.clients.clear();
+            run.pool.shutdownNow();
+            questions.stop();
+            pendingAllow = false;
+            CountDownLatch latch = pendingLatch;
+            if (latch != null) latch.countDown();
+            dismissConfirmDialog();
+            cancelConfirmNotification();
+            if (failure == null) writeBridgeStatus("stopped");
+            else noteBindError(failure);
+            activeRun = null;
+            if (tokenOwner == this) tokenOwner = null;
+            if (fixtureTokenFile != null) { authToken = ""; tokenCtx = null; }
+            LIFECYCLE.finish(run.generation);
         }
-        try {
-            if (server6 != null) server6.close();
-        } catch (IOException ignored) {
-        }
-        if (pool != null) {
-            pool.shutdownNow();
-            pool = null;
-        }
-        // 释放挂起的确认（默认拒绝）
-        CountDownLatch l = pendingLatch;
-        if (l != null) l.countDown();
-        dismissConfirmDialog();
-        cancelConfirmNotification();
-        STARTED.set(false); // 放开，允许后续重新启动（DeviceBridgeService 会自愈拉起）
+    }
+
+    private static void closeSocket(java.io.Closeable socket) {
+        if (socket != null) try { socket.close(); } catch (IOException ignored) { }
     }
 
     /** 校验查询串/头中的 token（常量时间比较 + URL 解码容错） */
@@ -392,7 +441,7 @@ public final class HttpShellService {
     }
 
     private void handle(Socket client) {
-        try (Socket c = client) {
+        try (Socket c = client; com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             String line = reader.readLine();
             if (line == null) return;
@@ -972,7 +1021,7 @@ public final class HttpShellService {
                 sb.append("screen=").append(pm != null && pm.isInteractive() ? "on" : "off").append('\n');
             } catch (Throwable ignored) {
             }
-            sb.append("app_foreground=").append(MainActivity.current != null).append('\n');
+            sb.append("app_foreground=").append(ForegroundActivity.current() != null).append('\n');
             try {
                 android.os.StatFs fs = new android.os.StatFs(
                         android.os.Environment.getExternalStorageDirectory().getPath());
@@ -1051,29 +1100,34 @@ public final class HttpShellService {
     private String appClip(String path) {
         final String text = getParam(queryOf(path), "text", "");
         try {
-            final android.content.ClipboardManager cm = (android.content.ClipboardManager)
-                    ctx.getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm == null) return "NO_SERVICE";
-            if (!text.isEmpty()) {
-                mainHandler.post(() -> {
-                    try {
-                        cm.setPrimaryClip(android.content.ClipData.newPlainText("DSHA", text));
-                    } catch (Throwable ignored) {
-                    }
-                });
-                return "OK: 已写入剪贴板（" + text.length() + " 字）";
+            // HTTP 工作线程有界等待。不能在排队后先报成功，也不能因等待超时就假定尚未写入。
+            if (Looper.myLooper() == Looper.getMainLooper()) return "ERROR: 剪贴板桥需由请求工作线程调用";
+            BoundedUiCall.Result<String> result = BoundedUiCall.call(new BoundedUiCall.Dispatcher() {
+                @Override public boolean post(Runnable task) { return mainHandler.post(task); }
+                @Override public void remove(Runnable task) { mainHandler.removeCallbacks(task); }
+            }, () -> {
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
+                if (cm == null) return "NO_SERVICE";
+                if (!text.isEmpty()) {
+                    cm.setPrimaryClip(android.content.ClipData.newPlainText("DSHA", text));
+                    return "OK: 已写入剪贴板（" + text.length() + " 字）";
+                }
+                // 读取时复核真正前台窗口，WebView/Gecko 同样属于前台应用。
+                if (!ForegroundActivity.isResumed(ForegroundActivity.current()))
+                    return "[APP_BACKGROUND] 系统限制：只有 App 在前台时才能读剪贴板，可先用 /app/notify 提醒用户打开 DSHA";
+                android.content.ClipData cd = cm.getPrimaryClip();
+                if (cd == null || cd.getItemCount() == 0) return "（剪贴板为空）";
+                CharSequence cs = cd.getItemAt(0).coerceToText(ctx);
+                String value = cs == null ? "" : cs.toString();
+                return value.length() > 8192 ? value.substring(0, 8192) + "…（已截断）" : value;
+            }, 3000);
+            switch (result.status) {
+                case SUCCESS: return result.value;
+                case FAILED: return "ERROR: 剪贴板操作失败：" + safeError(result.error);
+                case NOT_EXECUTED: return (result.interrupted ? "[INTERRUPTED] " : "[TIMEOUT] ")
+                        + "主线程尚未执行，已取消本次剪贴板操作；可重试";
+                default: return "[RESULT_UNKNOWN] 剪贴板操作已开始，但等待已结束，结果未知；请确认后再重试";
             }
-            // 读：Android 10+ 只有前台应用能读剪贴板，后台一律拿不到
-            if (MainActivity.current == null) {
-                return "[APP_BACKGROUND] 系统限制：只有 App 在前台时才能读剪贴板，"
-                        + "可先用 /app/notify 提醒用户打开 DSHA";
-            }
-            android.content.ClipData cd = cm.getPrimaryClip();
-            if (cd == null || cd.getItemCount() == 0) return "（剪贴板为空）";
-            CharSequence cs = cd.getItemAt(0).coerceToText(ctx);
-            String s = cs == null ? "" : cs.toString();
-            if (s.length() > 8192) s = s.substring(0, 8192) + "…（已截断）";
-            return s;
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
         }
@@ -1166,70 +1220,54 @@ public final class HttpShellService {
 
     /** /app/ask?q=问题&options=选项A|选项B|选项C ：弹窗问用户，阻塞等回答（最多 3 个选项，120 秒超时） */
     private String appAsk(String path) {
+        return appAsk(path, 120_000, fixtureAskObserver);
+    }
+
+    /** 测试可缩短期限，但必须复用生产的前台宿主选择，不能注入一个永远前台的 Activity。 */
+    String appAsk(String path, long timeoutMillis, java.util.function.Consumer<BridgeAskDialog> created) {
+        return appAsk(path, timeoutMillis, ForegroundActivity.current(), created);
+    }
+
+    /** 包内注入窗口宿主与较短期限；不向 HTTP 参数开放这些测试控制。 */
+    String appAsk(String path, long timeoutMillis, androidx.fragment.app.FragmentActivity act,
+                  java.util.function.Consumer<BridgeAskDialog> created) {
+        if (timeoutMillis <= 0 || timeoutMillis > 120_000) throw new IllegalArgumentException("无效的提问期限");
         String q = getParam(queryOf(path), "q", "");
         String optRaw = getParam(queryOf(path), "options", "");
         if (q.isEmpty()) return "NO_QUESTION";
-        final MainActivity act = MainActivity.current;
         if (act == null) {
             return "[APP_BACKGROUND] App 不在前台，弹不出提问 —— 可先 /app/notify 提醒用户打开 DSHA";
         }
-        String[] parts = optRaw.isEmpty() ? new String[] { "好" } : optRaw.split("\\|");
+        String[] parts = optRaw.isEmpty() ? new String[] { "好" } : optRaw.split("\\|", -1);
         final String[] opts = parts.length <= 3 ? parts : new String[] { parts[0], parts[1], parts[2] };
         final String displayQuestion = safeDisplay(q);
         final String[] displayOptions = new String[opts.length];
         for (int i = 0; i < opts.length; i++) displayOptions[i] = safeDisplay(opts[i]);
-        // 检查与置位必须原子（见 askBusy 声明处）。CAS 成功之后立刻进 try，
-        // 保证任何返回路径都会在 finally 里放开它。
-        if (!askBusy.compareAndSet(false, true)) {
-            return "[BUSY] 已有一个提问在等用户回答";
+        final BridgeQuestions.Request request;
+        synchronized (LIFECYCLE) {
+            if (!running || instance != this) return "[STOPPED] 设备桥已停止，请稍后重试";
+            request = questions.begin(timeoutMillis);
         }
+        if (request == null) return "[BUSY] 已有一个提问在等用户回答";
+        BridgeAskDialog dialog = new BridgeAskDialog(act, questions, request);
         try {
-            final CountDownLatch latch = new CountDownLatch(1);
-            askAnswer = "";
-            act.runOnUiThread(() -> {
-                try {
-                    // 正在 finishing / 已销毁的 Activity 上 show() 会抛 BadTokenException，
-                    // 而这里是主线程，异常不在 handle() 的 catch 范围内 → 会崩 App
-                    if (act.isFinishing() || act.isDestroyed()) return;
-                    androidx.appcompat.app.AlertDialog.Builder b =
-                            new androidx.appcompat.app.AlertDialog.Builder(act)
-                                    .setTitle("助手提问").setMessage(displayQuestion);
-                    b.setPositiveButton(displayOptions[0], (d, w) -> {
-                        askAnswer = opts[0];
-                        latch.countDown();
-                    });
-                    if (opts.length > 1) {
-                        b.setNegativeButton(displayOptions[1], (d, w) -> {
-                            askAnswer = opts[1];
-                            latch.countDown();
-                        });
-                    }
-                    if (opts.length > 2) {
-                        b.setNeutralButton(displayOptions[2], (d, w) -> {
-                            askAnswer = opts[2];
-                            latch.countDown();
-                        });
-                    }
-                    // 只认「用户主动取消」（返回键 / 点框外）。**不要挂 OnDismissListener** ——
-                    // dismiss 在 Activity 重建时也会触发（旋屏、切深色模式、被系统回收），
-                    // 那会让 agent 收到「用户关掉了提问框」这种假答案。确认弹窗那边正是
-                    // 因为拿 dismiss 当拒绝，长期出现「确认框有时莫名被拒」。
-                    // 代价是 Activity 重建时这次提问要等满超时 —— 宁可让 agent 多等，
-                    // 也不要给它一个错的回答。
-                    b.setOnCancelListener(d -> latch.countDown());
-                    b.show();
-                } catch (Throwable e) {
-                    latch.countDown();
-                }
-            });
-            boolean answered = latch.await(120, TimeUnit.SECONDS);
-            if (!answered) return "[TIMEOUT] 用户 120 秒内没有回答";
-            return askAnswer.isEmpty() ? "[DISMISSED] 用户关掉了提问框" : askAnswer;
+            if (created != null) created.accept(dialog);
+            dialog.show(displayQuestion, opts, displayOptions);
+            switch (questions.await(request)) {
+                case ANSWER: return request.answer();
+                case TIMEOUT: return "[TIMEOUT] 用户在提问期限内没有回答";
+                case DISMISSED: return "[DISMISSED] 用户关掉了提问框";
+                case BACKGROUND: return "[APP_BACKGROUND] 页面已离开或重建，请回到 DSHA 后重新提问";
+                case STOPPED: return "[STOPPED] 设备桥已停止，请稍后重试";
+                default: return "[UNAVAILABLE] 提问窗口已关闭或无法显示，请重新提问";
+            }
         } catch (InterruptedException e) {
+            questions.cancel(request, BridgeQuestions.End.INTERRUPTED);
+            Thread.currentThread().interrupt();
             return "[INTERRUPTED]";
         } finally {
-            // 顺序与 confirm 一致：先清状态，最后才放开 busy
-            askBusy.set(false);
+            dialog.close();
+            questions.release(request);
         }
     }
 
@@ -1306,14 +1344,15 @@ public final class HttpShellService {
             OverlayController.askConfirm(ctx, safeDisplay(cmd),
                     () -> resolveConfirm(true, myEpoch),
                     () -> resolveConfirm(false, myEpoch));
-            final MainActivity act = MainActivity.current;
+            final androidx.fragment.app.FragmentActivity act = ForegroundActivity.current();
             if (act != null) {
                 final String prompt = "模型试图在设备上执行：\n" + safeDisplay(cmd) + "\n\n是否允许？";
                 act.runOnUiThread(() -> {
                     // 正在 finishing 的 Activity 上 show() 会抛 BadTokenException，
                     // 而这里是主线程，异常不在 handle() 的 catch 范围内 → 会崩 App
                     try {
-                        if (act.isFinishing() || act.isDestroyed()) return;
+                        if (!ForegroundActivity.isResumed(act) || confirmEpoch.get() != myEpoch
+                                || pendingLatch != latch || latch.getCount() == 0) return;
                         pendingDialog = new androidx.appcompat.app.AlertDialog.Builder(act)
                                 .setTitle("DSHA 安全确认")
                                 .setMessage(prompt)

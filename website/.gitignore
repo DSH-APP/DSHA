@@ -1,4 +1,5 @@
 dist/
+node_modules/
 artifacts/
 original/
 scripts/sync-source.ps1

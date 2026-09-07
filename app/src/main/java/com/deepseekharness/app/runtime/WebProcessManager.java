@@ -1,39 +1,57 @@
 package com.deepseekharness.app.runtime;
 
+import android.system.ErrnoException;
+import android.system.Os;
+import android.system.OsConstants;
+import com.deepseekharness.app.util.Compat;
+import com.deepseekharness.app.util.SensitiveData;
 import com.deepseekharness.app.util.WebProcSel;
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 
-/**
- * Web 进程的启停管理。停止判据全部收在 {@link WebProcSel}（唯一定义），
- * 这里只负责「按判据执行」：写停止哨兵 + 按 pid 文件杀。
- */
+/** 宿主侧按 PID 停止 Web；先写哨兵，不依赖可运行的 bash 或另起一个容器。 */
 public class WebProcessManager {
-
     private final ProotBootstrap proot;
+    public WebProcessManager(ProotBootstrap proot) { this.proot = proot; }
 
-    public WebProcessManager(ProotBootstrap proot) {
-        this.proot = proot;
+    /** 空串表示已退出；失败返回明确原因，绝不按端口或名称批量终止进程。 */
+    public String stop() {
+        File root = new File(proot.getRootfsDir(), "root");
+        if (!root.isDirectory()) return ""; // 首次安装不能因停止检查而生成一个“半环境”。
+        try {
+            File sentinel = new File(proot.getRootfsDir(), WebProcSel.pidFileRel(WebProcSel.STOP_SENTINEL));
+            if (Compat.isSymbolicLink(sentinel) || !sentinel.exists() && !sentinel.createNewFile())
+                return "无法写入停止标记，尚未停止 Web";
+            File pidFile = new File(proot.getRootfsDir(), WebProcSel.pidFileRel(WebProcSel.PID_WEB));
+            if (Compat.isSymbolicLink(pidFile)) return "Web PID 文件异常，未终止任何进程";
+            if (!pidFile.exists()) return "";
+            if (!pidFile.isFile() || pidFile.length() > 32)
+                return "Web PID 文件异常，未终止任何进程";
+            int pid = WebProcSel.parsePid(new String(Compat.readAllBytes(pidFile), StandardCharsets.UTF_8));
+            if (pid < 0) return "Web PID 无效，未终止任何进程";
+            if (!alive(pid)) return "";
+            File cmdline = new File("/proc/" + pid + "/cmdline");
+            if (cmdline.canRead()) {
+                byte[] bytes = new byte[8192]; int count;
+                try (FileInputStream in = new FileInputStream(cmdline)) { count = in.read(bytes); }
+                if (count > 0 && !WebProcSel.looksLikeWeb(new String(bytes, 0, count, StandardCharsets.UTF_8).replace('\0', ' ')))
+                    return "PID 指向的进程不是 dsh Web，已保留；请检查环境状态";
+            }
+            Os.kill(pid, OsConstants.SIGTERM);
+            long deadline = android.os.SystemClock.elapsedRealtime() + 3000;
+            do {
+                if (!alive(pid)) return "";
+                Thread.sleep(50);
+            } while (android.os.SystemClock.elapsedRealtime() < deadline);
+            return "已请求停止，Web 尚未退出；稍后可重试，未强杀容器启动器";
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();return "停止等待被中断，请检查 Web 状态";
+        } catch (Exception e) { return "停止 Web 失败：" + SensitiveData.redact(String.valueOf(e)); }
     }
 
-    /**
-     * 停止 Web：
-     * <ol>
-     *   <li>写 {@link WebProcSel#STOP_SENTINEL}，让看门狗/重启脚本见到就退出；</li>
-     *   <li>读 {@link WebProcSel#PID_WEB}，核对 cmdline 长相后 {@code kill}。</li>
-     * </ol>
-     * 顺序不可换：先哨兵再杀，否则拉起者会在你杀完之后把 Web 拽回来（「秒复活」）。
-     */
-    public void stop() {
-        String script = "touch " + WebProcSel.STOP_SENTINEL + "\n"
-                + "_p=$(cat " + WebProcSel.PID_WEB + " 2>/dev/null)\n"
-                + "case \"$_p\" in ''|*[!0-9]*) exit 0 ;; esac\n"
-                + "[ -r /proc/$_p/cmdline ] && { "
-                +   "_c=$(tr '\\0' ' ' < /proc/$_p/cmdline 2>/dev/null); "
-                +   "case \"$_c\" in *proot*|*proroot*) exit 0 ;; esac; "
-                + "}; "
-                + "kill \"$_p\" 2>/dev/null\n";
-        try {
-            proot.execAndRead(script, 10_000); // 同步等待 kill 完成，确保端口释放
-        } catch (Exception ignored) {
-        }
+    private static boolean alive(int pid) throws ErrnoException {
+        try { Os.kill(pid, 0);return true; }
+        catch (ErrnoException e) { if (e.errno == OsConstants.ESRCH) return false;throw e; }
     }
 }

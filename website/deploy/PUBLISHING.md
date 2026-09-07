@@ -1,6 +1,6 @@
 # 网站发布与回退
 
-1. 从最终标准版与兼容版 APK 生成统一发布清单，运行网站构建、检查和 `scripts/package.mjs`。
+1. 在 `website` 目录执行 `npm ci --ignore-scripts` 安装锁定的构建/测试依赖。从最终标准版与兼容版 APK 生成统一发布清单，运行 `npm run build`、`npm run check` 和 `node scripts/package.mjs`。仅改网页时使用当前线上 APK 对应的清单；新 APK 未发布前，不把更新接口提前切到新版本。
 2. 读取 `artifacts/deployment-manifest.json`，将网页归档和两个 APK 上传到服务器 `/srv/dsha.cc/uploads/BUILD_ID`。只部署 `dist` 产物，不上传源码、取证目录、连接信息或私钥。
 3. 按实际服务器配置核对 Nginx。`nginx-dsha-https.conf` 是 dsha.cc 的配置参考，其中 `/.well-known/assetlinks.json` 使用精确规则，其他隐藏文件禁止访问。配置变更前保留原文件，执行 `nginx -t` 后再重载。
 4. 执行 `bash update-web-release.sh BUILD_ID ARCHIVE_SHA256 VERSION`。脚本校验全部文件后原子切换 `current`，保留旧版本下载目录；健康检查失败时还原之前的链接。

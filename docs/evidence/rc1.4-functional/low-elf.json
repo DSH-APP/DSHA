@@ -1,0 +1,14 @@
+{
+  "arm64_elf_counts": {
+    "host": 24,
+    "rootfs": 737,
+    "python": 49,
+    "wheels": 21,
+    "python_support": 2,
+    "pnpm": 0
+  },
+  "unaligned_16k": [],
+  "other_architectures": [],
+  "relro_outside_load": [],
+  "limitation": "静态 ELF 检查不能替代真实 16 KB 内核上的 proot / dsh / ADB 运行验证"
+}

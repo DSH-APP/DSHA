@@ -50,6 +50,52 @@ public class PluginFragment extends Fragment {
     private ArrayList<String> pendingExports = new ArrayList<>();
     private android.net.Uri pendingImport;
     private AlertDialog previewDialog;
+    /** Repository 随 Activity 留存；失效记录不能只挂在被替换的 Fragment 上。仅主线程访问。 */
+    private static long installedRevision;
+    private static final java.util.WeakHashMap<PluginRepository, Long> refreshedRevisions = new java.util.WeakHashMap<>();
+    private final android.os.Handler refreshHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable refreshInvalidated = this::refreshInstalledIfNeeded;
+    private String environmentNotice;
+
+    static void invalidateInstalledState() { installedRevision++; }
+
+    /** 只在首次读取或安全启动失效后同步一次；等待中的轮询只读内存状态。 */
+    private void refreshInstalledIfNeeded() {
+        refreshHandler.removeCallbacks(refreshInvalidated);
+        if (root == null || !isResumed()) return;
+        if (pluginRefreshBlocked()) {
+            refreshHandler.postDelayed(refreshInvalidated, 500);
+            return;
+        }
+        Long refreshed = refreshedRevisions.get(repository);
+        if (refreshed != null && refreshed == installedRevision) return;
+        // 失败由操作结果明确显示，用户可手动重试；不在失败后无限全量刷新。
+        refreshedRevisions.put(repository, installedRevision);
+        syncInstalledState();
+    }
+
+    // 调试自测替换这两个边界，验证刷新时机，不触发真实插件注册或容器任务。
+    boolean pluginRefreshBlocked() {
+        String blocked = repository.environmentBlockMessage();
+        if (!blocked.isEmpty()) {
+            PluginRepository.State shown = repository.state().getValue();
+            if (!repository.isBusy()) {
+                environmentNotice = blocked;
+                if (shown == null || !blocked.equals(shown.message)) repository.selectionMessage(blocked);
+            }
+            return true;
+        }
+        if (environmentNotice != null) {
+            PluginRepository.State shown = repository.state().getValue();
+            if (!repository.isBusy() && shown != null && environmentNotice.equals(shown.message))
+                repository.selectionMessage("环境任务已结束；当前显示缓存列表，可点「刷新」同步插件状态");
+            environmentNotice = null;
+        }
+        com.deepseekharness.app.core.HarnessController controller =
+                com.deepseekharness.app.core.HarnessController.get(requireContext());
+        return repository.isBusy() || controller.isStarting() || controller.isStopping();
+    }
+    void syncInstalledState() { repository.refresh(); }
 
     private final ActivityResultLauncher<android.content.Intent> importPicker = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -121,6 +167,7 @@ public class PluginFragment extends Fragment {
         view.findViewById(R.id.btnInstalled).setOnClickListener(v -> selectTab(false));
         view.findViewById(R.id.btnRefresh).setOnClickListener(v -> repository.refresh());
         view.findViewById(R.id.btnPluginUpdates).setOnClickListener(v -> repository.checkUpdates(null));
+        view.findViewById(R.id.btnCancelPluginTask).setOnClickListener(v -> repository.cancelTask());
         view.findViewById(R.id.btnPluginRestore).setOnClickListener(v -> new AlertDialog.Builder(requireContext())
                 .setTitle("恢复第三方插件？").setMessage("恢复安全启动前已启用的插件；之后手动禁用的插件保持禁用。恢复后重启 Web 生效。")
                 .setNegativeButton("取消", null).setPositiveButton("恢复", (d, which) -> repository.safeMode(false, null)).show());
@@ -150,10 +197,17 @@ public class PluginFragment extends Fragment {
         });
         repository.state().observe(getViewLifecycleOwner(), state -> { current = state; render(); });
         repository.preview().observe(getViewLifecycleOwner(), ignored -> showInstallPreview());
-        if (!repository.isBusy() && ((saved == null && getArguments() != null && getArguments().getBoolean("show_installed", false))
-                || repository.state().getValue() == null
-                || repository.state().getValue().items.isEmpty())) repository.refresh();
         recognizeLink();
+    }
+
+    @Override public void onResume() {
+        super.onResume();
+        refreshInstalledIfNeeded();
+    }
+
+    @Override public void onPause() {
+        refreshHandler.removeCallbacks(refreshInvalidated);
+        super.onPause();
     }
 
     @Override public void onSaveInstanceState(@NonNull Bundle state) {
@@ -165,6 +219,7 @@ public class PluginFragment extends Fragment {
     }
 
     @Override public void onDestroyView() {
+        refreshHandler.removeCallbacks(refreshInvalidated);
         if (previewDialog != null) { previewDialog.dismiss(); previewDialog = null; }
         ((RecyclerView) root.findViewById(R.id.pluginList)).setAdapter(null);
         root = null;
@@ -235,7 +290,14 @@ public class PluginFragment extends Fragment {
 
     private void installLink() {
         if (repository.isBusy()) return;
-        try { repository.install(PluginSource.parse(linkInput.getText().toString())); }
+        try {
+            PluginSource source = PluginSource.parse(linkInput.getText().toString());
+            android.view.inputmethod.InputMethodManager keyboard = (android.view.inputmethod.InputMethodManager)
+                    requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+            if (keyboard != null) keyboard.hideSoftInputFromWindow(linkInput.getWindowToken(),0);
+            linkInput.clearFocus();
+            repository.install(source);
+        }
         catch (IllegalArgumentException error) { toast(error.getMessage()); }
     }
 
@@ -269,6 +331,7 @@ public class PluginFragment extends Fragment {
 
     private void render() {
         if (root == null || current == null) return;
+        root.findViewById(R.id.pluginMarketCard).setVisibility(market ? View.VISIBLE : View.GONE);
         root.findViewById(R.id.marketHelp).setVisibility(market ? View.VISIBLE : View.GONE);
         root.findViewById(R.id.pluginWebsiteSection).setVisibility(market ? View.VISIBLE : View.GONE);
         root.findViewById(R.id.pluginLinkSection).setVisibility(market ? View.VISIBLE : View.GONE);
@@ -282,6 +345,11 @@ public class PluginFragment extends Fragment {
         ((TextView) root.findViewById(R.id.btnInstalled)).setTextColor(requireContext().getColor(
                 market ? R.color.text_secondary : R.color.primary));
         root.findViewById(R.id.pluginBusy).setVisibility(current.busy ? View.VISIBLE : View.GONE);
+        android.widget.ProgressBar progress = root.findViewById(R.id.pluginBusy);
+        progress.setIndeterminate(current.percent < 0);
+        if (current.percent >= 0) progress.setProgress(current.percent);
+        root.findViewById(R.id.btnCancelPluginTask).setVisibility(current.busy ? View.VISIBLE : View.GONE);
+        root.findViewById(R.id.btnCancelPluginTask).setEnabled(current.cancellable);
         ((TextView) root.findViewById(R.id.statusText)).setText(current.message);
         for (int id : new int[]{R.id.btnImport, R.id.btnImportFallback, R.id.btnExport, R.id.btnRefresh, R.id.btnPluginUpdates, R.id.btnPluginRestore})
             root.findViewById(id).setEnabled(!current.busy);

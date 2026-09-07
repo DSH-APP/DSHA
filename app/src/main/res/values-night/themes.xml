@@ -1,40 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.DeepseekHarness" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorOnPrimary">@color/accent_on</item>
-        <item name="colorPrimaryContainer">@color/raised</item>
-        <item name="colorOnPrimaryContainer">@color/primary</item>
-        <item name="colorSecondary">@color/primary_dark</item>
-        <item name="colorSecondaryContainer">@color/ripple</item>
-        <item name="colorOnSecondaryContainer">@color/primary</item>
-        <item name="colorSurface">@color/card</item>
-        <item name="colorOnSurface">@color/text</item>
-        <item name="colorSurfaceVariant">@color/raised</item>
-        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
-        <item name="colorOutline">@color/line</item>
-        <item name="colorOutlineVariant">@color/line</item>
-        <item name="colorError">@color/err</item>
-        <item name="colorOnError">#1A0F0F</item>
-        <item name="colorControlHighlight">@color/ripple</item>
-
-        <item name="android:colorBackground">@color/surface</item>
-        <item name="android:windowBackground">@color/surface</item>
-        <item name="android:statusBarColor">@color/surface</item>
-        <item name="android:navigationBarColor">@color/surface</item>
+    <!-- 共同颜色及控件规则集中到 Base，夜间只覆盖系统栏图标。 -->
+    <style name="Theme.DeepseekHarness" parent="Theme.DSHA.Base">
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:textColorPrimary">@color/text</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="android:textColorHint">@color/text_muted</item>
-
-        <item name="alertDialogTheme">@style/Dialog.DSHA.Alert</item>
-        <item name="materialAlertDialogTheme">@style/Dialog.DSHA.Material</item>
-
-        <!-- 必须和 values/themes.xml 保持一致：Material3 会把 <Button> 膨胀成
-             MaterialButton 并用 backgroundTint=colorPrimary 填充，忽略
-             android:background。深色模式下 primary 是浅蓝 #7DA7F4，
-             配 text_secondary #A6B0C3 对比度只有约 1.3:1 —— 就是用户看到的
-             「浅蓝底白字看不清」。上一版只改了 day 那份，深色模式毫无变化。 -->
-        <item name="materialButtonStyle">@style/Widget.DSHA.Button</item>
     </style>
 </resources>

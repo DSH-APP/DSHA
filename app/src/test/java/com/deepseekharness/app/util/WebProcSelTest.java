@@ -8,6 +8,12 @@ import org.junit.Test;
 
 /** WebProcSel 的判据断言：认得出 dsh 进程、绝不误杀 proot 容器启动器。 */
 public class WebProcSelTest {
+    @org.junit.Test public void pidFileContainsOnlyOneSafePid() {
+        org.junit.Assert.assertEquals(1234, WebProcSel.parsePid("1234\n"));
+        for (String value : new String[]{"", "0", "1", "-1234", "+1234", "1234;echo bad", "1234\n5678", "9999999999", "１２３４"})
+            org.junit.Assert.assertEquals(value, -1, WebProcSel.parsePid(value));
+        org.junit.Assert.assertEquals(-1, WebProcSel.parsePid(null));
+    }
 
     @Test
     public void recognizesRealDshCmdline() {

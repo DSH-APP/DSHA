@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/surface" android:fillViewport="true">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_pad">
-        <Button android:id="@+id/link_install_close" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="关闭" />
-        <TextView style="@style/DshaText.Display" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="安装网站插件" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <Button android:id="@+id/link_install_close" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="44dp" android:layout_height="wrap_content" android:text="‹" android:textSize="24sp" android:contentDescription="返回" />
+            <TextView style="@style/DshaText.PageTitle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="安装插件" />
+        </LinearLayout>
         <TextView android:id="@+id/link_install_status" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textIsSelectable="true" />
         <TextView android:id="@+id/link_install_details" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textIsSelectable="true" />
-        <Button android:id="@+id/link_install_confirm" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="解析链接" />
-        <Button android:id="@+id/link_install_manage" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="打开插件管理" />
+        <Button android:id="@+id/link_install_confirm" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="解析链接" />
+        <Button android:id="@+id/link_install_manage" style="@style/Widget.DSHA.TextButton" android:layout_marginTop="8dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="打开插件管理" />
     </LinearLayout>
 </ScrollView>

@@ -97,11 +97,12 @@ public final class PtyTerminalFragment extends Fragment
     /** App 退出时收掉会话，别在容器里留一个孤儿 bash。 */
     public static void shutdown() {
         PtySession s = session;
-        session = null;
         if (s != null) {
             try {
                 s.finish();
-            } catch (Throwable ignored) {
+                if (!s.isRunning() && session == s) session = null;
+            } catch (Throwable error) {
+                android.util.Log.w("DSHA", "终端尚未停止，保留会话与环境保护：" + SensitiveData.redact(String.valueOf(error)));
             }
         }
     }
@@ -175,6 +176,7 @@ public final class PtyTerminalFragment extends Fragment
         for (String[] k : KEYS) {
             TextView b = new TextView(requireContext());
             b.setText(k[0]);
+            b.setMinHeight(dp(44)); b.setMinWidth(dp(44));
             b.setGravity(Gravity.CENTER);
             b.setBackgroundResource(R.drawable.bg_chip);
             b.setTextColor(getResources().getColor(R.color.text_secondary));

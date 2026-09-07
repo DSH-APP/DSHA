@@ -1,85 +1,37 @@
 #!/usr/bin/env python3
 """插件安装预览、更新发现、单版本回退与安全启动；由 plugin-manager 注入既有安装器。"""
+import base64
+import functools
 import hashlib
 import json
 import os
 import re
 import shlex
 import shutil
+import subprocess
 import time
 import urllib.parse
 import uuid
 
 
-def version_parts(value):
-    match = re.fullmatch(r"v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?", str(value))
-    if not match:
+@functools.lru_cache(maxsize=256)
+def semver_request(action, left, right):
+    """使用随包 npm SemVer；未知/非法范围不得冒充兼容。"""
+    try:
+        request = {'action': action, 'left': left, 'right': right, 'version': left, 'range': right}
+        process = subprocess.run(['node', os.path.join(os.path.dirname(__file__), 'plugin-semver.cjs')],
+                                 input=json.dumps(request), text=True, capture_output=True, timeout=15)
+        return json.loads(process.stdout) if process.returncode == 0 else None
+    except (OSError, ValueError, subprocess.TimeoutExpired):
         return None
-    return tuple(int(match[i] or 0) for i in (1, 2, 3)), match[4]
 
 
 def compare_versions(left, right):
-    a, b = version_parts(left), version_parts(right)
-    if a is None or b is None:
-        return None
-    if a[0] != b[0]:
-        return (a[0] > b[0]) - (a[0] < b[0])
-    if a[1] == b[1]:
-        return 0
-    if a[1] is None or b[1] is None:
-        return 1 if a[1] is None else -1
-    aa, bb = a[1].split('.'), b[1].split('.')
-    for x, y in zip(aa, bb):
-        if x == y:
-            continue
-        if x.isdigit() and y.isdigit():
-            return (int(x) > int(y)) - (int(x) < int(y))
-        if x.isdigit() != y.isdigit():
-            return -1 if x.isdigit() else 1
-        return (x > y) - (x < y)
-    return (len(aa) > len(bb)) - (len(aa) < len(bb))
+    return semver_request('compare', str(left), str(right))
 
 
 def accepts_version(installed, requirement):
-    """识别常用精确/比较/^/~ 范围；不能确定时返回 None，交给用户查看声明。"""
-    if requirement.strip() in ('*', 'latest', ''):
-        return True
-    parsed = version_parts(installed)
-    if not parsed:
-        return None
-    unknown = False
-    for group in requirement.split('||'):
-        words = group.strip().split()
-        outcomes = []
-        for word in words:
-            match = re.fullmatch(r'(\^|~|>=|<=|>|<|=)?(v?\d+(?:\.\d+){0,2}(?:-[0-9A-Za-z.-]+)?)', word)
-            if not match:
-                unknown = True; outcomes.append(None); continue
-            operator, wanted = match[1] or '=', match[2]
-            cmp = compare_versions(installed, wanted)
-            if cmp is None:
-                outcomes.append(None); continue
-            if operator in ('^', '~'):
-                target = version_parts(wanted)[0]
-                if operator == '~':
-                    upper = (target[0], target[1] + 1, 0)
-                elif target[0]:
-                    upper = (target[0] + 1, 0, 0)
-                elif target[1]:
-                    upper = (0, target[1] + 1, 0)
-                else:
-                    upper = (0, 0, target[2] + 1)
-                outcomes.append(cmp >= 0 and parsed[0] < upper)
-            else:
-                outcomes.append({'=': cmp == 0, '>': cmp > 0, '<': cmp < 0, '>=': cmp >= 0, '<=': cmp <= 0}[operator])
-        # 对预发布版不猜测 npm 的所有复杂区间规则，没有显式声明时标记待确认。
-        if parsed[1] and '-' not in group:
-            outcomes.append(None)
-        if outcomes and all(value is True for value in outcomes):
-            return True
-        if None in outcomes and False not in outcomes:
-            unknown = True
-    return None if unknown else False
+    return semver_request('satisfies', str(installed), str(requirement))
 
 
 class HistoryChange:
@@ -148,7 +100,9 @@ class Lifecycle:
         return ''
 
     def metadata(self, root):
-        pkg = self.g['plugin_package'](root)
+        return self.package_metadata(self.g['plugin_package'](root))
+
+    def package_metadata(self, pkg):
         author = pkg.get('author', '')
         if isinstance(author, dict):
             author = author.get('name', '')
@@ -213,6 +167,7 @@ class Lifecycle:
 
         def receive(archive, subdir='', source=''):
             nonlocal prepared
+            self.g['progress']('verify', '正在核对插件摘要和声明…')
             if not os.path.isfile(archive) or os.path.getsize(archive) > self.g['MAX_DOWNLOAD']:
                 raise ValueError('插件包不存在或超过 256 MiB')
             digest = self.digest(archive)
@@ -231,7 +186,7 @@ class Lifecycle:
                 raise ValueError('下载包的名称与选中的插件不一致')
             if request.get('version') and (len(items) != 1 or items[0]['version'] != request['version']):
                 raise ValueError('下载包版本与网页说明不一致')
-            prepared = {'previewId': key, 'source': source, 'command': command, 'sha256': digest,
+            prepared = {'previewId': key, 'source': request.get('source') or source, 'command': command, 'sha256': digest,
                         'items': items, 'createdAt': int(time.time()), 'subdir': subdir,
                         'updateFor': request.get('updateFor', ''), 'fromVersion': request.get('fromVersion', '')}
             self.write(os.path.join(path, 'preview.json'), prepared)
@@ -252,6 +207,7 @@ class Lifecycle:
                 raise ValueError('不支持的安装参数')
             if prepared is None:
                 raise ValueError('未获得可安装的插件包')
+            self.g['check_cancel']()
         except Exception:
             shutil.rmtree(path); raise
         if emit:
@@ -288,10 +244,10 @@ class Lifecycle:
             if current.get('version') != preview.get('fromVersion'):
                 raise ValueError('插件已被其他操作更新，请重新检查版本')
         expected = {preview['updateFor']: preview.get('fromVersion')} if preview.get('updateFor') else None
-        code = self.g['cmd_import'](archive, preview.get('subdir', ''), preview.get('source', ''), expected_versions=expected)
-        if code == 0:
+        try:
+            return self.g['cmd_import'](archive, preview.get('subdir', ''), preview.get('source', ''), expected_versions=expected)
+        finally:
             shutil.rmtree(path)
-        return code
 
     def source_command(self, name):
         sources = self.read(self.local(self.g['SOURCES']), {})
@@ -322,12 +278,87 @@ class Lifecycle:
             return 'download ' + shlex.quote(source)
         raise ValueError('此插件没有可检查的来源，请从作者页面取得新包后导入')
 
-    def check_updates(self, name=''):
+    def remote_json(self, url):
+        self.g['progress']('metadata', '正在读取版本信息…')
+        with self.g['open_url'](url) as response:
+            data = response.read(4 * 1024 * 1024 + 1)
+        if len(data) > 4 * 1024 * 1024:
+            raise ValueError('版本元数据过大')
+        self.g['check_cancel']()
+        return json.loads(data)
+
+    def update_metadata(self, name):
+        command = self.source_command(name)
+        parts = shlex.split(command)
+        if parts[0] == 'npm':
+            package = parts[1].removesuffix('@latest')
+            pkg = self.remote_json('https://registry.npmjs.org/' + urllib.parse.quote(package, safe='') + '/latest')
+            if pkg.get('name') != name:
+                raise ValueError('来源返回的包名不一致')
+            latest = self.package_metadata(pkg)
+            # 固定到已检查的版本；安装预览再次核对包名、版本与兼容声明。
+            request = {'command': 'npm ' + shlex.quote(package + '@' + latest['version']),
+                       'name': name, 'version': latest['version']}
+            return latest, request
+        if parts[0] == 'release':
+            owner, repo = parts[1:3]
+            release = self.remote_json('https://api.github.com/repos/%s/%s/releases/latest' % (owner, repo))
+            version = str(release.get('tag_name', '')).removeprefix('v')
+            if compare_versions(version, version) is None:
+                raise ValueError('Release 标签不是版本号，请打开作者页面核对更新')
+            archives = [a for a in release.get('assets', []) if re.search(r'\.(zip|tar|tar\.gz|tgz)$', a.get('name', ''), re.I)]
+            if len(archives) != 1:
+                raise ValueError('Release 未提供唯一插件归档，请从作者页面选择新包')
+            asset = archives[0]
+            request = {'command': 'download ' + shlex.quote(asset['browser_download_url']), 'name': name}
+            # tag 可能不同于 package.version；暂作发现依据，预览时必须再次比较实际包版本。
+            digest = asset.get('digest') or ''
+            if re.fullmatch('sha256:[a-fA-F0-9]{64}', digest):
+                request['sha256'] = digest[7:]
+            return {'version': version, 'compatibilityMessage': '以下载后的插件声明为准'}, request
+        if parts[0] == 'github':
+            owner, repo = parts[1:3]
+            revision, subdir = self.g['github_revision'](owner, repo, parts[3] if len(parts) == 4 else '')
+            path = (subdir + '/' if subdir else '') + 'package.json'
+            doc = self.remote_json('https://api.github.com/repos/%s/%s/contents/%s?ref=%s' %
+                                   (owner, repo, urllib.parse.quote(path, safe='/'), urllib.parse.quote(revision, safe='')))
+            if doc.get('encoding') != 'base64' or doc.get('size', 0) > 1024 * 1024:
+                raise ValueError('仓库未提供可检查的插件版本，请选择具体插件目录')
+            pkg = json.loads(base64.b64decode(doc['content']))
+            if pkg.get('name') != name or not (pkg.get('dsh') or {}).get('bundle'):
+                raise ValueError('仓库目录不是此插件，请使用具体插件目录链接')
+            latest = self.package_metadata(pkg)
+            pinned = 'github ' + shlex.join([owner, repo, revision + ('/' + subdir if subdir else '')])
+            source = 'https://github.com/%s/%s' % (owner, repo) + ('/tree/' + parts[3] if len(parts) == 4 else '')
+            return latest, {'command': pinned, 'name': name, 'version': latest['version'], 'source': source}
+        raise ValueError('此来源是固定归档，没有版本查询接口；请从作者页面取得新包后导入')
+
+    def prepare_update(self, name):
+        if not self.builtin.valid_name(name):
+            raise ValueError('无效插件名')
+        state = self.read(self.path('plugin-updates.json'), {}).get(name, {})
+        if not state.get('available') or not state.get('request') or time.time() - state.get('checkedAt', 0) > 3600:
+            self.check_updates(name, emit=False)
+            state = self.read(self.path('plugin-updates.json'), {}).get(name, {})
+        if not state.get('available') or not state.get('request'):
+            raise ValueError(state.get('message', '请重新检查插件更新'))
+        request = dict(state['request'], updateFor=name, fromVersion=state['installedVersion'])
+        preview = self.inspect(request, False)
+        actual = preview['items'][0]['version']
+        comparison = compare_versions(actual, state['installedVersion'])
+        if comparison is None or comparison <= 0:
+            shutil.rmtree(self.preview_path(preview['previewId']))
+            raise ValueError('归档中的实际插件版本没有更新，请向作者核对 Release 内容')
+        self.g['result']('ok', '请确认更新包的作者、实际版本和兼容声明', preview=preview)
+        return 0
+
+    def check_updates(self, name='', emit=True):
         doc = self.builtin.read_manifest() or {}
         candidates = [name] if name else list(doc.get('dependencies', {}))
         states = self.read(self.path('plugin-updates.json'), {})
         checked = []
-        for item in candidates:
+        for index, item in enumerate(candidates):
+            self.g['progress']('metadata', '检查版本 %d/%d：%s' % (index + 1, len(candidates), item))
             if item in self.builtin.OFFICIAL_BUNDLES or item in self.builtin.builtin_names():
                 continue
             if not self.builtin.valid_name(item):
@@ -338,23 +369,24 @@ class Lifecycle:
                 continue
             status = {'name': item, 'installedVersion': str(pkg.get('version', '')), 'checkedAt': int(time.time()), 'available': False}
             try:
-                preview = self.inspect({'command': self.source_command(item), 'name': item,
-                                       'updateFor': item, 'fromVersion': pkg.get('version', '')}, False)
-                latest = preview['items'][0]
+                latest, request = self.update_metadata(item)
                 comparison = compare_versions(latest['version'], status['installedVersion'])
-                status.update(latestVersion=latest['version'], previewId=preview['previewId'],
+                status.update(latestVersion=latest['version'], request=request,
                               available=comparison is not None and comparison > 0,
-                              compatibility=latest['compatibilityMessage'], source=preview['source'])
+                              compatibility=latest['compatibilityMessage'], source=self.source_command(item))
                 status['message'] = '有新版本' if status['available'] else '来源未提供更高版本' if comparison is not None else '版本格式不同，请手动核对'
+            except self.g['PluginCancelled']:
+                raise
             except Exception as error:
                 status['message'] = str(error)
             states[item] = status; checked.append(status)
-        with self.builtin.operation_lock():
+        with self.builtin.operation_lock(self.g['check_cancel']), self.g['committing']('正在保存版本检查结果…'):
             latest_states = self.read(self.path('plugin-updates.json'), {})
             latest_states.update({item['name']: item for item in checked})
             self.write(self.path('plugin-updates.json'), latest_states)
         updates = sum(1 for item in checked if item['available'])
-        self.g['result']('ok', '已检查 %d 个第三方插件，%d 个可更新；详情见插件卡片' % (len(checked), updates), updates=checked)
+        if emit:
+            self.g['result']('ok', '已检查 %d 个第三方插件，%d 个可更新；详情见插件卡片' % (len(checked), updates), updates=checked)
         return 0
 
     def rollback(self, name, expected=''):
@@ -371,7 +403,7 @@ class Lifecycle:
 
     def safe_mode(self, action):
         path = self.path('plugin-safe-mode.json')
-        with self.builtin.operation_lock():
+        with self.builtin.operation_lock(self.g['check_cancel']), self.g['committing']('正在切换插件安全模式…'):
             state = self.read(path, {'active': False, 'names': []})
             doc = self.builtin.read_manifest() or {}
             if action == 'on':

@@ -57,6 +57,15 @@ public final class WebProcSel {
     /** 看门狗自己写下的 pid 文件（容器内路径）。 */
     public static final String PID_WATCHDOG = "/root/.dsha-watchdog.pid";
 
+    /** PID 文件只接受单个正整数；拒绝 PID 1、进程组及任何 shell 语法。 */
+    public static int parsePid(String value) {
+        if (value == null || value.length() > 32) return -1;
+        String digits = value.trim();
+        if (!digits.matches("[1-9][0-9]{0,9}")) return -1;
+        try { int pid = Integer.parseInt(digits); return pid > 1 ? pid : -1; }
+        catch (NumberFormatException ignored) { return -1; }
+    }
+
     /** pid 文件相对 rootfs 根的路径 —— Android 侧要用 {@code File} 直接读它。 */
     public static String pidFileRel(String guestPath) {
         return guestPath.startsWith("/") ? guestPath.substring(1) : guestPath;

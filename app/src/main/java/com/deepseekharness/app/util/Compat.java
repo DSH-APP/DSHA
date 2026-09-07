@@ -161,14 +161,47 @@ public final class Compat {
 
     // ============ Process（Process.isAlive/destroyForcibly/waitFor 是 API 26） ============
 
-    /** 强杀进程：API 26+ 用 destroyForcibly，旧版退回 destroy()。 */
+    /** 仅终止传入进程并等待退出；Android 的 destroyForcibly 可能仍只发 SIGTERM。 */
     public static void destroy(Process p) {
-        if (android.os.Build.VERSION.SDK_INT >= 26) {
-            p.destroyForcibly();
-        } else {
-            try {
-                p.destroy();
-            } catch (Throwable ignored) {
+        ProcessIdentity target = ownedProcess(p);
+        if (target != null) {
+            boolean proot = false;
+            try { proot = ProcessIdentity.isProot(android.system.Os.readlink("/proc/" + target.pid + "/exe")); }
+            catch (android.system.ErrnoException ignored) { }
+            // proot 忽略 SIGTERM；SIGQUIT 会杀掉它自己登记的 tracee，再由事件循环退出。
+            // 先给它完成清理的机会，不能直接 KILL 启动器而留下原有 tracee。
+            Runnable graceful = proot ? () -> signalOwned(p, target, android.system.OsConstants.SIGQUIT) : null;
+            ProcessTermination.stop(p, graceful, () -> signalOwned(p, target, android.system.OsConstants.SIGKILL), 750, 2000);
+            return;
+        }
+        // 未能核验 PID 时只使用该对象的公开销毁方法，不猜 PID、不扫描或按名称杀进程。
+        ProcessTermination.stop(p, null, () -> {
+            if (android.os.Build.VERSION.SDK_INT >= 26) p.destroyForcibly(); else p.destroy();
+        }, 0, 2000);
+    }
+
+    private static ProcessIdentity ownedProcess(Process process) {
+        synchronized (process) {
+            if (ProcessTermination.exited(process)) return null;
+            int pid = ProcessIdentity.androidPid(process.getClass().getName(), process.toString());
+            return readProcessIdentity(pid);
+        }
+    }
+    private static ProcessIdentity readProcessIdentity(int pid) {
+        if (pid <= 1 || pid == android.os.Process.myPid()) return null;
+        try {
+            return ProcessIdentity.fromStat(readAll(new File("/proc/" + pid + "/stat")), pid, android.os.Process.myPid());
+        } catch (IOException | RuntimeException ignored) { return null; }
+    }
+    private static void signalOwned(Process process, ProcessIdentity target, int signal) {
+        synchronized (process) {
+            if (ProcessTermination.exited(process)) return;
+            if (!target.sameProcess(readProcessIdentity(target.pid)))
+                throw new IllegalStateException("本次进程身份已变化或不可确认，未发送信号");
+            try { android.system.Os.kill(target.pid, signal); }
+            catch (android.system.ErrnoException error) {
+                if (error.errno != android.system.OsConstants.ESRCH)
+                    throw new IllegalStateException("无法终止本次进程", error);
             }
         }
     }

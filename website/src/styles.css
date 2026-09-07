@@ -25,4 +25,8 @@ body,.topbar,.card,.panel,.side-box,.search-wrap,.field-select,.button,.theme-bu
 .submission-form{flex-direction:column}.share-fallback{width:100%;margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:13px}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 [data-install-form]{flex-direction:column;align-items:stretch}[data-install-form] input{display:block;width:100%;min-width:0;margin:10px 0;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}[data-install-status]{overflow-wrap:anywhere}
+.install-sharing{margin-top:24px;border-top:1px solid var(--line);padding-top:20px}.install-qr{width:320px;max-width:100%;margin:16px 0}.install-qr svg{display:block;width:100%;height:auto;shape-rendering:crispEdges}.install-sharing label{font-size:14px;font-weight:650}
+.nav-toggle{display:none;min-height:44px;padding:6px 12px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink);font-size:14px}
+@media(max-width:800px){.nav{flex-wrap:wrap;overflow:visible}.nav a{min-height:44px;display:flex;align-items:center}.js .nav-toggle{display:block;order:2}.theme-button{order:1}.js .nav{display:none}.js .nav[data-open]{display:flex}}
+@media(max-width:360px){.topbar-inner{gap:8px}.brand{font-size:19px;gap:7px}.brand small{font-size:10px}.theme-button{min-width:58px;padding:0 4px}.nav-toggle{padding:6px 8px}}
 .plugin-screenshot{display:block;width:100%;max-width:330px;height:auto;margin:20px auto;border-radius:14px;border:1px solid var(--line)}.screenshot-caption{font-size:13px;text-align:center;color:var(--muted)}

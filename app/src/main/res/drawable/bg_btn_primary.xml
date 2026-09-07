@@ -2,7 +2,7 @@
 <!-- 主按钮：实心主色 + 按压涟漪 + 禁用变灰。圆角与次级按钮统一（旧版 16 vs 14 差 2dp，
      并排放时肉眼能看出不齐）。 -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#33FFFFFF">
+    android:color="@color/primary_ripple">
 
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">

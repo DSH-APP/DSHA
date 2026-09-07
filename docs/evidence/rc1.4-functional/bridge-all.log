@@ -1,0 +1,27 @@
+INSTRUMENTATION_STATUS: phase=真实 ShellService：四路静默命令超时与同一工作池的后继请求
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=真实 ShellService：持续输出达到上限仍按期返回
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=真实 3090：占用端口 → 撤销假就绪 → 释放端口 → 同实例恢复监听
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=提问测试准备：唤醒并解除无安全锁的锁屏，将 MainActivity 带到前台（最多等待 15 秒）
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=真实 AlertDialog：短期限超时清窗、旧按钮回调与新请求取消隔离
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=提问宿主已就绪：lifecycle=RESUMED, resumed=true, focus=true, attached=true, shown=true, closed=false, events=create@199485046 > start@199485055 > resume@199485057 > postResume@199485057 > focus=true@199485099
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=提问宿主已就绪：lifecycle=RESUMED, resumed=true, focus=true, attached=true, shown=true, closed=false, events=create@199485046 > start@199485055 > resume@199485057 > postResume@199485057 > focus=true@199485099 > focus=false@199485226 > focus=true@199485257
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=提问宿主已就绪：lifecycle=RESUMED, resumed=true, focus=true, attached=true, shown=true, closed=false, events=create@199485046 > start@199485055 > resume@199485057 > postResume@199485057 > focus=true@199485099 > focus=false@199485226 > focus=true@199485257 > focus=false@199485342 > focus=true@199486858
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=提问宿主已就绪：lifecycle=RESUMED, resumed=true, focus=true, attached=true, shown=true, closed=false, events=create@199485046 > start@199485055 > resume@199485057 > postResume@199485057 > focus=true@199485099 > focus=false@199485226 > focus=true@199485257 > focus=false@199485342 > focus=true@199486858 > focus=false@199487074 > focus=true@199487121
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=提问宿主已就绪：lifecycle=RESUMED, resumed=true, focus=true, attached=true, shown=true, closed=false, events=start@199485055 > resume@199485057 > postResume@199485057 > focus=true@199485099 > focus=false@199485226 > focus=true@199485257 > focus=false@199485342 > focus=true@199486858 > focus=false@199487074 > focus=true@199487121 > focus=false@199487282 > focus=true@199487328
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=提问宿主已就绪：lifecycle=RESUMED, resumed=true, focus=true, attached=true, shown=true, closed=false, events=postResume@199485057 > focus=true@199485099 > focus=false@199485226 > focus=true@199485257 > focus=false@199485342 > focus=true@199486858 > focus=false@199487074 > focus=true@199487121 > focus=false@199487282 > focus=true@199487328 > focus=false@199487468 > focus=true@199487519
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_RESULT: assertions=65
+INSTRUMENTATION_RESULT: fixture=/data/user/0/com.dsh.client/cache/bridge-audit-914e47dd-b4c9-4180-9b48-f716029d553b
+INSTRUMENTATION_RESULT: passed=ShellService: four timeouts, follow-up, exit code, bounded flood; elapsed=790ms; HttpShellService: occupied 3090 recovery, diagnostics, token gate, owner isolation, socket cleanup; production HTTP ask: authenticated request selects non-Main foreground host; app status correct; app/ask: timeout cleanup, stale real button, new cancellation, current answer, service stop, Activity destruction
+INSTRUMENTATION_RESULT: result=PASS
+INSTRUMENTATION_CODE: -1

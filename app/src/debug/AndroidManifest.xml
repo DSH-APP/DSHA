@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name=".ui.LayoutPreviewActivity" android:exported="false" android:excludeFromRecents="true" />
+        <activity android:name=".ui.FragmentSessionTestActivity" android:exported="false" android:excludeFromRecents="true" />
+        <activity android:name="com.deepseekharness.app.BridgeAuditInstrumentation$AskActivity" android:exported="false" />
+    </application>
+    <instrumentation android:name="com.deepseekharness.app.ui.LayoutAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.FunctionalAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.InstallAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.UpdateFlowAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.MaintenanceFixtureInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.FragmentSessionInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.AdbFlowAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.BridgeAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.ConfigurationAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.runtime.ProotCommandAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.WebRegressionAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.DiagnosticPtyAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+</manifest>

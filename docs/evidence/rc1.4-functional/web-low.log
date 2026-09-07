@@ -1,0 +1,20 @@
+INSTRUMENTATION_STATUS: phase=旋转重建通过：浏览会话、未发图片、文字、阅读位置保留
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=系统返回通过：弹层、抽屉、详情预览逐层关闭
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=浏览会话重新创建通过：真实 IndexedDB 图片字节和阅读位置恢复
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=网页下载通过：真实点击导出、SAF 选择保存、完整字节回读、清理测试输出
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=网页 Blob 导出通过：临时文件流式保存和字节校验
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=文件上传通过：真实内核选择回调、内容 URI 复制、PNG 字节回读、多选上限与路径限制
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=图片移除后重建没有复活已删除附件
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=失败边界通过：不完整响应拒绝、跨服务跳转拒绝、真实流下载取消与缓存清理
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: phase=保存恢复通过：下载模型重建、输出位置失败后保留缓存、更换位置与最终摘要校验
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_RESULT: result=PASS com.deepseekharness.app.ui.GeckoPreviewActivity
+INSTRUMENTATION_CODE: 0

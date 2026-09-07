@@ -1,0 +1,56 @@
+<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>DSHA 独立网页验收</title>
+<main data-mobile-nav="frame" data-sidebar-collapsed data-details-collapsed>
+  <div data-shell-overlay></div><div data-slot="conversation.session" id="reader" style="height:180px;overflow:auto"><div style="height:2400px;background:linear-gradient(white,lightblue)">独立测试阅读区域</div></div>
+  <textarea id="text" aria-label="独立草稿"></textarea><p id="state">等待测试</p>
+  <input id="upload" type="file" accept="image/*" aria-label="独立图片上传">
+</main>
+<script>
+window.__ModuleLoader__={load(definition){window.integration=definition.factory()}};
+if (!AbortSignal.any) AbortSignal.any = signals => {const c=new AbortController();for(const s of signals){if(s.aborted)c.abort(s.reason);else s.addEventListener('abort',()=>c.abort(s.reason),{once:true})}return c.signal};
+</script><script src="/client.js"></script><script>
+const report=(key,value='ok')=>fetch('/report?key='+encodeURIComponent(key)+'&value='+encodeURIComponent(value));
+document.querySelector('#upload').addEventListener('change',async event=>{
+ const bytes=new Uint8Array(await event.target.files[0].arrayBuffer());
+ report('uploaded',btoa(String.fromCharCode(...bytes)));
+});
+window.addEventListener('error',event=>report('scriptError',event.message));
+window.addEventListener('unhandledrejection',event=>report('scriptError',String(event.reason)));
+const subscriptions=new Set(), shell={imageIds:[],state:{getSnapshot:()=>({imageIds:shell.imageIds}),subscribe(fn){subscriptions.add(fn);return()=>subscriptions.delete(fn)}},notify(type,text){report('notice',text)},actions:{addImages(ids){shell.imageIds.push(...ids); for(const fn of subscriptions)fn(); return true}}};
+const conversation={input:{shells:new Map([['owned-session',shell]])},draftAttachments:new Map(),
+createDraftImages(files){return files.map(file=>{const a={id:Math.random().toString(36),file,previewUrl:URL.createObjectURL(file)};this.draftAttachments.set(a.id,a);return a})},
+draftImages(ids){return ids.map(id=>this.draftAttachments.get(id)).filter(Boolean)},releaseDraftImage(id){this.draftAttachments.delete(id)}};
+const frame=document.querySelector('main'), disposers=[];
+report('bootReading',localStorage.getItem('dsha.reading-position'));
+const ctx={conversation,sessions:{list:{getSnapshot:()=>({current:'owned-session',byId:{'owned-session':{}}})},open(){}},layout:{closeDetails(){frame.setAttribute('data-details-collapsed','');report('previewClosed')}},effect(fn){disposers.push(fn())}};
+integration.apply(ctx);
+let handled='';
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.querySelector('[role=dialog]')&&!frame.hasAttribute('data-sidebar-collapsed')){frame.setAttribute('data-sidebar-collapsed','');report('drawerClosed')}});
+setInterval(async()=>{
+ const command=await(await fetch('/command')).text(); if(command===handled)return; handled=command;
+ if(command==='seed'){
+   document.querySelector('#reader').dispatchEvent(new Event('pointerdown',{bubbles:true}));
+   const file=new File(['owned-image-bytes-123'],'fixture.png',{type:'image/png'});
+   shell.actions.addImages(conversation.createDraftImages([file]).map(a=>a.id));
+   document.querySelector('#text').value='旋转前未发送文字'; document.querySelector('#reader').scrollTop=713;
+   setTimeout(()=>report('seeded',shell.imageIds.length),800);
+ }
+ if(command==='retained')report('retained',JSON.stringify({images:shell.imageIds.length,text:document.querySelector('#text').value,scroll:document.querySelector('#reader').scrollTop}));
+ if(command==='restored')setTimeout(async()=>report('restored',JSON.stringify({images:shell.imageIds.length,bytes:await conversation.draftImages(shell.imageIds)[0]?.file.text(),scroll:document.querySelector('#reader').scrollTop,reading:localStorage.getItem('dsha.reading-position')})),1600);
+ if(command==='modal'){
+   const modal=document.createElement('div'); modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.textContent='独立弹层';modal.tabIndex=0;
+   modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();modal.remove();report('modalClosed')}});document.body.append(modal);modal.focus();report('modalReady');
+ }
+ if(command==='drawer'){frame.removeAttribute('data-sidebar-collapsed');report('drawerReady')}
+ if(command==='preview'){frame.removeAttribute('data-details-collapsed');report('previewReady')}
+ if(command==='download'){const a=document.createElement('a');a.href='/file.zip';a.download='fixture.zip';document.body.append(a);a.click();a.remove()}
+ if(command==='blobDownload'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['owned-blob-download'],{type:'text/plain'}));a.download='DSHA-web-check-blob.txt';document.body.append(a);a.click();a.remove()}
+ if(command==='upload'){
+   const input=document.querySelector('#upload');input.style.cssText='position:fixed;top:280px;left:12px;width:220px;height:48px;z-index:1000;background:white';
+   const rect=input.getBoundingClientRect();report('uploadReady',JSON.stringify({x:rect.left+50,y:rect.top+24,width:innerWidth}));
+ }
+ if(command==='deleteImages'){shell.imageIds=[];for(const fn of subscriptions)fn();setTimeout(()=>report('deleted'),700)}
+ if(command==='cleared')setTimeout(()=>report('cleared',shell.imageIds.length),1100);
+ if(command==='cleanup'){for(const fn of disposers)fn?.();localStorage.clear();indexedDB.deleteDatabase('dsha-image-drafts');report('cleanup')}
+},200);
+report('loaded');
+</script>

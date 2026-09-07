@@ -27,6 +27,20 @@ public class BackupScopeTest {
     }
 
     @Test
+    public void archiveNamesPreserveScopeForLegacyRestore() {
+        for (int scope : BackupScope.ALL) {
+            String name = BackupScope.archiveName(scope, "latest");
+            assertEquals(scope, BackupScope.fromFileName(name));
+            assertEquals(scope == BackupScope.FULL, name.startsWith("DSHA-backup-"));
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void archiveNameCannotEscapeDownloadDirectory() {
+        BackupScope.archiveName(BackupScope.FULL, "../other");
+    }
+
+    @Test
     public void fromFileNameMatchesPrefix() {
         assertEquals(BackupScope.SESSIONS,
                 BackupScope.fromFileName("/some/dir/DSHA-sessions-2026-01-01.tar.gz"));
@@ -68,9 +82,11 @@ public class BackupScopeTest {
     public void sessionsScopePacksSessionsAndRegistry() {
         // dsh 1.2：会话文件在 sessions/，UI 入口在 storages/workspace.json 注册表。
         // 只带 sessions/ 恢复后 WebUI 认不出会话，所以注册表必须一起打包合并。
-        assertArrayEquals(new String[] { ".dsh/sessions", ".dsh/storages" },
+        assertArrayEquals(new String[] { ".dsh/sessions", ".dsh/storages", ".dsh/attachments" },
                 BackupScope.dshPaths(BackupScope.SESSIONS));
-        assertArrayEquals(new String[] { "sessions", "storages" },
+        assertArrayEquals(new String[] { "sessions", "storages", "attachments" },
                 BackupScope.mergeSubdirs(BackupScope.SESSIONS));
+        assertArrayEquals(BackupScope.mergeSubdirs(BackupScope.SESSIONS),
+                BackupScope.snapshotEntries(BackupScope.SESSIONS));
     }
 }

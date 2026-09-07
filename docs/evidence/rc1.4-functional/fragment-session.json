@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "elapsedMs": 8370,
+  "checks": {
+    "launch": "PASS：连点只进入一次，鉴权失败和旧视图回调可安全返回",
+    "plugin": "PASS：内存夹具的安全状态、启用开关、恢复按钮同步，刷新次数 1→2→3",
+    "terminal_sleep": "PASS：真实 sleep PID 已停止，重启耗时 2395ms，排队命令执行一次",
+    "terminal_exit": "PASS：exit 后立即排队、退出后重新输入两条路径均不丢失、不重复",
+    "terminal_cleanup": "PASS：仅回收本次创建的 shell\/子进程，临时目录已删除",
+    "isolation": "PASS：用户插件状态指纹及真实 Web 代次\/鉴权地址保持不变"
+  },
+  "failures": []
+}

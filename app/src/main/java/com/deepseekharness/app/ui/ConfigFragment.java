@@ -37,6 +37,7 @@ import com.deepseekharness.app.util.Constants;
  * 所有开关都落到 ConfigStore / SharedPreferences，并真正影响启动与预览。
  */
 public class ConfigFragment extends Fragment {
+    private int adbStatusRequest;
 
     @Nullable
     @Override
@@ -46,9 +47,6 @@ public class ConfigFragment extends Fragment {
         ConfigStore c = new ConfigStore(requireContext());
         Context ctx = requireContext();
 
-        TextView back = v.findViewById(R.id.sub_back);
-        back.setVisibility(View.VISIBLE);
-        back.setOnClickListener(x -> getParentFragmentManager().popBackStack());
 
         v.findViewById(R.id.config_workspace_entry).setOnClickListener(x -> open(new WorkspaceFragment()));
 
@@ -82,6 +80,7 @@ public class ConfigFragment extends Fragment {
         desktop.setChecked(c.isDesktopMode());
         CheckBox gecko = v.findViewById(R.id.config_gecko_core);
         gecko.setVisibility(com.deepseekharness.app.BuildConfig.LOW_ANDROID ? View.VISIBLE : View.GONE);
+        v.findViewById(R.id.config_gecko_hint).setVisibility(com.deepseekharness.app.BuildConfig.LOW_ANDROID ? View.VISIBLE : View.GONE);
         gecko.setChecked(c.isGeckoCore());
         backupKey.setChecked(c.isBackupKey());
         proroot.setChecked(c.isProroot());
@@ -103,9 +102,6 @@ public class ConfigFragment extends Fragment {
                         ? "ADB 已开启。无线配对：开发者选项 → 无线调试"
                         : "ADB 已关闭。不用无线调试就保持关闭。"));
         refreshAdbStatus(adbStatus);
-
-        // 待接回项（诚实提示）
-        v.findViewById(R.id.config_translate).setOnClickListener(x -> toast("插件市场翻译待接回"));
 
         // 所有文件访问权限（Android 11+ MANAGE_EXTERNAL_STORAGE）：跳系统设置开启，
         // 让容器/proot 能读写手机存储任意文件（含 DSHA 目录外），WebUI 工作区可建到 /sdcard
@@ -133,8 +129,20 @@ public class ConfigFragment extends Fragment {
         v.findViewById(R.id.config_repo_link).setOnClickListener(x -> openRepo(ctx));
 
         save.setOnClickListener(x -> {
-            c.setApiKey(apiKey.getText().toString());
-            c.setPort(port.getText().toString());
+            final int chosenPort, backupInterval;
+            try { chosenPort = com.deepseekharness.app.util.ConfigInput.port(port.getText().toString()); }
+            catch (IllegalArgumentException e) { advBody.setVisibility(View.VISIBLE); port.setError(e.getMessage()); port.requestFocus(); return; }
+            try { backupInterval = com.deepseekharness.app.util.ConfigInput.backupInterval(autoBackup.getText().toString()); }
+            catch (IllegalArgumentException e) { autoBackup.setError(e.getMessage()); autoBackup.requestFocus(); return; }
+            port.setError(null); autoBackup.setError(null); apiKey.setError(null);
+            com.deepseekharness.app.util.EnvironmentTaskGate.Lease saving =
+                    com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire("保存配置");
+            if (saving == null) { toast("正在" + com.deepseekharness.app.util.EnvironmentTaskGate.activeKind() + "，完成后再保存配置"); return; }
+            try {
+            saving.run(() -> {
+            String key = apiKey.getText().toString().trim();
+            if (!c.saveApiKey(key)) { apiKey.setError("密钥加密保存失败，原配置已保留，请重试"); return null; }
+            c.setPort(String.valueOf(chosenPort));
             c.setConfirmShell(confirm.isChecked());
             c.setRootShellAllowed(rootShell.isChecked());
             c.setCheckUpdate(checkUpdate.isChecked());
@@ -143,11 +151,15 @@ public class ConfigFragment extends Fragment {
             c.setBackupKey(backupKey.isChecked());
             c.setProroot(proroot.isChecked());
             c.setLanMode(lan.isChecked());
-            c.setAutoBackupLaunches(parseInt(autoBackup.getText().toString()));
+            c.setAutoBackupLaunches(backupInterval);
             setPref(ctx, "overlay_stream", overlay.isChecked());
             setPref(ctx, "cap_sensors", sensors.isChecked());
             setPref(ctx, "cap_location", location.isChecked());
             setPref(ctx, "adb_enabled", adb.isChecked());
+            String synced = AdbBridge.applySettings(ctx, HarnessController.get(ctx).proot());
+            TextView guardStatus = v.findViewById(R.id.config_guard_status);
+            guardStatus.setText(synced.replaceFirst("^SETTINGS_[A-Z]+: ", ""));
+            guardStatus.setVisibility(View.VISIBLE);
             if (adb.isChecked()) {
                 DeviceBridgeService.apply(ctx);
             } else {
@@ -156,10 +168,24 @@ public class ConfigFragment extends Fragment {
             applyLanMode(c, lan.isChecked());
             if ((adb.isChecked() || lan.isChecked()) && getActivity() instanceof MainActivity)
                 ((MainActivity) getActivity()).requestLocalNetwork();
-            Toast.makeText(ctx, "已保存（重启 Web 后生效）", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ctx, synced.startsWith("SETTINGS_FAILED") || synced.startsWith("ENVIRONMENT_BUSY")
+                    ? "配置已保存，但设备授权同步失败，请查看安全与备份下的说明并重试保存"
+                    : "已保存；网页显示选项重新进入对话生效，端口与运行时需重启 Web", Toast.LENGTH_LONG).show();
+            if (overlay.isChecked() && !OverlayController.permitted(ctx)) openOverlayPermission();
+            refreshAdbStatus(adbStatus);
+            return null;
+            });
+            } catch (Exception e) {
+                toast("配置保存未完成：" + com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(e)));
+            } finally { saving.close(); }
         });
 
         return v;
+    }
+
+    private void openOverlayPermission() {
+        try { startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + requireContext().getPackageName()))); }
+        catch (Exception e) { toast("未取得悬浮窗权限，请到系统设置 → 应用 → DSHA → 悬浮窗中允许"); }
     }
 
     /** LAN 开关真正生效：开启时若 dsh 已鉴权则启动 3081 代理，关闭时停掉监听。 */
@@ -192,37 +218,48 @@ public class ConfigFragment extends Fragment {
 
     /** 后台读 ADB 通道真实状态（key/deps/端口 + 保活服务的连接状态），刷到状态栏。 */
     private void refreshAdbStatus(final TextView status) {
+        final Context app = requireContext().getApplicationContext();
+        final View page = getView();
+        final android.app.Activity activity = getActivity();
+        if (activity == null) return;
+        final int request = ++adbStatusRequest;
         new Thread(() -> {
-            final String text = computeAdbStatus();
-            if (getActivity() == null || !isAdded()) return;
-            getActivity().runOnUiThread(() -> {
-                if (status != null && isAdded()) status.setText(text);
+            final String text = computeAdbStatus(app);
+            activity.runOnUiThread(() -> {
+                if (request != adbStatusRequest || status == null || getView() != page || !isAdded()) return;
+                status.setText(text);
+                if (text.startsWith("环境任务进行中") && isResumed()) status.postDelayed(() -> {
+                    if (request == adbStatusRequest && getView() == page && isResumed()) refreshAdbStatus(status);
+                }, 1500);
             });
         }, "adb-status").start();
     }
 
-    private String computeAdbStatus() {
+    private String computeAdbStatus(Context app) {
         try {
+            if (!pref(app, "adb_enabled", false)) return "ADB 已关闭。开启并保存后才会保持连接。";
             String bridge = DeviceBridgeService.adbState;
             String detail = DeviceBridgeService.adbDetail == null ? "" : DeviceBridgeService.adbDetail;
-            HarnessController hc = new HarnessController(requireContext());
+            HarnessController hc = HarnessController.get(app);
             String st = hc.proot().isEnvironmentReady()
                     ? AdbBridge.status(hc.proot()) : "env:not_ready";
+            if (st.startsWith("ENVIRONMENT_BUSY") || "environment_busy".equals(bridge))
+                return "环境任务进行中，ADB 暂停检查，完成后自动重试。"
+                        + (detail.isEmpty() ? "" : "\n" + detail);
             boolean key = st.contains("key=YES");
             String port = "?";
             int p = st.indexOf("port=");
             if (p >= 0) port = st.substring(p + 5).trim();
-            if (key && !"-".equals(port)) {
-                return "✅ ADB 通道已就绪 · 端口 " + port
-                        + (detail.isEmpty() ? "" : "（" + detail + "）");
-            } else if ("need_pair".equals(bridge)) {
-                return "⚠️ 配对已失效，需重新配对（保活服务已提示）";
+            if ("need_pair".equals(bridge)) {
+                return "配对已失效，请重新配对。";
             } else if ("reconnecting".equals(bridge)) {
-                return "⏳ 正在重连无线调试…";
+                return "正在重连无线调试…" + (detail.isEmpty() ? "" : "\n" + detail);
+            } else if ("connected".equals(bridge)) {
+                return "连接已验证 · 端口 " + port + (detail.isEmpty() ? "" : "\n" + detail);
             } else if (key) {
-                return "🔑 已配对（密钥在位）· 连接端口待保活探活确认";
+                return "配对密钥已保存，连接尚未验证。" + (detail.isEmpty() ? "" : "\n" + detail);
             } else {
-                return "未配对：点下方「ADB 无线配对」完成一次配对即就绪";
+                return "尚未配对：点下方「ADB 无线配对」，配对后还会验证连接。";
             }
         } catch (Throwable e) {
             return "ADB 状态读取失败：" + e.getMessage();
@@ -337,6 +374,7 @@ public class ConfigFragment extends Fragment {
             View v = getView();
             if (v != null) refreshAllFilesStatus(v.findViewById(R.id.config_all_files_status));
             if (v != null) refreshA11yStatus(v.findViewById(R.id.config_a11y_status));
+            if (v != null) refreshAdbStatus(v.findViewById(R.id.config_adb_status));
         } catch (Throwable ignored) {
         }
     }
@@ -510,38 +548,8 @@ public class ConfigFragment extends Fragment {
     }
 
     private void checkScriptUpdate(Context ctx) {
-        toast("正在检查脚本更新…");
-        new Thread(() -> {
-            String tag = fetchLatestRelease();
-            requireActivity().runOnUiThread(() -> toast(
-                    tag == null ? "检查失败（网络不可用）" : "脚本层最新 " + tag + "（本版已内置）"));
-        }, "script-update").start();
-    }
-
-    private String fetchLatestRelease() {
-        try {
-            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(
-                    "https://api.github.com/repos/qiannianhuanxiang/DSHA/releases/latest")
-                    .openConnection();
-            conn.setConnectTimeout(8000);
-            conn.setReadTimeout(8000);
-            conn.setRequestProperty("User-Agent", "DSHA");
-            if (conn.getResponseCode() != 200) return null;
-            java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(
-                    conn.getInputStream(), java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = r.readLine()) != null) sb.append(line);
-            conn.disconnect();
-            String body = sb.toString();
-            int i = body.indexOf("\"tag_name\"");
-            if (i < 0) return null;
-            int c = body.indexOf('"', body.indexOf('"', i + 11) + 1);
-            int e = body.indexOf('"', c + 1);
-            return c >= 0 && e > c ? body.substring(c + 1, e) : null;
-        } catch (Exception e) {
-            return null;
-        }
+        try { startActivity(new Intent(ctx, UpdateActivity.class)); }
+        catch (Exception e) { toast("无法打开更新页面：" + e.getClass().getSimpleName()); }
     }
 
     private void openRepo(Context ctx) {
@@ -561,15 +569,8 @@ public class ConfigFragment extends Fragment {
         ctx.getSharedPreferences(Constants.PREFS, Context.MODE_PRIVATE).edit().putBoolean(k, v).apply();
     }
 
-    private int parseInt(String s) {
-        try {
-            return Math.max(0, Integer.parseInt(s.trim()));
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
     private void toast(String s) {
-        Toast.makeText(requireContext(), s, Toast.LENGTH_SHORT).show();
+        Context context = getContext();
+        if (context != null) Toast.makeText(context, s, Toast.LENGTH_SHORT).show();
     }
 }

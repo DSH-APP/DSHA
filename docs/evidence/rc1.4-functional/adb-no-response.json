@@ -1,0 +1,1 @@
+{"exit": 124, "seconds": 2.563, "acceptedSocketCount": 1, "output": "CONNECT_FAIL: 命令尚未发送；请检查无线调试与配对授权。尝试记录：\n127.0.0.1:18555 TcpTimeoutException: Reading from 127.0.0.1:18555 timed out (1.9934790770057589 seconds)\n[EXIT=124]\n"}

@@ -57,6 +57,8 @@ public final class PtySession implements TerminalSessionClient {
 
     private volatile WeakReference<Listener> listener = new WeakReference<>(null);
     private volatile TerminalSession session;
+    private com.deepseekharness.app.util.ProcessIdentity identity;
+    private com.deepseekharness.app.core.RuntimeTasks work;
 
     private PtySession() {
     }
@@ -83,6 +85,9 @@ public final class PtySession implements TerminalSessionClient {
     public static PtySession start(ProotBootstrap proot, int cols, int rows, Listener l) {
         PtySession ps = new PtySession();
         ps.attachListener(l);
+        // 必须先登记异步寿命，再准备目录和 fork，避免维护切换与终端启动交错。
+        ps.work = com.deepseekharness.app.core.RuntimeTasks.beginDetached();
+        try {
         proot.ensureAndroidGroups(); // 登录 shell 的 $(groups) 依赖 /etc/group 里有 Android GID
         String[] argv = proot.ptyArgv();
         String[] env = proot.ptyEnv();
@@ -92,7 +97,16 @@ public final class PtySession implements TerminalSessionClient {
         ps.session = s;
         // initializeEmulator 才真正 fork 出子进程，所以尺寸要在这之前定好
         s.initializeEmulator(Math.max(4, cols), Math.max(2, rows));
+        ps.identity = readIdentity(s.getPid());
         return ps;
+        } catch (RuntimeException | Error e) {
+            if (ps.session == null || !ps.session.isRunning()) ps.work.close();
+            else {
+                // fork 已成功时，退出回调才能释放工作锁；初始化异常不能先放行环境维护。
+                try { ps.finish(); } catch (RuntimeException ignored) { }
+            }
+            throw e;
+        }
     }
 
     public TerminalSession session() {
@@ -117,7 +131,33 @@ public final class PtySession implements TerminalSessionClient {
     /** 结束会话（切页面/退出时调，避免留一个孤儿 bash 在容器里跑）。 */
     public void finish() {
         TerminalSession t = session;
-        if (t != null) t.finishIfRunning();
+        if (t == null || !t.isRunning()) return;
+        int pid = t.getPid();
+        try {
+            com.deepseekharness.app.util.ProcessIdentity expected = identity;
+            if (expected == null) expected = readIdentity(pid);
+            if (expected == null || !expected.sameProcess(readIdentity(pid)))
+                throw new IllegalStateException("无法确认本次终端进程身份，尚未停止");
+            String executable = android.system.Os.readlink("/proc/" + pid + "/exe");
+            // proot 的 SIGQUIT 会先清理自己登记的全部 tracee；直接 KILL 会遗留后台 shell/命令。
+            // 普通交互 shell 用 HUP，让 shell 将挂断通知传给自己的作业。
+            int signal = com.deepseekharness.app.util.ProcessIdentity.isProot(executable)
+                    ? android.system.OsConstants.SIGQUIT : android.system.OsConstants.SIGHUP;
+            if (!expected.sameProcess(readIdentity(pid))) throw new IllegalStateException("终端进程身份已变化，未发送信号");
+            android.system.Os.kill(pid, signal);
+        } catch (android.system.ErrnoException e) {
+            if (e.errno != android.system.OsConstants.ESRCH)
+                throw new IllegalStateException("终端停止失败，后台任务仍保留保护", e);
+        }
+        // 不在主线程等待 JNI 回调，也不提前释放 RuntimeTasks。
+    }
+
+    private static com.deepseekharness.app.util.ProcessIdentity readIdentity(int pid) {
+        try {
+            return com.deepseekharness.app.util.ProcessIdentity.fromStat(
+                    com.deepseekharness.app.util.Compat.readAll(new java.io.File("/proc/" + pid + "/stat")),
+                    pid, android.os.Process.myPid());
+        } catch (java.io.IOException | RuntimeException error) { return null; }
     }
 
     // ==================== TerminalSessionClient ====================
@@ -136,6 +176,7 @@ public final class PtySession implements TerminalSessionClient {
 
     @Override
     public void onSessionFinished(TerminalSession finishedSession) {
+        if (work != null) work.close();
         Listener l = listener();
         if (l != null) l.onExit(finishedSession == null ? -1 : finishedSession.getExitStatus());
     }

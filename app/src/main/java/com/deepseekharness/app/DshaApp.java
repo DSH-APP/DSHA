@@ -14,8 +14,11 @@ public class DshaApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        com.deepseekharness.app.ui.ThemeController.apply(this);
+        com.deepseekharness.app.core.RuntimeTasks.initialize(this);
         com.deepseekharness.app.core.DiagnosticLog.installCrashHandler(this);
         registerActivityLifecycleCallbacks(new com.deepseekharness.app.ui.ModernAndroidUi());
+        registerActivityLifecycleCallbacks(new ForegroundActivity());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager nm = getSystemService(NotificationManager.class);
             nm.createNotificationChannel(new NotificationChannel(

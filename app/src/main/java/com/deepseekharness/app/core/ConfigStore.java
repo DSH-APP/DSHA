@@ -28,6 +28,13 @@ public class ConfigStore {
         prefs.edit().putBoolean(Constants.KEY_WELCOMED, v).apply();
     }
 
+    public String getUiTheme() {
+        return com.deepseekharness.app.util.UiThemePreference.normalize(prefs.getString("ui_theme", "system"));
+    }
+    public void setUiTheme(String value) {
+        prefs.edit().putString("ui_theme", com.deepseekharness.app.util.UiThemePreference.normalize(value)).apply();
+    }
+
     // ================= 接入 =================
 
     public String getApiKey() {
@@ -35,7 +42,15 @@ public class ConfigStore {
     }
 
     public void setApiKey(String v) {
-        prefs.edit().putString(Constants.KEY_API_KEY, vault.encrypt(v)).apply();
+        saveApiKey(v);
+    }
+
+    /** 加密失败时保留旧凭据，让界面能明确报告保存失败。 */
+    public boolean saveApiKey(String value) {
+        String plain = value == null ? "" : value;
+        String encrypted = vault.encrypt(plain);
+        if (!plain.isEmpty() && encrypted.isEmpty()) return false;
+        return prefs.edit().putString(Constants.KEY_API_KEY, encrypted).commit();
     }
 
     public String getPort() {
@@ -44,7 +59,7 @@ public class ConfigStore {
 
     public int getPortInt() {
         int p = parsePort(prefs.getString(Constants.KEY_PORT, String.valueOf(Constants.DSH_WEB_PORT)));
-        return p == Constants.LAN_BRIDGE_PORT ? Constants.DSH_WEB_PORT : p;
+        return p == Constants.LAN_BRIDGE_PORT || p == Constants.SHELL_BRIDGE_PORT ? Constants.DSH_WEB_PORT : p;
     }
 
     public void setPort(String v) {
@@ -156,5 +171,102 @@ public class ConfigStore {
 
     public void setWorkdir(String v) {
         prefs.edit().putString(Constants.KEY_WORKDIR, v).apply();
+    }
+
+    public int getWebFailures() { return prefs.getInt("web_consecutive_failures", 0); }
+    public boolean isEcoMode() { return prefs.getBoolean("runtime_eco_mode", false); }
+    public void setEcoMode(boolean value) { prefs.edit().putBoolean("runtime_eco_mode", value).apply(); }
+    public String getWebFailureStage() { return prefs.getString("web_failure_stage", ""); }
+    public String getWebFailureReason() { return prefs.getString("web_failure_reason", ""); }
+    public void recordWebRecovery(int count, String stage, String reason) {
+        prefs.edit().putInt("web_consecutive_failures", count).putString("web_failure_stage", stage)
+                .putString("web_failure_reason", reason.length() > 500 ? reason.substring(0, 500) : reason).commit();
+    }
+
+    /** 只导出可迁移的运行设置；API Key 遵循现有「备份密钥」开关。 */
+    public org.json.JSONObject exportBackupSettings() throws org.json.JSONException {
+        org.json.JSONObject out = new org.json.JSONObject();
+        out.put("formatVersion", 1).put("port", getPort()).put("workdir", getWorkdir())
+                .put("permissionMode", getPermissionMode()).put("confirmShell", isConfirmShell())
+                .put("desktopMode", isDesktopMode()).put("checkUpdate", isCheckUpdate())
+                .put("autoBackupLaunches", getAutoBackupLaunches()).put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme());
+        if (isBackupKey() && !getApiKey().isEmpty()) out.put("apiKey", getApiKey());
+        return out;
+    }
+
+    public void importBackupSettings(org.json.JSONObject data) throws java.io.IOException {
+        SharedPreferences.Editor edit = prefs.edit();
+        if (data.has("port")) edit.putString(Constants.KEY_PORT, String.valueOf(parsePort(data.optString("port"))));
+        if (data.has("workdir")) edit.putString(Constants.KEY_WORKDIR, data.optString("workdir", Constants.DEFAULT_WORKDIR));
+        if (data.has("permissionMode")) edit.putString(Constants.KEY_PERMISSION_MODE, data.optString("permissionMode", "danger-full-access"));
+        if (data.has("confirmShell")) edit.putBoolean(Constants.KEY_CONFIRM_SHELL, data.optBoolean("confirmShell", true));
+        if (data.has("desktopMode")) edit.putBoolean(Constants.KEY_DESKTOP_MODE, data.optBoolean("desktopMode"));
+        if (data.has("checkUpdate")) edit.putBoolean(Constants.KEY_CHECK_UPDATE, data.optBoolean("checkUpdate", true));
+        if (data.has("autoBackupLaunches")) edit.putString(Constants.KEY_AUTO_BACKUP, String.valueOf(Math.max(0, data.optInt("autoBackupLaunches", 5))));
+        if (data.has("apiKey")) {
+            String plain = data.optString("apiKey");
+            String encrypted = vault.encrypt(plain);
+            if (!plain.isEmpty() && encrypted.isEmpty()) throw new java.io.IOException("API Key 加密失败，未写入恢复配置");
+            edit.putString(Constants.KEY_API_KEY, encrypted);
+        }
+        if (data.has("ecoMode")) edit.putBoolean("runtime_eco_mode", data.optBoolean("ecoMode"));
+        if (data.has("uiTheme")) edit.putString("ui_theme", com.deepseekharness.app.util.UiThemePreference.normalize(data.optString("uiTheme")));
+        if (!edit.commit()) throw new java.io.IOException("原生设置写入失败");
+    }
+
+    private static final String[] BACKUP_SETTING_KEYS = {
+            Constants.KEY_PORT, Constants.KEY_WORKDIR, Constants.KEY_PERMISSION_MODE,
+            Constants.KEY_CONFIRM_SHELL, Constants.KEY_DESKTOP_MODE, Constants.KEY_CHECK_UPDATE,
+            Constants.KEY_AUTO_BACKUP, Constants.KEY_API_KEY, "runtime_eco_mode", "ui_theme"
+    };
+
+    /** 保存的是 Keystore 密文和原始偏好值，供跨进程中断恢复使用。 */
+    public void beginRestoreSettings() throws Exception {
+        org.json.JSONObject before = new org.json.JSONObject();
+        java.util.Map<String, ?> all = prefs.getAll();
+        for (String key : BACKUP_SETTING_KEYS) before.put(key, all.containsKey(key) ? all.get(key) : org.json.JSONObject.NULL);
+        if (!prefs.edit().putString("backup_restore_previous_settings", before.toString()).commit())
+            throw new java.io.IOException("无法保留恢复前设置");
+    }
+
+    public void finishRestoreSettings(boolean rollback) throws Exception {
+        String saved = prefs.getString("backup_restore_previous_settings", "");
+        if (saved.isEmpty()) return;
+        SharedPreferences.Editor edit = prefs.edit();
+        if (rollback) {
+            org.json.JSONObject before = new org.json.JSONObject(saved);
+            for (String key : BACKUP_SETTING_KEYS) {
+                Object value = before.opt(key);
+                if (value == null || value == org.json.JSONObject.NULL) edit.remove(key);
+                else if (value instanceof Boolean) edit.putBoolean(key, (Boolean) value);
+                else edit.putString(key, String.valueOf(value));
+            }
+        }
+        if (!edit.remove("backup_restore_previous_settings").commit()) throw new java.io.IOException("恢复设置事务写入失败");
+    }
+
+    public void recordBackupResult(String uri, String name, String failure, int scope) {
+        SharedPreferences.Editor edit = prefs.edit().putString("backup_last_error", failure)
+                .putLong("backup_last_attempt", System.currentTimeMillis());
+        if (failure.isEmpty()) {
+            edit.putString("backup_last_uri", uri).putString("backup_last_name", name)
+                    .putLong("backup_last_success", System.currentTimeMillis()).putInt("backup_last_scope", scope);
+        }
+        edit.apply();
+    }
+
+    public String getLastBackupUri() { return prefs.getString("backup_last_uri", ""); }
+    public String getLastBackupName() { return prefs.getString("backup_last_name", ""); }
+    public String getLastBackupError() { return prefs.getString("backup_last_error", ""); }
+    public long getLastBackupSuccess() { return prefs.getLong("backup_last_success", 0); }
+
+    /** 每次手动启动计数，达到阈值才触发；看门狗重启不计数。 */
+    public synchronized boolean countLaunchForBackup() {
+        int every = getAutoBackupLaunches();
+        if (every <= 0) return false;
+        int count = prefs.getInt("backup_launch_count", 0) + 1;
+        boolean due = count >= every;
+        prefs.edit().putInt("backup_launch_count", due ? 0 : count).apply();
+        return due;
     }
 }

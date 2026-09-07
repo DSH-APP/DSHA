@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "check": "node --test scripts/site.test.mjs",
+    "check": "node --test scripts/site.test.mjs scripts/interactions.test.mjs",
     "dev": "node scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "30.0.1",
+    "jsqr": "1.4.0",
+    "qrcode-generator": "2.0.4"
   }
 }

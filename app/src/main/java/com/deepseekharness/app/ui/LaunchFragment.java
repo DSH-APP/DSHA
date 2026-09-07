@@ -31,6 +31,9 @@ public class LaunchFragment extends Fragment {
     private TextView launchLog;
     /** 启动按钮当前是否处于「进入」态（鉴权链接已就绪）。 */
     private boolean webReady;
+    /** 主线程单飞；成功打开后保持占用，直到页面重新可见。 */
+    private boolean enteringWeb;
+    private long enterRequest;
     /** 本次启动开始时刻（显示耗时用）。 */
     private long startAtMs;
     private final android.os.Handler ui = new android.os.Handler(android.os.Looper.getMainLooper());
@@ -58,6 +61,7 @@ public class LaunchFragment extends Fragment {
         launchLog = v.findViewById(R.id.launch_log);
 
         restart.setText("重启");
+        v.findViewById(R.id.launch_recovery).setOnClickListener(x -> showRecovery());
         v.findViewById(R.id.launch_safe).setOnClickListener(x -> new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("安全启动 Web？")
                 .setMessage("暂时禁用第三方插件后启动，保留插件文件、会话和配置。可在插件管理中逐个启用或恢复之前的状态。")
@@ -65,7 +69,7 @@ public class LaunchFragment extends Fragment {
 
         // 启动按钮：未就绪时是「启动」；鉴权链接就绪后自动变为「进入」，点击进 WebUI。
         start.setOnClickListener(x -> {
-            if (webReady || !controller.getWebAuthUrl().isEmpty()) {
+            if (webReady || !webEntryUrl().isEmpty()) {
                 enterWeb();
                 return;
             }
@@ -78,6 +82,7 @@ public class LaunchFragment extends Fragment {
         });
 
         stop.setOnClickListener(x -> {
+            invalidateWebEntry();
             controller.stopWeb(msg -> {
                 long generation = controller.getWebGeneration();
                 activity.runOnUiThread(() -> {
@@ -105,6 +110,8 @@ public class LaunchFragment extends Fragment {
     private void doStart(Activity activity, TextView status, Button start, boolean safeMode) {
         if (controller.isStarting() || controller.isStopping()) return;
         final View root = getView();
+        if (root == null || activity.isFinishing() || activity.isDestroyed()) return;
+        invalidateWebEntry();
         startAtMs = System.currentTimeMillis();
         String time = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
                 .format(new java.util.Date());
@@ -128,6 +135,7 @@ public class LaunchFragment extends Fragment {
             });
         };
         boolean accepted = safeMode ? controller.startWebSafely(startStatus) : controller.startWeb(startStatus);
+        if (accepted && safeMode) PluginFragment.invalidateInstalledState();
         refreshRunState();
         if (!accepted) return;
         // 前台保活服务：dsh 后台常驻 + 看门狗自动重启（退到桌面/锁屏不被杀）
@@ -145,7 +153,11 @@ public class LaunchFragment extends Fragment {
 
     /** 打开 WebPreviewActivity 进入 dsh WebUI。 */
     private void enterWeb() {
-        String url = controller.getWebAuthUrl();
+        final View root = getView();
+        final Activity activity = getActivity();
+        if (enteringWeb || root == null || activity == null || !isResumed()
+                || activity.isFinishing() || activity.isDestroyed()) return;
+        String url = webEntryUrl();
         if (url.isEmpty()) {
             if (getView() != null) {
                 ((TextView) getView().findViewById(R.id.launch_status))
@@ -153,19 +165,62 @@ public class LaunchFragment extends Fragment {
             }
             return;
         }
-        final Activity activity = requireActivity();
-        final View root = getView();
-        final long generation = controller.getWebGeneration();
-        new Thread(() -> {
-            String cookie = controller.exchangeDshAuthCookie();
-            String finalUrl = url;
-            activity.runOnUiThread(() -> {
-                if (getView() != root || generation != controller.getWebGeneration()
-                        || !url.equals(controller.getWebAuthUrl())) return;
-                startActivity(WebPreviewActivity.intent(requireContext(), finalUrl, cookie));
-                refreshLanAddr();
-            });
-        }, "dsh-cookie").start();
+        final long generation = webEntryGeneration();
+        final long request = ++enterRequest;
+        enteringWeb = true;
+        ((TextView) root.findViewById(R.id.launch_status)).setText("正在验证 Web 访问权限…");
+        refreshRunState();
+        try {
+            new Thread(() -> {
+                String cookie = null;
+                String failure = null;
+                try {
+                    cookie = exchangeWebEntryCookie();
+                    if (cookie == null || cookie.isEmpty()) failure = "未取得 Web 鉴权，请稍后点「进入」重试";
+                } catch (Exception error) {
+                    failure = "Web 鉴权失败，请点「进入」重试（" + error.getClass().getSimpleName() + "）";
+                }
+                final String authCookie = cookie;
+                final String authFailure = failure;
+                ui.post(() -> {
+                    if (request != enterRequest || getView() != root || !isResumed()
+                            || activity.isFinishing() || activity.isDestroyed()) return;
+                    if (generation != webEntryGeneration() || !url.equals(webEntryUrl())) {
+                        finishWebEntry(root, "Web 状态已变化，请等待就绪后重新进入");
+                        return;
+                    }
+                    if (authFailure != null) { finishWebEntry(root, authFailure); return; }
+                    try {
+                        openWebEntry(activity, url, authCookie);
+                        ((TextView) root.findViewById(R.id.launch_status)).setText("鉴权成功，正在打开 Web…");
+                        refreshLanAddr();
+                    } catch (RuntimeException error) {
+                        finishWebEntry(root, "无法打开 Web 页面，请重试（" + error.getClass().getSimpleName() + "）");
+                    }
+                });
+            }, "dsh-cookie").start();
+        } catch (RuntimeException error) {
+            finishWebEntry(root, "无法开始 Web 鉴权，请重试");
+        }
+    }
+
+    // 同包调试自测可替换鉴权和 Activity 出口，验证连点/异常/销毁，不实际启动 Web。
+    String webEntryUrl() { return controller.getWebAuthUrl(); }
+    long webEntryGeneration() { return controller.getWebGeneration(); }
+    String exchangeWebEntryCookie() { return controller.exchangeDshAuthCookie(); }
+    void openWebEntry(Activity activity, String url, String cookie) {
+        startActivity(WebPreviewActivity.intent(activity, url, cookie));
+    }
+
+    private void finishWebEntry(View root, String message) {
+        enteringWeb = false;
+        ((TextView) root.findViewById(R.id.launch_status)).setText(message);
+        refreshRunState();
+    }
+
+    private void invalidateWebEntry() {
+        enterRequest++;
+        enteringWeb = false;
     }
 
     /** 往日志区追加一行（首行替换占位文本）。 */
@@ -185,17 +240,24 @@ public class LaunchFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        invalidateWebEntry();
+        ui.removeCallbacks(refreshState);
         ui.post(refreshState);
     }
 
     @Override
     public void onPause() {
+        if (enteringWeb && getView() != null) {
+            ((TextView) getView().findViewById(R.id.launch_status)).setText("返回后可重新进入 Web");
+        }
+        invalidateWebEntry();
         ui.removeCallbacks(refreshState);
         super.onPause();
     }
 
     @Override
     public void onDestroyView() {
+        invalidateWebEntry();
         ui.removeCallbacks(refreshState);
         lanAddrText = null;
         launchLog = null;
@@ -212,13 +274,17 @@ public class LaunchFragment extends Fragment {
             if (runState == null) return;
             boolean starting = controller.isStarting();
             boolean stopping = controller.isStopping();
-            boolean ready = !starting && !stopping && !controller.getWebAuthUrl().isEmpty();
-            runState.setText(stopping ? "DSH 停止中…" : starting ? "DSH 启动中…"
+            boolean ready = !starting && !stopping && !webEntryUrl().isEmpty();
+            runState.setText(enteringWeb ? "正在鉴权并打开 Web…" : controller.isRestartBlocked() ? "自动重启已暂停" : stopping ? "DSH 停止中…" : starting ? "DSH 启动中…"
                     : ready ? "DSH 已就绪，可进入" : controller.isUserStopped() ? "DSH 已停止" : "DSH 未就绪");
+            Button recovery = root.findViewById(R.id.launch_recovery);
+            int failures = controller.config().getWebFailures();
+            recovery.setVisibility(failures > 0 ? View.VISIBLE : View.GONE);
+            recovery.setText("失败 " + failures + "/3 · " + controller.config().getWebFailureStage() + " · 查看恢复选项");
             if (start != null) {
                 webReady = ready;
-                start.setText(ready ? "进入" : "启动");
-                start.setEnabled(!starting && !stopping);
+                start.setText(enteringWeb ? "进入中…" : ready ? "进入" : "启动");
+                start.setEnabled(!enteringWeb && !starting && !stopping);
             }
             Button restart = root.findViewById(R.id.launch_open);
             if (restart != null) restart.setEnabled(!starting && !stopping);
@@ -226,6 +292,21 @@ public class LaunchFragment extends Fragment {
             if (stop != null) stop.setEnabled(!stopping);
         } catch (Throwable ignored) {
         }
+    }
+
+    private void showRecovery() {
+        com.deepseekharness.app.core.ConfigStore config = controller.config();
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(controller.isRestartBlocked() ? "连续失败，已暂停自动重启" : "启动恢复")
+                .setMessage("失败阶段：" + config.getWebFailureStage() + "\n" + config.getWebFailureReason()
+                        + "\n\n可点启动重试，或用安全启动暂时禁用第三方插件。插件管理提供上一版回退；诊断页可检查并修复基础工具。")
+                .setPositiveButton("查看诊断", (d, w) -> startActivity(new Intent(requireContext(), DiagnosticActivity.class)))
+                .setNeutralButton("插件回退", (d, w) -> {
+                    PluginFragment fragment = new PluginFragment();
+                    Bundle args = new Bundle(); args.putBoolean("show_installed", true); fragment.setArguments(args);
+                    getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment)
+                            .addToBackStack("recovery").commit();
+                }).setNegativeButton("关闭", null).show();
     }
 
     /** LAN 开关开 + 代理已绑定 → 直接把完整局域网地址亮出来（点一下可复制）。 */

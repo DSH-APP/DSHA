@@ -1,0 +1,2 @@
+验证原生停止：空环境、无效 PID、软链接、同 UID 的非 Web 子进程
+PASS 36 stop assertions；fixture 原样保留：/data/user/0/com.dsh.client/cache/maintenance-fixture-14f1a0b0-bc49-444a-8aab-58bb568bb577-

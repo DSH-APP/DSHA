@@ -44,6 +44,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             + ".forEach(function(k){if(typeof window[k]==='undefined')m.push(k);});"
             + "if(typeof AbortSignal==='undefined'||typeof AbortSignal.any!=='function')m.push('AbortSignal.any');"
             + "if(typeof AbortSignal==='undefined'||typeof AbortSignal.timeout!=='function')m.push('AbortSignal.timeout');"
+            + "if(typeof Promise.withResolvers!=='function')m.push('Promise.withResolvers');"
             + "return m.join(', ');})()";
 
     private FrameLayout container;
@@ -59,10 +60,29 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     private String browserInfo = "系统 WebView 版本未知";
     private boolean pageFailed;
     private boolean authRetried;
+    private Retained retained;
+    private WebDownloads downloads;
+    private Bundle restoreState;
+    private boolean navigatingBack;
+
+    public static final class Retained extends androidx.lifecycle.ViewModel {
+        WebView view;
+        WebBlobDownload blobDownload;
+        ValueCallback<Uri[]> pickerCallback;
+        final java.util.ArrayList<java.io.File> uploads = new java.util.ArrayList<>();
+        @Override protected void onCleared() {
+            if (pickerCallback != null) pickerCallback.onReceiveValue(null);
+            if (view != null) view.destroy();
+            view = null;
+            if (blobDownload != null) blobDownload.close();
+            WebUploads.clean(uploads);
+        }
+    }
 
     private final ActivityResultLauncher<Intent> filePicker = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
-                ValueCallback<Uri[]> callback = fileCallback;
+                ValueCallback<Uri[]> callback = retained.pickerCallback;
+                retained.pickerCallback = null;
                 fileCallback = null;
                 if (callback == null) return;
                 Uri[] selected = WebChromeClient.FileChooserParams.parseResult(
@@ -76,7 +96,29 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                         }
                     }
                 }
-                callback.onReceiveValue(selected);
+                if (selected == null) { callback.onReceiveValue(null); return; }
+                final Uri[] chosen = selected;
+                final Retained owner = retained;
+                final Context app = getApplicationContext();
+                new Thread(() -> {
+                    java.util.ArrayList<java.io.File> copied = new java.util.ArrayList<>();
+                    try {
+                        copied = WebUploads.copy(app, java.util.Arrays.asList(chosen));
+                        Uri[] local = new Uri[copied.size()];
+                        for (int i=0;i<local.length;i++) local[i] = androidx.core.content.FileProvider.getUriForFile(app,app.getPackageName()+".updates",copied.get(i));
+                        final java.util.ArrayList<java.io.File> ready = copied;
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                            if (owner.view == null) { WebUploads.clean(ready); callback.onReceiveValue(null); }
+                            else { owner.uploads.addAll(ready); callback.onReceiveValue(local); }
+                        });
+                    } catch (Exception error) {
+                        WebUploads.clean(copied);
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                            callback.onReceiveValue(null);
+                            Toast.makeText(app,"上传失败："+error.getMessage(),Toast.LENGTH_LONG).show();
+                        });
+                    }
+                },"web-file-import").start();
             });
 
     public static Intent intent(Context ctx, String url, String cookie) {
@@ -87,6 +129,9 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        retained = new androidx.lifecycle.ViewModelProvider(this).get(Retained.class);
+        downloads = new WebDownloads(this,savedInstanceState);
+        restoreState = savedInstanceState == null ? null : savedInstanceState.getBundle("browser-state");
         setContentView(R.layout.activity_web_preview);
         WebFullscreenUi.install(this);
         container = findViewById(R.id.web_container);
@@ -108,7 +153,13 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             return;
         }
         if (PreviewFallback.preferred(this) && PreviewFallback.open(this, authUrl, authCookie)) return;
-        loadSession();
+        if (retained.view != null) {
+            webView = retained.view;
+            ((android.content.MutableContextWrapper) webView.getContext()).setBaseContext(this);
+            attachClients(webView);
+            container.addView(webView,new FrameLayout.LayoutParams(-1,-1));
+            progress.setVisibility(View.GONE);
+        } else loadSession();
     }
 
     private void loadSession() {
@@ -119,8 +170,9 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         errorPanel.setVisibility(View.GONE);
         progress.setVisibility(View.VISIBLE);
         try {
-            WebView view = new WebView(this);
+            WebView view = new WebView(new android.content.MutableContextWrapper(this));
             webView = view;
+            retained.view = view;
             PackageInfo provider = android.os.Build.VERSION.SDK_INT >= 26 ? WebView.getCurrentWebViewPackage() : null;
             browserInfo = provider == null ? "系统 WebView 版本未知"
                     : provider.packageName + " " + provider.versionName;
@@ -130,18 +182,26 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
             settings.setAllowFileAccess(false);
-            settings.setAllowContentAccess(false);
+            // 网页只能获取用户选择后复制到专属 FileProvider 的 URI。
+            settings.setAllowContentAccess(true);
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
             settings.setSupportMultipleWindows(false);
             settings.setLoadWithOverviewMode(true);
             settings.setUseWideViewPort(true);
+            if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                androidx.webkit.WebViewCompat.addDocumentStartJavaScript(view,WebPageScripts.compatibility(this),
+                        java.util.Collections.singleton(baseUrl.substring(0,baseUrl.length()-1)));
+            }
             if (getSharedPreferences(Constants.PREFS, MODE_PRIVATE)
                     .getBoolean(Constants.KEY_DESKTOP_MODE, false)) {
                 settings.setUserAgentString(WebPreviewPolicy.desktopUserAgent(settings.getUserAgentString()));
             }
-            view.setWebViewClient(new PreviewClient());
-            view.setWebChromeClient(new PreviewChromeClient());
+            attachClients(view);
             container.addView(view, new FrameLayout.LayoutParams(-1, -1));
+            if (restoreState != null) {
+                Bundle history = restoreState; restoreState = null;
+                if (view.restoreState(history) != null) return;
+            }
             CookieManager cookies = CookieManager.getInstance();
             cookies.setAcceptCookie(true);
             cookies.setAcceptThirdPartyCookies(view, false);
@@ -163,9 +223,24 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         }
     }
 
+    private void attachClients(WebView view) {
+        view.setWebViewClient(new PreviewClient());
+        view.setWebChromeClient(new PreviewChromeClient());
+        view.setDownloadListener((url, agent, disposition, mime, length) -> {
+            if (!WebPreviewPolicy.sameService(baseUrl, view.getUrl())) return;
+            String name = android.webkit.URLUtil.guessFileName(url,disposition,mime);
+            if (url.startsWith("blob:") || url.startsWith("data:")) {
+                if (retained.blobDownload == null) retained.blobDownload = new WebBlobDownload(view,downloads.model);
+                retained.blobDownload.start(baseUrl,url,name); return;
+            }
+            downloads.start(baseUrl,url,CookieManager.getInstance().getCookie(url),
+                    name,length,null);
+        });
+    }
+
     private class PreviewClient extends WebViewClient {
         @Override public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            if (WebPreviewPolicy.sameService(baseUrl, url)) return false;
+            if (WebPreviewPolicy.pageDownload(baseUrl, url)) return false;
             openExternal(url);
             return true;
         }
@@ -174,7 +249,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             // 插件的 iframe / 内嵌预览保持 WebView 原有行为，只接管顶层导航。
             if (!request.isForMainFrame()) return false;
             String url = request.getUrl().toString();
-            if (WebPreviewPolicy.sameService(baseUrl, url)) return false;
+            if (WebPreviewPolicy.pageDownload(baseUrl, url)) return false;
             if (request.hasGesture()) openExternal(url);
             return true;
         }
@@ -252,11 +327,21 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                 return true;
             }
             fileCallback = callback;
+            retained.pickerCallback = callback;
+            Intent primary = null;
             try {
-                filePicker.launch(params.createIntent());
+                primary = params.createIntent();
+                filePicker.launch(primary);
             } catch (RuntimeException e) {
-                cancelFileSelection();
-                Toast.makeText(WebPreviewActivity.this, "无法打开系统文件选择器", Toast.LENGTH_SHORT).show();
+                try {
+                    if (primary == null) primary = new Intent(Intent.ACTION_GET_CONTENT).setType("*/*")
+                            .putExtra(Intent.EXTRA_ALLOW_MULTIPLE,params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE)
+                            .putExtra(Intent.EXTRA_MIME_TYPES,params.getAcceptTypes());
+                    filePicker.launch(WebUploads.fallback(primary));
+                } catch (RuntimeException ignored) {
+                    cancelFileSelection();
+                    Toast.makeText(WebPreviewActivity.this, "无法打开文件选择器，请启用系统文件应用", Toast.LENGTH_LONG).show();
+                }
             }
             return true;
         }
@@ -283,13 +368,27 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     }
 
     private void navigateBack() {
-        if (!pageFailed && webView != null && webView.canGoBack()) webView.goBack();
-        else finish();
+        if (navigatingBack) return;
+        WebView current = webView;
+        if (pageFailed || current == null || !WebPreviewPolicy.sameService(baseUrl,current.getUrl())) { finish(); return; }
+        navigatingBack = true;
+        Runnable fallback = () -> {
+            if (!navigatingBack || webView != current || isDestroyed()) return;
+            navigatingBack = false;
+            if (current.canGoBack()) current.goBack(); else finish();
+        };
+        current.postDelayed(fallback,1200);
+        current.evaluateJavascript(WebPageScripts.back(this), result -> {
+            if (!navigatingBack || webView != current) return;
+            if ("true".equals(result)) { navigatingBack = false; current.removeCallbacks(fallback); }
+            else fallback.run();
+        });
     }
 
     private void cancelFileSelection() {
-        if (fileCallback == null) return;
-        ValueCallback<Uri[]> callback = fileCallback;
+        if (retained == null || retained.pickerCallback == null) return;
+        ValueCallback<Uri[]> callback = retained.pickerCallback;
+        retained.pickerCallback = null;
         fileCallback = null;
         callback.onReceiveValue(null);
     }
@@ -298,6 +397,8 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         cancelFileSelection();
         WebView previous = webView;
         webView = null;
+        if (retained != null) retained.view = null;
+        if (retained != null && retained.blobDownload != null) { retained.blobDownload.close(); retained.blobDownload = null; }
         if (previous != null) {
             container.removeView(previous);
             previous.destroy();
@@ -320,7 +421,19 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     }
 
     @Override protected void onDestroy() {
-        destroyWebView();
+        if (downloads != null) downloads.dismiss();
+        if (isChangingConfigurations() && webView != null) {
+            container.removeView(webView);
+            webView.setWebViewClient(new WebViewClient()); webView.setWebChromeClient(null); webView.setDownloadListener(null);
+            ((android.content.MutableContextWrapper) webView.getContext()).setBaseContext(getApplicationContext());
+            webView = null;
+        } else destroyWebView();
         super.onDestroy();
+    }
+
+    @Override protected void onSaveInstanceState(Bundle out) {
+        if (downloads != null) downloads.model.saveState(out);
+        if (webView != null) { Bundle state = new Bundle(); webView.saveState(state); out.putBundle("browser-state",state); }
+        super.onSaveInstanceState(out);
     }
 }

@@ -15,11 +15,18 @@ import com.deepseekharness.app.R;
 /** 统一处理 Android 15+ 强制铺满窗口后的状态栏、挖孔和输入法区域。 */
 public final class ModernAndroidUi implements Application.ActivityLifecycleCallbacks {
     @Override public void onActivityPostCreated(Activity activity, Bundle saved) {
+        applyInsets(activity);
+    }
+
+    private void applyInsets(Activity activity) {
         if (activity instanceof WebFullscreenUi.Host) return;
         View content = activity.findViewById(android.R.id.content);
         if (content == null) return;
+        if (android.os.Build.VERSION.SDK_INT >= 29) content.setForceDarkAllowed(false);
         WindowCompat.setDecorFitsSystemWindows(activity.getWindow(), false);
         int color = activity.getColor(R.color.surface);
+        activity.getWindow().setNavigationBarColor(android.os.Build.VERSION.SDK_INT >= 26
+                ? color : activity.getColor(R.color.terminal_surface));
         content.setBackgroundColor(color);
         boolean light = ColorUtils.calculateLuminance(color) > 0.5;
         androidx.core.view.WindowInsetsControllerCompat controller =
@@ -39,7 +46,10 @@ public final class ModernAndroidUi implements Application.ActivityLifecycleCallb
         ViewCompat.requestApplyInsets(content);
     }
 
-    @Override public void onActivityCreated(Activity activity, Bundle saved) { }
+    @Override public void onActivityCreated(Activity activity, Bundle saved) {
+        if (android.os.Build.VERSION.SDK_INT < 29)
+            activity.getWindow().getDecorView().post(() -> { if (!activity.isFinishing()) applyInsets(activity); });
+    }
     @Override public void onActivityStarted(Activity activity) { }
     @Override public void onActivityResumed(Activity activity) { }
     @Override public void onActivityPaused(Activity activity) { }

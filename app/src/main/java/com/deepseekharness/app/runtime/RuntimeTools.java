@@ -19,7 +19,10 @@ final class RuntimeTools {
             install(context, rootfs, "ca-certificates.crt", CERT_PATH.substring(1), false);
             install(context, rootfs, "plugin-manager.py", "root/.dsh/plugin-manager.py", false);
             install(context, rootfs, "plugin-lifecycle.py", "root/.dsh/plugin-lifecycle.py", false);
+            install(context, rootfs, "plugin-semver.cjs", "root/.dsh/plugin-semver.cjs", false);
             install(context, rootfs, "register-builtin-plugins.py", "root/.dsh/register-builtin-plugins.py", false);
+            for (String file : new String[]{"package.json", "cordis.patch.yml", "index.js", "activity.js", "client.js"})
+                install(context, rootfs, "app-integration/" + file, "root/dsha-app-integration/" + file, false);
             install(context, rootfs, "dsha-plugin.sh", "root/dsh-bin/dsha-plugin", true);
             for (String command : new String[]{"npm", "npx"}) {
                 File cli = new File(rootfs, "usr/local/lib/node_modules/npm/bin/" + command + "-cli.js");

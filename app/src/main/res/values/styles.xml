@@ -49,7 +49,7 @@
     <style name="DshaText.Body" parent="">
         <item name="android:textSize">@dimen/text_body</item>
         <item name="android:textColor">@color/text</item>
-        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:lineSpacingExtra">2dp</item>
     </style>
 
     <!-- 次要说明 -->
@@ -80,11 +80,69 @@
          本项目已经在「同一份配置散落两处」上栽过几次
          （补丁标记版本不同步、插件安置两套实现并存）。 -->
     <style name="Widget.DSHA.Button" parent="Widget.Material3.Button.TextButton">
+        <item name="android:background">@drawable/bg_btn</item>
         <item name="backgroundTint">@null</item>
+        <item name="android:backgroundTint">@null</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:textColor">@color/text</item>
+        <item name="android:textColor">@color/button_text</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:singleLine">false</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="rippleColor">@color/ripple</item>
+    </style>
+
+    <style name="Widget.DSHA.PlatformButton" parent="android:style/Widget.Material.Button">
+        <item name="android:background">@drawable/bg_btn</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:textColor">@color/button_text</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <style name="Widget.DSHA.PrimaryButton" parent="Widget.DSHA.Button">
+        <item name="android:background">@drawable/bg_btn_primary</item>
+        <item name="android:textColor">@color/button_primary_text</item>
+    </style>
+    <style name="Widget.DSHA.RadioButton" parent="Widget.Material3.CompoundButton.RadioButton">
+        <item name="android:textColor">@color/button_text</item>
+    </style>
+    <style name="Widget.DSHA.CheckBox" parent="Widget.Material3.CompoundButton.CheckBox">
+        <item name="android:textColor">@color/button_text</item>
+    </style>
+    <style name="Widget.DSHA.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="android:textColor">@color/button_text</item>
+    </style>
+    <style name="Widget.DSHA.DangerButton" parent="Widget.DSHA.Button">
+        <item name="android:background">@drawable/bg_btn_danger</item>
+        <item name="android:textColor">@color/button_danger_text</item>
+    </style>
+    <style name="DshaText.PageTitle" parent="DshaText.Title">
+        <item name="android:textSize">@dimen/text_page_title</item>
+    </style>
+    <style name="Widget.DSHA.TextButton" parent="Widget.DSHA.Button">
+        <item name="android:background">@drawable/bg_action_plain</item>
+        <item name="android:textColor">@color/action_text</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+    <style name="Widget.DSHA.ToolbarAction" parent="PluginAction">
+        <item name="android:background">@drawable/bg_action_plain</item>
+        <item name="android:minWidth">44dp</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingRight">8dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:textColor">@color/button_text</item>
     </style>
 </resources>

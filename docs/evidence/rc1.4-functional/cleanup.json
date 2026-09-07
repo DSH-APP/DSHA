@@ -1,0 +1,29 @@
+{
+  "result": "PASS",
+  "installed": "1.2.0-rc1.4low debug / 113",
+  "native_key_empty_restored": true,
+  "auto_backup_interval": 5,
+  "app_adb_enabled": false,
+  "wireless_debug_restored": 0,
+  "wifi_connection_unchanged": true,
+  "pairing_keys_unchanged": true,
+  "web_pid_gone": true,
+  "valid_user_backup_listing_unchanged": true,
+  "user_backups_retained": 6,
+  "temporary_key_and_restore_checkpoint_absent": true,
+  "temporary_forward_removed": true,
+  "removed_owned_paths": [
+    "cache/maintenance-fixture-14f1a0b0-bc49-444a-8aab-58bb568bb577-",
+    "cache/maintenance-fixture-37981d2d-0395-420f-aec0-b5a9a032c29b-",
+    "cache/maintenance-fixture-3b03da2c-5179-4e02-b7f9-2b7b3b3d02e1-",
+    "cache/maintenance-fixture-4cde46eb-66db-4cdc-8b09-83c1aa6ba53b-",
+    "cache/maintenance-fixture-8155b170-b893-4df0-8491-6ccdbf695330-",
+    "files/linux/ubuntu/root/.dsha-opt-backup-check",
+    "files/linux/ubuntu/root/.dsha-opt-plugin-check",
+    "cache/functional-audit",
+    "files/linux/ubuntu/root/.dsha-functional-check",
+    "Download/dsh-session-session-90534800-1a35-4740-a55d-c6759a97fbe8.zip"
+  ],
+  "removed_mirror_scripts": 7,
+  "note": "Only exact owned fixture directories, mirror scripts and the known session export were deleted; valid backups and archived test conversations remain."
+}

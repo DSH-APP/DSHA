@@ -7,8 +7,6 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.net.nsd.NsdManager;
-import android.net.nsd.NsdServiceInfo;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -20,10 +18,10 @@ import com.deepseekharness.app.core.HarnessController;
 import com.deepseekharness.app.runtime.ProotBootstrap;
 import com.deepseekharness.app.util.Constants;
 import com.deepseekharness.app.util.SensitiveData;
+import com.deepseekharness.app.util.AdbResult;
+import com.deepseekharness.app.util.AdbEnvironmentTask;
 
 import java.io.File;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -41,6 +39,7 @@ public class DeviceBridgeService extends Service {
 
     private final Handler watchHandler = new Handler(Looper.getMainLooper());
     private final AtomicBoolean probing = new AtomicBoolean(false);
+    private volatile Thread probeThread;
     private volatile int consecutiveFailures = 0;
     private volatile long lastFullVerifyAt = 0L;
     private volatile long lastKickAt = 0L;
@@ -65,7 +64,8 @@ public class DeviceBridgeService extends Service {
     public static boolean apply(Context ctx) {
         if (!isAdbEnabled(ctx)) return false;
         if (!com.deepseekharness.app.bridge.LocalNetworkAccess.granted(ctx)) {
-            adbState = "ADB 等待局域网授权：请到配置页保存并授权";
+            adbState = "permission_required";
+            adbDetail = "ADB 等待局域网授权：请到配置页保存并授权";
             return false;
         }
         if (current != null) return true;
@@ -100,6 +100,20 @@ public class DeviceBridgeService extends Service {
         } else {
             apply(ctx);
         }
+    }
+
+    /** 配对页的验证结果与配置页使用同一状态命名。 */
+    public static void recordPairResult(Context ctx, AdbResult.PairState result, String output) {
+        adbState = result == AdbResult.PairState.CONNECTED ? "connected"
+                : result == AdbResult.PairState.PAIRED ? "reconnecting" : "need_manual";
+        adbDetail = result == AdbResult.PairState.CONNECTED ? "配对页已验证设备连接"
+                : result == AdbResult.PairState.PAIRED ? "配对完成，等待连接验证" : "配对或连接验证未完成，请查看配对页详情";
+        DeviceBridgeService svc = current;
+        if (svc != null && result == AdbResult.PairState.CONNECTED) {
+            svc.lastFullVerifyAt = System.currentTimeMillis();
+            svc.consecutiveFailures = 0;
+        }
+        if (isAdbEnabled(ctx)) apply(ctx);
     }
 
     @Override
@@ -141,7 +155,10 @@ public class DeviceBridgeService extends Service {
     @Override
     public void onDestroy() {
         running = false;
+        if (probeThread != null) probeThread.interrupt();
         current = null;
+        adbState = "disabled";
+        adbDetail = "ADB 保活已停止";
         watchHandler.removeCallbacksAndMessages(null);
         try {
             if (netCallback != null) {
@@ -262,24 +279,35 @@ public class DeviceBridgeService extends Service {
     }
 
     private void probeAsync(final String reason) {
+        if (!running || !isAdbEnabled(this) || AdbBridge.isPairing()) return;
         if (!probing.compareAndSet(false, true)) return;
-        new Thread(() -> {
+        probeThread = new Thread(() -> {
             try {
-                runProbe(reason);
+                AdbBridge.runEnvironmentTask(this, "ADB 后台准备与探活", () -> {
+                    runProbe(reason);
+                    return null;
+                });
+            } catch (AdbEnvironmentTask.Busy e) {
+                setAdbState("environment_busy", e.getMessage());
             } catch (Throwable e) {
                 Log.w("DSHA-ADB", "保活探测异常: " + SensitiveData.redact(String.valueOf(e)));
+                setAdbState("need_manual", "保活探测未完成：" + SensitiveData.redact(String.valueOf(e)));
             } finally {
                 probing.set(false);
             }
-        }, "dsha-adb-watchdog").start();
+        }, "dsha-adb-watchdog");
+        probeThread.start();
     }
 
     private void runProbe(String reason) {
+        if (!running || !isAdbEnabled(this)) return;
         // 3090 桥自愈：桥被系统回收/异常退出后自动补拉起。
         // start() 内部有跨实例互斥（STARTED），重复调用安全；谁抢到端口谁持有。
         try {
-            if (HttpShellService.instance() == null) {
+            if (!HttpShellService.isReady()) {
                 new HttpShellService(this).start();
+                if (!HttpShellService.isStarting() && !HttpShellService.bindError().isEmpty())
+                    Log.w("DSHA-ADB", "设备确认桥未就绪：" + HttpShellService.bindError());
             }
         } catch (Throwable ignored) {
         }
@@ -289,6 +317,20 @@ public class DeviceBridgeService extends Service {
             setAdbState("no_env", "环境未就绪");
             return;
         }
+        if (!AdbBridge.injected(proot)) {
+            setAdbState("installing", "正在更新 ADB 脚本与授权设置");
+            String prepared = AdbBridge.ensureReady(this, proot);
+            if (AdbResult.marker(prepared, "ENVIRONMENT_BUSY")) {
+                setAdbState("environment_busy", prepared);
+                return;
+            }
+            if (!AdbResult.marker(prepared, "SETUP_DONE")) {
+                consecutiveFailures++;
+                setAdbState("need_manual", "ADB 准备失败：" + SensitiveData.redact(prepared));
+                return;
+            }
+        }
+        if (!running || !isAdbEnabled(this) || AdbBridge.isPairing()) return;
         // 1) 无副作用 TCP 探活（避免每轮都触发系统「已连接无线调试」toast）
         boolean needFull = System.currentTimeMillis() - lastFullVerifyAt > FULL_VERIFY_INTERVAL_MS;
         if (!needFull && tcpReachable(readConnectPort(proot), 1200)) {
@@ -296,27 +338,36 @@ public class DeviceBridgeService extends Service {
             return;
         }
         // 2) 完整握手验证（无副作用探活失败时才做）
-        String r = proot.execAndReadWithProot("DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py id 2>&1 | head -3", 60_000);
-        if (r != null && r.contains("uid=")) {
+        String r = probeCommand(proot, null);
+        if (AdbResult.shellReady(r)) {
             lastFullVerifyAt = System.currentTimeMillis();
             onProbeOk(reason);
             return;
         }
+        if (r != null && r.contains("NO_KEY:")) {
+            consecutiveFailures++;
+            setAdbState("need_pair", "尚未配对，请到配置页完成一次无线配对");
+            return;
+        }
         if (r != null && r.contains("DEPS_MISSING")) {
             setAdbState("installing", "正在补装 ADB 依赖");
-            AdbBridge.ensureReady(this, proot);
+            String prepared = AdbBridge.ensureReady(this, proot);
+            if (AdbResult.marker(prepared, "ENVIRONMENT_BUSY")) {
+                setAdbState("environment_busy", prepared);
+                return;
+            }
+            if (!AdbResult.marker(prepared, "SETUP_DONE")) setAdbState("need_manual", SensitiveData.redact(prepared));
             consecutiveFailures++;
             return;
         }
         // 3) mDNS 重发现连接端口 → 重试
         setAdbState("reconnecting", "触发原因：" + reason);
-        int connPort = discoverConnPortSync();
-        if (connPort > 0) {
-            saveConnectPort(proot, connPort);
-            String r2 = proot.execAndReadWithProot(
-                    "DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py --port " + connPort + " id 2>&1 | head -3", 60_000);
-            if (r2 != null && r2.contains("uid=")) {
-                onProbeOk("重连端口 " + connPort);
+        AdbBridge.Endpoint endpoint = discoverConnPortSync();
+        if (endpoint != null) {
+            String r2 = probeCommand(proot, endpoint);
+            if (AdbResult.shellReady(r2)) {
+                lastFullVerifyAt = System.currentTimeMillis();
+                onProbeOk("重连端口 " + endpoint.port);
                 return;
             }
             if (r2 != null && (r2.contains("Unauthorized") || r2.contains("unauthorized")
@@ -329,7 +380,7 @@ public class DeviceBridgeService extends Service {
         }
         // 4) 自动重开无线调试
         if (tryReopenWirelessDebug()) {
-            int p2 = -1;
+            AdbBridge.Endpoint p2 = null;
             long deadline = System.currentTimeMillis() + 12_000;
             while (System.currentTimeMillis() < deadline) {
                 try {
@@ -338,19 +389,19 @@ public class DeviceBridgeService extends Service {
                     break;
                 }
                 p2 = discoverConnPortSync();
-                if (p2 > 0) break;
+                if (p2 != null) break;
             }
-            if (p2 > 0) {
-                saveConnectPort(proot, p2);
-                String r3 = proot.execAndReadWithProot(
-                        "DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py --port " + p2 + " id 2>&1 | head -1", 60_000);
-                if (r3 != null && r3.contains("uid=")) {
+            if (p2 != null) {
+                String r3 = probeCommand(proot, p2);
+                if (AdbResult.shellReady(r3)) {
+                    lastFullVerifyAt = System.currentTimeMillis();
                     onProbeOk("自动重开无线调试后重连");
                     return;
                 }
             }
             consecutiveFailures++;
-            setAdbState("reconnecting", "已重开无线调试，等待 adbd 就绪");
+            setAdbState(consecutiveFailures >= 3 ? "need_manual" : "reconnecting",
+                    "无线调试连接尚未验证；请检查连接端口或重新配对。" + SensitiveData.redact(r));
             return;
         }
         consecutiveFailures++;
@@ -362,7 +413,7 @@ public class DeviceBridgeService extends Service {
 
     private void onProbeOk(String detail) {
         consecutiveFailures = 0;
-        setAdbState("ok", detail);
+        setAdbState("connected", detail);
         try {
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) nm.cancel(WATCH_NOTIF_ID);
@@ -394,49 +445,19 @@ public class DeviceBridgeService extends Service {
         }
     }
 
-    private int discoverConnPortSync() {
-        final CountDownLatch done = new CountDownLatch(1);
-        final int[] port = {0};
-        try {
-            NsdManager nm = (NsdManager) getSystemService(Context.NSD_SERVICE);
-            if (nm == null) return 0;
-            final NsdManager.DiscoveryListener[] holder = new NsdManager.DiscoveryListener[1];
-            holder[0] = new NsdManager.DiscoveryListener() {
-                @Override public void onDiscoveryStarted(String t) { }
-                @Override public void onDiscoveryStopped(String t) { }
-                @Override public void onStartDiscoveryFailed(String t, int e) { done.countDown(); }
-                @Override public void onStopDiscoveryFailed(String t, int e) { }
-                @Override public void onServiceFound(NsdServiceInfo info) {
-                    nm.resolveService(info, new NsdManager.ResolveListener() {
-                        @Override public void onResolveFailed(NsdServiceInfo s, int e) { done.countDown(); }
-                        @Override public void onServiceResolved(NsdServiceInfo s) {
-                            int p = s.getPort();
-                            if (p > 0) port[0] = p;
-                            done.countDown();
-                            try { nm.stopServiceDiscovery(holder[0]); } catch (Throwable ignored) { }
-                        }
-                    });
-                }
-                @Override public void onServiceLost(NsdServiceInfo info) { }
-            };
-            nm.discoverServices("_adb-tls-connect._tcp.", NsdManager.PROTOCOL_DNS_SD, holder[0]);
-            done.await(5, TimeUnit.SECONDS);
-        } catch (Throwable ignored) {
-        }
-        return port[0];
+    private AdbBridge.Endpoint discoverConnPortSync() {
+        if (!running || Thread.currentThread().isInterrupted()) return null;
+        return AdbBridge.discover(this, "_adb-tls-connect._tcp.", 5000,
+                detail -> setAdbState("reconnecting", detail));
     }
 
-    private void saveConnectPort(ProotBootstrap proot, int port) {
-        try {
-            File f = new File(proot.getRootfsDir(), "root/.dsh/adbkeys/connect_port");
-            if (f.getParentFile() != null) f.getParentFile().mkdirs();
-            Compat.write(f, String.valueOf(port)
-                    .getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        } catch (Throwable ignored) {
-        }
+    private String probeCommand(ProotBootstrap proot, AdbBridge.Endpoint endpoint) {
+        if (!running || !isAdbEnabled(this) || Thread.currentThread().isInterrupted()) return "STOPPED";
+        return AdbBridge.probe(proot, endpoint);
     }
 
     private boolean tryReopenWirelessDebug() {
+        if (!running || !isAdbEnabled(this) || Thread.currentThread().isInterrupted()) return false;
         try {
             boolean hasSecure = checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)
                     == android.content.pm.PackageManager.PERMISSION_GRANTED;
@@ -454,6 +475,7 @@ public class DeviceBridgeService extends Service {
     }
 
     private void setAdbState(String state, String detail) {
+        if (!running || current != this) return; // 服务停止后的迟到回调不能覆盖新实例状态。
         adbState = state;
         adbDetail = detail == null ? "" : detail;
     }

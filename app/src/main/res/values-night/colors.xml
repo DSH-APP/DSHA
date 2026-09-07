@@ -9,7 +9,7 @@
     <color name="line">#2A3344</color>
     <color name="text">#E8ECF4</color>
     <color name="text_secondary">#A6B0C3</color>
-    <color name="text_muted">#6B7689</color>
+    <color name="text_muted">#9BA8BD</color>
     <color name="ok">#7ED6A2</color>
     <color name="warn">#E5C07B</color>
     <color name="err">#E08A8A</color>
@@ -17,7 +17,9 @@
     <color name="logo_top">#273349</color>
     <color name="logo_bot">#161D2B</color>
     <!-- 深色底下涟漪要更亮一点才看得见 -->
-    <color name="ripple">#337DA7F4</color>
+    <color name="ripple">#187DA7F4</color>
+    <color name="primary_ripple">#20FFFFFF</color>
+    <color name="error_on">#1A0F0F</color>
     <color name="disabled">#1B2130</color>
     <color name="err_bg">#1AE08A8A</color>
 </resources>

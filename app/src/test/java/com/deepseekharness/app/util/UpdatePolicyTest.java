@@ -35,4 +35,25 @@ public class UpdatePolicyTest {
                 "arm64-v8a", "https://dsha.cc/a.apk", "bad", 100, "", "https://dsha.cc/");
         assertNull(UpdatePolicy.select(Arrays.asList(bad), 112, "low", 23, "preview"));
     }
+    @Test public void legacyStableArtifactDoesNotIdentifyTheQueryChannel() {
+        UpdatePolicy.Release stable = release(113, "stable", "standard", 30);
+        assertSame(stable, UpdatePolicy.select(Arrays.asList(stable), 112, "standard", 37, "stable"));
+        assertSame(stable, UpdatePolicy.select(Arrays.asList(stable), 112, "standard", 37, "preview"));
+        assertNull(UpdatePolicy.restoreCheckedChannel(false, null, stable.channel));
+    }
+    @Test public void legacyPreviewArtifactHasOnlyOnePossibleQueryChannel() {
+        UpdatePolicy.Release preview = release(113, "preview", "standard", 30);
+        assertNull(UpdatePolicy.select(Arrays.asList(preview), 112, "standard", 37, "stable"));
+        assertSame(preview, UpdatePolicy.select(Arrays.asList(preview), 112, "standard", 37, "preview"));
+        assertEquals("preview", UpdatePolicy.restoreCheckedChannel(false, null, preview.channel));
+    }
+    @Test public void explicitSourceWinsAndUnknownMarkerNeverBecomesLegacy() {
+        assertEquals("preview", UpdatePolicy.restoreCheckedChannel(true, "preview", "stable"));
+        assertEquals("stable", UpdatePolicy.restoreCheckedChannel(true, "stable", "stable"));
+        for (String invalid : new String[]{null, "", "unknown", "preview "}) {
+            assertNull(UpdatePolicy.restoreCheckedChannel(true, invalid, "stable"));
+            assertNull(UpdatePolicy.restoreCheckedChannel(true, invalid, "preview"));
+        }
+        assertNull(UpdatePolicy.restoreCheckedChannel(false, null, "invalid"));
+    }
 }

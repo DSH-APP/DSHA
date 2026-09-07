@@ -28,10 +28,10 @@ public final class Constants {
 
     // ================= dsh 版本（采用最新 @deepseek-ai/dsh） =================
     /**
-     * 最新 dsh 版本：npm registry 的 alpha 标签（@deepseek-ai/dsh@0.1.2-alpha.4）。
+     * 当前 APK 内置 dsh 版本（不是远端 latest 标签）。
      * 对应上游 deepseek-ai/deepseek-harness 仓库。
      */
-    public static final String DSH_VERSION = "0.1.2-alpha.4";
+    public static final String DSH_VERSION = "0.1.2-rc.1";
     public static final String DSH_RUNTIME_ID = "dsh-v" + DSH_VERSION;
     /** 全局安装路径下的 dsh 入口（容器内路径，见 WebProcSel 的 cmdline 判据）。 */
     public static final String DSH_BIN_JS =

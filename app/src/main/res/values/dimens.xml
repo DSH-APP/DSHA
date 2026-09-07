@@ -8,7 +8,7 @@
 
     <!-- ========== 间距（4 的倍数，形成节奏） ========== -->
     <!-- 页面左右边距：所有全屏页统一 -->
-    <dimen name="page_pad">20dp</dimen>
+    <dimen name="page_pad">16dp</dimen>
     <!-- 居中式启动/引导页的宽边距（内容少，留白更多才不显空） -->
     <dimen name="page_pad_wide">32dp</dimen>
     <!-- 卡片内部留白 -->
@@ -25,11 +25,11 @@
 
     <!-- ========== 圆角阶梯 ========== -->
     <!-- 大容器：卡片、预览框 -->
-    <dimen name="radius_card">18dp</dimen>
+    <dimen name="radius_card">16dp</dimen>
     <!-- 控件：按钮、输入框 -->
-    <dimen name="radius_control">14dp</dimen>
+    <dimen name="radius_control">12dp</dimen>
     <!-- 小控件：标签、tab、小徽章 -->
-    <dimen name="radius_small">10dp</dimen>
+    <dimen name="radius_small">8dp</dimen>
     <!-- 全圆：chip、进度条 -->
     <dimen name="radius_pill">999dp</dimen>
 
@@ -37,6 +37,7 @@
     <!-- 引导页大标题（只有欢迎页用，比 display 更有气势） -->
     <dimen name="text_hero">28sp</dimen>
     <dimen name="text_display">24sp</dimen>
+    <dimen name="text_page_title">20sp</dimen>
     <dimen name="text_title">17sp</dimen>
     <dimen name="text_body">15sp</dimen>
     <dimen name="text_label">13sp</dimen>

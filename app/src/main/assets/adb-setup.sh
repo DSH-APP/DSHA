@@ -1,5 +1,5 @@
 #!/bin/bash
-# DSHA_ADB_SCRIPT_VERSION=11
+# DSHA_ADB_SCRIPT_VERSION=15
 # DSHA ADB 无线配对环境安装（幂等；rootfs 内执行）
 # 步骤：依赖(adb_shell_wifi/spake2-cffi) → 密钥 → 包装命令 /root/dsh-bin/adb-shell
 # 依赖走「离线 wheel 包」（/root/.dsh/wheels，由 App 注入），不依赖 apt/网络/编译器。
@@ -109,14 +109,8 @@ echo "== [4/4] 安装 /root/dsh-bin/adb-shell 包装命令"
 mkdir -p /root/dsh-bin
 cat > /root/dsh-bin/adb-shell <<'EOF'
 #!/bin/bash
-# DSHA ADB 设备 shell（无线通道，免 Shizuku）
-# 安全铁律（与守卫合并）：守卫开（App 配置「危险 Shell 操作需确认」+ 标记存在）
-# → 执行前经 dsh-confirm.sh --force 确认（所有命令都弹窗，用户点允许才执行）。
-# 守卫关 → 不弹窗，只靠 agent 引导「口头报备」（用户可接受才执行）。
-# 跳过确认：DSH_NO_CONFIRM=1（安装脚本/看门狗内部用，agent 无此变量）
-if [ "${DSH_NO_CONFIRM:-0}" != "1" ] && [ -f /root/.dsh/confirm-shell-enabled ]; then
-  /root/dsh-confirm.sh --force "adb-shell $*" || exit 1
-fi
+# DSHA_ADB_SCRIPT_VERSION=15
+# 确认只由 Python 入口处理；直调脚本与包装器共用一次确认及真实退出码。
 exec python3 /root/.dsh/adb-shell.py "$@"
 EOF
 chmod +x /root/dsh-bin/adb-shell

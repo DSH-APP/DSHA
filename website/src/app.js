@@ -1,6 +1,18 @@
 (function () {
   'use strict';
   var root = document.documentElement;
+  var navigation = document.querySelector('[data-navigation]');
+  var navButton = document.querySelector('[data-nav-toggle]');
+  if (navigation && navButton) {
+    function closeNavigation() { navigation.removeAttribute('data-open'); navButton.setAttribute('aria-expanded', 'false'); }
+    navButton.addEventListener('click', function () {
+      var open = navButton.getAttribute('aria-expanded') !== 'true';
+      navButton.setAttribute('aria-expanded', String(open));
+      if (open) navigation.setAttribute('data-open', ''); else closeNavigation();
+    });
+    navigation.addEventListener('click', function (event) { if (event.target.closest('a')) closeNavigation(); });
+    document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && navButton.getAttribute('aria-expanded') === 'true') { closeNavigation(); navButton.focus(); } });
+  }
   var toast = document.querySelector('[data-toast]'), toastTimer;
   function announce(message) {
     if (!toast) return;

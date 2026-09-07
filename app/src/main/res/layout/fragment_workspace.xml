@@ -1,164 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/surface">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/page_pad">
-        <TextView
-            android:id="@+id/sub_back"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingBottom="@dimen/gap_tight"
-            android:text="‹ 返回"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/text_body"
-            android:visibility="gone" />
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="数据与备份"
-            android:textSize="@dimen/text_display"
-            android:textStyle="bold" />
-
-        <Button android:background="@drawable/bg_btn" android:textAllCaps="false"
-            android:id="@+id/workspace_backup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_control"
-            android:text="选择备份范围" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight"
-            android:lineSpacingExtra="2dp"
-            android:text="可选全部数据、对话记录、设置或插件；每次只写入所选范围。默认不包含 API Key，不删除当前数据。新备份固定保存为 DSHA-backup-latest.tar.gz。"
-            android:textColor="@color/text_muted"
-            android:textSize="@dimen/text_caption" />
-
-        <Button android:background="@drawable/bg_btn" android:textAllCaps="false"
-            android:id="@+id/workspace_restore"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight"
-            android:text="恢复" />
-
-        <Button android:background="@drawable/bg_btn" android:textAllCaps="false"
-            android:id="@+id/workspace_location"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight"
-            android:text="查看保存位置" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_section"
-            android:text="环境管理"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_section"
-            android:text="工作区目录名（rootfs 内）" />
-
-        <EditText
-            android:id="@+id/workspace_path"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="deepseek-harness" />
-
-        <Button android:background="@drawable/bg_btn" android:textAllCaps="false"
-            android:id="@+id/workspace_apply"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_control"
-            android:text="应用路径" />
-
-        <TextView
-            android:id="@+id/workspace_info"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_section"
-            android:lineSpacingExtra="4dp"
-            android:textSize="@dimen/text_body" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_section"
-            android:text="文件共享（MT 注入文件提供器 · 无需 ROOT）"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/workspace_share_status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight"
-            android:lineSpacingExtra="3dp"
-            android:text="尚未加载"
-            android:textSize="@dimen/text_label" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_section"
-            android:text="设备 Shell 能力（Shizuku）"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/workspace_shizuku_status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight"
-            android:text="Shizuku 未授权"
-            android:textSize="@dimen/text_label" />
-
-        <Button android:background="@drawable/bg_btn" android:textAllCaps="false"
-            android:id="@+id/workspace_shizuku_auth"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_control"
-            android:text="授权 Shizuku" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight"
-            android:lineSpacingExtra="3dp"
-            android:text="授权后，助手（Web UI 里的 agent）可在设备上执行 shell 命令：\ncurl http://127.0.0.1:3090/exec?cmd=..."
-            android:textSize="@dimen/text_caption" />
-
-        <Button android:background="@drawable/bg_btn" android:textAllCaps="false"
-            android:id="@+id/workspace_clean_sessions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight"
-            android:text="清理损坏会话（隔离到 corrupt-backup，可恢复）" />
-
-        <Button android:background="@drawable/bg_btn" android:textAllCaps="false"
-            android:id="@+id/workspace_reset"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight"
-            android:text="重置配置（保留对话记录）" />
-
-        <Button android:background="@drawable/bg_btn_danger" android:textAllCaps="false"
-            android:id="@+id/workspace_clear"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_section"
-            android:text="清除环境" />
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_pad">
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="备份与恢复" />
+            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="按需备份全部数据、对话、设置或插件。" />
+            <Button android:id="@+id/workspace_backup" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="创建备份" />
+            <Button android:id="@+id/workspace_restore" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="从文件恢复" />
+            <TextView android:id="@+id/workspace_backup_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
+            <Button android:id="@+id/workspace_restore_latest" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="预览最近备份" />
+            <Button android:id="@+id/workspace_location" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="保存位置：Download/DSHA" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="备份可能包含密钥、配置和插件凭据，请妥善保存。" />
+        </LinearLayout>
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="工作区" />
+            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="运行环境中的工作目录名" />
+            <EditText android:id="@+id/workspace_path" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="8dp" android:background="@drawable/bg_input" android:padding="12dp" android:singleLine="true" android:hint="deepseek-harness" />
+            <Button android:id="@+id/workspace_apply" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="应用路径" />
+            <TextView android:id="@+id/workspace_info" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="" />
+        </LinearLayout>
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="文件共享" />
+            <TextView android:id="@+id/workspace_share_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="" />
+        </LinearLayout>
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="设备 Shell · Shizuku" />
+            <TextView android:id="@+id/workspace_shizuku_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Shizuku 未授权" />
+            <Button android:id="@+id/workspace_shizuku_auth" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="授权 Shizuku" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="授权后，助手可使用设备 Shell 能力。" />
+        </LinearLayout>
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="环境维护" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="重置与清除操作会再次询问，请先做好备份。" />
+            <Button android:id="@+id/workspace_clean_sessions" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="清理损坏会话" />
+            <Button android:id="@+id/workspace_reset" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="重置配置，保留对话" />
+            <Button android:id="@+id/workspace_clear" style="@style/Widget.DSHA.DangerButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="清除环境" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

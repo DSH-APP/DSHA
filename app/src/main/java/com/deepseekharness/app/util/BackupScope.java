@@ -60,6 +60,14 @@ public final class BackupScope {
         }
     }
 
+    /** 统一生成归档名，防止调用方绕过范围前缀约定。 */
+    public static String archiveName(int scope, String suffix) {
+        if (suffix == null || !suffix.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,80}")) {
+            throw new IllegalArgumentException("备份文件标识无效");
+        }
+        return fileNamePrefix(scope) + suffix + ".tar.gz";
+    }
+
     /** 按文件名判断范围（用户手动选包恢复时先看名字，清单里的 scope 优先级更高）。 */
     public static int fromFileName(String name) {
         if (name == null) return FULL;
@@ -91,22 +99,22 @@ public final class BackupScope {
     public static String describe(int scope) {
         switch (scope) {
             case SESSIONS:
-                return "只打包会话、消息与工作区结构，恢复时不动设置与插件";
+                return "只打包会话、索引、附件与工作区结构，恢复时不动设置与插件";
             case PLUGINS:
                 return "只打包插件清单、配置和已安装插件数据";
             case SETTINGS:
-                return "只打包设置和运行参数，默认不含 API Key";
+                return "打包 settings.yaml 和运行参数；原生 API Key 遵循备份密钥开关";
             default:
-                return "配置、对话、插件和工作区文件，换机或重装用这个";
+                return "配置、对话、附件、插件与工作区 .env/日志，换机或重装用这个";
         }
     }
 
     public static String restoreImpact(int scope) {
         switch (scope) {
-            case SESSIONS: return "只覆盖聊天记录，不改设置和插件";
-            case SETTINGS: return "只覆盖 settings.yaml，不改聊天记录和插件";
-            case PLUGINS: return "只覆盖插件 profile，不改聊天记录和设置";
-            default: return "覆盖配置、聊天记录、插件和工作区文件";
+            case SESSIONS: return "覆盖聊天记录、会话索引与附件，不改设置和插件";
+            case SETTINGS: return "覆盖 settings.yaml 和原生运行设置，不改聊天记录和插件";
+            case PLUGINS: return "覆盖插件 profile 和插件源码，不改聊天记录和设置";
+            default: return "覆盖配置、聊天记录、附件、插件与工作区 .env/日志";
         }
     }
 
@@ -116,8 +124,8 @@ public final class BackupScope {
             // dsh 1.2：会话文件在 sessions/，但 UI 入口是 storages/workspace.json 注册表
             // （workspace -> sessionIds）。只带 sessions/ 的话恢复后会话文件在、注册表没引用，
             // WebUI 里看不到 —— 所以两个都带（session_projcache 是投影缓存非权威，可重建）。
-            case SESSIONS: return new String[] { ".dsh/sessions", ".dsh/storages" };
-            case PLUGINS:  return new String[] { ".dsh/profiles" };
+            case SESSIONS: return new String[] { ".dsh/sessions", ".dsh/storages", ".dsh/attachments" };
+            case PLUGINS:  return new String[] { ".dsh/profiles", ".dsh/plugin-src", ".dsh/plugin-sources.json", ".dsh/plugin-history", ".dsh/plugin-safe-mode.json" };
             case SETTINGS: return new String[] { ".dsh/settings.yaml" };
             default:       return new String[0];   // 空 = 整个 .dsh
         }
@@ -126,8 +134,8 @@ public final class BackupScope {
     /** 恢复时要合并的 {@code .dsh} 子目录名；必须与 {@link #dshPaths(int)} 一一对应。 */
     public static String[] mergeSubdirs(int scope) {
         switch (scope) {
-            case SESSIONS: return new String[] { "sessions", "storages" };
-            case PLUGINS:  return new String[] { "profiles" };
+            case SESSIONS: return new String[] { "sessions", "storages", "attachments" };
+            case PLUGINS:  return new String[] { "profiles", "plugin-src", "plugin-sources.json", "plugin-history", "plugin-safe-mode.json" };
             case SETTINGS: return new String[] { "settings.yaml" };
             default:       return new String[0];
         }
@@ -145,7 +153,7 @@ public final class BackupScope {
 
     /** 这个范围要不要把公开目录里的热数据解引用快照进包。 */
     public static boolean needsPublicDataSnapshot(int scope) {
-        return scope == FULL || scope == SESSIONS;
+        return scope == FULL || scope == SESSIONS || scope == SETTINGS;
     }
 
     /** 公开目录里会被软链出去的热数据条目（与 BackupManager 的软链自修复同一份名单）。 */
@@ -158,7 +166,7 @@ public final class BackupScope {
 
     /** 这个范围需要快照哪些公开条目。 */
     public static String[] snapshotEntries(int scope) {
-        if (scope == SESSIONS) return new String[] { "sessions" };
+        if (scope == SESSIONS) return new String[] { "sessions", "storages", "attachments" };
         if (scope == SETTINGS) return new String[] { "settings.yaml" };
         if (scope == FULL) return PUBLIC_HOT_ENTRIES.clone();
         return new String[0];

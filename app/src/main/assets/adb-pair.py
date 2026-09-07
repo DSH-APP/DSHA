@@ -1,272 +1,156 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# DSHA_ADB_SCRIPT_VERSION=14
-"""
-DSHA ADB 无线配对（绕过 Shizuku）—— 单次配对脚本。
-协议：Android 11+ wireless debugging pairing（TLS1.3-PSK + SPAKE2，AOSP/BoringSSL）。
-关键坑（已踩）：
-  * SPAKE2 必须用 spake2-cffi（BoringSSL 兼容：32 字节消息、NUL 终止、非主子群盲化点）；
-    绝不能 pip install warner 的 spake2（33 字节消息，必败并让设备弹窗报警）。
-  * 配对服务监听地址因 ROM 而异：多数绑定 0.0.0.0（127.0.0.1 可连），
-    部分 ROM 只绑定 WiFi 接口 IP（127.0.0.1 连不上！）→ 自动多地址尝试：
-    优先 App 传入的真实 host（mDNS 解析），再 127.0.0.1，再本机接口 IP。
-  * 配对务必单次执行：失败握手会让设备弹"配对失败"并关闭配对，禁止循环重试。
-  * 成功标志 PAIR_OK；随后直连 adbd（传统 5555 或无线调试常规端口）自检。
-用法：
-  python3 adb-pair.py --code 123456 [--host <ip>] [--port <配对端口>] [--connect-port 5555]
-  python3 adb-pair.py --genkey                        # 仅生成/确保密钥
-输出（供 App/脚本解析）：
-  KEY_GEN_OK / DEPS_MISSING / NO_PAIR_PORT / PORT_UNREACHABLE /
-  TLS_ERROR / SPAKE2_ERROR / WRONG_CODE / PAIR_OK / CONNECT_OK / CONNECT_WARN
+# DSHA_ADB_SCRIPT_VERSION=15
+"""无线配对只握手一次；配对授权与连接验证分别反馈。
+
+PAIR_OK 表示配对完成；只有 CONNECT_OK 才能执行设备命令。
+CONNECT_WARN 表示已配对但连接未验证，不应重复消耗配对码。
 """
 import argparse
+import importlib.util
 import os
+import re
 import socket
 import sys
 import time
 
-KEYDIR = '/root/.dsh/adbkeys'
-KEY = KEYDIR + '/adbkey'
-KEYPUB = KEY + '.pub'
-DEFAULT_CONNECT_PORT = 5555
+# 与 shell 共用有限时连接/退出码/mDNS实现，避免两条路径再次漂移。
+_spec = importlib.util.spec_from_file_location('dsha_adb_shell', os.path.join(os.path.dirname(__file__), 'adb-shell.py'))
+adb = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(adb)
+KEYDIR, KEY, KEYPUB = adb.KEYDIR, adb.KEY, adb.KEYPUB
 
 
 def check_deps():
     try:
-        import adb_shell_wifi  # noqa
-        # 新版库(0.5.0+)从 spake2.spake2 导入（spake2-cffi 的模块名就是 spake2）
-        from spake2.spake2 import Spake2_Alice, Spake2_Bob  # noqa
-    except Exception as e:
-        print('DEPS_MISSING: %s' % e)
-        print('RUN: python3 -m pip install --break-system-packages '
-              'adb_shell_wifi pyopenssl spake2-cffi aiofiles async_timeout zeroconf')
+        from adb_shell_wifi.pairing import pair
+        from spake2.spake2 import Spake2_Alice, Spake2_Bob
+        return True
+    except ImportError:
+        print('DEPS_MISSING: 无线配对依赖不完整，请重新准备 ADB 环境', flush=True)
         return False
-    return True
 
 
 def ensure_key():
-    os.makedirs(KEYDIR, exist_ok=True)
+    os.makedirs(KEYDIR, mode=0o700, exist_ok=True)
     os.chmod(KEYDIR, 0o700)
-    if not (os.path.exists(KEY) and os.path.exists(KEYPUB)):
+    if not (os.path.isfile(KEY) and os.path.isfile(KEYPUB)):
         from adb_shell_wifi.auth.keygen import keygen
         keygen(KEY)
-        print('KEY_GEN_OK')
-    return True
+        print('KEY_GEN_OK', flush=True)
 
 
-def local_ips():
-    """本机所有 IPv4 接口地址（proot 与 Android 共享网络栈，能拿到 WiFi IP）。"""
-    ips = []
+def probe(host, port):
     try:
-        import subprocess
-        out = subprocess.check_output(
-            "ip -4 addr show | grep -oP 'inet \\K[0-9.]+' | grep -v '^127\\.'",
-            shell=True, timeout=5, stderr=subprocess.DEVNULL).decode().split()
-        ips.extend(out)
-    except Exception:
-        pass
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        ips.append(s.getsockname()[0])
-        s.close()
-    except Exception:
-        pass
-    # 去重保序
-    seen = set()
-    return [ip for ip in ips if not (ip in seen or seen.add(ip))]
-
-
-def probe(port, host='127.0.0.1', timeout=2.5):
-    try:
-        s = socket.create_connection((host, port), timeout=timeout)
-        s.close()
-        return True
-    except Exception:
+        with socket.create_connection((host, port), timeout=2):
+            return True
+    except OSError:
         return False
 
 
-def do_pair(host, port, code, priv_pem, pub_data):
-    """单次配对；返回 (ok, detail)。detail 含协议阶段信息。"""
+def do_pair(host, port, code):
     from adb_shell_wifi.pairing import pair
-    from adb_shell_wifi.pairing.connection import PairingException
     try:
-        r = pair(host, port, code, priv_pem, pub_data, timeout_s=30)
-        return True, 'PAIR_OK: %r' % (r,)
-    except PairingException as e:
-        m = str(e).lower()
-        if 'decryption' in m or 'init_cipher' in m or 'spake' in m:
-            return False, 'SPAKE2_ERROR: %s' % e
-        if 'tls' in m or 'ssl' in m or 'handshake' in m:
-            return False, 'TLS_ERROR: %s' % e
-        return False, 'PAIR_FAIL: %s' % e
-    except ImportError as e:
-        return False, 'DEPS_MISSING: %s' % e
+        with open(KEY, 'rb') as f:
+            private = f.read()
+        with open(KEYPUB, 'rb') as f:
+            public = f.read().strip()
+        # 不打印配对码、密钥或库返回的配对对象。
+        pair(host, port, code, private, public, timeout_s=25)
+        return True, 'PAIR_OK: 无线配对授权已完成'
     except Exception as e:
-        return False, 'PAIR_FAIL: %s (%s)' % (e, type(e).__name__)
+        kind = type(e).__name__
+        message = str(e).lower()
+        if any(s in message for s in ('decrypt', 'spake', 'init_cipher')):
+            return False, 'SPAKE2_ERROR: 配对码错误或已失效，请重新打开配对弹窗（%s）' % kind
+        if any(s in message for s in ('ssl', 'tls', 'handshake')):
+            return False, 'TLS_ERROR: 配对握手失败，请确认使用的是配对端口（%s）' % kind
+        return False, 'PAIR_FAIL: 配对未完成，请重新获取配对码和端口（%s）' % kind
+
+
+def verify_connection(port=0, host=''):
+    from adb_shell_wifi.adb_device import AdbDeviceTls
+    from adb_shell_wifi.auth.sign_pythonrsa import PythonRSASigner
+    if not port:
+        try:
+            with open(KEYDIR + '/connect_port') as f:
+                port = int(f.read(20).strip())
+            if not 1 <= port <= 65535: port = 0
+        except (OSError, ValueError):
+            port = 0
+    result = adb.connect_with_retry(AdbDeviceTls, PythonRSASigner,
+        'id', port, host, connect_timeout=25, command_timeout=10)
+    if result.exit_code != 0 or not re.search(r'(?m)^uid=\d+', result.output):
+        raise adb.ExecutionUnknown('连接自检没有返回有效身份或远端命令失败')
+    print('CONNECT_OK: 设备连接已验证', flush=True)
+    print(result.output.strip(), flush=True)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--code', default=None, help='6 位配对码')
-    ap.add_argument('--host', default='', help='配对服务地址（App mDNS 解析出的真实 IP，可空）')
-    ap.add_argument('--port', type=int, default=0, help='配对端口（0=用户后补/不配）')
-    ap.add_argument('--connect-port', type=int, default=DEFAULT_CONNECT_PORT)
+    ap.add_argument('--code', help='6 位配对码')
+    ap.add_argument('--host', default='', help='本机配对服务 IP')
+    ap.add_argument('--port', type=int, default=0, help='配对端口，0=重新发现')
+    ap.add_argument('--connect-port', type=int, default=0, help='连接端口，0=重新发现')
     ap.add_argument('--genkey', action='store_true')
+    ap.add_argument('--verify-only', action='store_true', help='仅验证已有配对连接，不再配对')
     a = ap.parse_args()
-
+    if not 0 <= a.port <= 65535 or not 0 <= a.connect_port <= 65535:
+        print('INVALID_PORT: 端口必须在 1—65535，自动发现请留空')
+        return 2
+    if a.code is not None and not re.fullmatch(r'[0-9]{6}', a.code):
+        print('INVALID_CODE: 配对码必须恰好为 6 位数字')
+        return 2
     if not check_deps():
-        sys.exit(1)
-    ensure_key()
+        return 1
     if a.genkey:
-        sys.exit(0)
-
+        ensure_key()
+        return 0
+    if a.verify_only:
+        if not (os.path.isfile(KEY) and os.path.isfile(KEYPUB)):
+            print('NO_KEY: 尚未配对，请先获取配对码完成配对')
+            return 1
+        try:
+            verify_connection(a.connect_port, a.host)
+            return 0
+        except (adb.ConnectFail, adb.ExecutionUnknown, ValueError) as e:
+            print('CONNECT_WARN: 已有配对的连接尚未验证：%s' % e, flush=True)
+            return 1
     if not a.code:
-        print('NO_CODE')
-        sys.exit(1)
-
-    priv_pem = open(KEY, 'rb').read()
-    pub_data = open(KEYPUB, 'rb').read().strip()
-
-    port = a.port
-    if not port:
-        port = mdns_pair_port()
-    if not port:
-        print('NO_PAIR_PORT: 在 App 内输入手机「无线调试」界面显示的配对端口')
-        sys.exit(1)
-
-    # 候选地址：App 传入真实 host → 127.0.0.1 → 本机接口 IP
-    candidates = []
-    if a.host:
-        candidates.append(a.host)
-    candidates.append('127.0.0.1')
-    for ip in local_ips():
-        if ip not in candidates:
-            candidates.append(ip)
-
-    # 先探测可达性（任一地址通即可）
-    reachable = None
-    for h in candidates:
-        if probe(port, h):
-            reachable = h
-            break
+        print('NO_CODE: 请输入本次配对弹窗里的 6 位数字')
+        return 2
+    ensure_key()
+    hosts = adb.candidate_hosts(a.host)
+    print('PAIR_DISCOVERING: 正在查找本机配对服务…', flush=True)
+    if a.port:
+        endpoints = [(h, a.port) for h in hosts]
+    else:
+        endpoints = adb.discover_endpoints('_adb-tls-pairing._tcp.local.', 5, hosts)
+    if not endpoints:
+        print('NO_PAIR_PORT: 未发现本机配对服务；请保持系统配对弹窗打开，或填写该弹窗的 IP 和配对端口')
+        return 1
+    reachable = next(((host, port) for host, port in endpoints if probe(host, port)), None)
     if reachable is None:
-        print('PORT_UNREACHABLE: 端口 %d 在所有地址(%s)都连不上。'
-              '请确认手机「无线调试 → 使用配对码配对设备」弹窗刚打开（2 分钟内有效）'
-              % (port, ','.join(candidates)))
-        sys.exit(1)
-
-    # 用可达地址配对（单次！）
-    ok, detail = do_pair(reachable, port, a.code, priv_pem, pub_data)
+        print('PORT_UNREACHABLE: 本次配对端口不可达；重开配对弹窗后请使用新端口与新配对码')
+        return 1
+    print('PAIR_HANDSHAKE: 正在完成一次配对握手…', flush=True)
+    ok, detail = do_pair(*reachable, a.code)
+    print(detail, flush=True)
     if not ok:
-        print(detail)
-        print('ADDR_USED=%s' % reachable)
-        sys.exit(1)
-    print(detail)
-    print('ADDR_USED=%s' % reachable)
-
-    # 配对成功后直连自检（等 adbd 更新授权列表）
-    # 注意：无线调试的**连接端口**是随机的（「无线调试」主界面「IP 地址和端口」里那个，
-    # 不是配对弹窗里的配对端口！），且部分 ROM 的 adbd 只监听 WiFi 接口 IP ——
-    # 所以地址用配对成功的 reachable（App 解析出的真实 IP），端口用 mDNS 重发现。
-    time.sleep(1.2)
-    fresh = discover_conn_port()  # 配对后 adbd 可能刚注册 connect 服务
-    conn = a.connect_port
-    ports = []
-    for p in (conn, fresh, DEFAULT_CONNECT_PORT):
-        if p and p not in ports:
-            ports.append(p)
-    hosts = []
-    for h in (reachable, '127.0.0.1'):
-        if h and h not in hosts:
-            hosts.append(h)
-    last = None
-    for h in hosts:
-        for p in ports:
-            try:
-                out = adb_shell(h, p, ['id', 'getprop ro.product.model'])
-                print('CONNECT_OK host=%s port=%d' % (h, p))
-                print(out.strip())
-                save_connect_port(p)
-                sys.exit(0)
-            except Exception as e:
-                last = e
-    print('CONNECT_WARN: 配对成功(PAIR_OK)，但直连自检未通过(%s)。'
-          'App 会在后台自动用 mDNS 重连；若持续失败，'
-          '请把「无线调试」主界面「IP 地址和端口」里的端口填入 App 连接端口后重试' % last)
-    sys.exit(0)
-
-
-def adb_shell(host, port, cmds):
-    from adb_shell_wifi.adb_device import AdbDeviceTls  # 无线调试 TLS 通道
-    from adb_shell_wifi.auth.sign_pythonrsa import PythonRSASigner
-    signer = PythonRSASigner(open(KEYPUB, 'rb').read().strip(), open(KEY, 'rb').read())
-    priv_pem = open(KEY, 'rb').read()
-    dev = AdbDeviceTls(host, port)
-    dev.connect(rsa_keys=[signer], auth_timeout_s=20, tls_priv_pem=priv_pem)
+        return 1
+    print('CONNECT_VERIFYING: 正在验证设备连接（与配对端口不同）…', flush=True)
+    time.sleep(1)
     try:
-        return dev.shell(' && '.join(cmds))
-    finally:
-        dev.close()
-
-
-def save_connect_port(port):
-    try:
-        with open(KEYDIR + '/connect_port', 'w') as f:
-            f.write(str(port))
-    except Exception:
-        pass
-
-
-def mdns_pair_port(timeout_s=6):
-    # 尽力而为：容器回环收不到组播时返回 0，由 App NsdManager 兜底
-    try:
-        from zeroconf import Zeroconf, ServiceBrowser, ServiceListener
-        found = {}
-        class L(ServiceListener):
-            def add_service(self, zc, type_, name):
-                info = zc.get_service_info(type_, name)
-                if info:
-                    found[info.port] = name
-            def update_service(self, zc, type_, name):
-                pass
-            def remove_service(self, zc, type_, name):
-                pass
-        zc = Zeroconf()
-        ServiceBrowser(zc, '_adb-tls-pairing._tcp.local.', L())
-        time.sleep(timeout_s)
-        zc.close()
-        if found:
-            return sorted(found)[0]
-    except Exception:
-        pass
-    return 0
-
-
-def discover_conn_port(timeout_s=4):
-    """mDNS 发现无线调试**连接**端口（_adb-tls-connect，即主界面「IP 地址和端口」）。"""
-    try:
-        from zeroconf import Zeroconf, ServiceBrowser, ServiceListener
-        found = {}
-        class L(ServiceListener):
-            def add_service(self, zc, type_, name):
-                info = zc.get_service_info(type_, name)
-                if info:
-                    found[info.port] = name
-            def update_service(self, zc, type_, name):
-                pass
-            def remove_service(self, zc, type_, name):
-                pass
-        zc = Zeroconf()
-        ServiceBrowser(zc, '_adb-tls-connect._tcp.local.', L())
-        time.sleep(timeout_s)
-        zc.close()
-        if found:
-            return sorted(found)[0]
-    except Exception:
-        pass
+        verify_connection(a.connect_port, reachable[0])
+    except (adb.ConnectFail, adb.ExecutionUnknown) as e:
+        print('CONNECT_WARN: 配对已完成，连接尚未验证：%s\n'
+              '请检查无线调试主页面的连接端口，点击「验证连接」；无需重新配对。' % e, flush=True)
     return 0
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        sys.exit(main())
+    except Exception as error:
+        print('PAIR_ERROR: 配对流程异常（%s），请重新准备环境后重试' % type(error).__name__, flush=True)
+        sys.exit(1)

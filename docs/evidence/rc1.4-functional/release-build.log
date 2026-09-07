@@ -1,0 +1,229 @@
+
+> Configure project :app
+ǩ�������� keystore F:\DSHA\dsha\key\DSHA-ACTUAL-PUBLISH-KEY-debug.keystore��alias=androiddebugkey��
+
+> Task :app:prepareStandardAssets UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preStandardReleaseBuild UP-TO-DATE
+> Task :app:mergeStandardReleaseJniLibFolders UP-TO-DATE
+> Task :app:mergeStandardReleaseNativeLibs UP-TO-DATE
+> Task :app:stripStandardReleaseDebugSymbols UP-TO-DATE
+> Task :app:extractStandardReleaseNativeSymbolTables UP-TO-DATE
+> Task :app:mergeStandardReleaseNativeDebugMetadata UP-TO-DATE
+> Task :app:mergeStandardReleaseArtProfile UP-TO-DATE
+> Task :app:expandStandardReleaseL8ArtProfileWildcards UP-TO-DATE
+> Task :app:checkStandardReleaseDuplicateClasses UP-TO-DATE
+> Task :app:compileStandardReleaseAidl UP-TO-DATE
+> Task :app:generateStandardReleaseBuildConfig UP-TO-DATE
+> Task :app:generateStandardReleaseResValues UP-TO-DATE
+> Task :app:generateStandardReleaseResources UP-TO-DATE
+> Task :app:packageStandardReleaseResources UP-TO-DATE
+> Task :app:processStandardReleaseNavigationResources UP-TO-DATE
+> Task :app:parseStandardReleaseLocalResources UP-TO-DATE
+> Task :app:generateStandardReleaseRFile UP-TO-DATE
+> Task :app:compileStandardReleaseKotlin NO-SOURCE
+> Task :app:javaPreCompileStandardRelease UP-TO-DATE
+
+> Task :app:compileStandardReleaseJavaWithJavac
+
+> Task :app:checkStandardReleaseAarMetadata UP-TO-DATE
+ע: ĳЩ�����ļ�ʹ�û򸲸����ѹ�ʱ�� API��
+ע: �й���ϸ��Ϣ, ��ʹ�� -Xlint:deprecation ���±��롣
+> Task :app:mapStandardReleaseSourceSetPaths
+> Task :app:compileStandardReleaseNavigationResources UP-TO-DATE
+> Task :app:createStandardReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksStandardRelease UP-TO-DATE
+> Task :app:processStandardReleaseMainManifest UP-TO-DATE
+> Task :app:processStandardReleaseManifest UP-TO-DATE
+> Task :app:processStandardReleaseManifestForPackage UP-TO-DATE
+> Task :app:desugarStandardReleaseFileDependencies UP-TO-DATE
+> Task :app:mergeStandardReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexStandardRelease UP-TO-DATE
+> Task :app:generateStandardReleaseAssets UP-TO-DATE
+> Task :app:mergeStandardReleaseResources
+> Task :app:mergeStandardReleaseAssets
+> Task :app:extractStandardReleaseVersionControlInfo UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:compressStandardReleaseAssets
+> Task :app:generateStandardReleaseLintVitalReportModel
+> Task :app:processStandardReleaseJavaRes NO-SOURCE
+> Task :app:mergeStandardReleaseJavaResource UP-TO-DATE
+> Task :app:collectStandardReleaseDependencies UP-TO-DATE
+> Task :app:sdkStandardReleaseDependencyData UP-TO-DATE
+> Task :app:validateSigningStandardRelease UP-TO-DATE
+> Task :app:writeStandardReleaseAppMetadata UP-TO-DATE
+> Task :app:writeStandardReleaseSigningConfigVersions UP-TO-DATE
+> Task :app:preLowReleaseBuild UP-TO-DATE
+> Task :app:mergeLowReleaseJniLibFolders UP-TO-DATE
+> Task :app:mergeLowReleaseNativeLibs UP-TO-DATE
+> Task :app:stripLowReleaseDebugSymbols UP-TO-DATE
+> Task :app:extractLowReleaseNativeSymbolTables UP-TO-DATE
+> Task :app:mergeLowReleaseNativeDebugMetadata UP-TO-DATE
+> Task :app:mergeLowReleaseArtProfile UP-TO-DATE
+> Task :app:expandLowReleaseL8ArtProfileWildcards UP-TO-DATE
+> Task :app:checkLowReleaseDuplicateClasses UP-TO-DATE
+> Task :app:compileLowReleaseAidl UP-TO-DATE
+> Task :app:generateLowReleaseBuildConfig UP-TO-DATE
+> Task :app:generateLowReleaseResValues UP-TO-DATE
+> Task :app:generateLowReleaseResources UP-TO-DATE
+> Task :app:packageLowReleaseResources UP-TO-DATE
+> Task :app:processLowReleaseNavigationResources UP-TO-DATE
+> Task :app:parseLowReleaseLocalResources UP-TO-DATE
+> Task :app:generateLowReleaseRFile UP-TO-DATE
+> Task :app:compileLowReleaseKotlin NO-SOURCE
+> Task :app:javaPreCompileLowRelease UP-TO-DATE
+
+> Task :app:compileLowReleaseJavaWithJavac
+ע: ĳЩ�����ļ�ʹ�û򸲸����ѹ�ʱ�� API��
+ע: �й���ϸ��Ϣ, ��ʹ�� -Xlint:deprecation ���±��롣
+
+> Task :app:checkLowReleaseAarMetadata UP-TO-DATE
+> Task :app:mapLowReleaseSourceSetPaths
+> Task :app:compileLowReleaseNavigationResources UP-TO-DATE
+> Task :app:processStandardReleaseResources
+> Task :app:mergeLowReleaseResources
+> Task :app:dexBuilderStandardRelease
+> Task :app:mergeStandardReleaseGlobalSynthetics UP-TO-DATE
+> Task :app:createLowReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksLowRelease UP-TO-DATE
+> Task :app:processLowReleaseMainManifest UP-TO-DATE
+> Task :app:processLowReleaseManifest UP-TO-DATE
+> Task :app:processLowReleaseManifestForPackage UP-TO-DATE
+> Task :app:desugarLowReleaseFileDependencies UP-TO-DATE
+> Task :app:mergeLowReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexLowRelease UP-TO-DATE
+> Task :app:generateLowReleaseAssets UP-TO-DATE
+> Task :app:mergeLowReleaseAssets
+> Task :app:extractLowReleaseVersionControlInfo UP-TO-DATE
+> Task :app:compressLowReleaseAssets
+> Task :app:generateLowReleaseLintVitalReportModel
+> Task :app:optimizeStandardReleaseResources
+> Task :app:processLowReleaseJavaRes NO-SOURCE
+> Task :app:mergeLowReleaseJavaResource UP-TO-DATE
+> Task :app:collectLowReleaseDependencies UP-TO-DATE
+> Task :app:sdkLowReleaseDependencyData UP-TO-DATE
+> Task :app:validateSigningLowRelease UP-TO-DATE
+> Task :app:writeLowReleaseAppMetadata UP-TO-DATE
+> Task :app:writeLowReleaseSigningConfigVersions UP-TO-DATE
+> Task :app:generateStandardReleaseLintReportModel
+> Task :app:generateLowReleaseLintReportModel
+> Task :app:preStandardDebugBuild UP-TO-DATE
+> Task :app:compileStandardDebugAidl UP-TO-DATE
+> Task :app:generateStandardDebugBuildConfig UP-TO-DATE
+> Task :app:generateStandardDebugResValues UP-TO-DATE
+> Task :app:generateStandardDebugResources UP-TO-DATE
+> Task :app:packageStandardDebugResources UP-TO-DATE
+> Task :app:processStandardDebugNavigationResources UP-TO-DATE
+> Task :app:parseStandardDebugLocalResources UP-TO-DATE
+> Task :app:generateStandardDebugRFile UP-TO-DATE
+> Task :app:compileStandardDebugKotlin NO-SOURCE
+> Task :app:javaPreCompileStandardDebug UP-TO-DATE
+> Task :app:compileStandardDebugJavaWithJavac UP-TO-DATE
+> Task :app:checkStandardDebugAarMetadata UP-TO-DATE
+> Task :app:mapStandardDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileStandardDebugNavigationResources UP-TO-DATE
+> Task :app:mergeStandardDebugResources UP-TO-DATE
+> Task :app:createStandardDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksStandardDebug UP-TO-DATE
+> Task :app:processStandardDebugMainManifest UP-TO-DATE
+> Task :app:processStandardDebugManifest UP-TO-DATE
+> Task :app:processStandardDebugManifestForPackage UP-TO-DATE
+> Task :app:processStandardDebugResources UP-TO-DATE
+> Task :app:preStandardDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileStandardDebugUnitTest UP-TO-DATE
+> Task :app:processStandardDebugJavaRes NO-SOURCE
+> Task :app:preLowDebugBuild UP-TO-DATE
+> Task :app:compileLowDebugAidl UP-TO-DATE
+> Task :app:generateLowDebugBuildConfig UP-TO-DATE
+> Task :app:generateLowDebugResValues UP-TO-DATE
+> Task :app:generateLowDebugResources UP-TO-DATE
+> Task :app:packageLowDebugResources UP-TO-DATE
+> Task :app:processLowDebugNavigationResources UP-TO-DATE
+> Task :app:parseLowDebugLocalResources UP-TO-DATE
+> Task :app:generateLowDebugRFile UP-TO-DATE
+> Task :app:compileLowDebugKotlin NO-SOURCE
+> Task :app:javaPreCompileLowDebug UP-TO-DATE
+> Task :app:compileLowDebugJavaWithJavac UP-TO-DATE
+> Task :app:checkLowDebugAarMetadata UP-TO-DATE
+> Task :app:mapLowDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileLowDebugNavigationResources UP-TO-DATE
+> Task :app:mergeLowDebugResources UP-TO-DATE
+> Task :app:bundleStandardDebugClassesToCompileJar
+> Task :app:createLowDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:bundleStandardDebugClassesToRuntimeJar
+> Task :app:compileStandardDebugUnitTestKotlin NO-SOURCE
+> Task :app:compileStandardDebugUnitTestJavaWithJavac UP-TO-DATE
+> Task :app:processStandardDebugUnitTestJavaRes NO-SOURCE
+> Task :app:mergeDexStandardRelease
+> Task :app:processLowReleaseResources
+> Task :app:lintVitalAnalyzeStandardRelease
+> Task :app:testStandardDebugUnitTest
+> Task :app:lintVitalReportStandardRelease SKIPPED
+> Task :app:lintVitalStandardRelease SKIPPED
+> Task :app:lintVitalAnalyzeLowRelease
+> Task :app:l8DexDesugarLibStandardRelease
+> Task :app:dexBuilderLowRelease
+> Task :app:mergeLowReleaseGlobalSynthetics UP-TO-DATE
+> Task :app:lintVitalReportLowRelease SKIPPED
+> Task :app:lintVitalLowRelease SKIPPED
+> Task :app:extractDeepLinksLowDebug UP-TO-DATE
+> Task :app:processLowDebugMainManifest UP-TO-DATE
+> Task :app:processLowDebugManifest UP-TO-DATE
+> Task :app:processLowDebugManifestForPackage UP-TO-DATE
+> Task :app:processLowDebugResources UP-TO-DATE
+> Task :app:preLowDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileLowDebugUnitTest UP-TO-DATE
+> Task :app:processLowDebugJavaRes NO-SOURCE
+> Task :app:preLowDebugAndroidTestBuild SKIPPED
+> Task :app:compileLowDebugAndroidTestAidl NO-SOURCE
+> Task :app:processLowDebugAndroidTestManifest UP-TO-DATE
+> Task :app:generateLowDebugAndroidTestBuildConfig UP-TO-DATE
+> Task :app:generateLowDebugAndroidTestResValues UP-TO-DATE
+> Task :app:generateLowDebugAndroidTestResources UP-TO-DATE
+> Task :app:packageLowDebugAndroidTestResources UP-TO-DATE
+> Task :app:processLowDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :app:parseLowDebugAndroidTestLocalResources UP-TO-DATE
+> Task :app:generateLowDebugAndroidTestRFile UP-TO-DATE
+> Task :app:javaPreCompileLowDebugAndroidTest UP-TO-DATE
+> Task :app:bundleLowDebugClassesToCompileJar
+> Task :app:bundleLowDebugClassesToRuntimeJar
+> Task :app:compileLowDebugUnitTestKotlin NO-SOURCE
+> Task :app:compileStandardReleaseArtProfile
+> Task :app:compileLowDebugUnitTestJavaWithJavac UP-TO-DATE
+> Task :app:processLowDebugUnitTestJavaRes NO-SOURCE
+> Task :app:mergeDexLowRelease
+> Task :app:lintAnalyzeStandardRelease
+> Task :app:lintAnalyzeLowRelease
+> Task :app:testLowDebugUnitTest
+> Task :app:packageStandardRelease
+> Task :app:createStandardReleaseApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleStandardRelease
+> Task :app:compileLowDebugAndroidTestKotlin NO-SOURCE
+
+> Task :app:lintReportLowRelease
+Wrote HTML report to file:///F:/DSHA_RESTART/app/build/reports/lint-results-lowRelease.html
+
+> Task :app:lintReportStandardRelease
+Wrote HTML report to file:///F:/DSHA_RESTART/app/build/reports/lint-results-standardRelease.html
+
+> Task :app:compileLowDebugAndroidTestJavaWithJavac
+> Task :app:lintStandardRelease
+> Task :app:lintLowRelease
+> Task :app:optimizeLowReleaseResources
+> Task :app:l8DexDesugarLibLowRelease
+> Task :app:compileLowReleaseArtProfile
+> Task :app:packageLowRelease
+> Task :app:createLowReleaseApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleLowRelease
+
+[Incubating] Problems report is available at: file:///F:/DSHA_RESTART/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1m 8s
+170 actionable tasks: 43 executed, 127 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.3.1/userguide/configuration_cache_enabling.html

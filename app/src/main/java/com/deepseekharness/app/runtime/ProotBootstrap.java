@@ -17,7 +17,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -213,7 +212,7 @@ public class ProotBootstrap {
     }
 
     private void ensureNetworkTools() {
-        try { RuntimeTools.prepare(ctx, rootfsDir); }
+        try { RuntimeTools.prepare(ctx, getRootfsDir()); }
         catch (IOException error) { Log.w("DSHA", "运行工具准备失败：" + SensitiveData.redact(String.valueOf(error))); }
     }
 
@@ -435,32 +434,24 @@ public class ProotBootstrap {
      *                  {@code export '["dsh-web-mobile"]' /root/.dsh/export.tar.gz}、
      *                  {@code github owner repo 'branch/subdir'}
      */
-    public String runPluginManager(String extraArgs) {
+    public String runPluginManager(String extraArgs) { return runPluginManager(extraArgs, ""); }
+
+    public String runPluginManager(String extraArgs, String taskId) {
         synchronized (PLUGIN_SCRIPT_LOCK) {
-        if (!isEnvironmentReady()) return "ENV_NOT_READY";
-        if (!ensureBundledPython()) return "ERROR: Ubuntu Python 环境未就绪";
-        ensureBundledPnpm();
-        try {
-            String script = readAssetString(PLUGIN_MANAGER_SCRIPT);
-            if (script.isEmpty()) return "ASSET_MISSING:" + PLUGIN_MANAGER_SCRIPT;
-            String b64 = Base64.encodeToString(script.getBytes(
-                    java.nio.charset.StandardCharsets.UTF_8), Base64.NO_WRAP);
-            String common = readAssetString(BUILTIN_REGISTER_SCRIPT);
-            if (common.isEmpty()) return "ASSET_MISSING:" + BUILTIN_REGISTER_SCRIPT;
-            String common64 = Base64.encodeToString(common.getBytes(
-                    java.nio.charset.StandardCharsets.UTF_8), Base64.NO_WRAP);
-            String cmd = "set -e; mkdir -p /root/.dsh; "
-                    + "printf '%s' '" + common64 + "' | base64 -d > /root/.dsh/" + BUILTIN_REGISTER_SCRIPT + "; "
-                    + "printf '%s' '" + b64 + "' | base64 -d > /root/.dsh/" + PLUGIN_MANAGER_SCRIPT + "; "
-                    + "chmod +x /root/.dsh/" + PLUGIN_MANAGER_SCRIPT + "; "
-                    + "python3 /root/.dsh/" + PLUGIN_MANAGER_SCRIPT
-                    + (extraArgs == null || extraArgs.isEmpty() ? "" : " " + extraArgs) + " 2>&1";
-            // 下载、多个插件依赖安装和导出可能较慢，脚本内部仍有单次网络/依赖超时。
-            return execAndRead(cmd, 600_000);
-        } catch (Throwable e) {
-            Log.w("DSHA", "插件管理脚本执行失败: " + SensitiveData.redact(String.valueOf(e)));
-            return "ERROR: " + SensitiveData.redact(String.valueOf(e));
-        }
+            if (!isEnvironmentReady()) return "ENV_NOT_READY";
+            if (!ensureBundledPython()) return "ERROR: Ubuntu Python 环境未就绪";
+            ensureBundledPnpm();
+            try {
+                // RuntimeTools 原子写入所有共用资产，终端与界面使用同一套版本解析和管理脚本。
+                RuntimeTools.prepare(ctx, getRootfsDir());
+                String task = taskId != null && taskId.matches("[a-f0-9]{32}")
+                        ? "DSHA_PLUGIN_TASK=" + taskId + " " : "";
+                return execAndRead(task + "python3 /root/.dsh/" + PLUGIN_MANAGER_SCRIPT
+                        + (extraArgs == null || extraArgs.isEmpty() ? "" : " " + extraArgs) + " 2>&1", 600_000);
+            } catch (Throwable e) {
+                Log.w("DSHA", "插件管理脚本执行失败: " + SensitiveData.redact(String.valueOf(e)));
+                return "ERROR: " + SensitiveData.redact(String.valueOf(e));
+            }
         }
     }
 
@@ -710,10 +701,18 @@ public class ProotBootstrap {
     /** proot 运行环境（两个 exec 入口共用）。proroot 是 LD_PRELOAD 方案，对 LD_LIBRARY_PATH 敏感。 */
     private void applyProotEnv(ProcessBuilder pb) {
         ensureNetworkTools();
-        ContainerRuntime rt = runtime();
+        applyProotEnv(pb, runtime(), hardlinkSupported());
+    }
+
+    /** 显式运行时入口不重读偏好；argv 与 env 必须属于同一个运行时。 */
+    private void applyProotEnv(ProcessBuilder pb, ContainerRuntime rt, boolean hardlinks) {
         if ("proot".equals(rt.id())) {
             pb.environment().put("PROOT_TMP_DIR", tmpDir.getAbsolutePath());
-            applyL2sEnv(pb);
+            if (!hardlinks) {
+                File l2s = new File(rootfsDir, ".l2s");
+                l2s.mkdirs();
+                pb.environment().put("PROOT_L2S_DIR", l2s.getAbsolutePath());
+            }
             pb.environment().put("PROOT_LOADER",
                     findNativeLib("libprootloader.so").getAbsolutePath());
             pb.environment().put("PROOT_LOADER_32",
@@ -738,13 +737,35 @@ public class ProotBootstrap {
 
     /** 在 rootfs 内执行 bash 命令，返回进程（stderr 并入 stdout）。 */
     public Process execRootfs(String bashCommand) throws IOException {
-        List<String> argv = baseProotArgv();
+        ContainerRuntime rt = runtime();
+        boolean hardlinks = hardlinkSupported();
+        ensureNetworkTools();
+        return startRootfs(bashCommand, rt, hardlinks);
+    }
+
+    /**
+     * 安装流式入口：固定 proot，沿用兼容版 native 库选择和共用挂载，不修改用户运行时偏好。
+     * 仅补原生 loader 依赖与临时目录，不写 Python/pnpm/补丁/插件资产；调用方拥有进程并回收。
+     */
+    public Process execRootfsForInstall(String bashCommand) throws IOException {
+        synchronized (ProotBootstrap.class) {
+            // 诊断与安装可以同时首次调用，不能在另一线程尚未复制完时执行半份 native 依赖。
+            baseDir.mkdirs(); tmpDir.mkdirs(); libDir.mkdirs();
+            copyExec(findNativeLib("libtalloc.so"), new File(libDir, "libtalloc.so.2"));
+            copyExec(findNativeLib("libandroidshmem.so"), new File(libDir, "libandroid-shmem.so"));
+        }
+        // 安装始终用 link2symlink；避免检查为探测硬链接额外写用户目录。
+        return startRootfs(bashCommand, new ContainerRuntime.Proot(ctx, findNativeLib("libproot.so")), false);
+    }
+
+    private Process startRootfs(String bashCommand, ContainerRuntime rt, boolean hardlinks) throws IOException {
+        List<String> argv = rt.baseArgv(rootfsDir, hardlinks);
         argv.add("/bin/bash");
         argv.add("-c");
         argv.add(bashCommand);
         ProcessBuilder pb = new ProcessBuilder(argv).redirectErrorStream(true);
         Compat.redirectStdinDevNull(pb);
-        applyProotEnv(pb);
+        applyProotEnv(pb, rt, hardlinks);
         return pb.start();
     }
 
@@ -754,62 +775,61 @@ public class ProotBootstrap {
     }
 
     public String execAndRead(String bashCommand, long timeoutMs) {
+        return execAndRead(bashCommand, timeoutMs, false);
+    }
+
+    private String execAndRead(String bashCommand, long timeoutMs, boolean forceProot) {
         try {
-            Process p = execRootfs(bashCommand);
-            java.util.concurrent.FutureTask<String> task = new java.util.concurrent.FutureTask<>(
-                    () -> readStream(p.getInputStream()));
-            Thread t = new Thread(task, "exec-read");
-            t.setDaemon(true);
-            t.start();
-            String out;
-            try {
-                out = task.get(timeoutMs, TimeUnit.MILLISECONDS);
-            } catch (Exception te) {
-                Compat.destroy(p);
-                return "ERROR: 命令执行超时(>" + (timeoutMs / 1000) + "s)，已强杀";
-            }
-            if (!Compat.waitFor(p, 3000)) {
-                Compat.destroy(p);
-            }
-            return out;
+            com.deepseekharness.app.util.BoundedProcessRunner.Result result =
+                    collectRootfs(bashCommand, timeoutMs, forceProot);
+            if (result.timedOut) return "ERROR: 命令执行超时（" + timeoutMs / 1000 + " 秒），本次进程已停止";
+            return result.output;
+        } catch (InterruptedException error) {
+            Thread.currentThread().interrupt(); return "ERROR: 命令等待被中断";
         } catch (Throwable e) {
             return "ERROR: " + SensitiveData.redact(String.valueOf(e));
+        }
+    }
+
+    /** 同步作用域覆盖启动准备和读取；回收未确认时，后台进程仍计入维护保护。 */
+    private com.deepseekharness.app.util.BoundedProcessRunner.Result collectRootfs(
+            String command, long timeoutMs, boolean forceProot) throws IOException, InterruptedException {
+        com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin();
+        Process process = null;
+        try {
+            process = forceProot ? execRootfsForInstall(command) : execRootfs(command);
+            return com.deepseekharness.app.util.BoundedProcessRunner.collect(process, timeoutMs, 256 * 1024, Compat::destroy);
+        } finally {
+            if (process != null && !com.deepseekharness.app.util.ProcessTermination.exited(process))
+                work.retainUntilExit(process);
+            else work.close();
         }
     }
 
     /**
      * 用 proot（非 proroot）运行时执行并读回输出。
      * python 等依赖 Android linker 的二进制在 proroot（LD_PRELOAD 方案）下可能找不到 libc，
-     * 而 proot 走真实 linker64，对这类二进制最稳。执行完恢复用户的运行时选择。
+     * 而 proot 走真实 linker64，对这类二进制最稳。显式选择运行时，不临时改 SharedPreferences。
      */
     public String execAndReadWithProot(String bashCommand, long timeoutMs) {
-        ensureRuntimeFiles();
-        android.content.SharedPreferences sp = ctx.getSharedPreferences(
-                "deepseekharness", android.content.Context.MODE_PRIVATE);
-        String saved = sp.getString("container_runtime", "proot");
-        try {
-            sp.edit().putString("container_runtime", "proot").apply();
-            return execAndRead(bashCommand, timeoutMs);
-        } finally {
-            sp.edit().putString("container_runtime", saved).apply();
-        }
+        return execAndRead(bashCommand, timeoutMs, true);
     }
 
     /** 同步执行 rootfs 命令，退出码非 0 抛异常。 */
-    public String execChecked(String bashCommand) throws IOException {        Process p = execRootfs(bashCommand);
-        String out = readStream(p.getInputStream());
-        int code;
+    public String execChecked(String bashCommand) throws IOException {
         try {
-            code = p.waitFor();
+            com.deepseekharness.app.util.BoundedProcessRunner.Result result = collectRootfs(bashCommand, 600_000, false);
+            if (result.timedOut) throw new IOException("命令执行超时（600 秒），本次进程已停止");
+            if (result.exitCode != 0) {
+                String out = result.output;
+                throw new IOException("退出码 " + result.exitCode + "：\n"
+                        + SensitiveData.redact(out.length() > 600 ? out.substring(out.length() - 600) : out));
+            }
+            return result.output;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("命令被中断", e);
         }
-        if (code != 0) {
-            String tail = out.length() > 600 ? out.substring(out.length() - 600) : out;
-            throw new IOException("退出码 " + code + "：\n" + tail);
-        }
-        return out;
     }
 
     // ================= PTY 终端（Termux terminal-view） =================
@@ -819,6 +839,9 @@ public class ProotBootstrap {
      * 与 execRootfs 的差别：不带 -c、不重定向 stdin 到 /dev/null，且补 DSH_CONFIRM 交互确认。
      */
     public Process execRootfsInteractive() throws IOException {
+        com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.beginDetached();
+        Process process = null;
+        try {
         ensureRuntimeFiles();
         ensureBundledPython();
         ensureBundledPnpm();
@@ -830,7 +853,14 @@ public class ProotBootstrap {
         // 交互终端：危险命令启用确认
         pb.environment().put("DSH_CONFIRM", "1");
         pb.environment().put("DSH_INTERACTIVE", "1");
-        return pb.start();
+            process = pb.start();
+            work.retainUntilExit(process);
+            return process;
+        } catch (IOException | RuntimeException | Error error) {
+            if (process == null || com.deepseekharness.app.util.ProcessTermination.exited(process)) work.close();
+            // 已启动的进程保留异步登记，不能在 watcher 启动失败时放行环境维护。
+            throw error;
+        }
     }
 
     /** PTY 会话的 argv：与 execRootfs 共用同一份 proot 构造逻辑（见 AGENTS.md 单源约束）。 */
@@ -866,22 +896,6 @@ public class ProotBootstrap {
             out.add(e.getKey() + "=" + e.getValue());
         }
         return out.toArray(new String[0]);
-    }
-
-    private String readStream(InputStream in) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        byte[] buf = new byte[8192];
-        int n;
-        int kept = 0;
-        final int MAX = 256 * 1024;
-        while ((n = in.read(buf)) != -1) {
-            if (kept < MAX) {
-                int w = Math.min(n, MAX - kept);
-                bos.write(buf, 0, w);
-                kept += w;
-            }
-        }
-        return bos.toString("UTF-8");
     }
 
     /** 冒烟测试：proot 能否 exec + 进 rootfs。 */
@@ -943,6 +957,10 @@ public class ProotBootstrap {
      */
     public void extractOfflineBundle(java.util.function.BiConsumer<Long, Long> onProgress)
             throws IOException {
+        // 进程重启后旧环境可能正被维护日志保护；必须在任何目录/资产写入之前拒绝覆盖。
+        if (com.deepseekharness.app.BackupManager.hasPendingMaintenance(ctx.getFilesDir())
+                && !com.deepseekharness.app.BackupManager.isDataTaskOwner())
+            throw new IOException("上次环境维护尚未完成，请先恢复中断维护；现有目录未覆盖");
         ensureRuntimeFiles();
         ZipFile apk = null;
         InputStream raw = null;
@@ -998,7 +1016,7 @@ public class ProotBootstrap {
         TarGzipExtractor.extractAuto(counted, rootfsDir, 0);
         installBundledPython(rootfsDir);
         installBundledPnpm(rootfsDir);
-        RuntimeTools.prepare(ctx, rootfsDir);
+        RuntimeTools.prepare(ctx, getRootfsDir());
         markOfflineExtracted();
     }
 

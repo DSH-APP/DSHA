@@ -25,6 +25,8 @@ import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.WebRequestError;
+import org.mozilla.geckoview.WebExtension;
+import org.mozilla.geckoview.WebResponse;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,10 +44,30 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
     private boolean canGoBack;
     private GeckoSession.PromptDelegate.FilePrompt filePrompt;
     private GeckoResult<GeckoSession.PromptDelegate.PromptResponse> fileResult;
-    private final ArrayList<File> uploads = new ArrayList<>();
+    private Retained retained;
+    private WebDownloads downloads;
+    private WebExtension.Port pagePort;
+    private int backSequence;
+    private boolean backPending;
+    private String savedHistory;
+    public static final class Retained extends androidx.lifecycle.ViewModel {
+        GeckoSession session;
+        GeckoSession.SessionState history;
+        boolean canGoBack;
+        WebExtension.Port port;
+        GeckoSession.PromptDelegate.FilePrompt prompt;
+        GeckoResult<GeckoSession.PromptDelegate.PromptResponse> result;
+        final ArrayList<File> uploads = new ArrayList<>();
+        @Override protected void onCleared() {
+            if (prompt != null && result != null) result.complete(prompt.dismiss());
+            if (session != null && session.isOpen()) session.close();
+            session = null; WebUploads.clean(uploads);
+        }
+    }
 
     private final ActivityResultLauncher<Intent> picker = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
+                filePrompt = retained.prompt; fileResult = retained.result;
                 if (filePrompt == null) return;
                 if (result.getResultCode() != RESULT_OK || result.getData() == null) {
                     cancelFilePrompt();
@@ -62,6 +84,9 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
 
     @Override protected void onCreate(Bundle saved) {
         super.onCreate(saved);
+        retained = new androidx.lifecycle.ViewModelProvider(this).get(Retained.class);
+        downloads = new WebDownloads(this,saved);
+        savedHistory = saved == null ? null : saved.getString("gecko-state");
         setContentView(R.layout.activity_web_preview);
         WebFullscreenUi.install(this);
         container = findViewById(R.id.web_container);
@@ -70,7 +95,7 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
         authUrl = getIntent().getStringExtra("url");
         baseUrl = WebPreviewPolicy.loopbackBaseUrl(authUrl);
         findViewById(R.id.web_error_browser).setOnClickListener(v -> external(authUrl));
-        findViewById(R.id.web_retry).setOnClickListener(v -> load());
+        findViewById(R.id.web_retry).setOnClickListener(v -> { closeSession(); savedHistory = null; load(); });
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { back(); }
         });
@@ -85,23 +110,24 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
 
     private void load() {
         if (baseUrl == null || isFinishing()) return;
-        closeSession();
         errorPanel.setVisibility(View.GONE);
         progress.setVisibility(View.VISIBLE);
-        canGoBack = false;
+        canGoBack = retained.canGoBack;
         try {
             browser = new GeckoView(this);
             com.deepseekharness.app.core.DiagnosticLog.record(this, "WEB_ENGINE", "Gecko 143");
             boolean desktop = getSharedPreferences(Constants.PREFS, MODE_PRIVATE)
                     .getBoolean(Constants.KEY_DESKTOP_MODE, false);
-            GeckoSession current = new GeckoSession(new GeckoSessionSettings.Builder()
+            boolean fresh = retained.session == null;
+            GeckoSession current = fresh ? new GeckoSession(new GeckoSessionSettings.Builder()
                     .userAgentMode(desktop ? GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
-                            : GeckoSessionSettings.USER_AGENT_MODE_MOBILE).build());
+                            : GeckoSessionSettings.USER_AGENT_MODE_MOBILE).build()) : retained.session;
             session = current;
+            retained.session = current;
             current.setNavigationDelegate(new GeckoSession.NavigationDelegate() {
-                @Override public void onCanGoBack(GeckoSession s, boolean allowed) { canGoBack = allowed; }
+                @Override public void onCanGoBack(GeckoSession s, boolean allowed) { canGoBack = allowed; retained.canGoBack = allowed; }
                 @Override public GeckoResult<AllowOrDeny> onLoadRequest(GeckoSession s, LoadRequest request) {
-                    if (WebPreviewPolicy.sameService(baseUrl, request.uri)) return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+                    if (WebPreviewPolicy.pageDownload(baseUrl, request.uri)) return GeckoResult.fromValue(AllowOrDeny.ALLOW);
                     if (request.hasUserGesture) external(request.uri);
                     return GeckoResult.fromValue(AllowOrDeny.DENY);
                 }
@@ -111,6 +137,9 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
                 }
             });
             current.setProgressDelegate(new GeckoSession.ProgressDelegate() {
+                @Override public void onSessionStateChange(GeckoSession s, GeckoSession.SessionState state) {
+                    retained.history = new GeckoSession.SessionState(state);
+                }
                 @Override public void onPageStart(GeckoSession s, String url) {
                     progress.setProgress(0);
                     progress.setVisibility(View.VISIBLE);
@@ -122,6 +151,20 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
                 }
             });
             current.setContentDelegate(new GeckoSession.ContentDelegate() {
+                @Override public void onExternalResponse(GeckoSession s, WebResponse response) {
+                    if (s != session) { try { if (response.body != null) response.body.close(); } catch (Exception ignored) { } return; }
+                    response.setReadTimeoutMillis(30000);
+                    String disposition = header(response,"content-disposition"), mime = header(response,"content-type");
+                    long size = -1;
+                    try { size = Long.parseLong(header(response,"content-length")); } catch (Exception ignored) { }
+                    if (header(response,"content-encoding") != null) size = -1;
+                    if (response.statusCode != 200 && !(response.statusCode == 0
+                            && (response.uri.startsWith("blob:") || response.uri.startsWith("data:")))) {
+                        try { if (response.body != null) response.body.close(); } catch (Exception ignored) { }
+                        Toast.makeText(GeckoPreviewActivity.this,"下载失败：HTTP " + response.statusCode,Toast.LENGTH_LONG).show(); return;
+                    }
+                    downloads.start(baseUrl,response.uri,null,android.webkit.URLUtil.guessFileName(response.uri,disposition,mime),size,response.body);
+                }
                 @Override public void onCrash(GeckoSession s) { showError("网页进程异常退出", "点击重试可重新打开对话。"); }
                 @Override public void onKill(GeckoSession s) { showError("网页进程被系统回收", "关闭其他应用后重试。"); }
             });
@@ -151,20 +194,34 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
                     }
                     filePrompt = prompt;
                     fileResult = new GeckoResult<>();
+                    retained.prompt = filePrompt; retained.result = fileResult;
                     GeckoResult<PromptResponse> pending = fileResult;
                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
                             .setType("*/*").putExtra(Intent.EXTRA_ALLOW_MULTIPLE, prompt.type == FilePrompt.Type.MULTIPLE);
                     if (prompt.mimeTypes != null && prompt.mimeTypes.length > 0)
                         intent.putExtra(Intent.EXTRA_MIME_TYPES, prompt.mimeTypes);
-                    try { picker.launch(intent); } catch (RuntimeException error) { cancelFilePrompt(); }
+                    try { picker.launch(intent); } catch (RuntimeException error) {
+                        try { picker.launch(WebUploads.fallback(intent)); }
+                        catch (RuntimeException ignored) { cancelFilePrompt(); Toast.makeText(GeckoPreviewActivity.this,
+                                "无法打开文件选择器，请启用系统文件应用",Toast.LENGTH_LONG).show(); }
+                    }
                     return pending;
                 }
             });
-            current.open(GeckoRuntime.getDefault(this));
+            GeckoRuntime runtime = GeckoRuntime.getDefault(this);
+            if (fresh) current.open(runtime);
             browser.setSession(current);
             container.addView(browser, new FrameLayout.LayoutParams(-1, -1));
-            // 由 Gecko 自己完成 token → Cookie 交换，避免与 WebView 分开的 Cookie 存储混用。
-            current.loadUri(authUrl);
+            runtime.getWebExtensionController().ensureBuiltIn("resource://android/assets/web-integration/", "dsha-page@dsh.client")
+                    .accept(extension -> runOnUiThread(() -> {
+                        if (session != current) return;
+                        attachPageBridge(current,extension);
+                        if (fresh) loadInitial(current); else progress.setVisibility(View.GONE);
+                    }), error -> runOnUiThread(() -> {
+                        if (session != current) return;
+                        Toast.makeText(this,"页面返回适配未加载，可重试打开对话",Toast.LENGTH_LONG).show();
+                        if (fresh) loadInitial(current);
+                    }));
         } catch (RuntimeException | LinkageError error) {
             closeSession();
             showError("兼容内核无法启动", "可尝试在系统浏览器打开。错误：" + error.getClass().getSimpleName());
@@ -172,62 +229,83 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
     }
 
     private void receiveFiles(ArrayList<Uri> uris) {
-        final GeckoSession.PromptDelegate.FilePrompt prompt = filePrompt;
-        final GeckoResult<GeckoSession.PromptDelegate.PromptResponse> pending = fileResult;
+        final Retained owner = retained;
+        final GeckoSession.PromptDelegate.FilePrompt prompt = owner.prompt;
+        final GeckoResult<GeckoSession.PromptDelegate.PromptResponse> pending = owner.result;
         if (prompt == null || uris.isEmpty()) { cancelFilePrompt(); return; }
+        final android.content.Context app = getApplicationContext();
         new Thread(() -> {
             ArrayList<File> copied = new ArrayList<>();
             String failure = null;
-            try {
-                if (uris.size() > 20) throw new java.io.IOException("一次最多上传 20 个文件");
-                long total = 0;
-                for (Uri uri : uris) {
-                    if (!"content".equals(uri.getScheme())) throw new java.io.IOException("不支持的文件来源");
-                    // 部分文档提供方没有可直接使用的路径；复制用户授权的内容到本次缓存。
-                    String name = "upload.bin";
-                    try (android.database.Cursor cursor = getContentResolver().query(uri,
-                            new String[]{android.provider.OpenableColumns.DISPLAY_NAME}, null, null, null)) {
-                        if (cursor != null && cursor.moveToFirst() && cursor.getString(0) != null)
-                            name = cursor.getString(0).replaceAll("[\\\\/\\p{Cntrl}]", "_");
-                    }
-                    if (name.equals(".") || name.equals("..") || name.isEmpty()) name = "upload.bin";
-                    File folder = new File(getCacheDir(), "gecko-upload-" + java.util.UUID.randomUUID());
-                    if (!folder.mkdir()) throw new java.io.IOException("无法创建上传缓存");
-                    File file = new File(folder, name);
-                    copied.add(file);
-                    try (InputStream in = getContentResolver().openInputStream(uri); FileOutputStream out = new FileOutputStream(file)) {
-                        if (in == null) throw new java.io.IOException("无法读取文件");
-                        byte[] buffer = new byte[65536]; int size;
-                        while ((size = in.read(buffer)) != -1) {
-                            total += size;
-                            if (total > 256L * 1024 * 1024) throw new java.io.IOException("本次上传超过 256 MiB");
-                            out.write(buffer, 0, size);
-                        }
-                    }
-                }
-            } catch (Exception error) { failure = error.getMessage(); }
+            try { copied = WebUploads.copy(app,uris); }
+            catch (Exception error) { failure = error.getMessage(); }
+            final ArrayList<File> ready = copied;
             final String error = failure;
-            runOnUiThread(() -> {
-                if (filePrompt != prompt || isFinishing() || isDestroyed() || error != null) {
-                    for (File file : copied) { file.delete(); file.getParentFile().delete(); }
-                    if (filePrompt == prompt) cancelFilePrompt();
-                    if (error != null && !isFinishing()) Toast.makeText(this, "上传失败：" + error, Toast.LENGTH_LONG).show();
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                if (owner.prompt != prompt || owner.session == null || error != null) {
+                    WebUploads.clean(ready);
+                    if (owner.prompt == prompt) {
+                        pending.complete(prompt.dismiss()); owner.prompt = null; owner.result = null;
+                    }
+                    if (error != null) Toast.makeText(app,"上传失败：" + error,Toast.LENGTH_LONG).show();
                     return;
                 }
-                Uri[] files = new Uri[copied.size()];
-                for (int i = 0; i < files.length; i++) files[i] = Uri.fromFile(copied.get(i));
-                uploads.addAll(copied);
-                pending.complete(prompt.confirm(this, files));
-                filePrompt = null; fileResult = null;
+                Uri[] files = new Uri[ready.size()];
+                for (int i=0;i<files.length;i++) files[i] = Uri.fromFile(ready.get(i));
+                owner.uploads.addAll(ready);
+                pending.complete(prompt.confirm(app,files));
+                owner.prompt = null; owner.result = null;
             });
-        }, "gecko-file-import").start();
+        },"gecko-file-import").start();
     }
 
     private void cancelFilePrompt() {
+        if (retained != null) { filePrompt = retained.prompt; fileResult = retained.result; }
         if (filePrompt != null && fileResult != null) fileResult.complete(filePrompt.dismiss());
         filePrompt = null; fileResult = null;
+        if (retained != null) { retained.prompt = null; retained.result = null; }
     }
-    private void back() { if (session != null && canGoBack) session.goBack(); else finish(); }
+    private void back() {
+        if (backPending) return;
+        if (pagePort == null) { historyBack(); return; }
+        backPending = true; int id = ++backSequence;
+        try { pagePort.postMessage(new org.json.JSONObject().put("type","back").put("id",id)); }
+        catch (Exception error) { backPending = false; historyBack(); return; }
+        container.postDelayed(() -> { if (backPending && id == backSequence) { backPending = false; historyBack(); } },1200);
+    }
+    private void historyBack() { if (session != null && canGoBack) session.goBack(); else finish(); }
+    private void loadInitial(GeckoSession current) {
+        if (savedHistory != null) {
+            try { current.restoreState(GeckoSession.SessionState.fromString(savedHistory)); savedHistory = null; return; }
+            catch (RuntimeException ignored) { savedHistory = null; }
+        }
+        // 由 Gecko 自己完成 token → Cookie 交换。
+        current.loadUri(authUrl);
+    }
+    private static String header(WebResponse response, String name) {
+        for (java.util.Map.Entry<String,String> h : response.headers.entrySet()) if (h.getKey().equalsIgnoreCase(name)) return h.getValue();
+        return null;
+    }
+    private void attachPageBridge(GeckoSession current, WebExtension extension) {
+        current.getWebExtensionController().setMessageDelegate(extension,new WebExtension.MessageDelegate() {
+            @Override public void onConnect(WebExtension.Port port) {
+                if (port.sender.session != session || !port.sender.isTopLevel()
+                        || !WebPreviewPolicy.sameService(baseUrl,port.sender.url)) { port.disconnect(); return; }
+                retained.port = port; pagePort = port;
+                port.setDelegate(new WebExtension.PortDelegate() {
+                    @Override public void onPortMessage(Object message, WebExtension.Port source) {
+                        if (source != pagePort || !(message instanceof org.json.JSONObject)) return;
+                        org.json.JSONObject value = (org.json.JSONObject) message;
+                        if (!backPending || !"back".equals(value.optString("type")) || value.optInt("id") != backSequence) return;
+                        backPending = false;
+                        if (!value.optBoolean("handled")) historyBack();
+                    }
+                    @Override public void onDisconnect(WebExtension.Port source) { if (pagePort == source) { pagePort = null; retained.port = null; } }
+                });
+            }
+        },"dsha");
+        if (retained.port != null) current.getWebExtensionController().getMessageDelegate(extension,"dsha").onConnect(retained.port);
+    }
     private void external(String url) {
         if (url == null || !(url.startsWith("https://") || url.startsWith("http://"))) return;
         try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addCategory(Intent.CATEGORY_BROWSABLE)); }
@@ -243,13 +321,26 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
         cancelFilePrompt();
         if (browser != null) { browser.releaseSession(); container.removeView(browser); browser = null; }
         if (session != null) { session.close(); session = null; }
+        if (retained != null) retained.session = null;
+        pagePort = null;
+        if (retained != null) retained.port = null;
     }
     @Override protected void onPause() { if (session != null) session.setActive(false); super.onPause(); }
     @Override protected void onResume() { super.onResume(); if (session != null) session.setActive(true); }
     @Override protected void onDestroy() {
-        closeSession();
-        for (File file : uploads) { file.delete(); file.getParentFile().delete(); }
-        uploads.clear();
+        if (downloads != null) downloads.dismiss();
+        if (isChangingConfigurations() && session != null) {
+            if (browser != null) { browser.releaseSession(); container.removeView(browser); browser = null; }
+            session.setNavigationDelegate(null); session.setProgressDelegate(null); session.setPromptDelegate(null); session.setContentDelegate(null);
+            // 保留消息端口，新的 Activity 在接管后更换代理。
+            if (pagePort != null) pagePort.setDelegate(null);
+            session = null;
+        } else closeSession();
         super.onDestroy();
+    }
+    @Override protected void onSaveInstanceState(Bundle out) {
+        if (downloads != null) downloads.model.saveState(out);
+        if (retained.history != null) out.putString("gecko-state",retained.history.toString());
+        super.onSaveInstanceState(out);
     }
 }

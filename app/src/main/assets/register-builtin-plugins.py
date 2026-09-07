@@ -58,6 +58,7 @@ DEFAULT_BUILTINS = (
     "dsh-task-notifier",
     "dsh-status-overlay",
     "dsh-web-mobile",
+    "dsh-app-integration",
 )
 
 # web profile 的官方核心（dsh 的 PROFILE_TEMPLATES.web），新建 profile 时打底
@@ -130,14 +131,25 @@ def ensure_runtime_modules():
 
 
 @contextmanager
-def operation_lock():
+def operation_lock(check_cancel=None):
     """所有 DSHA 插件清单写入共用锁；进程退出由系统释放。"""
     os.makedirs(local(DSH_HOME), exist_ok=True)
-    with open(local(os.path.join(DSH_HOME, ".plugins.lock")), "a") as lock:
+    # 锁放在 .dsh 外，恢复整个 .dsh 时不会换掉正在使用的锁 inode。
+    data_root = os.path.dirname(local(DSH_HOME))
+    with open(os.path.join(data_root, ".dsha-data.lock"), "a") as lock:
         if os.name != "nt":
             import fcntl
-            fcntl.flock(lock, fcntl.LOCK_EX)
+            while True:
+                if check_cancel:
+                    check_cancel()
+                try:
+                    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    time.sleep(0.1)
         try:
+            if os.path.isfile(os.path.join(data_root, ".dsha-restore-journal.json")):
+                raise RuntimeError("恢复事务尚未完成，请先启动 DSHA 完成恢复后再操作插件")
             yield
         finally:
             if os.name != "nt":
@@ -177,7 +189,7 @@ def builtin_names():
         with open(BUILTIN_LIST, encoding="utf-8") as f:
             names = [ln.strip() for ln in f if ln.strip() and not ln.startswith("#")]
         if names:
-            return names
+            return list(dict.fromkeys(names + ["dsh-app-integration"]))
     except OSError:
         pass
     return list(DEFAULT_BUILTINS)

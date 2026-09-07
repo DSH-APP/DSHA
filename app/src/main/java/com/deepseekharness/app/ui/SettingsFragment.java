@@ -38,9 +38,9 @@ public class SettingsFragment extends Fragment {
     private final Handler main = new Handler(Looper.getMainLooper());
 
     private static final TabOption[] TAB_OPTIONS = {
-            new TabOption("安装", "分步安装 rootfs / 工具 / Node / harness", InstallFragment::new),
-            new TabOption("配置", "API key · 端口 · 行为", ConfigFragment::new),
-            new TabOption("数据与备份", "备份恢复 · 保存位置 · 工作区", WorkspaceFragment::new),
+            new TabOption("安装", "安装与修复运行环境", InstallFragment::new),
+            new TabOption("配置", "接口、行为与权限", ConfigFragment::new),
+            new TabOption("数据与备份", "备份恢复 · 文件共享", WorkspaceFragment::new),
     };
 
     @Nullable
@@ -60,6 +60,21 @@ public class SettingsFragment extends Fragment {
             }
             tabs.addView(buildRow(i));
         }
+        LinearLayout power = v.findViewById(R.id.settings_power);
+        com.google.android.material.materialswitch.MaterialSwitch eco = new com.google.android.material.materialswitch.MaterialSwitch(requireContext());
+        eco.setText("省电模式"); eco.setTextSize(15); eco.setMinHeight(dp(48)); eco.setPadding(dp(16),dp(8),dp(16),dp(4));
+        com.deepseekharness.app.core.ConfigStore config = HarnessController.get(requireContext()).config();
+        eco.setChecked(config.isEcoMode()); power.addView(eco);
+        TextView powerHint = new TextView(requireContext());
+        powerHint.setTextSize(13); powerHint.setTextColor(requireContext().getColor(R.color.text_muted));
+        powerHint.setPadding(dp(16),0,dp(16),dp(12)); power.addView(powerHint);
+        java.util.function.Consumer<Boolean> describe = enabled -> powerHint.setText(enabled
+                ? "熄屏空闲 1 分钟后减少保活；有任务时继续运行。"
+                : "持续保持运行，适合长时间任务。");
+        describe.accept(config.isEcoMode());
+        eco.setOnCheckedChangeListener((button, checked) -> {
+            config.setEcoMode(checked); com.deepseekharness.app.HarnessService.refreshPowerMode(); describe.accept(checked);
+        });
 
         String version = "unknown";
         try {
@@ -70,7 +85,7 @@ public class SettingsFragment extends Fragment {
         TextView ver = v.findViewById(R.id.settings_ver);
         ver.setText("DSHA v" + version + " · MIT License");
         TextView updateSub = v.findViewById(R.id.settings_update_sub);
-        updateSub.setText("当前 v" + version + " · 稳定 / 预览更新通道");
+        updateSub.setText("稳定版与预览版更新");
 
         v.findViewById(R.id.settings_about).setOnClickListener(x -> AboutDialog.show(requireContext()));
         v.findViewById(R.id.settings_update).setOnClickListener(x -> checkUpdate());
@@ -81,17 +96,26 @@ public class SettingsFragment extends Fragment {
     }
 
     private void confirmReextract() {
+        com.deepseekharness.app.core.BackupTask task = com.deepseekharness.app.core.BackupTask.get(requireContext());
+        if (task.busy()) {
+            Toast.makeText(requireContext(), "已有数据任务进行中，可到数据与备份页查看。", Toast.LENGTH_LONG).show();
+            return;
+        }
+        boolean recovery = task.pendingMaintenance();
         new AlertDialog.Builder(requireContext())
-                .setTitle("重新解压内置环境")
-                .setMessage("用 APK 里自带的环境覆盖当前容器，约数分钟。\n\n"
-                        + "会保留：配置、API Key（自动备份后还原）。\n"
-                        + "会回到出厂状态：自己在容器里额外装的东西。\n\n"
-                        + "适用场景：dsh 或 npm 不见了、环境怎么修都不对。")
-                .setPositiveButton("重新解压", (d, w) -> {
+                .setTitle(recovery ? "恢复中断维护" : "备份并重建内置环境")
+                .setMessage(recovery ? "先停止 Web，再回切原环境；安全备份和失败的新环境均保留。"
+                        : "先停止 Web 并等待退出（会中断正在执行的任务），完整备份并校验配置、会话与本地插件，再解压并恢复。\n\n"
+                        + "备份失败不会切换环境；解压或恢复失败会回切。旧环境和安全备份留在私有目录，需要额外空间。\n"
+                        + "原生配置和 API Key 保持原位；额外安装的系统软件留在旧环境中。")
+                .setPositiveButton(recovery ? "恢复原环境" : "备份并重建", (d, w) -> {
                     try {
+                        if (!(recovery ? task.recoverMaintenance() : task.rebuild())) {
+                            Toast.makeText(requireContext(), "已有任务或未完成维护，请到数据与备份页查看。", Toast.LENGTH_LONG).show();
+                            return;
+                        }
                         Intent i = new Intent(requireContext(), ExtractActivity.class);
-                        i.putExtra("force_extract", true);
-                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        i.putExtra("data_task_id", task.snapshot().id);
                         startActivity(i);
                     } catch (Throwable t) {
                         Toast.makeText(requireContext(), "打不开解压页：" + t.getMessage(),
@@ -101,6 +125,18 @@ public class SettingsFragment extends Fragment {
                 .setNegativeButton("算了", null)
                 .show();
     }
+
+    private final Runnable refreshMaintenance = new Runnable() {
+        @Override public void run() {
+            if (getView() == null) return;
+            boolean busy = com.deepseekharness.app.core.BackupTask.get(requireContext()).busy();
+            View action = getView().findViewById(R.id.settings_reextract);
+            action.setEnabled(!busy); action.setAlpha(busy ? 0.5f : 1f);
+            main.postDelayed(this, 500);
+        }
+    };
+    @Override public void onResume() { super.onResume(); main.post(refreshMaintenance); }
+    @Override public void onPause() { main.removeCallbacks(refreshMaintenance); super.onPause(); }
 
     private void runSelftest() {
         startActivity(new Intent(requireContext(), DiagnosticActivity.class));
@@ -115,7 +151,8 @@ public class SettingsFragment extends Fragment {
         LinearLayout row = new LinearLayout(requireContext());
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(dp(15), dp(15), dp(15), dp(15));
+        row.setPadding(dp(16), dp(12), dp(16), dp(12));
+        row.setMinimumHeight(dp(64)); row.setFocusable(true);
         // 用主题的 selectableItemBackground（Material ripple），不用 Holo 的黄色 list_selector
         TypedValue tv = new TypedValue();
         requireContext().getTheme().resolveAttribute(
@@ -124,17 +161,18 @@ public class SettingsFragment extends Fragment {
 
         LinearLayout body = new LinearLayout(requireContext());
         body.setOrientation(LinearLayout.VERTICAL);
-        body.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        LinearLayout.LayoutParams bodyParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        bodyParams.leftMargin = dp(12); bodyParams.rightMargin = dp(8); body.setLayoutParams(bodyParams);
 
         TextView title = new TextView(requireContext());
         title.setText(opt.title);
-        title.setTextSize(14);
+        title.setTextSize(15);
         title.setTextColor(requireContext().getColor(R.color.text));
         title.setTypeface(title.getTypeface(), android.graphics.Typeface.BOLD);
 
         TextView sub = new TextView(requireContext());
         sub.setText(opt.sub);
-        sub.setTextSize(12);
+        sub.setTextSize(13);
         sub.setTextColor(requireContext().getColor(R.color.text_muted));
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -149,6 +187,12 @@ public class SettingsFragment extends Fragment {
         chev.setTextSize(18);
         chev.setTextColor(requireContext().getColor(R.color.text_muted));
 
+        android.widget.ImageView icon = new android.widget.ImageView(requireContext());
+        icon.setImageResource(index == 0 ? R.drawable.ic_terminal : index == 1 ? R.drawable.ic_settings : R.drawable.ic_plugins);
+        icon.setImageTintList(android.content.res.ColorStateList.valueOf(requireContext().getColor(R.color.text_secondary)));
+        icon.setBackgroundResource(R.drawable.bg_chip); icon.setPadding(dp(7),dp(7),dp(7),dp(7));
+        icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        row.addView(icon,new LinearLayout.LayoutParams(dp(32),dp(32)));
         row.addView(body);
         row.addView(chev);
         row.setOnClickListener(v -> getParentFragmentManager().beginTransaction()

@@ -1,102 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 真 PTY 终端（阶段 1，见 docs/ROADMAP.md）。
-     旧的 fragment_terminal.xml 是「ScrollView + TextView + 单行 EditText」，
-     那套结构决定了它只能「执行一条、看一段输出」，跑不了任何全屏程序。
-     这里换成 Termux 的 TerminalView（自己画字符网格、管光标与选择），
-     底部那排扩展键是 TUI 的必需品 —— 手机软键盘没有 Esc / Ctrl / 方向键。 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/surface"
-    android:orientation="vertical"
-    android:paddingStart="@dimen/page_pad"
-    android:paddingEnd="@dimen/page_pad"
-    android:paddingTop="6dp"
-    android:paddingBottom="@dimen/gap_control">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingBottom="@dimen/gap_control">
-
-        <TextView
-            android:id="@+id/pty_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/bg_chip"
-            android:ellipsize="end"
-            android:fontFamily="monospace"
-            android:maxLines="1"
-            android:paddingStart="@dimen/gap_control"
-            android:paddingTop="7dp"
-            android:paddingEnd="@dimen/gap_control"
-            android:paddingBottom="7dp"
-            android:text="Ubuntu · PTY"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/text_caption" />
-
-        <TextView
-            android:id="@+id/pty_font_dec"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/gap_tight"
-            android:padding="6dp"
-            android:text="A−"
-            android:textColor="@color/text_muted"
-            android:textSize="@dimen/text_label" />
-
-        <TextView
-            android:id="@+id/pty_font_inc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="6dp"
-            android:text="A+"
-            android:textColor="@color/text_muted"
-            android:textSize="@dimen/text_label" />
-
-        <TextView
-            android:id="@+id/pty_simple"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/gap_tight"
-            android:padding="6dp"
-            android:text="简易"
-            android:textColor="@color/text_muted"
-            android:textSize="@dimen/text_caption" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/surface" android:orientation="vertical" android:paddingStart="@dimen/page_pad" android:paddingEnd="@dimen/page_pad" android:paddingTop="6dp" android:paddingBottom="@dimen/gap_control">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingBottom="@dimen/gap_control">
+        <TextView android:id="@+id/pty_title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:background="@drawable/bg_chip" android:ellipsize="end" android:fontFamily="monospace" android:maxLines="1" android:paddingStart="@dimen/gap_control" android:paddingTop="7dp" android:paddingEnd="@dimen/gap_control" android:paddingBottom="7dp" android:text="Ubuntu · PTY" android:textColor="@color/text_secondary" android:textSize="@dimen/text_caption" />
+        <TextView android:id="@+id/pty_font_dec" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="A−" android:textColor="@color/text_muted" android:textSize="@dimen/text_label" style="@style/Widget.DSHA.ToolbarAction" />
+        <TextView android:id="@+id/pty_font_inc" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="A+" android:textColor="@color/text_muted" android:textSize="@dimen/text_label" style="@style/Widget.DSHA.ToolbarAction" />
+        <TextView android:id="@+id/pty_simple" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="简易" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" style="@style/Widget.DSHA.ToolbarAction" />
     </LinearLayout>
-
-    <!-- TerminalView 自己按整个 View 的宽高绘制字符，不读取 View.padding。
-         用外层容器提供真正的安全边距，避免第一行文字被圆角裁掉。 -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="@drawable/bg_terminal"
-        android:padding="@dimen/gap_tight">
-
-        <com.termux.view.TerminalView
-            android:id="@+id/pty_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/terminal_surface"
-            android:focusable="true"
-            android:focusableInTouchMode="true" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:background="@drawable/bg_terminal" android:padding="@dimen/gap_tight">
+        <com.termux.view.TerminalView android:id="@+id/pty_view" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/terminal_surface" android:focusable="true" android:focusableInTouchMode="true" />
     </FrameLayout>
-
-    <!-- 扩展键：按钮由代码生成（12 个 TextView 写在 XML 里既长又难统一样式） -->
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/gap_tight"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/pty_keys"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" />
+    <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight" android:scrollbars="none">
+        <LinearLayout android:id="@+id/pty_keys" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" />
     </HorizontalScrollView>
 </LinearLayout>

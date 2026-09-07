@@ -24,6 +24,7 @@ app/src/main/assets/offline-rootfs.version
 release/*.apk
 release/*.sha256
 release/_data_backup/
+release/history/
 
 # 本地临时/中间产物
 tmp_*/

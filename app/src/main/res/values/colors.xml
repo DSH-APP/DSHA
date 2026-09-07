@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#3D6FD4</color>
-    <color name="primary_dark">#2E5BB8</color>
+    <color name="primary">#2B55A4</color>
+    <color name="primary_dark">#214685</color>
     <color name="accent_on">#FFFFFF</color>
     <color name="surface">#F7F8FB</color>
     <color name="card">#FFFFFF</color>
@@ -9,10 +9,10 @@
     <color name="line">#E2E6EE</color>
     <color name="text">#1A2230</color>
     <color name="text_secondary">#4A5568</color>
-    <color name="text_muted">#7A8494</color>
-    <color name="ok">#2F9E64</color>
-    <color name="warn">#C48A1A</color>
-    <color name="err">#C45A5A</color>
+    <color name="text_muted">#596579</color>
+    <color name="ok">#207348</color>
+    <color name="warn">#825900</color>
+    <color name="err">#AD3D45</color>
     <color name="preview">#F0F3F8</color>
     <!-- Termux 的默认 ANSI 前景色是白色；终端背景必须固定为深色，不能复用
          会在浅色主题下变亮的 preview，否则就会出现浅灰底白字。 -->
@@ -21,7 +21,9 @@
     <color name="logo_top">#E8EEF8</color>
     <color name="logo_bot">#D5DFF0</color>
     <!-- 按压涟漪：主色低透明度，浅色底上淡淡一层 -->
-    <color name="ripple">#233D6FD4</color>
+    <color name="ripple">#1A3D6FD4</color>
+    <color name="primary_ripple">#1F000000</color>
+    <color name="error_on">#FFFFFF</color>
     <!-- 禁用态：按钮变灰 + 文字降到可读下限（不可点却外观照旧最让人困惑） -->
     <color name="disabled">#E9ECF2</color>
     <!-- 状态色的浅底（用于状态条/标签背景，不刺眼） -->

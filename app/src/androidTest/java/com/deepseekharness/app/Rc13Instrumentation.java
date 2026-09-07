@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import androidx.core.content.FileProvider;
 import com.deepseekharness.app.core.UpdateRepository;
+import com.deepseekharness.app.core.UpdateEngine;
 import com.deepseekharness.app.core.PluginRepository;
 import com.deepseekharness.app.ui.MainActivity;
 import com.deepseekharness.app.util.PluginSource;
@@ -178,21 +179,25 @@ public final class Rc13Instrumentation extends Instrumentation {
             } else {
                 Application app=(Application)getTargetContext().getApplicationContext();
                 UpdateRepository repository=new UpdateRepository(app);
+                UpdateEngine updateEngine=UpdateEngine.get(app);
                 File directory=new File(args.getString("fixtures"));
                 File valid=new File(directory,"valid.apk");
                 String hash=hex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(valid.toPath())));
                 String url=args.getString("url","https://dsha.cc/unused-test.apk");
-                UpdatePolicy.Release release=new UpdatePolicy.Release(113,"1.2.0-validation",UpdatePolicy.PREVIEW,
+                UpdatePolicy.Release release=new UpdatePolicy.Release(114,"1.2.0-validation",UpdatePolicy.PREVIEW,
                         BuildConfig.LOW_ANDROID?"low":"standard",BuildConfig.LOW_ANDROID?23:30,"arm64-v8a",url,hash,valid.length(),"验收用测试包","https://dsha.cc/download/");
-                Method validate=UpdateRepository.class.getDeclaredMethod("validatePackage",File.class,UpdatePolicy.Release.class);validate.setAccessible(true);
-                validate.invoke(repository,valid,release);
+                Method validate=UpdateEngine.class.getDeclaredMethod("validatePackage",File.class,UpdatePolicy.Release.class);validate.setAccessible(true);
+                validate.invoke(updateEngine,valid,release);
                 for(String name:new String[]{"wrong-signature.apk","wrong-package.apk","wrong-flavor.apk"}){
-                    boolean rejected=false;try{validate.invoke(repository,new File(directory,name),release);}catch(InvocationTargetException e){rejected=e.getCause() instanceof java.io.IOException;}
+                    boolean rejected=false;try{validate.invoke(updateEngine,new File(directory,name),release);}catch(InvocationTargetException e){rejected=e.getCause() instanceof java.io.IOException;}
                     check(rejected,"错误 APK 未被拒绝："+name);
                 }
                 result.putString("packageValidation","PASS: 有效新版本、签名不符、包名不符、版本分支不符");
                 if(args.containsKey("url")){
-                    Field candidate=UpdateRepository.class.getDeclaredField("candidate");candidate.setAccessible(true);candidate.set(repository,release);
+                    check(UpdatePolicy.PREVIEW.equals(updateEngine.channel()),"预览下载夹具需要先选择预览通道");
+                    Field candidate=UpdateEngine.class.getDeclaredField("candidate");candidate.setAccessible(true);candidate.set(updateEngine,release);
+                    Field candidateChannel=UpdateEngine.class.getDeclaredField("candidateChannel");candidateChannel.setAccessible(true);candidateChannel.set(updateEngine,UpdatePolicy.PREVIEW);
+                    Field verifiedApk=UpdateEngine.class.getDeclaredField("verifiedApk");verifiedApk.setAccessible(true);verifiedApk.set(updateEngine,null);
                     runOnMainSync(repository::download);
                     until(()->repository.state().getValue().downloaded>0||!repository.state().getValue().busy,"下载未响应");
                     check(repository.state().getValue().downloaded>0,"下载未显示进度："+repository.state().getValue().message);
@@ -203,7 +208,7 @@ public final class Rc13Instrumentation extends Instrumentation {
                     check(hex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(repository.installableApk().toPath()))).equals(hash),"下载文件与实际包不一致");
                     android.net.Uri installUri=FileProvider.getUriForFile(app,app.getPackageName()+".updates",repository.installableApk());
                     check(app.getPackageManager().resolveActivity(new Intent(Intent.ACTION_VIEW).setDataAndType(installUri,"application/vnd.android.package-archive").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),0)!=null,"没有系统 APK 安装器");
-                    candidate.set(repository,new UpdatePolicy.Release(113,"1.2.0-validation",UpdatePolicy.PREVIEW,release.flavor,release.minSdk,"arm64-v8a",url,"0000000000000000000000000000000000000000000000000000000000000000",valid.length(),"验收",release.pageUrl));
+                    candidate.set(updateEngine,new UpdatePolicy.Release(114,"1.2.0-validation",UpdatePolicy.PREVIEW,release.flavor,release.minSdk,"arm64-v8a",url,"0000000000000000000000000000000000000000000000000000000000000000",valid.length(),"验收",release.pageUrl));
                     runOnMainSync(repository::download);until(()->!repository.state().getValue().busy,"错误摘要下载超时");
                     check(repository.state().getValue().apk==null&&repository.state().getValue().message.contains("SHA-256"),"错误摘要未阻止安装");
                     result.putString("download","PASS: HTTPS、进度、取消、重试、摘要及 Android 包校验");

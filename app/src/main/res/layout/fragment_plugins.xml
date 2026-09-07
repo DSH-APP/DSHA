@@ -1,135 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/pluginScroll" android:layout_width="match_parent" android:layout_height="match_parent"
-    android:background="@color/surface" android:fillViewport="true" android:clipToPadding="false">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="vertical" android:padding="@dimen/page_pad">
-
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:gravity="center_vertical">
-            <TextView android:id="@+id/btnMarket" style="@style/PluginAction"
-                android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-                android:background="@drawable/bg_tab_on" android:text="插件市场" />
-            <TextView android:id="@+id/btnInstalled" style="@style/PluginAction"
-                android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/gap_tight" android:background="@drawable/bg_tab"
-                android:text="插件管理" />
-            <TextView android:id="@+id/btnRefresh" style="@style/PluginAction"
-                android:layout_width="48dp" android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/gap_tight" android:text="↻"
-                android:contentDescription="刷新插件状态" android:textSize="22sp" />
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/pluginScroll" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/surface" android:fillViewport="true" android:clipToPadding="false">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_pad">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/btnMarket" style="@style/PluginAction" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:background="@drawable/bg_tab_on" android:text="插件市场" />
+            <TextView android:id="@+id/btnInstalled" style="@style/PluginAction" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:background="@drawable/bg_tab" android:text="插件管理" />
+            <TextView android:id="@+id/btnRefresh" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="48dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="↻" android:contentDescription="刷新插件状态" android:textSize="20sp" />
         </LinearLayout>
-
-        <LinearLayout android:id="@+id/pluginWebsiteSection" style="@style/DshaCard"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_block">
-            <TextView style="@style/DshaText.Title" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:text="发现更多插件" />
-            <TextView style="@style/DshaText.Body" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight"
-                android:text="在网站选取插件并打开 DSHA，核对实际包信息后确认安装；也可在此粘贴链接或导入插件包。" />
-            <Button android:id="@+id/btnPluginWebsite" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:minHeight="48dp"
-                android:layout_marginTop="@dimen/gap_control"
-                android:background="@drawable/bg_btn_primary" android:textColor="@color/accent_on"
-                android:text="前往 dsha.cc 选插件" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/pluginLinkSection" style="@style/DshaCard"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_block">
-            <TextView style="@style/DshaText.Title" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:text="通过链接安装" />
-            <EditText android:id="@+id/appbar_github_input" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:minHeight="48dp"
-                android:layout_marginTop="@dimen/gap_control" android:background="@drawable/bg_input"
-                android:hint="粘贴插件链接或 owner/repo" android:inputType="textUri"
-                android:imeOptions="actionGo" android:singleLine="true" android:importantForAutofill="no"
-                android:padding="@dimen/gap_control" android:textColor="@color/text"
-                android:textColorHint="@color/text_muted" android:textSize="@dimen/text_body" />
-            <TextView android:id="@+id/pluginLinkHint" style="@style/DshaText.Caption"
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/gap_tight" />
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/gap_control" android:orientation="horizontal">
-                <TextView android:id="@+id/btnPluginPaste" style="@style/PluginAction"
-                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-                    android:text="粘贴链接" />
-                <TextView android:id="@+id/btnPluginInstall" style="@style/PluginAction"
-                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/gap_tight" android:text="安装插件" />
+        <LinearLayout android:id="@+id/installedControls" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+            <EditText android:id="@+id/pluginSearch" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:background="@drawable/bg_input" android:hint="搜索插件名称或描述" android:singleLine="true" android:imeOptions="actionDone" android:inputType="text" android:padding="@dimen/gap_control" android:textColor="@color/text" android:textColorHint="@color/text_muted" android:textSize="@dimen/text_body" android:layout_marginTop="12dp" />
+            <CheckBox android:id="@+id/chkHideBuiltin" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="@dimen/gap_hair" android:text="只看自己装的" android:buttonTint="@color/primary" android:textColor="@color/text_secondary" android:textSize="@dimen/text_label" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:layout_marginBottom="@dimen/gap_control">
+                <TextView android:id="@+id/pluginCount" style="@style/DshaText.Caption" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <TextView android:id="@+id/btnSort" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="名称排序" />
+                <Button android:id="@+id/btnPluginUpdates" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="0dp" android:text="检查更新" style="@style/Widget.DSHA.TextButton" />
             </LinearLayout>
         </LinearLayout>
-
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_block" android:orientation="horizontal">
-            <TextView android:id="@+id/btnImport" style="@style/PluginAction"
-                android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-                android:text="导入插件包" />
-            <TextView android:id="@+id/btnExport" style="@style/PluginAction"
-                android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/gap_tight" android:text="导出插件包" />
-        </LinearLayout>
-
-        <TextView android:id="@+id/btnImportFallback" style="@style/PluginAction"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight" android:text="其他文件选择器"
-            android:textColor="@color/text_secondary" />
-
-        <ProgressBar android:id="@+id/pluginBusy" style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent" android:layout_height="3dp"
-            android:layout_marginTop="@dimen/gap_control" android:indeterminate="true"
-            android:indeterminateTint="@color/primary" android:visibility="gone" />
-        <TextView android:id="@+id/statusText" style="@style/DshaText.Caption"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_control" android:layout_marginBottom="@dimen/gap_block"
-            android:maxLines="2" android:ellipsize="end" android:minHeight="32dp"
-            android:paddingTop="@dimen/gap_hair" android:paddingBottom="@dimen/gap_hair" android:clickable="true" android:focusable="true"
-            android:contentDescription="插件操作状态，点按查看完整信息" />
-
-        <LinearLayout android:id="@+id/marketHelp" style="@style/DshaCard"
-            android:layout_width="match_parent" android:layout_height="wrap_content">
-            <TextView style="@style/DshaText.Title" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:text="安装与分享" />
-            <TextView style="@style/DshaText.Body" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_control"
-                android:text="链接安装：支持 GitHub 仓库、分支与子目录、Release 附件和 HTTPS 压缩包直链。\n\n本地导入：支持 ZIP、TAR、TAR.GZ、TGZ。请使用作者已构建好的插件包。\n\n导出分享：可多选插件并选择保存位置，导出包可在其他 DSHA 中导入。\n\n安装、切换开关或删除后，重启 Web 生效。" />
-        </LinearLayout>
-
-        <Button android:id="@+id/btnPluginRestore" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/gap_control" android:visibility="gone" android:text="安全模式：恢复此前启用的第三方插件" />
-
-        <LinearLayout android:id="@+id/installedControls" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
-            <Button android:id="@+id/btnPluginUpdates" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/gap_control" android:text="检查第三方插件更新" />
-            <EditText android:id="@+id/pluginSearch" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:minHeight="48dp"
-                android:background="@drawable/bg_input" android:hint="搜索插件名称或描述"
-                android:singleLine="true" android:imeOptions="actionDone" android:inputType="text"
-                android:padding="@dimen/gap_control" android:textColor="@color/text"
-                android:textColorHint="@color/text_muted" android:textSize="@dimen/text_body" />
-            <CheckBox android:id="@+id/chkHideBuiltin" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:minHeight="48dp"
-                android:layout_marginTop="@dimen/gap_hair" android:text="只看自己装的"
-                android:buttonTint="@color/primary" android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_label" />
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:gravity="center_vertical" android:orientation="horizontal"
-                android:layout_marginBottom="@dimen/gap_control">
-                <TextView android:id="@+id/pluginCount" style="@style/DshaText.Caption"
-                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
-                <TextView android:id="@+id/btnSort" style="@style/PluginAction"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="名称排序" />
+        <LinearLayout style="@style/DshaCard" android:id="@+id/pluginMarketCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <LinearLayout android:id="@+id/pluginWebsiteSection" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:orientation="horizontal" android:gravity="center_vertical">
+                <TextView style="@style/DshaText.Title" android:layout_width="0dp" android:layout_height="wrap_content" android:text="安装插件" android:layout_weight="1" />
+                <Button android:id="@+id/btnPluginWebsite" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="0dp" android:text="浏览目录" style="@style/Widget.DSHA.TextButton" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/pluginLinkSection" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:orientation="vertical">
+                <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="插件链接或 npm 包名" android:layout_marginTop="8dp" />
+                <EditText android:id="@+id/appbar_github_input" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="@dimen/gap_control" android:background="@drawable/bg_input" android:hint="插件链接或 npm 包名" android:inputType="textUri" android:imeOptions="actionGo" android:singleLine="true" android:importantForAutofill="no" android:padding="@dimen/gap_control" android:textColor="@color/text" android:textColorHint="@color/text_muted" android:textSize="@dimen/text_body" />
+                <TextView android:id="@+id/pluginLinkHint" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_control" android:orientation="horizontal">
+                    <TextView android:id="@+id/btnPluginPaste" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="粘贴链接" />
+                    <TextView android:id="@+id/btnPluginInstall" style="@style/PluginAction" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="解析插件" android:background="@drawable/bg_btn_primary" android:textColor="@color/button_primary_text" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-        <TextView android:id="@+id/pluginEmpty" style="@style/DshaText.Body"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:padding="@dimen/card_pad" android:gravity="center"
-            android:visibility="gone" android:textColor="@color/text_muted" />
-        <androidx.recyclerview.widget.RecyclerView android:id="@+id/pluginList"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false" android:visibility="gone" />
+        <ProgressBar android:id="@+id/pluginBusy" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="3dp" android:layout_marginTop="@dimen/gap_control" android:indeterminate="true" android:indeterminateTint="@color/primary" android:visibility="gone" />
+        <TextView android:id="@+id/statusText" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginBottom="4dp" android:maxLines="2" android:ellipsize="end" android:minHeight="44dp" android:paddingTop="@dimen/gap_hair" android:paddingBottom="@dimen/gap_hair" android:clickable="true" android:focusable="true" android:contentDescription="插件操作状态，点按查看完整信息" android:gravity="center_vertical" />
+        <Button android:id="@+id/btnCancelPluginTask" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" android:text="取消当前操作" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:orientation="horizontal">
+            <TextView android:id="@+id/btnImport" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="导入插件包" android:textColor="@color/action_text" />
+            <TextView android:id="@+id/btnExport" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="导出插件包" android:textColor="@color/action_text" />
+        </LinearLayout>
+        <TextView android:id="@+id/btnImportFallback" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight" android:text="其他文件选择器" android:textColor="@color/text_secondary" />
+        <LinearLayout android:id="@+id/marketHelp" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="8dp">
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="使用提示" android:textStyle="bold" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="安装或修改插件后，重启 Web 生效。支持 GitHub、npm 和 ZIP / TAR / TAR.GZ / TGZ 的已构建插件包；导出包可在其他 DSHA 中导入。" />
+        </LinearLayout>
+        <Button android:id="@+id/btnPluginRestore" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/gap_control" android:visibility="gone" android:text="安全模式：恢复此前启用的第三方插件" />
+        <TextView android:id="@+id/pluginEmpty" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="@dimen/card_pad" android:gravity="center" android:visibility="gone" android:textColor="@color/text_muted" />
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/pluginList" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" android:visibility="gone" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

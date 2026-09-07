@@ -38,11 +38,17 @@ public final class DiagnosticActivity extends AppCompatActivity {
         findViewById(R.id.diagnostic_repair).setOnClickListener(v -> repository.repairNetworkTools());
         findViewById(R.id.diagnostic_plugins).setOnClickListener(v -> startActivity(new android.content.Intent(this, MainActivity.class).putExtra("open_plugins", true)));
         findViewById(R.id.diagnostic_copy).setOnClickListener(v -> {
-            ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            clipboard.setPrimaryClip(ClipData.newPlainText("DSHA 诊断", completeReport()));
-            Toast.makeText(this, "已复制脱敏报告", Toast.LENGTH_SHORT).show();
+            try {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                if (clipboard == null) throw new IllegalStateException("剪贴板不可用");
+                clipboard.setPrimaryClip(ClipData.newPlainText("DSHA 诊断", completeReport()));
+                Toast.makeText(this, "已复制脱敏报告", Toast.LENGTH_SHORT).show();
+            } catch (Exception error) { Toast.makeText(this, "复制失败，可尝试导出报告", Toast.LENGTH_LONG).show(); }
         });
-        findViewById(R.id.diagnostic_export).setOnClickListener(v -> exporter.launch("DSHA-diagnostic-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.ROOT).format(new java.util.Date()) + ".txt"));
+        findViewById(R.id.diagnostic_export).setOnClickListener(v -> {
+            try { exporter.launch("DSHA-diagnostic-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.ROOT).format(new java.util.Date()) + ".txt"); }
+            catch (RuntimeException error) { Toast.makeText(this, "无法打开保存位置，请使用复制报告或检查系统文件管理器", Toast.LENGTH_LONG).show(); }
+        });
         repository.report.observe(this, text -> ((TextView) findViewById(R.id.diagnostic_report)).setText(text));
         repository.busy.observe(this, busy -> {
             ((TextView) findViewById(R.id.diagnostic_status)).setText(busy ? "正在检查环境…" : "报告保留在本机，复制或导出后可用于反馈");

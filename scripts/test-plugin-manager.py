@@ -159,13 +159,13 @@ class PluginManagerTest(PluginTestBase):
         def response(url):
             responses.append(url)
             if url.endswith("feature%2Fandroid"):
-                return io.BytesIO(json.dumps({"sha": "abc123"}).encode())
+                return io.BytesIO(json.dumps({"sha": "abc123" + "a" * 34}).encode())
             raise self.manager.urllib.error.HTTPError(url, 404, "missing", {}, None)
         with patch.object(self.manager, "open_url", side_effect=response), \
                 patch.object(self.manager, "cmd_download", return_value=0) as download:
             self.manager.cmd_github("owner", "repo", "feature/android/packages/demo")
             args = download.call_args.args
-            self.assertEqual("https://codeload.github.com/owner/repo/tar.gz/abc123", args[0])
+            self.assertEqual("https://codeload.github.com/owner/repo/tar.gz/abc123" + "a" * 34, args[0])
             self.assertEqual("packages/demo", args[1])
 
     def test_github_zip_uses_official_download_and_preserves_ref(self):
@@ -186,7 +186,7 @@ class PluginManagerTest(PluginTestBase):
             self.assertIn("--ignore-scripts", args)
             return self.manager.subprocess.CompletedProcess(args, 0, '[{"filename":"sample-demo-1.0.0.tgz"}]', '')
         with patch.object(self.manager.shutil, "which", return_value="/usr/bin/npm"), \
-                patch.object(self.manager.subprocess, "run", side_effect=pack), \
+                patch.object(self.manager, "run_package_command", side_effect=pack), \
                 patch.object(self.manager, "cmd_import", return_value=0) as install:
             self.assertEqual(0, self.manager.cmd_npm("@sample/demo@1.0.0"))
             self.assertEqual("npm:@sample/demo@1.0.0", install.call_args.kwargs["source"])
@@ -279,18 +279,22 @@ class PluginLifecycleTest(PluginTestBase):
             import shutil
             shutil.copyfile(archive, target)
         life = self.manager.lifecycle()
-        with patch.object(self.manager, 'download', side_effect=download):
+        with patch.object(self.manager, 'download', side_effect=download), patch.object(life, 'update_metadata', return_value=(
+                {'version': '2.0.0', 'compatibilityMessage': 'test'},
+                {'command': "download 'https://example.com/demo.zip'", 'name': 'dsh-demo', 'version': '2.0.0'})):
             life.check_updates('dsh-demo')
             state = self.manager.read_json(self.home / 'plugin-updates.json')['dsh-demo']
             self.assertTrue(state['available'])
             self.assertEqual('2.0.0', state['latestVersion'])
+            life.prepare_update('dsh-demo')
+            preview = json.loads(self.out.getvalue().split('PLUGIN_RESULT: ')[-1])['preview']
             self.manager.register_plugin(self.package(self.root / 'v3', version='3.0.0'), 'https://example.com/demo.zip')
             self.manager.cmd_list()
             listing = json.loads(self.out.getvalue().split('PLUGIN_RESULT: ')[-1])
             changed = next(item for item in listing['items'] if item['name'] == 'dsh-demo')
             self.assertFalse(changed['updateAvailable'])
             self.assertEqual('', changed['updateMessage'])
-            with self.assertRaises(ValueError): life.install_preview(state['previewId'])
+            with self.assertRaises(ValueError): life.install_preview(preview['previewId'])
             with self.assertRaises(ValueError): life.inspect({'command': "download 'https://example.com/demo.zip'", 'name': 'other-plugin'}, False)
 
     def test_safe_mode_preserves_manual_disables_and_restores_only_its_own_changes(self):
@@ -316,6 +320,143 @@ class PluginLifecycleTest(PluginTestBase):
         with self.assertRaises(ValueError):
             self.manager.register_plugin(self.package(self.root / 'scoped', name='@scope/demo'), '')
         self.assertEqual([], list(outside.iterdir()))
+
+
+class PluginOptimizationTest(PluginTestBase):
+    @unittest.skipIf(os.name == 'nt', '需要 Linux 文件锁')
+    def test_cancel_while_waiting_for_data_lock(self):
+        import fcntl
+        import threading
+        import time
+        cancel = self.task()
+        with open(self.home.parent / '.dsha-data.lock', 'a') as held:
+            fcntl.flock(held, fcntl.LOCK_EX)
+            timer = threading.Timer(.2, cancel.touch)
+            timer.start()
+            started = time.monotonic()
+            try:
+                with self.assertRaises(self.manager.PluginCancelled):
+                    with self.manager.builtin.operation_lock(self.manager.check_cancel):
+                        self.fail('取消任务不应取得尚未释放的锁')
+                self.assertLess(time.monotonic() - started, 1.0)
+            finally:
+                timer.join()
+                fcntl.flock(held, fcntl.LOCK_UN)
+
+    def install_sample(self, source='npm:dsh-demo@1.0.0'):
+        self.manager.register_plugin(self.package(self.root / 'original', version='1.0.0'), source)
+
+    def task(self):
+        self.env_task = patch.dict(os.environ, {'DSHA_PLUGIN_TASK': 'a' * 32})
+        self.env_task.start()
+        self.addCleanup(self.env_task.stop)
+        return Path(self.manager.task_file('.cancel'))
+
+    def test_npm_semver_rules_are_used_by_python_adapter(self):
+        life = self.manager.lifecycle()
+        fn = life.package_metadata.__globals__['accepts_version']
+        for installed, requirement, expected in [('0.5.0', '^0', True), ('1.8.0', '~1', True),
+                ('1.2.9', '1.2', True), ('0.1.2-rc.1', '^0.1.1-alpha', False),
+                ('0.1.2-rc.1', '^0.1.2-rc.0', True), ('1.0.0', 'latest', None)]:
+            self.assertIs(expected, fn(installed, requirement))
+
+    def test_unchanged_npm_version_never_downloads_archive_or_creates_preview(self):
+        self.install_sample()
+        pkg = {'name': 'dsh-demo', 'version': '1.0.0', 'engines': {'dsh': '^0'}}
+        life = self.manager.lifecycle()
+        with patch.object(self.manager, 'open_url', return_value=io.BytesIO(json.dumps(pkg).encode())) as get, \
+                patch.object(self.manager, 'cmd_npm', side_effect=AssertionError('must not download')):
+            life.check_updates('dsh-demo')
+        self.assertEqual('https://registry.npmjs.org/dsh-demo/latest', get.call_args.args[0])
+        state = self.manager.read_json(self.home / 'plugin-updates.json')['dsh-demo']
+        self.assertFalse(state['available'])
+        self.assertNotIn('previewId', state)
+        self.assertFalse((self.home / 'plugin-previews').exists())
+
+    def test_release_metadata_discovers_update_without_fetching_asset(self):
+        self.install_sample('https://github.com/o/repo/releases/download/v1.0.0/demo.zip')
+        release = {'tag_name': 'v2.0.0', 'assets': [{'name': 'demo.zip',
+            'browser_download_url': 'https://github.com/o/repo/releases/download/v2.0.0/demo.zip', 'digest': 'sha256:' + 'b' * 64}]}
+        with patch.object(self.manager, 'open_url', return_value=io.BytesIO(json.dumps(release).encode())) as get, \
+                patch.object(self.manager, 'download', side_effect=AssertionError('must not download')):
+            self.manager.lifecycle().check_updates('dsh-demo')
+        self.assertTrue(get.call_args.args[0].endswith('/releases/latest'))
+        state = self.manager.read_json(self.home / 'plugin-updates.json')['dsh-demo']
+        self.assertTrue(state['available'])
+        self.assertEqual('b' * 64, state['request']['sha256'])
+
+    def test_fixed_archive_reports_limitation_without_download(self):
+        self.install_sample('https://example.org/demo.zip')
+        with patch.object(self.manager, 'open_url', side_effect=AssertionError('no metadata endpoint')):
+            self.manager.lifecycle().check_updates('dsh-demo')
+        state = self.manager.read_json(self.home / 'plugin-updates.json')['dsh-demo']
+        self.assertFalse(state['available'])
+        self.assertIn('固定归档', state['message'])
+
+    def test_cancel_during_download_removes_preview_and_preserves_installed_data(self):
+        self.install_sample()
+        cancel = self.task()
+        before = (self.home / 'plugin-src/dsh-demo/package.json').read_bytes()
+        class Response(io.BytesIO):
+            headers = {'Content-Length': '20'}
+            def read(inner, count=-1):
+                cancel.touch()
+                return super().read(count)
+        with patch.object(self.manager, 'open_url', return_value=Response(b'abcdefghij' * 2)):
+            with self.assertRaises(self.manager.PluginCancelled):
+                self.manager.lifecycle().inspect({'command': 'download https://example.org/demo.zip'}, False)
+        self.assertEqual(before, (self.home / 'plugin-src/dsh-demo/package.json').read_bytes())
+        self.assertEqual([], list((self.home / 'plugin-previews').iterdir()))
+        self.assertFalse(list(self.home.glob('plugin-download-*')))
+
+    def test_cancel_before_commit_keeps_old_version_and_manifest(self):
+        self.install_sample()
+        cancel = self.task()
+        old = self.manager.builtin.read_manifest()
+        incoming = self.package(self.root / 'new', version='2.0.0')
+        copytree = self.manager.shutil.copytree
+        def copied(*args, **kwargs):
+            value = copytree(*args, **kwargs)
+            cancel.touch()
+            return value
+        with patch.object(self.manager.shutil, 'copytree', side_effect=copied):
+            with self.assertRaises(self.manager.PluginCancelled): self.manager.register_plugin(incoming, '')
+        self.assertEqual(old, self.manager.builtin.read_manifest())
+        self.assertEqual('1.0.0', self.manager.read_json(self.home / 'plugin-src/dsh-demo/package.json')['version'])
+        self.assertFalse(list((self.home / 'plugin-src').glob('.install-*')))
+
+    def test_cancel_arriving_in_commit_finishes_consistent_transaction(self):
+        self.install_sample()
+        cancel = self.task()
+        incoming = self.package(self.root / 'new', version='2.0.0')
+        write = self.manager.builtin.write_manifest
+        def committed(doc):
+            cancel.touch()
+            return write(doc)
+        with patch.object(self.manager.builtin, 'write_manifest', side_effect=committed):
+            self.manager.register_plugin(incoming, 'npm:dsh-demo@2.0.0')
+        self.assertEqual('2.0.0', self.manager.read_json(self.home / 'plugin-src/dsh-demo/package.json')['version'])
+        self.assertEqual('1.0.0', self.manager.lifecycle().history_info('dsh-demo')['version'])
+        self.assertIn('dsh-demo', self.manager.builtin.read_manifest()['dependencies'])
+
+    def test_cancelling_owned_package_subprocess_cleans_child(self):
+        import threading
+        import time
+        import sys
+        cancel = self.task()
+        marker = self.root / 'unexpected-child-output'
+        timer = threading.Timer(.3, cancel.touch)
+        timer.start()
+        started = time.monotonic()
+        try:
+            with self.assertRaises(self.manager.PluginCancelled):
+                self.manager.run_package_command([sys.executable, '-c',
+                    'import time,pathlib;time.sleep(1.5);pathlib.Path(' + repr(str(marker)) + ').write_text("bad")'], str(self.root))
+            self.assertLess(time.monotonic() - started, 1.4)
+            time.sleep(1.5)
+            self.assertFalse(marker.exists())
+        finally:
+            timer.join()
 
 
 if __name__ == "__main__":

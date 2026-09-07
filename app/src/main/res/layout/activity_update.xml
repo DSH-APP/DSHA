@@ -1,21 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_pad">
-        <Button android:id="@+id/update_back" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="返回" />
-        <TextView style="@style/DshaText.Display" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="应用更新" />
-        <TextView android:id="@+id/update_current" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
-        <RadioGroup android:id="@+id/update_channels" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="horizontal">
-            <RadioButton android:id="@+id/update_stable" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp" android:text="稳定版" />
-            <RadioButton android:id="@+id/update_preview" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp" android:text="预览版" />
-        </RadioGroup>
-        <TextView android:id="@+id/update_status" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textIsSelectable="true" />
-        <ProgressBar android:id="@+id/update_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:max="100" android:layout_marginTop="12dp" android:visibility="gone" />
-        <TextView android:id="@+id/update_bytes" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <Button android:id="@+id/update_cancel" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="取消下载 / 检查" android:visibility="gone" />
-        <TextView android:id="@+id/update_notes" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textIsSelectable="true" />
-        <Button android:id="@+id/update_check" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="检查更新 / 重试" />
-        <Button android:id="@+id/update_download" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="下载更新 / 重试下载" />
-        <Button android:id="@+id/update_install" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="安装更新" />
-        <Button android:id="@+id/update_browser" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="在浏览器查看发布页" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <Button android:id="@+id/update_back" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="44dp" android:layout_height="wrap_content" android:text="‹" android:textSize="24sp" android:contentDescription="返回" />
+            <TextView style="@style/DshaText.PageTitle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="应用更新" />
+        </LinearLayout>
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="当前版本" />
+            <TextView android:id="@+id/update_current" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" />
+            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="更新通道" android:textStyle="bold" />
+            <RadioGroup android:id="@+id/update_channels" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                <RadioButton android:id="@+id/update_stable" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp" android:text="稳定版" android:textSize="15sp" />
+                <RadioButton android:id="@+id/update_preview" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp" android:text="预览版" android:textSize="15sp" />
+            </RadioGroup>
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="稳定版仅接收正式发布；预览版也包含测试版本。自动匹配当前设备。" />
+        </LinearLayout>
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="检查结果" android:textStyle="bold" />
+            <TextView android:id="@+id/update_status" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textIsSelectable="true" />
+            <ProgressBar android:id="@+id/update_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="6dp" android:max="100" android:layout_marginTop="12dp" android:visibility="gone" />
+            <TextView android:id="@+id/update_bytes" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" />
+            <Button android:id="@+id/update_download" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="下载更新" android:visibility="gone" />
+            <Button android:id="@+id/update_install" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="安装更新" android:visibility="gone" />
+            <Button android:id="@+id/update_check" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="检查更新" />
+            <Button android:id="@+id/update_cancel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="取消当前任务" android:visibility="gone" />
+        </LinearLayout>
+        <Button android:id="@+id/update_browser" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="在浏览器查看发布页" />
+        <LinearLayout android:id="@+id/update_release_panel" style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="版本说明" />
+            <TextView android:id="@+id/update_notes" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textIsSelectable="true" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

@@ -1,17 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/surface" android:fillViewport="true">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_pad">
-        <Button android:id="@+id/diagnostic_back" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="返回" />
-        <TextView style="@style/DshaText.Display" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="诊断与修复" />
-        <TextView android:id="@+id/diagnostic_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
-        <Button android:id="@+id/diagnostic_refresh" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="重新诊断" />
-        <Button android:id="@+id/diagnostic_repair" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="修复证书与 npm" />
-        <Button android:id="@+id/diagnostic_plugins" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="前往插件页使用备用文件选择器" />
-        <EditText android:id="@+id/diagnostic_steps" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="96dp" android:background="@drawable/bg_input" android:padding="12dp" android:gravity="top" android:inputType="textMultiLine" android:hint="补充复现步骤（请勿填写密钥或私人对话）" android:maxLength="2000" />
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="12dp">
-            <Button android:id="@+id/diagnostic_copy" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="复制反馈信息" />
-            <Button android:id="@+id/diagnostic_export" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="导出诊断报告" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <Button android:id="@+id/diagnostic_back" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="44dp" android:layout_height="wrap_content" android:text="‹" android:textSize="24sp" android:contentDescription="返回" />
+            <TextView style="@style/DshaText.PageTitle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="诊断与修复" />
         </LinearLayout>
-        <TextView android:id="@+id/diagnostic_report" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textIsSelectable="true" android:fontFamily="monospace" android:textSize="13sp" />
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="环境检查" />
+            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="检查运行环境、证书和插件状态。" />
+            <TextView android:id="@+id/diagnostic_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="12dp">
+                <Button android:id="@+id/diagnostic_refresh" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="重新诊断" />
+                <Button android:id="@+id/diagnostic_repair" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="修复工具" />
+            </LinearLayout>
+            <Button android:id="@+id/diagnostic_plugins" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="打开插件管理" />
+        </LinearLayout>
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="反馈问题" />
+            <EditText android:id="@+id/diagnostic_steps" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="80dp" android:layout_marginTop="12dp" android:background="@drawable/bg_input" android:padding="12dp" android:gravity="top" android:inputType="textMultiLine" android:hint="补充复现步骤，不要填写密钥或私人对话" android:maxLength="2000" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="12dp">
+                <Button android:id="@+id/diagnostic_copy" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="复制反馈" />
+                <Button android:id="@+id/diagnostic_export" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="导出报告" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="诊断报告" />
+            <TextView android:id="@+id/diagnostic_report" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textIsSelectable="true" android:fontFamily="monospace" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

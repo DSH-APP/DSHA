@@ -23,6 +23,13 @@ public final class WebPreviewPolicy {
         return baseUrl != null && baseUrl.equals(loopbackBaseUrl(candidate));
     }
 
+    /** 仅用于已验证为本机页面的下载回调；Blob 仍须属于相同源。 */
+    public static boolean pageDownload(String baseUrl, String candidate) {
+        if (baseUrl == null || candidate == null) return false;
+        return sameService(baseUrl,candidate) || candidate.startsWith("blob:") && sameService(baseUrl,candidate.substring(5))
+                || candidate.startsWith("data:");
+    }
+
     /** 电脑模式只改变平台标识，保留真实 Chrome 版本，避免伪装新内核。 */
     public static String desktopUserAgent(String userAgent) {
         if (userAgent == null) return "";

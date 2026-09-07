@@ -22,6 +22,21 @@
 
 ---
 
+## v1.2.0-rc1.4 — usability and reliability preview
+
+This is a **Pre-release**, maintained by contributor [@ym2025szz](https://github.com/ym2025szz), with thanks to original author [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) and the other contributors.
+
+This preview improves installation checks and live output, backup/restore, command timeouts and terminal cleanup, background downloads, plugin tasks, update state, and both embedded browser engines. Native pages use a moderately compact layout, a fixed configuration save button, and the existing toolbar day/night toggle. Display and runtime options explain their purpose and when changes take effect.
+
+- **Standard:** Android 11+ / arm64, system WebView, **212.87 MiB**. [APK](https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1.4/dsha-1.2.0-rc1.4.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1.4/dsha-1.2.0-rc1.4.apk.sha256).
+- **Compatibility:** Android 6+ / arm64, bundled Gecko fallback, **289.69 MiB**. [APK](https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1.4/dsha-1.2.0-rc1.4low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1.4/dsha-1.2.0-rc1.4low.apk.sha256).
+
+Version code **113**, the historical APK certificate, environment version **9**, and dsh **0.1.2-rc.1** are retained. Same-signature upgrades preserve the environment. Both variants share application data and cannot coexist.
+
+On Android 13, the six-step check took about **1.9 seconds**; actual DeepSeek responses, in-app wireless ADB, backups, process cleanup, and both browser engines were verified. Builds, signing and related tests pass. Other Android versions, real 16 KB kernels and vendor background behavior still have coverage limits.
+
+[GitHub release](https://github.com/DSH-APP/DSHA/releases/tag/v1.2.0-rc1.4) · [Release notes](docs/releases/v1.2.0-rc1.4.md) · [Verification and limitations](docs/functional-audit-rc1.4.md)
+
 ## v1.2.0-rc1.2 preview — Android standard / compatibility builds
 
 Maintained and published by contributor [@ym2025szz](https://github.com/ym2025szz), continuing the 1.2 refactor of [@qiannianhuanxiang](https://github.com/qiannianhuanxiang)'s project. This is a **pre-release**.

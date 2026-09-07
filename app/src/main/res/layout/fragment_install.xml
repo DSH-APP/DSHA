@@ -4,18 +4,19 @@
     android:fillViewport="true" android:background="@color/surface">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="vertical" android:padding="@dimen/page_pad">
-        <TextView android:id="@+id/sub_back" style="@style/PluginAction"
-            android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="‹ 返回设置" />
-        <TextView style="@style/DshaText.Title" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_control"
-            android:text="安装模块" />
         <TextView android:id="@+id/install_status" style="@style/DshaText.Label"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/gap_tight" />
         <Button android:id="@+id/install_btn" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:minHeight="48dp"
             android:layout_marginTop="@dimen/gap_control" android:background="@drawable/bg_btn_primary"
-            android:textColor="@color/accent_on" android:text="一键检查与修复" />
+            android:textColor="@color/button_primary_text" android:text="仅检查环境" />
+        <Button android:id="@+id/install_repair" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight"
+            android:background="@drawable/bg_btn" android:text="检查并按需修复" />
+        <Button android:id="@+id/install_cancel" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight"
+            android:background="@drawable/bg_btn" android:text="取消检查" android:visibility="gone" />
         <ProgressBar android:id="@+id/install_progressbar" style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent" android:layout_height="@dimen/progress_bold"
             android:layout_marginTop="@dimen/gap_control" android:indeterminateTint="@color/primary"
@@ -51,14 +52,24 @@
             android:textIsSelectable="true" android:visibility="gone" />
         <Button android:id="@+id/install_copy" android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight"
-            android:background="@drawable/bg_btn" android:text="复制报错内容" android:visibility="gone" />
+            android:background="@drawable/bg_btn" android:text="复制脱敏日志" android:visibility="gone" />
+        <TextView style="@style/DshaText.Label" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_control"
+            android:text="详细输出" />
+        <ScrollView android:id="@+id/install_log_scroll" android:layout_width="match_parent"
+            android:layout_height="220dp" android:layout_marginTop="@dimen/gap_tight"
+            android:background="@drawable/bg_card" android:fillViewport="true">
+            <TextView android:id="@+id/install_log" style="@style/DshaText.Caption"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:padding="@dimen/card_pad" android:fontFamily="monospace" android:textIsSelectable="true" />
+        </ScrollView>
         <Button android:id="@+id/install_crash" android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:text="查看崩溃日志" android:visibility="gone" />
         <TextView style="@style/DshaText.Caption" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_block"
-            android:text="第 2 步会检查实际运行结果，缺少 curl / git 时通过软件源下载。其他步骤检查或修复内置组件；检查失败会保留详细输出，可复制后反馈。" />
+            android:text="仅检查不会安装组件。按需修复只处理失败项，curl / git 缺失时会联网下载。切页或旋转后任务继续，返回可查看进度和结果；修复期间的停止请求会等待安全点。" />
         <Button android:id="@+id/install_uninstall" android:layout_width="match_parent"
             android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_section"
-            android:background="@drawable/bg_btn_danger" android:text="清除环境" />
+            android:background="@drawable/bg_btn_danger" android:text="备份并重建环境" android:textColor="@color/button_danger_text" />
     </LinearLayout>
 </ScrollView>

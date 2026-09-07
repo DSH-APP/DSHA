@@ -120,3 +120,7 @@ DOM 元素，同时激活会互相打架（抽屉/浮层出两份、事件绑定
 - Ubuntu arm64 rootfs（`assets/offline-rootfs.bin`）：各软件包遵循各自许可
 - GeckoView（`libxul.so` 等）：MPL-2.0
 - `@deepseek-ai/dsh`：见其 npm 包内的许可声明
+
+## npm node-semver 7.8.1
+
+插件版本兼容性使用 [npm/node-semver](https://github.com/npm/node-semver) 7.8.1，遵循 ISC 许可。完整许可随 `app/src/main/assets/plugin-semver.cjs` 一并分发；生成方式见 `tools/vendor-plugin-semver.cjs`。

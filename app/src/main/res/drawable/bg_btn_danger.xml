@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 危险按钮（停止/清除/卸载）：实心告警色 + 按压涟漪 + 禁用变灰 -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#33FFFFFF">
+    android:color="@color/primary_ripple">
 
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">

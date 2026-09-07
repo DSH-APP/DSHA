@@ -33,6 +33,13 @@ public final class UpdatePolicy {
         return version != null && version.contains("-") ? PREVIEW : STABLE;
     }
 
+    /** 旧稳定包可由两种通道选中，不能用发布通道或当前偏好猜测查询来源。 */
+    public static String restoreCheckedChannel(boolean recorded, String checkedChannel, String releaseChannel) {
+        if (recorded) return STABLE.equals(checkedChannel) || PREVIEW.equals(checkedChannel) ? checkedChannel : null;
+        // 旧选择契约明确禁止稳定通道接收预览包，只有这一种旧来源可以确定。
+        return PREVIEW.equals(releaseChannel) ? PREVIEW : null;
+    }
+
     public static Release select(List<Release> releases, int currentCode, String flavor, int sdk, String channel) {
         if (!STABLE.equals(channel) && !PREVIEW.equals(channel)) throw new IllegalArgumentException("未知更新通道");
         Release best = null;
