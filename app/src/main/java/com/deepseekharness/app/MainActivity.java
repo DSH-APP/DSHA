@@ -853,10 +853,6 @@ public class MainActivity extends AppCompatActivity {
             boolean apkNewer = tag != null && !tag.equals(ignored)
                     && UpdateChecker.isNewer(tag, current);
             if (!apkNewer) {
-                // 应用本体已是最新 → 顺带看脚本层有没有小更新。
-                // 只拉几 KB 的清单做比对，**不下载**任何脚本：更新动作留给用户手动确认，
-                // 因为清单目前还没有签名，静默更新一条远程代码通道不合适。
-                maybeHintRuntimeUpdate();
                 return;
             }
             // 更新前自动存档：检测到新版先静默备份一次（同一版本只备份一次），
@@ -871,43 +867,6 @@ public class MainActivity extends AppCompatActivity {
                             .putString("ignored_version", tag).apply())
                     .show());
         }).start();
-    }
-
-    /** 脚本层有更新时温和提示一次，引导用户自己去配置页更新（不自动下载）。
-     *
-     *  纯手动的问题是用户根本想不起来去点；自动下载的问题是清单还没签名。
-     *  折中就是这里：自动**检查**（几 KB），提示一次，动作仍由用户发起。
-     *  同一批更新只提示一次 —— 用待更新文件名的指纹记住，别每次启动都烦人。 */
-    private void maybeHintRuntimeUpdate() {
-        try {
-            RuntimeUpdater.Result probe = RuntimeUpdater.checkAndApply(
-                    getApplicationContext(), HarnessController.get(this), true);
-            if (probe.updated <= 0) return;
-            StringBuilder key = new StringBuilder();
-            for (String f : probe.changed) {
-                key.append(f).append('|');
-            }
-            String fp = Integer.toHexString(key.toString().hashCode());
-            final android.content.SharedPreferences sp = getSharedPreferences(
-                    "deepseekharness", MODE_PRIVATE);
-            if (fp.equals(sp.getString("runtime_hint_fp", ""))) return;   // 这批已经提过
-            runOnUiThread(() -> {
-                if (isFinishing() || isDestroyed()) return;
-                new AlertDialog.Builder(this)
-                        .setTitle("有脚本更新可用")
-                        .setMessage(probe.updated + " 个脚本有新版本（合计通常只有几十 KB，"
-                                + "不用重下整个应用）。\n\n"
-                                + "到「配置」页点「检查脚本更新」即可查看具体改了哪些文件并更新。\n"
-                                + "不更新也能正常使用。")
-                        .setPositiveButton("知道了", (d, w) -> sp.edit()
-                                .putString("runtime_hint_fp", fp).apply())
-                        .setNegativeButton("不再提示这批", (d, w) -> sp.edit()
-                                .putString("runtime_hint_fp", fp).apply())
-                        .show();
-            });
-        } catch (Throwable e) {
-            android.util.Log.w("DSHA", "脚本更新检查失败（忽略）: " + e);
-        }
     }
 
     // ================= 备份提醒 =================

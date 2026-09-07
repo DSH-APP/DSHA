@@ -576,24 +576,6 @@
                 android:minHeight="@dimen/touch_min"
                 android:text="启动时检查新版本" />
 
-            <Button
-                android:id="@+id/config_runtime_update"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/btn_height"
-                android:layout_marginTop="@dimen/gap_tight"
-                android:background="@drawable/bg_btn"
-                android:textSize="@dimen/text_body"
-                android:text="🔄 检查脚本更新（几十 KB，不用重下整包）" />
-
-            <TextView
-                android:id="@+id/config_runtime_status"
-                style="@style/DshaText.Caption"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/gap_tight"
-                android:textColor="?attr/dshaTextSecondary"
-                android:text="" />
-
         </com.deepseekharness.app.GlassCard>
 
         <TextView

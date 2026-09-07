@@ -246,13 +246,8 @@ single-flight guard, and never lower `SCRIPT_VERSION` — old installs keep thei
   regenerates when the SDK dir is wiped, so a backup lives at
   `/workspace/DSHA-ACTUAL-PUBLISH-KEY-debug.keystore`. Key rotation (APK Signature Scheme v3)
   is a separate, unscheduled task; see `DSHA-签名现状与风险.md` in the workspace.
-- `DSHA-release.keystore` (alias `dsha`, RSA 4096, `ED:8A:AE:A2…`) is used **only** to sign
-  the incremental-update manifest (`tools/sign-runtime-manifest.sh`; the matching public key
-  ships as `assets/runtime-update-pubkey.pem`). Never export `DSHA_KEYSTORE` pointing at the
-  publish key *before* the manifest is signed — that script reads the env var first, and a
-  manifest signed with the wrong key makes every client reject the whole update batch. It now
-  restores the previous `.sig` when self-verification fails, so a bad signature can't slip
-  into a commit.
+- `DSHA-release.keystore` is no longer part of the APK build or runtime update path; scripts are
+  bundled in APK `assets` and released together with Java and the offline rootfs.
 - `release.yml` **fails** when the APK fingerprint doesn't match the publish key. Shipping a
   package users cannot install is worse than a failed release. (It used to warn only — and it
   had the wrong expected fingerprint, so it warned on every single build and nobody looked.)

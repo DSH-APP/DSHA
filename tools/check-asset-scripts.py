@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""assets 里的脚本层「能不能跑起来」的静态检查。
+"""assets 里的脚本「能不能跑起来」的静态检查。
 
-为什么必须有：assets 下的 .py/.sh/.js 是我们唯一的**远程代码通道**
-（runtime-manifest.json 增量更新会把它们推给所有已安装用户），而它们
-不经过 gradle 编译、也没有任何测试。一个正则写错就能让整个功能哑火：
+为什么必须有：assets 下的 .py/.sh/.js 是 APK 内置的离线脚本，
+随 Java 与离线 rootfs 一起发布，不经过 gradle 编译，也没有 Android 运行时测试。
 
   2026-08-25 实例：selftest.py 里
       PENDING_RE = re.compile(r"([\\w@/.-]+):\\s*pending \\\\(waiting for service")
@@ -110,8 +109,7 @@ def main():
         for p in problems:
             print("  ✗ %s" % p)
         print("")
-        print("共 %d 个问题。这些文件会通过 runtime 增量更新推给所有用户，"
-              "坏的不能发。" % len(problems))
+        print("共 %d 个问题。资产脚本随 APK 离线发布，坏的不能发。" % len(problems))
         return 1
     print("全部通过。")
     return 0

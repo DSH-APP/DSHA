@@ -93,6 +93,12 @@ final class GlassDrawable extends Drawable {
         invalidateSelf();
     }
 
+    void setGlassStroke(int color, float width) {
+        strokePaint.setColor(color);
+        strokePaint.setStrokeWidth(width);
+        invalidateSelf();
+    }
+
     @Override
     public void draw(Canvas canvas) {
         Rect b = getBounds();

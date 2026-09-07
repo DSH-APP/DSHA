@@ -165,8 +165,7 @@ public class ConfigFragment extends Fragment {
         Button batteryBtn = view.findViewById(R.id.config_battery_opt);
         if (batteryBtn != null) {
             refreshBatteryOptState(view);
-        bindA11yEntry(view);
-        bindRuntimeUpdate(view);
+            bindA11yEntry(view);
             batteryBtn.setOnClickListener(v -> requestIgnoreBatteryOpt());
         }
         Button adbPairBtn = view.findViewById(R.id.config_adb_pair);
@@ -316,62 +315,6 @@ public class ConfigFragment extends Fragment {
             }
         }
     }
-
-    /** 脚本层增量更新：先 dry-run 把「会改哪些文件」摊给用户看，确认后才下载。
-     *
-     *  为什么不做自动静默更新：这是一条远程代码通道，而清单目前还没有签名 ——
-     *  仓库万一被攻破，带正确 sha256 的恶意脚本一样能通过校验。手动触发 +
-     *  展示变更清单 + 只动脚本，这三条约束是签名做好之前的替代品。 */
-    private void bindRuntimeUpdate(View view) {
-        Button btn = view == null ? null : view.findViewById(R.id.config_runtime_update);
-        if (btn == null) return;
-        btn.setOnClickListener(v -> {
-            DshaSnack.show(ConfigFragment.this, "正在检查脚本更新…");
-            final android.content.Context appCtx = requireContext().getApplicationContext();
-            new Thread(() -> {
-                RuntimeUpdater.Result probe =
-                        RuntimeUpdater.checkAndApply(appCtx, c, true);   // dryRun
-                // 探测要联网，回来时用户可能已经离开配置页。requireActivity() /
-                // requireContext() 这时都会抛 IllegalStateException。
-                android.app.Activity act = getActivity();
-                if (act == null || !isAdded()) return;
-                act.runOnUiThread(() -> {
-                    if (probe.updated == 0) {
-                        Toast.makeText(appCtx, probe.message, Toast.LENGTH_LONG).show();
-                        refreshRuntimeStatus();
-                        return;
-                    }
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(probe.message).append("\n\n将更新：\n");
-                    int n = 0;
-                    for (String f : probe.changed) {
-                        if (n++ >= 12) {
-                            sb.append("  … 还有 ").append(probe.changed.size() - 12).append(" 个\n");
-                            break;
-                        }
-                        sb.append("  ").append(f).append('\n');
-                    }
-                    sb.append("\n只更新脚本，不动 rootfs 与应用本体；");
-                    sb.append("每个文件都会校验 sha256，不符就保留原版本。");
-                    // 弹窗必须用 Activity context；这一刻拿不到就退回 Toast，
-                    // 不能让「有更新」这件事被静默吞掉。
-                    android.app.Activity a2 = getActivity();
-                    if (a2 == null || a2.isFinishing() || !isAdded()) {
-                        Toast.makeText(appCtx, probe.message, Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                    new androidx.appcompat.app.AlertDialog.Builder(a2)
-                            .setTitle("脚本更新")
-                            .setMessage(sb.toString())
-                            .setPositiveButton("下载并应用", (d, w) -> doRuntimeUpdate(appCtx))
-                            .setNegativeButton("取消", null)
-                            .show();
-                });
-            }, "dsha-runtime-probe").start();
-        });
-    }
-
-
 
     /** 外观选择。选完立刻 recreate —— 已经创建的窗口不会自己换主题，
      *  而颜色槽是主题属性，只有重建才会重新解析。
@@ -830,77 +773,6 @@ public class ConfigFragment extends Fragment {
         return Math.round(v * getResources().getDisplayMetrics().density);
     }
 
-    private void doRuntimeUpdate(final android.content.Context appCtx) {
-        DshaSnack.show(ConfigFragment.this, "下载中…");
-        new Thread(() -> {
-            RuntimeUpdater.Result r = RuntimeUpdater.checkAndApply(appCtx, c, false);
-            final String resultMessage = runtimeResultMessage(r);
-            // 这里是真正的下载，耗时更长，用户离开页面的概率更高。
-            android.app.Activity act = getActivity();
-            if (act == null || !isAdded()) {
-                // 结果不能悄悄丢掉：更新已经落盘了，至少让用户看到一次
-                new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
-                        Toast.makeText(appCtx, resultMessage, Toast.LENGTH_LONG).show());
-                return;
-            }
-            act.runOnUiThread(() -> {
-                android.app.Activity a2 = getActivity();
-                if (a2 == null || a2.isFinishing() || !isAdded()) {
-                    Toast.makeText(appCtx, resultMessage, Toast.LENGTH_LONG).show();
-                    return;
-                }
-                new androidx.appcompat.app.AlertDialog.Builder(a2)
-                        .setTitle(r.ok ? "更新完成" : "部分失败")
-                        .setMessage(resultMessage)
-                        .setPositiveButton("知道了", null)
-                        .show();
-                refreshRuntimeStatus();
-            });
-        }, "dsha-runtime-apply").start();
-    }
-
-    private static String runtimeResultMessage(RuntimeUpdater.Result r) {
-        if (r == null || r.failedFiles.isEmpty()) return r == null ? "更新失败" : r.message;
-        StringBuilder details = new StringBuilder(r.message).append("\n\n失败文件：\n");
-        int n = 0;
-        for (String f : r.failedFiles) {
-            if (n++ >= 12) {
-                details.append("  … 还有 ").append(r.failedFiles.size() - 12).append(" 个\n");
-                break;
-            }
-            details.append("  ").append(f).append('\n');
-        }
-        return details.toString().trim();
-    }
-
-    private void refreshRuntimeStatus() {
-        View v = getView();
-        TextView tv = v == null ? null : v.findViewById(R.id.config_runtime_status);
-        if (tv == null) return;
-        int n = RuntimeUpdater.overlayCount(requireContext());
-        if (n <= 0) {
-            tv.setTextColor(requireContext().getColor(R.color.text_secondary));
-            tv.setText("○ 正在用应用内置的脚本版本");
-            tv.setOnClickListener(null);
-            return;
-        }
-        tv.setTextColor(requireContext().getColor(R.color.ok));
-        tv.setText("● 已用更新覆盖 " + n + " 个脚本（点这行可恢复内置版本）");
-        tv.setOnClickListener(x -> new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("恢复内置脚本")
-                .setMessage("删掉下载的覆盖文件，回到应用自带的版本。"
-                        + "更新后出现异常时用这个退回。")
-                .setPositiveButton("恢复", (d, w) -> {
-                    boolean ok = RuntimeUpdater.resetOverlay(requireContext());
-                    Toast.makeText(requireContext(),
-                            ok ? "已恢复内置版本，重启 Web 生效" : "恢复失败，请重启 App 再试",
-                            Toast.LENGTH_LONG).show();
-                    refreshRuntimeStatus();
-                })
-                .setNegativeButton("取消", null)
-                .show());
-    }
-
     /** 「屏幕操作权限」= 无障碍服务。它是免 ADB / 免 Shizuku 操作手机的唯一现实路径：
      *  绝大多数用户既没开无线调试也没装 Shizuku，而无障碍一次授权就长期可用。 */
     private void bindA11yEntry(View view) {
@@ -987,7 +859,6 @@ public class ConfigFragment extends Fragment {
         refreshBatteryOptState(getView());
         showGuardStatus(); // 上次启动 Web 时补丁可能已失配，切回本页就刷新
         refreshA11yStatus(); // 用户可能刚从系统设置里开/关了无障碍
-        refreshRuntimeStatus();
         // 回到配置页顺手催一次 ADB 探测：用户往往就是来看连上没有的
         DeviceBridgeService.kickNow(requireContext(), "打开配置页");
     }

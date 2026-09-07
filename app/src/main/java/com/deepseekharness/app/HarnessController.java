@@ -3376,17 +3376,8 @@ public class HarnessController {
     }
 
     public String readAsset(String name) {
-        // 增量更新的覆盖层优先：脚本层的修复（几 KB）不必等下一个 384MB 的 APK。
-        // 覆盖层为空或读失败就回落到 APK 内置版本 —— 删掉覆盖文件即回退。
-        try {
-            java.io.File over = RuntimeUpdater.overlayFile(appContext, name);
-            if (over.isFile() && over.length() > 0) {
-                byte[] b = java.nio.file.Files.readAllBytes(over.toPath());
-                return new String(b, StandardCharsets.UTF_8);
-            }
-        } catch (Throwable e) {
-            android.util.Log.w("DSHA", "读覆盖层脚本失败，回落内置版本: " + name + " " + e);
-        }
+        // 脚本与 APK、Java、rootfs 一起发布，始终从同一个离线包读取。
+        // 脚本始终来自 APK 内置 assets；旧版本留下的私有覆盖文件不再读取。
         try (BufferedReader r = new BufferedReader(new InputStreamReader(
                 appContext.getAssets().open(name), StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
@@ -3458,12 +3449,7 @@ public class HarnessController {
                 + "echo RESTORED_WEB_AUTH; fi; fi; done";
         String out = proot.execAndRead(probe);
         if (out == null || !out.contains("UPSTREAM_WEB_AUTH")) return;
-        File overlay = RuntimeUpdater.overlayFile(appContext, "webserver-auth-patch.sh");
-        if (overlay.isFile() && !overlay.delete()) {
-            android.util.Log.w("DSHA", "无法删除旧 webserver-auth 热更新覆盖层: " + overlay);
-        } else if (!overlay.isFile()) {
-            android.util.Log.i("DSHA", "dsh 已有原生 BrowserAuth，未使用旧 webserver-auth 覆盖层");
-        }
+        android.util.Log.i("DSHA", "dsh 已有原生 BrowserAuth，脚本统一使用 APK 内置版本");
         if (out.contains("RESTORED_WEB_AUTH")) {
             logActivity("检测到 dsh 原生 BrowserAuth，已撤销旧版 Web 鉴权补丁");
         }

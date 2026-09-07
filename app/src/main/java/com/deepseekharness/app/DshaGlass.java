@@ -216,8 +216,87 @@ final class DshaGlass {
     private static android.graphics.Bitmap sBackdrop;
     private static int sBackdropW;
     private static int sBackdropH;
-    /** 已经铺了玻璃背景的 View → 它的 drawable，用来在 preDraw 时刷新位置。弱引用避免泄漏。 */
+    /** 已经铺了玻璃背景的 View -> 它的 drawable，用来在 preDraw 时刷新位置。弱引用避免泄漏。 */
     private static final java.util.WeakHashMap<View, GlassDrawable> LIVE = new java.util.WeakHashMap<>();
+    /** apply 过的根视图。底图异步完成时要重新套到尚未出现在 decor 树里的页面。 */
+    private static final java.util.WeakHashMap<View, Boolean> ROOTS = new java.util.WeakHashMap<>();
+    /** 尚未 attach 的根视图只挂一次回调，避免 ViewPager2 建页时重复登记。 */
+    private static final java.util.WeakHashMap<View, Boolean> ATTACH_HOOKS = new java.util.WeakHashMap<>();
+    /** 每个 View 的原始背景与当前玻璃实例。避免重复 apply 时反复替换 RippleDrawable 内容层。 */
+    private static final java.util.WeakHashMap<View, GlassState> MANAGED =
+            new java.util.WeakHashMap<>();
+
+    private static final class GlassState {
+        final Drawable source;
+        final Drawable sourceContent;
+        final float sourceCorner;
+        final float sourceOriginalCorner;
+        final int sourceAlpha;
+        final boolean ripple;
+        GlassDrawable glass;
+        boolean installed;
+
+        GlassState(Drawable source, View view) {
+            this.source = source;
+            this.ripple = source instanceof android.graphics.drawable.RippleDrawable;
+            if (ripple) {
+                android.graphics.drawable.RippleDrawable rd =
+                        (android.graphics.drawable.RippleDrawable) source;
+                sourceContent = rd.getNumberOfLayers() > 0 ? rd.getDrawable(0) : null;
+            } else {
+                sourceContent = null;
+            }
+            sourceCorner = readCorner(source, view);
+            sourceOriginalCorner = readOriginalCorner(source);
+            sourceAlpha = source.getAlpha();
+        }
+    }
+
+    /** 记住一个 apply 入口；底图在后台生成后，尚未进入 decor 树的页面也要被重新应用。 */
+    private static void rememberRoot(View root) {
+        ROOTS.put(root, Boolean.TRUE);
+        if (root.getWindowToken() != null || ATTACH_HOOKS.containsKey(root)) return;
+        ATTACH_HOOKS.put(root, Boolean.TRUE);
+        root.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                v.removeOnAttachStateChangeListener(this);
+                ATTACH_HOOKS.remove(v);
+                apply(v);
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+            }
+        });
+    }
+
+    /** 在主线程统一刷新所有登记过的根视图。 */
+    private static void applyKnownRoots() {
+        java.util.ArrayList<View> roots = new java.util.ArrayList<>(ROOTS.size() + 4);
+        try {
+            roots.addAll(ROOTS.keySet());
+        } catch (Throwable ignored) {
+            return;
+        }
+        for (int i = 0; i < roots.size(); i++) {
+            View root = roots.get(i);
+            if (root != null && root.getWindowToken() != null && !hasKnownAncestor(root)) apply(root);
+        }
+        roots.clear();
+    }
+
+    /** decor、Fragment 根和 RecyclerView item 可能同时登记；有祖先已登记时跳过子树，
+     *  但 detached 的页面没有登记祖先，仍会被单独刷新。 */
+    private static boolean hasKnownAncestor(View view) {
+        android.view.ViewParent p = view.getParent();
+        int guard = 0;
+        while (p instanceof View && guard++ < 64) {
+            if (ROOTS.containsKey((View) p)) return true;
+            p = p.getParent();
+        }
+        return false;
+    }
 
     /** preDraw 回调里复用的两个缓冲。只在主线程用，不需要同步。 */
     private static final java.util.ArrayList<View> sPreDrawBuf = new java.util.ArrayList<>(32);
@@ -228,26 +307,57 @@ final class DshaGlass {
     /** 准备共用底图。没有自定义背景图时返回 false —— 那种情况下退回原来的 setAlpha 路子，
      *  因为主题底衬本身就是纯色或渐变，糊它没有意义。 */
     private static volatile boolean sBackdropLoading = false;
+    private static String sBackdropKey = "";
+    private static String sBackdropFailedKey = "";
+
+    private static int backdropWidth(Context ctx) {
+        return Math.max(1, ctx.getResources().getDisplayMetrics().widthPixels);
+    }
+
+    private static int backdropHeight(Context ctx) {
+        return Math.max(1, ctx.getResources().getDisplayMetrics().heightPixels);
+    }
+
+    private static String backdropKey(Context ctx, int w, int h) {
+        try {
+            java.io.File f = DshaBackground.file(ctx);
+            if (!f.isFile() || f.length() <= 0) return "";
+            return f.length() + ":" + f.lastModified() + ":" + w + ":" + h
+                    + ":" + radius(ctx);
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    private static boolean isBackdropReady(View root) {
+        if (root == null || sBackdrop == null || sBackdrop.isRecycled()) return false;
+        int w = backdropWidth(root.getContext());
+        int h = backdropHeight(root.getContext());
+        return sBackdropW == w && sBackdropH == h
+                && !sBackdropKey.isEmpty()
+                && sBackdropKey.equals(backdropKey(root.getContext(), w, h));
+    }
 
     private static boolean ensureBackdrop(View root) {
         try {
             if (!DshaBackground.exists(root.getContext())) return false;
-            final int w = root.getWidth() > 0 ? root.getWidth()
-                    : root.getResources().getDisplayMetrics().widthPixels;
-            final int h = root.getHeight() > 0 ? root.getHeight()
-                    : root.getResources().getDisplayMetrics().heightPixels;
-            if (sBackdrop != null && !sBackdrop.isRecycled() && sBackdropW == w && sBackdropH == h) {
-                return true;
-            }
-            // **底图在后台线程生成。**即便降采样之后，解码 + 缩放 + 裁剪 + 三次 box blur
-            // 也是几十到上百毫秒的活，放在主线程就是一个必然掉的长帧
-            // （gfxinfo 里 99 分位那几百毫秒的帧）。
-            // 这一帧先返回 false —— 元素退回单纯的半透明，等底图好了再 apply 一遍换成玻璃。
-            // 只在首次和换图/换尺寸时会看到这一次跳变。
+            final int w = backdropWidth(root.getContext());
+            final int h = backdropHeight(root.getContext());
+            final String key = backdropKey(root.getContext(), w, h);
+            if (isBackdropReady(root)) return true;
+            // 玻璃图是按屏幕尺寸生成的；如果只是参数或背景发生变化，先继续使用旧图，
+            // 直到新图完成，避免页面在「GlassDrawable / 普通 alpha」之间闪回。
+            boolean usableOld = sBackdrop != null && !sBackdrop.isRecycled()
+                    && sBackdropW == w && sBackdropH == h;
+            if (key.equals(sBackdropFailedKey)) return usableOld;
+            // **底图在后台线程生成。**即便降采样之后，解码 + 缩放 + 三次 box blur
+            // 也是几十到上百毫秒的活，放在主线程就是一个必然掉的长帧。
+            // 生成期间保留旧页面的当前状态；生成完成后统一刷新已登记的根视图，
+            // 不让先创建的页面停在半透明、后创建的页面已经是玻璃。
             if (!sBackdropLoading) {
                 sBackdropLoading = true;
+                final String loadingKey = key;
                 final Context appCtx = root.getContext().getApplicationContext();
-                final View r = root;
                 Thread t = new Thread(() -> {
                     android.graphics.Bitmap bm = null;
                     try {
@@ -255,27 +365,41 @@ final class DshaGlass {
                     } catch (Throwable ignored) {
                     }
                     final android.graphics.Bitmap result = bm;
-                    r.post(() -> {
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                         sBackdropLoading = false;
-                        if (result == null) return;
+                        // 用户可能在后台生成期间换图、清图或旋转屏幕；不能把旧结果
+                        // 绑定到新状态。下一次 apply 会按新的 key 重新生成。
+                        if (result == null) {
+                            sBackdropFailedKey = loadingKey;
+                            applyKnownRoots();
+                            return;
+                        }
+                        if (!loadingKey.equals(backdropKey(appCtx, w, h))) {
+                            applyKnownRoots();
+                            return;
+                        }
+                        sBackdropFailedKey = "";
                         // 换掉旧底图之前先解引用。不能直接 recycle —— 已有的 GlassDrawable
                         // 还拿着它画，recycle 掉会当场 "Canvas: trying to use a recycled bitmap"。
                         android.graphics.Bitmap old = sBackdrop;
                         sBackdrop = result;
                         sBackdropW = w;
                         sBackdropH = h;
+                        sBackdropKey = loadingKey;
                         if (old != null && old != result) {
                             for (GlassDrawable gd : snapshotLive()) {
                                 if (gd != null) gd.setBackdrop(result);
                             }
                         }
-                        apply(r);
+                        // 关键：FragmentStateAdapter 的新页面可能尚未挂进 decorView，
+                        // 因此不能只 apply 最初触发加载的 root。
+                        applyKnownRoots();
                     });
                 }, "dsha-backdrop");
                 t.setPriority(Thread.MIN_PRIORITY);
                 t.start();
             }
-            return false;
+            return usableOld;
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "玻璃底图准备失败（退回半透明）: " + t);
             return false;
@@ -336,20 +460,70 @@ final class DshaGlass {
         });
     }
 
-    /** 把一个 shape 背景换成玻璃背景。
-     *
-     *  @return true 表示换成功了（调用方就不用再走 setAlpha）。 */
-    private static boolean applyGlassBg(View v, Drawable bg, int alpha255, int cornerPx) {
-        if (sBackdrop == null || sBackdrop.isRecycled()) return false;
-        // **纯色底衬不参与元素级玻璃。**
-        // ColorDrawable 是「整片底衬」（activity_main 的根 FrameLayout、各 Fragment 的根
-        // ScrollView 都是 ?attr/dshaSurface）。给它铺一张糊过的底图，等于在整屏垫一层雾 ——
-        // 而且那层雾的浓度受「模糊强度」控制，用户以为那是卡片的参数，于是出现
-        // 「背景模糊明明是 0%，背景却还是糊的」。
-        // 可读性该由卡片解决（文字下面有卡片、卡片之外露出清晰背景），不该用全屏蒙层绕过。
-        if (bg instanceof android.graphics.drawable.ColorDrawable) return false;
+    /** 当前背景是否仍由我们管理。外部重新 setBackground 后要丢弃旧状态，避免把新背景误当成旧 Ripple。 */
+    private static boolean owns(GlassState state, Drawable current) {
+        if (current == state.source) {
+            if (!state.installed) return true;
+            if (!state.ripple) return false;
+            android.graphics.drawable.RippleDrawable rd =
+                    (android.graphics.drawable.RippleDrawable) state.source;
+            return rd.getNumberOfLayers() > 0 && rd.getDrawable(0) == state.glass;
+        }
+        return state.installed && current == state.glass;
+    }
+
+    /** 取得或创建一个 View 的背景状态。玻璃 Drawable 自己不是 shape，不能再拿它当原背景。 */
+    private static GlassState stateFor(View v, Drawable current) {
+        GlassState state = MANAGED.get(v);
+        if (state != null) {
+            if (owns(state, current)) return state;
+            // View 被外部换了背景时不能把外部背景覆盖回来，但仍要把我们曾经
+            // 改过的原 Ripple 内容、alpha 和圆角恢复，避免污染下一次使用。
+            restoreSource(state);
+            MANAGED.remove(v);
+            LIVE.remove(v);
+        }
+        if (current == null || current instanceof GlassDrawable || !isShapeLike(current)) return null;
+        state = new GlassState(current, v);
+        MANAGED.put(v, state);
+        return state;
+    }
+
+    /** 恢复原背景对象内部被 fallback 改过的属性，但不改变 View 当前指向的对象。 */
+    private static void restoreSource(GlassState state) {
+        if (state == null) return;
+        if (state.ripple) {
+            android.graphics.drawable.RippleDrawable rd =
+                    (android.graphics.drawable.RippleDrawable) state.source.mutate();
+            if (rd.getNumberOfLayers() > 0) rd.setDrawable(0, state.sourceContent);
+        }
+        state.source.setAlpha(state.sourceAlpha);
+        if (state.sourceOriginalCorner >= 0) {
+            applyCorner(state.source, Math.round(state.sourceOriginalCorner));
+        }
+    }
+
+    /** 从 View 中卸下玻璃，恢复最初的背景对象和 Ripple 内容层。 */
+    private static void restoreGlass(View v, GlassState state) {
+        if (state == null) return;
+        restoreSource(state);
+        if (state.installed && v.getBackground() != state.source) {
+            v.setBackground(state.source);
+        }
+        state.installed = false;
+        LIVE.remove(v);
+    }
+
+    /** 把一个 shape 背景换成玻璃背景；已安装时只更新同一个实例的参数。 */
+    private static boolean applyGlassBg(View v, GlassState state, int alpha255, int cornerPx) {
+        if (state == null || sBackdrop == null || sBackdrop.isRecycled()) return false;
+        // 纯色底衬不参与元素级玻璃，保持为普通背景并由调用方控制 alpha。
+        if (state.source instanceof android.graphics.drawable.ColorDrawable) return false;
         try {
-            float corner = cornerPx >= 0 ? cornerPx : readCorner(bg, v);
+            // 生成期间 fallback 可能改过 source 的 alpha；安装同一份玻璃前先恢复原层，
+            // 否则 Ripple/Gradient 的 alpha 会与 GlassDrawable 的 tint 叠乘。
+            restoreSource(state);
+            float corner = cornerPx >= 0 ? cornerPx : state.sourceCorner;
             int base = overlayColor(v.getContext(), 1f);
             int tint = android.graphics.Color.argb(alpha255,
                     android.graphics.Color.red(base),
@@ -358,25 +532,32 @@ final class DshaGlass {
             int line = stroke(v.getContext())
                     ? resolveColor(v.getContext(), R.attr.dshaLine, 0x33FFFFFF) : 0;
             float sw = v.getResources().getDimension(R.dimen.stroke);
-            GlassDrawable gd = new GlassDrawable(sBackdrop, tint, line, corner, sw);
-
-            if (bg instanceof android.graphics.drawable.RippleDrawable) {
-                // 只换内容层，保住涟漪 —— 整个换掉的话可点击元素点下去毫无反馈。
-                android.graphics.drawable.RippleDrawable rd =
-                        (android.graphics.drawable.RippleDrawable) bg.mutate();
-                if (rd.getNumberOfLayers() > 0) {
-                    rd.setDrawable(0, gd);
-                    v.setBackground(rd);
-                } else {
-                    v.setBackground(gd);
-                }
+            if (state.glass == null) {
+                state.glass = new GlassDrawable(sBackdrop, tint, line, corner, sw);
             } else {
-                v.setBackground(gd);
+                // 这些 setter 都是幂等的；重复 apply 不会创建 Drawable 或替换 Ripple 层。
+                state.glass.setBackdrop(sBackdrop);
+                state.glass.setGlassTint(tint);
+                state.glass.setGlassStroke(line, sw);
+                state.glass.setCorner(corner);
             }
-            LIVE.put(v, gd);
-            int[] xy = new int[2];
-            v.getLocationInWindow(xy);
-            gd.setWindowOffset(xy[0], xy[1]);
+
+            if (state.ripple) {
+                android.graphics.drawable.RippleDrawable rd =
+                        (android.graphics.drawable.RippleDrawable) state.source.mutate();
+                if (rd.getNumberOfLayers() > 0) {
+                    if (rd.getDrawable(0) != state.glass) rd.setDrawable(0, state.glass);
+                    if (v.getBackground() != rd) v.setBackground(rd);
+                } else if (v.getBackground() != state.glass) {
+                    v.setBackground(state.glass);
+                }
+            } else if (v.getBackground() != state.glass) {
+                v.setBackground(state.glass);
+            }
+            state.installed = true;
+            LIVE.put(v, state.glass);
+            v.getLocationInWindow(sPreDrawXY);
+            state.glass.setWindowOffset(sPreDrawXY[0], sPreDrawXY[1]);
             return true;
         } catch (Throwable t) {
             return false;
@@ -401,6 +582,36 @@ final class DshaGlass {
         } catch (Throwable ignored) {
         }
         return v.getResources().getDimension(R.dimen.radius_card);
+    }
+
+    /** 读取原 Drawable 的真实圆角；没有明确圆角时返回 -1，不能用默认卡片圆角代替。 */
+    private static float readOriginalCorner(Drawable d) {
+        try {
+            if (d instanceof android.graphics.drawable.GradientDrawable) {
+                android.graphics.drawable.GradientDrawable g =
+                        (android.graphics.drawable.GradientDrawable) d;
+                float r = g.getCornerRadius();
+                if (r > 0) return r;
+                float[] rs = g.getCornerRadii();
+                if (rs != null) {
+                    float max = 0;
+                    for (int i = 0; i < rs.length; i++) max = Math.max(max, rs[i]);
+                    if (max > 0) return max;
+                }
+                return -1;
+            }
+            if (d instanceof android.graphics.drawable.LayerDrawable) {
+                android.graphics.drawable.LayerDrawable ld =
+                        (android.graphics.drawable.LayerDrawable) d;
+                float max = -1;
+                for (int i = 0; i < ld.getNumberOfLayers(); i++) {
+                    max = Math.max(max, readOriginalCorner(ld.getDrawable(i)));
+                }
+                return max;
+            }
+        } catch (Throwable ignored) {
+        }
+        return -1;
     }
 
     private static int resolveColor(Context ctx, int attr, int fallback) {
@@ -450,22 +661,22 @@ final class DshaGlass {
      *  <p>圆角和透明度分开判断：圆角是纯视觉偏好，玻璃关着也该生效；透明度只在玻璃开着时动。 */
     static void apply(View root) {
         if (root == null) return;
+        rememberRoot(root);
         try {
             boolean glass = enabled(root.getContext());
             int corner = cornerPx(root.getContext());
-            if (!glass && corner < 0) return;      // 两样都不用改，省一次全树遍历
-            // 用 overlayPct 而不是另一个"卡片透明度"：这两个分开之后，用户拖玻璃浓度时
-            // 只有能装 BlurView 的顶栏底栏和卡片在变，终端页、设置页、插件页那些普通容器
-            // 仍是 100% 不透明 —— 表现就是"大部分组件吃不到玻璃效果"。
-            // 通透度对用户来说是一个概念，就该由一个参数管。
+            // 即使两个设置都恢复默认，也要走一遍：这一步负责卸下此前安装的玻璃背景。
+            // 不能为了省遍历直接 return，否则用户关闭玻璃后旧 Drawable 会继续留着。
             int a255 = glass ? (int) (overlayPct(root.getContext()) / 100f * 255f) : 255;
-            // 有自定义背景图时走元素级玻璃（GlassDrawable）；没有就退回单纯的半透明。
-            if (glass && ensureBackdrop(root)) {
-                hookPreDraw(root);
-            } else {
+            boolean useBackdrop = glass && ensureBackdrop(root);
+            // 生成期间统一走普通背景，避免同一屏一部分是旧玻璃、一部分是半透明。
+            if (!useBackdrop) {
                 sBackdrop = null;
+                sBackdropKey = "";
+            } else {
+                hookPreDraw(root);
             }
-            walk(root, a255, corner);
+            walk(root, a255, corner, useBackdrop);
         } catch (Throwable t) {
             android.util.Log.w("DSHA", "卡片透明度应用失败（不影响功能）: " + t);
         }
@@ -475,7 +686,10 @@ final class DshaGlass {
     static void preview(View root, int pct) {
         if (root == null) return;
         try {
-            walk(root, (int) (clamp(pct, 20, 100) / 100f * 255f), cornerPx(root.getContext()));
+            boolean useBackdrop = enabled(root.getContext())
+                    && sBackdrop != null && !sBackdrop.isRecycled();
+            walk(root, (int) (clamp(pct, 20, 100) / 100f * 255f),
+                    cornerPx(root.getContext()), useBackdrop);
             root.invalidate();
         } catch (Throwable ignored) {
         }
@@ -487,7 +701,9 @@ final class DshaGlass {
         try {
             int px = (int) (clamp(dp, 0, 32) * root.getResources().getDisplayMetrics().density);
             boolean glass = enabled(root.getContext());
-            walk(root, glass ? (int) (alpha(root.getContext()) / 100f * 255f) : 255, px);
+            boolean useBackdrop = glass && sBackdrop != null && !sBackdrop.isRecycled();
+            walk(root, useBackdrop ? (int) (overlayPct(root.getContext()) / 100f * 255f) : 255,
+                    px, useBackdrop);
             root.invalidate();
         } catch (Throwable ignored) {
         }
@@ -502,7 +718,9 @@ final class DshaGlass {
         try {
             int a = (int) (clamp(overlayPct, 20, 100) / 100f * 255f);
             walkBlur(root, clamp(radius, 4, 40), a);
-            walk(root, a, cornerPx(root.getContext()));
+            boolean useBackdrop = enabled(root.getContext())
+                    && sBackdrop != null && !sBackdrop.isRecycled();
+            walk(root, a, cornerPx(root.getContext()), useBackdrop);
             root.invalidate();
         } catch (Throwable ignored) {
         }
@@ -553,70 +771,73 @@ final class DshaGlass {
      *      真模糊，取样 blur_target（含内容区），所以滚动时纹样会跟着动。
      * </pre>
      */
-    private static void walk(View v, int alpha255, int cornerPx) {
-        // 三类东西不能透，遇到就整棵子树跳过：
-        // · 终端 —— Termux 的 ANSI 前景是白色，背景一透就成了浅底白字；
-        // · WebView / GeckoView —— 里面是网页自己的排版，透了会让背景图串在正文后面；
-        // · 显式标了 no-glass 的（留给以后不想被透的地方，不用改这里的判断）。
+    /** 把一个 shape 背景应用为玻璃，或恢复为普通半透明背景。 */
+    private static void walk(View v, int alpha255, int cornerPx, boolean useBackdrop) {
+        // 三类内容不允许背景图透进去：终端、网页以及显式 no-glass 子树。
         if ("no-glass".equals(v.getTag())) return;
         String cls = v.getClass().getName();
         if (cls.contains("TerminalView") || cls.contains("WebView") || cls.contains("GeckoView")) {
             return;
         }
+
         Drawable bg = v.getBackground();
-        // 顶栏与底栏整个跳过背景处理。
-        //
-        // 上一轮想「不给栏加圆角」，改的是下面 if(!done) 分支里的 applyCorner —— 完全没生效，
-        // 因为栏走的是**另一条路**：它的背景是 shape-like，又不是 GlassCard，于是被
-        // applyGlassBg 换成了 GlassDrawable（预糊底图的对应区域 + 着色，自带圆角）。
-        // 后果有两个，都能在截图上看到：
-        //   · 那个圆角矩形浅灰块根本不是 BlurView 的实时模糊，是一张静态糊图；
-        //   · GlassDrawable 不透明，把 BlurView 刚画好的实时模糊整块盖掉了。
-        // 也就是说顶栏从加 BlurView 起就没真正糊过内容，一直在拿静态底图充数,
-        // 描边（直角）和它（圆角）自然对不上。
-        //
-        // 栏的观感该由它自己那套负责：模糊 = setupWith + setBlurRadius，
-        // 通透 = setOverlayColor，圆角与描边 = bg_bar_glass + clipToOutline。walk 一律不插手。
-        if (v.getId() == R.id.top_glass || v.getId() == R.id.bottom_glass) bg = null;
-        // GlassCard 自己就是 BlurView，透明度由它的 overlayColor 决定；
-        // 再给背景 setAlpha 会把圆角描边一起弄淡。只跳过它的 alpha，圆角照样要改。
-        if (bg != null && isShapeLike(bg)) {
-            // 先试元素级玻璃：把背景换成「预糊底图的对应区域 + 着色」。这一条让按钮、
-            // 状态行、输入框这些容器里的组件也真的有玻璃，而不只是变淡。
-            boolean inGlass = insideGlass(v);
-            // 卡片内的元素不参与元素级玻璃（理由见 insideGlass）。
-            boolean done = !(v instanceof GlassCard) && !inGlass
-                    && applyGlassBg(v, bg, alpha255, cornerPx);
-            if (!done) {
-                Drawable m = bg.mutate();
-                if (!(v instanceof GlassCard)) {
-                    if (inGlass) {
-                        // ④ 卡片内：叠一层，比卡片实一档，不透背景图。
-                        m.setAlpha(Math.min(255, alpha255 + 55));
-                    } else if (m instanceof android.graphics.drawable.ColorDrawable
-                            && hasBackdropSource(v.getContext())) {
-                        // ② 页面底衬：完全让路。给它任何不透明度都会遮住背景图 ——
-                        // 「淡化和模糊的滑块只作用到顶栏和卡片」就是这么来的：滑块改的是
-                        // 背景图，而背景图被这层 72% 的深色幕布挡着；顶栏卡片取样的是
-                        // bg_blur_target（不含这层幕布），所以只有它们如实反映了变化。
-                        m.setAlpha(0);
-                    } else {
-                        m.setAlpha(alpha255);
-                    }
+        boolean bar = v.getId() == R.id.top_glass || v.getId() == R.id.bottom_glass;
+        if (bar) {
+            // 顶栏和底栏由 setupGlass 自己管理，不能让静态 GlassDrawable 盖住实时 BlurView。
+            GlassState old = MANAGED.get(v);
+            if (old != null) {
+                if (owns(old, bg)) restoreGlass(v, old);
+                else {
+                    restoreSource(old);
+                    MANAGED.remove(v);
+                    LIVE.remove(v);
                 }
-                applyCorner(m, cornerPx);
-                v.setBackground(m);
-                if (v instanceof GlassCard && cornerPx >= 0) {
-                    v.invalidateOutline();   // clipToOutline 用的是背景的 outline，得重算
+            }
+        } else {
+            GlassState state = stateFor(v, bg);
+            boolean inGlass = insideGlass(v);
+            boolean done = useBackdrop && !(v instanceof GlassCard) && !inGlass
+                    && applyGlassBg(v, state, alpha255, cornerPx);
+            if (!done) {
+                // 底图未就绪、玻璃关闭、或 View 已经在 GlassCard 内时，先恢复原背景。
+                // 这一步也是幂等的：没有安装玻璃时不会触碰 View 的背景对象。
+                if (state != null) restoreGlass(v, state);
+                bg = v.getBackground();
+                if (bg != null && isShapeLike(bg)) {
+                    int fallbackCorner = cornerPx >= 0
+                            ? cornerPx
+                            : state == null ? -1 : Math.round(state.sourceCorner);
+                    applyFallback(v, bg, alpha255, fallbackCorner, inGlass);
                 }
             }
         }
+
         if (v instanceof ViewGroup) {
             ViewGroup g = (ViewGroup) v;
             for (int i = 0; i < g.getChildCount(); i++) {
-                walk(g.getChildAt(i), alpha255, cornerPx);
+                walk(g.getChildAt(i), alpha255, cornerPx, useBackdrop);
             }
         }
+    }
+
+    /** 普通半透明路径，只改背景 Drawable，不改 View 本身的 alpha。 */
+    private static void applyFallback(View v, Drawable bg, int alpha255,
+                                      int cornerPx, boolean inGlass) {
+        Drawable m = bg.mutate();
+        if (!(v instanceof GlassCard)) {
+            if (inGlass) {
+                m.setAlpha(Math.min(255, alpha255 + 55));
+            } else if (m instanceof android.graphics.drawable.ColorDrawable
+                    && hasBackdropSource(v.getContext())) {
+                // 页面底衬有背景源时完全让路，否则背景图会被整屏幕布挡住。
+                m.setAlpha(0);
+            } else {
+                m.setAlpha(alpha255);
+            }
+        }
+        applyCorner(m, cornerPx);
+        if (v.getBackground() != m) v.setBackground(m);
+        if (v instanceof GlassCard && cornerPx >= 0) v.invalidateOutline();
     }
 
     /** 统一圆角。

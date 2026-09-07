@@ -46,14 +46,9 @@ import { readFileSync } from 'node:fs'
 
 /** 注入到系统提示的引导段（针对 DSHA 手机端环境）。
  *
- * <p><b>改这段之前先想一件事：这个文件会通过 runtime 增量更新推给老版本的 App。</b>
- * 清单里有它（runtime-manifest.json），而热更新只换脚本、不换 Java —— 也就是说
- * 新提示词随时可能跑在一个**没有新端点**的 App 上（ensureDeviceShellGuide 有好几条
- * 路径会把 overlay 里的新文件写进 rootfs，比如插件被用户禁用时的「仅更新实体」）。
- * 老 App 收到未知路径不会回 404，而是把它当 shell 命令处理，回给 agent 一堆无意义输出。
- *
- * 所以：凡是引用「较新才有的端点」的地方，都要就地给一份能用的兜底 ——
- * 否则老用户那边的表现是 agent 突然不知道自己能操作手机（比压缩掉几 KB 提示词严重得多）。
+ * <p><b>这个文件随 APK 的 assets 离线发布。</b>它必须与同一 APK 中的 Java、rootfs 和
+ * 插件版本保持兼容；修改提示词后需要随下一版 APK 一起交付，不存在单独的远程脚本通道。
+ * 因此这里引用的端点和能力，必须以当前 Java 代码写入的能力清单为准。
  */
 const CAPS_FILE = '/root/.dsh/.dsha-caps.json'
 

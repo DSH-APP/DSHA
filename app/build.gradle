@@ -105,10 +105,8 @@ android {
             // 一个也没给时会退回 AGP 默认 debug keystore，并大声警告 —— 那种包每次
             // 构建的指纹都不同，装出去谁也升级不了，只能自己调试用。
             //
-            // 另有一把**不同的**钥匙：DSHA-release.keystore（alias dsha，RSA 4096，
-            // 指纹 ED:8A:AE:A2…）现在只用来签增量更新清单
-            // （tools/sign-runtime-manifest.sh，公钥内置在 assets/runtime-update-pubkey.pem）。
-            // 两把钥匙各管一件事，不要混用。
+            // 线上 APK 签名使用历史发布密钥；运行时脚本与 APK 一起离线发布，
+            // 不再通过远程清单或覆盖层更新。
             def ksPath = System.getenv("DSHA_KEYSTORE") ?: project.findProperty("dsha.keystore")
             if (ksPath != null && !ksPath.toString().isEmpty() && file(ksPath).exists()) {
                 storeFile file(ksPath)

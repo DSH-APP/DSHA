@@ -20,24 +20,13 @@ VERSION_NAME=$(sed -n 's/.*versionName "\([^"]*\)".*/\1/p' app/build.gradle | he
 VERSION_NAME=${VERSION_NAME:-0.0}
 echo "==> 版本: ${VERSION_NAME}"
 
-# 增量更新清单 + 签名：改过 assets 里任何脚本都必须重新生成，否则客户端比对到的是旧
-# sha256 —— 要么以为没更新，要么下载后校验不过。放在构建前自动做，不靠人记。
-# 没有 keystore 的环境（外部贡献者）会自动跳过签名，构建照常。
-if command -v python3 >/dev/null 2>&1; then
-  python3 tools/gen-runtime-manifest.py || echo "（清单生成失败，继续构建）"
-  bash tools/sign-runtime-manifest.sh || echo "（清单签名失败，继续构建）"
-fi
-
 # ---- APK 签名：必须与线上包一致，否则装不上 ----
 # 线上包（v1.1.7 起）是用一份 debug keystore 签的 —— secret 当初传错了文件，详见
 # 工作区 DSHA-签名现状与风险.md。Android 只允许同签名覆盖安装，所以本地出的包想装到
 # 已经装过正式版的机器上，就必须用同一把钥匙；用 DSHA-release.keystore 签出来的包会
 # 因为签名冲突直接装不上（之前那个 1.1.7-fix 测试包就是这样）。
 #
-# **顺序要紧**：这段必须放在上面的清单签名之后。sign-runtime-manifest.sh 优先读环境
-# 变量 DSHA_KEYSTORE，提前导出会让它拿 debug keystore 去签增量更新清单，而客户端内置
-# 的公钥（assets/runtime-update-pubkey.pem）对应的是 DSHA-release.keystore —— 验签不过，
-# 热更新会被整批拒绝。两把钥匙各管一件事，别混。
+# 线上包使用历史发布密钥签名；脚本与 APK 一起离线发布，不再生成远程脚本清单。
 DSHA_PUBLISH_KEYSTORE="${DSHA_PUBLISH_KEYSTORE:-/workspace/DSHA-ACTUAL-PUBLISH-KEY-debug.keystore}"
 if [ -f "$DSHA_PUBLISH_KEYSTORE" ]; then
   export DSHA_KEYSTORE="$DSHA_PUBLISH_KEYSTORE"

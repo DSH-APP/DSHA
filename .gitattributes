@@ -1,13 +1,4 @@
-# 行尾必须统一成 LF —— 这不是风格问题，是热更新通道的正确性问题。
-#
-# runtime-manifest.json 里每个资产的 size/sha256 是按**仓库字节**算的，而客户端
-# 从 raw.githubusercontent 下到的也是仓库字节。工作树一旦被 checkout 成 CRLF，
-# gen-runtime-manifest.py 算出来的每一项都会比线上大（每个换行 +1 字节），
-# 清单自己的签名照样验得过，客户端却因为逐文件 sha256 对不上而**整批拒绝**，
-# 「检查脚本更新」只会显示一句「清单签名验证失败」。
-#
-# 这正是 issue #45：alpha2 的清单在 Windows CRLF 工作树上生成并签名，36 个条目
-# 全部与线上不符（例：fix-stale-bundles.sh 清单记 2852B、线上实为 2785B）。
+# 脚本仅随 APK 离线发布，文件行尾统一为 LF。
 * text=auto eol=lf
 
 # 二进制不许做任何行尾转换（转了就是文件损坏）
