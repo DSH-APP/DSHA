@@ -40,6 +40,7 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
     private FrameLayout container;
     private ProgressBar progress;
     private View errorPanel;
+    private long startupGeneration;
     private String authUrl, baseUrl;
     private boolean canGoBack;
     private GeckoSession.PromptDelegate.FilePrompt filePrompt;
@@ -50,8 +51,10 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
     private int backSequence;
     private boolean backPending;
     private String savedHistory;
+    private PreviewAuth previewAuth;
     public static final class Retained extends androidx.lifecycle.ViewModel {
         GeckoSession session;
+        String authUrl;
         GeckoSession.SessionState history;
         boolean canGoBack;
         WebExtension.Port port;
@@ -84,7 +87,9 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
 
     @Override protected void onCreate(Bundle saved) {
         super.onCreate(saved);
+        startupGeneration = com.deepseekharness.app.core.HarnessController.get(this).getWebGeneration();
         retained = new androidx.lifecycle.ViewModelProvider(this).get(Retained.class);
+        previewAuth = new PreviewAuth(this);
         downloads = new WebDownloads(this,saved);
         savedHistory = saved == null ? null : saved.getString("gecko-state");
         setContentView(R.layout.activity_web_preview);
@@ -93,19 +98,40 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
         progress = findViewById(R.id.web_progress);
         errorPanel = findViewById(R.id.web_error_panel);
         authUrl = getIntent().getStringExtra("url");
+        String current = com.deepseekharness.app.core.HarnessController.get(this).getWebAuthUrl();
+        if (!current.isEmpty() && !current.equals(authUrl)) { authUrl = current; savedHistory = null; }
         baseUrl = WebPreviewPolicy.loopbackBaseUrl(authUrl);
         findViewById(R.id.web_error_browser).setOnClickListener(v -> external(authUrl));
-        findViewById(R.id.web_retry).setOnClickListener(v -> { closeSession(); savedHistory = null; load(); });
+        findViewById(R.id.web_error_logs).setOnClickListener(v -> startActivity(DiagnosticActivity.downloadLogs(this)));
+        findViewById(R.id.web_error_recovery).setOnClickListener(v -> {
+            startActivity(new Intent(this, MainActivity.class).putExtra("open_launch", true)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)); finish();
+        });
+        findViewById(R.id.web_retry).setOnClickListener(v -> { savedHistory = null; refreshSession(); });
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { back(); }
         });
         if (baseUrl == null) { showError("对话地址无效", "请返回启动页重新进入。"); return; }
-        load();
+        if (retained.session != null && authUrl.equals(retained.authUrl) && authUrl.equals(current)) load();
+        else refreshSession();
+    }
+
+    private void refreshSession() {
+        if (previewAuth.busy() || isFinishing() || isDestroyed()) return;
+        errorPanel.setVisibility(View.GONE); progress.setVisibility(View.VISIBLE);
+        previewAuth.refresh((url, cookie, error) -> {
+            if (error != null) { showError("暂时无法进入对话", error); return; }
+            if (!url.equals(authUrl)) savedHistory = null;
+            if (session == null && retained.session != null) session = retained.session;
+            closeSession();
+            authUrl = url; baseUrl = WebPreviewPolicy.loopbackBaseUrl(url);
+            load();
+        });
     }
 
     @Override public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) WebFullscreenUi.hideSystemBars(this);
+        if (hasFocus) WebFullscreenUi.applySystemBars(this);
     }
 
     private void load() {
@@ -124,6 +150,7 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
                             : GeckoSessionSettings.USER_AGENT_MODE_MOBILE).build()) : retained.session;
             session = current;
             retained.session = current;
+            retained.authUrl = authUrl;
             current.setNavigationDelegate(new GeckoSession.NavigationDelegate() {
                 @Override public void onCanGoBack(GeckoSession s, boolean allowed) { canGoBack = allowed; retained.canGoBack = allowed; }
                 @Override public GeckoResult<AllowOrDeny> onLoadRequest(GeckoSession s, LoadRequest request) {
@@ -146,8 +173,14 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
                 }
                 @Override public void onProgressChange(GeckoSession s, int value) { progress.setProgress(value); }
                 @Override public void onPageStop(GeckoSession s, boolean success) {
+                    if (s != session) return;
                     progress.setVisibility(View.GONE);
                     if (!success) showError("页面未完成加载", "服务可能已退出，点击重试或返回启动页。");
+                    else if (savedHistory != null) {
+                        String history = savedHistory; savedHistory = null;
+                        try { current.restoreState(GeckoSession.SessionState.fromString(history)); }
+                        catch (RuntimeException ignored) { }
+                    }
                 }
             });
             current.setContentDelegate(new GeckoSession.ContentDelegate() {
@@ -275,11 +308,7 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
     }
     private void historyBack() { if (session != null && canGoBack) session.goBack(); else finish(); }
     private void loadInitial(GeckoSession current) {
-        if (savedHistory != null) {
-            try { current.restoreState(GeckoSession.SessionState.fromString(savedHistory)); savedHistory = null; return; }
-            catch (RuntimeException ignored) { savedHistory = null; }
-        }
-        // 由 Gecko 自己完成 token → Cookie 交换。
+        // 先由 Gecko 自己完成 token → Cookie 交换；成功后再恢复历史，避免进程重建绕过鉴权。
         current.loadUri(authUrl);
     }
     private static String header(WebResponse response, String name) {
@@ -296,6 +325,15 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
                     @Override public void onPortMessage(Object message, WebExtension.Port source) {
                         if (source != pagePort || !(message instanceof org.json.JSONObject)) return;
                         org.json.JSONObject value = (org.json.JSONObject) message;
+                        if ("startup".equals(value.optString("type"))) {
+                            org.json.JSONObject event = value.optJSONObject("report");
+                            if (event != null && event.toString().length() <= 9500
+                                    && com.deepseekharness.app.core.HarnessController.get(GeckoPreviewActivity.this)
+                                    .startupDiagnostics().pageEvent(startupGeneration, event))
+                                showError("网页插件加载失败", com.deepseekharness.app.util.SensitiveData.redact(event.optString("message"))
+                                        + "\n返回启动页可查看插件详情，或安全启动进入基础界面。");
+                            return;
+                        }
                         if (!backPending || !"back".equals(value.optString("type")) || value.optInt("id") != backSequence) return;
                         backPending = false;
                         if (!value.optBoolean("handled")) historyBack();
@@ -312,6 +350,7 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
         catch (RuntimeException error) { Toast.makeText(this, "没有可用的系统浏览器", Toast.LENGTH_SHORT).show(); }
     }
     private void showError(String title, String detail) {
+        com.deepseekharness.app.core.DiagnosticLog.record(this, "GECKO_PAGE", title + "：" + detail);
         if (isFinishing() || isDestroyed()) return;
         ((TextView) findViewById(R.id.web_error_title)).setText(title);
         ((TextView) findViewById(R.id.web_error_detail)).setText(detail + "\n兼容内核 Gecko 143");
@@ -325,9 +364,17 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
         pagePort = null;
         if (retained != null) retained.port = null;
     }
-    @Override protected void onPause() { if (session != null) session.setActive(false); super.onPause(); }
-    @Override protected void onResume() { super.onResume(); if (session != null) session.setActive(true); }
+    @Override protected void onPause() {
+        PluginFragment.invalidateInstalledState();
+        if (session != null) session.setActive(false); super.onPause();
+    }
+    @Override protected void onResume() {
+        super.onResume(); if (session != null) session.setActive(true);
+        String current = com.deepseekharness.app.core.HarnessController.get(this).getWebAuthUrl();
+        if (previewAuth != null && !current.isEmpty() && !current.equals(authUrl)) refreshSession();
+    }
     @Override protected void onDestroy() {
+        if (previewAuth != null) previewAuth.cancel();
         if (downloads != null) downloads.dismiss();
         if (isChangingConfigurations() && session != null) {
             if (browser != null) { browser.releaseSession(); container.removeView(browser); browser = null; }

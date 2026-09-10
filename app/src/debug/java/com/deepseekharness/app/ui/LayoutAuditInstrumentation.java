@@ -135,21 +135,25 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
             String[] scenes={"launch_idle","launch_error","fragment_settings","fragment_config","fragment_workspace","fragment_install","plugins_market","plugins_installed","update_idle","update_busy","update_ready","update_error","activity_diagnostics","activity_plugin_install","fragment_pty_terminal","fragment_terminal"};
             boolean quick="quick".equals(args.getString("mode"));
             boolean polish="polish".equals(args.getString("mode"));
+            boolean interactions="interactions".equals(args.getString("mode"));
             for(boolean dark:new boolean[]{false,true}) {
                 ui(()->AppCompatDelegate.setDefaultNightMode(dark?AppCompatDelegate.MODE_NIGHT_YES:AppCompatDelegate.MODE_NIGHT_NO));
                 for(int n=0;n<profiles.length;n++) {
                     if(quick && n!=0 && n!=3 && n!=5)continue;
+                    if(interactions && n!=0 && n!=2 && n!=3)continue;
                     width=profiles[n][0];height=profiles[n][1];scale=n>=3?1.3f:1f;
                     LayoutPreviewActivity screen=(LayoutPreviewActivity)startActivitySync(new Intent(getTargetContext(),LayoutPreviewActivity.class).setAction("layout."+System.nanoTime()).putExtra("scene",scenes[0]).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
                     active=screen;
                     for(String scene:scenes) {
                         if(polish && !scene.equals("fragment_settings") && !scene.startsWith("plugins") && !scene.startsWith("update"))continue;
+                        if(interactions && !scene.equals("fragment_settings") && !scene.startsWith("plugins") && !scene.startsWith("launch") && !scene.equals("activity_diagnostics"))continue;
                         ui(()->screen.showScene(scene));
                         until(()->screen.canvas.getWidth()>0 && screen.canvas.getHeight()>0,"布局未完成");
                         require(Math.abs(screen.getResources().getConfiguration().fontScale-scale)<0.01,"字体倍率未应用");
                         String name=(dark?"dark":"light")+"-"+width+"x"+height+"-font"+scale+"-"+scene;
                         ui(()->{painted.clear();audit(screen.canvas,name);});
                         if(scene.equals("fragment_config"))require(screen.canvas.findViewById(R.id.config_save).getBottom()<=screen.canvas.getHeight(),"保存按钮超出视口");
+                        if(scene.startsWith("plugins")) require(((TextView) screen.canvas.findViewById(R.id.btnRefresh)).getLineCount()==1,"检测插件按钮不得竖排换行");
                         if(scene.equals("update_idle"))require(screen.canvas.findViewById(R.id.update_install).getVisibility()==View.GONE,"无更新时仍展示安装操作");
                         if(scene.equals("update_busy"))require(screen.canvas.findViewById(R.id.update_cancel).getVisibility()==View.VISIBLE && !screen.canvas.findViewById(R.id.update_download).isEnabled(),"下载状态操作错误");
                         if(n==0 || n==1 || n==3 || n==5)save(screen.canvas,name);

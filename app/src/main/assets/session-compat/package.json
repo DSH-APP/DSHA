@@ -1,0 +1,9 @@
+{
+  "name": "dsha-session-compat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./index.js",
+  "license": "MIT",
+  "description": "保留原始会话文件的 DSHA 历史消息规范化"
+}

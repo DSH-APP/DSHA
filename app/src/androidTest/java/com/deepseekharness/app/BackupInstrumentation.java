@@ -115,11 +115,9 @@ public final class BackupInstrumentation extends Instrumentation {
                 check(config.getPort().equals(settings ? "3087" : "3097"), "原生设置范围错误");
                 result.putString(BackupScope.id(scope), "PASS: MediaStore URI、完整预检、范围隔离与真实容器往返");
             }
-            config.setAutoBackupLaunches(2);
-            check(!config.countLaunchForBackup() && config.countLaunchForBackup() && !config.countLaunchForBackup(), "自动备份计数不符");
             config.beginRestoreSettings(); config.setPort("3187"); config.finishRestoreSettings(true);
             check(!config.getPort().equals("3187"), "原生设置回滚失败");
-            result.putString("native", "PASS: 自动备份阈值、原生设置事务回滚");
+            result.putString("native", "PASS: 原生设置事务回滚");
             result.putString("result", "PASS");
         } catch (Throwable failure) {
             result.putString("result", "FAIL"); result.putString("error", failure.toString());

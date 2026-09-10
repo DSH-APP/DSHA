@@ -37,8 +37,7 @@ import java.util.concurrent.TimeUnit;
  *   curl -s "http://127.0.0.1:3090/exec?cmd=<urlencoded>"
  * 返回 JSON：{"result":"...输出...[EXIT=0]"}
  *
- * 安全：命中危险命令（删除/格式化/卸载/重启等）时，若设置开启"需确认"，
- * 前台弹窗 / 后台高优先级通知（允许/拒绝按钮），60 秒超时默认拒绝。
+ * 设备命令使用默认拒绝的原生策略；高危与未知命令不可通过确认开关放行。
  */
 public final class HttpShellService {
 
@@ -441,14 +440,15 @@ public final class HttpShellService {
     }
 
     private void handle(Socket client) {
-        try (Socket c = client; com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
+        try (Socket c = client) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             String line = reader.readLine();
             if (line == null) return;
             String[] parts = line.split(" ");
             String path = parts.length > 1 ? parts[1] : "/";
             String cmd = "";
-            if (path.startsWith("/exec") || path.startsWith("/confirm")) {
+            String route = path.split("\\?", 2)[0];
+            if (route.equals("/exec") || route.equals("/confirm") || route.equals("/device/plan")) {
                 // 走统一的查询串解析（Query.param）：值要截断到 &，参数名要精确匹配。
                 // 旧实现是 path.indexOf("cmd=") —— 值截断修过了，但参数名边界一直没有，
                 // 于是 ?xcmd=junk&cmd=真命令 会取到 junk。/confirm 的 cmd 是<b>给用户看的
@@ -487,9 +487,14 @@ public final class HttpShellService {
                 } catch (Throwable ignored) {
                 }
             }
+            // 预连接与未完成鉴权的 socket 不读写环境，不能占住维护屏障。
+            try (com.deepseekharness.app.core.RuntimeTasks work = authed
+                    ? com.deepseekharness.app.core.RuntimeTasks.begin() : null) {
             String result;
             if (!authed) {
                 result = "[UNAUTHORIZED]";
+            } else if (route.equals("/device/plan")) {
+                result = devicePlan(cmd, "1".equals(getParam(queryOf(path), "su", "0")));
             } else if (path.startsWith("/app/notify")) {
                 // agent 通过 App 发通知栏提醒（App 层交互）
                 result = appNotify(path);
@@ -543,16 +548,16 @@ public final class HttpShellService {
                 result = appExport(path);
             } else if (cmd.isEmpty()) {
                 result = "[NO_CMD]";
-            } else if (path.startsWith("/confirm")) {
-                // rootfs 内包装器请求的确认：只弹窗，不执行
-                // force=1（adb-shell 报备）→ 所有命令都确认；否则仅危险命令
-                boolean force = path.contains("force=1");
-                boolean needConfirm = force || (confirmEnabled() && DangerShellGuard.isDangerous(cmd));
-                result = needConfirm ? (requestUserConfirm(cmd) ? "YES" : "NO") : "YES";
-            } else if (DangerShellGuard.isDangerous(cmd) && confirmEnabled()) {
-                result = awaitConfirm(cmd);
+            } else if (route.equals("/confirm")) {
+                com.deepseekharness.app.util.DeviceShellPolicy.Plan plan = com.deepseekharness.app.util.DeviceShellPolicy.inspect(cmd);
+                // 旧确认接口不能验证实际路径和最新 UID，不再为写入或结束进程发放放行信号。
+                // 这些操作必须交给 /exec 或 ADB 原生计划执行器现场校验。
+                result = plan.kind == com.deepseekharness.app.util.DeviceShellPolicy.Kind.READ ? "YES" : "NO";
+            } else if (route.equals("/exec")) {
+                com.deepseekharness.app.util.DeviceShellPolicy.Plan plan = com.deepseekharness.app.util.DeviceShellPolicy.inspect(cmd);
+                result = plan.allowed() ? ShizukuShell.exec(cmd) : plan.reason + "\n[EXIT=126]";
             } else {
-                result = ShizukuShell.exec(cmd);
+                result = "[UNKNOWN_ENDPOINT]";
             }
             // 关键：result 必须包引号 —— 旧实现输出 {"result":YES} 是非法 JSON，
             // 客户端（adb-shell.py 判 '"YES"' in body / agent 用 json 解析）全部失效：
@@ -566,11 +571,33 @@ public final class HttpShellService {
             c.getOutputStream().write(head.getBytes("UTF-8"));
             c.getOutputStream().write(bodyBytes);
             c.getOutputStream().flush();
+            }
         } catch (Exception ignored) {
         }
     }
 
     // ================= App 层交互端点（agent 通过 3090 桥调用） =================
+
+    /** ADB 每次发送前向原生策略取计划；计划只包含已验证 argv，拒绝时没有可执行内容。 */
+    private String devicePlan(String command, boolean root) {
+        try {
+            com.deepseekharness.app.util.DeviceShellPolicy.Plan plan = com.deepseekharness.app.util.DeviceShellPolicy.inspect(command);
+            org.json.JSONObject value = new org.json.JSONObject().put("version", 1).put("kind", plan.kind.name())
+                    .put("reason", plan.reason).put("argv", new org.json.JSONArray(plan.argv))
+                    .put("operands", new org.json.JSONArray(plan.operands))
+                    .put("paths", new org.json.JSONObject(com.deepseekharness.app.util.DeviceShellPolicy.pathRules()));
+            if (root && !ctx.getSharedPreferences(Constants.PREFS, 0).getBoolean(Constants.KEY_ALLOW_ROOT_SHELL, false))
+                return value.put("kind", "DENY").put("argv", new org.json.JSONArray()).put("reason", "[POLICY_BLOCKED] 未允许 root shell").toString();
+            if (plan.kind == com.deepseekharness.app.util.DeviceShellPolicy.Kind.STOP) {
+                // PackageManager 可能被厂商限制，只返回部分应用。这里只解析目标；
+                // 实际 ADB/Shizuku 执行器必须用自己的身份现场取得完整 pm/ps 清单才能停止。
+                value.put("requiresAppInventory", true);
+            }
+            return value.toString();
+        } catch (Exception error) {
+            return "[POLICY_BLOCKED] " + safeError(error);
+        }
+    }
 
     /** /app/notify?title=&text= ：发通知栏提醒 */
     private String appNotify(String path) {
@@ -781,7 +808,7 @@ public final class HttpShellService {
      *
      * <p>所以插件的正确写法是 {@code if (protocol >= N)} 而不是 {@code == N}。
      */
-    private static final int BRIDGE_PROTOCOL = 1;
+    private static final int BRIDGE_PROTOCOL = 2;
 
     /**
      * {@code /app/version}：桥协议与 App 版本，给插件做特性检测。
@@ -815,12 +842,12 @@ public final class HttpShellService {
             + "\n"
             + "== 设备与应用 ==\n"
             + "/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n"
-            + "/app/apps?q=微信&limit=50       已装应用（默认只列第三方）\n"
+            + "/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n"
             + "/app/launch?pkg=com.tencent.mm  启动应用\n"
             + "/app/clip                       读剪贴板（需 App 在前台，系统限制）\n"
             + "/app/clip + text=…              写剪贴板\n"
-            + "/app/readfile?path=/sdcard/…    读外部文件\n"
-            + "/sdcard 已挂载，Download / DCIM 等公共目录可直接读写\n"
+            + "/app/readfile?path=/…          读取任意绝对路径的目录或文本，仍受 Android 权限限制\n"
+            + "设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n"
             + "\n"
             + "== 与用户交互 ==\n"
             + "/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n"
@@ -853,13 +880,18 @@ public final class HttpShellService {
             + "== 设备 shell（ADB 无线调试，用户可能没开）==\n"
             + "/root/dsh-bin/adb-shell \"命令\"        shell 级（uid=2000）\n"
             + "包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n"
+            + "仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n"
+            + "根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n"
+            + "结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n"
+            + "按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n"
+            + "策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n"
             + "报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n"
             + "「配置」页开「ADB 设备通道」并配对，别反复试同一条命令。\n"
             + "不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n"
             + "\n"
             + "== root（--su）==\n"
             + "默认权限是 shell 级（uid=2000，非 root）。不要主动用 --su；\n"
-            + "只有用户明确要求 root 操作时才尝试，且要先请他到「配置」页勾选「允许 root shell」。\n";
+            + "只有用户明确要求 root 操作时才尝试，且要先到「配置」页开启授权；同一设备保护策略仍然生效。\n";
     }
 
     private String appPlugins(String path) {
@@ -931,47 +963,41 @@ public final class HttpShellService {
         }
     }
 
-    /** /app/readfile?path= ：读外部文件（文本，限制 256KB）。路径如 /sdcard/Download/x.txt
-     *  安全：禁止读凭据文件（.env / .bridge_token / settings.yaml —— 含 API key/对话密钥）。 */
+    /** /app/readfile?path= ：按绝对路径读取目录或文本（256 KiB），权限由 Android 决定。 */
     private String appReadFile(String path) {
         try {
             String p = getParam(queryOf(path), "path", "");
             if (p.isEmpty()) return "NO_PATH";
-            String lower = p.toLowerCase();
-            if (lower.endsWith("/.env") || lower.contains("/.env/")
-                    || lower.contains(".bridge_token") || lower.contains("settings.yaml")) {
-                return "FORBIDDEN: 凭据文件不可读（.env/.bridge_token/settings.yaml）";
-            }
             java.io.File f = new java.io.File(p);
-            // 只允许读取外部存储（/sdcard 或 /storage/emulated/0）：
-            // 否则 agent 可绕过过滤直接读 App 私有目录（SharedPreferences 里含 API key）
+            if (!f.isAbsolute()) return "FORBIDDEN: 读取需要绝对路径";
             String canon;
             try {
                 canon = f.getCanonicalPath();
             } catch (Exception e) {
                 return "FORBIDDEN: 路径无法解析（" + p + "）";
             }
-            // 前缀匹配必须带路径分隔符，否则 /sdcardEVIL/x、/storage/emulated/0abc/x
-            // 这类路径会被当成外部存储放行。原实现算了 external 又不用它，
-            // 实际生效的是下面那个不带斜杠的宽松判断 —— 等于白名单形同虚设。
-            // （TarGzipExtractor.linkSafeWithin 里的同类校验就做对了：前缀 + 分隔符）
-            boolean external = canon.equals("/sdcard") || canon.startsWith("/sdcard/")
-                    || canon.equals("/storage/emulated/0") || canon.startsWith("/storage/emulated/0/");
-            if (!external) {
-                return "FORBIDDEN: 仅允许读取 /sdcard 外部存储（" + p + "）";
+            // 按用户策略放开可读目录；实际权限仍由 Android 执行，不把拒绝伪装成成功。
+            if (f.isDirectory()) {
+                java.io.File[] children = f.listFiles();
+                if (children == null) return "NO_PERMISSION: Android 未授予读取此目录的权限";
+                StringBuilder listing = new StringBuilder();
+                for (java.io.File child : children) {
+                    if (listing.length() > 250000) { listing.append("[OUTPUT_TRUNCATED]\n"); break; }
+                    listing.append(child.isDirectory() ? "d\t" : "f\t").append(child.getName()).append('\n');
+                }
+                return listing.toString();
             }
-            if (!f.isFile()) return "NOT_FOUND: " + p;
+            if (!f.isFile()) return "NOT_FOUND_OR_NO_PERMISSION: 路径不存在或 Android 未授予读取权限：" + p;
             if (f.length() > 256 * 1024) return "TOO_LARGE: " + f.length();
-            byte[] bytes = new byte[(int) f.length()];
+            java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
             try (java.io.FileInputStream in = new java.io.FileInputStream(f)) {
-                int off = 0;
-                while (off < bytes.length) {
-                    int n = in.read(bytes, off, bytes.length - off);
-                    if (n < 0) break;
-                    off += n;
+                byte[] buffer = new byte[8192]; int count;
+                while ((count = in.read(buffer)) != -1) {
+                    if (bytes.size() + count > 256 * 1024) return "TOO_LARGE: 内容超过 256 KiB";
+                    bytes.write(buffer, 0, count);
                 }
             }
-            return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+            return bytes.toString("UTF-8");
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
         }
@@ -1047,37 +1073,36 @@ public final class HttpShellService {
         return sb.toString().trim();
     }
 
-    /** /app/apps?q=关键字&limit=50 ：已装应用列表（每行「包名<TAB>应用名」） */
+    /** 默认完整分组；显式筛选不影响停止操作所用的完整清单。 */
     private String appList(String path) {
         try {
             String q = getParam(queryOf(path), "q", "").toLowerCase();
-            int limit = 50;
+            int limit = Integer.MAX_VALUE;
             try {
-                limit = Math.max(1, Math.min(300, Integer.parseInt(getParam(queryOf(path), "limit", "50"))));
+                String count = getParam(queryOf(path), "limit", "");
+                if (!count.isEmpty()) limit = Math.max(1, Integer.parseInt(count));
             } catch (Exception ignored) {
             }
-            boolean userOnly = !"0".equals(getParam(queryOf(path), "user", "1")); // 默认只列第三方应用
-            android.content.pm.PackageManager pm = ctx.getPackageManager();
-            java.util.List<android.content.pm.PackageInfo> all = pm.getInstalledPackages(0);
+            boolean userOnly = "1".equals(getParam(queryOf(path), "user", ""));
+            DeviceAppInventory inventory = new DeviceAppInventory(ctx);
             StringBuilder sb = new StringBuilder();
             int n = 0;
-            for (android.content.pm.PackageInfo pi : all) {
-                if (pi.applicationInfo == null) continue;
-                boolean sys = (pi.applicationInfo.flags
-                        & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0;
-                if (userOnly && sys) continue;
-                String label = String.valueOf(pm.getApplicationLabel(pi.applicationInfo));
-                if (!q.isEmpty() && !pi.packageName.toLowerCase().contains(q)
-                        && !label.toLowerCase().contains(q)) {
-                    continue;
+            for (boolean system : new boolean[]{false, true}) {
+                if (system && userOnly) continue;
+                sb.append(system ? "[系统应用]\n" : "[用户应用]\n");
+                for (int index = 0; index < inventory.entries.length(); index++) {
+                    org.json.JSONObject app = inventory.entries.getJSONObject(index);
+                    if (app.getBoolean("system") != system) continue;
+                    String name = app.getString("name"), label = app.getString("label");
+                    if (!q.isEmpty() && !name.toLowerCase().contains(q) && !label.toLowerCase().contains(q)) continue;
+                    if (n >= limit) break;
+                    sb.append(name).append('\t').append(label).append(" uid=").append(app.getInt("uid")).append('\n'); n++;
                 }
-                sb.append(pi.packageName).append('\t').append(label).append('\n');
-                if (++n >= limit) break;
             }
-            if (n == 0) return "（没有匹配的应用）";
-            return sb.append("共 ").append(n).append(" 个").toString();
+            return sb.append("显示 ").append(n).append(" 个；完整清单 ").append(inventory.entries.length()).append(" 个").toString();
         } catch (Throwable e) {
-            return "ERROR: " + safeError(e);
+            return "[APP_LIST_UNAVAILABLE] Android 未提供完整应用清单；设备停止操作会通过 ADB/Shizuku 重新读取。"
+                    + "可用设备命令分别查询 pm list packages -U -3 和 pm list packages -U -s。原因：" + safeError(e);
         }
     }
 

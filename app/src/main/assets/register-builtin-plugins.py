@@ -38,6 +38,7 @@ import shutil
 import sys
 import time
 import re
+import uuid
 from contextlib import contextmanager
 
 # ================= 位置与清单 =================
@@ -96,8 +97,82 @@ def valid_name(name):
         r"(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*", name) is not None
 
 
-def ensure_runtime_modules():
-    """导入实体位于 plugin-src；在共同父目录提供同一份 dsh 运行时，供 ESM 查找 peer 模块。"""
+def ensure_relative_link(link, target):
+    """受管链接用相对路径；仅迁移指向同一目标的旧链接，保留用户实体与其他链接。"""
+    if os.path.lexists(link):
+        if not os.path.islink(link):
+            return False
+        current = os.readlink(link)
+        same = os.path.realpath(link) == os.path.realpath(target)
+        if not same and os.path.normpath(current) != os.path.normpath(target):
+            return False
+        if not os.path.isabs(current) and same:
+            return False
+    os.makedirs(os.path.dirname(link), exist_ok=True)
+    relative = os.path.relpath(target, os.path.dirname(link))
+    # 原子替换，避免中断恰好发生在删旧链接与建新链接之间。
+    temporary = link + '.dsha-link-' + uuid.uuid4().hex
+    created = False
+    try:
+        os.symlink(relative, temporary, target_is_directory=True)
+        created = True
+        os.replace(temporary, link)
+        return True
+    finally:
+        if created and os.path.islink(temporary):
+            os.unlink(temporary)
+
+
+def runtime_links_stamp():
+    """仅检查链接所在目录和受管入口；增删/替换链接会改变父目录，无需逐个 realpath。"""
+    package = local('/usr/local/lib/node_modules/@deepseek-ai/dsh')
+    bundled = os.path.join(package, 'node_modules')
+    shared = os.path.join(local(DSH_HOME), 'node_modules')
+    paths = [package, os.path.join(package, 'package.json'), bundled, shared]
+    for base in (bundled, shared):
+        if os.path.isdir(base):
+            paths.extend(os.path.join(base, name) for name in os.listdir(base) if name.startswith('@'))
+    for name in DEFAULT_BUILTINS:
+        managed = local('/root/dsha-' + name.removeprefix('dsh-'))
+        paths.extend([managed, os.path.join(managed, 'package.json'), os.path.join(managed, 'node_modules')])
+    stamp = []
+    for path in sorted(paths):
+        try:
+            stat = os.lstat(path)
+            stamp.append([path, stat.st_dev, stat.st_ino, stat.st_mtime_ns, stat.st_ctime_ns,
+                          stat.st_size, os.path.realpath(path)])
+        except FileNotFoundError:
+            stamp.append([path, None])
+    return stamp
+
+
+def ensure_runtime_modules(force=False):
+    cache = local(os.path.join(DSH_HOME, '.runtime-links-cache.json'))
+    stamp = runtime_links_stamp()
+    if not force:
+        try:
+            with open(cache, encoding='utf-8') as stream:
+                previous = json.load(stream)
+            if previous == {'version': 1, 'stamp': stamp}:
+                print('RUNTIME_LINKS_CACHED: 共享依赖未变化，复用已检查链接', flush=True)
+                return 0
+        except (OSError, ValueError):
+            pass
+    print('RUNTIME_LINKS_CHECK: 检查共享依赖链接', flush=True)
+    count = repair_runtime_modules()
+    try:
+        os.makedirs(os.path.dirname(cache), exist_ok=True)
+        temporary = cache + '.tmp'
+        with open(temporary, 'w', encoding='utf-8') as stream:
+            json.dump({'version': 1, 'stamp': runtime_links_stamp()}, stream)
+        os.replace(temporary, cache)
+    except OSError:
+        pass
+    return count
+
+
+def repair_runtime_modules():
+    """导入插件与 /root 下受管内置插件均解析同一份运行时，供 ESM 查找 peer 模块。"""
     package = local('/usr/local/lib/node_modules/@deepseek-ai/dsh')
     bundled = os.path.join(package, 'node_modules')
     if not os.path.isdir(bundled):
@@ -114,6 +189,11 @@ def ensure_runtime_modules():
             candidates[name] = source
     candidates['@deepseek-ai/dsh'] = package
     count = 0
+    for name in DEFAULT_BUILTINS:
+        managed = local('/root/dsha-' + name.removeprefix('dsh-'))
+        modules = os.path.join(managed, 'node_modules')
+        if os.path.isfile(os.path.join(managed, 'package.json')):
+            count += int(ensure_relative_link(modules, bundled))
     for name, source in candidates.items():
         if not valid_name(name) or not os.path.isfile(os.path.join(source, 'package.json')):
             continue
@@ -121,12 +201,8 @@ def ensure_runtime_modules():
         parent = os.path.dirname(target)
         if os.path.commonpath([home, os.path.realpath(parent)]) != home:
             raise RuntimeError('运行时模块目录指向用户环境之外，已停止修复')
-        # 用户已有实体/依赖保持原样；仅填充缺失的运行时链接。
-        if os.path.lexists(target):
-            continue
-        os.makedirs(parent, exist_ok=True)
-        os.symlink(source, target, target_is_directory=True)
-        count += 1
+        # 用户已有实体/依赖保持原样，同时迁移旧版由本工具创建的绝对链接。
+        count += int(ensure_relative_link(target, source))
     return count
 
 
@@ -160,17 +236,88 @@ def entity_dir(name):
     """内置插件名 → 其实体目录（/root/dsha-*），找不到（官方核心/第三方）返回 None。"""
     if not valid_name(name):
         return None
+    if name in DEFAULT_BUILTINS:
+        managed = '/root/dsha-' + name.removeprefix('dsh-')
+        if os.path.isfile(local(os.path.join(managed, 'package.json'))):
+            return managed
+    if name not in DEFAULT_BUILTINS:
+        active = os.path.join(NODE_MODULES, name)
+        if os.path.isfile(local(os.path.join(active, "package.json"))):
+            return active
     imported = os.path.join(DSH_HOME, "plugin-src", name)
     if os.path.isfile(local(os.path.join(imported, "package.json"))):
         return imported
     if name.startswith("@"):
-        return None  # 官方核心从 dsh 安装树解析，不在 /root/dsha-*
+        found = discover_plugins().get(name)
+        return found["directory"] if found else None
     cands = ["/root/" + name, "/root/dsha-" + name]
     if name.startswith("dsh-"):
         cands.insert(0, "/root/dsha-" + name[4:])
     for c in cands:
         if os.path.isfile(local(os.path.join(c, "package.json"))):
             return c
+    found = discover_plugins().get(name)
+    return found["directory"] if found else None
+
+
+def discover_plugins(home_directory=None, include_global=True):
+    """只读枚举常用安装位置；仅识别带可读取 bundle patch 的插件，不把运行时依赖当插件。"""
+    roots = [(NODE_MODULES, "Web 配置"), (os.path.join(DSH_HOME, "plugin-src"), "本地导入"),
+             (os.path.join(DSH_HOME, "node_modules"), "共享插件"),
+             (os.path.join(DSH_HOME, "profiles", "node_modules"), "共享配置"),
+             (os.path.join(home_directory or '/root', 'node_modules'), "终端安装")]
+    if include_global:
+        roots.append(("/usr/local/lib/node_modules", "全局安装"))
+    profiles = local(os.path.join(DSH_HOME, "profiles"))
+    if os.path.isdir(profiles):
+        for profile in sorted(os.listdir(profiles)):
+            if profile in ("web", "node_modules") or not re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", profile):
+                continue
+            roots.append((os.path.join(DSH_HOME, "profiles", profile, "node_modules"), "配置 " + profile))
+    runtime = os.path.realpath(local('/usr/local/lib/node_modules/@deepseek-ai/dsh'))
+    found = {}
+    for root, location in roots:
+        path = local(root)
+        if not os.path.isdir(path):
+            continue
+        candidates = []
+        for entry in sorted(os.listdir(path)):
+            if entry.startswith('@') and os.path.isdir(os.path.join(path, entry)):
+                candidates.extend(entry + '/' + child for child in sorted(os.listdir(os.path.join(path, entry))))
+            else:
+                candidates.append(entry)
+        for name in candidates:
+            if not valid_name(name) or name in OFFICIAL_BUNDLES or name in DEFAULT_BUILTINS:
+                continue
+            directory = os.path.realpath(os.path.join(path, name))
+            # 由 ensure_runtime_modules 自动生成的共享依赖链接不属于用户安装。
+            try:
+                shared_runtime = os.path.commonpath([runtime, directory]) == runtime
+            except ValueError:
+                shared_runtime = False
+            if shared_runtime:
+                continue
+            manifest = os.path.join(directory, 'package.json')
+            try:
+                if os.path.getsize(manifest) > 1024 * 1024:
+                    continue
+                with open(manifest, encoding='utf-8') as stream:
+                    package = json.load(stream)
+                patch = package.get('dsh', {}).get('bundle', {}).get('patch')
+                patches = [patch] if isinstance(patch, str) else patch
+                if package.get('name') != name or not isinstance(patches, list) or not patches:
+                    continue
+                if any(not isinstance(p, str) or not p or os.path.isabs(p)
+                       or os.path.commonpath([directory, os.path.realpath(os.path.join(directory, p))]) != directory
+                       or not os.path.isfile(os.path.join(directory, p)) for p in patches):
+                    continue
+            except (OSError, ValueError, TypeError, AttributeError):
+                continue
+            if name not in found:
+                found[name] = dict(directory=directory, location=location, locations=[location])
+            elif location not in found[name]['locations']:
+                found[name]['locations'].append(location)
+    return found
     return None
 
 
@@ -286,7 +433,7 @@ def ensure_symlink(name, d):
     if os.path.lexists(link):
         try:
             if os.path.islink(link) and os.path.realpath(link) == os.path.realpath(target):
-                return False
+                return ensure_relative_link(link, target)
         except OSError:
             pass
         # 已存在的非正确链接/实体：proot 下 islink 不可信，用 realpath 对比判断；
@@ -302,19 +449,9 @@ def ensure_symlink(name, d):
             # 是实体目录但指向不对（几乎不可能是内置场景，保守起见不动）
             return False
     try:
-        # 目标是目录：Windows 上必须显式 target_is_directory（Linux 忽略该位），
-        # 容器内正常建链，传上对两边都安全
-        os.symlink(target, link, target_is_directory=True)
-        return True
+        return ensure_relative_link(link, target)
     except OSError:
-        # 实体目录不能 symlink 的极端情况（SELinux/文件系统限制）：
-        # 退回软链到相对路径后仍失败则放弃，由 dsh 的 pnpm 链接兜底
-        try:
-            rel = os.path.relpath(target, os.path.dirname(link))
-            os.symlink(rel, link, target_is_directory=True)
-            return True
-        except OSError:
-            return False
+        return False
 
 
 def remove_link(name):
@@ -335,6 +472,7 @@ def enable_plugin(name):
     """--enable：清禁用标记、加回 bundles、重建链接（官方核心无标记/链接，只改 bundles）。"""
     lines = ["== " + time.strftime("%Y-%m-%d %H:%M:%S") + " 启用 " + name]
     try:
+        existing_web = os.path.isfile(os.path.join(local(NODE_MODULES), name, "package.json"))
         d = entity_dir(name)
         if d is None and name not in OFFICIAL_BUNDLES:
             link = os.path.join(local(NODE_MODULES), name, "package.json")
@@ -356,8 +494,9 @@ def enable_plugin(name):
         if d is not None:
             if not os.path.isfile(os.path.join(local(NODE_MODULES), name, "package.json")):
                 raise RuntimeError("无法建立插件链接：" + name)
-            doc.setdefault("dependencies", {})[name] = "link:" + d
-            changed = True
+            if name in DEFAULT_BUILTINS or not existing_web:
+                doc.setdefault("dependencies", {})[name] = "link:" + d
+                changed = True
         if changed:
             write_manifest(doc)
             lines.append("已加回 bundles：%s" % name)
@@ -400,7 +539,8 @@ def disable_plugin(name):
                 lines.append("已移出 bundles：%s" % name)
             else:
                 lines.append("本就不在 bundles：%s" % name)
-        if d is not None and remove_link(name):
+        # 第三方 pnpm 链接是其安装记录的一部分，禁用只移出 bundles，保留实体以便再次启用。
+        if name in DEFAULT_BUILTINS and d is not None and remove_link(name):
             changed = True
             lines.append("已摘 node_modules 链接")
         if not changed:

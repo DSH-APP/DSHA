@@ -4,6 +4,26 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ProcessIdentityTest {
+    @Test public void terminalSessionIncludesSeparateJobGroupsButExcludesOtherSessions() {
+        String child = "444 (sleep) S 321 444 321" + " 0".repeat(15) + " 555 0 0";
+        ProcessIdentity member = ProcessIdentity.inSession(child, 444, 321);
+        assertNotNull(member); assertFalse(member.ownsSession()); assertFalse(member.exited());
+        assertNull(ProcessIdentity.inSession(child, 444, 123));
+        assertNull(ProcessIdentity.inSession(child, 321, 321));
+        assertNull(ProcessIdentity.inSession(child, 444, 0));
+        assertFalse(member.sameProcess(ProcessIdentity.inSession(child.replace("555", "556"), 444, 321)));
+        assertTrue(ProcessIdentity.inSession(child.replace(") S ", ") Z "), 444, 321).exited());
+        assertNull(ProcessIdentity.inSession("444 (sleep) S 321", 444, 321));
+    }
+    @Test public void isolatedSessionRequiresBothGroupAndSessionToMatchOwnPid() {
+        String own = "321 (sh) T 123 321 321" + " 0".repeat(15) + " 555 0 0";
+        ProcessIdentity identity = ProcessIdentity.fromStat(own, 321, 123);
+        assertNotNull(identity); assertTrue(identity.ownsSession()); assertEquals('T', identity.state);
+        assertFalse(ProcessIdentity.fromStat(own.replace("123 321 321", "123 222 321"), 321, 123).ownsSession());
+        assertFalse(ProcessIdentity.fromStat(own.replace("123 321 321", "123 321 222"), 321, 123).ownsSession());
+        assertNull(ProcessIdentity.fromStat(own, 321, 999));
+        assertFalse(identity.sameProcess(ProcessIdentity.fromStat(own.replace("555", "556"), 321, 123)));
+    }
     private String stat(int pid, int parent, long started) {
         return pid + " (odd ) command) S " + parent + " 0".repeat(17) + " " + started + " 0 0";
     }

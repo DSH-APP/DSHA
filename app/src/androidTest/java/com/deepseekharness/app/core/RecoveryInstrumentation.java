@@ -57,7 +57,6 @@ public final class RecoveryInstrumentation extends Instrumentation {
             @Override public Process execRootfs(String command) throws IOException { throw new IOException("独立样本：进程创建失败"); }
         };
         HarnessController controlled = new HarnessController(isolated);
-        controlled.config().setAutoBackupLaunches(0);
         field(HarnessController.class,"proot").set(controlled,fixture);
         field(HarnessController.class,"webProc").set(controlled,new WebProcessManager(fixture) { @Override public String stop() { return ""; } });
         Field recovery = field(HarnessController.class,"recovery"); Object previous = recovery.get(null);
@@ -97,18 +96,15 @@ public final class RecoveryInstrumentation extends Instrumentation {
         try {
             check(!controller.isStarting() && !controller.isWebRunning(),"用户 Web 正在运行，停止本轮启动测试以保留现场");
             failureScenario(base,controller);
-            int every = controller.config().getAutoBackupLaunches();
-            check(every > 0,"自动备份当前关闭，未修改用户设置");
-            prefs.edit().putInt("backup_launch_count",every-1).commit();
+            prefs.edit().putInt("backup_launch_count",4).commit();
             long before = controller.config().getLastBackupSuccess();
             shell("am start -W -n com.dsh.client/com.deepseekharness.app.ui.MainActivity");
             check(controller.startWeb(null),"真实启动未接受"); started = true;
             runOnMainSync(()->androidx.core.content.ContextCompat.startForegroundService(base,new Intent(base,HarnessService.class)));
             until(()->!controller.getWebAuthUrl().isEmpty(),90000,"真实 Web 未获得鉴权链接："+controller.config().getWebFailureReason());
-            check(controller.config().getLastBackupSuccess()>before,"启动前自动备份未触发");
-            check(controller.config().getLastBackupError().isEmpty(),"自动备份报错");
+            check(controller.config().getLastBackupSuccess()==before,"启动不应自动创建备份");
             output.putString("backup",controller.config().getLastBackupName());
-            phase("真实启动通过：自动备份已保存校验，Web 鉴权已就绪");
+            phase("真实启动通过：未触发自动备份，Web 鉴权已就绪");
             File activity = new File(controller.proot().getRootfsDir(),"root/.dsha-web-activity.json");
             until(activity::isFile,15000,"运行状态插件未写出状态");
             org.json.JSONObject status = new org.json.JSONObject(new String(Compat.readAllBytes(activity),java.nio.charset.StandardCharsets.UTF_8));

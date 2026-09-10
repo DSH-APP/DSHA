@@ -12,9 +12,9 @@ window.__dshaPageBack = function () {
   }
   const frame = document.querySelector('[data-mobile-nav="frame"]');
   if (visible(frame) && !frame.hasAttribute('data-sidebar-collapsed')) { escape(); return true; }
-  // 详情预览由公共 layout 控制器关闭。
-  const shell = document.querySelector('[data-shell-overlay]')?.parentElement;
-  if (visible(shell) && !shell.hasAttribute('data-details-collapsed')) {
+  // 新版文件与预览由右侧面板控制器关闭，不能只改布局宽度而留下展开状态。
+  const panel = document.querySelector('[data-sidebar-right-panel][data-sidebar-right-open]');
+  if (visible(panel)) {
     document.documentElement.removeAttribute('data-dsha-back-handled');
     document.dispatchEvent(new CustomEvent('dsha-close-details'));
     if (document.documentElement.getAttribute('data-dsha-back-handled') === 'true') return true;

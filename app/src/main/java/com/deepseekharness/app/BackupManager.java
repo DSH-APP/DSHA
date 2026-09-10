@@ -33,7 +33,7 @@ public final class BackupManager {
     public static String lastError() { return SensitiveData.redact(error); }
     public static boolean isRestoring() { return restoring.get(); }
 
-    /** 安全入口供页面任务使用：停止队列排空后才拿归档锁，避免启动前自动备份互等。 */
+    /** 安全入口供页面任务使用：停止队列排空后才拿归档锁，避免运行任务互等。 */
     public interface DataOperation<T> { T run() throws Exception; }
     private static final ThreadLocal<Boolean> dataOwner = new ThreadLocal<>();
     public static boolean isDataTaskOwner() { return Boolean.TRUE.equals(dataOwner.get()); }
@@ -62,11 +62,18 @@ public final class BackupManager {
         if (!restoring.compareAndSet(false, true)) throw new IOException("已有备份、恢复或维护任务，请等待完成");
         try {
             stopWebForMaintenance(controller);
+            com.deepseekharness.app.ui.PtyTerminalFragment.shutdownAndWait(5000);
+            com.deepseekharness.app.ui.TerminalFragment.shutdownShellAndWait(5000);
             com.deepseekharness.app.util.RuntimeTaskRegistry.Maintenance maintenance =
                     com.deepseekharness.app.core.RuntimeTasks.tryEnterMaintenance();
+            long drainDeadline = android.os.SystemClock.elapsedRealtime() + 3000;
+            while (maintenance == null && android.os.SystemClock.elapsedRealtime() < drainDeadline) {
+                Thread.sleep(50);
+                maintenance = com.deepseekharness.app.core.RuntimeTasks.tryEnterMaintenance();
+            }
             if (maintenance == null) throw new IOException("Web 已停止，但终端或后台任务仍在运行。请结束这些任务后重试；原环境未移动，数据未覆盖。");
             // 检查与新 RuntimeTasks 登记原子互斥；只放行本线程的同步嵌套任务。
-            try (maintenance) {
+            try (com.deepseekharness.app.util.RuntimeTaskRegistry.Maintenance held = maintenance) {
             synchronized (LOCK) {
                 dataOwner.set(true);
                 try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
@@ -82,45 +89,16 @@ public final class BackupManager {
         return restoring.get() || com.deepseekharness.app.util.EnvironmentTaskGate.isBusy();
     }
 
-    /** 启动队列中的自动备份不能调用 runDataTask，否则会等待自身的停止任务。 */
-    public static String backupForAutomaticLaunch(Context ctx, HarnessController controller) {
-        // 已绑定的 Lease 直接复用；不会尝试再次获取并等待自己，也不会释放外层凭据。
-        try { return runSnapshotTask(controller, () -> backupToExternal(ctx, controller)); }
-        catch (Exception e) { error = safeError(e); return null; }
-    }
-
-    /** 只用公开生命周期与宿主 PID 探活；无响应/权限错误不能解释为已经停止。 */
+    /** 与普通停止共用 PID 身份与同 UID 进程核验，未知读取错误仍阻止维护。 */
     public static void stopWebForMaintenance(HarnessController controller) throws Exception {
         if (Thread.holdsLock(LOCK)) throw new IOException("等待 Web 停止前必须释放归档锁");
         if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper())
             throw new IOException("请在独立数据任务线程等待 Web 停止，不能阻塞界面线程");
         controller.stopWeb(message -> { });
         long deadline = android.os.SystemClock.elapsedRealtime() + 45_000;
-        File root = new File(controller.proot().getRootfsDir(), "root");
-        File pid = new File(root, ".dsha-web.pid");
         do {
             if (Thread.currentThread().isInterrupted()) throw new InterruptedException("等待停止被中断");
-            if (!controller.isStarting() && !controller.isStopping()) {
-                boolean alive = false;
-                if (pid.exists() || Compat.isSymbolicLink(pid)) {
-                    if (!pid.isFile() || pid.length() > 32 || Compat.isSymbolicLink(pid)) throw new IOException("Web PID 文件无效，已停止维护");
-                    String value = new String(Compat.readAllBytes(pid), StandardCharsets.UTF_8).trim();
-                    int process = com.deepseekharness.app.util.WebProcSel.parsePid(value);
-                    if (process < 0) throw new IOException("无法确认 Web PID，已停止维护");
-                    try { android.system.Os.kill(process, 0); alive = true; }
-                    catch (android.system.ErrnoException e) {
-                        if (e.errno != android.system.OsConstants.ESRCH) throw new IOException("无法确认 Web 已停止", e);
-                    }
-                }
-                if (!alive && !controller.hasLiveWebProcesses()) {
-                    if (root.isDirectory()) {
-                        File stopped = new File(root, ".dsha-stopped");
-                        if (Compat.isSymbolicLink(stopped) || !stopped.exists() && !stopped.createNewFile())
-                            throw new IOException("无法安全写入停止标记");
-                    }
-                    return;
-                }
-            }
+            if (!controller.isStarting() && !controller.isStopping() && controller.isWebStoppedForMaintenance()) return;
             Thread.sleep(100);
         } while (android.os.SystemClock.elapsedRealtime() < deadline);
         throw new IOException("等待 Web 或它启动的后台进程退出超时；原环境未移动，请结束运行任务后重试");
@@ -131,16 +109,15 @@ public final class BackupManager {
         return hasPendingMaintenance(controller.proot().getRootfsDir().getParentFile().getParentFile());
     }
     public static boolean hasPendingMaintenance(File filesDir) {
-        try { return com.deepseekharness.app.util.MaintenanceTransaction.pending(filesDir) != null; }
+        try { return com.deepseekharness.app.util.MaintenanceTransaction.pending(filesDir) != null
+                || com.deepseekharness.app.util.RuntimeUpdateTransaction.pending(filesDir) != null; }
         catch (IOException e) { return true; }
     }
 
     public static void recoverMaintenanceBeforeStart(HarnessController controller) throws Exception {
         if (!hasPendingMaintenance(controller)) return;
         runDataTask(controller, () -> {
-            com.deepseekharness.app.util.MaintenanceTransaction pending = com.deepseekharness.app.util.MaintenanceTransaction.pending(
-                    controller.proot().getRootfsDir().getParentFile().getParentFile());
-            if (pending != null) pending.rollback();
+            com.deepseekharness.app.core.EnvironmentMaintenance.recover(controller);
             return null;
         });
     }
@@ -230,7 +207,7 @@ public final class BackupManager {
                 DownloadsExport.Result saved = DownloadsExport.write(ctx, archive, BackupScope.archiveName(scope, suffix));
                 if (!saved.integrity.sha256.equals(result.getString("sha256"))) throw new IOException("归档与导出摘要不符");
                 controller.config().recordBackupResult(saved.uri.toString(), saved.displayName, "", scope);
-                return "Download/DSHA/" + saved.displayName + "\nSHA-256：" + saved.integrity.sha256;
+                return "Download/DSHA/" + saved.displayName + "\nSHA-256：" + saved.integrity.sha256 + warnings(result);
             } catch (Exception e) {
                 error = safeError(e);
                 controller.config().recordBackupResult("", "", error, scope);
@@ -240,12 +217,19 @@ public final class BackupManager {
     }
 
     private static JSONObject run(HarnessController controller, String arguments) throws Exception {
-        if (!controller.isEnvironmentReady()) throw new IOException("环境未就绪，请先完成安装");
+        // 升级门禁不能挡住旧环境的迁移备份；只有持有停止屏障的数据任务能使用旧版本。
+        if (!controller.isEnvironmentReady() && !(isDataTaskOwner() && controller.proot().hasBash()))
+            throw new IOException("环境未就绪，请先完成安装");
         if (!controller.proot().ensureBundledPython()) throw new IOException("内置 Python 无法使用，请从诊断页修复工具");
         File script = new File(controller.proot().getRootfsDir(), "root/.dsha-backup-engine.py");
         String asset = controller.readAsset("backup-engine.py");
         if (asset.isEmpty()) throw new IOException("缺少备份核心脚本");
         Compat.write(script, asset.getBytes(StandardCharsets.UTF_8));
+        for (String helper : new String[]{"backup-plugin-graph.py", "register-builtin-plugins.py"}) {
+            String body = controller.readAsset(helper);
+            if (body.isEmpty()) throw new IOException("缺少备份支持脚本：" + helper);
+            Compat.write(new File(controller.proot().getRootfsDir(), "root/.dsha-" + helper), body.getBytes(StandardCharsets.UTF_8));
+        }
         String out = controller.proot().execAndReadWithProot("python3 -B /root/.dsha-backup-engine.py " + arguments
                 + " --workdir " + ShellQuote.arg(controller.config().getWorkdir()) + " 2>&1", 600_000);
         String marker = "DSHA_BACKUP_RESULT=";
@@ -262,6 +246,15 @@ public final class BackupManager {
             if (journal.isFile()) run(controller, "recover");
             controller.config().finishRestoreSettings(interrupted);
         }
+    }
+
+    private static String warnings(JSONObject result) {
+        org.json.JSONArray values = result.optJSONArray("warnings");
+        if (values == null || values.length() == 0) return "";
+        StringBuilder text = new StringBuilder("\n注意：");
+        for (int i = 0; i < Math.min(10, values.length()); i++) text.append('\n').append(values.optString(i));
+        if (values.length() > 10) text.append("\n其余缺失项见备份清单。");
+        return text.toString();
     }
 
     public static final class PreparedRestore implements AutoCloseable {
@@ -301,6 +294,7 @@ public final class BackupManager {
                         + "\n文件数：" + result.getInt("files") + "\n解压内容：" + HarnessController.fmtBytes(result.getLong("bytes"))
                         + "\n来自版本：" + (manifest == null ? "未知" : manifest.optString("appVersion", "未知"))
                         + (result.optBoolean("legacy") ? "\n旧格式：已验证归档完整性，但包内没有逐文件摘要。" : "\n归档与逐文件 SHA-256 校验通过。")
+                        + warnings(result)
                         + "\n\n恢复会先停止 Web。当前数据会保留为 .pre-restore-*，恢复失败自动回滚；完成后可手动启动 Web。";
                 ready = true;
                 return new PreparedRestore(target, copied.sha256, scope, summary);
@@ -311,7 +305,7 @@ public final class BackupManager {
     public static String restorePrepared(HarnessController controller, PreparedRestore prepared) throws Exception {
         if (!restoring.compareAndSet(false, true)) throw new IOException("已有恢复任务正在进行");
         try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
-            // 等待 Web 停止时不持有归档锁，避免与启动队列中的自动备份形成互等。
+            // 等待 Web 停止时不持有归档锁，避免与运行队列形成互等。
             controller.stopWeb();
             synchronized (LOCK) {
             try {

@@ -24,7 +24,7 @@ public final class ConfigurationAuditInstrumentation extends Instrumentation {
         SharedPreferences prefs=app.getSharedPreferences(Constants.PREFS,0);
         ConfigStore config=new ConfigStore(app);String key=config.getApiKey();
         Object stored=prefs.getAll().get(Constants.KEY_API_KEY);String port=config.getPort();
-        int interval=config.getAutoBackupLaunches();FragmentSessionTestActivity page=null;
+        FragmentSessionTestActivity page=null;
         try {
             check(!EnvironmentTaskGate.isBusy(),"有真实环境任务，请稍后测试");
             try(android.os.ParcelFileDescriptor fd=getUiAutomation().executeShellCommand("am start -W -n com.dsh.client/com.deepseekharness.app.ui.MainActivity");
@@ -35,14 +35,11 @@ public final class ConfigurationAuditInstrumentation extends Instrumentation {
             check(page!=null,"配置测试宿主未打开");
             FragmentSessionTestActivity host=page;
             ui(()->host.getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,new ConfigFragment()).commitNow());
-            EditText api=host.findViewById(R.id.config_api_key),input=host.findViewById(R.id.config_port),backup=host.findViewById(R.id.config_auto_backup);
+            EditText api=host.findViewById(R.id.config_api_key),input=host.findViewById(R.id.config_port);
             ui(()->{api.setText("AUDIT_UNSAVED");input.setText("3090");host.findViewById(R.id.config_save).performClick();});
             check(input.getError()!=null,"占用桥接端口没有字段错误");
             check(config.getPort().equals(port)&&config.getApiKey().equals(key),"无效端口导致其他配置被保存");
-            ui(()->{input.setText(port);backup.setText("2147483648");host.findViewById(R.id.config_save).performClick();});
-            check(backup.getError()!=null,"备份间隔溢出没有字段错误");
-            check(config.getAutoBackupLaunches()==interval&&config.getApiKey().equals(key),"无效间隔关闭了备份或改了凭据");
-            ui(()->{backup.setText(String.valueOf(interval));});
+            ui(()->input.setText(port));
             try(EnvironmentTaskGate.Lease held=EnvironmentTaskGate.tryAcquire("配置互斥验收")) {
                 check(held!=null,"无法取得测试互斥");
                 ui(()->host.findViewById(R.id.config_save).performClick());
@@ -51,15 +48,15 @@ public final class ConfigurationAuditInstrumentation extends Instrumentation {
             long began=android.os.SystemClock.elapsedRealtime();
             ui(()->{api.setText(key);host.findViewById(R.id.config_save).performClick();});
             out.putLong("save_ms",android.os.SystemClock.elapsedRealtime()-began);
-            check(config.getApiKey().equals(key)&&config.getPort().equals(port)&&config.getAutoBackupLaunches()==interval,"有效保存改变了原值");
-            check(input.getError()==null&&backup.getError()==null,"保存成功后旧错误仍显示");
+            check(config.getApiKey().equals(key)&&config.getPort().equals(port),"有效保存改变了原值");
+            check(input.getError()==null,"保存成功后旧错误仍显示");
             check(((TextView)host.findViewById(R.id.config_guard_status)).getText().toString().contains("已同步"),"设备授权同步缺少结果");
             check(!host.findViewById(R.id.config_translate).isEnabled(),"未提供的翻译仍是可点击设置");
             check(!EnvironmentTaskGate.isBusy(),"配置保存未释放环境锁");
             out.putString("result","PASS");out.putInt("checks",checks);
         } catch(Throwable e) {out.putString("failure",android.util.Log.getStackTraceString(e));}
         finally {
-            config.setPort(port);config.setAutoBackupLaunches(interval);
+            config.setPort(port);
             SharedPreferences.Editor edit=prefs.edit();if(stored==null)edit.remove(Constants.KEY_API_KEY);else edit.putString(Constants.KEY_API_KEY,(String)stored);edit.commit();
             if(page!=null){Activity closing=page;runOnMainSync(closing::finish);}
             finish(out.containsKey("failure")?1:0,out);

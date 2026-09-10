@@ -1,0 +1,308 @@
+{
+  "format": 1,
+  "distribution": "Ubuntu 24.04 noble",
+  "architecture": "arm64",
+  "requested": [
+    "curl",
+    "git",
+    "ca-certificates"
+  ],
+  "baseStatusSha256": "922b9fd7d5e42e68a9eca63234466bd64a15d8c878eb8efa8e531810b69689c2",
+  "sources": [
+    {
+      "suite": "noble",
+      "inReleaseSha256": "cdb2f31d809f589719a53c6ad15f255b27569c4059542ada282aaa21b8e164b0"
+    },
+    {
+      "suite": "noble-security",
+      "inReleaseSha256": "b1694b783d0b28bf08b45047e9597ec206080662cb770e97341765f99b9d0ede"
+    },
+    {
+      "suite": "noble-updates",
+      "inReleaseSha256": "c6d77031a7d857275b479db658dbfdf8ff9e7875f668176c1e5c669ba5be69bf"
+    }
+  ],
+  "packages": [
+    {
+      "Package": "ca-certificates",
+      "Installed-Size": "333",
+      "Architecture": "all",
+      "Version": "20260601~24.04.1",
+      "Depends": "openssl (>= 1.1.1), debconf (>= 0.5) | debconf-2.0",
+      "Filename": "pool/main/c/ca-certificates/ca-certificates_20260601~24.04.1_all.deb",
+      "Size": "139430",
+      "SHA256": "6bac2a01979e210d9eac1d4d56747ec709ea60654744d66705dc3c36e7629e50"
+    },
+    {
+      "Package": "curl",
+      "Installed-Size": "555",
+      "Architecture": "arm64",
+      "Version": "8.5.0-2ubuntu10.13",
+      "Depends": "libc6 (>= 2.34), libcurl4t64 (= 8.5.0-2ubuntu10.13), zlib1g (>= 1:1.1.4)",
+      "Filename": "pool/main/c/curl/curl_8.5.0-2ubuntu10.13_arm64.deb",
+      "Size": "221832",
+      "SHA256": "8089eb1f6d6ce38431128f3fb758643b4b6b61743ca009fc8ed772692732a848"
+    },
+    {
+      "Package": "git",
+      "Installed-Size": "21796",
+      "Architecture": "arm64",
+      "Version": "1:2.43.0-1ubuntu7.3",
+      "Depends": "libc6 (>= 2.38), libcurl3t64-gnutls (>= 7.56.1), libexpat1 (>= 2.0.1), libpcre2-8-0 (>= 10.34), zlib1g (>= 1:1.2.2), perl, liberror-perl, git-man (>> 1:2.43.0), git-man (<< 1:2.43.0-.)",
+      "Filename": "pool/main/g/git/git_2.43.0-1ubuntu7.3_arm64.deb",
+      "Size": "3773542",
+      "SHA256": "db7f9a9a06a5dd6d6d5bd4bc3b14a2a0f0aaf0cc48f6e096e7ba3f4db63503ee"
+    },
+    {
+      "Package": "git-man",
+      "Installed-Size": "2162",
+      "Architecture": "all",
+      "Version": "1:2.43.0-1ubuntu7.3",
+      "Filename": "pool/main/g/git/git-man_2.43.0-1ubuntu7.3_all.deb",
+      "Size": "1100178",
+      "SHA256": "5701f931ed2cd30644700b0fc1cda7c2214f93a63ef84c0c80e43ce40d2cf1d2"
+    },
+    {
+      "Package": "libbrotli1",
+      "Architecture": "arm64",
+      "Version": "1.1.0-2build2",
+      "Installed-Size": "863",
+      "Depends": "libc6 (>= 2.29)",
+      "Filename": "pool/main/b/brotli/libbrotli1_1.1.0-2build2_arm64.deb",
+      "Size": "339424",
+      "SHA256": "cabf3462d908e72f2e594f19ae87c581c4614f099947e38fbd865bf8eae27014"
+    },
+    {
+      "Package": "libcurl3t64-gnutls",
+      "Installed-Size": "876",
+      "Architecture": "arm64",
+      "Version": "8.5.0-2ubuntu10.13",
+      "Depends": "libbrotli1 (>= 0.6.0), libc6 (>= 2.36), libgnutls30t64 (>= 3.8.2), libgssapi-krb5-2 (>= 1.17), libidn2-0 (>= 2.0.0), libldap2 (>= 2.6.2), libnettle8t64, libnghttp2-14 (>= 1.50.0), libpsl5t64 (>= 0.16.0), librtmp1 (>= 2.3), libssh-4 (>= 0.9.0), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.1.4)",
+      "Filename": "pool/main/c/curl/libcurl3t64-gnutls_8.5.0-2ubuntu10.13_arm64.deb",
+      "Size": "329604",
+      "SHA256": "124fd75efab0338c58c329e8ec21d35ae461b8bf763a950ab1d0d5511f6f964f"
+    },
+    {
+      "Package": "libcurl4t64",
+      "Installed-Size": "939",
+      "Architecture": "arm64",
+      "Version": "8.5.0-2ubuntu10.13",
+      "Depends": "libbrotli1 (>= 0.6.0), libc6 (>= 2.34), libgssapi-krb5-2 (>= 1.17), libidn2-0 (>= 2.0.0), libldap2 (>= 2.6.2), libnghttp2-14 (>= 1.50.0), libpsl5t64 (>= 0.16.0), librtmp1 (>= 2.3), libssh-4 (>= 0.9.0), libssl3t64 (>= 3.0.0), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.1.4)",
+      "Filename": "pool/main/c/curl/libcurl4t64_8.5.0-2ubuntu10.13_arm64.deb",
+      "Size": "335792",
+      "SHA256": "a83424c121f45320883b8e262229c4954fead6c57f379cbea454865ea44a6120"
+    },
+    {
+      "Package": "liberror-perl",
+      "Architecture": "all",
+      "Version": "0.17029-2",
+      "Installed-Size": "69",
+      "Depends": "perl:any",
+      "Filename": "pool/main/libe/liberror-perl/liberror-perl_0.17029-2_all.deb",
+      "Size": "25632",
+      "SHA256": "1907af6bf33dd8684447c09f216c675d2b8559fadd8ddace29fbf83c6fb2a636"
+    },
+    {
+      "Package": "libexpat1",
+      "Installed-Size": "436",
+      "Architecture": "arm64",
+      "Version": "2.6.1-2ubuntu0.4",
+      "Depends": "libc6 (>= 2.38)",
+      "Filename": "pool/main/e/expat/libexpat1_2.6.1-2ubuntu0.4_arm64.deb",
+      "Size": "77506",
+      "SHA256": "284f48567ba2abe026e12ae351f5f4c3a489ce723f725eacfa51bf715aa94609"
+    },
+    {
+      "Package": "libgdbm-compat4t64",
+      "Architecture": "arm64",
+      "Version": "1.23-5.1build1",
+      "Installed-Size": "86",
+      "Depends": "libc6 (>= 2.33), libgdbm6t64 (>= 1.16)",
+      "Filename": "pool/main/g/gdbm/libgdbm-compat4t64_1.23-5.1build1_arm64.deb",
+      "Size": "6578",
+      "SHA256": "e5788a4d0477e0b5bf5cad8950cbd591698828836818c180c20da6f86d68bd37"
+    },
+    {
+      "Package": "libgdbm6t64",
+      "Architecture": "arm64",
+      "Version": "1.23-5.1build1",
+      "Installed-Size": "88",
+      "Depends": "libc6 (>= 2.34)",
+      "Filename": "pool/main/g/gdbm/libgdbm6t64_1.23-5.1build1_arm64.deb",
+      "Size": "34352",
+      "SHA256": "acc12af7e644ac336024c5d24028b20814fadd272588be30fb792982217e2dd4"
+    },
+    {
+      "Package": "libgssapi-krb5-2",
+      "Installed-Size": "422",
+      "Architecture": "arm64",
+      "Version": "1.20.1-6ubuntu2.8",
+      "Depends": "libkrb5-3 (= 1.20.1-6ubuntu2.8), libc6 (>= 2.38), libcom-err2 (>= 1.43.9), libk5crypto3 (>= 1.20), libkrb5support0 (= 1.20.1-6ubuntu2.8)",
+      "Filename": "pool/main/k/krb5/libgssapi-krb5-2_1.20.1-6ubuntu2.8_arm64.deb",
+      "Size": "141678",
+      "SHA256": "3f2aea0bbe7aa2dfc9a525c5bde7bcb6d035cd99975b80a24a09eadcfe5d7503"
+    },
+    {
+      "Package": "libk5crypto3",
+      "Installed-Size": "278",
+      "Architecture": "arm64",
+      "Version": "1.20.1-6ubuntu2.8",
+      "Depends": "libc6 (>= 2.38), libkrb5support0 (= 1.20.1-6ubuntu2.8)",
+      "Filename": "pool/main/k/krb5/libk5crypto3_1.20.1-6ubuntu2.8_arm64.deb",
+      "Size": "85794",
+      "SHA256": "989dd6b8e5707c73a8982f8e97080fc7a0f359a912d7a1d7e4a8b9185442a696"
+    },
+    {
+      "Package": "libkeyutils1",
+      "Architecture": "arm64",
+      "Version": "1.6.3-3build1",
+      "Installed-Size": "84",
+      "Depends": "libc6 (>= 2.17)",
+      "Filename": "pool/main/k/keyutils/libkeyutils1_1.6.3-3build1_arm64.deb",
+      "Size": "9654",
+      "SHA256": "d141e94ed3b32ea6540f2e927a83b3d42cd4378256a1aad60cda583ffdbd78af"
+    },
+    {
+      "Package": "libkrb5-3",
+      "Installed-Size": "1098",
+      "Architecture": "arm64",
+      "Version": "1.20.1-6ubuntu2.8",
+      "Depends": "libkrb5support0 (= 1.20.1-6ubuntu2.8), libc6 (>= 2.38), libcom-err2 (>= 1.43.9), libk5crypto3 (>= 1.20), libkeyutils1 (>= 1.5.9), libssl3t64 (>= 3.0.0)",
+      "Filename": "pool/main/k/krb5/libkrb5-3_1.20.1-6ubuntu2.8_arm64.deb",
+      "Size": "349476",
+      "SHA256": "ef9bcb4f46d80022072741af30df1b6b08a80a8c3c3bbb06e0e710f99e4dab44"
+    },
+    {
+      "Package": "libkrb5support0",
+      "Installed-Size": "153",
+      "Architecture": "arm64",
+      "Version": "1.20.1-6ubuntu2.8",
+      "Depends": "libc6 (>= 2.38)",
+      "Filename": "pool/main/k/krb5/libkrb5support0_1.20.1-6ubuntu2.8_arm64.deb",
+      "Size": "35090",
+      "SHA256": "ee2327c5501eec9d31f696cdd7a332509f90f130cde6180a5b99337deb7c39fe"
+    },
+    {
+      "Package": "libldap2",
+      "Installed-Size": "573",
+      "Architecture": "arm64",
+      "Version": "2.6.10+dfsg-0ubuntu0.24.04.1",
+      "Depends": "libc6 (>= 2.38), libgnutls30t64 (>= 3.8.2), libsasl2-2 (>= 2.1.28+dfsg1)",
+      "Filename": "pool/main/o/openldap/libldap2_2.6.10+dfsg-0ubuntu0.24.04.1_arm64.deb",
+      "Size": "195858",
+      "SHA256": "60893ca2782c2e52dc3b7b192be0169228beb91f7c87e93abaeca5871c5f16ee"
+    },
+    {
+      "Package": "libnghttp2-14",
+      "Installed-Size": "228",
+      "Architecture": "arm64",
+      "Version": "1.59.0-1ubuntu0.4",
+      "Depends": "libc6 (>= 2.17)",
+      "Filename": "pool/main/n/nghttp2/libnghttp2-14_1.59.0-1ubuntu0.4_arm64.deb",
+      "Size": "74758",
+      "SHA256": "ec812e0b82dfb315b140020f4c8434191a89cf42c49dbb82605d0892b6783b59"
+    },
+    {
+      "Package": "libperl5.38t64",
+      "Installed-Size": "31047",
+      "Architecture": "arm64",
+      "Version": "5.38.2-3.2ubuntu0.4",
+      "Depends": "libbz2-1.0, libc6 (>= 2.38), libcrypt1 (>= 1:4.1.0), libdb5.3t64, libgdbm-compat4t64 (>= 1.18-3), libgdbm6t64 (>= 1.21), zlib1g (>= 1:1.2.3.3), perl-modules-5.38 (>= 5.38.2-3.2ubuntu0.4)",
+      "Filename": "pool/main/p/perl/libperl5.38t64_5.38.2-3.2ubuntu0.4_arm64.deb",
+      "Size": "4784520",
+      "SHA256": "d539297e7d903e6358430bbf25e8574d077a7f7de7a673d6360b5a6f7f87d67e"
+    },
+    {
+      "Package": "libpsl5t64",
+      "Architecture": "arm64",
+      "Version": "0.21.2-1.1build1",
+      "Installed-Size": "155",
+      "Depends": "libidn2-0 (>= 0.16), libc6 (>= 2.33), libunistring5 (>= 1.1)",
+      "Filename": "pool/main/libp/libpsl/libpsl5t64_0.21.2-1.1build1_arm64.deb",
+      "Size": "57436",
+      "SHA256": "886d485c74567b855bcd19b6f353a769a08b58c111b2d8275a908a469c15d4bf"
+    },
+    {
+      "Package": "librtmp1",
+      "Architecture": "arm64",
+      "Version": "2.4+20151223.gitfa8646d.1-2build7",
+      "Installed-Size": "149",
+      "Depends": "libc6 (>= 2.34), libgmp10 (>= 2:6.3.0+dfsg), libgnutls30t64 (>= 3.8.1), libhogweed6t64, libnettle8t64, zlib1g (>= 1:1.1.4)",
+      "Filename": "pool/main/r/rtmpdump/librtmp1_2.4+20151223.gitfa8646d.1-2build7_arm64.deb",
+      "Size": "57804",
+      "SHA256": "fb771b2743120d9d44ee9989fd485205680976f7bf89f2f1ac5df50238ea1db7"
+    },
+    {
+      "Package": "libsasl2-2",
+      "Installed-Size": "180",
+      "Architecture": "arm64",
+      "Version": "2.1.28+dfsg1-5ubuntu3.1",
+      "Depends": "libsasl2-modules-db (>= 2.1.28+dfsg1-5ubuntu3.1), libc6 (>= 2.38), libssl3t64 (>= 3.0.0)",
+      "Filename": "pool/main/c/cyrus-sasl2/libsasl2-2_2.1.28+dfsg1-5ubuntu3.1_arm64.deb",
+      "Size": "54660",
+      "SHA256": "05da24adf2b95285ce7eaf9a2ea902fbf4f756a796c8adbfd221d746035df44b"
+    },
+    {
+      "Package": "libsasl2-modules-db",
+      "Installed-Size": "106",
+      "Architecture": "arm64",
+      "Version": "2.1.28+dfsg1-5ubuntu3.1",
+      "Depends": "libc6 (>= 2.17), libdb5.3t64",
+      "Filename": "pool/main/c/cyrus-sasl2/libsasl2-modules-db_2.1.28+dfsg1-5ubuntu3.1_arm64.deb",
+      "Size": "21552",
+      "SHA256": "ee8237dfd0d26df4d5fbfd3a9b132ae9f34f05b4508176b8bd1839f12739d94c"
+    },
+    {
+      "Package": "libssh-4",
+      "Installed-Size": "506",
+      "Architecture": "arm64",
+      "Version": "0.10.6-2ubuntu0.5",
+      "Depends": "libc6 (>= 2.33), libgssapi-krb5-2 (>= 1.17), libssl3t64 (>= 3.0.0), zlib1g (>= 1:1.1.4)",
+      "Filename": "pool/main/libs/libssh/libssh-4_0.10.6-2ubuntu0.5_arm64.deb",
+      "Size": "192306",
+      "SHA256": "f1b8da917a3d65ca77918027206b55b69d62795df2676c39828d4439bc97e68f"
+    },
+    {
+      "Package": "openssl",
+      "Installed-Size": "1897",
+      "Architecture": "arm64",
+      "Version": "3.0.13-0ubuntu3.15",
+      "Depends": "libc6 (>= 2.34), libssl3t64 (>= 3.0.9)",
+      "Filename": "pool/main/o/openssl/openssl_3.0.13-0ubuntu3.15_arm64.deb",
+      "Size": "984680",
+      "SHA256": "818b4ab7092eb3365358ce41896ad08206b30cdb67445d7ec0503262893a0d95"
+    },
+    {
+      "Package": "perl",
+      "Installed-Size": "673",
+      "Architecture": "arm64",
+      "Version": "5.38.2-3.2ubuntu0.4",
+      "Depends": "perl-base (= 5.38.2-3.2ubuntu0.4), perl-modules-5.38 (>= 5.38.2-3.2ubuntu0.4), libperl5.38t64 (= 5.38.2-3.2ubuntu0.4)",
+      "Pre-Depends": "dpkg (>= 1.17.17)",
+      "Filename": "pool/main/p/perl/perl_5.38.2-3.2ubuntu0.4_arm64.deb",
+      "Size": "231440",
+      "SHA256": "585e0229427b1897c6718fd30e7be725f7beb762432460e0b1788646955b3094"
+    },
+    {
+      "Package": "perl-base",
+      "Installed-Size": "8127",
+      "Architecture": "arm64",
+      "Version": "5.38.2-3.2ubuntu0.4",
+      "Pre-Depends": "libc6 (>= 2.38), libcrypt1 (>= 1:4.1.0), dpkg (>= 1.17.17)",
+      "Filename": "pool/main/p/perl/perl-base_5.38.2-3.2ubuntu0.4_arm64.deb",
+      "Size": "1780926",
+      "SHA256": "ef46aa2535744a298e6a3406d7440a66a2b369d56a09acf2110bce95e7aac73a"
+    },
+    {
+      "Package": "perl-modules-5.38",
+      "Installed-Size": "19164",
+      "Architecture": "all",
+      "Version": "5.38.2-3.2ubuntu0.4",
+      "Depends": "perl-base (>= 5.38.2-1)",
+      "Pre-Depends": "dpkg (>= 1.17.17)",
+      "Filename": "pool/main/p/perl/perl-modules-5.38_5.38.2-3.2ubuntu0.4_all.deb",
+      "Size": "3110104",
+      "SHA256": "14e3fb89fdc5e154f0f442f8ed5d2b5e07d98fe4b883b97793df459ff265e866"
+    }
+  ]
+}

@@ -193,11 +193,9 @@ public class WorkspaceFragment extends Fragment {
                 + java.text.DateFormat.getDateTimeInstance().format(new java.util.Date(time))
                 + "\n" + controller.config().getLastBackupName();
         String failure = controller.config().getLastBackupError();
-        int every = controller.config().getAutoBackupLaunches();
         com.deepseekharness.app.util.BackupTaskState.Snapshot s = task.snapshot();
         boolean busy = task.busy(), pending = task.pendingMaintenance();
         ((TextView) view.findViewById(R.id.workspace_backup_status)).setText(success
-                + "\n自动备份：" + (every <= 0 ? "已关闭" : "每手动启动 Web " + every + " 次")
                 + (failure.isEmpty() ? "" : "\n上次未完成：" + failure)
                 + (s.id == 0 ? "" : "\n\n" + s.kind + "\n" + s.detail)
                 + (pending ? "\n\n有未完成的环境维护，请恢复原环境后再继续。" : ""));

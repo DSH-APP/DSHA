@@ -11,7 +11,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.deepseekharness.app.R;
 
-/** 两种网页内核共用全屏窗口，保留挖孔安全区、输入法缩放与系统返回手势。 */
+/** 两种网页内核共用安全显示区；系统栏、挖孔和输入法都不能覆盖正文。 */
 public final class WebFullscreenUi {
     /** 避免全局页面边距处理覆盖网页的全屏设置。 */
     public interface Host { }
@@ -19,25 +19,34 @@ public final class WebFullscreenUi {
     private WebFullscreenUi() { }
 
     public static void install(Activity activity) {
+        // 旧 Android 的 FLAG_FULLSCREEN 会阻止 adjustResize，不能依赖输入法出现时再取消全屏。
+        activity.getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
         WindowCompat.setDecorFitsSystemWindows(activity.getWindow(), false);
         View content = activity.findViewById(android.R.id.content);
         content.setBackgroundColor(activity.getColor(R.color.surface));
         ViewCompat.setOnApplyWindowInsetsListener(content, (view, insets) -> {
-            // 临时唤出的系统栏覆盖页面；键盘和不可隐藏的窗口标题栏仍需避让。
-            Insets safe = insets.getInsets(WindowInsetsCompat.Type.displayCutout()
-                    | WindowInsetsCompat.Type.captionBar());
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            // 顶部保留稳定安全区，避免 ROM 在键盘/焦点切换时短暂报告状态栏不可见而把正文顶上去。
+            Insets stableTop = insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.statusBars()
+                    | WindowInsetsCompat.Type.displayCutout() | WindowInsetsCompat.Type.captionBar());
+            Insets safe = Insets.max(bars, stableTop);
             int keyboard = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
             view.setPadding(safe.left, safe.top, safe.right, Math.max(safe.bottom, keyboard));
             return WindowInsetsCompat.CONSUMED;
         });
-        hideSystemBars(activity);
+        applySystemBars(activity);
         ViewCompat.requestApplyInsets(content);
     }
 
-    public static void hideSystemBars(Activity activity) {
+    public static void applySystemBars(Activity activity) {
         WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(
                 activity.getWindow(), activity.getWindow().getDecorView());
+        controller.setAppearanceLightStatusBars(androidx.core.graphics.ColorUtils.calculateLuminance(
+                activity.getColor(R.color.surface)) > 0.5);
         controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-        controller.hide(WindowInsetsCompat.Type.systemBars());
+        // 显示状态栏，正文由 insets 避让；底部仍可通过手势唤出系统导航。
+        controller.show(WindowInsetsCompat.Type.statusBars());
+        controller.hide(WindowInsetsCompat.Type.navigationBars());
     }
 }

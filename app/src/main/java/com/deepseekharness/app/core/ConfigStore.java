@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 
 import com.deepseekharness.app.data.KeyVault;
 import com.deepseekharness.app.util.Constants;
+import com.deepseekharness.app.util.PreferenceValue;
 
 /**
  * 配置的唯一读写入口：SharedPreferences + Keystore 加密的 API key。
@@ -18,10 +19,13 @@ public class ConfigStore {
     public ConfigStore(Context ctx) {
         this.prefs = ctx.getSharedPreferences(Constants.PREFS, Context.MODE_PRIVATE);
         this.vault = new KeyVault(ctx);
+        // 启动计数备份已移除；覆盖安装与旧备份恢复均不能重新启用。
+        if (prefs.contains(Constants.KEY_AUTO_BACKUP) || prefs.contains("backup_launch_count"))
+            prefs.edit().remove(Constants.KEY_AUTO_BACKUP).remove("backup_launch_count").apply();
     }
 
     public boolean isWelcomed() {
-        return prefs.getBoolean(Constants.KEY_WELCOMED, false);
+        return flag(Constants.KEY_WELCOMED, false);
     }
 
     public void setWelcomed(boolean v) {
@@ -29,7 +33,7 @@ public class ConfigStore {
     }
 
     public String getUiTheme() {
-        return com.deepseekharness.app.util.UiThemePreference.normalize(prefs.getString("ui_theme", "system"));
+        return com.deepseekharness.app.util.UiThemePreference.normalize(text("ui_theme", "system"));
     }
     public void setUiTheme(String value) {
         prefs.edit().putString("ui_theme", com.deepseekharness.app.util.UiThemePreference.normalize(value)).apply();
@@ -38,7 +42,7 @@ public class ConfigStore {
     // ================= 接入 =================
 
     public String getApiKey() {
-        return vault.decrypt(prefs.getString(Constants.KEY_API_KEY, ""));
+        return vault.decrypt(text(Constants.KEY_API_KEY, ""));
     }
 
     public void setApiKey(String v) {
@@ -58,7 +62,7 @@ public class ConfigStore {
     }
 
     public int getPortInt() {
-        int p = parsePort(prefs.getString(Constants.KEY_PORT, String.valueOf(Constants.DSH_WEB_PORT)));
+        int p = parsePort(text(Constants.KEY_PORT, String.valueOf(Constants.DSH_WEB_PORT)));
         return p == Constants.LAN_BRIDGE_PORT || p == Constants.SHELL_BRIDGE_PORT ? Constants.DSH_WEB_PORT : p;
     }
 
@@ -79,7 +83,7 @@ public class ConfigStore {
     // ================= 行为 =================
 
     public boolean isConfirmShell() {
-        return prefs.getBoolean(Constants.KEY_CONFIRM_SHELL, true);
+        return flag(Constants.KEY_CONFIRM_SHELL, true);
     }
 
     public void setConfirmShell(boolean v) {
@@ -87,7 +91,7 @@ public class ConfigStore {
     }
 
     public boolean isRootShellAllowed() {
-        return prefs.getBoolean(Constants.KEY_ALLOW_ROOT_SHELL, false);
+        return flag(Constants.KEY_ALLOW_ROOT_SHELL, false);
     }
 
     public void setRootShellAllowed(boolean v) {
@@ -95,7 +99,7 @@ public class ConfigStore {
     }
 
     public boolean isCheckUpdate() {
-        return prefs.getBoolean(Constants.KEY_CHECK_UPDATE, true);
+        return flag(Constants.KEY_CHECK_UPDATE, true);
     }
 
     public void setCheckUpdate(boolean v) {
@@ -103,7 +107,7 @@ public class ConfigStore {
     }
 
     public boolean isDesktopMode() {
-        return prefs.getBoolean(Constants.KEY_DESKTOP_MODE, false);
+        return flag(Constants.KEY_DESKTOP_MODE, false);
     }
 
     public void setDesktopMode(boolean v) {
@@ -111,7 +115,7 @@ public class ConfigStore {
     }
 
     public boolean isBackupKey() {
-        return prefs.getBoolean(Constants.KEY_BACKUP_KEY, true);
+        return flag(Constants.KEY_BACKUP_KEY, true);
     }
 
     public void setBackupKey(boolean v) {
@@ -119,7 +123,7 @@ public class ConfigStore {
     }
 
     public boolean isGeckoCore() {
-        return prefs.getBoolean(Constants.KEY_GECKO_CORE, false);
+        return flag(Constants.KEY_GECKO_CORE, false);
     }
 
     public void setGeckoCore(boolean v) {
@@ -128,7 +132,7 @@ public class ConfigStore {
 
     /** 默认 proroot；关掉用传统 proot。 */
     public boolean isProroot() {
-        return "proroot".equals(prefs.getString(Constants.KEY_CONTAINER_RUNTIME, "proot"));
+        return "proroot".equals(text(Constants.KEY_CONTAINER_RUNTIME, "proot"));
     }
 
     public void setProroot(boolean v) {
@@ -136,29 +140,17 @@ public class ConfigStore {
     }
 
     public boolean isLanMode() {
-        return prefs.getBoolean(Constants.KEY_LAN_MODE, false);
+        return flag(Constants.KEY_LAN_MODE, false);
     }
 
     public void setLanMode(boolean v) {
         prefs.edit().putBoolean(Constants.KEY_LAN_MODE, v).apply();
     }
 
-    public int getAutoBackupLaunches() {
-        try {
-            return Integer.parseInt(prefs.getString(Constants.KEY_AUTO_BACKUP, "5"));
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
-    public void setAutoBackupLaunches(int v) {
-        prefs.edit().putString(Constants.KEY_AUTO_BACKUP, String.valueOf(Math.max(0, v))).apply();
-    }
-
     // ================= 其他 =================
 
     public String getPermissionMode() {
-        return prefs.getString(Constants.KEY_PERMISSION_MODE, "danger-full-access");
+        return text(Constants.KEY_PERMISSION_MODE, "danger-full-access");
     }
 
     public void setPermissionMode(String v) {
@@ -166,18 +158,18 @@ public class ConfigStore {
     }
 
     public String getWorkdir() {
-        return prefs.getString(Constants.KEY_WORKDIR, Constants.DEFAULT_WORKDIR);
+        return text(Constants.KEY_WORKDIR, Constants.DEFAULT_WORKDIR);
     }
 
     public void setWorkdir(String v) {
         prefs.edit().putString(Constants.KEY_WORKDIR, v).apply();
     }
 
-    public int getWebFailures() { return prefs.getInt("web_consecutive_failures", 0); }
-    public boolean isEcoMode() { return prefs.getBoolean("runtime_eco_mode", false); }
+    public int getWebFailures() { return integer("web_consecutive_failures", 0); }
+    public boolean isEcoMode() { return flag("runtime_eco_mode", false); }
     public void setEcoMode(boolean value) { prefs.edit().putBoolean("runtime_eco_mode", value).apply(); }
-    public String getWebFailureStage() { return prefs.getString("web_failure_stage", ""); }
-    public String getWebFailureReason() { return prefs.getString("web_failure_reason", ""); }
+    public String getWebFailureStage() { return text("web_failure_stage", ""); }
+    public String getWebFailureReason() { return text("web_failure_reason", ""); }
     public void recordWebRecovery(int count, String stage, String reason) {
         prefs.edit().putInt("web_consecutive_failures", count).putString("web_failure_stage", stage)
                 .putString("web_failure_reason", reason.length() > 500 ? reason.substring(0, 500) : reason).commit();
@@ -189,7 +181,7 @@ public class ConfigStore {
         out.put("formatVersion", 1).put("port", getPort()).put("workdir", getWorkdir())
                 .put("permissionMode", getPermissionMode()).put("confirmShell", isConfirmShell())
                 .put("desktopMode", isDesktopMode()).put("checkUpdate", isCheckUpdate())
-                .put("autoBackupLaunches", getAutoBackupLaunches()).put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme());
+                .put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme());
         if (isBackupKey() && !getApiKey().isEmpty()) out.put("apiKey", getApiKey());
         return out;
     }
@@ -202,7 +194,6 @@ public class ConfigStore {
         if (data.has("confirmShell")) edit.putBoolean(Constants.KEY_CONFIRM_SHELL, data.optBoolean("confirmShell", true));
         if (data.has("desktopMode")) edit.putBoolean(Constants.KEY_DESKTOP_MODE, data.optBoolean("desktopMode"));
         if (data.has("checkUpdate")) edit.putBoolean(Constants.KEY_CHECK_UPDATE, data.optBoolean("checkUpdate", true));
-        if (data.has("autoBackupLaunches")) edit.putString(Constants.KEY_AUTO_BACKUP, String.valueOf(Math.max(0, data.optInt("autoBackupLaunches", 5))));
         if (data.has("apiKey")) {
             String plain = data.optString("apiKey");
             String encrypted = vault.encrypt(plain);
@@ -217,7 +208,7 @@ public class ConfigStore {
     private static final String[] BACKUP_SETTING_KEYS = {
             Constants.KEY_PORT, Constants.KEY_WORKDIR, Constants.KEY_PERMISSION_MODE,
             Constants.KEY_CONFIRM_SHELL, Constants.KEY_DESKTOP_MODE, Constants.KEY_CHECK_UPDATE,
-            Constants.KEY_AUTO_BACKUP, Constants.KEY_API_KEY, "runtime_eco_mode", "ui_theme"
+            Constants.KEY_API_KEY, "runtime_eco_mode", "ui_theme"
     };
 
     /** 保存的是 Keystore 密文和原始偏好值，供跨进程中断恢复使用。 */
@@ -230,7 +221,7 @@ public class ConfigStore {
     }
 
     public void finishRestoreSettings(boolean rollback) throws Exception {
-        String saved = prefs.getString("backup_restore_previous_settings", "");
+        String saved = text("backup_restore_previous_settings", "");
         if (saved.isEmpty()) return;
         SharedPreferences.Editor edit = prefs.edit();
         if (rollback) {
@@ -239,6 +230,8 @@ public class ConfigStore {
                 Object value = before.opt(key);
                 if (value == null || value == org.json.JSONObject.NULL) edit.remove(key);
                 else if (value instanceof Boolean) edit.putBoolean(key, (Boolean) value);
+                else if (value instanceof Integer) edit.putInt(key, (Integer) value);
+                else if (value instanceof Long) edit.putLong(key, (Long) value);
                 else edit.putString(key, String.valueOf(value));
             }
         }
@@ -255,18 +248,13 @@ public class ConfigStore {
         edit.apply();
     }
 
-    public String getLastBackupUri() { return prefs.getString("backup_last_uri", ""); }
-    public String getLastBackupName() { return prefs.getString("backup_last_name", ""); }
-    public String getLastBackupError() { return prefs.getString("backup_last_error", ""); }
-    public long getLastBackupSuccess() { return prefs.getLong("backup_last_success", 0); }
+    public String getLastBackupUri() { return text("backup_last_uri", ""); }
+    public String getLastBackupName() { return text("backup_last_name", ""); }
+    public String getLastBackupError() { return text("backup_last_error", ""); }
+    public long getLastBackupSuccess() { return longValue("backup_last_success", 0); }
 
-    /** 每次手动启动计数，达到阈值才触发；看门狗重启不计数。 */
-    public synchronized boolean countLaunchForBackup() {
-        int every = getAutoBackupLaunches();
-        if (every <= 0) return false;
-        int count = prefs.getInt("backup_launch_count", 0) + 1;
-        boolean due = count >= every;
-        prefs.edit().putInt("backup_launch_count", due ? 0 : count).apply();
-        return due;
-    }
+    private String text(String key, String fallback) { return PreferenceValue.text(prefs.getAll().get(key), fallback); }
+    private boolean flag(String key, boolean fallback) { return PreferenceValue.flag(prefs.getAll().get(key), fallback); }
+    private int integer(String key, int fallback) { return PreferenceValue.integer(prefs.getAll().get(key), fallback); }
+    private long longValue(String key, long fallback) { return PreferenceValue.integer(prefs.getAll().get(key), fallback); }
 }

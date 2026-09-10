@@ -43,6 +43,11 @@ public final class TarGzipExtractor {
 
     /** gzip 或裸 tar 自动识别（1f 8b gzip magic）。 */
     public static void extractAuto(InputStream raw, File dest, int strip) throws IOException {
+        extractSelected(raw, dest, strip, name -> true);
+    }
+
+    /** 在同一份离线包上流式筛选受管运行时，避免重新落盘 Ubuntu 和用户数据。 */
+    public static void extractSelected(InputStream raw, File dest, int strip, java.util.function.Predicate<String> selected) throws IOException {
         PushbackInputStream pin = new PushbackInputStream(new BufferedInputStream(raw, 1 << 16), 2);
         int b0 = pin.read();
         int b1 = pin.read();
@@ -52,14 +57,18 @@ public final class TarGzipExtractor {
         }
         if (b0 == 0x1f && b1 == 0x8b) {
             try (GZIPInputStream gz = new GZIPInputStream(pin, 1 << 16)) {
-                extractTar(gz, dest, strip);
+                extractTar(gz, dest, strip, selected);
             }
         } else {
-            extractTar(pin, dest, strip);
+            extractTar(pin, dest, strip, selected);
         }
     }
 
     public static void extractTar(InputStream tar, File dest, int strip) throws IOException {
+        extractTar(tar, dest, strip, name -> true);
+    }
+
+    private static void extractTar(InputStream tar, File dest, int strip, java.util.function.Predicate<String> selected) throws IOException {
         InputStream in = (tar instanceof BufferedInputStream) ? tar : new BufferedInputStream(tar, 1 << 16);
         byte[] header = new byte[BLOCK];
         // 256KB：既当 inflate 读块、又当写文件缓冲（rootfs 解出约 1GB，8KB 会放大 syscall 次数）
@@ -134,6 +143,17 @@ public final class TarGzipExtractor {
             if (name == null || name.isEmpty() || traversal
                     || name.contains("..") || name.contains("\\\"") || name.contains(",")) {
                 throw new IOException("预构建包损坏（非法文件条目: " + safeName(name) + "）");
+            }
+
+            if (!selected.test(name)) {
+                long remaining = size;
+                while (remaining > 0) {
+                    int count = in.read(buf, 0, (int) Math.min(buf.length, remaining));
+                    if (count < 0) throw new IOException("预构建包被截断");
+                    remaining -= count;
+                }
+                skipPadding(in, size);
+                continue;
             }
 
             switch (type) {

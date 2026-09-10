@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# DSHA_ADB_SCRIPT_VERSION=15
-"""设备 shell：有限时连接、一次确认、发送后不重放、真实远端退出码。
+# DSHA_ADB_SCRIPT_VERSION=16
+"""设备 shell：原生白名单判定、有限时连接、发送后不重放、真实远端退出码。
 
 用法：adb-shell.py [--host 本机IP] [--port 端口] [--timeout 秒] [--su] 命令
-失败码：124=连接失败/超时，125=已发送但执行结果未知，126=未获确认。
+失败码：124=连接失败/超时，125=已发送但执行结果未知，126=策略拦截。
 命令正常结束时，本地退出码与 [EXIT=n] 都使用远端退出码。
 """
 import ipaddress
@@ -17,6 +17,11 @@ import sys
 import threading
 import time
 import uuid
+import importlib.util
+
+_policy_spec = importlib.util.spec_from_file_location('dsha_device_policy', os.path.join(os.path.dirname(__file__), 'device-shell-policy.py'))
+policy = importlib.util.module_from_spec(_policy_spec)
+_policy_spec.loader.exec_module(policy)
 
 KEYDIR = '/root/.dsh/adbkeys'
 KEY = KEYDIR + '/adbkey'
@@ -224,10 +229,17 @@ def run_on_endpoint(device_cls, signer_cls, cmd, host, port, deadline, command_t
         marker = '__DSHA_EXIT_' + uuid.uuid4().hex + '__='
         # 从这里开始即使异常也禁止换地址重放，包括不兼容库抛出的 TypeError。
         try:
-            raw = dev.shell(frame_command(cmd, marker),
-                transport_timeout_s=min(TRANSPORT_TIMEOUT, command_timeout),
-                read_timeout_s=min(8, command_timeout), timeout_s=command_timeout)
-            result = parse_shell_result(raw, marker)
+            def shell(command):
+                marker = '__DSHA_EXIT_' + uuid.uuid4().hex + '__='
+                if isinstance(cmd, dict) and cmd.get('su'):
+                    command = 'su -c ' + shlex.quote(command)
+                raw = dev.shell(frame_command(command, marker),
+                    transport_timeout_s=min(TRANSPORT_TIMEOUT, command_timeout),
+                    read_timeout_s=min(8, command_timeout), timeout_s=command_timeout)
+                return parse_shell_result(raw, marker)
+            result = policy.execute(cmd, shell, ShellResult) if isinstance(cmd, dict) else shell(cmd)
+        except policy.Blocked:
+            raise
         except Exception as e:
             raise ExecutionUnknown('%s:%d 返回中断（%s）；命令可能已执行，请先检查设备，未自动重试'
                                    % (host, port, type(e).__name__)) from e
@@ -314,6 +326,33 @@ def request_confirm(cmd, reason=''):
     raise ConfirmationError('BRIDGE_UNREACHABLE: 3090 确认桥未监听，请打开 DSHA 后重试')
 
 
+def request_device_plan(cmd, use_su=False):
+    """所有设备命令均经过同一原生白名单；不接受 DSH_INTERNAL 或关闭确认来绕过。"""
+    import urllib.request
+    import urllib.parse
+    try:
+        with open('/root/.dsh/.bridge_token') as source:
+            token = source.read().strip()
+        if not token:
+            raise ValueError('missing token')
+        query = urllib.parse.urlencode({'cmd': cmd, 'su': '1' if use_su else '0'})
+        request = urllib.request.Request('http://127.0.0.1:3090/device/plan?' + query, headers={'X-Token': token})
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(request, timeout=15) as response:
+            value = json.loads(response.read(1024 * 1024)).get('result')
+        if not isinstance(value, str) or not value.startswith('{'):
+            raise policy.Blocked(str(value or '原生策略未就绪'))
+        plan = json.loads(value)
+        if plan.get('version') != 1 or plan.get('kind') not in ('READ', 'FILE', 'STOP'):
+            raise policy.Blocked(plan.get('reason') or '命令未获策略允许')
+        plan['su'] = use_su
+        return plan
+    except policy.Blocked:
+        raise
+    except Exception as error:
+        raise policy.Blocked('设备策略桥不可用，命令未发送；请打开或更新 DSHA（' + type(error).__name__ + '）') from error
+
+
 def parse_args(args):
     port, host, timeout, connect_timeout, use_su = 0, '', COMMAND_TIMEOUT, CONNECT_TIMEOUT, False
     while args:
@@ -342,7 +381,7 @@ def parse_args(args):
             break
         else:
             break
-    return port, host, timeout, connect_timeout, use_su, ' '.join(args) if args else 'id'
+    return port, host, timeout, connect_timeout, use_su, (args[0] if len(args) == 1 else shlex.join(args)) if args else 'id'
 
 
 def main():
@@ -351,11 +390,11 @@ def main():
     except ValueError as e:
         print('INVALID_ARGUMENT: %s\n[EXIT=2]' % e)
         return 2
-    if use_su:
-        if not os.path.isfile('/root/.dsh/allow-root-shell'):
-            print('ROOT_NOT_ALLOWED: 请在配置页允许 root shell 并保存后重试\n[EXIT=126]')
-            return 126
-        cmd = 'su -c ' + shlex.quote(cmd)
+    try:
+        plan = request_device_plan(cmd, use_su)
+    except policy.Blocked as error:
+        print('[POLICY_BLOCKED] %s\n[EXIT=126]' % error)
+        return 126
     if not (os.path.isfile(KEY) and os.path.isfile(KEYPUB)):
         print('NO_KEY: 请到配置页完成 ADB 无线配对\n[EXIT=1]')
         return 1
@@ -365,13 +404,6 @@ def main():
     except ImportError:
         print('DEPS_MISSING: ADB 依赖未就绪，请重新打开配对页准备环境\n[EXIT=1]')
         return 1
-    confirm_on = not os.path.isfile('/root/.dsh/confirm-shell-disabled')
-    if os.environ.get('DSH_INTERNAL') != '1' and (use_su or (confirm_on and not is_readonly_cmd(cmd))):
-        try:
-            request_confirm(cmd)
-        except ConfirmationError as e:
-            print('%s\n[EXIT=126]' % e)
-            return 126
     if not port:
         try:
             with open(KEYDIR + '/connect_port') as f:
@@ -387,7 +419,10 @@ def main():
         except OSError:
             pass
     try:
-        result = connect_with_retry(AdbDeviceTls, PythonRSASigner, cmd, port, host, connect_timeout, timeout)
+        result = connect_with_retry(AdbDeviceTls, PythonRSASigner, plan, port, host, connect_timeout, timeout)
+    except policy.Blocked as error:
+        print('[POLICY_BLOCKED] %s\n[EXIT=126]' % error)
+        return 126
     except ConnectFail as e:
         print('CONNECT_FAIL: %s\n[EXIT=124]' % e)
         return 124

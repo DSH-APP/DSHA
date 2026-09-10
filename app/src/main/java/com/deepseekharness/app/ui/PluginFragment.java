@@ -482,8 +482,10 @@ public class PluginFragment extends Fragment {
         @Override public void onBindViewHolder(@NonNull Holder holder, int position) {
             PluginRepository.Item item = visibleItems.get(position);
             holder.name.setText(item.name);
-            holder.state.setText((item.available ? (item.enabled ? "已启用" : "已禁用") : "实体缺失，请重新导入")
+            holder.state.setText((item.dynamic ? (item.enabled ? "临时插件 · 已运行" : "临时插件 · 未运行")
+                    : item.available ? (item.enabled ? "已启用" : item.detected ? "已检测，可开启以加入 Web" : "已禁用") : "实体缺失，请重新导入")
                     + (item.version.isEmpty() ? "" : " · " + item.version)
+                    + (item.location.isEmpty() ? "" : "\n位置：" + item.location)
                     + (item.updateAvailable ? "\n可更新：" + item.latestVersion
                             : (item.latestVersion.isEmpty() ? "" : "\n上次检查版本：" + item.latestVersion)
                             + (item.updateMessage.isEmpty() ? "" : "\n" + item.updateMessage))
@@ -494,7 +496,7 @@ public class PluginFragment extends Fragment {
                     ? (item.official ? "官方核心" : item.builtin ? "DSHA 内置插件" : "第三方插件") : item.description);
             holder.itemView.findViewById(R.id.pluginActions).setOnClickListener(v -> itemActions(item));
             holder.itemView.findViewById(R.id.pluginActions).setContentDescription("更多操作：" + item.name);
-            holder.toggle.setVisibility(View.VISIBLE);
+            holder.toggle.setVisibility(item.dynamic ? View.GONE : View.VISIBLE);
             holder.toggle.setOnCheckedChangeListener(null);
             holder.toggle.setChecked(item.enabled);
             holder.toggle.setContentDescription((item.enabled ? "禁用 " : "启用 ") + item.name);

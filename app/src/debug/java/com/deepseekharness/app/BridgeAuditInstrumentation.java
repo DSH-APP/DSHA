@@ -116,8 +116,16 @@ public final class BridgeAuditInstrumentation extends Instrumentation {
         ShellService shell = new ShellService(shellMillis);
         List<Future<String>> requests = new ArrayList<>();
         long start = SystemClock.elapsedRealtime();
-        // exec 让 sleep 替换本次 sh；不会留下继承管道的额外 shell 子进程。
-        for (int i = 0; i < 4; i++) requests.add(workers.submit(() -> shell.exec("exec sleep 60")));
+        // 已识别的 cat 读取无写端 FIFO，覆盖静默超时，避免以任意脚本绕过新策略。
+        File base = new File(getTargetContext().getCacheDir(), "bridge-shell-" + UUID.randomUUID());
+        check(base.mkdirs(), "创建独立 FIFO 目录");
+        List<File> pipes = new ArrayList<>();
+        try {
+        for (int i = 0; i < 4; i++) {
+            File pipe = new File(base, "wait-" + i); pipes.add(pipe);
+            android.system.Os.mkfifo(pipe.getPath(), 0600);
+            requests.add(workers.submit(() -> shell.exec("cat " + ShellQuote.arg(pipe.getPath()))));
+        }
         for (Future<String> request : requests) {
             String response = request.get(shellMillis + 5000, TimeUnit.MILLISECONDS);
             check(response.contains("[EXIT=timeout]"), "静默命令必须返回超时标记");
@@ -127,16 +135,19 @@ public final class BridgeAuditInstrumentation extends Instrumentation {
         check(elapsed >= shellMillis - 100 && elapsed < shellMillis + 5000, "四路命令总等待有界");
         String next = workers.submit(() -> shell.exec("printf BRIDGE_AUDIT_NEXT")).get(4, TimeUnit.SECONDS);
         check(next.contains("BRIDGE_AUDIT_NEXT") && next.contains("[EXIT=0]"), "超时后后继请求可以执行");
-        String nonzero = workers.submit(() -> shell.exec("printf expected; exit 7")).get(4, TimeUnit.SECONDS);
-        check(nonzero.contains("expected") && nonzero.contains("[EXIT=7]"), "普通输出与非零退出码保留");
+        String nonzero = workers.submit(() -> shell.exec("ls " + ShellQuote.arg(new File(base, "missing").getPath()))).get(4, TimeUnit.SECONDS);
+        check(nonzero.contains("missing") && nonzero.contains("[EXIT=1]"), "普通输出与非零退出码保留");
         report("真实 ShellService：持续输出达到上限仍按期返回");
-        char[] block = new char[4096]; Arrays.fill(block, 'x');
         ShellService flooding = new ShellService(Math.max(2500, shellMillis));
-        String command = "while :; do printf '%s' " + ShellQuote.arg(new String(block)) + "; done";
+        String command = "cat /dev/zero";
         String output = workers.submit(() -> flooding.exec(command)).get(Math.max(2500, shellMillis) + 5000, TimeUnit.MILLISECONDS);
         check(output.contains("[OUTPUT_TRUNCATED]") && output.contains("[EXIT=timeout]"), "持续输出同时受大小与期限约束");
         check(output.length() <= 262_144 + 256, "输出正文不得超过 256 KiB 加固定状态说明");
         passed.add("ShellService: four timeouts, follow-up, exit code, bounded flood; elapsed=" + elapsed + "ms");
+        } finally {
+            for (File pipe : pipes) pipe.delete();
+            base.delete();
+        }
     }
 
     private void bindingCases() throws Exception {

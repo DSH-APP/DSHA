@@ -36,6 +36,7 @@ public class LaunchFragment extends Fragment {
     private long enterRequest;
     /** 本次启动开始时刻（显示耗时用）。 */
     private long startAtMs;
+    private long logRevision = -1;
     private final android.os.Handler ui = new android.os.Handler(android.os.Looper.getMainLooper());
     private final Runnable refreshState = new Runnable() {
         @Override public void run() {
@@ -59,12 +60,14 @@ public class LaunchFragment extends Fragment {
         Button stop = v.findViewById(R.id.launch_stop);
         lanAddrText = v.findViewById(R.id.lan_addr);
         launchLog = v.findViewById(R.id.launch_log);
+        logRevision = -1;
+        v.findViewById(R.id.launch_download_logs).setOnClickListener(x -> startActivity(DiagnosticActivity.downloadLogs(requireContext())));
 
         restart.setText("重启");
         v.findViewById(R.id.launch_recovery).setOnClickListener(x -> showRecovery());
         v.findViewById(R.id.launch_safe).setOnClickListener(x -> new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("安全启动 Web？")
-                .setMessage("暂时禁用第三方插件后启动，保留插件文件、会话和配置。可在插件管理中逐个启用或恢复之前的状态。")
+                .setMessage("停止当前启动，只加载官方基础界面。原插件开关、会话、模型和配置保留；普通重启后回到原配置。安全界面不加载移动插件等扩展。")
                 .setNegativeButton("取消", null).setPositiveButton("安全启动", (dialog, which) -> doStart(activity, status, start, true)).show());
 
         // 启动按钮：未就绪时是「启动」；鉴权链接就绪后自动变为「进入」，点击进 WebUI。
@@ -108,7 +111,7 @@ public class LaunchFragment extends Fragment {
     }
 
     private void doStart(Activity activity, TextView status, Button start, boolean safeMode) {
-        if (controller.isStarting() || controller.isStopping()) return;
+        if (!safeMode && (controller.isStarting() || controller.isStopping())) return;
         final View root = getView();
         if (root == null || activity.isFinishing() || activity.isDestroyed()) return;
         invalidateWebEntry();
@@ -118,24 +121,18 @@ public class LaunchFragment extends Fragment {
         status.setText("启动中…（" + time + "）");
         start.setText("启动");
         webReady = false;
-        appendLog("—— 启动 " + time + " ——");
         java.util.function.Consumer<String> startStatus = msg -> {
             long generation = controller.getWebGeneration();
             activity.runOnUiThread(() -> {
                 if (getView() != root || generation != controller.getWebGeneration()) return;
                 status.setText(msg);
-                if (!controller.getWebAuthUrl().isEmpty() && !webReady) {
-                    long sec = (System.currentTimeMillis() - startAtMs) / 1000;
-                    appendLog("启动成功，耗时 " + sec + "s");
-                    appendLog("本机打开：" + controller.getWebAuthUrl()
-                            + "　（仅本机；其它设备请用「局域网地址」那条）");
-                }
                 refreshRunState();
                 refreshLanAddr();
             });
         };
-        boolean accepted = safeMode ? controller.startWebSafely(startStatus) : controller.startWeb(startStatus);
-        if (accepted && safeMode) PluginFragment.invalidateInstalledState();
+        boolean accepted;
+        if (safeMode) { controller.recoverWeb(true, null, startStatus); accepted = true; }
+        else accepted = controller.startWeb(startStatus);
         refreshRunState();
         if (!accepted) return;
         // 前台保活服务：dsh 后台常驻 + 看门狗自动重启（退到桌面/锁屏不被杀）
@@ -176,7 +173,7 @@ public class LaunchFragment extends Fragment {
                 String failure = null;
                 try {
                     cookie = exchangeWebEntryCookie();
-                    if (cookie == null || cookie.isEmpty()) failure = "未取得 Web 鉴权，请稍后点「进入」重试";
+                    if (cookie == null || cookie.isEmpty()) failure = controller.getWebAuthFailure();
                 } catch (Exception error) {
                     failure = "Web 鉴权失败，请点「进入」重试（" + error.getClass().getSimpleName() + "）";
                 }
@@ -275,12 +272,23 @@ public class LaunchFragment extends Fragment {
             boolean starting = controller.isStarting();
             boolean stopping = controller.isStopping();
             boolean ready = !starting && !stopping && !webEntryUrl().isEmpty();
+            com.deepseekharness.app.util.StartupTrace.Snapshot trace = controller.startupDiagnostics().snapshot();
+            if (launchLog != null && trace.revision != logRevision && !trace.log.isEmpty()) {
+                launchLog.setText(trace.log); logRevision = trace.revision;
+            }
             runState.setText(enteringWeb ? "正在鉴权并打开 Web…" : controller.isRestartBlocked() ? "自动重启已暂停" : stopping ? "DSH 停止中…" : starting ? "DSH 启动中…"
-                    : ready ? "DSH 已就绪，可进入" : controller.isUserStopped() ? "DSH 已停止" : "DSH 未就绪");
+                    : ready ? (trace.safe ? "基础界面已就绪 · 安全模式" : "DSH 已就绪，可进入")
+                    + (controller.isWebCompatibilityFallback() ? " · 已兼容切换 proot" : "")
+                    : controller.isUserStopped() ? "DSH 已停止" : "DSH 未就绪");
+            if (starting) ((TextView) root.findViewById(R.id.launch_status)).setText(trace.stage
+                    + " · 本阶段 " + trace.stageElapsedMs / 1000 + " 秒 · 总计 " + trace.elapsedMs / 1000
+                    + " 秒\n" + (trace.issues.isEmpty() ? "下方实时显示启动输出；等待不会自动终止。" : "检测到插件或配置异常，可查看恢复选项。"));
+            root.findViewById(R.id.launch_busy).setVisibility(starting || stopping ? View.VISIBLE : View.GONE);
             Button recovery = root.findViewById(R.id.launch_recovery);
             int failures = controller.config().getWebFailures();
-            recovery.setVisibility(failures > 0 ? View.VISIBLE : View.GONE);
-            recovery.setText("失败 " + failures + "/3 · " + controller.config().getWebFailureStage() + " · 查看恢复选项");
+            recovery.setVisibility(failures > 0 || !trace.issues.isEmpty() ? View.VISIBLE : View.GONE);
+            recovery.setText(!trace.issues.isEmpty() ? "检测到 " + trace.issues.size() + " 项异常 · 查看插件与恢复选项"
+                    : "失败 " + failures + "/3 · " + controller.config().getWebFailureStage() + " · 查看恢复选项");
             if (start != null) {
                 webReady = ready;
                 start.setText(enteringWeb ? "进入中…" : ready ? "进入" : "启动");
@@ -296,12 +304,34 @@ public class LaunchFragment extends Fragment {
 
     private void showRecovery() {
         com.deepseekharness.app.core.ConfigStore config = controller.config();
+        com.deepseekharness.app.util.StartupTrace.Snapshot trace = controller.startupDiagnostics().snapshot();
+        StringBuilder details = new StringBuilder("当前阶段：" + trace.stage + "\n");
+        java.util.ArrayList<String> plugins = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<String,String> issue : trace.issues.entrySet()) {
+            details.append("\n").append(issue.getKey().isEmpty() ? "配置/加载异常（尚未确定插件）" : issue.getKey())
+                    .append("\n").append(issue.getValue()).append("\n");
+            if (!issue.getKey().isEmpty() && !com.deepseekharness.app.util.BuiltinPlugins.internal(issue.getKey())) plugins.add(issue.getKey());
+        }
+        if (trace.issues.isEmpty()) details.append(config.getWebFailureReason());
+        details.append("\n可安全启动进入基础界面；插件文件和原配置保留。下载日志可保留完整错误上下文。");
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle(controller.isRestartBlocked() ? "连续失败，已暂停自动重启" : "启动恢复")
-                .setMessage("失败阶段：" + config.getWebFailureStage() + "\n" + config.getWebFailureReason()
-                        + "\n\n可点启动重试，或用安全启动暂时禁用第三方插件。插件管理提供上一版回退；诊断页可检查并修复基础工具。")
-                .setPositiveButton("查看诊断", (d, w) -> startActivity(new Intent(requireContext(), DiagnosticActivity.class)))
-                .setNeutralButton("插件回退", (d, w) -> {
+                .setMessage(details.toString())
+                .setPositiveButton("安全启动", (d,w) -> {
+                    View root = getView();
+                    if (root != null) doStart(requireActivity(), root.findViewById(R.id.launch_status), root.findViewById(R.id.launch_start), true);
+                })
+                .setNeutralButton(plugins.isEmpty() ? "管理插件" : "选择停用插件", (d, w) -> {
+                    if (!plugins.isEmpty()) {
+                        new androidx.appcompat.app.AlertDialog.Builder(requireContext()).setTitle("停用所选插件并重启")
+                                .setItems(plugins.toArray(new String[0]), (dialog, item) -> {
+                                    controller.recoverWeb(false, plugins.get(item), message -> ui.post(() -> {
+                                        if (getView() != null) ((TextView)getView().findViewById(R.id.launch_status)).setText(message);
+                                        PluginFragment.invalidateInstalledState(); refreshRunState();
+                                    }));
+                                }).setNegativeButton("取消", null).show();
+                        return;
+                    }
                     PluginFragment fragment = new PluginFragment();
                     Bundle args = new Bundle(); args.putBoolean("show_installed", true); fragment.setArguments(args);
                     getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment)

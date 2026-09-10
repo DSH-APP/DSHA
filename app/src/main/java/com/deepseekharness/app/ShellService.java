@@ -21,11 +21,16 @@ extends IShellService.Stub {
 
     @Override
     public String exec(String cmd) {
+        return DeviceShellExecutor.execute(cmd, this::executeArgv);
+    }
+
+    private String executeArgv(java.util.List<String> arguments) {
         try {
-            ProcessBuilder pb = new ProcessBuilder("sh", "-c", cmd).redirectErrorStream(true);
+            java.util.List<String> argv = new java.util.ArrayList<>(arguments);
+            argv.set(0, "/system/bin/" + argv.get(0));
+            ProcessBuilder pb = new ProcessBuilder(argv).redirectErrorStream(true);
             Map<String, String> env = pb.environment();
-            String oldPath = env.get("PATH");
-            env.put("PATH", (oldPath == null || oldPath.isEmpty() ? "" : oldPath + ":") + "/system/bin:/system/xbin:/sbin:/vendor/bin");
+            env.put("PATH", "/system/bin:/system/xbin:/sbin:/vendor/bin");
             Process p = pb.start();
             BoundedProcessRunner.Result result = BoundedProcessRunner.collect(p, timeoutMillis, 262_144, Compat::destroy);
             String output = result.output + (result.truncated ? "\n[OUTPUT_TRUNCATED] 输出超过 256 KiB，已截断" : "");

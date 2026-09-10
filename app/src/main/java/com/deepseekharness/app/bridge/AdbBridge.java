@@ -29,10 +29,10 @@ import java.nio.charset.StandardCharsets;
  */
 public final class AdbBridge {
 
-    private static final String[] SCRIPTS = {"adb-pair.py", "adb-shell.py", "adb-setup.sh"};
+    private static final String[] SCRIPTS = {"adb-pair.py", "adb-shell.py", "adb-setup.sh", "device-shell-policy.py"};
     /** assets 脚本版本：每次改脚本 +1，旧 APK 的残留脚本会因版本不符被强制重注入。
-     *  15：单次确认、有限时连接、执行后不重放、真实退出码、本机 mDNS。 */
-    private static final String SCRIPT_VERSION = "15";
+     *  16：原生默认拒绝策略、现场路径核验与全量应用分组；取消内部标志绕过。 */
+    private static final String SCRIPT_VERSION = "16";
     private static final Object SETTINGS_LOCK = new Object();
     private static final java.util.concurrent.atomic.AtomicBoolean PAIRING = new java.util.concurrent.atomic.AtomicBoolean();
 
@@ -137,6 +137,7 @@ public final class AdbBridge {
 
     private static String ensureReadyOwned(Context ctx, ProotBootstrap proot, java.util.function.Consumer<String> progress) {
         if (Thread.currentThread().isInterrupted()) return "ADB_CANCELLED: 环境准备已取消";
+        new com.deepseekharness.app.HttpShellService(ctx).start();
         StringBuilder sb = new StringBuilder();
         progress.accept("正在同步 ADB 授权设置…");
         String settings = applySettings(ctx, proot);
@@ -338,8 +339,7 @@ public final class AdbBridge {
     private static String grantSecureSettings(ProotBootstrap proot) {
         try {
             String pkg = "com.dsh.client";
-            String r = execOwned(proot, "DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py --connect-timeout 15 --timeout 10 pm grant "
-                    + pkg + " android.permission.WRITE_SECURE_SETTINGS 2>&1", 45_000);
+            String r = execOwned(proot, "python3 /root/.dsh/adb-pair.py --grant-keepalive 2>&1", 45_000);
             android.util.Log.i("DSHA-ADB", "WRITE_SECURE_SETTINGS 授权结果: " + SensitiveData.redact(r));
             return r != null && r.trim().endsWith("[EXIT=0]") ? "KEEPALIVE_OK: 已允许自动恢复无线调试"
                     : "KEEPALIVE_WARN: 连接已验证，但自动恢复授权未完成；重启后可能需手动打开无线调试\n" + SensitiveData.redact(r);
@@ -367,7 +367,7 @@ public final class AdbBridge {
     public static String probe(ProotBootstrap proot, Endpoint endpoint) {
         return environmentResult(proot, "ADB 后台探活", () -> {
             String options = endpoint == null ? "" : " --host " + ShellQuote.arg(endpoint.host) + " --port " + endpoint.port;
-            return execOwned(proot, "DSH_INTERNAL=1 python3 /root/.dsh/adb-shell.py"
+            return execOwned(proot, "python3 /root/.dsh/adb-shell.py"
                     + " --connect-timeout 20 --timeout 10" + options + " id 2>&1", 60_000);
         });
     }

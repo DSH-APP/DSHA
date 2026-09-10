@@ -11,6 +11,7 @@ public final class InstallProbe {
     public static final String SESSION_BASE = "/usr/local/lib/node_modules/@deepseek-ai/";
     public static final String SESSION_TOP = SESSION_BASE + "dsh-session-persistence-jsonl/lib/index.js";
     public static final String SESSION_NESTED = SESSION_BASE + "dsh/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js";
+    public static final String SESSION_PUBLISH_IMPORT = "import { publishSessionExclusive as link } from \"dsha-runtime-fs\";";
     public static final String SETTINGS = SESSION_BASE + "dsh/node_modules/@deepseek-ai/dsh-client-ui-settings/lib/client.js";
 
     public static final class Check {
@@ -31,7 +32,8 @@ public final class InstallProbe {
                 + ShellQuote.arg("const p=require('/usr/local/lib/node_modules/@deepseek-ai/dsh/package.json'); if(!/^\\d+\\./.test(p.version))process.exit(1); console.log(p.version)")));
         all.add(new Check(6, "dns", "DNS 配置", "grep -Eq '^[[:space:]]*nameserver[[:space:]]+[^[:space:]#]+' /etc/resolv.conf || { echo '缺少 nameserver 配置'; exit 1; }"));
         all.add(new Check(6, "session", "会话写入补丁", "found=0; for f in " + ShellQuote.arg(SESSION_TOP) + " " + ShellQuote.arg(SESSION_NESTED)
-                + "; do [ -f \"$f\" ] || continue; found=1; if grep -Fq 'await link(tmp, finalPath)' \"$f\"; then echo \"会话写入补丁缺失：$f\"; exit 1; fi; done; [ \"$found\" = 1 ] || { echo '会话模块缺失'; exit 1; }"));
+                + "; do [ -f \"$f\" ] || continue; found=1; if grep -Fq 'await link(tmp, finalPath)' \"$f\" && ! grep -Fq "
+                + ShellQuote.arg(SESSION_PUBLISH_IMPORT) + " \"$f\"; then echo \"会话写入补丁缺失：$f\"; exit 1; fi; done; [ \"$found\" = 1 ] || { echo '会话模块缺失'; exit 1; }"));
         all.add(new Check(6, "settings", "局域网设置补丁", "test -f " + ShellQuote.arg(SETTINGS)
                 + " || { echo '设置模块缺失'; exit 1; }; if grep -Fq "
                 + ShellQuote.arg("const persistence = ctx.remote.$host.isLoopback ? \"host\" : \"memory\";")
@@ -116,7 +118,7 @@ public final class InstallProbe {
                 + "for p in ['" + SESSION_TOP + "','" + SESSION_NESTED + "']:\n"
                 + " if not os.path.isfile(p): continue\n"
                 + " s=read(p)\n"
-                + " if 'await link(tmp, finalPath)' in s:\n"
+                + " if 'await link(tmp, finalPath)' in s and '" + SESSION_PUBLISH_IMPORT + "' not in s:\n"
                 + "  old='import { link, mkdir, mkdtemp, open,'\n"
                 + "  if old not in s or 'await link(tmp, finalPath);' not in s: raise RuntimeError('会话模块结构已变化，保留原文件：'+p)\n"
                 + "  s=s.replace('await link(tmp, finalPath);','await rename(tmp, finalPath);').replace(old,'import { mkdir, mkdtemp, open, rename,')\n"

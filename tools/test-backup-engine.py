@@ -80,6 +80,95 @@ class BackupTest(unittest.TestCase):
             engine.restore_archive(self.root, self.archive)
         self.assertEqual(before, self.contents(self.root / ".dsh"))
 
+    def test_legacy_mobile_host_peer_does_not_block_upgrade_backup(self):
+        base = '.dsh/profiles/web/node_modules/dsh-web-mobile/'
+        self.put(base + 'package.json', json.dumps({'name': 'dsh-web-mobile', 'version': '2.3.0',
+                 'peerDependencies': {'@deepseek-ai/dsh-client-runtime': '^0.1.2-rc.1'}}))
+        self.put(base + 'lib/client.js', 'export default function() {}')
+        self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {'dsh-web-mobile': '2.3.0'}}))
+        engine.make_backup(self.root, self.archive, 'full')
+        stage = self.root / 'inspection'
+        engine.inspect_archive(self.archive, stage)
+        manifest = json.loads((stage / engine.MANIFEST).read_text())
+        mobile = next(row for row in manifest['pluginDependencyGraph'].values() if row['name'] == 'dsh-web-mobile')
+        self.assertEqual({}, mobile['links'])
+        self.assertTrue(list(stage.rglob('lib/client.js')))
+
+    def test_missing_dependencies_preserve_source_and_report_in_backup(self):
+        base = '.dsh/profiles/web/node_modules/plugin/'
+        self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {'plugin': '1'}}))
+        for requirements in ({'dependencies': {'missing-runtime': '1'}},
+                             {'dependencies': {'@deepseek-ai/dsh-client-runtime': '1'},
+                              'peerDependencies': {'@deepseek-ai/dsh-client-runtime': '1'}},
+                             {'peerDependencies': {'missing-third-party': '1'}}):
+            with self.subTest(requirements=requirements):
+                self.put(base + 'package.json', json.dumps({'name': 'plugin', **requirements}))
+                source = json.dumps({'name': 'plugin', **requirements})
+                self.put(base + 'lib/index.js', 'export const original = true')
+                result = engine.make_backup(self.root, self.archive, 'plugins')
+                self.assertEqual(1, len(result['warnings']))
+                with tempfile.TemporaryDirectory() as folder:
+                    summary = engine.inspect_archive(self.archive, Path(folder), 'plugins')
+                    self.assertEqual(result['warnings'], summary['warnings'])
+                    graph = summary['manifest']['pluginDependencyGraph']
+                    row = next(row for row in graph.values() if row['name'] == 'plugin')
+                    self.assertEqual(1, len(row['missing']))
+                    saved = next(Path(folder).glob('.dsha-plugin-src/.deps/*/package.json'))
+                    self.assertEqual(json.loads(source), json.loads(saved.read_text()))
+                    self.assertEqual('export const original = true', (saved.parent/'lib/index.js').read_text())
+
+    def test_file_upload_missing_mammoth_preserves_conversations(self):
+        self.put('.dsh/profiles/web/package.json', '{"dependencies":{"dsh-file-upload":"1"}}')
+        self.put('.dsh/profiles/web/node_modules/dsh-file-upload/package.json',
+                 '{"name":"dsh-file-upload","dependencies":{"mammoth":"1"}}')
+        original = (self.root/'.dsh/sessions/one/session.jsonl').read_bytes()
+        result = engine.make_backup(self.root, self.archive, 'full')
+        self.assertIn('dsh-file-upload → mammoth', result['warnings'][0])
+        self.assertEqual(original, (self.root/'.dsh/sessions/one/session.jsonl').read_bytes())
+
+    def test_installed_host_peer_is_kept_in_backup(self):
+        base = '.dsh/profiles/web/node_modules/'
+        self.put(base + 'plugin/package.json', json.dumps({'name': 'plugin',
+                 'peerDependencies': {'@deepseek-ai/dsh-custom-service': '1'}}))
+        self.put(base + '@deepseek-ai/dsh-custom-service/package.json', '{"name":"@deepseek-ai/dsh-custom-service"}')
+        self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {'plugin': '1'}}))
+        engine.make_backup(self.root, self.archive, 'plugins')
+        stage = self.root / 'inspection'
+        engine.inspect_archive(self.archive, stage)
+        manifest = json.loads((stage / engine.MANIFEST).read_text())
+        plugin = next(row for row in manifest['pluginDependencyGraph'].values() if row['name'] == 'plugin')
+        self.assertIn('@deepseek-ai/dsh-custom-service', plugin['links'])
+
+    @unittest.skipIf(os.name == 'nt', '真实共享运行时软链在 Linux 验证')
+    def test_shared_runtime_pool_does_not_copy_unreferenced_framework_dependencies(self):
+        base = '.dsh/profiles/web/node_modules/'
+        self.put(base + 'plugin/package.json', json.dumps({'name': 'plugin', 'dependencies': {'needed': '1'}}))
+        for name in ('needed', 'unrelated-host-runtime'):
+            self.put('global/' + name + '/package.json', json.dumps({'name': name}))
+        (self.root / base / 'plugin/node_modules').symlink_to(self.root / 'global', target_is_directory=True)
+        self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {'plugin': '1'}}))
+        with patch.object(engine, 'GLOBAL_NM', (self.root / 'global',)):
+            engine.make_backup(self.root, self.archive, 'plugins')
+        stage = self.root / 'inspection'; engine.inspect_archive(self.archive, stage)
+        manifest = json.loads((stage / engine.MANIFEST).read_text())
+        self.assertEqual({'plugin', 'needed'}, {row['name'] for row in manifest['pluginDependencyGraph'].values()})
+
+    def test_inspection_rejects_broken_dependency_graph_before_restore(self):
+        engine.make_backup(self.root, self.archive, 'full')
+        stage = self.root / 'invalid-graph'
+        engine.inspect_archive(self.archive, stage)
+        manifest_path = next(stage.rglob(engine.MANIFEST))
+        manifest = json.loads(manifest_path.read_text())
+        manifest['pluginDependencyGraph'] = {'a' * 20: {'name': 'example', 'links': {'dep': 'missing-node'}}}
+        manifest_path.write_text(json.dumps(manifest))
+        with tarfile.open(self.archive, 'w:gz') as archive:
+            for path in stage.iterdir():
+                archive.add(path, arcname=path.name)
+        before = self.contents(self.root / '.dsh')
+        with self.assertRaisesRegex(ValueError, '插件依赖引用无效'):
+            engine.inspect_archive(self.archive, self.root / 'inspection')
+        self.assertEqual(before, self.contents(self.root / '.dsh'))
+
     def test_truncated_archive_keeps_current_data(self):
         engine.make_backup(self.root, self.archive, "full")
         self.archive.write_bytes(self.archive.read_bytes()[:-8])
@@ -302,6 +391,93 @@ class BackupTest(unittest.TestCase):
             tar.addfile(link)
         with self.assertRaisesRegex(ValueError, "缺少实际数据"):
             engine.restore_archive(self.root, self.archive, "sessions")
+
+    @unittest.skipIf(os.name == 'nt', '依赖链接与运行身份由 Linux 验证')
+    def test_hoisted_circular_dependencies_keep_one_module_identity(self):
+        import subprocess
+        base = '.dsh/profiles/web/node_modules/'
+        self.put(base + 'plugin-a/package.json', json.dumps({'name': 'plugin-a', 'dependencies': {'plugin-b': '1.0.0'}}))
+        self.put(base + 'plugin-a/index.js', "exports.name='A';const b=require('plugin-b');exports.same=()=>b.getA()===module.exports;")
+        self.put(base + 'plugin-b/package.json', json.dumps({'name': 'plugin-b', 'dependencies': {'plugin-a': '1.0.0'}}))
+        self.put(base + 'plugin-b/index.js', "exports.getA=()=>require('plugin-a');")
+        self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {'plugin-a': '1.0.0'}}))
+        engine.make_backup(self.root, self.archive, 'plugins')
+        shutil.rmtree(self.root / base)
+        engine.restore_archive(self.root, self.archive, 'plugins')
+        installed = self.root / base / 'plugin-a'
+        self.assertEqual(installed.resolve(), (installed / 'node_modules/plugin-b/node_modules/plugin-a').resolve())
+        node = os.environ.get('DSHA_TEST_NODE') or shutil.which('node')
+        self.assertIsNotNone(node, '需要 Node 验证恢复后的真实模块身份')
+        result = subprocess.run([node, '-e', "if(!require(process.argv[1]).same())process.exit(2)", str(installed)], capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    @unittest.skipIf(os.name == 'nt', '真实依赖链接由 Linux 验证')
+    def test_nested_versions_do_not_get_hoisted_into_wrong_dependency(self):
+        base = '.dsh/profiles/web/node_modules/'
+        for name, version, deps in [('plugin-a', '1', {'dep': '2', 'plugin-b': '1'}),
+                                     ('plugin-b', '1', {'dep': '1'}), ('dep', '2', {}),
+                                     ('plugin-b/node_modules/dep', '1', {})]:
+            package_name = name.rsplit('/', 1)[-1]
+            self.put(base + name + '/package.json', json.dumps({'name': package_name, 'version': version, 'dependencies': deps}))
+        self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {'plugin-a': '1'}}))
+        engine.make_backup(self.root, self.archive, 'plugins')
+        shutil.rmtree(self.root / base)
+        engine.restore_archive(self.root, self.archive, 'plugins')
+        a = self.root / base / 'plugin-a'
+        self.assertEqual('2', json.loads((a / 'node_modules/dep/package.json').read_text())['version'])
+        self.assertEqual('1', json.loads((a / 'node_modules/plugin-b/node_modules/dep/package.json').read_text())['version'])
+
+    @unittest.skipIf(os.name == 'nt', '真实依赖链接由 Linux 验证')
+    def test_unregistered_plugin_and_unpublished_source_history_survive(self):
+        self.put('.dsh/node_modules/web-downloaded/package.json', json.dumps({'name': 'web-downloaded', 'dsh': {'bundle': {'patch': 'cordis.patch.yml'}}}))
+        self.put('.dsh/node_modules/web-downloaded/cordis.patch.yml', '[]')
+        self.put('.dsh/plugin-src/prototype/script.py', 'unpublished code')
+        self.put('.dsh/plugin-src/prototype/.git/private-commit', 'unpublished history')
+        engine.make_backup(self.root, self.archive, 'plugins')
+        shutil.rmtree(self.root / '.dsh/node_modules')
+        shutil.rmtree(self.root / '.dsh/plugin-src')
+        engine.restore_archive(self.root, self.archive, 'plugins')
+        self.assertTrue((self.root / '.dsh/plugin-src/web-downloaded/package.json').is_file())
+        self.assertEqual('unpublished history', (self.root / '.dsh/plugin-src/prototype/.git/private-commit').read_text())
+        profile = json.loads((self.root / '.dsh/profiles/web/package.json').read_text())
+        self.assertNotIn('web-downloaded', profile['dsh']['profile']['bundles'])
+
+    @unittest.skipIf(os.name == 'nt', '真实恢复链接在 Linux 验证')
+    def test_repeated_rebuild_keeps_conflicting_source_once_without_losing_revisions(self):
+        managed = self.root / 'managed/plugin'
+        self.put('managed/plugin/package.json', '{"name":"plugin","version":"1"}')
+        self.put('managed/plugin/index.js', 'managed-v1')
+        self.put('.dsh/plugin-src/plugin/draft.txt', 'unpublished-original')
+        self.put('.dsh/plugin-src/plugin/.git/commit', 'unpublished-history')
+        counts = []
+        for attempt in range(3):
+            self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {'plugin': 'link:' + str(managed)}}))
+            active = self.root / '.dsh/profiles/web/node_modules/plugin'
+            engine.remove(active); active.parent.mkdir(parents=True, exist_ok=True); active.symlink_to(managed, target_is_directory=True)
+            engine.make_backup(self.root, self.archive, 'plugins')
+            engine.restore_archive(self.root, self.archive, 'plugins')
+            preserved = self.root / '.dsh/plugin-src/.preserved'
+            self.assertEqual(['unpublished-original'], [p.read_text() for p in preserved.rglob('draft.txt')])
+            self.assertEqual(['unpublished-history'], [p.read_text() for p in preserved.rglob('commit')])
+            self.assertEqual('managed-v1', (active / 'index.js').read_text())
+            counts.append(sum(p.is_file() for p in preserved.rglob('*')))
+        self.assertEqual(counts[1], counts[2], '重复恢复不能不断累积相同的源码副本')
+
+    @unittest.skipIf(os.name == 'nt', '真实依赖链接由 Linux 验证')
+    def test_v3_plugin_archive_remains_readable(self):
+        stage = self.root / 'v3-stage'
+        slot = 'a' * 20
+        paths = {'.dsh/profiles/web/package.json': json.dumps({'dependencies': {'old-plugin': 'link:/old/plugin'}}),
+                 '.dsha-plugin-src/' + slot + '/package.json': '{"name":"old-plugin"}',
+                 '.dsha-plugin-src/' + slot + '/index.js': 'old-plugin-content'}
+        for name, content in paths.items():
+            target = stage / name; target.parent.mkdir(parents=True, exist_ok=True); target.write_text(content)
+        engine.dump(stage / engine.MANIFEST, {'formatVersion': 3, 'scope': 'plugins',
+                    'plugins': [{'profile': 'web', 'name': 'old-plugin', 'slot': slot}], 'inventory': engine.inventory(stage)})
+        with tarfile.open(self.archive, 'w:gz') as archive:
+            for path in stage.iterdir(): archive.add(path, arcname=path.name)
+        engine.restore_archive(self.root, self.archive, 'plugins')
+        self.assertEqual('old-plugin-content', (self.root / '.dsh/profiles/web/node_modules/old-plugin/index.js').read_text())
 
 
 if __name__ == "__main__":

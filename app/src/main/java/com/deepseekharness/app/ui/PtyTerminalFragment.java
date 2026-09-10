@@ -107,6 +107,16 @@ public final class PtyTerminalFragment extends Fragment
         }
     }
 
+    /** 维护时先结束持久终端，等待真实退出与工作锁释放；不能阻塞主线程回调。 */
+    public static void shutdownAndWait(long timeoutMs) throws java.io.IOException, InterruptedException {
+        if (Looper.myLooper() == Looper.getMainLooper()) throw new java.io.IOException("请在维护线程等待终端退出");
+        PtySession terminal = session;
+        if (terminal != null) {
+            terminal.finishAndWait(timeoutMs);
+            if (session == terminal) session = null;
+        }
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -146,6 +156,8 @@ public final class PtyTerminalFragment extends Fragment
             return;
         }
         try {
+            if (com.deepseekharness.app.BackupManager.isEnvironmentTaskBusy())
+                throw new IllegalStateException("正在维护环境，请完成后再启动终端");
             // 初始 80x24 只是占位：attachSession 之后 TerminalView 会按控件实测的字宽
             // 重新算行列并通知 PTY（否则 TUI 的边框会错位）。
             PtySession ns = PtySession.start(c.proot(), 80, 24, this);

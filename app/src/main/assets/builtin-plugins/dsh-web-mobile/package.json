@@ -1,0 +1,107 @@
+{
+  "name": "dsh-web-mobile",
+  "version": "2.4.0-dsha.4",
+  "description": "尽可能的使dsh适配竖屏等移动端设备",
+  "license": "MIT",
+  "author": "mexiaosh",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mexiaosqwq/dsh-web-mobile.git"
+  },
+  "homepage": "https://github.com/mexiaosqwq/dsh-web-mobile#readme",
+  "bugs": {
+    "url": "https://github.com/mexiaosqwq/dsh-web-mobile/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "mobile",
+    "responsive",
+    "deepseek"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "src",
+    "assets",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.json && node scripts/build-client.mjs",
+    "verify": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "smoke:cdp": "node scripts/cdp-probe.mjs",
+    "test:core": "node --test tests/*.test.ts",
+    "prepack": "npm run build"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-primitives",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-session-log-export",
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-client-locale": "0.1.5-rc.1",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.5-rc.1",
+    "@deepseek-ai/dsh-client-ui-layout": "0.1.5-rc.1",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.1",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.5-rc.1",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.1.5-rc.1",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.5-rc.1",
+    "@deepseek-ai/dsh-session-log-export": "0.1.5-rc.1",
+    "react": "^18.2.0",
+    "@deepseek-ai/dsh-client-ui-sidebar-right": "0.1.5-rc.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.0",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@11.7.0",
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-client-ui-primitives": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-slots": {
+      "optional": true
+    }
+  },
+  "dshaUpstream": {
+    "version": "2.4.0",
+    "registry": "https://registry.npmjs.org/dsh-web-mobile/-/dsh-web-mobile-2.4.0.tgz",
+    "sha1": "89cb9d9d7238fc88fe55d6cf432850af01fd2d1c"
+  }
+}

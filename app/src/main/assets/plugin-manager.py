@@ -445,9 +445,14 @@ def cmd_import(archive, subdir="", source="", expected_versions=None):
         return 0 if not failures else 1
 
 
-def resolve_plugin_dir(name):
+def resolve_plugin_dir(name, discovered=None):
     if not builtin.valid_name(name):
         raise ValueError("无效的插件名称")
+    path = os.path.join(local(builtin.NODE_MODULES), name)
+    if name not in builtin.builtin_names() and os.path.isfile(os.path.join(path, "package.json")):
+        return os.path.realpath(path)
+    if discovered is not None and name in discovered:
+        return discovered[name]['directory']
     directory = builtin.entity_dir(name)
     if directory:
         return local(directory)
@@ -686,15 +691,16 @@ def cmd_list():
     sources = read_json(local(SOURCES), {})
     if not isinstance(sources, dict):
         sources = {}
+    discovered = builtin.discover_plugins()
     names = list(dict.fromkeys(list(builtin.OFFICIAL_BUNDLES) + builtin.builtin_names()
-                              + list(deps) + bundles))
+                              + list(deps) + bundles + list(discovered)))
     items = []
     updates = lifecycle().read(lifecycle().path('plugin-updates.json'), {})
     for name in names:
         if not builtin.valid_name(name):
             continue
         official = name in builtin.OFFICIAL_BUNDLES
-        directory = resolve_plugin_dir(name)
+        directory = resolve_plugin_dir(name, discovered)
         pkg = read_json(os.path.join(directory, "package.json"), {}) if directory else {}
         if name not in builtin.OFFICIAL_BUNDLES and name not in builtin.builtin_names() \
                 and name not in bundles and not (pkg.get("dsh") or {}).get("bundle"):
@@ -704,7 +710,11 @@ def cmd_list():
                           version=pkg.get("version", ""), description=pkg.get("description", ""),
                           source=sources.get(name, "") or repository_url(pkg),
                           exportable=not official and directory is not None,
-                          deletable=not official and name not in builtin.builtin_names()))
+                          deletable=not official and name not in builtin.builtin_names()
+                                    and (name in deps or name in bundles),
+                          internal=official or name == 'dsh-app-integration',
+                          detected=name in discovered and name not in deps and name not in bundles,
+                          location='、'.join(discovered.get(name, {}).get('locations', []))))
         update = updates.get(name, {})
         previous = lifecycle().history_info(name) if not official and name not in builtin.builtin_names() else {}
         items[-1].update(latestVersion=update.get('latestVersion', ''), updateAvailable=bool(update.get('available'))

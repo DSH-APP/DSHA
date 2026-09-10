@@ -1,0 +1,4 @@
+# DSHA task notifier bundle patch: registers server plugin for turn/end → app notify
+- insert:
+    - id: task-notifier
+      name: 'dsh-task-notifier'

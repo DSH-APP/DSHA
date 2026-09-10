@@ -247,7 +247,7 @@ public class HarnessService extends Service {
                 fail = 0;
                 long now = android.os.SystemClock.elapsedRealtime();
                 if (lastRestartAt.get() != 0 && now - lastRestartAt.get() < RESTART_COOLDOWN_MS) continue;
-                // Controller 持有启动门控直到就绪/失败/超时，无需异步返回即释放的第二把锁。
+                // Controller 在等待鉴权期间始终保持启动门控；等待时间过长不会触发自动重启。
                 if (c.restartWebAutomatically(generation, msg -> { })) {
                     lastRestartAt.set(now);
                     android.util.Log.w("DSHA", "[保活] WebUI 连续失联，已提交自动重启");

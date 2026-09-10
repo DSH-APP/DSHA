@@ -23,6 +23,12 @@ public final class BuiltinPlugins {
     private BuiltinPlugins() {
     }
 
+    /** 宿主核心继续参与启动和自检，用户列表只展示四个功能插件及第三方插件。 */
+    public static boolean internal(String name) {
+        return "@deepseek-ai/dsh-base".equals(name) || "@deepseek-ai/dsh-web-app".equals(name)
+                || "dsh-app-integration".equals(name);
+    }
+
     /** 内置插件清单兜底（dsha-builtin.txt 缺失/精简包时的固定名单，与脚本 DEFAULT_BUILTINS 一致）。 */
     public static final List<String> DEFAULT_BUILTINS = Collections.unmodifiableList(
             Arrays.asList(

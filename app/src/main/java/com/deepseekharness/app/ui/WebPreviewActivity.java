@@ -64,9 +64,12 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     private WebDownloads downloads;
     private Bundle restoreState;
     private boolean navigatingBack;
+    private PreviewAuth previewAuth;
+    private long startupGeneration;
 
     public static final class Retained extends androidx.lifecycle.ViewModel {
         WebView view;
+        String authUrl;
         WebBlobDownload blobDownload;
         ValueCallback<Uri[]> pickerCallback;
         final java.util.ArrayList<java.io.File> uploads = new java.util.ArrayList<>();
@@ -129,7 +132,9 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        startupGeneration = com.deepseekharness.app.core.HarnessController.get(this).getWebGeneration();
         retained = new androidx.lifecycle.ViewModelProvider(this).get(Retained.class);
+        previewAuth = new PreviewAuth(this);
         downloads = new WebDownloads(this,savedInstanceState);
         restoreState = savedInstanceState == null ? null : savedInstanceState.getBundle("browser-state");
         setContentView(R.layout.activity_web_preview);
@@ -141,11 +146,18 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         progress = findViewById(R.id.web_progress);
         findViewById(R.id.web_retry).setOnClickListener(v -> loadSession());
         findViewById(R.id.web_error_browser).setOnClickListener(v -> openExternal(authUrl));
+        findViewById(R.id.web_error_logs).setOnClickListener(v -> startActivity(DiagnosticActivity.downloadLogs(this)));
+        findViewById(R.id.web_error_recovery).setOnClickListener(v -> {
+            startActivity(new Intent(this, MainActivity.class).putExtra("open_launch", true)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)); finish();
+        });
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { navigateBack(); }
         });
         authUrl = getIntent().getStringExtra(EXTRA_URL);
         authCookie = getIntent().getStringExtra(EXTRA_COOKIE);
+        String current = com.deepseekharness.app.core.HarnessController.get(this).getWebAuthUrl();
+        if (!current.isEmpty() && !current.equals(authUrl)) { authUrl = current; authCookie = null; restoreState = null; }
         baseUrl = WebPreviewPolicy.loopbackBaseUrl(authUrl);
         if (baseUrl == null) {
             authUrl = null;
@@ -153,26 +165,45 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             return;
         }
         if (PreviewFallback.preferred(this) && PreviewFallback.open(this, authUrl, authCookie)) return;
-        if (retained.view != null) {
+        if (retained.view != null && authUrl.equals(retained.authUrl) && authUrl.equals(current)) {
             webView = retained.view;
             ((android.content.MutableContextWrapper) webView.getContext()).setBaseContext(this);
             attachClients(webView);
             container.addView(webView,new FrameLayout.LayoutParams(-1,-1));
             progress.setVisibility(View.GONE);
-        } else loadSession();
+        } else {
+            // 旋转保留同一进程的页面；服务已换代时清理旧页面，再用当前凭据加载。
+            if (retained.view != null) { webView = retained.view; destroyWebView(); }
+            loadSession();
+        }
     }
 
     private void loadSession() {
-        if (baseUrl == null || isFinishing() || isDestroyed()) return;
+        loadSession(true);
+    }
+
+    private void loadSession(boolean allowAuthRetry) {
+        if (isFinishing() || isDestroyed() || previewAuth.busy()) return;
+        errorPanel.setVisibility(View.GONE); progress.setVisibility(View.VISIBLE);
+        previewAuth.refresh((url, cookie, error) -> {
+            if (error != null) { showError("暂时无法进入对话", error); return; }
+            if (!url.equals(authUrl)) restoreState = null;
+            authUrl = url; authCookie = cookie; baseUrl = WebPreviewPolicy.loopbackBaseUrl(url);
+            createWebView(allowAuthRetry);
+        });
+    }
+
+    private void createWebView(boolean allowAuthRetry) {
         destroyWebView();
         pageFailed = false;
-        authRetried = false;
+        authRetried = !allowAuthRetry;
         errorPanel.setVisibility(View.GONE);
         progress.setVisibility(View.VISIBLE);
         try {
             WebView view = new WebView(new android.content.MutableContextWrapper(this));
             webView = view;
             retained.view = view;
+            retained.authUrl = authUrl;
             PackageInfo provider = android.os.Build.VERSION.SDK_INT >= 26 ? WebView.getCurrentWebViewPackage() : null;
             browserInfo = provider == null ? "系统 WebView 版本未知"
                     : provider.packageName + " " + provider.versionName;
@@ -198,10 +229,6 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             }
             attachClients(view);
             container.addView(view, new FrameLayout.LayoutParams(-1, -1));
-            if (restoreState != null) {
-                Bundle history = restoreState; restoreState = null;
-                if (view.restoreState(history) != null) return;
-            }
             CookieManager cookies = CookieManager.getInstance();
             cookies.setAcceptCookie(true);
             cookies.setAcceptThirdPartyCookies(view, false);
@@ -209,6 +236,10 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                 // setCookie 是异步的：完成后才加载，避免首次进入偶发未认证。
                 cookies.setCookie(baseUrl, authCookie + "; Path=/; HttpOnly; SameSite=Strict", ok -> {
                     if (webView != view || isFinishing() || isDestroyed()) return;
+                    if (Boolean.TRUE.equals(ok) && restoreState != null) {
+                        Bundle history = restoreState; restoreState = null;
+                        if (view.restoreState(history) != null) return;
+                    }
                     view.loadUrl(Boolean.TRUE.equals(ok) ? baseUrl : authUrl);
                 });
             } else {
@@ -294,7 +325,8 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             if ((code == 401 || code == 403) && !authRetried) {
                 authRetried = true;
                 authCookie = null;
-                view.loadUrl(authUrl);
+                restoreState = null;
+                loadSession(false);
                 return;
             }
             showError(code == 401 || code == 403 ? "对话认证已失效" : "对话页面加载失败",
@@ -314,6 +346,27 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     }
 
     private class PreviewChromeClient extends WebChromeClient {
+        @Override public boolean onConsoleMessage(android.webkit.ConsoleMessage message) {
+            com.deepseekharness.app.core.StartupDiagnostics diagnostics = com.deepseekharness.app.core.HarnessController.get(WebPreviewActivity.this).startupDiagnostics();
+            if (message.message().startsWith("[DSHA_PAGE] ") && message.message().length() <= 9500
+                    && webView != null && WebPreviewPolicy.sameService(baseUrl, webView.getUrl())) {
+                try {
+                    org.json.JSONObject event = new org.json.JSONObject(message.message().substring(12));
+                    if (diagnostics.pageEvent(startupGeneration, event)) showError("网页插件加载失败",
+                            com.deepseekharness.app.util.SensitiveData.redact(event.optString("message"))
+                                    + "\n返回启动页可查看插件详情，或安全启动进入基础界面。");
+                } catch (Exception ignored) { }
+                return true;
+            }
+            if (message.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR) {
+                String source = android.net.Uri.parse(message.sourceId() == null ? "" : message.sourceId()).getPath();
+                com.deepseekharness.app.core.DiagnosticLog.record(WebPreviewActivity.this, "WEB_JS",
+                        String.valueOf(source) + ":" + message.lineNumber() + " " + message.message());
+                if (webView != null && WebPreviewPolicy.sameService(baseUrl, webView.getUrl()))
+                    diagnostics.browser(startupGeneration, String.valueOf(source) + ":" + message.lineNumber() + " " + message.message());
+            }
+            return true;
+        }
         @Override public void onProgressChanged(WebView view, int value) {
             if (webView == view && !pageFailed) progress.setProgress(value);
         }
@@ -349,6 +402,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
 
     private void showError(String title, String detail) {
         if (isFinishing() || isDestroyed()) return;
+        com.deepseekharness.app.core.DiagnosticLog.record(this, "WEB_PAGE", title + "：" + detail);
         pageFailed = true;
         progress.setVisibility(View.GONE);
         errorTitle.setText(title);
@@ -407,10 +461,11 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
 
     @Override public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) WebFullscreenUi.hideSystemBars(this);
+        if (hasFocus) WebFullscreenUi.applySystemBars(this);
     }
 
     @Override protected void onPause() {
+        PluginFragment.invalidateInstalledState();
         if (webView != null) webView.onPause();
         super.onPause();
     }
@@ -418,9 +473,12 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     @Override protected void onResume() {
         super.onResume();
         if (webView != null) webView.onResume();
+        String current = com.deepseekharness.app.core.HarnessController.get(this).getWebAuthUrl();
+        if (previewAuth != null && !current.isEmpty() && !current.equals(authUrl)) loadSession();
     }
 
     @Override protected void onDestroy() {
+        if (previewAuth != null) previewAuth.cancel();
         if (downloads != null) downloads.dismiss();
         if (isChangingConfigurations() && webView != null) {
             container.removeView(webView);

@@ -118,6 +118,9 @@ public final class BackupTask {
     public boolean rebuild() {
         return start("重建环境", false, true, id -> EnvironmentMaintenance.rebuild(controller, detail -> progress(id, detail)));
     }
+    public boolean updateEnvironment() {
+        return start("更新运行环境", false, true, id -> EnvironmentMaintenance.update(controller, detail -> progress(id, detail)));
+    }
     public boolean recoverMaintenance() {
         return start("恢复中断维护", true, true, id -> EnvironmentMaintenance.recover(controller));
     }

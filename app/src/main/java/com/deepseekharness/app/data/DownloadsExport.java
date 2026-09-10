@@ -39,7 +39,7 @@ public final class DownloadsExport {
     private static Result media(Context context, File source, String name, FileIntegrity.Result expected) throws Exception {
         ContentValues values = new ContentValues();
         values.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
-        values.put(MediaStore.MediaColumns.MIME_TYPE, name.endsWith(".zip") ? "application/zip" : "application/gzip");
+        values.put(MediaStore.MediaColumns.MIME_TYPE, name.endsWith(".txt") ? "text/plain" : name.endsWith(".zip") ? "application/zip" : "application/gzip");
         values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/DSHA/");
         values.put(MediaStore.MediaColumns.IS_PENDING, 1);
         Uri uri = context.getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);

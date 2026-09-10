@@ -1,0 +1,37 @@
+{
+  "dshVersion": "0.1.5-rc.1",
+  "patches": [
+    {
+      "before": "import { createRequire } from \"node:module\";",
+      "after": "import { createComboCache, countNewlines } from \"dsha-client-combo-cache\"; // DSHA_COMBO_CACHE_V1\nimport { createRequire } from \"node:module\";"
+    },
+    {
+      "before": "function newlineCount(value) {\n\tlet count = 0;\n\tfor (const char of value) if (char === \"\\n\") count += 1;\n\treturn count;\n}",
+      "after": "function newlineCount(value) {\n\treturn countNewlines(value);\n}"
+    },
+    {
+      "before": "function buildBatch(phase, records) {\n\tconst artifact = buildCombo(records);",
+      "after": "function buildBatch(phase, records, builder = buildCombo) {\n\tconst artifact = builder(records);"
+    },
+    {
+      "before": "\tcompose() {\n\t\tconst entries =",
+      "after": "\tcompose() {\n\t\tconst cachedCombo = createComboCache(buildCombo, this.dshaComboArtifacts);\n\t\tconst entries ="
+    },
+    {
+      "before": "artifacts.push(buildBatch(\"bootstrap\", records));",
+      "after": "artifacts.push(buildBatch(\"bootstrap\", records, cachedCombo));"
+    },
+    {
+      "before": "artifacts.push(buildBatch(\"application\", records));",
+      "after": "artifacts.push(buildBatch(\"application\", records, cachedCombo));"
+    },
+    {
+      "before": "const artifact = buildCombo([record], record.entry.rev);",
+      "after": "const artifact = cachedCombo([record], record.entry.rev);"
+    },
+    {
+      "before": "\t\tthis.previousBatchResponses = this.batchResponses;",
+      "after": "\t\tthis.dshaComboArtifacts = cachedCombo.cache;\n\t\tthis.previousBatchResponses = this.batchResponses;"
+    }
+  ]
+}

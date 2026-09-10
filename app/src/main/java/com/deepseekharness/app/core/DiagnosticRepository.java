@@ -40,6 +40,7 @@ public final class DiagnosticRepository extends AndroidViewModel {
                 try {
                     ProotBootstrap proot = HarnessController.get(getApplication()).proot();
                     if (!proot.isEnvironmentReady()) throw new java.io.IOException("环境未就绪，请先完成首次解压");
+                    proot.prepareRuntimeTools();
                     proot.ensureRuntimeFiles();
                     if (!proot.ensureGlibcPython() || !proot.ensureBundledPnpm()) throw new java.io.IOException("内置 Python / pnpm 修复失败");
                     String output = proot.execAndReadWithProot("python3 -c 'import ssl; ssl.create_default_context()' && npm --version && printf '\\nDSHA_NETWORK_REPAIR_OK\\n'", 30000);

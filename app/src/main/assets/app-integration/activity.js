@@ -16,3 +16,15 @@ export function knownIdle(ctx) {
     return true;
   } catch { return false; }
 }
+
+/** 新版 maintain() 期间公开状态仍可能为 idle；等待当轮活动收敛后再次读取状态。 */
+export async function confirmedIdle(ctx, timeoutMs = 250) {
+  if (!knownIdle(ctx)) return false;
+  let timer;
+  try {
+    const quiet = Promise.all(ctx.agents.list().map(agent => agent.whenIdle())).then(() => true);
+    const deadline = new Promise(resolve => { timer = setTimeout(() => resolve(false), timeoutMs); });
+    return await Promise.race([quiet, deadline]) && knownIdle(ctx);
+  } catch { return false; }
+  finally { clearTimeout(timer); }
+}

@@ -59,6 +59,8 @@ public final class PtySession implements TerminalSessionClient {
     private volatile TerminalSession session;
     private com.deepseekharness.app.util.ProcessIdentity identity;
     private com.deepseekharness.app.core.RuntimeTasks work;
+    private volatile boolean maintenanceClosing;
+    private volatile boolean maintenanceUncertain;
 
     private PtySession() {
     }
@@ -128,6 +130,31 @@ public final class PtySession implements TerminalSessionClient {
         return t != null && t.isRunning();
     }
 
+    public void finishAndWait(long timeoutMs) throws java.io.IOException, InterruptedException {
+        if (maintenanceUncertain) throw new java.io.IOException("上次终端回收未能确认，环境保护仍保留；请重新打开 App 后重试");
+        maintenanceClosing = true;
+        try {
+        if (isRunning()) {
+            com.deepseekharness.app.util.ProcessIdentity expected = identity;
+            if (expected == null) throw new java.io.IOException("无法确认终端身份，原环境保持保护");
+            try {
+                String executable = android.system.Os.readlink("/proc/" + expected.pid + "/exe");
+                if (com.deepseekharness.app.util.ProcessIdentity.isProot(executable)) finish();
+                else com.deepseekharness.app.runtime.TerminalProcessCloser.close(expected, timeoutMs);
+            } catch (android.system.ErrnoException error) { throw new java.io.IOException("无法确认终端可执行文件", error); }
+        }
+        long deadline = android.os.SystemClock.elapsedRealtime() + timeoutMs;
+        while (isRunning() && android.os.SystemClock.elapsedRealtime() < deadline)
+            Thread.sleep(20);
+        if (isRunning())
+            throw new java.io.IOException("终端仍在退出，已保留原环境；请稍后重试");
+        if (work != null) work.close();
+        } catch (java.io.IOException | InterruptedException | RuntimeException error) {
+            maintenanceUncertain = true;
+            throw error;
+        }
+    }
+
     /** 结束会话（切页面/退出时调，避免留一个孤儿 bash 在容器里跑）。 */
     public void finish() {
         TerminalSession t = session;
@@ -176,7 +203,9 @@ public final class PtySession implements TerminalSessionClient {
 
     @Override
     public void onSessionFinished(TerminalSession finishedSession) {
-        if (work != null) work.close();
+        if (!maintenanceClosing) {
+            if (work != null) work.close();
+        }
         Listener l = listener();
         if (l != null) l.onExit(finishedSession == null ? -1 : finishedSession.getExitStatus());
     }

@@ -48,6 +48,9 @@ public final class PluginRepository extends AndroidViewModel {
 
     public static final class Item {
         public final String name, description, version, source;
+        public final String location;
+        public final boolean detected;
+        public final boolean dynamic;
         public final String latestVersion, updatePreviewId, updateMessage, rollbackVersion, compatibility;
         public final boolean updateAvailable;
         public final boolean enabled, builtin, official, available, exportable, deletable;
@@ -56,6 +59,9 @@ public final class PluginRepository extends AndroidViewModel {
             description = json.optString("description");
             version = json.optString("version");
             source = json.optString("source");
+            location = json.optString("location");
+            detected = json.optBoolean("detected");
+            dynamic = json.optBoolean("dynamic");
             enabled = json.optBoolean("enabled");
             builtin = json.optBoolean("builtin");
             official = json.optBoolean("official");
@@ -286,12 +292,12 @@ public final class PluginRepository extends AndroidViewModel {
     }
 
     public void refresh() {
-        submit("正在同步插件状态…", proot -> {
+        submit("正在检测 Web、终端和本地安装的插件…", proot -> {
             String output = proot.registerBuiltinPlugins();
             if (output.contains("FAIL") || output.contains("ERROR:"))
                 throw new IOException(shortError(output));
             return output.contains("PARTIAL") ? "部分内置插件待修复，请检查环境"
-                    : "插件状态已同步；启用、禁用或安装后请到启动页重启 Web";
+                    : "插件检测完成；新检测到的插件可开启开关加入 Web，变更后重启 Web 生效";
         }, null, false);
     }
 
@@ -447,7 +453,31 @@ public final class PluginRepository extends AndroidViewModel {
         JSONArray array = output.getJSONArray("items");
         safeMode = output.optBoolean("safeMode");
         List<Item> next = new ArrayList<>();
-        for (int i = 0; i < array.length(); i++) next.add(new Item(array.getJSONObject(i)));
+        for (int i = 0; i < array.length(); i++) {
+            Item item = new Item(array.getJSONObject(i));
+            if (!com.deepseekharness.app.util.BuiltinPlugins.internal(item.name)) next.add(item);
+        }
+        // 临时插件由当前 Web 进程提供摘要；旧进程或过期文件不能当成仍在运行。
+        HarnessController controller = HarnessController.get(getApplication());
+        File activity = new File(proot.getRootfsDir(), "root/.dsha-web-activity.json");
+        if (!controller.getWebAuthUrl().isEmpty() && activity.isFile() && activity.length() <= 256 * 1024) {
+            try {
+                JSONObject snapshot = new JSONObject(com.deepseekharness.app.util.Compat.readAll(activity));
+                long age = System.currentTimeMillis() - snapshot.optLong("at");
+                if (age >= 0 && age <= 10_000 && Long.toString(controller.getWebGeneration()).equals(snapshot.optString("generation"))) {
+                    JSONArray dynamic = snapshot.optJSONArray("plugins");
+                    if (dynamic != null) for (int i = 0; i < Math.min(256, dynamic.length()); i++) {
+                        JSONObject row = dynamic.getJSONObject(i);
+                        String session = row.optString("sessionId");
+                        JSONObject item = new JSONObject().put("name", row.optString("name"))
+                                .put("dynamic", true).put("available", true).put("enabled", row.optBoolean("active"))
+                                .put("location", "会话 " + session.substring(Math.max(0, session.length() - 8)))
+                                .put("description", "会话内临时插件，请在 Web 页面管理；重启后需重新定义，不作为安装包备份。");
+                        next.add(new Item(item));
+                    }
+                }
+            } catch (Exception ignored) { /* 临时摘要失效不影响持久插件列表。 */ }
+        }
         return Collections.unmodifiableList(next);
     }
 

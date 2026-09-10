@@ -25,7 +25,7 @@ SCOPES = {"full": None, "sessions": ("sessions", "storages", "attachments"),
           "plugins": ("profiles", "plugin-src", "plugin-sources.json", "plugin-history", "plugin-safe-mode.json")}
 HOT = ("sessions", "storages", "attachments", "settings.yaml")
 MANIFEST = ".dsha-backup-manifest.json"
-SKIP = {".git", ".pnpm-store", ".cache", "session_projcache", "dist-cache",
+SKIP = {".pnpm-store", ".cache", "session_projcache", "dist-cache",
         "node_modules", MANIFEST, ".dsha-plugin-src", "DSHA-README.txt"}
 # 仅排除 App 管理的顶层缓存；插件内同名目录与配对密钥均属于备份内容。
 TOP_CACHE = {"plugin-previews", "plugin-updates.json", ".plugins.lock"}
@@ -152,42 +152,40 @@ def inventory(stage):
     return result
 
 
+def plugin_support(filename):
+    import importlib.util
+    path = Path(__file__).parent / filename
+    if not path.is_file():
+        path = Path(__file__).parent / ('.dsha-' + filename)
+    specification = importlib.util.spec_from_file_location(filename.replace('-', '_'), path)
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module
+
+
 def inline_plugins(root, stage, checks=None):
-    records = []
-    profiles = stage / ".dsh" / "profiles"
-    if not profiles.exists():
-        return records
-    for pkg_path in sorted(profiles.glob("*/package.json")):
-        pkg = json.loads(pkg_path.read_text(encoding="utf-8"))
-        for name, spec in (pkg.get("dependencies") or {}).items():
-            if not package_name(name):
-                raise ValueError("插件包名无效")
-            if not isinstance(spec, str):
-                raise ValueError("插件依赖声明无效：" + name)
-            local = spec.startswith(("file:", "link:"))
-            # 官方依赖由随包 dsh 提供；第三方插件保存已安装的实际代码。
-            if name.startswith("@deepseek-ai/") and not local:
-                continue
-            original_profile = root / ".dsh" / "profiles" / pkg_path.parent.name
-            if local:
-                source = Path(spec.split(":", 1)[1])
-                if not source.is_absolute():
-                    source = original_profile / source
-            else:
-                source = original_profile / "node_modules" / name
-            if not (source / "package.json").is_file():
-                raise ValueError("插件源码缺失，请修复后再备份：" + name)
-            slot = hashlib.sha256((pkg_path.parent.name + "/" + name).encode()).hexdigest()[:20]
-            # 已安装的运行依赖是插件的一部分；缓存和 Git 历史可重建。
-            copy_data(source, stage / ".dsha-plugin-src" / slot,
-                      exclude=SKIP - {"node_modules"}, checks=checks)
-            records.append({"profile": pkg_path.parent.name, "name": name, "slot": slot})
-        original_nm = root / ".dsh" / "profiles" / pkg_path.parent.name / "node_modules"
-        if original_nm.is_dir():
-            for marker in original_nm.rglob("*.disabled"):
-                if marker.is_file() and not marker.is_symlink():
-                    copy_data(marker, pkg_path.parent / "node_modules" / marker.relative_to(original_nm), checks=checks)
-    return records
+    builtin = plugin_support('register-builtin-plugins.py')
+    builtin.ROOT = ''
+    builtin.DSH_HOME = str(root / '.dsh')
+    builtin.PROFILE = str(root / '.dsh/profiles/web')
+    builtin.NODE_MODULES = str(root / '.dsh/profiles/web/node_modules')
+    # 在扫描之前记住包目录及 scope 目录；扫描期间的新安装也必须使本次快照失败。
+    if checks is not None:
+        bases = [root / 'node_modules', root / '.dsh/node_modules', root / '.dsh/profiles/node_modules',
+                 root / '.dsh/plugin-src'] + list((root / '.dsh/profiles').glob('*/node_modules'))
+        if str(root) == '/root':
+            bases += list(GLOBAL_NM)
+        for base in bases:
+            base = Path(base)
+            if base.is_dir():
+                children = list(base.iterdir())
+                checks.append((base.resolve(), sorted(path.name for path in children), set()))
+                for child in children:
+                    if child.name.startswith('@') and child.is_dir():
+                        checks.append((child.resolve(), sorted(path.name for path in child.iterdir()), set()))
+    discovered = builtin.discover_plugins(home_directory=str(root), include_global=str(root) == '/root')
+    return plugin_support('backup-plugin-graph.py').archive_plugins(
+        root, stage, copy_data, SKIP, checks, package_name, GLOBAL_NM, discovered)
 
 
 def make_backup(root, output, scope, app_version="unknown", app_code=0,
@@ -249,9 +247,9 @@ def make_backup(root, output, scope, app_version="unknown", app_code=0,
         installed = Path("/usr/local/lib/node_modules/@deepseek-ai/dsh/package.json")
         if installed.is_file():
             version = json.loads(installed.read_text()).get("version", "unknown")
-        manifest = {"formatVersion": 3, "scope": scope, "createdAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        manifest = {"formatVersion": 4, "scope": scope, "createdAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                     "appVersion": app_version, "appVersionCode": app_code, "dshVersion": version,
-                    "workdir": workdir, "plugins": plugins, "inventory": entries, "bytes": total}
+                    "workdir": workdir, "plugins": plugins, "pluginDependencyGraph": getattr(plugins, "graph", {}), "inventory": entries, "bytes": total}
         dump(stage / MANIFEST, manifest)
         temp_out = output.with_name(output.name + ".part")
         try:
@@ -265,7 +263,14 @@ def make_backup(root, output, scope, app_version="unknown", app_code=0,
             if temp_out.exists():
                 temp_out.unlink()
         return {"scope": scope, "files": sum(not v.get("directory") for v in entries.values()),
-                "bytes": output.stat().st_size, "sha256": digest(output)}
+                "warnings": plugin_warnings(manifest),
+                "bytes": output.stat().st_size, "unpackedBytes": total, "sha256": digest(output)}
+
+
+def plugin_warnings(manifest):
+    return ['插件原有依赖缺失，源码已保留，恢复后仍需补装：' + row['name'] + ' → ' + name
+            for row in manifest.get('pluginDependencyGraph', {}).values()
+            for name in row.get('missing', [])]
 
 
 def safe_name(name):
@@ -329,11 +334,13 @@ def inspect_archive(archive, stage, filename_scope="full"):
         raise ValueError("备份范围无法识别，现有数据未覆盖")
     if filename_scope != "full" and scope != filename_scope:
         raise ValueError("备份文件名与清单范围不符，请核对文件")
-    if manifest and manifest.get("formatVersion", 1) > 3:
+    if manifest and manifest.get("formatVersion", 1) > 4:
         raise ValueError("备份格式较新，请更新 DSHA 后恢复")
-    if manifest and manifest.get("formatVersion") == 3:
+    if manifest and manifest.get("formatVersion") in (3, 4):
         if links or manifest.get("inventory") != inventory(stage):
             raise ValueError("备份内容与 SHA-256 清单不符，现有数据未覆盖")
+    if manifest and manifest.get('formatVersion') == 4:
+        plugin_support('backup-plugin-graph.py').validate_graph(manifest.get('pluginDependencyGraph', {}), stage, package_name)
     candidates = sorted((p for p in stage.rglob(".dsh") if p.is_dir()), key=lambda p: len(p.parts))
     dsh = candidates[0] if candidates else stage
     if not candidates and not any((stage / n).exists() for n in ("sessions", "profiles", "settings.yaml", "storages")):
@@ -370,8 +377,8 @@ def inspect_archive(archive, stage, filename_scope="full"):
     for pkg in (dsh / "profiles").glob("*/package.json"):
         if not isinstance(json.loads(pkg.read_text(encoding="utf-8")), dict):
             raise ValueError("插件 profile JSON 无效")
-    return {"scope": scope, "files": files, "bytes": total,
-            "manifest": manifest or {}, "dsh": str(dsh), "legacy": not manifest or manifest.get("formatVersion") != 3}
+    return {"scope": scope, "files": files, "bytes": total, "warnings": plugin_warnings(manifest or {}),
+            "manifest": manifest or {}, "dsh": str(dsh), "legacy": not manifest or manifest.get("formatVersion") not in (3, 4)}
 
 
 def recover(root):
@@ -437,7 +444,8 @@ def repair_profile_links(candidate, stage, root, generation, plugin_stage, recor
                 continue
             nm.parent.mkdir(parents=True, exist_ok=True)
             remove(nm)
-            nm.symlink_to(target, target_is_directory=True)
+            final_nm = root / '.dsh' / nm.relative_to(candidate)
+            nm.symlink_to(os.path.relpath(target, final_nm.parent), target_is_directory=True)
         if deps:
             pkg["dependencies"] = deps
         if original != json.dumps(pkg, sort_keys=True):
@@ -520,6 +528,40 @@ def finalize(root):
     recover(root)
 
 
+def preserve_plugin_source(alias, preserved):
+    """同名未登记源码保留一次；内容不同则另存版本，重复恢复不得冲突或无限复制。"""
+    def signature(path):
+        result = hashlib.sha256()
+        def visit(current, relative):
+            if current.is_symlink():
+                value = {'link': os.readlink(current)}
+            elif current.is_file():
+                value = {'sha256': digest(current), 'mode': stat.S_IMODE(current.stat().st_mode)}
+            elif current.is_dir():
+                value = {'directory': True}
+            else:
+                raise ValueError('待保留的插件源码包含特殊文件')
+            result.update(json.dumps([relative, value], sort_keys=True).encode('utf-8'))
+            if value.get('directory'):
+                for child in sorted(current.iterdir()):
+                    visit(child, relative + '/' + child.name)
+        visit(path, '')
+        return result.hexdigest()
+    if os.path.lexists(preserved):
+        value = signature(alias)
+        if signature(preserved) == value:
+            remove(alias)
+            return
+        preserved = preserved.parent / '.versions' / value / preserved.name
+        if os.path.lexists(preserved):
+            if signature(preserved) != value:
+                raise ValueError('插件源码版本摘要冲突，所有文件已保留')
+            remove(alias)
+            return
+    preserved.parent.mkdir(parents=True, exist_ok=True)
+    os.replace(alias, preserved)
+
+
 def restore_archive(root, archive, filename_scope="full", workdir="deepseek-harness", fail_after=None, defer=False):
     root = Path(root)
     recover(root)
@@ -555,14 +597,41 @@ def restore_archive(root, archive, filename_scope="full", workdir="deepseek-harn
             plugin_stage = candidate / "plugin-src"
             if manifest.get("formatVersion") == 3:
                 remove(plugin_stage)
+            graph = manifest.get('pluginDependencyGraph', {}) if manifest.get('formatVersion') == 4 else {}
+            if graph:
+                plugin_support('backup-plugin-graph.py').restore_graph(graph, stage, plugin_stage, generation, copy_data, package_name)
             for record in manifest.get("plugins", []):
                 slot, name, profile = record["slot"], record["name"], record["profile"]
                 if (not re.fullmatch(r"[a-f0-9]{20}", slot)
                         or not re.fullmatch(r"[A-Za-z0-9_-][A-Za-z0-9._-]*", profile)
                         or not package_name(name)):
                     raise ValueError("插件清单路径无效")
-                src = stage / ".dsha-plugin-src" / slot
                 relative = name if profile == "web" else ".profiles/" + profile + "/" + name
+                if manifest.get('formatVersion') == 4:
+                    key = record.get('node')
+                    if not isinstance(key, str) or key not in graph or graph[key]['name'] != name:
+                        raise ValueError('插件记录与依赖图不符')
+                    target = generation / '.deps' / key
+                    alias = plugin_stage / relative
+                    if os.path.lexists(alias):
+                        preserved = plugin_stage / '.preserved' / slot / relative
+                        preserve_plugin_source(alias, preserved)
+                    alias.parent.mkdir(parents=True, exist_ok=True)
+                    alias.symlink_to(os.path.relpath(plugin_stage / '.deps' / key, alias.parent), target_is_directory=True)
+                    if record.get('unregistered'):
+                        continue
+                    pkg_path = candidate / 'profiles' / profile / 'package.json'
+                    pkg = json.loads(pkg_path.read_text(encoding='utf-8'))
+                    bundles = ((pkg.get('dsh') or {}).get('profile') or {}).get('bundles') or []
+                    if name not in pkg.get('dependencies', {}) and not (record.get('bundledOnly') and name in bundles):
+                        raise ValueError('插件记录与配置不符')
+                    pkg.setdefault('dependencies', {})[name] = 'link:' + str(target)
+                    dump(pkg_path, pkg)
+                    nm = pkg_path.parent / 'node_modules' / name
+                    nm.parent.mkdir(parents=True, exist_ok=True)
+                    remove(nm); nm.symlink_to(os.path.relpath(plugin_stage / '.deps' / key, nm.parent), target_is_directory=True)
+                    continue
+                src = stage / ".dsha-plugin-src" / slot
                 copy_data(src, plugin_stage / relative)
                 pkg_path = candidate / "profiles" / profile / "package.json"
                 pkg = json.loads(pkg_path.read_text(encoding="utf-8"))
@@ -573,7 +642,7 @@ def restore_archive(root, archive, filename_scope="full", workdir="deepseek-harn
                 nm = pkg_path.parent / "node_modules" / name
                 nm.parent.mkdir(parents=True, exist_ok=True)
                 remove(nm)
-                nm.symlink_to(generation / relative, target_is_directory=True)
+                nm.symlink_to(os.path.relpath(plugin_stage / relative, nm.parent), target_is_directory=True)
             repair_profile_links(candidate, stage, root, generation, plugin_stage, manifest.get("plugins", []))
         if scope == "full":
             wd = Path(workdir)

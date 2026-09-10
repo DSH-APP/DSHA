@@ -11,7 +11,7 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
       req.onblocked = () => reject(new Error('图片草稿存储正在被其他页面使用'));
     });
   }
-  function imageIds(shell) { return Array.from(shell.imageIds || shell.state.getSnapshot().imageIds || []); }
+  function attachmentIds(shell) { return Array.from(shell.state.getSnapshot().attachmentIds || []); }
   function usable(record, revision) {
     return record && record.revision === revision && Array.isArray(record.files) && record.files.length <= 20
       && record.files.every(f => f.blob instanceof Blob && /^image\//.test(f.type) && typeof f.name === 'string')
@@ -32,13 +32,13 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     });
   }
   async function watchDraft(db, conversation, id, shell, alive, storage = localStorage) {
-    let loading = true, changed = false, previous = JSON.stringify(imageIds(shell)), disposed = false;
+    let loading = true, changed = false, previous = JSON.stringify(attachmentIds(shell)), disposed = false;
     const key = prefix + id;
     let warned = false;
     const warn = () => { if (!warned) { warned = true; shell.notify?.('error','图片草稿未能保存到本机，退出前请保留原图并检查存储空间。'); } };
     const save = () => {
       try {
-        const attachments = conversation.draftImages(imageIds(shell));
+        const attachments = conversation.resolveDraftAttachments(attachmentIds(shell)).filter(a => a.kind === 'image');
         const revision = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
         // 同步写入修订号，避免进程在 IndexedDB 提交前退出时复活已发送/删除的图片。
         storage.setItem(key,revision);
@@ -49,7 +49,7 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
       } catch { warn(); }
     };
     const off = shell.state.subscribe(() => {
-      const next = JSON.stringify(imageIds(shell));
+      const next = JSON.stringify(attachmentIds(shell));
       if (next === previous) return;
       previous = next; changed = true;
       if (!loading) save();
@@ -57,11 +57,11 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     try {
       const revision = storage.getItem(key);
       const record = await request(db.transaction('drafts').objectStore('drafts').get(id));
-      if (!changed && alive() && usable(record,revision) && imageIds(shell).length === 0) {
+      if (!changed && alive() && usable(record,revision) && attachmentIds(shell).length === 0) {
         const files = record.files.map(f => new File([f.blob],f.name,{type:f.type,lastModified:f.lastModified}));
-        const images = conversation.createDraftImages(files);
-        const accepted = shell.actions.addImages(images.map(image => image.id));
-        if (accepted === false) for (const image of images) conversation.releaseDraftImage(image.id);
+        const images = conversation.createDrafts(id,files);
+        const accepted = shell.actions.addAttachments(images.map(image => image.id));
+        if (accepted === false) for (const image of images) conversation.releaseDraftAttachment(image.id);
       }
     } catch { warn(); }
     loading = false;
@@ -142,10 +142,21 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
   }
   function apply(ctx) {
     ctx.effect(() => {
+      // Gecko 132+ 默认只缩小 visual viewport；dsh 的整屏布局需要随键盘一起重新排版。
+      const viewport = document.querySelector('meta[name="viewport"]') || document.createElement('meta');
+      const directives = (viewport.getAttribute('content') || 'width=device-width, initial-scale=1')
+        .split(/[,;]/).map(value => value.trim()).filter(value => value && !/^interactive-widget\s*=/i.test(value));
+      viewport.setAttribute('name','viewport');
+      viewport.setAttribute('content',directives.concat('interactive-widget=resizes-content').join(', '));
+      if (!viewport.parentNode) document.head.appendChild(viewport);
       document.documentElement.setAttribute('data-dsha-integration','ready');
       let alive = true, db, warned = false;
       const entries = new Map();
-      const closeDetails = () => { try { ctx.layout.closeDetails(); document.documentElement.setAttribute('data-dsha-back-handled','true'); } catch {} };
+      const closeDetails = () => { try {
+        if (!ctx.sidebarRight.isExpanded()) return;
+        ctx.sidebarRight.toggleExpanded();
+        document.documentElement.setAttribute('data-dsha-back-handled','true');
+      } catch {} };
       document.addEventListener('dsha-close-details',closeDetails);
       const stopReading = installReadingPosition(ctx);
       const scan = () => {
@@ -168,5 +179,5 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
         db?.close(); stopReading(); document.removeEventListener('dsha-close-details',closeDetails); };
     },'dsha-browser-state');
   }
-  return {inject:['conversation','sessions','layout'],apply,watchDraft,usable,writeDraft};
+  return {inject:['conversation','sessions','layout','sidebarRight'],apply,watchDraft,usable,writeDraft};
 }});

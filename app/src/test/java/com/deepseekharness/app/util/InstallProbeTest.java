@@ -39,4 +39,11 @@ public class InstallProbeTest {
         for (String bad : List.of("apt-get", "ensure", "head -1", "rm -", "pip install", "npm install", "flatten-l2s")) assertFalse(bad, script.contains(bad));
         assertTrue(script.contains("PYTHONDONTWRITEBYTECODE=1"));
     }
+
+    @Test public void newExclusivePublishAliasIsRecognizedAndNeverRewrittenAsRename() {
+        InstallProbe.Check session = InstallProbe.checks(6).stream().filter(c -> c.key.equals("session")).findFirst().orElseThrow();
+        assertTrue(session.command.contains("&& ! grep -Fq " + ShellQuote.arg(InstallProbe.SESSION_PUBLISH_IMPORT)));
+        assertTrue(InstallProbe.patchScript().contains("publishSessionExclusive as link"));
+        assertTrue(InstallProbe.patchScript().contains("not in s"));
+    }
 }

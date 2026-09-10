@@ -1234,7 +1234,7 @@ def check_bundles():
 def check_backup():
     d = "/sdcard/Download/DSHA"
     if not os.path.isdir(d):
-        add("SKIP", "备份", "还没备份过（配置页可设自动备份）")
+        add("SKIP", "备份", "还没备份过（数据与备份页可手动创建）")
         return
     packs = [os.path.join(d, f) for f in os.listdir(d)
              if f.lower().endswith((".tar.gz", ".tgz")) and f.lower().startswith("dsha-")]

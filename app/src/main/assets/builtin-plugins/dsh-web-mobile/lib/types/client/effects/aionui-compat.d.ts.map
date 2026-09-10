@@ -1,0 +1,1 @@
+{"version":3,"file":"aionui-compat.d.ts","sourceRoot":"","sources":["../../../../src/client/effects/aionui-compat.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,wCAAwC,CAAA;AAC3E,OAAO,EAAiC,KAAK,cAAc,EAAE,MAAM,mBAAmB,CAAA;AAEtF,gEAAgE;AAChE,wBAAgB,mBAAmB,CAAC,GAAG,EAAE,aAAa,GAAG,IAAI,CA8E5D;AAED,wBAAgB,sBAAsB,IAAI,cAAc,CAmBvD;AAED,wBAAgB,mBAAmB,IAAI,cAAc,CAsCpD"}

@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""从实际 APK 验证新版 dsh、发布补丁、内置插件及减重资产摘要。"""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import tarfile
+import zipfile
+
+PREFIX = 'usr/local/lib/node_modules/@deepseek-ai/dsh'
+
+
+def verify(path):
+    root = Path(__file__).resolve().parent.parent
+    dsh_version = json.loads((root / 'tools/dsh-runtime/package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
+    with zipfile.ZipFile(path) as apk:
+        version = apk.read('assets/offline-rootfs.version').decode().strip()
+        assert version == '10', '环境版本错误'
+        digest = hashlib.sha256()
+        with apk.open('assets/offline-rootfs.bin') as stream:
+            for chunk in iter(lambda: stream.read(1048576), b''):
+                digest.update(chunk)
+        assert digest.hexdigest() == apk.read('assets/offline-rootfs.sha256').decode().strip()
+        wanted = {
+            PREFIX + '/package.json': ('"version": "' + dsh_version + '"').encode(),
+            PREFIX + '/node_modules/@deepseek-ai/dsh-fs-local/lib/index.js': b'DSHA_ATOMIC_PUBLISH_V1',
+            PREFIX + '/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js': b'DSHA_ATOMIC_PUBLISH_V1',
+            PREFIX + '/node_modules/@deepseek-ai/dsh-session-format-v2-to-v3/lib/index.js': b'DSHA_LEGACY_SESSION_V1',
+            PREFIX + '/node_modules/dsha-runtime-fs/index.js': b'publishSessionExclusive',
+            PREFIX + '/node_modules/dsha-session-compat/index.js': b'wrapDshaLegacyStage',
+            PREFIX + '/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js': b'DSHA_COMBO_CACHE_V1',
+            PREFIX + '/node_modules/dsha-client-combo-cache/index.js': b'createComboCache',
+        }
+        # 新增预览、文件交付和反馈模块必须与锁定官方包逐字节一致，不能被旧适配覆盖。
+        untouched = {}
+        runtime = Path(os.environ.get('DSHA_TEST_RUNTIME', str(root / 'app/build/locked-dsh-runtime'))) / 'node_modules'
+        tooltip = json.loads((root / 'app/src/main/assets/web-integration/tooltip-patch.json').read_text(encoding='utf-8'))
+        for name, entry in [('dsh-client-ui-sidebar-documentpreview', 'lib/client.js'),
+                            ('dsh-client-ui-deliverables', 'lib/client.js'),
+                            ('dsh-command-feedback', 'lib/index.js'),
+                            ('dsh-client-ui-sidebar-right', 'lib/client.js'),
+                            ('dsh-client-ui-sidebar-files', 'lib/client.js'),
+                            ('dsh-client-ui-model-selection', 'lib/client.js'),
+                            ('dsh-web-frontend', 'dist/' + tooltip['bundle']),
+                            ('dsh-llm-deepseek', 'lib/index.js')]:
+            source = runtime / '@deepseek-ai' / name / entry
+            untouched[PREFIX + '/node_modules/@deepseek-ai/' + name + '/' + entry] = hashlib.sha256(source.read_bytes()).hexdigest()
+        preserved_features = list(untouched)
+        aliases, expanded = 0, 0
+        assets = ['offline-rootfs.bin']
+        if 'assets/offline-rootfs.layout' in apk.namelist():
+            assert apk.read('assets/offline-rootfs.layout').strip() == b'split-runtime-v1'
+            assets.append('dsh-runtime.bin')
+            assert hashlib.sha256(apk.read('assets/dsh-runtime.bin')).hexdigest() == apk.read('assets/dsh-runtime.sha256').decode().strip()
+        seen = set()
+        for asset in assets:
+            with apk.open('assets/' + asset) as stream, tarfile.open(fileobj=stream, mode='r|gz') as archive:
+                for item in archive:
+                    name = item.name.removeprefix('./').rstrip('/')
+                    if not item.isdir():
+                        assert name not in seen, '两个归档含重复运行时文件：' + name
+                        seen.add(name)
+                    if item.isfile():
+                        expanded += item.size
+                    if name in wanted:
+                        assert wanted.pop(name) in archive.extractfile(item).read(), name
+                    if name in untouched:
+                        assert hashlib.sha256(archive.extractfile(item).read()).hexdigest() == untouched.pop(name), name
+                    if name.startswith('usr/local/lib/node_modules/') and not name.startswith((PREFIX+'/', 'usr/local/lib/node_modules/npm/')):
+                        assert item.issym() or item.isdir(), '新版运行时之外有重复全局依赖：' + name
+                        aliases += int(item.issym())
+                    assert not name.startswith(('root/dsha-device-shell-guide/', 'root/dsha-task-notifier/',
+                                                'root/dsha-status-overlay/', 'root/dsha-web-mobile/')), '混入旧版内置插件'
+        assert not wanted, str(wanted)
+        assert not untouched, '新版功能模块缺失：' + str(untouched)
+        assert aliases > 100, '缺少共享依赖别名'
+        assert expanded == int(apk.read('assets/offline-rootfs.bytes'))
+        tools_lock = json.loads((Path(__file__).resolve().parent / 'ubuntu-tools/packages.lock.json').read_text())
+        packages = {Path(row['Filename']).name: row['SHA256'] for row in tools_lock['packages']}
+        with apk.open('assets/ubuntu-tools.bin') as stream, tarfile.open(fileobj=stream, mode='r|gz') as tools:
+            for member in tools:
+                if member.name.endswith('.deb'):
+                    assert member.isfile() and member.name in packages, '离线工具归档存在未知软件包'
+                    assert hashlib.sha256(tools.extractfile(member).read()).hexdigest() == packages.pop(member.name)
+        assert not packages, 'APK 缺少锁定的 Ubuntu 软件包'
+        assert b'dpkg --configure' in apk.read('assets/install-ubuntu-tools.sh')
+        plugins = {}
+        for name in ('dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile'):
+            package = json.loads(apk.read('assets/builtin-plugins/' + name + '/package.json'))
+            plugins[name] = package['version']
+        client = apk.read('assets/app-integration/client.js')
+        assert b'resolveDraftAttachments' in client and b'createDrafts(id,files)' in client
+        assert b'draftImages(' not in client and b'closeDetails()' not in client
+        assert b'runner.listPlugins(agent)' in apk.read('assets/app-integration/runtime-plugins.js')
+        assert b'dynamicCordisRunner' in apk.read('assets/app-integration/index.js')
+        assert b'validate_graph' in apk.read('assets/backup-plugin-graph.py')
+        assert b'REPLACED_TOOLS' in apk.read('assets/environment-data.py')
+        mobile = apk.read('assets/builtin-plugins/dsh-web-mobile/lib/client.js')
+        assert b"'sidebarRight'" in mobile and b"ctx.sidebarRight.openTab('files')" in mobile
+        assert b'installSessionMenuDelete' in mobile
+        assert b'connection.requestRejection' in apk.read('assets/builtin-plugins/dsh-web-mobile/lib/index.js')
+        assert 'assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js' in apk.namelist()
+        assert b'NARB_DISABLE_NATIVE_CACHE' in apk.read('assets/dsha-runtime-env.sh')
+        return dict(apk=str(path), dsh=dsh_version, environment=version, plugins=plugins,
+                    preservedOfficialFeatures=preserved_features,
+                    sharedModuleAliases=aliases, expandedBytes=expanded, ubuntuToolPackages=len(tools_lock['packages']), rootfsSha256=digest.hexdigest())
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('apks', nargs='+', type=Path)
+    args = parser.parse_args()
+    print(json.dumps([verify(path) for path in args.apks], indent=2, ensure_ascii=False))

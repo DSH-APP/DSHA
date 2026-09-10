@@ -45,6 +45,18 @@
                     android:layout_marginTop="24dp"
                     android:text="重试" />
                 <Button
+                    android:id="@+id/web_error_recovery"
+                    style="@style/Widget.DSHA.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="返回启动页处理插件 / 安全启动" />
+                <Button
+                    android:id="@+id/web_error_logs"
+                    style="@style/Widget.DSHA.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="下载错误日志" />
+                <Button
                     android:id="@+id/web_error_browser"
                     style="?attr/borderlessButtonStyle"
                     android:layout_width="match_parent"

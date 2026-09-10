@@ -37,6 +37,16 @@ public class DshAuthUrlTest {
         assertEquals("http://127.0.0.1:8080/?token=" + TOKEN_43, p.authUrl);
     }
 
+    @Test public void rejectsIncompleteOverlongTokensAndInvalidPorts() {
+        assertNull(DshAuthUrl.findAny(DshAuthUrl.AUTH_URL_PREFIX + TOKEN_43.substring(0, 25)));
+        assertNull(DshAuthUrl.findAny(DshAuthUrl.AUTH_URL_PREFIX + TOKEN_43 + "Z"));
+        assertNull(DshAuthUrl.findAny(DshAuthUrl.AUTH_URL_PREFIX + TOKEN_43 + "&token=other"));
+        assertNull(DshAuthUrl.parse("http://127.0.0.1:0/?token=" + TOKEN_43));
+        assertNull(DshAuthUrl.parse("http://127.0.0.1:999999/?token=" + TOKEN_43));
+        assertNull(DshAuthUrl.findAny(DshAuthUrl.AUTH_URL_PREFIX + TOKEN_43, 9999));
+        assertNotNull(DshAuthUrl.findAny(DshAuthUrl.AUTH_URL_PREFIX + TOKEN_43, 3080));
+    }
+
     @Test
     public void rejectsMalformedToken() {
         assertNull(DshAuthUrl.parse(DshAuthUrl.AUTH_URL_PREFIX + "short"));

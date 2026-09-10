@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# DSHA_ADB_SCRIPT_VERSION=15
+# DSHA_ADB_SCRIPT_VERSION=16
 """无线配对只握手一次；配对授权与连接验证分别反馈。
 
 PAIR_OK 表示配对完成；只有 CONNECT_OK 才能执行设备命令。
@@ -94,6 +94,7 @@ def main():
     ap.add_argument('--connect-port', type=int, default=0, help='连接端口，0=重新发现')
     ap.add_argument('--genkey', action='store_true')
     ap.add_argument('--verify-only', action='store_true', help='仅验证已有配对连接，不再配对')
+    ap.add_argument('--grant-keepalive', action='store_true', help='配对设置专用：仅授予 DSHA 自身的保活权限')
     a = ap.parse_args()
     if not 0 <= a.port <= 65535 or not 0 <= a.connect_port <= 65535:
         print('INVALID_PORT: 端口必须在 1—65535，自动发现请留空')
@@ -103,6 +104,19 @@ def main():
         return 2
     if not check_deps():
         return 1
+    if a.grant_keepalive:
+        from adb_shell_wifi.adb_device import AdbDeviceTls
+        from adb_shell_wifi.auth.sign_pythonrsa import PythonRSASigner
+        # 固定的应用设置操作，没有接收任意命令的“内部跳过”入口。
+        try:
+            result = adb.connect_with_retry(AdbDeviceTls, PythonRSASigner,
+                'pm grant com.dsh.client android.permission.WRITE_SECURE_SETTINGS',
+                a.connect_port, a.host, connect_timeout=15, command_timeout=10)
+            print(result.output); print('[EXIT=%d]' % result.exit_code)
+            return result.exit_code
+        except (adb.ConnectFail, adb.ExecutionUnknown) as error:
+            print('KEEPALIVE_WARN: %s\n[EXIT=1]' % error)
+            return 1
     if a.genkey:
         ensure_key()
         return 0

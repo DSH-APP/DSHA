@@ -12,12 +12,6 @@ public final class ConfigInput {
         return port;
     }
 
-    public static int backupInterval(String value) {
-        int count = number(value, "备份间隔请输入 0—2147483647 的整数，0 为关闭");
-        if (count < 0) throw new IllegalArgumentException("备份间隔不能为负数，0 为关闭");
-        return count;
-    }
-
     private static int number(String value, String error) {
         try { return Integer.parseInt(value == null ? "" : value.trim()); }
         catch (NumberFormatException e) { throw new IllegalArgumentException(error); }

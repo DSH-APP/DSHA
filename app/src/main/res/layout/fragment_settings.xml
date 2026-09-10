@@ -19,8 +19,8 @@
             <LinearLayout android:id="@+id/settings_selftest" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="16dp" android:paddingEnd="16dp" android:paddingTop="12dp" android:paddingBottom="12dp" android:minHeight="64dp">
                 <TextView android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_chip" android:gravity="center" android:text="✓" android:textColor="@color/text_secondary" android:textSize="@dimen/text_title" />
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_control" android:layout_weight="1" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="诊断与修复" android:textColor="@color/text" android:textSize="@dimen/text_body" android:textStyle="bold" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_hair" android:text="脱敏反馈 · 导出报告 · 证书 / npm 修复" android:textColor="@color/text_muted" android:textSize="@dimen/text_label" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="诊断与日志" android:textColor="@color/text" android:textSize="@dimen/text_body" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_hair" android:text="下载错误日志 · 环境检查 · 故障修复" android:textColor="@color/text_muted" android:textSize="@dimen/text_label" />
                 </LinearLayout>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textColor="@color/text_muted" android:textSize="@dimen/text_title" />
             </LinearLayout>

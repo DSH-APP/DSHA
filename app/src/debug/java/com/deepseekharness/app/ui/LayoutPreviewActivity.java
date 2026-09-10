@@ -91,7 +91,7 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
             text(R.id.workspace_share_status,"在 MT 管理器中添加本地存储，选择 DocumentsProvider → DSHA。\n\n容器目录：files/linux/ubuntu/root\n配置目录：容器中的 .dsh");
             visible(R.id.workspace_clean_sessions,false);
         } else if (scene.equals("fragment_config")) {
-            text(R.id.config_port,"3080");text(R.id.config_auto_backup,"5");
+            text(R.id.config_port,"3080");
         } else if (scene.equals("activity_diagnostics")) {
             text(R.id.diagnostic_status,"检查完成，报告保留在本机。");
             text(R.id.diagnostic_report,"版本：rc1.4（布局样例）\nPython：可用\n证书：可用\nNode：可用\n\n此处只使用独立的显示样例。");

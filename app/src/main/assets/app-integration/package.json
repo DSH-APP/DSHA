@@ -1,6 +1,6 @@
 {
   "name": "dsh-app-integration",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -17,7 +17,8 @@
       "platform": "web",
       "inject": [
         "@deepseek-ai/dsh-client-ui-conversation",
-        "@deepseek-ai/dsh-client-ui-layout"
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
       ]
     }
   },

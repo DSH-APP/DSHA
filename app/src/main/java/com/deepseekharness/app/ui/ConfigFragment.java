@@ -62,7 +62,6 @@ public class ConfigFragment extends Fragment {
         CheckBox overlay = v.findViewById(R.id.config_overlay_stream);
         CheckBox sensors = v.findViewById(R.id.config_cap_sensors);
         CheckBox location = v.findViewById(R.id.config_cap_location);
-        EditText autoBackup = v.findViewById(R.id.config_auto_backup);
         CheckBox adb = v.findViewById(R.id.config_adb_enable);
         Button save = v.findViewById(R.id.config_save);
 
@@ -94,7 +93,6 @@ public class ConfigFragment extends Fragment {
                 requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
                         android.Manifest.permission.ACCESS_COARSE_LOCATION}, 104);
         });
-        autoBackup.setText(String.valueOf(c.getAutoBackupLaunches()));
         adb.setChecked(pref(ctx, "adb_enabled", false));
         TextView adbStatus = v.findViewById(R.id.config_adb_status);
         adb.setOnCheckedChangeListener((b, checked) ->
@@ -129,12 +127,10 @@ public class ConfigFragment extends Fragment {
         v.findViewById(R.id.config_repo_link).setOnClickListener(x -> openRepo(ctx));
 
         save.setOnClickListener(x -> {
-            final int chosenPort, backupInterval;
+            final int chosenPort;
             try { chosenPort = com.deepseekharness.app.util.ConfigInput.port(port.getText().toString()); }
             catch (IllegalArgumentException e) { advBody.setVisibility(View.VISIBLE); port.setError(e.getMessage()); port.requestFocus(); return; }
-            try { backupInterval = com.deepseekharness.app.util.ConfigInput.backupInterval(autoBackup.getText().toString()); }
-            catch (IllegalArgumentException e) { autoBackup.setError(e.getMessage()); autoBackup.requestFocus(); return; }
-            port.setError(null); autoBackup.setError(null); apiKey.setError(null);
+            port.setError(null); apiKey.setError(null);
             com.deepseekharness.app.util.EnvironmentTaskGate.Lease saving =
                     com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire("保存配置");
             if (saving == null) { toast("正在" + com.deepseekharness.app.util.EnvironmentTaskGate.activeKind() + "，完成后再保存配置"); return; }
@@ -151,14 +147,13 @@ public class ConfigFragment extends Fragment {
             c.setBackupKey(backupKey.isChecked());
             c.setProroot(proroot.isChecked());
             c.setLanMode(lan.isChecked());
-            c.setAutoBackupLaunches(backupInterval);
             setPref(ctx, "overlay_stream", overlay.isChecked());
             setPref(ctx, "cap_sensors", sensors.isChecked());
             setPref(ctx, "cap_location", location.isChecked());
             setPref(ctx, "adb_enabled", adb.isChecked());
             String synced = AdbBridge.applySettings(ctx, HarnessController.get(ctx).proot());
             TextView guardStatus = v.findViewById(R.id.config_guard_status);
-            guardStatus.setText(synced.replaceFirst("^SETTINGS_[A-Z]+: ", ""));
+            guardStatus.setText("设备命令保护始终生效；" + synced.replaceFirst("^SETTINGS_[A-Z]+: ", ""));
             guardStatus.setVisibility(View.VISIBLE);
             if (adb.isChecked()) {
                 DeviceBridgeService.apply(ctx);

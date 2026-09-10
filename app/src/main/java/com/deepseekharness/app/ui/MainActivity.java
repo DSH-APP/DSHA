@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         ConfigStore config = new ConfigStore(this);
         HarnessController controller = HarnessController.get(this);
-        boolean skipExtract = getIntent().getBooleanExtra("skip_extract", false);
+        boolean skipExtract = com.deepseekharness.app.BuildConfig.DEBUG && getIntent().getBooleanExtra("skip_extract", false);
 
         // 启动门禁：未欢迎 → Welcome；环境未解压 → Extract
         if (!config.isWelcomed()) {
@@ -170,6 +170,9 @@ public class MainActivity extends AppCompatActivity {
         super.onNewIntent(intent); setIntent(intent);
         BottomNavigationView nav = findViewById(R.id.bottom_nav);
         if (nav != null && intent.getBooleanExtra("open_plugins", false)) nav.setSelectedItemId(R.id.nav_plugins);
+        if (nav != null && intent.getBooleanExtra("open_launch", false)) {
+            intent.removeExtra("open_launch"); nav.setSelectedItemId(R.id.nav_launch);
+        }
     }
 
     private void updateToolbar() {

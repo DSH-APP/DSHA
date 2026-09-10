@@ -53,6 +53,7 @@ public final class WebProcSel {
      * 停止时直接按 pid 杀，不猜命令行长相、不依赖任何工具。
      */
     public static final String PID_WEB = "/root/.dsha-web.pid";
+    public static final String IDENTITY_WEB = "/root/.dsha-web.identity";
 
     /** 看门狗自己写下的 pid 文件（容器内路径）。 */
     public static final String PID_WATCHDOG = "/root/.dsha-watchdog.pid";
@@ -80,11 +81,17 @@ public final class WebProcSel {
      */
     public static boolean looksLikeWeb(String cmdline) {
         if (cmdline == null || cmdline.isEmpty()) return false;
+        // proroot 的 bridge 是 guest 可执行程序本身，父进程 libproroot.so 才是启动器。
+        // 只接受已知的 Node + dsh web 参数序列，不能因命令中带有 bridge 名称就放行。
+        String[] argv = cmdline.indexOf('\0') >= 0 ? cmdline.split("\u0000") : cmdline.trim().split("\\s+");
+        if (argv.length > 0 && basename(argv[0]).equals("libproroot-bridge.so"))
+            return isProrootWebPayload(argv);
         if (cmdline.contains("libproot.so") || cmdline.contains("libproroot")
                 || cmdline.contains("proot")) {
             return false;
         }
-        return (cmdline.contains("bin.js") && cmdline.contains("web"))
+        cmdline = cmdline.replace('\0', ' ');
+        return maySignalWeb(cmdline) || (cmdline.contains("bin.js") && cmdline.contains("web"))
                 || cmdline.contains("dsh web")
                 || cmdline.contains("dsh-app-boot")
                 || cmdline.contains("dsh-cli")
@@ -93,5 +100,39 @@ public final class WebProcSel {
                 // 停止时漏掉它，等于停完一两秒后又冒出来一个（「秒复活」）
                 || cmdline.contains("dsh-cmd.txt")
                 || cmdline.contains("dsh-web-restart.sh");
+    }
+
+    private static boolean isProrootWebPayload(String[] argv) {
+        if (argv.length < 9 || !basename(argv[1]).equals("libproroot-linker.so")
+                || !argv[2].equals("--argv0") || !argv[3].equals("node")
+                || !argv[4].equals("--preload") || !basename(argv[5]).equals("libproroot-runtime.so")
+                || !argv[6].endsWith("/usr/local/bin/node")) return false;
+        int entry = 7;
+        if (argv[entry].equals("--expose-internals")) entry++;
+        if (entry + 1 >= argv.length) return false;
+        return (argv[entry].equals("/usr/local/bin/dsh")
+                || argv[entry].equals("/usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js"))
+                && webArguments(argv, entry + 1);
+    }
+
+    private static String basename(String path) {
+        return path.substring(path.lastIndexOf('/') + 1);
+    }
+
+    /** 发信号须是直接运行 dsh web 的 Node，不能命中 shell 参数中的文本。 */
+    public static boolean maySignalWeb(String cmdline) {
+        if (cmdline == null || cmdline.isEmpty()) return false;
+        String[] args = cmdline.indexOf('\0') >= 0 ? cmdline.split("\u0000") : cmdline.trim().split("\\s+");
+        if (args.length > 0 && basename(args[0]).equals("libproroot-bridge.so")) return isProrootWebPayload(args);
+        if (args.length < 3 || !(basename(args[0]).equals("node") || basename(args[0]).equals("nodejs"))) return false;
+        int entry = args[1].equals("--expose-internals") ? 2 : 1;
+        if (entry + 1 >= args.length) return false;
+        return (args[entry].equals("/usr/local/bin/dsh") || args[entry].endsWith("/node_modules/@deepseek-ai/dsh/lib/bin.js"))
+                && webArguments(args, entry + 1);
+    }
+
+    private static boolean webArguments(String[] args, int index) {
+        return args[index].equals("web") || (index + 1 < args.length && args[index].equals("--profile")
+                && args[index + 1].matches("dsha-recovery-[0-9a-f]{16}"));
     }
 }

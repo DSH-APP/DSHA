@@ -14,10 +14,4 @@ public class ConfigInputTest {
         for (String value : new String[]{"3081", "3090", "0", "-1", "65536", "", "x", "999999999999", "30.80"})
             assertThrows(value, IllegalArgumentException.class, () -> ConfigInput.port(value));
     }
-    @Test public void malformedBackupIntervalNeverDisablesBackups() {
-        assertEquals(0, ConfigInput.backupInterval("0"));
-        assertEquals(5, ConfigInput.backupInterval(" 5 "));
-        for (String value : new String[]{"-1", "", "five", "2147483648"})
-            assertThrows(value, IllegalArgumentException.class, () -> ConfigInput.backupInterval(value));
-    }
 }

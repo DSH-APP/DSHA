@@ -15,8 +15,8 @@ android {
         applicationId "com.dsh.client"
         minSdk 30
         targetSdk 37
-        versionCode 113
-        versionName "1.2.0-rc1.4"
+        versionCode 116
+        versionName "0.1.5-rc1"
         testInstrumentationRunner project.findProperty('dsha.testRunner') ?: "com.deepseekharness.app.Rc13Instrumentation"
         ndk {
             abiFilters 'arm64-v8a'
@@ -35,7 +35,7 @@ android {
         low {
             dimension 'androidSupport'
             minSdk 23
-            versionName '1.2.0-rc1.4low'
+            versionName '0.1.5-rc1low'
             buildConfigField 'boolean', 'LOW_ANDROID', 'true'
             resValue 'string', 'edition_description', '兼容版 · Android 6+ · WebView / Gecko'
             resValue 'string', 'browser_description', '旧系统 WebView 自动使用内置 Gecko；可手动开启兼容内核。'
@@ -115,6 +115,10 @@ android {
 def prepareStandardAssets = tasks.register("prepareStandardAssets", Exec) {
     inputs.dir("src/main/assets")
     inputs.file(rootProject.file("tools/prepare-standard-assets.py"))
+    inputs.file(rootProject.file("tools/build-dsh-runtime.py"))
+    inputs.dir(rootProject.file("tools/dsh-runtime"))
+    inputs.file(rootProject.file("tools/prepare-ubuntu-tools.py"))
+    inputs.dir(rootProject.file("tools/ubuntu-tools"))
     outputs.dir(layout.buildDirectory.dir("generated/standardAssets"))
     outputs.file(layout.buildDirectory.file("generated/standard-assets-report.json"))
     commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B",

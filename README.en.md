@@ -7,9 +7,9 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>
-  <a href="https://github.com/qiannianhuanxiang/DSHA/releases/latest"><img src="https://img.shields.io/github/v/release/qiannianhuanxiang/DSHA?color=blue" alt="release"></a>
-  <a href="https://github.com/qiannianhuanxiang/DSHA/stargazers"><img src="https://img.shields.io/github/stars/qiannianhuanxiang/DSHA?style=flat" alt="stars"></a>
-  <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white" alt="android">
+  <a href="https://github.com/DSH-APP/DSHA/releases/latest"><img src="https://img.shields.io/github/v/release/DSH-APP/DSHA?sort=date&color=blue" alt="release"></a>
+  <a href="https://github.com/DSH-APP/DSHA/stargazers"><img src="https://img.shields.io/github/stars/DSH-APP/DSHA?style=flat" alt="stars"></a>
+  <img src="https://img.shields.io/badge/Android-6%2B%20%2F%2011%2B-3DDC84?logo=android&logoColor=white" alt="android">
   <img src="https://img.shields.io/badge/arch-arm64--v8a-lightgrey" alt="arch">
 </p>
 
@@ -22,37 +22,41 @@
 
 ---
 
-## v1.2.0-rc1.4 — usability and reliability preview
+## DSHA v0.1.5-rc1 — official release · Latest
 
-This is a **Pre-release**, maintained by contributor [@ym2025szz](https://github.com/ym2025szz), with thanks to original author [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) and the other contributors.
+Maintained and published by contributor [@ym2025szz](https://github.com/ym2025szz), with thanks to original author [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) and the other contributors. The refactor preview announcements are consolidated here; historical releases and the original 1.1.10-and-earlier documentation below are preserved.
 
-This preview improves installation checks and live output, backup/restore, command timeouts and terminal cleanup, background downloads, plugin tasks, update state, and both embedded browser engines. Native pages use a moderately compact layout, a fixed configuration save button, and the existing toolbar day/night toggle. Display and runtime options explain their purpose and when changes take effect.
+**[Latest official release](https://github.com/DSH-APP/DSHA/releases/latest)** · [Full changes and preview comparison](docs/releases/v0.1.5-rc1-notes.md) · [Device verification](docs/releases/v0.1.5-rc1.md)
 
-- **Standard:** Android 11+ / arm64, system WebView, **212.87 MiB**. [APK](https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1.4/dsha-1.2.0-rc1.4.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1.4/dsha-1.2.0-rc1.4.apk.sha256).
-- **Compatibility:** Android 6+ / arm64, bundled Gecko fallback, **289.69 MiB**. [APK](https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1.4/dsha-1.2.0-rc1.4low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1.4/dsha-1.2.0-rc1.4low.apk.sha256).
+| Build | Devices | Download | Size |
+|---|---|---|---:|
+| Standard | Android 11+ / arm64, system WebView | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1.apk.sha256) | 176.06 MiB |
+| Compatibility | Android 6+ / arm64, bundled Gecko fallback | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1low.apk.sha256) | 252.82 MiB |
 
-Version code **113**, the historical APK certificate, environment version **9**, and dsh **0.1.2-rc.1** are retained. Same-signature upgrades preserve the environment. Both variants share application data and cannot coexist.
+This official GitHub Release retains the tested APK version **0.1.5-rc1**, version code **116**, and historical signing certificate. Bundled dsh is **0.1.5-rc.1** and the Ubuntu base version is **10**. Both builds share the application ID and data; they cannot coexist.
 
-On Android 13, the six-step check took about **1.9 seconds**; actual DeepSeek responses, in-app wireless ADB, backups, process cleanup, and both browser engines were verified. Builds, signing and related tests pass. Other Android versions, real 16 KB kernels and vendor background behavior still have coverage limits.
+### What's included
 
-[GitHub release](https://github.com/DSH-APP/DSHA/releases/tag/v1.2.0-rc1.4) · [Release notes](docs/releases/v1.2.0-rc1.4.md) · [Verification and limitations](docs/functional-audit-rc1.4.md)
+- **Updated models and previews:** DeepSeek-V41-Flash plus existing V4 choices; Markdown, HTML, PDF, image, code and long-text previews, scrolling, code copying, and centered tab-close buttons.
+- **Startup and installation:** separate Ubuntu/dsh archives, reuse of unchanged browser bundles, complete offline tools and certificate installation, and a fix for the first native-module load. On the tested Android 16 device, authentication was ready in **3.43–3.66 seconds**, and cold installation plus full validation took about **19.3 seconds**.
+- **Data-preserving maintenance:** update only managed runtime files when the Ubuntu base is unchanged; protect and restore personal data when rebuilding a different base. Manual backups, recovery and rollback remain; launch-count automatic backups and full-directory startup scans are removed.
+- **Diagnostics and recovery:** real startup phases, plugin errors, exit codes and downloadable logs; continued waiting after 60 seconds, an isolated safe profile, verified Web PID handling, and terminal/background-process cleanup before maintenance.
+- **Consolidated preview features:** standard/compatibility builds, plugin installation/import/export/toggles/updates/rollback, background APK downloads and verification, wireless ADB, the Shizuku fallback, LAN access and PTYs. Device-command policies protect system paths and critical processes.
+- **Mobile interaction:** keyboard/system-bar spacing, Enter for newlines, tooltip cleanup, image drafts, reading-position restoration, and clearer configuration, plugin and diagnostic pages.
 
-## v1.2.0-rc1.2 preview — Android standard / compatibility builds
+Compared with the last published preview, **v1.2.0-rc1.4**, dsh moves from `0.1.2-rc.1` to `0.1.5-rc.1`; the standard APK is about **17.3% smaller**, and the compatibility APK about **12.7% smaller**. The full notes compare alpha.2, rc1, rc1.2, rc1.3 and rc1.4 without modifying their historical Releases.
 
-Maintained and published by contributor [@ym2025szz](https://github.com/ym2025szz), continuing the 1.2 refactor of [@qiannianhuanxiang](https://github.com/qiannianhuanxiang)'s project. This is a **pre-release**.
+### Upgrading and verification
 
-- **Standard:** Android 11+ / arm64, system WebView, 212.39 MiB.
-- **Compatibility:** intended for Android 6–12 / arm64, with Gecko 143 for older WebViews, 289.46 MiB. Both builds share the package name and data, so they cannot coexist.
-- Compared with rc1: plugin link installation, import/export/delete, certificate and file-picker fixes, a dsha.cc browsing link, fullscreen chat, npm support and installation repairs. The standard APK is about 48.7% smaller than the published rc1 while retaining the offline environment.
-- Version code 111, same release certificate as rc1/rc1.1; compatible in-place upgrades do not require uninstalling first. The bundled dsh remains 0.1.2-rc.1.
+Keep a manual backup of important data, then install the matching APK over the existing app. Published v1.2 previews used Ubuntu base 9, so moving to base 10 requires data protection and a rebuild. Local alpha builds already on base 10 can use a partial update; alpha.2 → this build took about **7.45 seconds** on the test device. That figure does not describe every older-version upgrade.
 
-[Download both APKs and SHA-256 files / full release notes](https://github.com/qiannianhuanxiang/DSHA/releases/tag/v1.2.0-rc1.2) · [Browse plugins](https://dsha.cc/)
+Android 16 checks cover real model/image/file/tool requests, WebView and Gecko, previews, upgrades, cold installation, repeated starts, terminal cleanup, plugins and backup/restore. Each build has **330 unit tests: 329 passed, 1 skipped, no failures**, with no Lint errors; signing, hashes, offline bundles and ELF checks pass. Android 6/7 and real 16 KB kernels still need hardware coverage; see the verification report for limits.
 
-Builds, lint and signing checks pass; Android 13 covers both browser engines and plugin/npm flows, with earlier core checks on Android 16. Target SDK is API 37; Android 6–12, Android 17 and 16 KB devices still need additional hardware testing. Please report the device, Android version and reproduction steps in [Issues](https://github.com/qiannianhuanxiang/DSHA/issues) or QQ group **975836806**.
-
-The existing documentation below describes the earlier releases, including 1.1.10. The preview's scope is described above and in its release notes.
+[Issues and feedback](https://github.com/DSH-APP/DSHA/issues) · QQ group **975836806**. Include the device, Android version, reproduction steps and a redacted diagnostic report.
 
 ---
+
+The original documentation for **1.1.10 and earlier** follows unchanged. Its features, build instructions and compatibility claims describe those historical versions; use the official-release introduction above for the current version.
 
 ## What this is
 

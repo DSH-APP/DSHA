@@ -32,6 +32,24 @@ public final class MaintenanceFixtureInstrumentation extends Instrumentation {
             if (BackupManager.isEnvironmentTaskBusy()) throw new IOException("有真实环境任务运行，请完成后再执行 fixture");
             if (RuntimeTasks.isBusy()) throw new IOException("有实际终端或后台工作运行，请结束后再执行隔离 fixture");
             fixture = new FixtureContext(getTargetContext());
+            if ("cleanup".equals(args.getString("case"))) {
+                File old = new File(fixture.base, "owned-old-tree");
+                File empty = new File(old, "data/user/0/fixture/.l2s");
+                File locked = new File(old, "locked");
+                File outside = new File(fixture.base, "outside");
+                check(empty.mkdirs() && locked.mkdirs() && outside.mkdirs(), "创建清理夹具");
+                Compat.write(new File(locked, "content"), "old-only");
+                Compat.write(new File(outside, "sentinel"), "keep");
+                android.system.Os.symlink(outside.getAbsolutePath(), new File(old, "external-link").getAbsolutePath());
+                android.system.Os.chmod(empty.getAbsolutePath(), 0000);
+                android.system.Os.chmod(locked.getAbsolutePath(), 0000);
+                EnvironmentMaintenance.deleteTree(old);
+                check(!old.exists(), "000 挂载占位和含文件目录均已清理");
+                check("keep".equals(Compat.readAll(new File(outside, "sentinel"))), "不沿软链清理外部目录");
+                EnvironmentMaintenance.deleteTree(fixture.base);
+                result.putString("status", "PASS"); result.putInt("assertions", assertions);
+                finish(Activity.RESULT_OK, result); return;
+            }
             FixtureHarness harness = new FixtureHarness(fixture);
             result.putString("fixture", fixture.base.getAbsolutePath());
             check(!harness.proot().getRootfsDir().getCanonicalPath().startsWith(
@@ -112,12 +130,12 @@ public final class MaintenanceFixtureInstrumentation extends Instrumentation {
             check("fixture-private\n".equals(Compat.readAll(new File(harness.proot().getRootfsDir(), "root/.dsh/attachments/private.txt"))),
                     "中断恢复后私有用户数据一致");
 
-            report("验证自动备份嵌套 Lease/RuntimeTasks，不停止 Web、不释放调用方凭据");
+            report("验证快照嵌套 Lease/RuntimeTasks，不停止 Web、不释放调用方凭据");
             int snapshotStops = harness.stops;
             boolean runtimeBefore = RuntimeTasks.isBusy();
             try (com.deepseekharness.app.util.EnvironmentTaskGate.Lease outer =
-                         com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire("fixture 自动备份调用方")) {
-                check(outer != null, "自动备份调用方取得 Lease");
+                         com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire("fixture 快照调用方")) {
+                check(outer != null, "快照调用方取得 Lease");
                 outer.run(() -> {
                     try (RuntimeTasks caller = RuntimeTasks.begin()) {
                         String nested = BackupManager.runSnapshotTask(harness,
@@ -130,17 +148,13 @@ public final class MaintenanceFixtureInstrumentation extends Instrumentation {
                             check(denied && harness.stops == snapshotStops, "快照锁内升级为停止维护立即拒绝，未调用 stop");
                             return null;
                         });
-                        // 在导出之前注入错误，真正调用自动备份入口但不写公共 Download。
-                        harness.failBackup = true;
-                        try { check(BackupManager.backupForAutomaticLaunch(fixture, harness) == null, "自动备份异常安全返回"); }
-                        finally { harness.failBackup = false; }
                         check(com.deepseekharness.app.util.EnvironmentTaskGate.ownsCurrentThread(), "嵌套调用未释放外层 Lease");
                         check(RuntimeTasks.isBusy(), "嵌套调用未释放调用方 RuntimeTasks");
                     }
                     return null;
                 });
             }
-            check(harness.stops == snapshotStops, "快照和自动备份不调用停止 Web");
+            check(harness.stops == snapshotStops, "快照不调用停止 Web");
             if (!runtimeBefore) check(!RuntimeTasks.isBusy(), "快照异常路径没有遗留 RuntimeTasks");
             java.util.concurrent.atomic.AtomicBoolean uiRejected = new java.util.concurrent.atomic.AtomicBoolean();
             runOnMainSync(() -> {
@@ -183,10 +197,6 @@ public final class MaintenanceFixtureInstrumentation extends Instrumentation {
                 if (!runtimeBeforePreview) check(!RuntimeTasks.isBusy(), "等待用户预览确认不占用 RuntimeTasks");
                 long preview = task.snapshot().id;
                 check(!task.resetConfig() && !task.rebuild(), "恢复预览期间重置与维护互斥");
-                java.util.concurrent.FutureTask<String> automatic = new java.util.concurrent.FutureTask<>(
-                        () -> BackupManager.backupForAutomaticLaunch(fixture, harness));
-                new Thread(automatic, "fixture-auto-backup").start();
-                check(automatic.get(3, java.util.concurrent.TimeUnit.SECONDS) == null, "另一启动队列的自动备份遇到 Lease 立即跳过，不死锁");
                 boolean excluded = false;
                 try { BackupManager.runDataTask(harness, () -> "不得执行"); }
                 catch (IOException expected) { excluded = true; }
@@ -355,7 +365,7 @@ public final class MaintenanceFixtureInstrumentation extends Instrumentation {
                         Compat.readAll(new File(proc, "stat")), pid, android.os.Process.myPid())), "调用 stop 前再次核验本次子进程身份");
                 String reason = stop.stop();
                 Thread.sleep(100);
-                expectStop(failures, reason.contains("不是 dsh Web"), "同 UID 非 Web 进程应按 cmdline 明确拒绝：" + reason);
+                expectStop(failures, reason.isEmpty() && !pidFile.exists(), "同 UID 非 Web 的过期编号应被隔离：" + reason);
                 expectStop(failures, Compat.isAlive(sleep), "被测 stop 返回后专属 sleep 仍存活，未被误杀");
             } finally {
                 // 必须先清理自己创建的进程；不扫描进程、不使用 pid 文件或名字进行 cleanup。

@@ -18,7 +18,10 @@ local.properties
 
 # 离线 rootfs：不提交，CI 现场生成（AGENTS.md 约定；304MB 也超 git 单文件硬限）
 app/src/main/assets/offline-rootfs.bin
-app/src/main/assets/offline-rootfs.version
+app/src/main/assets/dsh-runtime.bin
+app/src/main/assets/dsh-runtime.inputs.json
+app/src/main/assets/ubuntu-tools.bin
+app/src/main/assets/ubuntu-tools.inputs.json
 
 # 发布 APK：走 GitHub Release 资产，不进 git
 release/*.apk

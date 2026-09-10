@@ -3,7 +3,7 @@ package com.deepseekharness.app.util;
 import java.util.regex.Pattern;
 
 /**
- * dsh 1.2 BrowserAuth 启动路径打印的 URL 的严格解析器。
+ * dsh BrowserAuth 启动路径打印的 URL 的严格解析器。
  *
  * <p>值被当作「已序列化的不透明 URL」解析，不做 URL 解码、不接受调用方提供的 host，
  * 只认 127.0.0.1 loopback；端口允许自定义（配置页可改 Web 端口）。
@@ -16,16 +16,15 @@ public final class DshAuthUrl {
     /** 默认的完整 BrowserAuth URL 前缀。 */
     public static final String AUTH_URL_PREFIX = LOOPBACK_BASE_URL + "?token=";
 
-    private static final Pattern TOKEN = Pattern.compile("[A-Za-z0-9_-]{43}");
     /** 严格 URL：loopback 任意端口 + 43 位 base64url token。 */
     private static final Pattern AUTH_URL = Pattern.compile(
             "^(http://127\\.0\\.0\\.1:\\d+/)\\?token=([A-Za-z0-9_-]{43})$");
     /** 官方输出是完整一行；不接受内嵌标记。 */
     private static final Pattern STARTUP = Pattern.compile(
             "^dsh web: (\\S+)(?:[ \\t][^\\r\\n]*)?$", Pattern.MULTILINE);
-    /** 宽松兜底：直接从输出里找鉴权 URL，不要求「dsh web: 」前缀；token 长度放宽。 */
+    /** 容忍日志前缀变化，仍要求完整的官方 token；不能提前截取尚未读完的 token。 */
     private static final Pattern ANY_URL = Pattern.compile(
-            "http://127\\.0\\.0\\.1:\\d+/\\?token=[A-Za-z0-9_-]{20,120}");
+            "http://127\\.0\\.0\\.1:\\d+/\\?token=[A-Za-z0-9_-]{43}(?![A-Za-z0-9_=&%-])");
 
     private DshAuthUrl() {
     }
@@ -53,6 +52,10 @@ public final class DshAuthUrl {
         if (!candidate.equals(candidate.trim())) return null;
         java.util.regex.Matcher m = AUTH_URL.matcher(candidate);
         if (!m.find()) return null;
+        try {
+            int port = java.net.URI.create(candidate).getPort();
+            if (port < 1 || port > 65535) return null;
+        } catch (RuntimeException error) { return null; }
         return new Parsed(m.group(1), m.group(2));
     }
 
@@ -79,13 +82,20 @@ public final class DshAuthUrl {
         Parsed p = fromStartupOutput(output);
         if (p != null) return p.authUrl;
         java.util.regex.Matcher m = ANY_URL.matcher(output);
-        return m.find() ? m.group() : null;
+        while (m.find()) { Parsed candidate = parse(m.group()); if (candidate != null) return candidate.authUrl; }
+        return null;
+    }
+
+    /** 进程输出只能为本轮配置的端口提供凭据。 */
+    public static String findAny(String output, int port) {
+        String url = findAny(output);
+        return url != null && parse(url).loopbackBaseUrl.equals("http://127.0.0.1:" + port + "/") ? url : null;
     }
 
     /** 把鉴权 token 打码（落盘前脱敏），端口无关。 */
     public static String redact(String s) {
         if (s == null) return null;
-        return s.replaceAll("(token=)[A-Za-z0-9_-]{20,120}", "$1***");
+        return s.replaceAll("(token=)[A-Za-z0-9_-]+", "$1***");
     }
 
     /**

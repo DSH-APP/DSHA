@@ -82,7 +82,7 @@ def main():
     artifacts = [inspect(args.standard, 'standard', args.build_tools, args.java),
                  inspect(args.low, 'low', args.build_tools, args.java)]
     version, code = artifacts[0]['versionName'], artifacts[0]['versionCode']
-    if not re.fullmatch(r'\d+\.\d+\.\d+(?:-[A-Za-z0-9.]+)?', version):
+    if not re.fullmatch(r'\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9.]+)?', version):
         raise ValueError('版本名称无效')
     if artifacts[1]['versionName'] != version + 'low' or artifacts[1]['versionCode'] != code:
         raise ValueError('两版 APK 版本不一致')

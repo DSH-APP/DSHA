@@ -49,6 +49,19 @@ locate_pkg() {
   return 1
 }
 
+# 0.1.5 的排他发布已在构建时统一适配；旧脚本不能把它降回可覆盖的 rename。
+NEW_FS=$(locate_pkg dsh-fs-local)
+NEW_SESSION=$(locate_pkg dsh-session-persistence-jsonl)
+if grep -q 'DSHA_ATOMIC_PUBLISH_V1' "$NEW_FS" "$NEW_SESSION" 2>/dev/null; then
+  if grep -q 'DSHA_ATOMIC_PUBLISH_V1' "$NEW_FS" && grep -q 'DSHA_ATOMIC_PUBLISH_V1' "$NEW_SESSION"; then
+    echo FS_PATCH_ALREADY
+    echo SESSION_PATCH_ALREADY
+    exit 0
+  fi
+  echo 'FS_PATCH_FAIL：新版运行模块未同步，请通过环境维护重新安装'
+  exit 1
+fi
+
 # ============ ① agent 的 write 工具（dsh-fs-local） ============
 F=$(locate_pkg dsh-fs-local)
 if [ -z "${F:-}" ] || [ ! -f "${F:-}" ]; then

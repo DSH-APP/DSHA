@@ -3,7 +3,16 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_pad">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:gravity="center_vertical" android:orientation="horizontal">
             <Button android:id="@+id/diagnostic_back" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="44dp" android:layout_height="wrap_content" android:text="‹" android:textSize="24sp" android:contentDescription="返回" />
-            <TextView style="@style/DshaText.PageTitle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="诊断与修复" />
+            <TextView style="@style/DshaText.PageTitle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="诊断与日志" />
+        </LinearLayout>
+        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="错误日志" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="收集启动失败、崩溃和最近运行输出。下载后可在 Download/DSHA 中找到。" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal">
+                <Button android:id="@+id/diagnostic_logs_download" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="下载错误日志" />
+                <Button android:id="@+id/diagnostic_logs_save_as" style="@style/Widget.DSHA.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="另存为" />
+            </LinearLayout>
+            <TextView android:id="@+id/diagnostic_logs_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="44dp" android:gravity="center_vertical" android:paddingTop="8dp" android:paddingBottom="8dp" android:textColor="@color/primary" android:clickable="true" android:focusable="true" />
         </LinearLayout>
         <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
             <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="环境检查" />

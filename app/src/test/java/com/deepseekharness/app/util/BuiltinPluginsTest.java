@@ -10,6 +10,13 @@ import java.util.Arrays;
 
 /** 内置插件纯逻辑的不变式（重构时绝不能改坏）。 */
 public class BuiltinPluginsTest {
+    @org.junit.Test public void hidesOnlyRuntimeInfrastructure() {
+        org.junit.Assert.assertTrue(BuiltinPlugins.internal("@deepseek-ai/dsh-base"));
+        org.junit.Assert.assertTrue(BuiltinPlugins.internal("@deepseek-ai/dsh-web-app"));
+        org.junit.Assert.assertTrue(BuiltinPlugins.internal("dsh-app-integration"));
+        for (String name : BuiltinPlugins.DEFAULT_BUILTINS) org.junit.Assert.assertFalse(BuiltinPlugins.internal(name));
+        org.junit.Assert.assertFalse(BuiltinPlugins.internal("@other/my-plugin"));
+    }
 
     @Test
     public void parseBuiltinNames_逐行解析_跳过空行与注释() {

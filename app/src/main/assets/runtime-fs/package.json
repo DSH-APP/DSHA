@@ -1,0 +1,9 @@
+{
+  "name": "dsha-runtime-fs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./index.js",
+  "description": "DSHA 在 Android 上的原子、禁止覆盖文件发布",
+  "license": "MIT"
+}

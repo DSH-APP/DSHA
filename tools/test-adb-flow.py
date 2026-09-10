@@ -143,7 +143,7 @@ class FlowTest(unittest.TestCase):
         for command in ['id', '/system/bin/getprop ro.product.model', 'pm list packages', 'settings get global foo']:
             self.assertTrue(adb.is_readonly_cmd(command), command)
 
-    def main_fakes(self, command, root=False, disabled=False):
+    def main_fakes(self, command, root=False, disabled=False, blocked=False):
         mods = {'adb_shell_wifi': types.ModuleType('adb_shell_wifi'),
                 'adb_shell_wifi.adb_device': types.SimpleNamespace(AdbDeviceTls=self.Device),
                 'adb_shell_wifi.auth': types.ModuleType('auth'),
@@ -151,43 +151,55 @@ class FlowTest(unittest.TestCase):
         self.stack.enter_context(patch.dict(sys.modules, mods))
         self.stack.enter_context(patch.object(adb.sys, 'argv', ['adb-shell.py', '--host', '192.0.2.1', '--port', '39000'] + command))
         self.stack.enter_context(patch.object(adb.os, 'environ', {}))
+        self.native_plan = self.stack.enter_context(patch.object(adb, 'request_device_plan',
+            side_effect=adb.policy.Blocked('策略拒绝') if blocked else None,
+            return_value={'version': 1, 'kind': 'READ', 'argv': ['id'], 'su': root}))
         self.stack.enter_context(patch.object(adb.os.path, 'isfile', side_effect=lambda p: p in (adb.KEY, adb.KEYPUB)
                 or (root and p.endswith('allow-root-shell')) or (disabled and p.endswith('confirm-shell-disabled'))))
 
-    def test_main_confirms_once_and_propagates_nonzero_exit(self):
-        self.main_fakes(['input tap 10 10'])
+    def test_main_uses_native_plan_and_propagates_nonzero_exit(self):
+        self.main_fakes(['id'])
         self.remote_exit = 5
         with patch.object(adb, 'request_confirm', return_value=True) as confirm, contextlib.redirect_stdout(io.StringIO()) as out:
             result = adb.main()
         self.assertEqual(5, result)
         self.assertTrue(out.getvalue().endswith('[EXIT=5]\n'))
-        confirm.assert_called_once()
+        confirm.assert_not_called()
+        self.native_plan.assert_called_once_with('id', False)
         wrapper = (ASSETS / 'adb-setup.sh').read_text(encoding='utf-8').split("cat > /root/dsh-bin/adb-shell <<'EOF'", 1)[1].split('\nEOF', 1)[0]
         self.assertNotIn('dsh-confirm.sh', wrapper)
         self.assertIn('exec python3', wrapper)
 
-    def test_refused_confirmation_does_not_connect(self):
-        self.main_fakes(['input tap 10 10'])
+    def test_native_denial_does_not_connect(self):
+        self.main_fakes(['input tap 10 10'], blocked=True)
         with patch.object(adb, 'request_confirm', side_effect=adb.ConfirmationError('BUSY')), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(126, adb.main())
         self.assertEqual([], self.events)
 
     def test_root_authorization_required_even_with_confirmation_disabled(self):
-        self.main_fakes(['--su', 'id'], disabled=True)
+        self.main_fakes(['--su', 'id'], disabled=True, blocked=True)
         with contextlib.redirect_stdout(io.StringIO()): self.assertEqual(126, adb.main())
         self.assertEqual([], self.events)
 
-    def test_root_still_confirms_once_when_authorized(self):
+    def test_root_still_requires_native_plan_when_authorized(self):
         self.main_fakes(['--su', 'id'], root=True, disabled=True)
         with patch.object(adb, 'request_confirm', return_value=True) as confirm, contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(0, adb.main())
-        confirm.assert_called_once()
+        confirm.assert_not_called()
+        self.native_plan.assert_called_once_with('id', True)
 
-    def test_confirmation_switch_is_respected_for_normal_commands(self):
-        self.main_fakes(['input tap 10 10'], disabled=True)
+    def test_confirmation_switch_never_bypasses_native_policy(self):
+        self.main_fakes(['id'], disabled=True)
         with patch.object(adb, 'request_confirm') as confirm, contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(0, adb.main())
         confirm.assert_not_called()
+        self.native_plan.assert_called_once_with('id', False)
+
+    def test_internal_flag_never_bypasses_native_denial(self):
+        self.main_fakes(['setenforce 0'], root=True, disabled=True, blocked=True)
+        with patch.dict(adb.os.environ, {'DSH_INTERNAL': '1', 'DSH_NO_CONFIRM': '1'}), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(126, adb.main())
+        self.assertEqual([], self.events)
 
     def test_main_unknown_result_nonzero_and_no_replay(self):
         self.main_fakes(['id'])
@@ -247,9 +259,9 @@ class FlowTest(unittest.TestCase):
 
     def test_script_and_wrapper_version_match_java(self):
         for file in ['adb-shell.py', 'adb-pair.py', 'adb-setup.sh']:
-            self.assertIn('DSHA_ADB_SCRIPT_VERSION=15', (ASSETS / file).read_text(encoding='utf-8'))
+            self.assertIn('DSHA_ADB_SCRIPT_VERSION=16', (ASSETS / file).read_text(encoding='utf-8'))
         source = (ROOT / 'app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java').read_text(encoding='utf-8')
-        self.assertIn('SCRIPT_VERSION = "15"', source)
+        self.assertIn('SCRIPT_VERSION = "16"', source)
         self.assertIn("grep -q '^# DSHA_ADB_SCRIPT_VERSION=", source)
 
 

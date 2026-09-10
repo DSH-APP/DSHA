@@ -5,7 +5,7 @@ DSHA 重构骨架。本文让你不扫全库就能上手 —— 读它之前先�
 ## 一句话
 
 APK 用 proot/proroot 把完整 Ubuntu rootfs 搬进 app 私有目录，在里面跑 Node 24 +
-pnpm + `@deepseek-ai/dsh`（**0.1.2-rc.1**）的 Web UI（`:3080`）。原生层是纯 Java 17、
+pnpm + `@deepseek-ai/dsh`（**0.1.5-rc.1**）的 Web UI（`:3080`）。原生层是纯 Java 17、
 Material3、单 Gradle 模块 `:app`。
 
 ## 技术约束（围绕这些设计）
@@ -15,10 +15,20 @@ Material3、单 Gradle 模块 `:app`。
 - `applicationId com.dsh.client`；Java 包 `com.deepseekharness.app`；标准版 `minSdk 30`、兼容版 `minSdk 23`，
   `compileSdk/targetSdk 37`（SDK 平台包 `android-37.0`）、AGP 9.1.1、Gradle 9.3.1、NDK 26、**arm64-v8a only**。
 - 离线 rootfs（`assets/offline-rootfs.bin`）**不提交**，CI 生成；本地骨架默认走精简包。
+- 新 dsh 依赖由 `tools/dsh-runtime/package-lock.json` 锁定，运行 `tools/prepare-dsh-runtime.py` 生成覆盖层；构建会校验补丁与覆盖层摘要。环境身份为版本码 + Ubuntu 基础环境版本 + dsh 版本；基础版本相同则事务替换受管运行时，个人目录、会话、配置和第三方插件保持原位；基础版本不同才保护数据并重建。不要因普通 dsh 更新递增 Ubuntu 基础环境版本。
+- 已删除按启动次数自动备份。不能通过默认值、旧偏好或旧备份重新启用；普通启动不得遍历整个工作区或会话目录做旧链接修复。
+- APK 使用 `offline-rootfs.layout=split-runtime-v1` 标记 Ubuntu 与 `dsh-runtime.bin` 分包；冷安装两份都解压，局部更新仅读 dsh 包。两份内容各保留一份，不改基础环境身份，构建核验两份摘要及运行时完整性。
+- 数据维护先关闭 PTY 与简易终端，再取得 `RuntimeTasks` 屏障；proroot 终端按本次独立会话核验并回收 guest，不能只结束启动器就释放工作锁。无法确认时保留原环境。
+- `client-combo-patch.json` 与 `client-combo-cache` 适配锁定的网页拼接器；只复用上一轮未变化的脚本/映射，HMR、插件移除和顺序变化必须失效，保留上游脚本、源码映射、URL 与修订号语义。
+- Web 启动等待鉴权不设强制终止时限，60 秒仅提示；保持 `isStarting`，避免看门狗把慢启动当故障。停止与维护必须共用 `WebProcessManager` 的 PID 身份/进程核验，不能重复使用裸 `kill(pid, 0)` 阻塞过期编号。
+- 启动诊断通过 `StartupDiagnostics` / `StartupTrace` 保存阶段、实际插件错误和退出码；失败输出另存，后续启动不可覆盖。兼容重试仅在 proroot 已确认退出、鉴权前且没有明确插件故障时进行一次，不能由超时触发。
+- 安全启动使用 `dsha-recovery-<16位十六进制>` 独立 profile，只加载官方基础组件，保留原 web profile；`WebProcSel` 必须能正确停止此类 Node 进程。启动观察器适配锁定 Cordis 的真实 Entry.init，不拦截全部 Node 模块解析，不把可选依赖探测误报为故障。
+- 离线 curl/git/证书及依赖由 `tools/ubuntu-tools/packages.lock.json` 锁定，运行 `tools/prepare-ubuntu-tools.py` 生成 `ubuntu-tools.bin`；新环境通过 dpkg 离线安装后删除安装包。生成文件不提交，不省略冷环境的完整安装检查。
 - `standard` / `low` 两个 flavor 共用功能代码与 Ubuntu Python。标准版使用系统 WebView，兼容版额外带 Gecko 143，在 Android 6/7 或旧 WebView 时使用；构建任务为 `assembleStandardRelease` / `assembleLowRelease`。
 - 兼容版 proot / loader 从 `src/low/jniLibs` 选择 API 23 构建；重编脚本 `tools/build-low-proot.py`。终端 JNI 同样以 API 23 构建，并保留 16 KB 对齐。不要把标准版 proot 当作 Android 6 可执行文件。
 - 构建通过 `tools/prepare-standard-assets.py` 生成 `app/build/generated/standardAssets`，需要 Python 3.9+（可用 `DSHA_PYTHON` 指定）。不直接修改原始 rootfs；仅重新压缩和清理预装缓存时不要递增环境版本，避免触发旧用户清空重装。
 - `RuntimeTools` 负责随包 CA、npm/npx 与 dsha-plugin 入口；插件、普通 shell、PTY 必须共用其环境，不能依赖用户先跑 apt 才有证书。终端 JNI 保持 max-page-size=16384 / common-page-size=4096，并核验 RELRO 在 4 KB 与 16 KB 页映射内。
+- `NARB_DISABLE_NATIVE_CACHE=1` 让原生扩展直接从随包目录加载；其默认 link+unlink 缓存会在 `--link2symlink` 下首次悬空。冷安装必须验证 Cordis 内部加载器第一次即可初始化，不能只检查 .node 文件或预热后复测。
 
 ## 分层与归属（改代码前先看这里）
 

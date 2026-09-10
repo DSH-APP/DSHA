@@ -63,6 +63,39 @@ public class MaintenanceTransactionTest {
         assertTrue(task.archive().exists()); assertNull(MaintenanceTransaction.pending(fixture.getRoot()));
         task.rollback(); assertFalse(new File(linux, "private-session").exists());
     }
+    @Test public void onlyVerifiedCommittedMigrationMayReleasePreviousRuntime() throws Exception {
+        File linux = oldEnvironment(); MaintenanceTransaction task = verified(); task.begin(false);
+        assertTrue(linux.mkdir());
+        final int[] calls = {0};
+        MaintenanceTransaction.TreeCleaner cleaner = root -> {
+            calls[0]++;
+            assertEquals(new File(task.directory(), "previous-linux"), root);
+            assertTrue(new File(root, "private-session").delete()); assertTrue(root.delete());
+        };
+        assertFalse(task.cleanup(cleaner)); assertEquals(0, calls[0]);
+        task.dataPreserved("a".repeat(64));
+        assertFalse(task.cleanup(cleaner)); assertEquals(0, calls[0]);
+        task.commit();
+        Files.writeString(task.personalArchive().toPath(), "personal-snapshot");
+        assertTrue(task.cleanup(cleaner)); assertEquals(1, calls[0]);
+        assertFalse(task.personalArchive().exists()); assertTrue(task.archive().isFile());
+        assertTrue(task.cleanup(cleaner)); assertEquals(1, calls[0]);
+    }
+    @Test public void interruptedCleanupRetriesAndNeverRollsBackCommittedData() throws Exception {
+        File linux = oldEnvironment(); MaintenanceTransaction task = verified(); task.begin(false);
+        assertTrue(linux.mkdir()); task.dataPreserved("a".repeat(64)); task.commit();
+        assertThrows(java.io.IOException.class, () -> task.cleanup(root -> { throw new java.io.IOException("disk busy"); }));
+        assertNull(MaintenanceTransaction.pending(fixture.getRoot()));
+        task.rollback(); assertTrue(linux.isDirectory());
+        MaintenanceTransaction.cleanupCompleted(fixture.getRoot(), root -> {
+            assertTrue(new File(root, "private-session").delete()); assertTrue(root.delete());
+        });
+        assertTrue(new File(task.directory(), "cleaned").isFile()); assertTrue(task.archive().isFile());
+    }
+    @Test public void historicalCommitWithoutPersonalDataProofIsNeverCleaned() throws Exception {
+        oldEnvironment(); MaintenanceTransaction task = verified(); task.begin(false); task.commit();
+        assertFalse(task.cleanup(root -> fail("不能删除历史个人目录")));
+    }
     @Test public void freshInstallNeverTreatsExistingLinuxAsDisposable() throws Exception {
         File linux = oldEnvironment(); MaintenanceTransaction task = MaintenanceTransaction.create(fixture.getRoot());
         assertThrows(java.io.IOException.class, () -> task.begin(true));
