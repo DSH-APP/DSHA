@@ -12,6 +12,15 @@ from urllib.parse import quote, urlparse
 PUBLISH_CERT = 'e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5'
 
 
+def release_channel(version, explicit=None):
+    """正式发布可沿用已验收的 rc 文件名，通道以显式发布决定为准。"""
+    if explicit is not None:
+        if explicit not in ('stable', 'preview'):
+            raise ValueError('无效发布通道')
+        return explicit
+    return 'preview' if '-' in version else 'stable'
+
+
 def retain_channels(current, previous):
     """新预览发布时保留可下载的稳定版；官网仍展示首个当前发布。"""
     if previous is None:
@@ -72,6 +81,7 @@ def main():
     parser.add_argument('--notes', required=True, type=Path)
     parser.add_argument('--output', default='app/build/release-manifest.json', type=Path)
     parser.add_argument('--previous-manifest', type=Path, help='上一份已发布更新清单；默认复用现有输出文件，保留另一通道')
+    parser.add_argument('--channel', choices=('stable', 'preview'), help='显式指定发布通道；正式推广已验收 rc 包时使用 stable')
     parser.add_argument('--origin', default='https://dsha.cc')
     args = parser.parse_args()
     previous_path = args.previous_manifest or args.output
@@ -92,8 +102,8 @@ def main():
         if artifact['filename'] != expected:
             raise ValueError(f'发布文件名应为 {expected}')
         artifact['url'] = origin + '/downloads/' + quote(version) + '/' + quote(artifact['filename'])
-        apk.with_suffix('.apk.sha256').write_text(f'{artifact["sha256"]}  {apk.name}\n', encoding='utf-8')
-    release = dict(version=version, versionCode=code, channel='preview' if '-' in version else 'stable',
+        apk.with_suffix('.apk.sha256').write_bytes(f'{artifact["sha256"]}  {apk.name}\n'.encode('utf-8'))
+    release = dict(version=version, versionCode=code, channel=release_channel(version, args.channel),
                    pageUrl=origin + '/download/', notes=notes, artifacts=artifacts)
     manifest = dict(schemaVersion=1, packageName='com.dsh.client', certificateSha256=PUBLISH_CERT,
                     releases=retain_channels(release, previous))
@@ -102,7 +112,7 @@ def main():
     github = f'# v{version}\n\n{notes}\n\n版本码 {code}；两版共享包名及历史发布签名。\n\n'
     github += '| 版本 | 最低 Android API | 安装包 | 大小 | SHA-256 |\n|---|---:|---|---:|---|\n'
     for a in artifacts:
-        url = f'https://github.com/qiannianhuanxiang/DSHA/releases/download/v{version}/{a["filename"]}'
+        url = f'https://github.com/DSH-APP/DSHA/releases/download/v{version}/{a["filename"]}'
         github += f'| {a["flavor"]} | {a["minSdk"]} | [{a["filename"]}]({url}) | {a["bytes"]/1048576:.2f} MiB | `{a["sha256"]}` |\n'
     args.output.with_name('github-release-body.md').write_text(github, encoding='utf-8')
     print(f'已核验两份 APK：{version} / {code}，清单：{args.output}')

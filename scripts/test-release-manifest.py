@@ -17,6 +17,16 @@ def feed(*items):
 
 
 class ReleaseChannelTest(unittest.TestCase):
+    def test_explicit_official_release_keeps_tested_rc_name(self):
+        self.assertEqual(manifest.release_channel('0.1.5-rc1', 'stable'), 'stable')
+        self.assertEqual(manifest.release_channel('0.1.5-rc1'), 'preview')
+        self.assertEqual(manifest.release_channel('1.1.10'), 'stable')
+
+    def test_new_stable_retains_published_preview_unchanged(self):
+        previous = release(112, 'preview')
+        current = dict(version='0.1.5-rc1', versionCode=116, channel=manifest.release_channel('0.1.5-rc1', 'stable'))
+        self.assertEqual(manifest.retain_channels(current, feed(previous)), [current, previous])
+
     def test_preview_retains_latest_stable(self):
         stable, preview = release(113, 'stable'), release(114, 'preview')
         self.assertEqual(manifest.retain_channels(preview, feed(stable, release(112, 'preview'))), [preview, stable])

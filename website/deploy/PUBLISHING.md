@@ -9,3 +9,5 @@
 脚本要求服务器已配置 HTTPS，并已有 `/srv/dsha.cc/current` 指向该目录下的一个版本。首次部署需根据实际服务器完成配置；不要盲目覆盖现有站点。
 
 后续生成清单时以 `--previous-manifest` 提供上一份线上 `/api/updates.json`，保留另一更新通道。清单的首个版本是官网当前展示版本；旧下载地址必须继续可用。
+
+发布已验收的 `0.1.5-rc1` 正式版时显式使用 `--channel stable`，并传入 `website/data/current-release-notes.txt`。该通道与 GitHub 正式 Release 一致；保留的旧预览条目和旧下载文件不改写。内置插件版本随 APK 更新，社区插件和技能仍显示各自实际核对的 dsh / DSHA 版本和日期。
