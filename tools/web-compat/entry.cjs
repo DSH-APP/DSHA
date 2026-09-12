@@ -1,0 +1,19 @@
+// 锁定的 PDF.js 主线程和 Worker 共用；只补齐旧内核缺失或不符合规范的接口。
+require('core-js/actual/iterator');
+require('core-js/actual/url/parse');
+require('core-js/actual/promise/with-resolvers');
+require('core-js/actual/promise/try');
+require('core-js/actual/map/get-or-insert');
+require('core-js/actual/map/get-or-insert-computed');
+require('core-js/actual/weak-map/get-or-insert');
+require('core-js/actual/weak-map/get-or-insert-computed');
+require('core-js/actual/math/sum-precise');
+require('core-js/actual/typed-array/from-base64');
+require('core-js/actual/typed-array/to-base64');
+require('core-js/actual/typed-array/from-hex');
+require('core-js/actual/typed-array/to-hex');
+require('core-js/actual/typed-array/set-from-base64');
+require('core-js/actual/typed-array/set-from-hex');
+require('core-js/actual/array-buffer/transfer');
+require('core-js/actual/array-buffer/transfer-to-fixed-length');
+require('../../app/src/main/assets/web-integration/compat.js');

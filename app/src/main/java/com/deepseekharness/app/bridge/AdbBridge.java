@@ -32,7 +32,7 @@ public final class AdbBridge {
     private static final String[] SCRIPTS = {"adb-pair.py", "adb-shell.py", "adb-setup.sh", "device-shell-policy.py"};
     /** assets 脚本版本：每次改脚本 +1，旧 APK 的残留脚本会因版本不符被强制重注入。
      *  16：原生默认拒绝策略、现场路径核验与全量应用分组；取消内部标志绕过。 */
-    private static final String SCRIPT_VERSION = "16";
+    private static final String SCRIPT_VERSION = "17";
     private static final Object SETTINGS_LOCK = new Object();
     private static final java.util.concurrent.atomic.AtomicBoolean PAIRING = new java.util.concurrent.atomic.AtomicBoolean();
 
@@ -65,8 +65,8 @@ public final class AdbBridge {
 
     /** 调用方已经持有环境凭据；包括超时回收在内，进程确实退出后才结束操作。 */
     private static String execOwned(ProotBootstrap proot, String command, long timeoutMs) {
-        if (!EnvironmentTaskGate.ownsCurrentThread()) throw new IllegalStateException("ADB 命令缺少环境任务凭据");
-        if (Thread.currentThread().isInterrupted()) return "ADB_CANCELLED: 操作已取消，未启动命令";
+        if (!EnvironmentTaskGate.ownsCurrentThread()) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("ADB 命令缺少环境任务凭据"));
+        if (Thread.currentThread().isInterrupted()) return com.deepseekharness.app.util.UiText.text("ADB_CANCELLED: 操作已取消，未启动命令");
         StringBuilder output = new StringBuilder();
         try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
             int exit = InstallProcess.read(proot.execRootfsForInstall(command), timeoutMs, true,
@@ -77,7 +77,7 @@ public final class AdbBridge {
         } catch (Exception error) {
             InstallProcess.CleanupFailure cleanup = InstallProcess.cleanupFailure(error);
             if (cleanup != null) {
-                android.util.Log.w("DSHA-ADB", "ADB 进程仍在回收，继续保留环境任务凭据");
+                android.util.Log.w("DSHA-ADB", com.deepseekharness.app.util.UiText.text("ADB 进程仍在回收，继续保留环境任务凭据"));
                 while (!cleanup.awaitExit(1000)) cleanup.retry();
             }
             if (error instanceof InterruptedException) Thread.currentThread().interrupt();
@@ -91,7 +91,7 @@ public final class AdbBridge {
     }
 
     public static boolean injected(ProotBootstrap proot) {
-        return "YES".equals(environmentResult(proot, "检查 ADB 脚本", () -> injectedState(proot)));
+        return "YES".equals(environmentResult(proot, com.deepseekharness.app.util.UiText.text("检查 ADB 脚本"), () -> injectedState(proot)));
     }
 
     private static String injectedState(ProotBootstrap proot) {
@@ -105,14 +105,14 @@ public final class AdbBridge {
 
     /** 幂等注入：把三个 assets 脚本 base64 写入 /root/.dsh/ 并加执行位 + 写版本标记。 */
     public static String inject(Context ctx, ProotBootstrap proot) {
-        return environmentResult(proot, "更新 ADB 脚本", () -> injectOwned(ctx, proot));
+        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("更新 ADB 脚本"), () -> injectOwned(ctx, proot));
     }
 
     private static String injectOwned(Context ctx, ProotBootstrap proot) {
         StringBuilder cmds = new StringBuilder("set -e; mkdir -p /root/.dsh; ");
         for (String name : SCRIPTS) {
             String content = readAsset(ctx, name);
-            if (content.isEmpty()) return "SCRIPTS_MISSING: 随包缺少 " + name;
+            if (content.isEmpty()) return com.deepseekharness.app.util.UiText.text("SCRIPTS_MISSING: 随包缺少 ") + name;
             String b64 = Base64.encodeToString(content.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
             cmds.append("printf '%s' '").append(b64).append("' | base64 -d > /root/.dsh/").append(name).append(".new")
                     .append("; chmod +x /root/.dsh/").append(name).append(".new; mv -f /root/.dsh/")
@@ -132,32 +132,32 @@ public final class AdbBridge {
     }
 
     public static String ensureReady(Context ctx, ProotBootstrap proot, java.util.function.Consumer<String> progress) {
-        return environmentResult(proot, "准备 ADB 环境", () -> ensureReadyOwned(ctx, proot, progress));
+        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("准备 ADB 环境"), () -> ensureReadyOwned(ctx, proot, progress));
     }
 
     private static String ensureReadyOwned(Context ctx, ProotBootstrap proot, java.util.function.Consumer<String> progress) {
-        if (Thread.currentThread().isInterrupted()) return "ADB_CANCELLED: 环境准备已取消";
+        if (Thread.currentThread().isInterrupted()) return com.deepseekharness.app.util.UiText.text("ADB_CANCELLED: 环境准备已取消");
         new com.deepseekharness.app.HttpShellService(ctx).start();
         StringBuilder sb = new StringBuilder();
-        progress.accept("正在同步 ADB 授权设置…");
+        progress.accept(com.deepseekharness.app.util.UiText.text("正在同步 ADB 授权设置…"));
         String settings = applySettings(ctx, proot);
         if (!AdbResult.marker(settings, "SETTINGS_APPLIED")) return settings;
-        progress.accept("正在检查 ADB 脚本版本…");
+        progress.accept(com.deepseekharness.app.util.UiText.text("正在检查 ADB 脚本版本…"));
         if (!injected(proot)) {
             sb.append(inject(ctx, proot)).append('\n');
-            if (!injected(proot)) return "SCRIPTS_FAILED: ADB 脚本更新未完成\n" + sb;
+            if (!injected(proot)) return com.deepseekharness.app.util.UiText.text("SCRIPTS_FAILED: ADB 脚本更新未完成\n") + sb;
         }
-        progress.accept("正在检查 Ubuntu Python…");
+        progress.accept(com.deepseekharness.app.util.UiText.text("正在检查 Ubuntu Python…"));
         if (!proot.ensureGlibcPython()) {
-            return "GLIBC_PY_INSTALL_FAIL: 无法安装 Ubuntu Python3，请先修复基础环境\n" + sb;
+            return com.deepseekharness.app.util.UiText.text("GLIBC_PY_INSTALL_FAIL: 无法安装 Ubuntu Python3，请先修复基础环境\n") + sb;
         }
-        progress.accept("正在检查离线 ADB 依赖…");
+        progress.accept(com.deepseekharness.app.util.UiText.text("正在检查离线 ADB 依赖…"));
         if (!depsOk(proot)) {
-            progress.accept("正在从 APK 补齐缺少的 wheel，保留已恢复的修改版与额外文件…");
+            progress.accept(com.deepseekharness.app.util.UiText.text("正在从 APK 补齐缺少的 wheel，保留已恢复的修改版与额外文件…"));
             String cache = injectWheels(ctx, proot);
             sb.append(cache).append('\n');
             if (!AdbResult.marker(cache, "WHEELS_CACHE_READY")) return sb.toString();
-            progress.accept("正在校验所有缓存 wheel 并安装；损坏缓存会原样保留并报告…");
+            progress.accept(com.deepseekharness.app.util.UiText.text("正在校验所有缓存 wheel 并安装；损坏缓存会原样保留并报告…"));
             String extracted = extractWheelsJava(proot);
             sb.append(extracted).append('\n');
             if (!AdbResult.marker(extracted, "WHEELS_JAVA_EXTRACTED")) return sb.toString();
@@ -165,10 +165,10 @@ public final class AdbBridge {
         if (keyPresent(proot) && depsOk(proot) && wrapperPresent(proot)) {
             return sb.append("SETUP_DONE\n").toString();
         }
-        progress.accept("正在安装离线依赖与新版 ADB 入口，最长等待 3 分钟…");
+        progress.accept(com.deepseekharness.app.util.UiText.text("正在安装离线依赖与新版 ADB 入口，最长等待 3 分钟…"));
         sb.append(setup(proot)).append('\n');
         if (!keyPresent(proot) || !depsOk(proot) || !wrapperPresent(proot)) {
-            return "SETUP_FAILED: 安装后验证未通过，请检查以下输出\n"
+            return com.deepseekharness.app.util.UiText.text("SETUP_FAILED: 安装后验证未通过，请检查以下输出\n")
                     + sb.toString().replace("SETUP_DONE", "SETUP_INCOMPLETE");
         }
         return sb.toString();
@@ -176,23 +176,23 @@ public final class AdbBridge {
 
     /** 保存配置后调用；仅同步授权标记，不启动命令、不读取任何密钥。 */
     public static String applySettings(Context ctx, ProotBootstrap proot) {
-        return environmentResult(proot, "同步 ADB 授权", () -> applySettingsOwned(ctx, proot));
+        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("同步 ADB 授权"), () -> applySettingsOwned(ctx, proot));
     }
 
     private static String applySettingsOwned(Context ctx, ProotBootstrap proot) {
         synchronized (SETTINGS_LOCK) {
-            if (!proot.isEnvironmentReady()) return "SETTINGS_PENDING: 环境未就绪，下次准备 ADB 时同步授权设置";
+            if (!proot.isEnvironmentReady()) return com.deepseekharness.app.util.UiText.text("SETTINGS_PENDING: 环境未就绪，下次准备 ADB 时同步授权设置");
             try {
                 ConfigStore config = new ConfigStore(ctx.getApplicationContext());
                 File dir = new File(proot.getRootfsDir(), "root/.dsh");
-                if (!dir.isDirectory() && !dir.mkdirs()) throw new java.io.IOException("无法创建 ADB 设置目录");
+                if (!dir.isDirectory() && !dir.mkdirs()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("无法创建 ADB 设置目录"));
                 // 先收回旧授权，再按当前偏好写入；新安装缺少禁用标记时默认确认。
                 setFlag(new File(dir, "allow-root-shell"), config.isRootShellAllowed());
                 setFlag(new File(dir, "confirm-shell-disabled"), !config.isConfirmShell());
                 setFlag(new File(dir, "confirm-shell-enabled"), config.isConfirmShell());
-                return "SETTINGS_APPLIED: ADB 授权设置已同步";
+                return com.deepseekharness.app.util.UiText.text("SETTINGS_APPLIED: ADB 授权设置已同步");
             } catch (Exception e) {
-                return "SETTINGS_FAILED: ADB 授权设置同步失败：" + SensitiveData.redact(String.valueOf(e));
+                return com.deepseekharness.app.util.UiText.text("SETTINGS_FAILED: ADB 授权设置同步失败：") + SensitiveData.redact(String.valueOf(e));
             }
         }
     }
@@ -201,7 +201,7 @@ public final class AdbBridge {
         android.util.AtomicFile atomic = new android.util.AtomicFile(file);
         if (!enabled) {
             atomic.delete();
-            if (file.exists()) throw new java.io.IOException("不能移除授权标记 " + file.getName());
+            if (file.exists()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("不能移除授权标记 ") + file.getName());
             return;
         }
         FileOutputStream out = null;
@@ -221,7 +221,7 @@ public final class AdbBridge {
      * 加载不了；glibc python + 本方法 = 与 1.1.9.1（rootfs 预装 glibc python3）等效。
      */
     public static String extractWheelsJava(ProotBootstrap proot) {
-        return environmentResult(proot, "安装 ADB 离线依赖", () -> extractWheelsOwned(proot));
+        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("安装 ADB 离线依赖"), () -> extractWheelsOwned(proot));
     }
 
     private static String extractWheelsOwned(ProotBootstrap proot) {
@@ -245,7 +245,7 @@ public final class AdbBridge {
         File stage = new File(ctx.getCacheDir(), "adb-wheel-bundle-" + java.util.UUID.randomUUID());
         String boundary;
         try {
-            if (!stage.mkdir()) throw new java.io.IOException("无法创建 APK wheel 临时目录");
+            if (!stage.mkdir()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("无法创建 APK wheel 临时目录"));
             boundary = stage.getCanonicalPath();
         } catch (Exception e) { return "WHEELS_INJECT_FAIL: " + SensitiveData.redact(String.valueOf(e)); }
         String result, cleanup = "";
@@ -258,7 +258,7 @@ public final class AdbBridge {
                 FileIntegrity.copy(in, out, 128L * 1024 * 1024);
             }
             File bundled = new File(stage, "wheels");
-            if (!bundled.mkdir()) throw new java.io.IOException("无法创建 wheel 解包目录");
+            if (!bundled.mkdir()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("无法创建 wheel 解包目录"));
             TarGzipExtractor.extract(archive, bundled);
             AdbWheelCache.Merge report = AdbWheelCache.fillMissing(bundled,
                     new File(proot.getRootfsDir(), "root/.dsh/wheels"), archive,
@@ -266,7 +266,7 @@ public final class AdbBridge {
             result = report.message();
         } catch (Exception e) {
             result = "WHEELS_INJECT_FAIL: " + SensitiveData.redact(String.valueOf(e))
-                    + "；已有缓存原样保留，未用 APK 覆盖";
+                    + com.deepseekharness.app.util.UiText.text("；已有缓存原样保留，未用 APK 覆盖");
         } finally {
             try { AdbWheelCache.removeStage(stage, boundary); }
             catch (java.io.IOException e) { cleanup = "\nWHEELS_STAGE_CLEANUP_WARN: " + SensitiveData.redact(String.valueOf(e)); }
@@ -286,12 +286,12 @@ public final class AdbBridge {
 
     /** 单次配对。pairPort 为空时脚本内尝试 mdns 发现；host 为 App 解析出的真实 IP。 */
     public static String pair(ProotBootstrap proot, String code, String pairPort, String connectPort, String host) {
-        return environmentResult(proot, "ADB 配对与连接验证", () -> pairOwned(proot, code, pairPort, connectPort, host));
+        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("ADB 配对与连接验证"), () -> pairOwned(proot, code, pairPort, connectPort, host));
     }
 
     private static String pairOwned(ProotBootstrap proot, String code, String pairPort, String connectPort, String host) {
-        if (!AdbResult.code(code)) return "INVALID_CODE: 配对码必须恰好为 6 位数字";
-        if (!PAIRING.compareAndSet(false, true)) return "PAIR_BUSY: 已有配对正在进行，请等待结果";
+        if (!AdbResult.code(code)) return com.deepseekharness.app.util.UiText.text("INVALID_CODE: 配对码必须恰好为 6 位数字");
+        if (!PAIRING.compareAndSet(false, true)) return com.deepseekharness.app.util.UiText.text("PAIR_BUSY: 已有配对正在进行，请等待结果");
         try {
             String c = "python3 -u /root/.dsh/adb-pair.py --code " + ShellQuote.arg(code)
                     + pairOptions(pairPort, connectPort, host);
@@ -299,7 +299,7 @@ public final class AdbBridge {
             if (AdbResult.pairState(out) == AdbResult.PairState.CONNECTED) {
                 out += "\n" + grantSecureSettings(proot);
             }
-            return SensitiveData.redact(out == null ? "PAIR_ERROR: 配对进程没有返回结果" : out);
+            return SensitiveData.redact(out == null ? com.deepseekharness.app.util.UiText.text("PAIR_ERROR: 配对进程没有返回结果") : out);
         } catch (Exception e) {
             return "PAIR_ERROR: " + SensitiveData.redact(String.valueOf(e));
         } finally {
@@ -308,7 +308,7 @@ public final class AdbBridge {
     }
 
     public static String verify(ProotBootstrap proot, String connectPort, String host) {
-        return environmentResult(proot, "验证 ADB 连接", () -> verifyOwned(proot, connectPort, host));
+        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("验证 ADB 连接"), () -> verifyOwned(proot, connectPort, host));
     }
 
     private static String verifyOwned(ProotBootstrap proot, String connectPort, String host) {
@@ -316,7 +316,7 @@ public final class AdbBridge {
             String out = execOwned(proot, "python3 -u /root/.dsh/adb-pair.py --verify-only"
                     + pairOptions("", connectPort, host), 60_000);
             if (AdbResult.pairState(out) == AdbResult.PairState.CONNECTED) out += "\n" + grantSecureSettings(proot);
-            return SensitiveData.redact(out == null ? "CONNECT_WARN: 验证没有返回结果" : out);
+            return SensitiveData.redact(out == null ? com.deepseekharness.app.util.UiText.text("CONNECT_WARN: 验证没有返回结果") : out);
         } catch (Exception e) {
             return "CONNECT_WARN: " + SensitiveData.redact(String.valueOf(e));
         }
@@ -328,7 +328,7 @@ public final class AdbBridge {
         if (pp > 0) out.append(" --port ").append(pp);
         if (cp > 0) out.append(" --connect-port ").append(cp);
         if (host != null && !host.trim().isEmpty()) {
-            if (!localAddresses().contains(host.trim())) throw new IllegalArgumentException("请填写本机无线调试页面的 IP 地址");
+            if (!localAddresses().contains(host.trim())) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("请填写本机无线调试页面的 IP 地址"));
             out.append(" --host ").append(ShellQuote.arg(host.trim()));
         }
         return out.toString();
@@ -340,19 +340,19 @@ public final class AdbBridge {
         try {
             String pkg = "com.dsh.client";
             String r = execOwned(proot, "python3 /root/.dsh/adb-pair.py --grant-keepalive 2>&1", 45_000);
-            android.util.Log.i("DSHA-ADB", "WRITE_SECURE_SETTINGS 授权结果: " + SensitiveData.redact(r));
-            return r != null && r.trim().endsWith("[EXIT=0]") ? "KEEPALIVE_OK: 已允许自动恢复无线调试"
-                    : "KEEPALIVE_WARN: 连接已验证，但自动恢复授权未完成；重启后可能需手动打开无线调试\n" + SensitiveData.redact(r);
+            android.util.Log.i("DSHA-ADB", com.deepseekharness.app.util.UiText.text("WRITE_SECURE_SETTINGS 授权结果: ") + SensitiveData.redact(r));
+            return r != null && r.trim().endsWith("[EXIT=0]") ? com.deepseekharness.app.util.UiText.text("KEEPALIVE_OK: 已允许自动恢复无线调试")
+                    : com.deepseekharness.app.util.UiText.text("KEEPALIVE_WARN: 连接已验证，但自动恢复授权未完成；重启后可能需手动打开无线调试\n") + SensitiveData.redact(r);
         } catch (Throwable t) {
-            android.util.Log.w("DSHA-ADB", "WRITE_SECURE_SETTINGS 授权失败: "
+            android.util.Log.w("DSHA-ADB", com.deepseekharness.app.util.UiText.text("WRITE_SECURE_SETTINGS 授权失败: ")
                     + SensitiveData.redact(String.valueOf(t)));
-            return "KEEPALIVE_WARN: 自动恢复授权未完成；重启后可能需手动打开无线调试";
+            return com.deepseekharness.app.util.UiText.text("KEEPALIVE_WARN: 自动恢复授权未完成；重启后可能需手动打开无线调试");
         }
     }
 
     /** 状态快照：key/deps/connect_port（供 UI 展示）。 */
     public static String status(ProotBootstrap proot) {
-        return environmentResult(proot, "读取 ADB 状态", () -> statusOwned(proot));
+        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("读取 ADB 状态"), () -> statusOwned(proot));
     }
 
     private static String statusOwned(ProotBootstrap proot) {
@@ -365,7 +365,7 @@ public final class AdbBridge {
 
     /** 后台探测也使用同一进程回收与环境任务范围。 */
     public static String probe(ProotBootstrap proot, Endpoint endpoint) {
-        return environmentResult(proot, "ADB 后台探活", () -> {
+        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("ADB 后台探活"), () -> {
             String options = endpoint == null ? "" : " --host " + ShellQuote.arg(endpoint.host) + " --port " + endpoint.port;
             return execOwned(proot, "python3 /root/.dsh/adb-shell.py"
                     + " --connect-timeout 20 --timeout 10" + options + " id 2>&1", 60_000);
@@ -398,7 +398,7 @@ public final class AdbBridge {
     public static Endpoint discover(Context ctx, String type, long timeoutMs,
                                      java.util.function.Consumer<String> progress) {
         android.net.nsd.NsdManager manager = (android.net.nsd.NsdManager) ctx.getSystemService(Context.NSD_SERVICE);
-        if (manager == null) { progress.accept("系统没有端口发现服务，请手动填写端口"); return null; }
+        if (manager == null) { progress.accept(com.deepseekharness.app.util.UiText.text("系统没有端口发现服务，请手动填写端口")); return null; }
         java.util.Set<String> local = localAddresses();
         java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(1);
         java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
@@ -409,7 +409,7 @@ public final class AdbBridge {
             @Override public void onDiscoveryStarted(String t) { if (closed.get()) stop(); }
             @Override public void onDiscoveryStopped(String t) { }
             @Override public void onStartDiscoveryFailed(String t, int error) {
-                if (!closed.get()) progress.accept("端口发现未启动（错误 " + error + "），可手动填写端口");
+                if (!closed.get()) progress.accept(com.deepseekharness.app.util.UiText.text("端口发现未启动（错误 ") + error + com.deepseekharness.app.util.UiText.text("），可手动填写端口"));
                 done.countDown();
             }
             @Override public void onStopDiscoveryFailed(String t, int error) { }
@@ -428,7 +428,7 @@ public final class AdbBridge {
                 try {
                     manager.resolveService(info, new android.net.nsd.NsdManager.ResolveListener() {
                         @Override public void onResolveFailed(android.net.nsd.NsdServiceInfo i, int error) {
-                            if (!closed.get()) progress.accept("一个服务解析失败（错误 " + error + "），继续查找本机端口…");
+                            if (!closed.get()) progress.accept(com.deepseekharness.app.util.UiText.text("一个服务解析失败（错误 ") + error + com.deepseekharness.app.util.UiText.text("），继续查找本机端口…"));
                             resolved();
                         }
                         @Override public void onServiceResolved(android.net.nsd.NsdServiceInfo i) {
@@ -454,11 +454,11 @@ public final class AdbBridge {
         try {
             manager.discoverServices(type, android.net.nsd.NsdManager.PROTOCOL_DNS_SD, discovery);
             if (!done.await(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS))
-                progress.accept("未在时限内发现本机端口，请确认系统配对弹窗仍打开，或手动填写端口");
+                progress.accept(com.deepseekharness.app.util.UiText.text("未在时限内发现本机端口，请确认系统配对弹窗仍打开，或手动填写端口"));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (RuntimeException e) {
-            progress.accept("端口发现失败：" + SensitiveData.redact(String.valueOf(e)));
+            progress.accept(com.deepseekharness.app.util.UiText.text("端口发现失败：") + SensitiveData.redact(String.valueOf(e)));
         } finally {
             closed.set(true);
             discovery.stop();

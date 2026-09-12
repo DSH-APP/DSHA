@@ -47,7 +47,7 @@ public final class UpdateEngine {
     private volatile boolean startupNotice;
     private volatile UpdatePolicy.Release candidate;
     private volatile File verifiedApk;
-    private final MutableLiveData<State> state = new MutableLiveData<>(new State("尚未检查更新", false, 0, 0, null, null));
+    private final MutableLiveData<State> state = new MutableLiveData<>(new State(com.deepseekharness.app.util.UiText.text("尚未检查更新"), false, 0, 0, null, null));
     private volatile String phase = "";
     private volatile String stopReason = "";
     private volatile boolean runningDownload;
@@ -76,7 +76,7 @@ public final class UpdateEngine {
         context.getSharedPreferences("dsha-updates", 0).edit().putString("channel", value).apply();
         check();
     }
-    public void cancel() { stop("已取消下载，进度已保留", "cancelled"); }
+    public void cancel() { stop(com.deepseekharness.app.util.UiText.text("已取消下载，进度已保留"), "cancelled"); }
     private interface Task { String run() throws Exception; }
     private void submit(String message, Task task) {
         if (!busy.compareAndSet(false, true)) return;
@@ -87,9 +87,9 @@ public final class UpdateEngine {
             String result;
             try { result = task.run(); }
             catch (Exception error) {
-                result = cancelled ? "已取消，可重新检查或下载" : "检查" + channelName(channel) + "失败："
+                result = cancelled ? com.deepseekharness.app.util.UiText.text("已取消，可重新检查或下载") : com.deepseekharness.app.util.UiText.text("检查") + channelName(channel) + com.deepseekharness.app.util.UiText.text("失败：")
                         + com.deepseekharness.app.util.SensitiveData.redact(error.getMessage())
-                        + (currentCandidate() ? "；保留此通道上次结果，可重试检查或继续使用已下载包" : "；可重新检查");
+                        + (currentCandidate() ? com.deepseekharness.app.util.UiText.text("；保留此通道上次结果，可重试检查或继续使用已下载包") : com.deepseekharness.app.util.UiText.text("；可重新检查"));
             }
             connection = null;
             DiagnosticLog.record(context, "APP_UPDATE", result);
@@ -121,20 +121,20 @@ public final class UpdateEngine {
     }
     private void check(boolean startup) {
         final String requestedChannel = channel;
-        submit("正在检查" + (UpdatePolicy.PREVIEW.equals(channel) ? "预览版" : "稳定版") + "更新…", () -> {
+        submit(com.deepseekharness.app.util.UiText.text("正在检查") + (UpdatePolicy.PREVIEW.equals(channel) ? com.deepseekharness.app.util.UiText.text("预览版") : com.deepseekharness.app.util.UiText.text("稳定版")) + com.deepseekharness.app.util.UiText.text("更新…"), () -> {
             HttpURLConnection conn = transport.open(FEED, 0); connection = conn;
             byte[] raw;
             try (InputStream input = conn.getInputStream(); ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
                 byte[] buffer = new byte[8192]; int n;
                 while ((n = input.read(buffer)) != -1) {
                     ensureActive();
-                    if (bytes.size() + n > 1024 * 1024) throw new IOException("更新清单过大");
+                    if (bytes.size() + n > 1024 * 1024) throw new IOException(com.deepseekharness.app.util.UiText.text("更新清单过大"));
                     bytes.write(buffer, 0, n);
                 }
                 raw = bytes.toByteArray();
             } finally { conn.disconnect(); }
             JSONObject feed = new JSONObject(new String(raw, java.nio.charset.StandardCharsets.UTF_8));
-            if (feed.optInt("schemaVersion") != 1) throw new IOException("更新清单版本不兼容");
+            if (feed.optInt("schemaVersion") != 1) throw new IOException(com.deepseekharness.app.util.UiText.text("更新清单版本不兼容"));
             JSONArray releases = feed.getJSONArray("releases");
             ArrayList<UpdatePolicy.Release> options = new ArrayList<>();
             for (int i = 0; i < releases.length(); i++) {
@@ -156,15 +156,15 @@ public final class UpdateEngine {
             candidate = selected;
             candidateChannel = selected == null ? null : requestedChannel;
             startupNotice = startup && selected != null;
-            return candidate != null ? "发现新版本 " + candidate.version : "此通道暂无适合当前设备的更新；当前版本码 " + BuildConfig.VERSION_CODE;
+            return candidate != null ? com.deepseekharness.app.util.UiText.text("发现新版本 ") + candidate.version : com.deepseekharness.app.util.UiText.text("此通道暂无适合当前设备的更新；当前版本码 ") + BuildConfig.VERSION_CODE;
         });
     }
     public void download() {
         if (!currentCandidate() || !candidate.valid() || !busy.compareAndSet(false, true)) return;
         cancelled = false; stopReason = ""; verifiedApk = null;
         try {
-            save("downloading", "正在准备下载…");
-            state.setValue(new State("正在准备下载，可离开此页面", Stage.DOWNLOADING,
+            save("downloading", com.deepseekharness.app.util.UiText.text("正在准备下载…"));
+            state.setValue(new State(com.deepseekharness.app.util.UiText.text("正在准备下载，可离开此页面"), Stage.DOWNLOADING,
                     partial().length(), candidate.bytes, candidate, null, channel, candidateChannel));
             androidx.core.content.ContextCompat.startForegroundService(context,
                     new android.content.Intent(context, com.deepseekharness.app.UpdateDownloadService.class));
@@ -173,7 +173,7 @@ public final class UpdateEngine {
 
     public void startFailed(Exception error) {
         runningDownload = false; busy.set(false);
-        finishState("paused", "下载尚未开始：" + com.deepseekharness.app.util.SensitiveData.redact(error.getMessage()) + "；请在更新页重试");
+        finishState("paused", com.deepseekharness.app.util.UiText.text("下载尚未开始：") + com.deepseekharness.app.util.SensitiveData.redact(error.getMessage()) + com.deepseekharness.app.util.UiText.text("；请在更新页重试"));
     }
 
     /** 由前台服务调用；进程重建后从持久清单和实际文件长度恢复。 */
@@ -181,16 +181,16 @@ public final class UpdateEngine {
         if (runningDownload || !shouldResume()) return;
         runningDownload = true; busy.set(true); cancelled = false; stopReason = "";
         final UpdatePolicy.Release release = candidate;
-        state.setValue(new State("正在恢复下载…", Stage.DOWNLOADING,
+        state.setValue(new State(com.deepseekharness.app.util.UiText.text("正在恢复下载…"), Stage.DOWNLOADING,
                 partial().length(), release.bytes, release, null, channel, candidateChannel));
         IO.execute(() -> {
             String message, completedPhase;
             try {
                 File partial = partial(), apk = apk();
                 File directory = partial.getParentFile();
-                if (!directory.isDirectory() && !directory.mkdirs()) throw new IOException("无法创建更新目录");
+                if (!directory.isDirectory() && !directory.mkdirs()) throw new IOException(com.deepseekharness.app.util.UiText.text("无法创建更新目录"));
                 if (directory.getUsableSpace() < Math.max(0, release.bytes - partial.length()) + 32L * 1024 * 1024)
-                    throw new IOException("存储不足，请留出剩余下载大小加 32 MiB 空间");
+                    throw new IOException(com.deepseekharness.app.util.UiText.text("存储不足，请留出剩余下载大小加 32 MiB 空间"));
                 ResumableDownload.transfer(partial, release.bytes, release.sha256, offset -> {
                     HttpURLConnection conn = transport.open(release.url, offset); connection = conn; return conn;
                 },
@@ -200,23 +200,23 @@ public final class UpdateEngine {
                     public void changed(long n, long total) {
                         long now = android.os.SystemClock.elapsedRealtime();
                         if (now - last >= 500 || n == total) {
-                            state.postValue(new State("正在下载，离开页面后继续", Stage.DOWNLOADING,
+                            state.postValue(new State(com.deepseekharness.app.util.UiText.text("正在下载，离开页面后继续"), Stage.DOWNLOADING,
                                     n, total, release, null, channel, candidateChannel)); last = now;
                         }
                     }
                 });
                 ensureActive();
-                state.postValue(new State("正在核验包名、版本与签名…", Stage.VERIFYING,
+                state.postValue(new State(com.deepseekharness.app.util.UiText.text("正在核验包名、版本与签名…"), Stage.VERIFYING,
                         release.bytes, release.bytes, release, null, channel, candidateChannel));
                 validatePackage(partial, release);
                 ensureActive();
                 android.system.Os.rename(partial.getAbsolutePath(), apk.getAbsolutePath());
                 verifiedApk = apk;
-                message = "下载及校验完成，点击「安装更新」继续"; completedPhase = "ready";
+                message = com.deepseekharness.app.util.UiText.text("下载及校验完成，点击「安装更新」继续"); completedPhase = "ready";
             } catch (Exception error) {
                 verifiedApk = null;
-                message = cancelled ? stopReason : "下载暂停：" + com.deepseekharness.app.util.SensitiveData.redact(error.getMessage()) + "；可继续下载";
-                completedPhase = cancelled ? ("已取消下载，进度已保留".equals(stopReason) ? "cancelled" : "paused") : "paused";
+                message = cancelled ? stopReason : com.deepseekharness.app.util.UiText.text("下载暂停：") + com.deepseekharness.app.util.SensitiveData.redact(error.getMessage()) + com.deepseekharness.app.util.UiText.text("；可继续下载");
+                completedPhase = cancelled ? (com.deepseekharness.app.util.UiText.text("已取消下载，进度已保留").equals(stopReason) ? "cancelled" : "paused") : "paused";
             }
             connection = null;
             final String done = message, savedPhase = completedPhase;
@@ -243,15 +243,15 @@ public final class UpdateEngine {
     private File apk() { return new File(context.getFilesDir(), "updates/" + candidate.sha256.toLowerCase(java.util.Locale.ROOT) + ".apk"); }
 
     private boolean currentCandidate() { return candidate != null && channel.equals(candidateChannel); }
-    public static String channelName(String value) { return UpdatePolicy.PREVIEW.equals(value) ? "预览通道" : "稳定通道"; }
+    public static String channelName(String value) { return UpdatePolicy.PREVIEW.equals(value) ? com.deepseekharness.app.util.UiText.text("预览通道") : com.deepseekharness.app.util.UiText.text("稳定通道"); }
     private State snapshot(String message, boolean working) {
         boolean matches = currentCandidate();
         if (candidate != null) {
-            message += candidateChannel == null ? "\n已保留 " + candidate.version
-                    + " 及已有下载文件，但无法确认查询来源；请联网重新检查，确认当前通道后才能下载/安装"
-                    : matches ? "\n候选来源：" + channelName(candidateChannel)
-                    : "\n已保留 " + candidate.version + "（来源：" + channelName(candidateChannel)
-                    + "），与当前" + channelName(channel) + "不匹配；切回来源通道或重新检查后才能下载/安装";
+            message += candidateChannel == null ? com.deepseekharness.app.util.UiText.text("\n已保留 ") + candidate.version
+                    + com.deepseekharness.app.util.UiText.text(" 及已有下载文件，但无法确认查询来源；请联网重新检查，确认当前通道后才能下载/安装")
+                    : matches ? com.deepseekharness.app.util.UiText.text("\n候选来源：") + channelName(candidateChannel)
+                    : com.deepseekharness.app.util.UiText.text("\n已保留 ") + candidate.version + com.deepseekharness.app.util.UiText.text("（来源：") + channelName(candidateChannel)
+                    + com.deepseekharness.app.util.UiText.text("），与当前") + channelName(channel) + com.deepseekharness.app.util.UiText.text("不匹配；切回来源通道或重新检查后才能下载/安装");
         }
         return new State(message, working ? Stage.CHECKING : Stage.IDLE,
                 !matches ? 0 : verifiedApk != null ? candidate.bytes : partial().length(),
@@ -261,7 +261,7 @@ public final class UpdateEngine {
 
     private void finishState(String nextPhase, String message) {
         try { save(nextPhase, message); }
-        catch (Exception error) { message += "；保存任务状态失败，下次需要重新检查"; }
+        catch (Exception error) { message += com.deepseekharness.app.util.UiText.text("；保存任务状态失败，下次需要重新检查"); }
         DiagnosticLog.record(context, "APP_UPDATE", message);
         state.setValue(snapshot(message, false));
     }
@@ -277,7 +277,7 @@ public final class UpdateEngine {
                     .put("checkedChannel", candidateChannel == null ? "" : candidateChannel);
         }
         if (!prefs().edit().putString("task", doc.toString()).putString("phase", nextPhase).putString("message", message).commit())
-            throw new IOException("任务状态无法写入存储");
+            throw new IOException(com.deepseekharness.app.util.UiText.text("任务状态无法写入存储"));
         phase = nextPhase;
     }
 
@@ -297,7 +297,7 @@ public final class UpdateEngine {
             if (candidate == null) return;
             phase = prefs().getString("phase", "paused");
             verifiedApk = "ready".equals(phase) && apk().isFile() ? apk() : null;
-            State restored = snapshot(verifiedApk != null ? "安装包已保留，安装前将重新校验" : "更新候选已恢复，可重新检查或继续下载", false);
+            State restored = snapshot(verifiedApk != null ? com.deepseekharness.app.util.UiText.text("安装包已保留，安装前将重新校验") : com.deepseekharness.app.util.UiText.text("更新候选已恢复，可重新检查或继续下载"), false);
             if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) state.setValue(restored);
             else state.postValue(restored);
         } catch (Exception ignored) { candidate = null; candidateChannel = null; verifiedApk = null; }
@@ -307,8 +307,8 @@ public final class UpdateEngine {
         UpdatePolicy.Release release = candidate;
         File file = verifiedApk;
         String sourceChannel = candidateChannel;
-        if (!isCurrentInstall(file, release, sourceChannel)) throw new IOException("候选来源与当前通道不匹配或任务已改变，请重新检查");
-        if (release == null || file == null || !file.isFile()) throw new IOException("请先下载并校验安装包");
+        if (!isCurrentInstall(file, release, sourceChannel)) throw new IOException(com.deepseekharness.app.util.UiText.text("候选来源与当前通道不匹配或任务已改变，请重新检查"));
+        if (release == null || file == null || !file.isFile()) throw new IOException(com.deepseekharness.app.util.UiText.text("请先下载并校验安装包"));
         try {
             ResumableDownload.verify(file, release.bytes, release.sha256);
             validatePackage(file, release);
@@ -316,12 +316,12 @@ public final class UpdateEngine {
             main.post(() -> {
                 if (verifiedApk == file && candidate == release) {
                     verifiedApk = null;
-                    finishState("paused", "安装前校验失败：" + com.deepseekharness.app.util.SensitiveData.redact(error.getMessage()));
+                    finishState("paused", com.deepseekharness.app.util.UiText.text("安装前校验失败：") + com.deepseekharness.app.util.SensitiveData.redact(error.getMessage()));
                 }
             });
             throw error;
         }
-        if (!isCurrentInstall(file, release, sourceChannel)) throw new IOException("校验期间通道或候选已改变，请重试安装");
+        if (!isCurrentInstall(file, release, sourceChannel)) throw new IOException(com.deepseekharness.app.util.UiText.text("校验期间通道或候选已改变，请重试安装"));
         return file;
     }
     /** 领取安装结果时再次核对身份，阻止校验期间发生的检查/切通道竞态。 */
@@ -334,19 +334,19 @@ public final class UpdateEngine {
         int flags = Build.VERSION.SDK_INT >= 28 ? PackageManager.GET_SIGNING_CERTIFICATES : PackageManager.GET_SIGNATURES;
         PackageInfo next = pm.getPackageArchiveInfo(apk.getAbsolutePath(), flags);
         PackageInfo installed = pm.getPackageInfo(context.getPackageName(), flags);
-        if (next == null || !installed.packageName.equals(next.packageName)) throw new IOException("安装包不是 DSHA");
+        if (next == null || !installed.packageName.equals(next.packageName)) throw new IOException(com.deepseekharness.app.util.UiText.text("安装包不是 DSHA"));
         long code = Build.VERSION.SDK_INT >= 28 ? next.getLongVersionCode() : next.versionCode;
-        if (code != release.versionCode || code <= BuildConfig.VERSION_CODE) throw new IOException("安装包版本不匹配或不是更新版本");
-        if (Build.VERSION.SDK_INT >= 24 && next.applicationInfo.minSdkVersion > Build.VERSION.SDK_INT) throw new IOException("安装包不支持当前 Android 版本");
+        if (code != release.versionCode || code <= BuildConfig.VERSION_CODE) throw new IOException(com.deepseekharness.app.util.UiText.text("安装包版本不匹配或不是更新版本"));
+        if (Build.VERSION.SDK_INT >= 24 && next.applicationInfo.minSdkVersion > Build.VERSION.SDK_INT) throw new IOException(com.deepseekharness.app.util.UiText.text("安装包不支持当前 Android 版本"));
         String expectedVersion = release.version + (BuildConfig.LOW_ANDROID ? "low" : "");
-        if (!expectedVersion.equals(next.versionName)) throw new IOException("安装包不是当前高/低安卓版本");
+        if (!expectedVersion.equals(next.versionName)) throw new IOException(com.deepseekharness.app.util.UiText.text("安装包不是当前高/低安卓版本"));
         Signature[] oldSign = signatures(installed), newSign = signatures(next);
-        if (oldSign.length == 0 || newSign.length != oldSign.length) throw new IOException("安装包签名不匹配");
+        if (oldSign.length == 0 || newSign.length != oldSign.length) throw new IOException(com.deepseekharness.app.util.UiText.text("安装包签名不匹配"));
         ArrayList<String> oldHashes = new ArrayList<>(), newHashes = new ArrayList<>();
         for (Signature sig : oldSign) oldHashes.add(hex(MessageDigest.getInstance("SHA-256").digest(sig.toByteArray())));
         for (Signature sig : newSign) newHashes.add(hex(MessageDigest.getInstance("SHA-256").digest(sig.toByteArray())));
         java.util.Collections.sort(oldHashes); java.util.Collections.sort(newHashes);
-        if (!oldHashes.equals(newHashes)) throw new IOException("签名与已安装版本不同，已阻止安装");
+        if (!oldHashes.equals(newHashes)) throw new IOException(com.deepseekharness.app.util.UiText.text("签名与已安装版本不同，已阻止安装"));
     }
     private Signature[] signatures(PackageInfo info) {
         if (Build.VERSION.SDK_INT >= 28) return info.signingInfo == null ? new Signature[0] : info.signingInfo.getApkContentsSigners();
@@ -356,7 +356,7 @@ public final class UpdateEngine {
     private HttpURLConnection connect(String target, long offset) throws Exception {
         for (int i = 0; i < 6; i++) {
             ensureActive();
-            if (!UpdatePolicy.https(target)) throw new IOException("更新地址必须使用 HTTPS");
+            if (!UpdatePolicy.https(target)) throw new IOException(com.deepseekharness.app.util.UiText.text("更新地址必须使用 HTTPS"));
             HttpURLConnection conn = (HttpURLConnection) new URL(target).openConnection(); connection = conn;
             ((javax.net.ssl.HttpsURLConnection) conn).setSSLSocketFactory(TrustedNetwork.sockets(context));
             conn.setConnectTimeout(15000); conn.setReadTimeout(30000); conn.setInstanceFollowRedirects(false);
@@ -366,15 +366,15 @@ public final class UpdateEngine {
             int code = conn.getResponseCode();
             if (code >= 300 && code <= 399) {
                 String location = conn.getHeaderField("Location"); conn.disconnect();
-                if (location == null) throw new IOException("下载重定向缺少地址");
+                if (location == null) throw new IOException(com.deepseekharness.app.util.UiText.text("下载重定向缺少地址"));
                 target = new URL(new URL(target), location).toString(); continue;
             }
-            if (code != 200 && !(offset > 0 && code == 206)) { conn.disconnect(); throw new IOException("HTTP " + code + "，请稍后重试或使用发布页下载"); }
+            if (code != 200 && !(offset > 0 && code == 206)) { conn.disconnect(); throw new IOException("HTTP " + code + com.deepseekharness.app.util.UiText.text("，请稍后重试或使用发布页下载")); }
             return conn;
         }
-        throw new IOException("下载重定向次数过多");
+        throw new IOException(com.deepseekharness.app.util.UiText.text("下载重定向次数过多"));
     }
-    private void ensureActive() throws IOException { if (cancelled) throw new IOException("已取消"); }
+    private void ensureActive() throws IOException { if (cancelled) throw new IOException(com.deepseekharness.app.util.UiText.text("已取消")); }
     private static String hex(byte[] bytes) {
         StringBuilder s = new StringBuilder(); for (byte b : bytes) s.append(String.format(java.util.Locale.ROOT, "%02x", b & 255)); return s.toString();
     }

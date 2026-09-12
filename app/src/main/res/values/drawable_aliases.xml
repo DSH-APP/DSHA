@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 同类卡片和主按钮共用背景，避免渐变、硬编码颜色与日夜主题产生色差。 -->
+    <item type="drawable" name="bg_polished_card">@drawable/bg_card</item>
+    <item type="drawable" name="bg_polished_primary">@drawable/bg_btn_primary</item>
+    <item type="color" name="polished_primary_text">@color/button_primary_text</item>
+</resources>

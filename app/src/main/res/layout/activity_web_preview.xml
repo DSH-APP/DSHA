@@ -43,25 +43,25 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    android:text="重试" />
+                    android:text="@string/ui_m0212" />
                 <Button
                     android:id="@+id/web_error_recovery"
                     style="@style/Widget.DSHA.TextButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="返回启动页处理插件 / 安全启动" />
+                    android:text="@string/ui_m0202" />
                 <Button
                     android:id="@+id/web_error_logs"
                     style="@style/Widget.DSHA.TextButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="下载错误日志" />
+                    android:text="@string/ui_m0047" />
                 <Button
                     android:id="@+id/web_error_browser"
                     style="?attr/borderlessButtonStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="在系统浏览器中打开" />
+                    android:text="@string/ui_m0095" />
             </LinearLayout>
         </ScrollView>
     </FrameLayout>

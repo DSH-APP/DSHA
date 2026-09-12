@@ -1,0 +1,7 @@
+<resources>
+    <string name="plugin_sort_title">Sort plugins</string>
+    <string name="plugin_sort_az">Name A–Z</string>
+    <string name="plugin_sort_za">Name Z–A</string>
+    <string name="plugin_sort_enabled">Enabled first</string>
+    <string name="plugin_sort_updates">Updates first</string>
+</resources>

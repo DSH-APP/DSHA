@@ -1,11 +1,39 @@
 {
   "manifest_version": 2,
   "name": "DSHA 页面返回",
-  "version": "1.2",
-  "browser_specific_settings": {"gecko": {"id": "dsha-page@dsh.client"}},
-  "permissions": ["nativeMessaging", "nativeMessagingFromContent", "geckoViewAddons"],
+  "version": "1.5",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "dsha-page@dsh.client"
+    }
+  },
+  "permissions": [
+    "nativeMessaging",
+    "nativeMessagingFromContent",
+    "geckoViewAddons"
+  ],
   "content_scripts": [
-    {"matches": ["http://127.0.0.1/*"], "js": ["startup-relay.js", "gecko-compat.js"], "all_frames": false, "run_at": "document_start"},
-    {"matches": ["http://127.0.0.1/*"], "js": ["page.js", "content.js"], "all_frames": false, "run_at": "document_end"}
+    {
+      "matches": [
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "startup-relay.js",
+        "gecko-compat.js"
+      ],
+      "all_frames": false,
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "page.js",
+        "content.js"
+      ],
+      "all_frames": false,
+      "run_at": "document_end"
+    }
   ]
 }

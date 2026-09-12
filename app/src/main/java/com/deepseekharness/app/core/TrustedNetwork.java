@@ -33,14 +33,14 @@ public final class TrustedNetwork {
         for (TrustManager manager : system.getTrustManagers()) if (manager instanceof X509TrustManager) managers.add((X509TrustManager) manager);
         for (TrustManager manager : bundled.getTrustManagers()) if (manager instanceof X509TrustManager) managers.add((X509TrustManager) manager);
         X509TrustManager combined = new X509TrustManager() {
-            @Override public void checkClientTrusted(X509Certificate[] chain, String type) throws CertificateException { throw new CertificateException("仅用于 HTTPS 服务端认证"); }
+            @Override public void checkClientTrusted(X509Certificate[] chain, String type) throws CertificateException { throw new CertificateException(com.deepseekharness.app.util.UiText.text("仅用于 HTTPS 服务端认证")); }
             @Override public void checkServerTrusted(X509Certificate[] chain, String type) throws CertificateException {
                 CertificateException last = null;
                 for (X509TrustManager manager : managers) {
                     try { manager.checkServerTrusted(chain, type); return; }
                     catch (CertificateException e) { last = e; }
                 }
-                throw last == null ? new CertificateException("没有可用的信任根") : last;
+                throw last == null ? new CertificateException(com.deepseekharness.app.util.UiText.text("没有可用的信任根")) : last;
             }
             @Override public X509Certificate[] getAcceptedIssuers() {
                 ArrayList<X509Certificate> issuers = new ArrayList<>();

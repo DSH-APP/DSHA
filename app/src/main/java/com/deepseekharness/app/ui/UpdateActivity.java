@@ -24,8 +24,8 @@ public final class UpdateActivity extends AppCompatActivity {
         repository = new ViewModelProvider(this).get(UpdateRepository.class);
         resumeInstall = saved != null && saved.getBoolean("resumeInstall");
         repository.restoreInterruptedInstall(saved != null && saved.getBoolean("installPending"));
-        ((TextView) findViewById(R.id.update_current)).setText(BuildConfig.VERSION_NAME + " · 版本码 " + BuildConfig.VERSION_CODE
-                + (BuildConfig.LOW_ANDROID ? " · 兼容版" : " · 标准版"));
+        ((TextView) findViewById(R.id.update_current)).setText(BuildConfig.VERSION_NAME + com.deepseekharness.app.util.UiText.text(" · 版本码 ") + BuildConfig.VERSION_CODE
+                + (BuildConfig.LOW_ANDROID ? com.deepseekharness.app.util.UiText.text(" · 兼容版") : com.deepseekharness.app.util.UiText.text(" · 标准版")));
         RadioGroup channels = findViewById(R.id.update_channels);
         channels.check(UpdatePolicy.PREVIEW.equals(repository.channel()) ? R.id.update_preview : R.id.update_stable);
         channels.setOnCheckedChangeListener((g, id) -> repository.setChannel(id == R.id.update_preview ? UpdatePolicy.PREVIEW : UpdatePolicy.STABLE));
@@ -57,9 +57,9 @@ public final class UpdateActivity extends AppCompatActivity {
         UpdateUi.render(findViewById(android.R.id.content), state, install.pending(), install.verifying);
         if (install.pending()) {
             ((TextView) findViewById(R.id.update_status)).setText(install.verifying
-                    ? "正在重新校验安装包…" : "校验完成，返回此页面后继续安装");
+                    ? com.deepseekharness.app.util.UiText.text("正在重新校验安装包…") : com.deepseekharness.app.util.UiText.text("校验完成，返回此页面后继续安装"));
         } else if (install.error != null) {
-            ((TextView) findViewById(R.id.update_status)).setText(state.message + "\n" + install.error);
+            ((TextView) findViewById(R.id.update_status)).setText(com.deepseekharness.app.util.UiStateText.render(state.message) + "\n" + com.deepseekharness.app.util.UiStateText.render(install.error));
         }
     }
 
@@ -85,7 +85,7 @@ public final class UpdateActivity extends AppCompatActivity {
         } catch (Exception error) { showInstallError(error); }
     }
     private void showInstallError(Exception error) {
-        repository.installFailed("无法安装：" + error.getMessage() + "；可重试");
+        repository.installFailed(com.deepseekharness.app.util.UiText.text("无法安装：") + error.getMessage() + com.deepseekharness.app.util.UiText.text("；可重试"));
         Toast.makeText(this, repository.installation().getValue().error, Toast.LENGTH_LONG).show();
     }
     @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) {
@@ -102,7 +102,7 @@ public final class UpdateActivity extends AppCompatActivity {
         if (resumeInstall) {
             resumeInstall = false;
             if (android.os.Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls()) install();
-            else Toast.makeText(this, "未允许安装更新，可稍后重试", Toast.LENGTH_SHORT).show();
+            else Toast.makeText(this, com.deepseekharness.app.util.UiText.text("未允许安装更新，可稍后重试"), Toast.LENGTH_SHORT).show();
         }
     }
     @Override protected void onPostResume() {

@@ -27,9 +27,9 @@ public final class AdbResult {
     public static int port(String text) {
         String s = text == null ? "" : text.trim();
         if (s.isEmpty()) return 0;
-        if (!s.matches("[0-9]{1,5}")) throw new IllegalArgumentException("端口必须是 1—65535 的整数");
+        if (!s.matches("[0-9]{1,5}")) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("端口必须是 1—65535 的整数"));
         int value = Integer.parseInt(s);
-        if (value < 1 || value > 65535) throw new IllegalArgumentException("端口必须在 1—65535 之间");
+        if (value < 1 || value > 65535) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("端口必须在 1—65535 之间"));
         return value;
     }
 

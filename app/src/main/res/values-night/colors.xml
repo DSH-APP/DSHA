@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#7DA7F4</color>
-    <color name="primary_dark">#6F9BEF</color>
+    <color name="panel_top">#1D2635</color>
+    <color name="panel_bottom">#141B27</color>
+    <color name="panel_outline">#35445D</color>
+    <color name="primary">#A7BFFA</color>
+    <color name="primary_dark">#98B4F4</color>
     <color name="accent_on">#0B1524</color>
-    <color name="surface">#10141B</color>
-    <color name="card">#161B24</color>
-    <color name="raised">#1C2330</color>
-    <color name="line">#2A3344</color>
-    <color name="text">#E8ECF4</color>
-    <color name="text_secondary">#A6B0C3</color>
-    <color name="text_muted">#9BA8BD</color>
+    <color name="surface">#10141D</color>
+    <color name="card">#191F2B</color>
+    <color name="raised">#252F43</color>
+    <color name="line">#303B50</color>
+    <color name="text">#EDF1FC</color>
+    <color name="text_secondary">#BAC5DD</color>
+    <color name="text_muted">#ABB8D1</color>
     <color name="ok">#7ED6A2</color>
     <color name="warn">#E5C07B</color>
     <color name="err">#E08A8A</color>
     <color name="preview">#0A0D12</color>
-    <color name="logo_top">#273349</color>
-    <color name="logo_bot">#161D2B</color>
+    <color name="logo_top">#252F43</color>
+    <color name="logo_bot">#252F43</color>
     <!-- 深色底下涟漪要更亮一点才看得见 -->
     <color name="ripple">#187DA7F4</color>
     <color name="primary_ripple">#20FFFFFF</color>

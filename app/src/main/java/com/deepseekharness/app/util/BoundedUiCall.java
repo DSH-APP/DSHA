@@ -24,11 +24,11 @@ public final class BoundedUiCall {
     }
 
     public static <T> Result<T> call(Dispatcher dispatcher, Callable<T> work, long timeoutMillis) {
-        if (timeoutMillis <= 0) throw new IllegalArgumentException("主线程等待期限必须大于零");
+        if (timeoutMillis <= 0) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("主线程等待期限必须大于零"));
         long started = System.nanoTime();
         Task<T> task = new Task<>(work, started, TimeUnit.MILLISECONDS.toNanos(timeoutMillis));
         try {
-            if (!dispatcher.post(task)) throw new IllegalStateException("主线程未接受操作");
+            if (!dispatcher.post(task)) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("主线程未接受操作"));
         } catch (RuntimeException error) {
             synchronized (task) { task.cancelled = true; }
             return new Result<>(Status.FAILED, null, error, false);

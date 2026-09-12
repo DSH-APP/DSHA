@@ -1,225 +1,168 @@
 package com.deepseekharness.app;
 
-import com.deepseekharness.app.util.SensitiveData;
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.os.IBinder;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
-
+import android.os.SystemClock;
+import com.deepseekharness.app.util.SensitiveData;
 import rikka.shizuku.Shizuku;
 
-/**
- * Shizuku shell 执行封装：通过 UserService 在 root/shell 身份下执行设备命令，
- * 让助手（deepseek-harness agent）无需 root 即可操作设备。
- *
- * 加固点：
- *  - bindUserService 异常不再静默吞掉，打日志（配 manifest 缺失排查根因）；
- *  - 补 onBindingDied / onServiceDisconnected 回调：状态归零 + 延迟自动重绑；
- *  - 监听 Shizuku binder 重启（服务被回收）后自动重绑；
- *  - 授权成功回调内自动触发绑定（解决"授权后桥仍不就绪"的时机 bug）；
- *  - status() 诊断字符串供 3090 /status 端点与开发者排查。
- */
+/** Provider 接收服务 Binder，Application 建立监听；不依赖 ADB 开关或 Ubuntu 环境。 */
 public final class ShizukuShell {
+    private static final Handler MAIN = new Handler(Looper.getMainLooper());
+    private static final Object LOCK = new Object();
+    private static volatile Context context;
+    private static volatile IShellService service;
+    private static volatile ServiceConnection connection;
+    private static volatile String failure = "";
+    private static Shizuku.UserServiceArgs arguments;
+    private static boolean listening;
+    private static int requestCode = 9527;
+    private ShizukuShell() { }
 
-    private static final String TAG = "ShizukuShell";
-
-    private static volatile Context appCtx;
-    private static volatile IShellService shellService;
-    private static volatile boolean binding = false;
-    private static volatile boolean binderListenerAttached = false;
-    private static final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private static volatile long lastRetryAt = 0L;
-    private static final long RETRY_DELAY_MS = 4000L;
-    private static final long RETRY_COOLDOWN_MS = 10000L;
-
-    private ShizukuShell() {
-    }
-
-    /** 初始化：缓存 Application context 并挂 Shizuku binder 重启监听（幂等）。 */
     public static void init(Context ctx) {
-        if (appCtx == null && ctx != null) {
-            appCtx = ctx.getApplicationContext();
+        if (ctx != null) context = ctx.getApplicationContext();
+        synchronized (LOCK) {
+            if (listening || context == null) return;
+            listening = true;
         }
-        attachBinderListener();
+        try {
+            Shizuku.addBinderDeadListener(() -> MAIN.post(() -> disconnect(com.deepseekharness.app.util.UiText.text("Shizuku 服务已停止"), false)));
+            Shizuku.addBinderReceivedListenerSticky(() -> MAIN.post(() -> ensureBound(context)));
+        } catch (Throwable e) {
+            synchronized (LOCK) { listening = false; }
+            fail(e);
+        }
     }
-
-    /** Shizuku 服务是否可用（binder 存活） */
+    public static boolean isInstalled(Context ctx) {
+        return isAvailable() || ShizukuManagerCompat.manager(ctx) != null;
+    }
     public static boolean isAvailable() {
-        try {
-            return Shizuku.pingBinder();
-        } catch (Throwable e) {
-            return false;
-        }
+        try { return Shizuku.pingBinder(); } catch (Throwable e) { return false; }
     }
-
-    /** 是否已获得 Shizuku 权限 */
     public static boolean hasPermission() {
-        try {
-            return Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED;
-        } catch (Throwable e) {
-            return false;
-        }
+        try { return isAvailable() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED; }
+        catch (Throwable e) { return false; }
     }
-
-    /** UserService 是否已就绪（3090 桥可用的判断依据） */
     public static boolean isReady() {
-        return shellService != null;
+        IShellService current = service;
+        return hasPermission() && current != null && current.asBinder().pingBinder();
     }
-
-    /** 供 3090 /status 端点的诊断字符串 */
     public static String status() {
-        String perm;
-        try {
-            int p = Shizuku.checkSelfPermission();
-            perm = p == PackageManager.PERMISSION_GRANTED ? "granted" : "denied(" + p + ")";
-        } catch (Throwable e) {
-            perm = "err:" + e.getClass().getSimpleName();
-        }
-        return "binder=" + isAvailable()
-                + ",permission=" + perm
-                + ",bound=" + (shellService != null)
-                + ",binding=" + binding;
+        return "binder=" + isAvailable() + ",permission=" + hasPermission() + ",bound=" + isReady()
+                + ",binding=" + (connection != null && service == null) + (failure.isEmpty() ? "" : ",error=" + failure);
     }
-
-    /** 请求 Shizuku 权限；授权成功回调自动触发绑定（联动修复）。
-     *  一次性语义：add 监听 → requestPermission → 回调后立即 remove。
-     *  （Shizuku 13.x 没有带 listener 的 requestPermission 重载，只有 add/remove 配对；
-     *   旧实现 add 后从不 remove → 每次请求都永久累积一个监听器 → 泄漏 + 重复回调） */
-    public static void requestPermission(Shizuku.OnRequestPermissionResultListener listener) {
-        final Shizuku.OnRequestPermissionResultListener[] holder = new Shizuku.OnRequestPermissionResultListener[1];
-        holder[0] = (code, result) -> {
-            // 一次性：先移除自身（防泄漏）
-            try {
-                Shizuku.removeRequestPermissionResultListener(holder[0]);
-            } catch (Throwable ignored) {
-            }
-            try {
-                if (listener != null) listener.onRequestPermissionResult(code, result);
-            } finally {
-                if (result == PackageManager.PERMISSION_GRANTED) {
-                    ensureBound(appCtx);
-                }
-            }
-        };
-        try {
-            Shizuku.addRequestPermissionResultListener(holder[0]);
-            Shizuku.requestPermission(9527);
-        } catch (Throwable ignored) {
-            // 添加/请求失败：立刻移除，避免残留
-            try {
-                Shizuku.removeRequestPermissionResultListener(holder[0]);
-            } catch (Throwable ignored2) {
-            }
-        }
+    public static String userStatus(Context ctx) {
+        if (!isAvailable()) return isInstalled(ctx)
+                ? com.deepseekharness.app.util.UiText.text("管理器已安装，服务尚未连接。点击授权重新连接；若仍未连接，请启动管理器服务，并检查隐藏模式是否允许 DSHA。")
+                : com.deepseekharness.app.util.UiText.text("尚未安装 Shizuku。安装并启动后可在这里授权。");
+        if (!hasPermission()) return com.deepseekharness.app.util.UiText.text("服务已连接，尚未授权 DSHA。点击下方授权。");
+        if (isReady()) return com.deepseekharness.app.util.UiText.text("已授权 · 设备 Shell 已连接，可直接使用，无需 ADB 配对");
+        if (!failure.isEmpty()) return com.deepseekharness.app.util.UiText.text("已授权，连接失败：") + failure + com.deepseekharness.app.util.UiText.text("。点击下方重试。");
+        return com.deepseekharness.app.util.UiText.text("已授权，正在连接设备 Shell…");
     }
-
-    /** 绑定 UserService（进程由 Shizuku 以 root/shell 身份托管） */
+    public static void requestPermission(Shizuku.OnRequestPermissionResultListener callback) {
+        MAIN.post(() -> {
+            if (hasPermission()) { ensureBound(context); if (callback != null) callback.onRequestPermissionResult(0, PackageManager.PERMISSION_GRANTED); return; }
+            final int code = ++requestCode;
+            final Shizuku.OnRequestPermissionResultListener[] holder = new Shizuku.OnRequestPermissionResultListener[1];
+            final boolean[] completed = {false};
+            holder[0] = (received, result) -> {
+                if (received != code || completed[0]) return;
+                completed[0] = true;
+                Shizuku.removeRequestPermissionResultListener(holder[0]);
+                if (result == PackageManager.PERMISSION_GRANTED) ensureBound(context);
+                if (callback != null) callback.onRequestPermissionResult(code, result);
+            };
+            try {
+                Shizuku.addRequestPermissionResultListener(holder[0]);
+                Shizuku.requestPermission(code);
+                MAIN.postDelayed(() -> {
+                    if (!completed[0]) { failure = com.deepseekharness.app.util.UiText.text("授权请求尚未完成，请重试"); holder[0].onRequestPermissionResult(code, PackageManager.PERMISSION_DENIED); }
+                }, 60_000);
+            } catch (Throwable e) {
+                fail(e);
+                holder[0].onRequestPermissionResult(code, PackageManager.PERMISSION_DENIED);
+            }
+        });
+    }
     public static void ensureBound(Context ctx) {
         init(ctx);
-        attachBinderListener();
-        if (binding || shellService != null) return;
-        if (appCtx == null) return;
-        if (!hasPermission()) {
-            Log.w(TAG, "ensureBound skip: no Shizuku permission yet");
-            return;
-        }
-        binding = true;
-        try {
-            Shizuku.UserServiceArgs args = new Shizuku.UserServiceArgs(
-                    new ComponentName(appCtx, ShellService.class))
-                    .daemon(false)
-                    .version(1);
-            Shizuku.bindUserService(args, new ServiceConnection() {
-                @Override
-                public void onServiceConnected(ComponentName name, IBinder binder) {
-                    shellService = IShellService.Stub.asInterface(binder);
-                    binding = false;
-                    Log.i(TAG, "UserService connected: " + name);
-                    try {
-                        binder.linkToDeath(() -> {
-                            Log.w(TAG, "UserService binder died");
-                            shellService = null;
-                            retryBindSoon();
-                        }, 0);
-                    } catch (Throwable ignored2) {
-                    }
-                }
-
-                @Override
-                public void onServiceDisconnected(ComponentName name) {
-                    Log.w(TAG, "UserService disconnected");
-                    shellService = null;
-                    binding = false;
-                    retryBindSoon();
-                }
-
-                @Override
-                public void onBindingDied(ComponentName name) {
-                    Log.w(TAG, "UserService binding died");
-                    shellService = null;
-                    binding = false;
-                    retryBindSoon();
-                }
-
-                @Override
-                public void onNullBinding(ComponentName name) {
-                    Log.e(TAG, "UserService null binding (ShellService 未实现正确?)");
-                    binding = false;
-                }
-            });
-        } catch (Throwable e) {
-            // 根因可见：manifest 未注册 / 组件缺失 / Shizuku 异常等都在这暴露
-            Log.e(TAG, "bindUserService failed: " + SensitiveData.redact(String.valueOf(e)));
-            binding = false;
-        }
-    }
-
-    /**
-     * 延迟重绑（绑定断开 / binding died / Shizuku binder 重启后调用）。
-     * 带 10s 冷却，避免连接频繁断开时重绑风暴。
-     */
-    private static void retryBindSoon() {
-        long now = System.currentTimeMillis();
-        if (now - lastRetryAt < RETRY_COOLDOWN_MS) return;
-        lastRetryAt = now;
-        mainHandler.postDelayed(() -> ensureBound(appCtx), RETRY_DELAY_MS);
-    }
-
-    /** 挂 Shizuku 服务重启监听：服务被回收后 binder 恢复时自动重绑（幂等） */
-    private static void attachBinderListener() {
-        if (binderListenerAttached || appCtx == null) return;
-        try {
-            if (Shizuku.isPreV11()) {
-                Shizuku.addBinderReceivedListener(() -> retryBindSoon());
-            } else {
-                Shizuku.addBinderReceivedListenerSticky(() -> retryBindSoon());
+        if (Looper.myLooper() != Looper.getMainLooper()) { MAIN.post(() -> ensureBound(context)); return; }
+        if (context == null) return;
+        if (!hasPermission()) { if (connection != null) disconnect("", true); return; }
+        if (isReady()) return;
+        if (service != null) disconnect("", true);
+        if (connection != null) return;
+        failure = "";
+        arguments = new Shizuku.UserServiceArgs(new ComponentName(context, ShellService.class))
+                .processNameSuffix("shizuku").tag("dsha-device-shell")
+                .daemon(false).version(BuildConfig.VERSION_CODE);
+        ServiceConnection pending = new ServiceConnection() {
+            @Override public void onServiceConnected(ComponentName name, IBinder binder) {
+                if (connection != this) return;
+                try {
+                    if (binder == null || !binder.pingBinder()) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("设备 Shell 返回了失效的 Binder"));
+                    binder.linkToDeath(() -> MAIN.post(() -> lost(this, com.deepseekharness.app.util.UiText.text("设备 Shell 已退出"))), 0);
+                    synchronized (LOCK) { service = IShellService.Stub.asInterface(binder); failure = ""; LOCK.notifyAll(); }
+                } catch (Throwable e) { fail(e); lost(this, failure); }
             }
-            binderListenerAttached = true;
-            Log.i(TAG, "binder received listener attached");
-        } catch (Throwable e) {
-            Log.w(TAG, "attachBinderListener failed: " + SensitiveData.redact(String.valueOf(e)));
+            @Override public void onServiceDisconnected(ComponentName name) { lost(this, com.deepseekharness.app.util.UiText.text("设备 Shell 连接断开")); }
+            @Override public void onBindingDied(ComponentName name) { lost(this, com.deepseekharness.app.util.UiText.text("设备 Shell 绑定已失效")); }
+            @Override public void onNullBinding(ComponentName name) { lost(this, com.deepseekharness.app.util.UiText.text("设备 Shell 未返回 Binder")); }
+        };
+        connection = pending;
+        try {
+            Shizuku.bindUserService(arguments, pending);
+            MAIN.postDelayed(() -> {
+                if (connection == pending && service == null) disconnect(com.deepseekharness.app.util.UiText.text("设备 Shell 连接超时"), true);
+            }, 15_000);
+        } catch (Throwable e) { fail(e); disconnect(failure, true); }
+    }
+    private static void lost(ServiceConnection expected, String message) {
+        if (Looper.myLooper() != Looper.getMainLooper()) { MAIN.post(() -> lost(expected, message)); return; }
+        if (connection != expected) return;
+        disconnect(message, true);
+        MAIN.postDelayed(() -> ensureBound(context), 4000);
+    }
+    private static void disconnect(String message, boolean unbind) {
+        ServiceConnection old = connection;
+        Shizuku.UserServiceArgs oldArguments = arguments;
+        synchronized (LOCK) { connection = null; service = null; failure = message; LOCK.notifyAll(); }
+        if (unbind && old != null && oldArguments != null) {
+            try { Shizuku.unbindUserService(oldArguments, old, false); } catch (Throwable ignored) { }
         }
     }
-
-    /** 通过 UserService 执行 shell 命令并返回输出 */
-    public static String exec(String cmd) {
-        if (!hasPermission()) {
-            return "[NO_SHIZUKU_PERMISSION]";
+    private static void fail(Throwable error) {
+        failure = SensitiveData.redact(error.getClass().getSimpleName() + ": " + error.getMessage());
+        android.util.Log.w("ShizukuShell", failure);
+    }
+    /** 只在发送前等待绑定；已经发送的命令失败后不自动重放。 */
+    public static boolean awaitReady(Context ctx, long timeoutMs) {
+        ensureBound(ctx);
+        if (Looper.myLooper() == Looper.getMainLooper()) return isReady();
+        long until = SystemClock.elapsedRealtime() + timeoutMs;
+        synchronized (LOCK) {
+            while (hasPermission() && !isReady()) {
+                long remaining = until - SystemClock.elapsedRealtime();
+                if (remaining <= 0) break;
+                try { LOCK.wait(Math.min(remaining, 250)); }
+                catch (InterruptedException e) { Thread.currentThread().interrupt(); return false; }
+            }
         }
-        IShellService s = shellService;
-        if (s == null) {
-            Log.w(TAG, "exec ignored (not ready), status=" + status());
-            return "[SHIZUKU_SERVICE_NOT_READY]";
-        }
-        try {
-            return s.exec(cmd);
-        } catch (Throwable e) {
-            return "ERROR: " + SensitiveData.redact(String.valueOf(e));
+        return isReady();
+    }
+    public static String exec(String command) {
+        if (!awaitReady(context, 8000)) return "[SHIZUKU_SERVICE_NOT_READY] " + status() + "\n[EXIT=124]";
+        IShellService current = service;
+        try { return current.exec(command); }
+        catch (Throwable e) {
+            fail(e);
+            return com.deepseekharness.app.util.UiText.text("[EXECUTION_UNKNOWN] 设备命令结果未确认，不会自动重试：") + failure + "\n[EXIT=125]";
         }
     }
 }

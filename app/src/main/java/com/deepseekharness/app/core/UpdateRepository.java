@@ -69,7 +69,7 @@ public final class UpdateRepository extends AndroidViewModel {
     public void requestInstall() {
         State current = state().getValue();
         if (cleared || installationPending() || current == null || current.busy) return;
-        if (current.apk == null || current.release == null) { installFailed("请先在当前通道下载并校验安装包"); return; }
+        if (current.apk == null || current.release == null) { installFailed(com.deepseekharness.app.util.UiText.text("请先在当前通道下载并校验安装包")); return; }
         installRelease = current.release;
         installChannel = engine.channel();
         long request = ++installRequest;
@@ -83,7 +83,7 @@ public final class UpdateRepository extends AndroidViewModel {
             main.post(() -> {
                 if (cleared || request != installRequest) return;
                 installation.setValue(new InstallState(false, result,
-                        result == null ? "安装前校验失败：" + (message == null ? "无法读取安装包" : message) + "；请重试" : null));
+                        result == null ? com.deepseekharness.app.util.UiText.text("安装前校验失败：") + (message == null ? com.deepseekharness.app.util.UiText.text("无法读取安装包") : message) + com.deepseekharness.app.util.UiText.text("；请重试") : null));
             });
         });
     }
@@ -92,7 +92,7 @@ public final class UpdateRepository extends AndroidViewModel {
         InstallState current = installation.getValue();
         if (cleared || current.verifying || current.apk == null) return null;
         if (!engine.isCurrentInstall(current.apk, installRelease, installChannel)) {
-            installFailed("通道或候选已改变，请重新检查后重试安装"); return null;
+            installFailed(com.deepseekharness.app.util.UiText.text("通道或候选已改变，请重新检查后重试安装")); return null;
         }
         installation.setValue(new InstallState(false, null, null));
         return current.apk;
@@ -103,7 +103,7 @@ public final class UpdateRepository extends AndroidViewModel {
     public void restoreInterruptedInstall(boolean wasPending) {
         InstallState current = installation.getValue();
         if (wasPending && !current.pending() && current.error == null)
-            installFailed("安装前校验已因进程重建中断，请点击「安装更新」重试");
+            installFailed(com.deepseekharness.app.util.UiText.text("安装前校验已因进程重建中断，请点击「安装更新」重试"));
     }
     @Override protected void onCleared() {
         cleared = true; installRequest++;

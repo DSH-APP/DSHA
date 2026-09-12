@@ -1,9 +1,9 @@
-param([string]$Ndk = $env:ANDROID_NDK_HOME, [ValidateSet(23,26)][int]$MinApi = 26)
+param([string]$Ndk = $env:ANDROID_NDK_HOME, [ValidateSet(23,26)][int]$MinApi = 23)
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-# 只编译本目录的原版 C 源码；不调用 Gradle，不下载工具，不修改其它原生库。
+# 校验固定的上游 PTY，生成创建身份握手补丁并编译；不调用 Gradle，不下载工具。
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $ndkVersion = '26.3.11579264'
 if (-not $Ndk) {
@@ -37,6 +37,21 @@ $buildDir = Join-Path $repoRoot 'app/build/termux-jni'
 $output = Join-Path $buildDir ("libtermux-" + [Guid]::NewGuid().ToString('N') + '.so')
 $destination = Join-Path $repoRoot 'app/src/main/jniLibs/arm64-v8a/libtermux.so'
 New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
+# 只在构建目录生成补丁版；固定锚点必须各出现一次，避免上游变化后静默漏补。
+$patches = @(
+    @('#include <dirent.h>', "#include <dirent.h>`n#include `"dsha-pty.h`""),
+    @('    pid_t pid = fork();', "    int identity_pair[2];`n    if (dsha_pty_prepare(identity_pair) != 0) {`n        close(ptm);`n        return throw_runtime_exception(env, `"Cannot prepare PTY identity handshake`");`n    }`n    pid_t pid = fork();"),
+    @('        return throw_runtime_exception(env, "Fork failed");', "        close(identity_pair[0]); close(identity_pair[1]); close(ptm);`n        return throw_runtime_exception(env, `"Fork failed`");"),
+    @('        *pProcessId = (int) pid;', "        if (!dsha_pty_parent(env, identity_pair, pid)) {`n            close(ptm);`n            if ((*env)->ExceptionCheck(env)) return -1;`n            return throw_runtime_exception(env, `"Cannot confirm PTY identity before exec`");`n        }`n        *pProcessId = (int) pid;"),
+    @('        setsid();', "        if (setsid() < 0) _exit(125);`n        dsha_pty_child(identity_pair);"),
+    @('    int* pProcId = (int*) (*env)->GetPrimitiveArrayCritical(env, processIdArray, NULL);', "    if ((*env)->ExceptionCheck(env)) return -1;`n    int* pProcId = (int*) (*env)->GetPrimitiveArrayCritical(env, processIdArray, NULL);")
+)
+foreach ($patch in $patches) {
+    if ([regex]::Matches($sourceText, [regex]::Escape($patch[0])).Count -ne 1) { throw 'PTY 身份握手补丁锚点不唯一。' }
+    $sourceText = $sourceText.Replace($patch[0], $patch[1])
+}
+$patchedSource = Join-Path $buildDir 'termux-patched.c'
+[IO.File]::WriteAllText($patchedSource, $sourceText, [Text.UTF8Encoding]::new($false))
 $clangArgs = @(
     "--target=aarch64-linux-android$MinApi", '-std=gnu11', '-shared', '-fPIC',
     '-O2', '-g0', '-fvisibility=hidden', '-fstack-protector-strong', '-D_FORTIFY_SOURCE=2',
@@ -45,7 +60,8 @@ $clangArgs = @(
     '-Wl,-z,relro', '-Wl,-z,now', '-Wl,-soname,libtermux.so',
     # 保留 16 KB LOAD 对齐，但 RELRO 按 4 KB 收尾，避免旧 linker 对未映射空洞 mprotect 报 ENOMEM。
     '-Wl,-z,max-page-size=16384', '-Wl,-z,common-page-size=4096',
-    $sourceFile, '-o', $output
+    '-I', $PSScriptRoot, $patchedSource, (Join-Path $PSScriptRoot 'dsha-process.c'),
+    (Join-Path $PSScriptRoot 'dsha-pty.c'), '-o', $output
 )
 & "$toolBin/clang.exe" @clangArgs
 if ($LASTEXITCODE -ne 0) { throw 'JNI 编译失败。' }
@@ -66,11 +82,32 @@ foreach ($load in $loads) {
         throw "ELF 不满足 16KB 对齐：$load"
     }
 }
+# Android 6 的 4 KB linker 与新系统的 16 KB 映射都必须覆盖整个 RELRO 范围。
+$relro = @($headers | Where-Object { $_ -match '^\s*GNU_RELRO\s' })
+if ($relro.Count -ne 1) { throw 'ELF 必须有一个 RELRO 段。' }
+$relroFields = $relro[0].Trim() -split '\s+'
+$relroStart = [Convert]::ToUInt64($relroFields[2].Substring(2), 16)
+$relroEnd = $relroStart + [Convert]::ToUInt64($relroFields[5].Substring(2), 16)
+foreach ($page in @(4096, 16384)) {
+    $begin = [Math]::Floor($relroStart / $page) * $page
+    $end = [Math]::Ceiling($relroEnd / $page) * $page
+    for ($address = $begin; $address -lt $end; $address += $page) {
+        $mapped = $false
+        foreach ($load in $loads) {
+            $fields = $load.Trim() -split '\s+'
+            $start = [Convert]::ToUInt64($fields[2].Substring(2), 16)
+            $stop = $start + [Convert]::ToUInt64($fields[5].Substring(2), 16)
+            if ($address -ge [Math]::Floor($start / $page) * $page -and $address -lt [Math]::Ceiling($stop / $page) * $page) { $mapped = $true; break }
+        }
+        if (-not $mapped) { throw "RELRO 在 $page 字节页映射中存在空洞。" }
+    }
+}
 $symbols = & "$toolBin/llvm-nm.exe" --dynamic --defined-only --format=posix $output
 if ($LASTEXITCODE -ne 0) { throw 'JNI 符号读取失败。' }
 $actual = @($symbols | ForEach-Object { ($_ -split '\s+')[0] } | Sort-Object)
-$expected = @('close', 'createSubprocess', 'setPtyUTF8Mode', 'setPtyWindowSize', 'waitFor') |
-    ForEach-Object { "Java_com_termux_terminal_JNI_$_" } | Sort-Object
+$expected = @(@('close', 'createSubprocess', 'setPtyUTF8Mode', 'setPtyWindowSize', 'waitFor') |
+    ForEach-Object { "Java_com_termux_terminal_JNI_$_" }) + 'Java_com_deepseekharness_app_runtime_NativeProcess_sessionId'
+$expected = @($expected | Sort-Object)
 if (@(Compare-Object $expected $actual).Count -ne 0) { throw 'JNI 导出集合不符合 v0.118.0。' }
 New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
 $sameOutput = (Test-Path -LiteralPath $destination) -and

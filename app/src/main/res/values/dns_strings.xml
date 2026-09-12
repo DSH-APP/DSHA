@@ -1,0 +1,10 @@
+<resources>
+    <string name="dns_title">DNS 解析</string>
+    <string name="dns_auto">自动兼容（推荐）</string>
+    <string name="dns_ipv4">IPv4 DNS 兼容</string>
+    <string name="dns_native">原生双栈解析</string>
+    <string name="dns_hint">自动模式保留 IPv6，仅在 Node 双栈解析失败时尝试 IPv4。IPv4 兼容模式适用于拒绝 AAAA 查询的网络，但无法解析仅有 IPv6 的域名。保存后重新启动 Web 或新建终端生效。</string>
+    <string name="api_credentials">API 密钥</string>
+    <string name="deepseek_api_key">DeepSeek API 密钥</string>
+    <string name="ubuntu_rootfs">Ubuntu 根文件系统</string>
+</resources>

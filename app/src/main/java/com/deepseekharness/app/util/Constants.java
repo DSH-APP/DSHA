@@ -31,7 +31,7 @@ public final class Constants {
      * 当前 APK 内置 dsh 版本（不是远端 latest 标签）。
      * 对应上游 deepseek-ai/deepseek-harness 仓库。
      */
-    public static final String DSH_VERSION = "0.1.5-rc.1";
+    public static final String DSH_VERSION = "0.1.5-rc.2";
     public static final String DSH_RUNTIME_ID = "dsh-v" + DSH_VERSION;
     /** 全局安装路径下的 dsh 入口（容器内路径，见 WebProcSel 的 cmdline 判据）。 */
     public static final String DSH_BIN_JS =

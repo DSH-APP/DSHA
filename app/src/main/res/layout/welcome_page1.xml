@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
+<LinearLayout
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="@color/surface"
     android:gravity="center_horizontal"
     android:orientation="vertical"
@@ -38,7 +39,7 @@
         android:layout_marginTop="@dimen/gap_block"
         android:gravity="center"
         android:lineSpacingExtra="6dp"
-        android:text="DeepSeek Harness 一键启动器\n\n内置 Linux 环境，无需 Termux，\n自动安装并启动，开箱即用。"
+        android:text="@string/ui_m0035"
         android:textColor="@color/text_secondary"
         android:textSize="@dimen/text_body" />
 
@@ -55,3 +56,5 @@
         android:textColor="@color/text_muted"
         android:textSize="@dimen/text_caption" />
 </LinearLayout>
+
+</ScrollView>

@@ -1,0 +1,43 @@
+name: Star history
+
+# 按周更新仓库内的 SVG；也可手动刷新。
+on:
+  schedule:
+    # 每周一 03:17 UTC（北京时间 11:17）。错开整点，避开 GitHub 的调度高峰。
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: star-history
+  cancel-in-progress: false
+
+jobs:
+  chart:
+    name: 刷新 star history 曲线
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 生成 SVG
+        env:
+          GITHUB_TOKEN: ${{ secrets.STAR_HISTORY_TOKEN || secrets.GITHUB_TOKEN }}
+          STAR_REPO: ${{ github.repository }}
+        run: python3 tools/gen-star-history.py
+
+      - name: 有变化才提交
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/star-history.svg docs/star-history-dark.svg docs/star-history.json
+          if git diff --cached --quiet; then
+            echo "曲线没变化，不提交"
+            exit 0
+          fi
+          STARS=$(python3 -c "import json;print(json.load(open('docs/star-history.json'))['total'])")
+          git commit -m "chore(star-history): 刷新曲线（${STARS} stars，自动提交）"
+          git push

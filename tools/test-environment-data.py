@@ -8,6 +8,7 @@ from pathlib import Path
 import tarfile
 import tempfile
 import unittest
+from unittest import mock
 
 spec = importlib.util.spec_from_file_location('environment_data', Path(__file__).resolve().parents[1] / 'app/src/main/assets/environment-data.py')
 engine = importlib.util.module_from_spec(spec)
@@ -15,6 +16,98 @@ spec.loader.exec_module(engine)
 
 
 class MigrationTest(unittest.TestCase):
+    def test_host_l2s_mount_placeholders_are_never_traversed(self):
+        aliases = ['data/user/0/com.dsh.client/files/linux/ubuntu/.l2s',
+                   'data/user/10/com.dsh.client/files/linux/ubuntu/.l2s',
+                   'data/data/com.dsh.client/files/linux/ubuntu/.l2s']
+        blocked = {self.old / name for name in aliases}
+        for name in aliases:
+            self.put(name + '/cache', '运行时临时文件')
+        self.put('data/project/private.txt', '用户数据必须保留')
+        original = Path.iterdir
+        def guarded(path):
+            if path in blocked:
+                raise PermissionError('000 mount placeholder')
+            return original(path)
+        with mock.patch.object(Path, 'iterdir', guarded):
+            engine.snapshot(self.old, self.archive)
+        inventory = engine.verify_archive(self.archive)['inventory']
+        self.assertIn('data/project/private.txt', inventory)
+        self.assertFalse(any('.l2s' in name for name in inventory))
+        engine.restore(self.new, self.archive)
+        self.assertEqual('用户数据必须保留', (self.new/'data/project/private.txt').read_text(encoding='utf-8'))
+
+    def test_permission_denial_in_personal_directory_still_aborts(self):
+        self.put('data/project/private.txt')
+        original = Path.iterdir
+        def guarded(path):
+            if path == self.old/'data/project':
+                raise PermissionError('real personal data denied')
+            return original(path)
+        with mock.patch.object(Path, 'iterdir', guarded), self.assertRaises(PermissionError):
+            engine.snapshot(self.old, self.archive)
+        self.assertFalse(self.archive.exists())
+        self.assertTrue((self.old/'data/project/private.txt').exists())
+
+    def test_runtime_cache_match_requires_exact_app_root_boundary(self):
+        self.assertTrue(engine.runtime_cache('data/user/0/com.dsh.client/files/linux/ubuntu/.l2s'))
+        for name in ['data/project/.l2s', 'data/user/0/com.dsh.client.other/files/linux/ubuntu/.l2s',
+                     'data/user/0/com.dsh.client/files/linux/ubuntu-old/.l2s', 'root/.l2s-notes']:
+            self.assertFalse(engine.runtime_cache(name), name)
+
+    @unittest.skipIf(os.name == 'nt', 'guest 绝对软链由 Linux 验证')
+    def test_old_host_absolute_l2s_link_is_saved_as_content(self):
+        self.put('.l2s/content', '硬链接个人文件')
+        (self.old/'root').mkdir()
+        (self.old/'root/document').symlink_to('/data/user/10/com.dsh.client/files/linux/ubuntu/.l2s/content')
+        engine.snapshot(self.old, self.archive); engine.restore(self.new, self.archive)
+        self.assertEqual('硬链接个人文件', (self.new/'root/document').read_text(encoding='utf-8'))
+        self.assertFalse((self.new/'root/document').is_symlink())
+        self.assertFalse((self.new/'.l2s').exists())
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX 链由 Linux 验证')
+    def test_mapped_absolute_and_relative_l2s_links_keep_content(self):
+        self.put('.l2s/content', '有效数据')
+        (self.old/'root').mkdir()
+        (self.old/'root/absolute').symlink_to(self.old/'.l2s/content')
+        (self.old/'root/relative').symlink_to('../.l2s/content')
+        engine.snapshot(self.old, self.archive); engine.restore(self.new, self.archive)
+        for name in ['absolute','relative']:
+            self.assertEqual('有效数据',(self.new/'root'/name).read_text(encoding='utf-8'))
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX 链由 Linux 验证')
+    def test_l2s_loop_and_external_target_fail_without_publishing_archive(self):
+        self.put('root/keep.txt')
+        (self.old/'.l2s').mkdir()
+        (self.old/'root/linked').symlink_to('/.l2s/first')
+        (self.old/'.l2s/first').symlink_to('/.l2s/first')
+        with self.assertRaisesRegex(ValueError, '循环'):
+            engine.snapshot(self.old, self.archive)
+        self.assertFalse(self.archive.exists())
+        (self.old/'.l2s/first').unlink()
+        self.put('sdcard/outside', '外部数据')
+        (self.old/'.l2s/first').symlink_to('/sdcard/outside')
+        with self.assertRaisesRegex(ValueError, '外部挂载'):
+            engine.snapshot(self.old, self.archive)
+        self.assertFalse(self.archive.exists())
+
+    def test_source_file_is_not_read_again_just_to_calculate_hash(self):
+        source = self.put('root/project/large.txt', '中文与二进制数据' * 20000)
+        original = engine.digest
+        def no_second_source_read(path, *args):
+            self.assertNotEqual(source, Path(path))
+            return original(path, *args)
+        with mock.patch.object(engine, 'digest', side_effect=no_second_source_read):
+            engine.snapshot(self.old, self.archive)
+        self.assertEqual(engine.digest(source), engine.verify_archive(self.archive)['inventory']['root/project/large.txt']['sha256'])
+
+    def test_owned_abandoned_archives_are_not_nested_in_new_snapshot(self):
+        self.put('root/.dsha-personal-12345678-1234-1234-1234-123456789abc.tar.gz.part', '临时文件')
+        self.put('root/.dsha-environment-data.py', '迁移脚本')
+        self.put('root/my-personal.tar.gz', '用户自己的归档')
+        engine.snapshot(self.old, self.archive)
+        names = engine.verify_archive(self.archive)['inventory']
+        self.assertEqual({'root/my-personal.tar.gz'}, set(names))
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.base = Path(self.temp.name)

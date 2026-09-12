@@ -10,7 +10,7 @@
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="56dp"
+        android:minHeight="64dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="@dimen/page_pad"
@@ -18,8 +18,8 @@
 
         <FrameLayout
             android:id="@+id/app_logo"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_logo">
 
             <ImageView
@@ -32,8 +32,8 @@
         </FrameLayout>
 
         <TextView android:id="@+id/sub_back" style="@style/Widget.DSHA.ToolbarAction"
-            android:layout_width="44dp" android:layout_height="wrap_content" android:text="‹"
-            android:textSize="24sp" android:contentDescription="返回上一页" android:visibility="gone" />
+            android:layout_width="44dp" android:layout_height="wrap_content" android:background="@drawable/bg_logo" android:text="‹"
+            android:textSize="24sp" android:contentDescription="@string/ui_m0201" android:visibility="gone" />
 
         <TextView
             android:id="@+id/app_title"
@@ -42,7 +42,7 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/gap_control"
-            android:text="启动" />
+            android:text="@string/ui_m0005" />
 
 
         <TextView
@@ -51,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="白天" />
+            android:text="@string/ui_m0020" />
 
         <FrameLayout
             android:id="@+id/btn_about"
@@ -59,7 +59,7 @@
             android:layout_height="44dp"
             android:background="@drawable/bg_chip_clickable"
             android:clickable="true"
-            android:contentDescription="关于"
+            android:contentDescription="@string/ui_m0067"
             android:focusable="true">
 
             <ImageView
@@ -71,6 +71,11 @@
                 app:tint="@color/text_secondary" />
         </FrameLayout>
     </LinearLayout>
+
+    <TextView android:id="@+id/environment_recovery_banner" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:minHeight="48dp" android:padding="12dp"
+        android:textColor="@color/primary" android:background="@drawable/bg_chip_clickable"
+        android:textSize="14sp" android:clickable="true" android:focusable="true" android:visibility="gone" android:gravity="center" android:includeFontPadding="false" />
 
     <FrameLayout
         android:id="@+id/fragment_container"
@@ -90,7 +95,7 @@
         android:layout_height="wrap_content"
         android:background="@color/card"
         android:minHeight="64dp"
-        app:itemIconSize="22dp"
+        app:itemIconSize="24dp"
         app:itemPaddingTop="8dp"
         app:itemPaddingBottom="6dp"
         app:elevation="0dp"

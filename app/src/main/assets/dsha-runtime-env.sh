@@ -1,4 +1,10 @@
 # DSHA 的终端入口与 TLS 根证书；用户显式设置的证书路径优先。
+if [ -r /usr/local/share/dsha/dns-compat.cjs ]; then
+    case " ${NODE_OPTIONS-} " in
+        *" --require=/usr/local/share/dsha/dns-compat.cjs "*) ;;
+        *) export NODE_OPTIONS="--require=/usr/local/share/dsha/dns-compat.cjs${NODE_OPTIONS:+ $NODE_OPTIONS}" ;;
+    esac
+fi
 case ":$PATH:" in *:/root/dsh-bin:*) ;; *) export PATH="/root/dsh-bin:$PATH" ;; esac
 export SSL_CERT_FILE="${SSL_CERT_FILE:-/usr/local/share/dsha/ca-certificates.crt}"
 export REQUESTS_CA_BUNDLE="${REQUESTS_CA_BUNDLE:-$SSL_CERT_FILE}"

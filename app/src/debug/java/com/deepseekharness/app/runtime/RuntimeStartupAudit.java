@@ -31,7 +31,13 @@ public final class RuntimeStartupAudit extends Instrumentation {
         try {
             String mode = args.getString("mode", "links");
             if (mode.equals("terminal-maintenance")) {
-                terminalMaintenance(app);
+                int repetitions = Integer.parseInt(args.getString("repeat", "1"));
+                for (int i = 0; i < repetitions; i++) {
+                    terminalMaintenance(app);
+                    report("TERMINAL_ROUND " + (i + 1) + "/" + repetitions);
+                }
+            } else if (mode.equals("terminal-birth")) {
+                terminalBirth(app);
             } else if (mode.equals("groups")) {
                 groups(output);
             } else if (mode.equals("cold")) {
@@ -97,17 +103,39 @@ public final class RuntimeStartupAudit extends Instrumentation {
         runOnMainSync(() -> {
             terminal[0] = com.deepseekharness.app.PtySession.start(proot, 80, 24, null);
             try {
-                java.lang.reflect.Field field = com.deepseekharness.app.ui.PtyTerminalFragment.class.getDeclaredField("session");
-                field.setAccessible(true); field.set(null, terminal[0]);
+                java.lang.reflect.Field field = com.deepseekharness.app.ui.PtyTerminalFragment.class.getDeclaredField("sessions");
+                field.setAccessible(true);
+                ((com.deepseekharness.app.util.TerminalTabs<com.deepseekharness.app.PtySession>)field.get(null)).add(terminal[0]);
             } catch (Exception e) { throw new IllegalStateException(e); }
         });
         File childFile = new File(proot.getRootfsDir(), "tmp/dsha-terminal-audit.pid");
-        terminal[0].write("sleep 120 & echo $! > /tmp/dsha-terminal-audit.pid\n");
+        terminal[0].write("unset HISTFILE; sleep 120 & echo $! > /tmp/dsha-terminal-audit.pid\n");
         long deadline = SystemClock.elapsedRealtime() + 5000;
         while (!childFile.isFile() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(20);
         if (!childFile.isFile()) throw new AssertionError("终端子进程未启动");
         int child = Integer.parseInt(Compat.readAll(childFile).trim()); childFile.delete();
         report("TERMINAL_STARTED child=" + child);
+        if ("true".equals(args.getString("identity_probe"))) {
+            int leader = terminal[0].session().getPid();
+            report("IDENTITY_PROBE debug=" + com.deepseekharness.app.BuildConfig.DEBUG + " app=" + android.os.Process.myPid() + " leader=" + leader);
+            try {
+                String stat = Compat.readAll(new File("/proc/" + leader + "/stat"));
+                var parsed = com.deepseekharness.app.util.ProcessIdentity.fromStat(stat, leader, android.os.Process.myPid());
+                report("IDENTITY_PROBE laterStat=" + (parsed == null ? "not-owned" : "owned session=" + parsed.session + " started=" + parsed.started));
+            } catch (Exception error) { report("IDENTITY_PROBE laterStat=" + error); }
+        }
+        if ("true".equals(String.valueOf(args.get("fail_once")))) {
+            java.lang.reflect.Field identity = com.deepseekharness.app.PtySession.class.getDeclaredField("identity");
+            identity.setAccessible(true); Object saved = identity.get(terminal[0]);
+            boolean refused = false;
+            try {
+                identity.set(terminal[0], null);
+                try { terminal[0].finishAndWait(200); } catch (java.io.IOException expected) { refused = true; }
+            } finally { identity.set(terminal[0], saved); }
+            if (!refused || !terminal[0].isRunning() || !com.deepseekharness.app.core.RuntimeTasks.isBusy())
+                throw new AssertionError("首次核验失败未保留终端保护");
+            report("FIRST_CLOSE_REFUSED_RETRYING_SAME_SESSION");
+        }
         String action = args.getString("action", "none");
         if (action.equals("update") || action.equals("rebuild")) {
             var task = com.deepseekharness.app.core.BackupTask.get(app);
@@ -135,6 +163,69 @@ public final class RuntimeStartupAudit extends Instrumentation {
             report("TERMINAL_MAINTENANCE_ENTERED_AND_CHILD_GONE");
             return null;
         });
+        } finally { Compat.destroy(unrelated); }
+    }
+    private void terminalBirth(Context app) throws Exception {
+        if (com.deepseekharness.app.BuildConfig.DEBUG) throw new AssertionError("必须使用非调试版复测");
+        ProotBootstrap proot = new ProotBootstrap(app);
+        Process unrelated = new ProcessBuilder("/system/bin/sleep", "120").start();
+        try {
+            for (int i = 0; i < 20; i++) {
+                // 覆盖 exec 立即失败和正常快速退出：身份必须在 waitFor 可以回收 PID 前记录。
+                String executable = i % 2 == 0 ? "/system/bin/true" : "/dsha-missing-terminal-executable";
+                ProotBootstrap fast = new ProotBootstrap(app) {
+                    @Override public String[] ptyArgv(String... guestCmd) { return new String[]{executable}; }
+                };
+                com.deepseekharness.app.PtySession[] terminal = {null};
+                runOnMainSync(() -> terminal[0] = com.deepseekharness.app.PtySession.start(fast, 80, 24, null));
+                long deadline = SystemClock.elapsedRealtime() + 3000;
+                while (terminal[0].isRunning() && SystemClock.elapsedRealtime() < deadline) Thread.sleep(10);
+                if (terminal[0].isRunning()) throw new AssertionError("快速退出未结束");
+                terminal[0].finishAndWait(3000);
+                if (com.deepseekharness.app.core.RuntimeTasks.isBusy()) throw new AssertionError("快速退出工作锁残留");
+            }
+            report("FAST_EXIT_AND_EXEC_FAILURE_20_PASSED");
+            java.lang.reflect.Constructor<com.deepseekharness.app.PtySession> constructor =
+                    com.deepseekharness.app.PtySession.class.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            for (int i = 0; i < 10; i++) {
+                final Throwable[] failure = {null};
+                com.deepseekharness.app.PtySession client = constructor.newInstance();
+                com.deepseekharness.app.util.ProcessIdentity[] birth = {null};
+                String[] parentRead = {""};
+                runOnMainSync(() -> {
+                    com.termux.terminal.TerminalSession raw = new com.termux.terminal.TerminalSession(
+                            "/system/bin/sleep", "/", new String[]{"sleep", "120"}, proot.ptyEnv(), 100,
+                            client);
+                    try {
+                        NativeProcess.capturePtyIdentity(value -> {
+                            birth[0] = value;
+                            try { Compat.readAll(new File("/proc/" + value.pid + "/stat")); parentRead[0] = "readable"; }
+                            catch (java.io.IOException error) { parentRead[0] = String.valueOf(error); }
+                            throw new IllegalStateException("EXPECTED_BIRTH_REJECTION");
+                        },
+                                () -> raw.initializeEmulator(80, 24));
+                    } catch (Throwable error) { failure[0] = error; }
+                });
+                if (failure[0] == null || !String.valueOf(failure[0]).contains("EXPECTED_BIRTH_REJECTION"))
+                    throw new AssertionError("出生身份登记失败未阻止 exec", failure[0]);
+                if (birth[0] == null || new File("/proc/" + birth[0].pid).exists())
+                    throw new AssertionError("握手失败未回收刚创建的子进程");
+                if (i == 0) report("BEFORE_EXEC_PARENT_STAT " + parentRead[0]);
+            }
+            report("BIRTH_REJECTION_10_PASSED");
+            ProotBootstrap beforeFork = new ProotBootstrap(app) {
+                @Override public String[] ptyArgv(String... guestCmd) { throw new IllegalStateException("EXPECTED_BEFORE_FORK"); }
+            };
+            final boolean[] refused = {false};
+            runOnMainSync(() -> {
+                try { com.deepseekharness.app.PtySession.start(beforeFork, 80, 24, null); }
+                catch (IllegalStateException expected) { refused[0] = true; }
+            });
+            if (!refused[0] || com.deepseekharness.app.core.RuntimeTasks.isBusy())
+                throw new AssertionError("fork 前失败留下工作锁");
+            if (!Compat.isAlive(unrelated)) throw new AssertionError("误伤无关进程");
+            report("BEFORE_FORK_FAILURE_AND_UNRELATED_PROCESS_PASSED");
         } finally { Compat.destroy(unrelated); }
     }
     private void groups(File temporary) throws Exception {

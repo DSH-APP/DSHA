@@ -35,7 +35,7 @@ public final class UpdateDownloadService extends Service {
         super.onCreate();
         engine = UpdateEngine.get(this);
         if (Build.VERSION.SDK_INT >= 26) getSystemService(NotificationManager.class).createNotificationChannel(
-                new NotificationChannel(CHANNEL, "应用更新下载", NotificationManager.IMPORTANCE_LOW));
+                new NotificationChannel(CHANNEL, com.deepseekharness.app.util.UiText.text("应用更新下载"), NotificationManager.IMPORTANCE_LOW));
     }
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         try {
@@ -63,15 +63,15 @@ public final class UpdateDownloadService extends Service {
         PendingIntent open = PendingIntent.getActivity(this, ID, new Intent(this, UpdateActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL)
-                .setSmallIcon(android.R.drawable.stat_sys_download).setContentTitle(state != null && state.apk != null ? "DSHA 更新已就绪" : "DSHA 应用更新")
-                .setContentText(state == null ? "正在准备下载…" : state.message)
+                .setSmallIcon(android.R.drawable.stat_sys_download).setContentTitle(state != null && state.apk != null ? com.deepseekharness.app.util.UiText.text("DSHA 更新已就绪") : com.deepseekharness.app.util.UiText.text("DSHA 应用更新"))
+                .setContentText(state == null ? com.deepseekharness.app.util.UiText.text("正在准备下载…") : state.message)
                 .setContentIntent(open).setOnlyAlertOnce(true).setOngoing(state != null && state.busy)
                 .setAutoCancel(state == null || !state.busy);
         if (state != null && state.busy) {
             builder.setProgress(100, state.total > 0 ? (int) (state.downloaded * 100 / state.total) : 0, state.total <= 0);
             PendingIntent cancel = PendingIntent.getService(this, ID, new Intent(this, UpdateDownloadService.class).setAction(CANCEL),
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            builder.addAction(0, "取消", cancel);
+            builder.addAction(0, com.deepseekharness.app.util.UiText.text("取消"), cancel);
         }
         return builder.build();
     }
@@ -81,12 +81,12 @@ public final class UpdateDownloadService extends Service {
     }
     @Override public void onTimeout(int startId, int fgsType) {
         // Android 15+ dataSync 配额到期必须及时退出；保留分段文件供下一次前台操作继续。
-        engine.pause("系统已暂停长时间下载，进度已保留，请在更新页继续");
+        engine.pause(com.deepseekharness.app.util.UiText.text("系统已暂停长时间下载，进度已保留，请在更新页继续"));
         stopForeground(true); stopSelf();
     }
     @Override public void onDestroy() {
         if (observing) engine.state().removeObserver(observer);
-        if (engine.shouldResume()) engine.pause("下载服务已中断，进度已保留，可继续下载");
+        if (engine.shouldResume()) engine.pause(com.deepseekharness.app.util.UiText.text("下载服务已中断，进度已保留，可继续下载"));
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         super.onDestroy();
     }

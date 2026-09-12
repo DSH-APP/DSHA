@@ -26,28 +26,29 @@ public final class InstallPipeline {
     public InstallPipeline(Context context) { this(new LocalEnvironment(context)); }
     InstallPipeline(Environment environment) { this.environment = environment; }
     public void run(InstallTask task, boolean repair, int selected) throws Exception {
-        task.stage(1, "检查第 1 步：Linux 解压标记、版本与 bash", true);
+        task.stage(1, com.deepseekharness.app.util.UiText.text("检查第 1 步：Linux 解压标记、版本与 bash"), true);
         boolean ready = environment.ready();
         if (!ready && repair && (selected == 0 || selected == 1)) {
             // 版本迁移会删除旧目录；只准首次空环境进入，绝不重置已有数据。
             if (environment.canExtractFresh()) {
-                task.stage(1, "安装第 1 步：首次解压离线环境（当前解压完成后可停止）", false);
+                task.stage(1, com.deepseekharness.app.util.UiText.text("安装第 1 步：首次解压离线环境（当前解压完成后可停止）"), false);
                 long[] last = {0};
                 environment.extract(done -> {
                     if (done - last[0] >= 8 * 1024 * 1024) {
-                        task.append("已读取离线包 " + done / (1024 * 1024) + " MiB"); last[0] = done;
+                        task.append(com.deepseekharness.app.util.UiText.text("已读取离线包 ") + done / (1024 * 1024) + " MiB"); last[0] = done;
                     }
                 });
                 ready = environment.ready();
             }
         }
-        task.result(1, ready, ready ? "标记、版本和 bash 在位" : "环境未就绪；保留现有文件，不自动重解压或清除，请先备份后恢复环境");
+        task.result(1, ready, ready ? com.deepseekharness.app.util.UiText.text("标记、版本和 bash 在位") : com.deepseekharness.app.util.UiText.text("环境未就绪；保留现有文件，不自动重解压或清除，请先备份后恢复环境"));
         task.checkCancelled();
         if (!ready) {
-            for (int step = 2; step <= 6; step++) if (selected == 0 || selected == step) task.skip(step, "Linux 环境未就绪");
-            task.finish(InstallTask.Outcome.FAILED, "第 1 步未通过，无法继续检查；现有环境已保留"); return;
+            for (int step = 2; step <= 6; step++) if (selected == 0 || selected == step)
+                task.result(step, false, com.deepseekharness.app.util.UiText.text("无法验证：Linux 环境未就绪，请先处理第 1 项"));
+            task.finish(InstallTask.Outcome.FAILED, com.deepseekharness.app.util.UiText.text("检查完成：Linux 环境未就绪，其余组件无法验证；现有文件已保留")); return;
         }
-        if (selected == 1) { task.finish(InstallTask.Outcome.SUCCEEDED, "第 1 步检查通过"); return; }
+        if (selected == 1) { task.finish(InstallTask.Outcome.SUCCEEDED, com.deepseekharness.app.util.UiText.text("第 1 步检查通过")); return; }
         InstallProbe.Results checked = probe(task, selected);
         boolean failed = false; int repaired = 0;
         for (int step = 2; step <= 6; step++) {
@@ -59,23 +60,23 @@ public final class InstallPipeline {
                 switch (step) {
                     case 2: environment.repairTools(checked, task); break;
                     case 4:
-                        task.stage(4, "修复第 4 步：补齐离线 pnpm", false);
-                        if (!environment.repairPnpm()) throw new IOException("离线 pnpm 修复失败，请检查可用空间");
-                        task.append("离线 pnpm 文件已核对，开始复验"); break;
+                        task.stage(4, com.deepseekharness.app.util.UiText.text("修复第 4 步：补齐离线 pnpm"), false);
+                        if (!environment.repairPnpm()) throw new IOException(com.deepseekharness.app.util.UiText.text("离线 pnpm 修复失败，请检查可用空间"));
+                        task.append(com.deepseekharness.app.util.UiText.text("离线 pnpm 文件已核对，开始复验")); break;
                     case 6:
                         if (!checked.ok("dns") || !checked.ok("session") || !checked.ok("settings")) {
-                            task.stage(6, "修复第 6 步：DNS、会话写入与局域网设置补丁", false);
+                            task.stage(6, com.deepseekharness.app.util.UiText.text("修复第 6 步：DNS、会话写入与局域网设置补丁"), false);
                             int code = environment.execute(InstallProbe.patchScript(), 60_000, false, task, task::append);
-                            if (code != 0) throw new IOException("运行补丁失败（退出码 " + code + "），已完成的部分会保留");
+                            if (code != 0) throw new IOException(com.deepseekharness.app.util.UiText.text("运行补丁失败（退出码 ") + code + com.deepseekharness.app.util.UiText.text("），已完成的部分会保留"));
                         }
                         task.checkCancelled();
                         if (!checked.ok("groups")) {
-                            task.stage(6, "修复第 6 步：补齐 Android 用户组", false);
-                            environment.repairGroups(); task.append("Android 用户组已核对，开始复验");
+                            task.stage(6, com.deepseekharness.app.util.UiText.text("修复第 6 步：补齐 Android 用户组"), false);
+                            environment.repairGroups(); task.append(com.deepseekharness.app.util.UiText.text("Android 用户组已核对，开始复验"));
                         }
                         break;
                     default:
-                        task.result(step, false, "内置组件无法运行；本页不覆盖用户升级的 Node/dsh，请备份后修复该组件");
+                        task.result(step, false, com.deepseekharness.app.util.UiText.text("内置组件无法运行；本页不覆盖用户升级的 Node/dsh，请备份后修复该组件"));
                         failed = true; continue;
                 }
                 task.checkCancelled();
@@ -90,27 +91,35 @@ public final class InstallPipeline {
         }
         task.checkCancelled();
         task.finish(failed ? InstallTask.Outcome.FAILED : InstallTask.Outcome.SUCCEEDED,
-                failed ? "检查完成，仍有步骤未通过；失败项与详细输出已保留"
-                        : repaired > 0 ? "已按需修复 " + repaired + " 步，并通过复验" : "检查全部通过，无需修复");
+                failed ? com.deepseekharness.app.util.UiText.text("检查完成，仍有步骤未通过；失败项与详细输出已保留")
+                        : repaired > 0 ? com.deepseekharness.app.util.UiText.text("已按需修复 ") + repaired + com.deepseekharness.app.util.UiText.text(" 步，并通过复验") : com.deepseekharness.app.util.UiText.text("检查全部通过，无需修复"));
     }
     private InstallProbe.Results probe(InstallTask task, int selected) throws Exception {
         List<InstallProbe.Check> checks = InstallProbe.checks(selected);
         InstallProbe.Results result = new InstallProbe.Results(checks);
-        task.stage(selected == 0 ? 2 : selected, "启动一次容器探测，逐项检查实际运行结果", true);
+        task.stage(selected == 0 ? 2 : selected, com.deepseekharness.app.util.UiText.text("启动一次容器探测，逐项检查实际运行结果"), true);
         InstallProbe.Check[] active = {null};
-        int code = environment.execute(InstallProbe.script(checks), Math.max(30_000, checks.size() * 22_000L), true, task, line -> {
+        int code;
+        try {
+            code = environment.execute(InstallProbe.script(checks), Math.max(30_000, checks.size() * 22_000L), true, task, line -> {
                     InstallProbe.Check begin = result.beginning(line);
                     if (begin != null) {
                         if (active[0] != null && active[0].step != begin.step)
                             task.result(active[0].step, result.ok(active[0].step), result.detail(active[0].step));
-                        active[0] = begin; task.stage(begin.step, "检查第 " + begin.step + " 步：" + begin.label, true);
+                        active[0] = begin; task.stage(begin.step, com.deepseekharness.app.util.UiText.text("检查第 ") + begin.step + com.deepseekharness.app.util.UiText.text(" 步：") + begin.label, true);
                     } else if (result.accept(line)) {
-                        if (active[0] != null) task.append(active[0].label + "："
-                                + (result.ok(active[0].key) ? "通过" : "失败（退出码 " + line.substring(line.lastIndexOf(':') + 1) + "）"));
+                        if (active[0] != null) task.append(active[0].label + com.deepseekharness.app.util.UiText.text("：")
+                                + (result.ok(active[0].key) ? com.deepseekharness.app.util.UiText.text("通过") : com.deepseekharness.app.util.UiText.text("失败（退出码 ") + line.substring(line.lastIndexOf(':') + 1) + com.deepseekharness.app.util.UiText.text("）")));
                     } else task.append(line);
                 });
-        if (code != 0) throw new IOException("容器探测退出码 " + code + "，检查未完整执行");
-        if (active[0] != null) task.result(active[0].step, result.ok(active[0].step), result.detail(active[0].step));
+        } finally {
+            // 进程提前退出、没有 BEGIN 或漏结果时，也要为每个选中组件发布结论。
+            // 取消保留已完成结果，剩余步骤由 finish 标为未完成。
+            if (!task.cancellationRequested()) for (int step = 2; step <= 6; step++) {
+                if (selected == 0 || selected == step) task.result(step, result.ok(step), result.detail(step));
+            }
+        }
+        if (code != 0) throw new IOException(com.deepseekharness.app.util.UiText.text("容器探测退出码 ") + code + com.deepseekharness.app.util.UiText.text("，检查未完整执行"));
         return result;
     }
     public static boolean isCancellation(Throwable error) {

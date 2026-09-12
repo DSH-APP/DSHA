@@ -23,7 +23,7 @@ public final class PluginSource {
     }
 
     public static PluginSource parse(String raw) {
-        if (raw == null || raw.trim().isEmpty()) throw new IllegalArgumentException("请粘贴插件链接或 owner/repo");
+        if (raw == null || raw.trim().isEmpty()) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("请粘贴插件链接或 owner/repo"));
         String value = raw.trim();
         String spec = value.startsWith("npm:") ? value.substring(4) : value;
         if (spec.length() <= 300 && spec.matches("(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*(?:@[A-Za-z0-9.^~*+_-]+)?"))
@@ -31,7 +31,7 @@ public final class PluginSource {
         Matcher matcher = URL.matcher(value);
         if (matcher.find()) {
             value = matcher.group().replaceFirst("[)\\]}>.,;!]+$", "");
-            if (matcher.find()) throw new IllegalArgumentException("识别到多个链接，请每次只粘贴一个插件链接");
+            if (matcher.find()) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("识别到多个链接，请每次只粘贴一个插件链接"));
         }
         GitHubRef github = GitHubRef.parse(value);
         if (github.valid) return new PluginSource(github, github.archiveUrl);
@@ -49,7 +49,7 @@ public final class PluginSource {
                 return new PluginSource(GitHubRef.invalid(), value);
         } catch (Exception ignored) {
         }
-        throw new IllegalArgumentException("无法识别：支持 npm 包名、GitHub 仓库、分支/子目录、Release 下载链接或 HTTPS 压缩包直链");
+        throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("无法识别：支持 npm 包名、GitHub 仓库、分支/子目录、Release 下载链接或 HTTPS 压缩包直链"));
     }
 
     public String command() {
@@ -62,13 +62,13 @@ public final class PluginSource {
     }
 
     public String description() {
-        if (!npm.isEmpty()) return "npm 插件包 · " + npm;
+        if (!npm.isEmpty()) return com.deepseekharness.app.util.UiText.text("npm 插件包 · ") + npm;
         if (!url.isEmpty()) {
-            try { return "插件压缩包 · " + new URI(url).getHost(); }
-            catch (Exception ignored) { return "插件压缩包"; }
+            try { return com.deepseekharness.app.util.UiText.text("插件压缩包 · ") + new URI(url).getHost(); }
+            catch (Exception ignored) { return com.deepseekharness.app.util.UiText.text("插件压缩包"); }
         }
         return github.owner + "/" + github.repo
                 + ("release".equals(github.kind) ? " · Release " + github.revision
-                : github.treePath.isEmpty() ? " · 默认分支" : "\n分支/目录：" + github.treePath);
+                : github.treePath.isEmpty() ? com.deepseekharness.app.util.UiText.text(" · 默认分支") : com.deepseekharness.app.util.UiText.text("\n分支/目录：") + github.treePath);
     }
 }

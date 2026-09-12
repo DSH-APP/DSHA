@@ -1,4 +1,4 @@
-import type { Context as ClientContext } from '@deepseek-ai/cordis';
+import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
 /**
  * Debug badge — ?mobile-nav-debug=1
  * Renders a live state overlay (URL, viewport, media queries, shell chrome,

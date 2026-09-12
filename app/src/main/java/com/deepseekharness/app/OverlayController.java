@@ -186,6 +186,7 @@ public final class OverlayController {
         // diagnostics out of both the transient buffer and the window.
         text = SensitiveData.redact(text);
         final String k = kind == null ? "delta" : kind;
+        if("tool".equals(k))text=com.deepseekharness.app.util.UiText.toolStatus(text);
         if ("reasoning".equals(k) && !showReasoning(ctx)) return;
         final String key = sessionKey == null || sessionKey.isEmpty() ? "-" : sessionKey;
         // 确认进行中：命令和按钮不能被流式内容顶掉（用户正要点它）
@@ -262,7 +263,7 @@ public final class OverlayController {
     static void askConfirm(Context ctx, String cmd, Runnable onAllow, Runnable onDeny) {
         if (ctx == null || !enabled(ctx) || !permitted(ctx) || !confirmOnOverlay(ctx)) return;
         confirming = true;
-        final String text = "⚠ 请求执行：" + collapse(cmd);
+        final String text = com.deepseekharness.app.util.UiText.text("⚠ 请求执行：") + collapse(cmd);
         mainHandler().post(() -> {
             try {
                 ensureView(ctx);
@@ -288,7 +289,7 @@ public final class OverlayController {
                     if (onDeny != null) onDeny.run();
                 });
             } catch (Throwable e) {
-                android.util.Log.w("DSHA", "悬浮条确认显示失败: "
+                android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("悬浮条确认显示失败: ")
                         + SensitiveData.redact(String.valueOf(e)));
                 confirming = false;
             }
@@ -341,7 +342,7 @@ public final class OverlayController {
                 }
                 scheduleHide(ctx);
             } catch (Throwable e) {
-                android.util.Log.w("DSHA", "悬浮条更新失败: "
+                android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("悬浮条更新失败: ")
                         + SensitiveData.redact(String.valueOf(e)));
             }
         });
@@ -418,7 +419,7 @@ public final class OverlayController {
                 }
                 if (!sticky) scheduleHide(ctx);
             } catch (Throwable e) {
-                android.util.Log.w("DSHA", "悬浮条更新失败: "
+                android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("悬浮条更新失败: ")
                         + SensitiveData.redact(String.valueOf(e)));
             }
         });
@@ -512,7 +513,7 @@ public final class OverlayController {
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
         TextView hint = new TextView(app);
-        hint.setText("守门人：这条命令要执行吗？");
+        hint.setText(com.deepseekharness.app.util.UiText.text("守门人：这条命令要执行吗？"));
         hint.setTextColor(0xFFFFC66D);
         hint.setTextSize(11f);
         hint.setVisibility(View.GONE);
@@ -521,8 +522,8 @@ public final class OverlayController {
         LinearLayout row = new LinearLayout(app);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setVisibility(View.GONE);
-        row.addView(actionButton(app, R.id.overlay_confirm_allow, "允许", 0xFF2E7D32));
-        row.addView(actionButton(app, R.id.overlay_confirm_deny, "拒绝", 0xFF8E2A2A));
+        row.addView(actionButton(app, R.id.overlay_confirm_allow, com.deepseekharness.app.util.UiText.text("允许"), 0xFF2E7D32));
+        row.addView(actionButton(app, R.id.overlay_confirm_deny, com.deepseekharness.app.util.UiText.text("拒绝"), 0xFF8E2A2A));
         box.addView(row);
 
         // 点条子本身收起（确认时不收 —— 那两个按钮才是出口）
@@ -557,7 +558,7 @@ public final class OverlayController {
             applyStyle(app);
         } catch (Throwable e) {
             // 权限被撤或某些 ROM 拒绝 → 安静降级，不影响 agent 干活
-            android.util.Log.w("DSHA", "悬浮条创建失败（权限被撤？）: "
+            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("悬浮条创建失败（权限被撤？）: ")
                     + SensitiveData.redact(String.valueOf(e)));
             root = null;
             label = null;

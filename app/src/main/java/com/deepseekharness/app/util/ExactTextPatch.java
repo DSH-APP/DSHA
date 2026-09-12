@@ -5,10 +5,10 @@ public final class ExactTextPatch {
     private ExactTextPatch() { }
     public static String apply(String source, String before, String after) {
         if (source == null || before == null || after == null || before.isEmpty() || after.isEmpty() || before.equals(after))
-            throw new IllegalArgumentException("无效的文本补丁");
+            throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("无效的文本补丁"));
         int old = count(source, before), patched = count(source, after);
         if (patched == 1 && old == count(after, before)) return source;
-        if (old != 1 || patched != 0) throw new IllegalArgumentException("上游模块结构与输入适配补丁不符，原文件保留");
+        if (old != 1 || patched != 0) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("上游模块结构与输入适配补丁不符，原文件保留"));
         return source.replace(before, after);
     }
     private static int count(String value, String part) {

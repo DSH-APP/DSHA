@@ -21,37 +21,38 @@
 
 ---
 
-## DSHA v0.1.5-rc1 正式版 · Latest
+## DSHA v0.1.5-rc2 正式版 · Latest
 
-本版由贡献者 [@ym2025szz](https://github.com/ym2025szz) 维护并发布，感谢原作者 [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) 和其他贡献者。此前的重构预览更新归并到本正式版介绍；1.1.10 及更早版本的历史发布与下方原始正文保留。
+由贡献者 [@ym2025szz](https://github.com/ym2025szz) 维护并发布，感谢原作者 [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) 和其他贡献者。
 
-**[最新正式版与下载](https://github.com/DSH-APP/DSHA/releases/latest)** · [完整更新与预览版对比](docs/releases/v0.1.5-rc1-notes.md) · [真机验收记录](docs/releases/v0.1.5-rc1.md)
+**[最新正式版与下载](https://github.com/DSH-APP/DSHA/releases/latest)** · [完整更新与历史版本对比](docs/releases/v0.1.5-rc2-notes.md) · [最终验收记录](docs/releases/v0.1.5-rc2-build129.md)
 
 | 版本 | 适用设备 | 下载 | 大小 |
 |---|---|---|---:|
-| 标准版 | Android 11+ / arm64，系统 WebView | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1.apk.sha256) | 176.06 MiB |
-| 兼容版 | Android 6+ / arm64，内置 Gecko 备用内核 | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1low.apk.sha256) | 252.82 MiB |
+| 标准版 | Android 11+ / arm64，系统 WebView | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc2/dsha-0.1.5-rc2.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc2/dsha-0.1.5-rc2.apk.sha256) | 176.69 MiB |
+| 兼容版 | Android 6+ / arm64，内置 Gecko 备用内核 | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc2/dsha-0.1.5-rc2low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc2/dsha-0.1.5-rc2low.apk.sha256) | 253.23 MiB |
 
-正式 Release 沿用已验收的版本号 **0.1.5-rc1**、版本码 **116** 与历史签名；包内 dsh 为 **0.1.5-rc.1**，Ubuntu 基础环境版本为 **10**。两版共享包名和数据，不能并排安装。
+本次以 **GitHub 正式 Release / Latest** 发布，沿用已验收 APK 的 **0.1.5-rc2** 名称、版本码 **129** 和原发布签名。包内 dsh 为 **0.1.5-rc.2**，Ubuntu 基础环境仍为 **10**。两版共享包名和数据，不能并排安装。
 
-### 正式版带来了什么
+### 本版更新
 
-- **新版模型与文件预览**：DeepSeek-V41-Flash，保留 V4 模型选项；Markdown、HTML、PDF、图片、代码和长文本预览、标签滚动与代码复制。关闭“×”在标签右侧垂直居中。
-- **更快的启动与更新**：独立 dsh 离线包、未变化网页脚本复用；修复首次原生模块加载失败。Android 16 同机启动至鉴权 **3.43～3.66 秒**，完整冷安装验证约 **19.3 秒**。
-- **数据保留与维护**：相同 Ubuntu 基础环境局部更新，个人目录、会话、配置和第三方插件保持原位；基础环境变化先保护数据再重建。移除按启动次数自动备份和启动时全目录扫描，保留手动备份、预检、回退和恢复。
-- **启动错误能定位、能恢复**：实际阶段、插件错误、退出码和可下载日志；60 秒后继续等待；独立安全启动；统一 PID 身份核验，维护前关闭终端及后台任务。
-- **汇总此前预览版能力**：标准／兼容双版本、插件安装／导入／导出／启停／更新／回退、后台 APK 下载与校验、无线 ADB、Shizuku 备用入口、局域网访问和 PTY；完善设备命令白名单与系统进程保护。
-- **移动交互修订**：键盘和系统栏避让、回车换行、提示清理、图片草稿和阅读位置恢复，以及更清晰的配置、插件和诊断界面。
+- **界面统一**：卡片、按钮、弹窗、设备权限和日夜主题统一，适配短屏与大字体；完善切页动画。安装检查日志和诊断报告在限定区域内独立滚动，关于弹窗重新安排仓库、QQ群和关闭入口。
+- **独立多终端**：PTY 与简易终端分别管理标签，切页、旋转、语言切换保留进程、输出与草稿；显示编号复用空缺，全部关闭后再新建从“终端 1”开始。
+- **中英文分离**：原生界面、应用状态和两种网页内核随语言设置切换；切换语言不停止 Web 或终端。用户内容、命令、文件名和第三方原始异常保持原文。
+- **插件与预设**：名称升降序、已启用优先、可更新优先排序实际可用，操作按钮有统一边框；内置 dsh-web-mobile 更新至 2.4.1-dsha.2。四种 Agent 预设由服务端确认切换，平板顶栏靠右并提供可用的文件夹入口。
+- **网页与文件兼容**：修复多文件选择丢失（#64）、旧 WebView 的 Iterator / PDF Worker 加载错误，提前补齐缺失的 AbortSignal 等接口。
+- **启动与恢复**：端口冲突自动选择可用端口，慢鉴权继续等待；保留实际错误记录和独立恢复界面。修复旧平板环境升级时的路径与权限误判，保护并校验个人数据。
+- **设备与网络**：集中管理设备能力授权，支持按协议识别 Shizuku 改版管理器并主动恢复连接；针对部分网络的 DNS 故障提供自动、IPv4 和原生模式（#63），不重放 HTTP 请求。
 
-相对上一已发布预览版 **v1.2.0-rc1.4**，dsh 从 `0.1.2-rc.1` 升至 `0.1.5-rc.1`；标准 APK 约缩小 **17.3%**，兼容 APK 约缩小 **12.7%**。完整说明按 alpha.2、rc1、rc1.2、rc1.3、rc1.4 汇总差异，历史 Release 继续保留。
+相对上一正式版，升级 dsh 至 rc.2，新增本轮界面、多终端、语言和兼容修复，并汇总至构建 129。此前重构版的离线 Ubuntu、模型选择、文件预览、备份恢复、插件和设备通道继续保留；逐版差异见完整更新说明。
 
-### 安装与验证
+### 升级与验证
 
-升级前保留重要数据的手动备份，再覆盖安装对应 APK。此前已发布 v1.2 预览版的基础环境为 9，升到本版 10 时需要保护数据并重建；相同基础环境 10 的本地 alpha 包可局部更新，alpha.2 → 本版实测约 **7.45 秒**。不要把该耗时当成所有旧版的升级耗时。
+使用同签名 APK 覆盖安装，重要数据建议保留手动备份。基础环境为 10 时只更新受管运行时；旧基础环境 9 先保护数据再重建，已在 Android 17 平板完成实际升级。1.1.10 及更早架构的全部直接升级路径未在本轮重新验证。
 
-本轮 Android 16 实测新模型的图片、附件与工具调用，WebView／Gecko、文件预览、覆盖更新、冷安装、连续启动、终端回收、插件和备份恢复。两版各 **330 项单测：329 通过、1 跳过、无失败**，Lint 无错误，签名、摘要、离线包与 ELF 检查通过。Android 6/7、真实 16 KB 页内核等仍需实机补充验证，具体边界见验收记录。
+两版各 **383 项单测：382 通过、1 跳过、无失败**，Lint 无错误；真机覆盖 WebView 116、Gecko、多文件回调、Shizuku 断连恢复、PDF Worker 和手机/平板布局。Android 6/7、真实 16 KiB 页设备与 thedjchi 改版本体未在最终轮次实测，改版兼容依据其公开协议实现。
 
-反馈：[GitHub Issues](https://github.com/DSH-APP/DSHA/issues) / QQ 群 **975836806**，请附机型、系统版本、复现步骤及脱敏诊断报告。
+[问题反馈](https://github.com/DSH-APP/DSHA/issues) · QQ 群 **975836806**。请附机型、系统版本、复现步骤和脱敏诊断报告。
 
 ---
 
@@ -336,7 +337,7 @@ QQ 群 **975836806** —— 测试版、问题反馈、插件交流。
 
 ## Star History
 
-<a href="https://github.com/qiannianhuanxiang/DSHA/stargazers">
+<a href="https://github.com/DSH-APP/DSHA/stargazers">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/star-history-dark.svg" />
     <source media="(prefers-color-scheme: light)" srcset="docs/star-history.svg" />
@@ -344,7 +345,5 @@ QQ 群 **975836806** —— 测试版、问题反馈、插件交流。
   </picture>
 </a>
 
-<sub>曲线由 [`tools/gen-star-history.py`](tools/gen-star-history.py) 每周自动生成（[workflow](.github/workflows/star-history.yml)）。
-GitHub 从 2026-06-30 起把 stargazers API 限制成只有仓库 admin/collaborator 能读，
-第三方实时嵌入图因此普遍失效，所以数据自己拉、图自己画。</sub>
+<sub>由 [`tools/gen-star-history.py`](tools/gen-star-history.py) 按周读取 GitHub 星标时间并更新（[workflow](.github/workflows/star-history.yml)）。浅色、深色 SVG 保存在本仓库；曲线按当前仍保留的星标汇总。</sub>
 

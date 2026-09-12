@@ -1,0 +1,10 @@
+{
+  "dshVersion": "0.1.5-rc.2",
+  "module": "@deepseek-ai/dsh-client-ui-sidebar-documentpreview/lib/client.js",
+  "mainBefore": "window.__ModuleLoader__.load({\n\tid: \"@deepseek-ai/dsh-client-ui-sidebar-documentpreview\",",
+  "workerBefore": "new Blob([_dsh_pdf_worker_default,",
+  "asset": "web-integration/es-compat.js",
+  "resourceModule": "@deepseek-ai/dsh-client-resources/lib/client.js",
+  "resourceBefore": "return parsed.hostname === \"\" ? void 0 : parsed.hostname.toLowerCase();",
+  "resourceAfter": "/* DSHA_FILE_RESOURCE_URL_V1: WebView 116 把非特殊协议的主机放在 pathname。 */ if (parsed.hostname === \"\" && address.startsWith(\"dsh-resource://file/\")) return \"file\"; return parsed.hostname === \"\" ? void 0 : parsed.hostname.toLowerCase();"
+}

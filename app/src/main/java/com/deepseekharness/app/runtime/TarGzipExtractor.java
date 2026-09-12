@@ -97,7 +97,7 @@ public final class TarGzipExtractor {
 
             if (type == 'L' || type == 'x' || type == 'K') {
                 if (size <= 0 || size > MAX_META_RECORD) {
-                    throw new IOException("预构建包损坏（超长元数据记录 size=" + size + "）");
+                    throw new IOException(com.deepseekharness.app.util.UiText.text("预构建包损坏（超长元数据记录 size=") + size + com.deepseekharness.app.util.UiText.text("）"));
                 }
                 byte[] longData = new byte[(int) size];
                 readFull(in, longData, longData.length);
@@ -142,14 +142,14 @@ public final class TarGzipExtractor {
                     || name.contains("\u0000");
             if (name == null || name.isEmpty() || traversal
                     || name.contains("..") || name.contains("\\\"") || name.contains(",")) {
-                throw new IOException("预构建包损坏（非法文件条目: " + safeName(name) + "）");
+                throw new IOException(com.deepseekharness.app.util.UiText.text("预构建包损坏（非法文件条目: ") + safeName(name) + com.deepseekharness.app.util.UiText.text("）"));
             }
 
             if (!selected.test(name)) {
                 long remaining = size;
                 while (remaining > 0) {
                     int count = in.read(buf, 0, (int) Math.min(buf.length, remaining));
-                    if (count < 0) throw new IOException("预构建包被截断");
+                    if (count < 0) throw new IOException(com.deepseekharness.app.util.UiText.text("预构建包被截断"));
                     remaining -= count;
                 }
                 skipPadding(in, size);
@@ -161,7 +161,7 @@ public final class TarGzipExtractor {
                 case 0:
                 case '7':
                     if (size > MAX_FILE_BYTES || totalBytes + size > MAX_TOTAL_BYTES) {
-                        throw new IOException("预构建包损坏（文件过大 size=" + size + "）");
+                        throw new IOException(com.deepseekharness.app.util.UiText.text("预构建包损坏（文件过大 size=") + size + com.deepseekharness.app.util.UiText.text("）"));
                     }
                     writeFile(in, out, size, mode, buf);
                     totalBytes += size;
@@ -244,7 +244,7 @@ public final class TarGzipExtractor {
             long remaining = size;
             while (remaining > 0) {
                 int n = in.read(buf, 0, (int) Math.min(buf.length, remaining));
-                if (n < 0) throw new IOException("tar 数据意外结束");
+                if (n < 0) throw new IOException(com.deepseekharness.app.util.UiText.text("tar 数据意外结束"));
                 fos.write(buf, 0, n);
                 remaining -= n;
             }
@@ -282,7 +282,7 @@ public final class TarGzipExtractor {
             int n = in.read(b, off, len - off);
             if (n < 0) {
                 if (off == 0) return false; // 干净 EOF
-                throw new IOException("tar 数据意外结束（需要 " + len + " 字节，只读到 " + off + "）");
+                throw new IOException(com.deepseekharness.app.util.UiText.text("tar 数据意外结束（需要 ") + len + com.deepseekharness.app.util.UiText.text(" 字节，只读到 ") + off + com.deepseekharness.app.util.UiText.text("）"));
             }
             off += n;
         }

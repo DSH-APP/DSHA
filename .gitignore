@@ -9,6 +9,7 @@ captures/
 # Python 缓存
 __pycache__/
 *.pyc
+node_modules/
 
 # 本机配置（不提交）
 local.properties

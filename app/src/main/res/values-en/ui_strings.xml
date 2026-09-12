@@ -1,0 +1,224 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="accessibility_desc" formatted="false">"Two purposes: (1) Read the pairing code from Android's Wireless debugging dialog, so you do not have to copy a code that expires after two minutes. (2) Let the AI assistant read the screen, tap, type, press keys and take screenshots (Android 11+), enabling device control without ADB or Shizuku.\n\nDSHA does not record your screen in the background. Screen contents are read only when the assistant explicitly requests them, returned directly to the conversation, and are not saved or uploaded separately. Pairing codes are read only during the two minutes after you tap Auto-read pairing code."</string>
+    <string name="nav_launch" formatted="false">"Start"</string>
+    <string name="nav_plugins" formatted="false">"Plugins"</string>
+    <string name="nav_settings" formatted="false">"Settings"</string>
+    <string name="nav_terminal" formatted="false">"Terminal"</string>
+    <string name="ui_m0000" formatted="false">"Next"</string>
+    <string name="ui_m0001" formatted="false">"Download update"</string>
+    <string name="ui_m0002" formatted="false">"Save settings"</string>
+    <string name="ui_m0003" formatted="false">"Cancel check"</string>
+    <string name="ui_m0004" formatted="false">"Sort by name"</string>
+    <string name="ui_m0005" formatted="false">"Start"</string>
+    <string name="ui_m0006" formatted="false">"Back up and rebuild"</string>
+    <string name="ui_m0007" formatted="false">"Safe start"</string>
+    <string name="ui_m0008" formatted="false">"Install &amp; repair"</string>
+    <string name="ui_m0009" formatted="false">"Export plugins"</string>
+    <string name="ui_m0010" formatted="false">"Start pairing"</string>
+    <string name="ui_m0011" formatted="false">"Recovery options"</string>
+    <string name="ui_m0012" formatted="false">"Manual address &amp; port"</string>
+    <string name="ui_m0013" formatted="false">"Manage plugins"</string>
+    <string name="ui_m0014" formatted="false">"Repair failed items"</string>
+    <string name="ui_m0015" formatted="false">"Authorize Shizuku"</string>
+    <string name="ui_m0016" formatted="false">"Plugins"</string>
+    <string name="ui_m0017" formatted="false">"Not checked"</string>
+    <string name="ui_m0018" formatted="false">"Check for updates"</string>
+    <string name="ui_m0019" formatted="false">"Environment maintenance"</string>
+    <string name="ui_m0020" formatted="false">"Light"</string>
+    <string name="ui_m0021" formatted="false">"Terminal"</string>
+    <string name="ui_m0022" formatted="false">"Device permissions"</string>
+    <string name="ui_m0023" formatted="false">"Settings"</string>
+    <string name="ui_m0024" formatted="false">"Enter a command and press Enter"</string>
+    <string name="ui_m0025" formatted="false">"No logs yet."</string>
+    <string name="ui_m0026" formatted="false">"Pairing and ports"</string>
+    <string name="ui_m0027" formatted="false">"Restart"</string>
+    <string name="ui_m0028" formatted="false">"3080 (1–65535; avoid 3081 / 3090)"</string>
+    <string name="ui_m0029" formatted="false">"6-digit pairing code"</string>
+    <string name="ui_m0030" formatted="false">"ADB is off. Leave it off if you do not use wireless debugging."</string>
+    <string name="ui_m0031" formatted="false">"Wireless ADB pairing"</string>
+    <string name="ui_m0032" formatted="false">"API key, installation, workspace, backups"</string>
+    <string name="ui_m0033" formatted="false">"DNS · Sessions · Android groups"</string>
+    <string name="ui_m0034" formatted="false">"DSH is not running"</string>
+    <string name="ui_m0035" formatted="false">"DeepSeek Harness launcher\n\nIncludes a Linux environment. No Termux required.\nInstalls and starts automatically."</string>
+    <string name="ui_m0036" formatted="false">"GitHub · QQ community · License"</string>
+    <string name="ui_m0037" formatted="false">"JavaScript runtime"</string>
+    <string name="ui_m0038" formatted="false">"Linux environment"</string>
+    <string name="ui_m0039" formatted="false">"Shizuku is not authorized"</string>
+    <string name="ui_m0040" formatted="false">"deepseek-harness: latest RC by default"</string>
+    <string name="ui_m0041" formatted="false">"Repair dsh / npm; settings and conversations are preserved"</string>
+    <string name="ui_m0042" formatted="false">"dsh entry point and version"</string>
+    <string name="ui_m0043" formatted="false">"▸ Advanced: port"</string>
+    <string name="ui_m0044" formatted="false">"Get started in three steps"</string>
+    <string name="ui_m0045" formatted="false">"The next page extracts the bundled Linux environment automatically."</string>
+    <string name="ui_m0046" formatted="false">"Download logs"</string>
+    <string name="ui_m0047" formatted="false">"Download error logs"</string>
+    <string name="ui_m0048" formatted="false">"Error logs · Environment checks · Repairs"</string>
+    <string name="ui_m0050" formatted="false">"Stop"</string>
+    <string name="ui_m0051" formatted="false">"Applies only to the DeepSeek API key entered in this app. Changes are saved immediately. If disabled, enter the key again after restoring. Plugin settings may still contain other credentials."</string>
+    <string name="ui_m0052" formatted="false">"Restore from file"</string>
+    <string name="ui_m0053" formatted="false">"Sensors &amp; flashlight"</string>
+    <string name="ui_m0054" formatted="false">"Use proroot runtime"</string>
+    <string name="ui_m0055" formatted="false">"Use compatibility browser"</string>
+    <string name="ui_m0056" formatted="false">"Tips"</string>
+    <string name="ui_m0057" formatted="false">"Use desktop web layout"</string>
+    <string name="ui_m0058" formatted="false">"Save to: Download/DSHA"</string>
+    <string name="ui_m0059" formatted="false">"Keep the system pairing dialog open. Return to DSHA in split screen and enter the current 6-digit code."</string>
+    <string name="ui_m0060" formatted="false">"Repair tools"</string>
+    <string name="ui_m0061" formatted="false">"Stop"</string>
+    <string name="ui_m0062" formatted="false">"Allow root shell"</string>
+    <string name="ui_m0063" formatted="false">"Allow LAN access"</string>
+    <string name="ui_m0064" formatted="false">"Allow the assistant and plugins in this DSHA environment to query SMS messages for the current Android user, including numbers, message bodies and verification codes. Preauthorization skips individual confirmations and can be revoked here. Queries only; Android may still deny access. Uses an authorized root or ADB connection. Shizuku does not run SMS queries."</string>
+    <string name="ui_m0065" formatted="false">"Allow device directory queries. Root directories, photo folders and Android/data remain read-only. Partition changes, system setting changes and unrecognized commands are blocked. Refresh the complete app list before stopping apps to protect system apps and essential processes. Ordinary download file operations and stopping ordinary user apps can run directly."</string>
+    <string name="ui_m0066" formatted="false">"Allow location access"</string>
+    <string name="ui_m0067" formatted="false">"About"</string>
+    <string name="ui_m0068" formatted="false">"About DSHA"</string>
+    <string name="ui_m0069" formatted="false">"About DSHA · Community"</string>
+    <string name="ui_m0070" formatted="false">"Other file picker"</string>
+    <string name="ui_m0071" formatted="false">"The bundled environment extracts automatically. Add a key to start using it, or install first without a key."</string>
+    <string name="ui_m0072" formatted="false">"Tasks continue when you leave this page. Return to see results. Repairs affect only failed items; stopping waits for the current operation to finish safely."</string>
+    <string name="ui_m0073" formatted="false">"Create backup"</string>
+    <string name="ui_m0074" formatted="false">"Start the service on the Start page"</string>
+    <string name="ui_m0075" formatted="false">"Enter it in Settings → Configuration, or skip and configure a third-party API in the Web UI later."</string>
+    <string name="ui_m0076" formatted="false">"Package manager"</string>
+    <string name="ui_m0077" formatted="false">"Report a problem"</string>
+    <string name="ui_m0078" formatted="false">"Cancel task"</string>
+    <string name="ui_m0079" formatted="false">"Cancel operation"</string>
+    <string name="ui_m0080" formatted="false">"Save as"</string>
+    <string name="ui_m0081" formatted="false">"Only my plugins"</string>
+    <string name="ui_m0082" formatted="false">"Optional. You can also configure official or third-party APIs and models in the conversation page."</string>
+    <string name="ui_m0083" formatted="false">"Sync installed plugins"</string>
+    <string name="ui_m0084" formatted="false">"If the connection drops in the background, allow DSHA to run in the background and reduce battery restrictions. Your device may still suspend it. Before reconnecting, turn on Wireless debugging, then tap Verify connection."</string>
+    <string name="ui_m0085" formatted="false">"Background operation"</string>
+    <string name="ui_m0086" formatted="false">"Start Web UI"</string>
+    <string name="ui_m0087" formatted="false">"Start the Web UI, then tap Open to use it in the app."</string>
+    <string name="ui_m0088" formatted="false">"Switch between Start, Terminal, Plugins and Settings using the bottom bar."</string>
+    <string name="ui_m0089" formatted="false">"Check for updates on startup"</string>
+    <string name="ui_m0090" formatted="false">"Enable ADB device access (off by default)"</string>
+    <string name="ui_m0091" formatted="false">"Four pages"</string>
+    <string name="ui_m0092" formatted="false">"Enable ADB in DSHA's Device permissions and keep your phone connected to Wi-Fi."</string>
+    <string name="ui_m0093" formatted="false">"While the local Web service is running, devices on the same Wi-Fi can access conversations through port 3081. LAN permission is required. Enable only on trusted networks."</string>
+    <string name="ui_m0094" formatted="false">"View releases in browser"</string>
+    <string name="ui_m0095" formatted="false">"Open in browser"</string>
+    <string name="ui_m0096" formatted="false">"Basic tools"</string>
+    <string name="ui_m0097" formatted="false">"Enter an API key (optional)"</string>
+    <string name="ui_m0098" formatted="false">"Backup"</string>
+    <string name="ui_m0099" formatted="false">"Backup &amp; restore"</string>
+    <string name="ui_m0100" formatted="false">"Include API key in backups"</string>
+    <string name="ui_m0101" formatted="false">"Backups may contain keys, settings and plugin credentials. Store them securely."</string>
+    <string name="ui_m0102" formatted="false">"Copy"</string>
+    <string name="ui_m0103" formatted="false">"Copy report"</string>
+    <string name="ui_m0104" formatted="false">"Safe mode: restore previously enabled third-party plugins"</string>
+    <string name="ui_m0105" formatted="false">"Restart the Web service after installing or changing plugins. Supports GitHub, npm and prebuilt ZIP / TAR / TAR.GZ / TGZ plugin packages. Exported packages can be imported into another DSHA installation."</string>
+    <string name="ui_m0106" formatted="false">"Install plugin"</string>
+    <string name="ui_m0107" formatted="false">"Install update"</string>
+    <string name="ui_m0108" formatted="false">"Import plugins"</string>
+    <string name="ui_m0109" formatted="false">"Export report"</string>
+    <string name="ui_m0110" formatted="false">"Fewer confirmations"</string>
+    <string name="ui_m0111" formatted="false">"Use proroot to speed up the container. If your device or a command is incompatible, turn this off to use proot. Save and restart the Web service to apply."</string>
+    <string name="ui_m0112" formatted="false">"Workspace"</string>
+    <string name="ui_m0113" formatted="false">"Marketplace"</string>
+    <string name="ui_m0114" formatted="false">"Common settings"</string>
+    <string name="ui_m0115" formatted="false">"App updates"</string>
+    <string name="ui_m0116" formatted="false">"Apply path"</string>
+    <string name="ui_m0117" formatted="false">"Enable device access"</string>
+    <string name="ui_m0118" formatted="false">"Force the bundled Gecko browser if the system browser shows a blank page or is incompatible. Otherwise, the app selects a compatible engine automatically. Save and reopen the conversation to apply."</string>
+    <string name="ui_m0119" formatted="false">"Current version"</string>
+    <string name="ui_m0121" formatted="false">"Show AI output in an overlay"</string>
+    <string name="ui_m0122" formatted="false">"Overlay settings ›"</string>
+    <string name="ui_m0123" formatted="false">"All files access ›"</string>
+    <string name="ui_m0124" formatted="false">"On a rooted phone, use su directly without ADB pairing. Authorize DSHA in your root manager on first use. Device protection rules always apply."</string>
+    <string name="ui_m0125" formatted="false">"Open Shizuku manager"</string>
+    <string name="ui_m0126" formatted="false">"Open backup &amp; data"</string>
+    <string name="ui_m0127" formatted="false">"Open Wireless debugging"</string>
+    <string name="ui_m0128" formatted="false">"Wireless debugging settings"</string>
+    <string name="ui_m0129" formatted="false">"Display AI responses and tool status over other apps. After saving, allow display-over-other-apps permission. People nearby may see the output."</string>
+    <string name="ui_m0130" formatted="false">"Back up all data, conversations, settings or plugins as needed."</string>
+    <string name="ui_m0131" formatted="false">"Enable the device connections and permissions you need. Commands use enabled root access first, then Shizuku, then ADB."</string>
+    <string name="ui_m0132" formatted="false">"Connects automatically after authorization; ADB is not required. Rebinds after the service restarts."</string>
+    <string name="ui_m0133" formatted="false">"Plugin marketplace"</string>
+    <string name="ui_m0134" formatted="false">"Plugin operation status. Tap for details."</string>
+    <string name="ui_m0135" formatted="false">"Plugin manager"</string>
+    <string name="ui_m0137" formatted="false">"Plugin URL or npm package name"</string>
+    <string name="ui_m0138" formatted="false">"Search plugin names or descriptions"</string>
+    <string name="ui_m0139" formatted="false">"Collect startup failures, crashes and recent output. Downloaded logs are saved to Download/DSHA."</string>
+    <string name="ui_m0140" formatted="false">"Sensitive permissions"</string>
+    <string name="ui_m0141" formatted="false">"File sharing"</string>
+    <string name="ui_m0142" formatted="false">"New terminal"</string>
+    <string name="ui_m0143" formatted="false">"Display &amp; runtime"</string>
+    <string name="ui_m0144" formatted="false">"Regular conversations, plugins and DSHA notifications do not require ADB.\n\nADB lets the assistant run supported Android device commands, such as inspecting app and system status, reading limited logs and working with files in allowed directories. Every command must still pass DSHA's policy checks. Enabling ADB does not allow silent app installation or removal, system setting changes or firmware flashing.\n\nSMS queries require preauthorization in Settings → Device permissions or confirmation for each query. Screen taps and typing use the screen-control permission below.\n\nWireless pairing requires Android 11+ Wireless debugging and may be restricted by your device manufacturer. On older versions, use Shizuku where available or continue using features that do not require ADB."</string>
+    <string name="ui_m0145" formatted="false">"No terminals\nTap New to open a terminal"</string>
+    <string name="ui_m0146" formatted="false">"More"</string>
+    <string name="ui_m0147" formatted="false">"Update app &amp; runtime scripts"</string>
+    <string name="ui_m0148" formatted="false">"Update channel"</string>
+    <string name="ui_m0149" formatted="false">"Current pairing code"</string>
+    <string name="ui_m0150" formatted="false">"Changes on this page are saved immediately. Prepare offline dependencies before getting a fresh pairing code so it does not expire while you wait."</string>
+    <string name="ui_m0151" formatted="false">"From the system pairing dialog; get a new code if it expires."</string>
+    <string name="ui_m0152" formatted="false">"View crash logs"</string>
+    <string name="ui_m0153" formatted="false">"Check all six components and view each result. Repair missing components only as needed."</string>
+    <string name="ui_m0154" formatted="false">"Check logs"</string>
+    <string name="ui_m0155" formatted="false">"Check environment"</string>
+    <string name="ui_m0156" formatted="false">"Check results"</string>
+    <string name="ui_m0157" formatted="false">"Check the runtime environment, certificates and plugin status."</string>
+    <string name="ui_m0158" formatted="false">"Detect installed plugins"</string>
+    <string name="ui_m0159" formatted="false">"Detect plugins"</string>
+    <string name="ui_m0160" formatted="false">"Preparing the runtime environment"</string>
+    <string name="ui_m0161" formatted="false">"Browse, install and enable plugins"</string>
+    <string name="ui_m0162" formatted="false">"Browse directory"</string>
+    <string name="ui_m0163" formatted="false">"Uses precise location. Off by default."</string>
+    <string name="ui_m0164" formatted="false">"Clear"</string>
+    <string name="ui_m0165" formatted="false">"Clean up damaged sessions"</string>
+    <string name="ui_m0166" formatted="false">"Delete environment"</string>
+    <string name="ui_m0167" formatted="false">"Tap Verify connection below. Verify again after restarting your phone or turning Wireless debugging off and on."</string>
+    <string name="ui_m0168" formatted="false">"Release notes"</string>
+    <string name="ui_m0169" formatted="false">"Environment checks"</string>
+    <string name="ui_m0170" formatted="false">"Authorize and verify root"</string>
+    <string name="ui_m0171" formatted="false">"Read SMS"</string>
+    <string name="ui_m0172" formatted="false">"Stable / Preview update channels"</string>
+    <string name="ui_m0173" formatted="false">"Stable"</string>
+    <string name="ui_m0174" formatted="false">"Stable receives official releases only. Preview also includes test releases. The app selects the build for your device."</string>
+    <string name="ui_m0175" formatted="false">"Port"</string>
+    <string name="ui_m0176" formatted="false">"Wait for extraction"</string>
+    <string name="ui_m0177" formatted="false">"Simple"</string>
+    <string name="ui_m0178" formatted="false">"Simple terminal"</string>
+    <string name="ui_m0179" formatted="false">"Paste URL"</string>
+    <string name="ui_m0180" formatted="false">"Maintenance &amp; information"</string>
+    <string name="ui_m0181" formatted="false">"Auto-read pairing code"</string>
+    <string name="ui_m0182" formatted="false">"Add steps to reproduce. Do not include keys or private conversations."</string>
+    <string name="ui_m0183" formatted="false">"Keep the screen on during extraction and do not stop the app."</string>
+    <string name="ui_m0184" formatted="false">"Inspect plugin"</string>
+    <string name="ui_m0185" formatted="false">"Inspect URL"</string>
+    <string name="ui_m0186" formatted="false">"Use the desktop conversation layout for larger screens. Usually leave this off on phones. Save and reopen the conversation to apply."</string>
+    <string name="ui_m0187" formatted="false">"Device shell · Shizuku"</string>
+    <string name="ui_m0188" formatted="false">"Device command protection is always on"</string>
+    <string name="ui_m0189" formatted="false">"Device permissions &amp; ADB"</string>
+    <string name="ui_m0190" formatted="false">"Screen-control permissions"</string>
+    <string name="ui_m0191" formatted="false">"Battery settings"</string>
+    <string name="ui_m0192" formatted="false">"Diagnostics &amp; logs"</string>
+    <string name="ui_m0193" formatted="false">"Diagnostic report"</string>
+    <string name="ui_m0194" formatted="false">"Adjust the overlay background, opacity, line count, font size and display duration. Choose whether to show reasoning and command text."</string>
+    <string name="ui_m0195" formatted="false">"Enter the current pairing code"</string>
+    <string name="ui_m0196" formatted="false">"Runtime logs"</string>
+    <string name="ui_m0197" formatted="false">"Working directory name inside the runtime"</string>
+    <string name="ui_m0198" formatted="false">"Runtime scripts update with the APK. Open this page to check and download app releases."</string>
+    <string name="ui_m0199" formatted="false">"Runtime patches"</string>
+    <string name="ui_m0200" formatted="false">"Back"</string>
+    <string name="ui_m0201" formatted="false">"Go back"</string>
+    <string name="ui_m0202" formatted="false">"Back to Start: plugins / safe start"</string>
+    <string name="ui_m0203" formatted="false">"Run commands in Linux"</string>
+    <string name="ui_m0204" formatted="false">"Check the selected Stable or Preview channel in the background when the app opens. You decide whether to download an available update."</string>
+    <string name="ui_m0205" formatted="false">"Go to Developer options → Wireless debugging, turn it on, then choose Pair device with pairing code."</string>
+    <string name="ui_m0206" formatted="false">"Connect to this phone's Android system using Android 11+ Wireless debugging."</string>
+    <string name="ui_m0207" formatted="false">"Verify after pairing"</string>
+    <string name="ui_m0208" formatted="false">"Re-extract bundled environment"</string>
+    <string name="ui_m0209" formatted="false">"Run checks again"</string>
+    <string name="ui_m0210" formatted="false">"Reset and deletion require confirmation. Back up your data first."</string>
+    <string name="ui_m0211" formatted="false">"Reset settings, keep conversations"</string>
+    <string name="ui_m0212" formatted="false">"Retry"</string>
+    <string name="ui_m0213" formatted="false">"Error logs"</string>
+    <string name="ui_m0214" formatted="false">"Preview latest backup"</string>
+    <string name="ui_m0215" formatted="false">"Preview"</string>
+    <string name="ui_m0216" formatted="false">"Extracting the bundled environment for first use. Please wait…"</string>
+    <string name="ui_m0217" formatted="false">"Verify connection"</string>
+    <string name="ui_m0218" formatted="false">"＋ New"</string>
+</resources>

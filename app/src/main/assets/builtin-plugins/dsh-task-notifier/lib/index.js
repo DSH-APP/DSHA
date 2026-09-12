@@ -12,6 +12,7 @@
 
 /** 无额外依赖（监听 session/event 是 cordis 核心事件，任何插件可用） */
 export const inject = []
+export const name = 'dsh-task-notifier'
 
 /** 通知节流：同一 agent 30s 内只发一次（防连续 turn/end 轰炸） */
 const THROTTLE_MS = 30_000

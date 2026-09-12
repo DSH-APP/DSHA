@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/gap_control" android:background="@drawable/bg_card_clickable"
+    android:layout_marginBottom="@dimen/gap_control" android:background="@drawable/bg_polished_action"
     android:orientation="vertical" android:padding="@dimen/card_pad">
 
     <TextView android:id="@+id/pluginName" style="@style/DshaText.Body"
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:fontFamily="sans" android:breakStrategy="simple"
+        android:fontFamily="sans" android:breakStrategy="simple" android:textSize="17sp"
         android:textStyle="bold" />
     <TextView android:id="@+id/pluginDesc" style="@style/DshaText.Caption"
         android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -17,11 +17,11 @@
         <TextView android:id="@+id/pluginStatus" style="@style/DshaText.Caption"
             android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/gap_tight" />
-        <Switch android:id="@+id/pluginSwitch" android:layout_width="wrap_content"
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/pluginSwitch" android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:minHeight="48dp"
             android:showText="false" />
         <TextView android:id="@+id/pluginActions" style="@style/PluginAction"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/gap_tight" android:text="更多" />
+            android:layout_marginStart="@dimen/gap_tight" android:background="@drawable/bg_polished_action" android:text="@string/ui_m0146" />
     </LinearLayout>
 </LinearLayout>

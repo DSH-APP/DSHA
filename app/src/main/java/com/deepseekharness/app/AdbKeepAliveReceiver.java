@@ -53,7 +53,7 @@ public class AdbKeepAliveReceiver extends BroadcastReceiver {
                 return; // 用户关了通道：不再排下一次，闹钟自然消失
             }
             // 服务若已被回收，kickNow 内部会按开关重新拉起
-            DeviceBridgeService.kickNow(ctx, "Alarm 唤醒");
+            DeviceBridgeService.kickNow(ctx, com.deepseekharness.app.util.UiText.text("Alarm 唤醒"));
             schedule(ctx);
         } catch (Throwable ignored) {
         }

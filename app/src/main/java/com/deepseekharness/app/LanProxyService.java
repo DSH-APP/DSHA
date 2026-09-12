@@ -304,7 +304,7 @@ public final class LanProxyService {
                 run.server = ss;
                 run.bound = true;
             }
-            log("LAN 代理已启动：0.0.0.0:" + LAN_PORT + " -> 127.0.0.1:" + run.backendPort);
+            log(com.deepseekharness.app.util.UiText.text("LAN 代理已启动：0.0.0.0:") + LAN_PORT + " -> 127.0.0.1:" + run.backendPort);
             while (isActiveRun(run)) {
                 try {
                     Socket client = ss.accept();
@@ -321,11 +321,11 @@ public final class LanProxyService {
                         closeQuietly(client);
                     }
                 } catch (IOException e) {
-                    if (isActiveRun(run)) log("接收连接失败：" + e.getClass().getSimpleName());
+                    if (isActiveRun(run)) log(com.deepseekharness.app.util.UiText.text("接收连接失败：") + e.getClass().getSimpleName());
                 }
             }
         } catch (IOException e) {
-            if (isActiveRun(run)) log("LAN 代理绑定失败：" + e.getClass().getSimpleName());
+            if (isActiveRun(run)) log(com.deepseekharness.app.util.UiText.text("LAN 代理绑定失败：") + e.getClass().getSimpleName());
         } finally {
             synchronized (LanProxyService.class) {
                 closeQuietly(ss);
@@ -360,7 +360,7 @@ public final class LanProxyService {
         }
         if (run != null) {
             closeRunSockets(run);
-            log("LAN 代理已停止");
+            log(com.deepseekharness.app.util.UiText.text("LAN 代理已停止"));
         }
     }
 
@@ -388,7 +388,7 @@ public final class LanProxyService {
             }
         }
         if (run != null) closeRunSockets(run);
-        if (generation <= 0 || run != null) log("LAN 代理已停止");
+        if (generation <= 0 || run != null) log(com.deepseekharness.app.util.UiText.text("LAN 代理已停止"));
     }
 
     public static boolean isRunning() {
@@ -427,7 +427,7 @@ public final class LanProxyService {
 
     private static void handle(Socket client, ProxyRun run) {
         String ip = client.getInetAddress() == null ? "" : client.getInetAddress().getHostAddress();
-        if (shouldLogConn(ip)) log("连接来自 " + ip);
+        if (shouldLogConn(ip)) log(com.deepseekharness.app.util.UiText.text("连接来自 ") + ip);
         try (Socket c = client) {
             InputStream in = c.getInputStream();
             OutputStream out = c.getOutputStream();

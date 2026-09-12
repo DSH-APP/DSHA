@@ -1,0 +1,10 @@
+<resources>
+    <string name="dns_title">DNS resolution</string>
+    <string name="dns_auto">Automatic compatibility (recommended)</string>
+    <string name="dns_ipv4">IPv4 DNS compatibility</string>
+    <string name="dns_native">Native dual-stack resolution</string>
+    <string name="dns_hint">Automatic mode preserves IPv6 and retries IPv4 only when Node dual-stack DNS fails. IPv4 compatibility helps networks that reject AAAA queries, but cannot resolve IPv6-only domains. Save, then restart Web or open a new terminal.</string>
+    <string name="api_credentials">API credentials</string>
+    <string name="deepseek_api_key">DeepSeek API key</string>
+    <string name="ubuntu_rootfs">Ubuntu root filesystem</string>
+</resources>

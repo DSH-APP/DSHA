@@ -6,17 +6,17 @@
     <item
         android:id="@+id/nav_launch"
         android:icon="@drawable/ic_launch"
-        android:title="启动" />
+        android:title="@string/ui_m0005" />
     <item
         android:id="@+id/nav_plugins"
         android:icon="@drawable/ic_plugins"
-        android:title="插件" />
+        android:title="@string/ui_m0016" />
     <item
         android:id="@+id/nav_settings"
         android:icon="@drawable/ic_settings"
-        android:title="设置" />
+        android:title="@string/ui_m0023" />
     <item
         android:id="@+id/nav_terminal"
         android:icon="@drawable/ic_terminal"
-        android:title="终端" />
+        android:title="@string/ui_m0021" />
 </menu>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# DSHA_ADB_SCRIPT_VERSION=16
+# DSHA_ADB_SCRIPT_VERSION=17
 """设备 shell：原生白名单判定、有限时连接、发送后不重放、真实远端退出码。
 
 用法：adb-shell.py [--host 本机IP] [--port 端口] [--timeout 秒] [--su] 命令
@@ -338,7 +338,7 @@ def request_device_plan(cmd, use_su=False):
         query = urllib.parse.urlencode({'cmd': cmd, 'su': '1' if use_su else '0'})
         request = urllib.request.Request('http://127.0.0.1:3090/device/plan?' + query, headers={'X-Token': token})
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        with opener.open(request, timeout=15) as response:
+        with opener.open(request, timeout=75) as response:
             value = json.loads(response.read(1024 * 1024)).get('result')
         if not isinstance(value, str) or not value.startswith('{'):
             raise policy.Blocked(str(value or '原生策略未就绪'))
@@ -384,6 +384,39 @@ def parse_args(args):
     return port, host, timeout, connect_timeout, use_su, (args[0] if len(args) == 1 else shlex.join(args)) if args else 'id'
 
 
+def request_native_execution(cmd, use_su=False, force_adb=False):
+    """原生层先选 root/Shizuku；仅收到明确的 ADB 计划才连接，不重放未知结果。"""
+    import urllib.request
+    import urllib.parse
+    try:
+        with open('/root/.dsh/.bridge_token') as source:
+            token = source.read().strip()
+        if not token:
+            raise ValueError('missing token')
+    except (OSError, ValueError) as error:
+        raise policy.Blocked('设备桥未准备好，请打开 DSHA 后重试') from error
+    query = urllib.parse.urlencode({'cmd': cmd, 'su': '1' if use_su else '0', 'adb': '1' if force_adb else '0'})
+    request = urllib.request.Request('http://127.0.0.1:3090/device/execute?' + query, headers={'X-Token': token})
+    try:
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(request, timeout=155) as response:
+            envelope = json.loads(response.read(1024 * 1024))
+        value = json.loads(envelope['result'])
+        if value.get('state') == 'completed':
+            code = value.get('exit')
+            if not isinstance(code, int) or not 0 <= code <= 255 or not isinstance(value.get('output'), str):
+                raise ValueError('invalid execution result')
+            return ShellResult(value['output'], code)
+        plan = value.get('plan')
+        if value.get('state') != 'adb' or not isinstance(plan, dict) or plan.get('version') != 1:
+            raise ValueError('missing explicit ADB plan')
+        if plan.get('kind') not in ('READ', 'FILE', 'STOP'):
+            raise ValueError('invalid ADB plan')
+        return plan
+    except Exception as error:
+        raise ExecutionUnknown('设备桥响应不完整，命令可能已执行，不会切换通道重试（' + type(error).__name__ + '）') from error
+
+
 def main():
     try:
         port, host, timeout, connect_timeout, use_su, cmd = parse_args(sys.argv[1:])
@@ -391,12 +424,18 @@ def main():
         print('INVALID_ARGUMENT: %s\n[EXIT=2]' % e)
         return 2
     try:
-        plan = request_device_plan(cmd, use_su)
+        plan = request_native_execution(cmd, use_su, bool(port or host))
     except policy.Blocked as error:
         print('[POLICY_BLOCKED] %s\n[EXIT=126]' % error)
         return 126
+    except ExecutionUnknown as error:
+        print('EXECUTION_UNKNOWN: %s\n[EXIT=125]' % error)
+        return 125
+    if isinstance(plan, ShellResult):
+        print(plan.output)
+        return plan.exit_code
     if not (os.path.isfile(KEY) and os.path.isfile(KEYPUB)):
-        print('NO_KEY: 请到配置页完成 ADB 无线配对\n[EXIT=1]')
+        print('NO_KEY: 请到设置 → 设备能力授权完成 ADB 无线配对\n[EXIT=1]')
         return 1
     try:
         from adb_shell_wifi.adb_device import AdbDeviceTls

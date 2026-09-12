@@ -1,6 +1,6 @@
 package com.deepseekharness.app.ui;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -39,8 +39,9 @@ public class SettingsFragment extends Fragment {
 
     private static final TabOption[] TAB_OPTIONS = {
             new TabOption("安装", "安装与修复运行环境", InstallFragment::new),
-            new TabOption("配置", "接口、行为与权限", ConfigFragment::new),
+            new TabOption("配置", "接口、显示与运行", ConfigFragment::new),
             new TabOption("数据与备份", "备份恢复 · 文件共享", WorkspaceFragment::new),
+            new TabOption("设备能力授权", "Root · Shizuku · ADB · 权限", DeviceGrantsFragment::new),
     };
 
     @Nullable
@@ -51,26 +52,21 @@ public class SettingsFragment extends Fragment {
 
         LinearLayout tabs = v.findViewById(R.id.settings_tabs);
         for (int i = 0; i < TAB_OPTIONS.length; i++) {
-            if (i > 0) {
-                View divider = new View(requireContext());
-                divider.setLayoutParams(new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, 1));
-                divider.setBackgroundColor(requireContext().getColor(R.color.line));
-                tabs.addView(divider);
-            }
-            tabs.addView(buildRow(i));
+            LinearLayout.LayoutParams spacing = new LinearLayout.LayoutParams(-1, -2);
+            if (i > 0) spacing.topMargin = dp(10);
+            tabs.addView(buildRow(i), spacing);
         }
         LinearLayout power = v.findViewById(R.id.settings_power);
         com.google.android.material.materialswitch.MaterialSwitch eco = new com.google.android.material.materialswitch.MaterialSwitch(requireContext());
-        eco.setText("省电模式"); eco.setTextSize(15); eco.setMinHeight(dp(48)); eco.setPadding(dp(16),dp(8),dp(16),dp(4));
+        eco.setText(com.deepseekharness.app.util.UiText.text("省电模式")); eco.setTextSize(15); eco.setMinHeight(dp(48)); eco.setPadding(dp(16),dp(8),dp(16),dp(4));
         com.deepseekharness.app.core.ConfigStore config = HarnessController.get(requireContext()).config();
         eco.setChecked(config.isEcoMode()); power.addView(eco);
         TextView powerHint = new TextView(requireContext());
         powerHint.setTextSize(13); powerHint.setTextColor(requireContext().getColor(R.color.text_muted));
         powerHint.setPadding(dp(16),0,dp(16),dp(12)); power.addView(powerHint);
         java.util.function.Consumer<Boolean> describe = enabled -> powerHint.setText(enabled
-                ? "熄屏空闲 1 分钟后减少保活；有任务时继续运行。"
-                : "持续保持运行，适合长时间任务。");
+                ? com.deepseekharness.app.util.UiText.text("熄屏空闲 1 分钟后减少保活；有任务时继续运行。")
+                : com.deepseekharness.app.util.UiText.text("持续保持运行，适合长时间任务。"));
         describe.accept(config.isEcoMode());
         eco.setOnCheckedChangeListener((button, checked) -> {
             config.setEcoMode(checked); com.deepseekharness.app.HarnessService.refreshPowerMode(); describe.accept(checked);
@@ -83,14 +79,29 @@ public class SettingsFragment extends Fragment {
         } catch (Exception ignored) {
         }
         TextView ver = v.findViewById(R.id.settings_ver);
-        ver.setText("DSHA v" + version + " · MIT License");
+        ver.setText(com.deepseekharness.app.util.UiText.text("DSHA v" + version + com.deepseekharness.app.util.UiText.choose(" · MIT 许可", " · MIT License")));
         TextView updateSub = v.findViewById(R.id.settings_update_sub);
-        updateSub.setText("稳定版与预览版更新");
+        updateSub.setText(com.deepseekharness.app.util.UiText.text("稳定版与预览版更新"));
 
         v.findViewById(R.id.settings_about).setOnClickListener(x -> AboutDialog.show(requireContext()));
         v.findViewById(R.id.settings_update).setOnClickListener(x -> checkUpdate());
         v.findViewById(R.id.settings_selftest).setOnClickListener(x -> runSelftest());
         v.findViewById(R.id.settings_reextract).setOnClickListener(x -> confirmReextract());
+
+        TextView language=new TextView(requireContext());
+        language.setText(com.deepseekharness.app.util.UiText.choose("语言 · 简体中文", "Language · English"));
+        language.setTextColor(requireContext().getColor(R.color.text));language.setTextSize(15);
+        language.setGravity(Gravity.CENTER);language.setIncludeFontPadding(false);
+        language.setFocusable(true);
+        language.setPadding(dp(16),dp(14),dp(16),dp(14));language.setMinHeight(dp(56));
+        language.setBackgroundResource(R.drawable.bg_polished_action);language.setId(R.id.settings_language);
+        LinearLayout.LayoutParams languageLayout=new LinearLayout.LayoutParams(-1,-2);languageLayout.topMargin=dp(10);
+        tabs.addView(language,languageLayout);
+        language.setOnClickListener(x->new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
+            .setTitle(com.deepseekharness.app.util.UiText.choose("界面语言", "Interface language"))
+            .setSingleChoiceItems(new String[]{com.deepseekharness.app.util.UiText.choose("简体中文", "Simplified Chinese"),"English"},
+                "en".equals(config.getUiLanguage())?1:0,(dialog,which)->{dialog.dismiss();LanguageController.select(requireContext(),which==1?"en":"zh");})
+            .setNegativeButton(com.deepseekharness.app.util.UiText.choose("取消", "Cancel"),null).show());
 
         return v;
     }
@@ -98,31 +109,31 @@ public class SettingsFragment extends Fragment {
     private void confirmReextract() {
         com.deepseekharness.app.core.BackupTask task = com.deepseekharness.app.core.BackupTask.get(requireContext());
         if (task.busy()) {
-            Toast.makeText(requireContext(), "已有数据任务进行中，可到数据与备份页查看。", Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(), com.deepseekharness.app.util.UiText.text("已有数据任务进行中，可到数据与备份页查看。"), Toast.LENGTH_LONG).show();
             return;
         }
         boolean recovery = task.pendingMaintenance();
-        new AlertDialog.Builder(requireContext())
-                .setTitle(recovery ? "恢复中断维护" : "备份并重建内置环境")
-                .setMessage(recovery ? "先停止 Web，再回切原环境；安全备份和失败的新环境均保留。"
-                        : "先停止 Web 并等待退出（会中断正在执行的任务），完整备份并校验配置、会话与本地插件，再解压并恢复。\n\n"
-                        + "备份失败不会切换环境；解压或恢复失败会回切。旧环境和安全备份留在私有目录，需要额外空间。\n"
-                        + "原生配置和 API Key 保持原位；额外安装的系统软件留在旧环境中。")
-                .setPositiveButton(recovery ? "恢复原环境" : "备份并重建", (d, w) -> {
+        new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
+                .setTitle(recovery ? com.deepseekharness.app.util.UiText.text("恢复中断维护") : com.deepseekharness.app.util.UiText.text("备份并重建内置环境"))
+                .setMessage(recovery ? com.deepseekharness.app.util.UiText.text("先停止 Web，再回切原环境；安全备份和失败的新环境均保留。")
+                        : com.deepseekharness.app.util.UiText.text("先停止 Web 并等待退出（会中断正在执行的任务），完整备份并校验配置、会话与本地插件，再解压并恢复。\n\n")
+                        + com.deepseekharness.app.util.UiText.text("备份失败不会切换环境；解压或恢复失败会回切。旧环境和安全备份留在私有目录，需要额外空间。\n")
+                        + com.deepseekharness.app.util.UiText.text("原生配置和 API Key 保持原位；额外安装的系统软件留在旧环境中。"))
+                .setPositiveButton(recovery ? com.deepseekharness.app.util.UiText.text("恢复原环境") : com.deepseekharness.app.util.UiText.text("备份并重建"), (d, w) -> {
                     try {
                         if (!(recovery ? task.recoverMaintenance() : task.rebuild())) {
-                            Toast.makeText(requireContext(), "已有任务或未完成维护，请到数据与备份页查看。", Toast.LENGTH_LONG).show();
+                            Toast.makeText(requireContext(), com.deepseekharness.app.util.UiText.text("已有任务或未完成维护，请到数据与备份页查看。"), Toast.LENGTH_LONG).show();
                             return;
                         }
                         Intent i = new Intent(requireContext(), ExtractActivity.class);
                         i.putExtra("data_task_id", task.snapshot().id);
                         startActivity(i);
                     } catch (Throwable t) {
-                        Toast.makeText(requireContext(), "打不开解压页：" + t.getMessage(),
+                        Toast.makeText(requireContext(), com.deepseekharness.app.util.UiText.text("打不开解压页：") + t.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
                 })
-                .setNegativeButton("算了", null)
+                .setNegativeButton(com.deepseekharness.app.util.UiText.text("算了"), null)
                 .show();
     }
 
@@ -157,7 +168,7 @@ public class SettingsFragment extends Fragment {
         TypedValue tv = new TypedValue();
         requireContext().getTheme().resolveAttribute(
                 android.R.attr.selectableItemBackground, tv, true);
-        row.setBackgroundResource(tv.resourceId);
+        row.setBackgroundResource(R.drawable.bg_polished_action);
 
         LinearLayout body = new LinearLayout(requireContext());
         body.setOrientation(LinearLayout.VERTICAL);
@@ -165,13 +176,13 @@ public class SettingsFragment extends Fragment {
         bodyParams.leftMargin = dp(12); bodyParams.rightMargin = dp(8); body.setLayoutParams(bodyParams);
 
         TextView title = new TextView(requireContext());
-        title.setText(opt.title);
-        title.setTextSize(15);
+        title.setText(com.deepseekharness.app.util.UiText.text(opt.title));
+        title.setTextSize(16);
         title.setTextColor(requireContext().getColor(R.color.text));
         title.setTypeface(title.getTypeface(), android.graphics.Typeface.BOLD);
 
         TextView sub = new TextView(requireContext());
-        sub.setText(opt.sub);
+        sub.setText(com.deepseekharness.app.util.UiText.text(opt.sub));
         sub.setTextSize(13);
         sub.setTextColor(requireContext().getColor(R.color.text_muted));
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
@@ -183,19 +194,20 @@ public class SettingsFragment extends Fragment {
         body.addView(sub);
 
         TextView chev = new TextView(requireContext());
-        chev.setText("›");
+        chev.setText(com.deepseekharness.app.util.UiText.text("›"));
         chev.setTextSize(18);
         chev.setTextColor(requireContext().getColor(R.color.text_muted));
 
         android.widget.ImageView icon = new android.widget.ImageView(requireContext());
-        icon.setImageResource(index == 0 ? R.drawable.ic_terminal : index == 1 ? R.drawable.ic_settings : R.drawable.ic_plugins);
-        icon.setImageTintList(android.content.res.ColorStateList.valueOf(requireContext().getColor(R.color.text_secondary)));
-        icon.setBackgroundResource(R.drawable.bg_chip); icon.setPadding(dp(7),dp(7),dp(7),dp(7));
+        icon.setImageResource(index == 0 ? R.drawable.ic_terminal : index == 1 ? R.drawable.ic_settings
+                : index == 2 ? R.drawable.ic_plugins : R.drawable.ic_ui_shield);
+        icon.setImageTintList(android.content.res.ColorStateList.valueOf(requireContext().getColor(R.color.primary)));
+        icon.setBackgroundResource(R.drawable.bg_logo); icon.setPadding(dp(10),dp(10),dp(10),dp(10));
         icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        row.addView(icon,new LinearLayout.LayoutParams(dp(32),dp(32)));
+        row.addView(icon,new LinearLayout.LayoutParams(dp(40),dp(40)));
         row.addView(body);
         row.addView(chev);
-        row.setOnClickListener(v -> getParentFragmentManager().beginTransaction()
+        row.setOnClickListener(v -> UiMotion.page(requireContext(), getParentFragmentManager().beginTransaction())
                 .replace(R.id.fragment_container, opt.factory.get())
                 .addToBackStack("settings")
                 .commit());

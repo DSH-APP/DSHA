@@ -46,6 +46,23 @@ public final class WebRegressionAudit extends Instrumentation {
             activity=waitForMonitorWithTimeout(monitor,15000);
             check(activity!=null,"浏览器页面 15 秒内未打开");
         } finally {removeMonitor(monitor);}
+        if ("upload".equals(arguments.getString("mode"))) {
+            // 独立传输夹具不使用用户 Web 鉴权；只在测试中直接建立真实 Activity 的浏览器。
+            Activity target = activity;
+            runOnMainSync(() -> {
+                try {
+                    ((PreviewAuth) field(target, "previewAuth")).cancel();
+                    for (String name : new String[]{"authUrl", "baseUrl"}) {
+                        var value = target.getClass().getDeclaredField(name); value.setAccessible(true); value.set(target, server.base);
+                    }
+                    if (type.endsWith("WebPreviewActivity")) {
+                        var method = target.getClass().getDeclaredMethod("createWebView", boolean.class); method.setAccessible(true); method.invoke(target, false);
+                    } else {
+                        var method = target.getClass().getDeclaredMethod("load"); method.setAccessible(true); method.invoke(target);
+                    }
+                } catch (Exception error) { throw new RuntimeException(error); }
+            });
+        }
         until(()->server.reports.containsKey("loaded"),30000,"独立网页未加载");
         return activity;
     }
@@ -72,6 +89,7 @@ public final class WebRegressionAudit extends Instrumentation {
             shell("input keyevent 224");shell("wm dismiss-keyguard");shell("am start -W -n com.dsh.client/com.deepseekharness.app.ui.MainActivity");
             server=new Fixture();
             page=open(type);
+            if("upload".equals(arguments.getString("mode"))){testUpload();result.putString("result","PASS upload "+type);return;}
             command("seed","seeded");
             Object engine=field(page,type.endsWith("WebPreviewActivity")?"webView":"session");
             ActivityMonitor monitor=addMonitor(type,null,false);
@@ -124,8 +142,8 @@ public final class WebRegressionAudit extends Instrumentation {
             if(page!=null)runOnMainSync(()->page.finish());
             if(downloader!=null)runOnMainSync(()->{downloader.cancel();downloader.discard();});
             if(server!=null)server.close();
+            finish(result.containsKey("failure")?1:0,result);
         }
-        finish(result.containsKey("failure")?1:0,result);
     }
     private void testUpload() throws Exception {
         String image="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jfZkAAAAASUVORK5CYII=";
@@ -135,7 +153,11 @@ public final class WebRegressionAudit extends Instrumentation {
         Uri uri=androidx.core.content.FileProvider.getUriForFile(getTargetContext(),getTargetContext().getPackageName()+".updates",file);
         IntentFilter filter=new IntentFilter();filter.addAction(Intent.ACTION_GET_CONTENT);filter.addAction(Intent.ACTION_OPEN_DOCUMENT);
         filter.addCategory(Intent.CATEGORY_OPENABLE);filter.addDataType("*/*");
-        ActivityMonitor chooser=addMonitor(filter,new ActivityResult(Activity.RESULT_OK,new Intent().setData(uri)),true);
+        File second=new File(folder,"web-owned-second-"+UUID.randomUUID()+".png");
+        try(FileOutputStream out=new FileOutputStream(second)){out.write(new byte[]{1,2,3,4});}
+        Uri uri2=androidx.core.content.FileProvider.getUriForFile(getTargetContext(),getTargetContext().getPackageName()+".updates",second);
+        Intent selection=new Intent(); android.content.ClipData clips=android.content.ClipData.newRawUri("files",uri);clips.addItem(new android.content.ClipData.Item(uri2));selection.setClipData(clips);
+        ActivityMonitor chooser=addMonitor(filter,new ActivityResult(Activity.RESULT_OK,selection),true);
         try {
             org.json.JSONObject position=new org.json.JSONObject(command("upload","uploadReady"));
             android.view.View container=(android.view.View)field(page,"container");int[] origin=new int[2];runOnMainSync(()->container.getLocationOnScreen(origin));
@@ -148,14 +170,24 @@ public final class WebRegressionAudit extends Instrumentation {
             down.setSource(android.view.InputDevice.SOURCE_TOUCHSCREEN);up.setSource(android.view.InputDevice.SOURCE_TOUCHSCREEN);
             try {getUiAutomation().injectInputEvent(down,true);getUiAutomation().injectInputEvent(up,true);}finally{down.recycle();up.recycle();}
             until(()->server.reports.containsKey("uploaded"),12000,"文件选择未完成 / monitor="+chooser.getHits());
-            check(server.reports.get("uploaded").equals(image),"网页文件选择回传的字节不同");
+            org.json.JSONArray uploaded=new org.json.JSONArray(server.reports.get("uploaded"));
+            check(uploaded.length()==2,"多选没有返回两个文件："+uploaded);
+            check(uploaded.getJSONObject(0).getString("bytes").equals(image)&&uploaded.getJSONObject(1).getString("bytes").equals("AQIDBA=="),"多选字节或顺序不符");
+            check(uploaded.getJSONObject(0).getString("name").equals(file.getName())&&uploaded.getJSONObject(1).getString("name").equals(second.getName()),"文件名丢失");
+            check(WebUploads.parseChooserResult(Activity.RESULT_OK,new Intent().setData(uri)).length==1,"单选失败");
+            check(WebUploads.parseChooserResult(Activity.RESULT_CANCELED,selection)==null,"取消必须回传空结果");
+            check(WebUploads.parseChooserResult(Activity.RESULT_OK,null)==null,"空结果未处理");
+            clips.addItem(new android.content.ClipData.Item(uri));
+            check(WebUploads.parseChooserResult(Activity.RESULT_OK,selection).length==2,"重复项未去重");
+            clips.addItem(new android.content.ClipData.Item(Uri.parse("file:///private/rejected")));
+            check(WebUploads.parseChooserResult(Activity.RESULT_OK,selection)==null,"混合非法来源未拒绝");
             check(chooser.getHits()>0,"未经过浏览器原生文件选择回调");
             check(WebUploads.fallback(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("image/*").putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true))
                     .getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE,false),"备用选择器丢失多选请求");
             try { WebUploads.copy(getTargetContext(),Collections.nCopies(21,uri));throw new AssertionError("超过 20 个上传文件未拒绝"); }catch(IOException expected){}
             try { WebUploads.copy(getTargetContext(),List.of(Uri.parse("file:///invalid/private")));throw new AssertionError("非授权本地路径未拒绝"); }catch(IOException expected){}
             phase("文件上传通过：真实内核选择回调、内容 URI 复制、PNG 字节回读、多选上限与路径限制");
-        } finally {removeMonitor(chooser);file.delete();}
+        } finally {removeMonitor(chooser);file.delete();second.delete();}
     }
     private void testDownloads() throws Exception {
         runOnMainSync(()->downloader=new WebDownloadModel((Application)getTargetContext().getApplicationContext()));

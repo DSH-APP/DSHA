@@ -1,5 +1,6 @@
 import { installResponseCompression } from './compress.js';
 import { deleteSession } from './delete-session.js';
+export const name = 'dsh-web-mobile';
 /** Drain a request body as UTF-8 text. */
 function readBody(req) {
     return new Promise((resolve, reject) => {
@@ -51,6 +52,7 @@ export function apply(ctx) {
                 let body;
                 try {
                     body = JSON.parse(await readBody(req));
+                    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('请求正文必须是对象');
                 }
                 catch {
                     respond(res, 400, {

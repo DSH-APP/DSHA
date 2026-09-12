@@ -28,7 +28,7 @@ public class BootReceiver extends BroadcastReceiver {
             }
             // 用户没开 ADB 就不拉起（尊重开关）
             if (!DeviceBridgeService.isAdbEnabled(context)) return;
-            android.util.Log.i("DSHA-ADB", "开机/升级自启：尝试自动开启无线调试 + 拉起设备桥");
+            android.util.Log.i("DSHA-ADB", com.deepseekharness.app.util.UiText.text("开机/升级自启：尝试自动开启无线调试 + 拉起设备桥"));
 
             // 关键（thedjchi/Shizuku 机制）：有 WRITE_SECURE_SETTINGS 权限 → 直接开无线调试
             boolean hasSecure = false;
@@ -42,14 +42,14 @@ public class BootReceiver extends BroadcastReceiver {
                     int cur = Settings.Global.getInt(context.getContentResolver(), "adb_wifi_enabled", 0);
                     if (cur != 1) {
                         Settings.Global.putInt(context.getContentResolver(), "adb_wifi_enabled", 1);
-                        android.util.Log.i("DSHA-ADB", "已自动开启无线调试（WRITE_SECURE_SETTINGS）");
+                        android.util.Log.i("DSHA-ADB", com.deepseekharness.app.util.UiText.text("已自动开启无线调试（WRITE_SECURE_SETTINGS）"));
                     }
                 } catch (Throwable e) {
-                    android.util.Log.w("DSHA-ADB", "自动开无线调试失败: "
+                    android.util.Log.w("DSHA-ADB", com.deepseekharness.app.util.UiText.text("自动开无线调试失败: ")
                             + SensitiveData.redact(String.valueOf(e)));
                 }
             } else {
-                android.util.Log.i("DSHA-ADB", "无 WRITE_SECURE_SETTINGS 权限，靠 Shizuku/看门狗兜底");
+                android.util.Log.i("DSHA-ADB", com.deepseekharness.app.util.UiText.text("无 WRITE_SECURE_SETTINGS 权限，靠 Shizuku/看门狗兜底"));
             }
 
             // 拉起设备桥（看门狗会自动发现端口重连）

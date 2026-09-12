@@ -65,7 +65,7 @@ public class DeviceBridgeService extends Service {
         if (!isAdbEnabled(ctx)) return false;
         if (!com.deepseekharness.app.bridge.LocalNetworkAccess.granted(ctx)) {
             adbState = "permission_required";
-            adbDetail = "ADB 等待局域网授权：请到配置页保存并授权";
+            adbDetail = com.deepseekharness.app.util.UiText.text("ADB 等待局域网授权：请到设备能力授权页开启并授权");
             return false;
         }
         if (current != null) return true;
@@ -79,11 +79,11 @@ public class DeviceBridgeService extends Service {
             return true;
         } catch (IllegalStateException e) {
             // Android 12+ 后台启动限制也属于此类；等用户回到前台再恢复。
-            adbState = "ADB 保活待恢复：请回到 DSHA";
-            Log.w("DSHA", "后台暂不能启动 ADB 保活: " + e.getClass().getSimpleName());
+            adbState = com.deepseekharness.app.util.UiText.text("ADB 保活待恢复：请回到 DSHA");
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("后台暂不能启动 ADB 保活: ") + e.getClass().getSimpleName());
         } catch (RuntimeException e) {
-            adbState = "ADB 保活启动失败：请在配置页重试";
-            Log.w("DSHA", "ADB 保活启动失败: " + e.getClass().getSimpleName());
+            adbState = com.deepseekharness.app.util.UiText.text("ADB 保活启动失败：请在设备能力授权页重试");
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("ADB 保活启动失败: ") + e.getClass().getSimpleName());
         }
         return false;
     }
@@ -102,12 +102,12 @@ public class DeviceBridgeService extends Service {
         }
     }
 
-    /** 配对页的验证结果与配置页使用同一状态命名。 */
+    /** 配对页的验证结果与设备能力授权页使用同一状态命名。 */
     public static void recordPairResult(Context ctx, AdbResult.PairState result, String output) {
         adbState = result == AdbResult.PairState.CONNECTED ? "connected"
                 : result == AdbResult.PairState.PAIRED ? "reconnecting" : "need_manual";
-        adbDetail = result == AdbResult.PairState.CONNECTED ? "配对页已验证设备连接"
-                : result == AdbResult.PairState.PAIRED ? "配对完成，等待连接验证" : "配对或连接验证未完成，请查看配对页详情";
+        adbDetail = result == AdbResult.PairState.CONNECTED ? com.deepseekharness.app.util.UiText.text("配对页已验证设备连接")
+                : result == AdbResult.PairState.PAIRED ? com.deepseekharness.app.util.UiText.text("配对完成，等待连接验证") : com.deepseekharness.app.util.UiText.text("配对或连接验证未完成，请查看配对页详情");
         DeviceBridgeService svc = current;
         if (svc != null && result == AdbResult.PairState.CONNECTED) {
             svc.lastFullVerifyAt = System.currentTimeMillis();
@@ -124,11 +124,11 @@ public class DeviceBridgeService extends Service {
         createChannel();
         try {
             if (android.os.Build.VERSION.SDK_INT >= 34)
-                startForeground(WATCH_NOTIF_ID, buildNotification("ADB 通道保活中"),
+                startForeground(WATCH_NOTIF_ID, buildNotification(com.deepseekharness.app.util.UiText.text("ADB 通道保活中")),
                         android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
-            else startForeground(WATCH_NOTIF_ID, buildNotification("ADB 通道保活中"));
+            else startForeground(WATCH_NOTIF_ID, buildNotification(com.deepseekharness.app.util.UiText.text("ADB 通道保活中")));
         } catch (RuntimeException error) {
-            adbState = "ADB 保活未获系统允许，请回到 DSHA 重试";
+            adbState = com.deepseekharness.app.util.UiText.text("ADB 保活未获系统允许，请回到 DSHA 重试");
             stopSelf();
             return;
         }
@@ -137,12 +137,12 @@ public class DeviceBridgeService extends Service {
         try {
             new HttpShellService(this).start();
         } catch (Throwable e) {
-            Log.w("DSHA", "3090 桥启动失败: " + SensitiveData.redact(String.valueOf(e)));
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("3090 桥启动失败: ") + SensitiveData.redact(String.valueOf(e)));
         }
         try {
             ShizukuShell.ensureBound(this);
         } catch (Throwable e) {
-            Log.w("DSHA", "Shizuku 绑定失败: " + SensitiveData.redact(String.valueOf(e)));
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("Shizuku 绑定失败: ") + SensitiveData.redact(String.valueOf(e)));
         }
         startKeepAlive();
     }
@@ -158,7 +158,7 @@ public class DeviceBridgeService extends Service {
         if (probeThread != null) probeThread.interrupt();
         current = null;
         adbState = "disabled";
-        adbDetail = "ADB 保活已停止";
+        adbDetail = com.deepseekharness.app.util.UiText.text("ADB 保活已停止");
         watchHandler.removeCallbacksAndMessages(null);
         try {
             if (netCallback != null) {
@@ -187,7 +187,7 @@ public class DeviceBridgeService extends Service {
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm == null) return;
             nm.createNotificationChannel(new NotificationChannel(
-                    CHANNEL_ADB, "ADB 设备通道", NotificationManager.IMPORTANCE_LOW));
+                    CHANNEL_ADB, com.deepseekharness.app.util.UiText.text("ADB 设备通道"), NotificationManager.IMPORTANCE_LOW));
         } catch (Throwable ignored) {
         }
     }
@@ -216,12 +216,12 @@ public class DeviceBridgeService extends Service {
             netCallback = new android.net.ConnectivityManager.NetworkCallback() {
                 @Override
                 public void onAvailable(android.net.Network network) {
-                    kick("网络恢复");
+                    kick(com.deepseekharness.app.util.UiText.text("网络恢复"));
                 }
 
                 @Override
                 public void onLost(android.net.Network network) {
-                    setAdbState("network_lost", "网络断开，等待恢复");
+                    setAdbState("network_lost", com.deepseekharness.app.util.UiText.text("网络断开，等待恢复"));
                 }
             };
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
@@ -234,7 +234,7 @@ public class DeviceBridgeService extends Service {
                                 .build(), netCallback);
             }
         } catch (Throwable e) {
-            Log.w("DSHA-ADB", "网络监听注册失败: " + SensitiveData.redact(String.valueOf(e)));
+            Log.w("DSHA-ADB", com.deepseekharness.app.util.UiText.text("网络监听注册失败: ") + SensitiveData.redact(String.valueOf(e)));
         }
     }
 
@@ -244,7 +244,7 @@ public class DeviceBridgeService extends Service {
             screenReceiver = new android.content.BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    kick("屏幕点亮/解锁");
+                    kick(com.deepseekharness.app.util.UiText.text("屏幕点亮/解锁"));
                 }
             };
             android.content.IntentFilter f = new android.content.IntentFilter();
@@ -252,7 +252,7 @@ public class DeviceBridgeService extends Service {
             f.addAction(Intent.ACTION_SCREEN_ON);
             registerReceiver(screenReceiver, f);
         } catch (Throwable e) {
-            Log.w("DSHA-ADB", "屏幕广播注册失败: " + SensitiveData.redact(String.valueOf(e)));
+            Log.w("DSHA-ADB", com.deepseekharness.app.util.UiText.text("屏幕广播注册失败: ") + SensitiveData.redact(String.valueOf(e)));
         }
     }
 
@@ -260,7 +260,7 @@ public class DeviceBridgeService extends Service {
         @Override
         public void run() {
             if (!running || !isAdbEnabled(DeviceBridgeService.this)) return;
-            probeAsync("周期");
+            probeAsync(com.deepseekharness.app.util.UiText.text("周期"));
             watchHandler.postDelayed(this, nextDelayMs());
         }
     };
@@ -283,15 +283,15 @@ public class DeviceBridgeService extends Service {
         if (!probing.compareAndSet(false, true)) return;
         probeThread = new Thread(() -> {
             try {
-                AdbBridge.runEnvironmentTask(this, "ADB 后台准备与探活", () -> {
+                AdbBridge.runEnvironmentTask(this, com.deepseekharness.app.util.UiText.text("ADB 后台准备与探活"), () -> {
                     runProbe(reason);
                     return null;
                 });
             } catch (AdbEnvironmentTask.Busy e) {
                 setAdbState("environment_busy", e.getMessage());
             } catch (Throwable e) {
-                Log.w("DSHA-ADB", "保活探测异常: " + SensitiveData.redact(String.valueOf(e)));
-                setAdbState("need_manual", "保活探测未完成：" + SensitiveData.redact(String.valueOf(e)));
+                Log.w("DSHA-ADB", com.deepseekharness.app.util.UiText.text("保活探测异常: ") + SensitiveData.redact(String.valueOf(e)));
+                setAdbState("need_manual", com.deepseekharness.app.util.UiText.text("保活探测未完成：") + SensitiveData.redact(String.valueOf(e)));
             } finally {
                 probing.set(false);
             }
@@ -307,18 +307,18 @@ public class DeviceBridgeService extends Service {
             if (!HttpShellService.isReady()) {
                 new HttpShellService(this).start();
                 if (!HttpShellService.isStarting() && !HttpShellService.bindError().isEmpty())
-                    Log.w("DSHA-ADB", "设备确认桥未就绪：" + HttpShellService.bindError());
+                    Log.w("DSHA-ADB", com.deepseekharness.app.util.UiText.text("设备确认桥未就绪：") + HttpShellService.bindError());
             }
         } catch (Throwable ignored) {
         }
         HarnessController c = new HarnessController(this);
         ProotBootstrap proot = c.proot();
         if (!proot.isEnvironmentReady()) {
-            setAdbState("no_env", "环境未就绪");
+            setAdbState("no_env", com.deepseekharness.app.util.UiText.text("环境未就绪"));
             return;
         }
         if (!AdbBridge.injected(proot)) {
-            setAdbState("installing", "正在更新 ADB 脚本与授权设置");
+            setAdbState("installing", com.deepseekharness.app.util.UiText.text("正在更新 ADB 脚本与授权设置"));
             String prepared = AdbBridge.ensureReady(this, proot);
             if (AdbResult.marker(prepared, "ENVIRONMENT_BUSY")) {
                 setAdbState("environment_busy", prepared);
@@ -326,7 +326,7 @@ public class DeviceBridgeService extends Service {
             }
             if (!AdbResult.marker(prepared, "SETUP_DONE")) {
                 consecutiveFailures++;
-                setAdbState("need_manual", "ADB 准备失败：" + SensitiveData.redact(prepared));
+                setAdbState("need_manual", com.deepseekharness.app.util.UiText.text("ADB 准备失败：") + SensitiveData.redact(prepared));
                 return;
             }
         }
@@ -346,11 +346,11 @@ public class DeviceBridgeService extends Service {
         }
         if (r != null && r.contains("NO_KEY:")) {
             consecutiveFailures++;
-            setAdbState("need_pair", "尚未配对，请到配置页完成一次无线配对");
+            setAdbState("need_pair", com.deepseekharness.app.util.UiText.text("尚未配对，请到设备能力授权页完成一次无线配对"));
             return;
         }
         if (r != null && r.contains("DEPS_MISSING")) {
-            setAdbState("installing", "正在补装 ADB 依赖");
+            setAdbState("installing", com.deepseekharness.app.util.UiText.text("正在补装 ADB 依赖"));
             String prepared = AdbBridge.ensureReady(this, proot);
             if (AdbResult.marker(prepared, "ENVIRONMENT_BUSY")) {
                 setAdbState("environment_busy", prepared);
@@ -361,20 +361,20 @@ public class DeviceBridgeService extends Service {
             return;
         }
         // 3) mDNS 重发现连接端口 → 重试
-        setAdbState("reconnecting", "触发原因：" + reason);
+        setAdbState("reconnecting", com.deepseekharness.app.util.UiText.text("触发原因：") + reason);
         AdbBridge.Endpoint endpoint = discoverConnPortSync();
         if (endpoint != null) {
             String r2 = probeCommand(proot, endpoint);
             if (AdbResult.shellReady(r2)) {
                 lastFullVerifyAt = System.currentTimeMillis();
-                onProbeOk("重连端口 " + endpoint.port);
+                onProbeOk(com.deepseekharness.app.util.UiText.text("重连端口 ") + endpoint.port);
                 return;
             }
             if (r2 != null && (r2.contains("Unauthorized") || r2.contains("unauthorized")
                     || r2.contains("AUTH"))) {
                 consecutiveFailures++;
-                setAdbState("need_pair", "配对已失效，需要重新配对");
-                notifyAdbProblem("需要重新配对", "配对信息已失效，请到「配置」页重新配对一次");
+                setAdbState("need_pair", com.deepseekharness.app.util.UiText.text("配对已失效，需要重新配对"));
+                notifyAdbProblem(com.deepseekharness.app.util.UiText.text("需要重新配对"), com.deepseekharness.app.util.UiText.text("配对信息已失效，请到「设备能力授权」页重新配对一次"));
                 return;
             }
         }
@@ -395,19 +395,19 @@ public class DeviceBridgeService extends Service {
                 String r3 = probeCommand(proot, p2);
                 if (AdbResult.shellReady(r3)) {
                     lastFullVerifyAt = System.currentTimeMillis();
-                    onProbeOk("自动重开无线调试后重连");
+                    onProbeOk(com.deepseekharness.app.util.UiText.text("自动重开无线调试后重连"));
                     return;
                 }
             }
             consecutiveFailures++;
             setAdbState(consecutiveFailures >= 3 ? "need_manual" : "reconnecting",
-                    "无线调试连接尚未验证；请检查连接端口或重新配对。" + SensitiveData.redact(r));
+                    com.deepseekharness.app.util.UiText.text("无线调试连接尚未验证；请检查连接端口或重新配对。") + SensitiveData.redact(r));
             return;
         }
         consecutiveFailures++;
-        setAdbState("need_manual", "无线调试似乎已关闭（失败 " + consecutiveFailures + " 次）");
+        setAdbState("need_manual", com.deepseekharness.app.util.UiText.text("无线调试似乎已关闭（失败 ") + consecutiveFailures + com.deepseekharness.app.util.UiText.text(" 次）"));
         if (consecutiveFailures >= 3) {
-            notifyAdbProblem("ADB 连接已断开", "自动重连未成功。打开「开发者选项 → 无线调试」后会自动恢复");
+            notifyAdbProblem(com.deepseekharness.app.util.UiText.text("ADB 连接已断开"), com.deepseekharness.app.util.UiText.text("自动重连未成功。打开「开发者选项 → 无线调试」后会自动恢复"));
         }
     }
 
@@ -465,7 +465,7 @@ public class DeviceBridgeService extends Service {
                 int cur = Settings.Global.getInt(getContentResolver(), "adb_wifi_enabled", 0);
                 if (cur != 1) {
                     Settings.Global.putInt(getContentResolver(), "adb_wifi_enabled", 1);
-                    Log.i("DSHA-ADB", "保活：WRITE_SECURE_SETTINGS 已开启无线调试");
+                    Log.i("DSHA-ADB", com.deepseekharness.app.util.UiText.text("保活：WRITE_SECURE_SETTINGS 已开启无线调试"));
                 }
                 return true;
             }

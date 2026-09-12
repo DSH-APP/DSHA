@@ -72,7 +72,7 @@ public final class Compat {
         try {
             android.system.Os.symlink(target, link.getAbsolutePath());
         } catch (android.system.ErrnoException e) {
-            throw new IOException("symlink 失败: " + link + " -> " + target + ": " + e.getMessage());
+            throw new IOException(com.deepseekharness.app.util.UiText.text("symlink 失败: ") + link + " -> " + target + ": " + e.getMessage());
         }
     }
 
@@ -81,7 +81,7 @@ public final class Compat {
         try {
             android.system.Os.link(existing.getAbsolutePath(), newLink.getAbsolutePath());
         } catch (android.system.ErrnoException e) {
-            throw new IOException("link 失败: " + existing + " -> " + newLink + ": " + e.getMessage());
+            throw new IOException(com.deepseekharness.app.util.UiText.text("link 失败: ") + existing + " -> " + newLink + ": " + e.getMessage());
         }
     }
 
@@ -197,11 +197,11 @@ public final class Compat {
         synchronized (process) {
             if (ProcessTermination.exited(process)) return;
             if (!target.sameProcess(readProcessIdentity(target.pid)))
-                throw new IllegalStateException("本次进程身份已变化或不可确认，未发送信号");
+                throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("本次进程身份已变化或不可确认，未发送信号"));
             try { android.system.Os.kill(target.pid, signal); }
             catch (android.system.ErrnoException error) {
                 if (error.errno != android.system.OsConstants.ESRCH)
-                    throw new IllegalStateException("无法终止本次进程", error);
+                    throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("无法终止本次进程"), error);
             }
         }
     }

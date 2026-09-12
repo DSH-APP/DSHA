@@ -5,7 +5,13 @@ import java.nio.charset.StandardCharsets;
 public final class WebPageScripts {
     private WebPageScripts() { }
     public static String compatibility(Context context) {
-        return read(context, "web-integration/compat.js") + "\n" + read(context, "web-integration/startup.js");
+        return language(context) + "\n" + read(context, "web-integration/es-compat.js") + "\n"
+                + read(context, "web-integration/compat.js") + "\n" + read(context, "web-integration/startup.js");
+    }
+    public static String language(Context context) {
+        String id=new com.deepseekharness.app.core.ConfigStore(context).getUiLanguage();
+        return "window.__DSHA_LANGUAGE__='"+id+"';window.dispatchEvent(new CustomEvent('dsha-language'));"
+            +"if(!window.__dshaLanguageSelectionBound){window.__dshaLanguageSelectionBound=true;window.addEventListener('dsha-language-selected',e=>{if(e.detail==='en'||e.detail==='zh')window.DshaLanguage?.postMessage(e.detail);});}";
     }
     private static String read(Context context, String path) {
         try (InputStream in = context.getAssets().open(path)) {

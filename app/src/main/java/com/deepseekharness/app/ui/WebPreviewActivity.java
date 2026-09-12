@@ -45,6 +45,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             + "if(typeof AbortSignal==='undefined'||typeof AbortSignal.any!=='function')m.push('AbortSignal.any');"
             + "if(typeof AbortSignal==='undefined'||typeof AbortSignal.timeout!=='function')m.push('AbortSignal.timeout');"
             + "if(typeof Promise.withResolvers!=='function')m.push('Promise.withResolvers');"
+            + "if(typeof Iterator==='undefined'||typeof Iterator.from!=='function'||typeof Iterator.prototype.filter!=='function')m.push('Iterator');"
             + "return m.join(', ');})()";
 
     private FrameLayout container;
@@ -57,7 +58,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     private String authUrl;
     private String authCookie;
     private String baseUrl;
-    private String browserInfo = "系统 WebView 版本未知";
+    private String browserInfo = com.deepseekharness.app.util.UiText.text("系统 WebView 版本未知");
     private boolean pageFailed;
     private boolean authRetried;
     private Retained retained;
@@ -70,6 +71,8 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     public static final class Retained extends androidx.lifecycle.ViewModel {
         WebView view;
         String authUrl;
+        androidx.webkit.ScriptHandler compatibilityScript;
+        String scriptLanguage;
         WebBlobDownload blobDownload;
         ValueCallback<Uri[]> pickerCallback;
         final java.util.ArrayList<java.io.File> uploads = new java.util.ArrayList<>();
@@ -88,7 +91,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                 retained.pickerCallback = null;
                 fileCallback = null;
                 if (callback == null) return;
-                Uri[] selected = WebChromeClient.FileChooserParams.parseResult(
+                Uri[] selected = WebUploads.parseChooserResult(
                         result.getResultCode(), result.getData());
                 if (selected != null) {
                     for (Uri uri : selected) {
@@ -118,7 +121,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                         WebUploads.clean(copied);
                         new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                             callback.onReceiveValue(null);
-                            Toast.makeText(app,"上传失败："+error.getMessage(),Toast.LENGTH_LONG).show();
+                            Toast.makeText(app,com.deepseekharness.app.util.UiText.text("上传失败：")+error.getMessage(),Toast.LENGTH_LONG).show();
                         });
                     }
                 },"web-file-import").start();
@@ -161,7 +164,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         baseUrl = WebPreviewPolicy.loopbackBaseUrl(authUrl);
         if (baseUrl == null) {
             authUrl = null;
-            showError("对话地址无效", "请返回启动页，重新进入对话。");
+            showError(com.deepseekharness.app.util.UiText.text("对话地址无效"), com.deepseekharness.app.util.UiText.text("请返回启动页，重新进入对话。"));
             return;
         }
         if (PreviewFallback.preferred(this) && PreviewFallback.open(this, authUrl, authCookie)) return;
@@ -186,7 +189,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         if (isFinishing() || isDestroyed() || previewAuth.busy()) return;
         errorPanel.setVisibility(View.GONE); progress.setVisibility(View.VISIBLE);
         previewAuth.refresh((url, cookie, error) -> {
-            if (error != null) { showError("暂时无法进入对话", error); return; }
+            if (error != null) { showError(com.deepseekharness.app.util.UiText.text("暂时无法进入对话"), error); return; }
             if (!url.equals(authUrl)) restoreState = null;
             authUrl = url; authCookie = cookie; baseUrl = WebPreviewPolicy.loopbackBaseUrl(url);
             createWebView(allowAuthRetry);
@@ -205,9 +208,9 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             retained.view = view;
             retained.authUrl = authUrl;
             PackageInfo provider = android.os.Build.VERSION.SDK_INT >= 26 ? WebView.getCurrentWebViewPackage() : null;
-            browserInfo = provider == null ? "系统 WebView 版本未知"
+            browserInfo = provider == null ? com.deepseekharness.app.util.UiText.text("系统 WebView 版本未知")
                     : provider.packageName + " " + provider.versionName;
-            Log.i("DSHA", "标准版预览内核: " + browserInfo);
+            Log.i("DSHA", com.deepseekharness.app.util.UiText.text("标准版预览内核: ") + browserInfo);
             com.deepseekharness.app.core.DiagnosticLog.record(this, "WEB_ENGINE", browserInfo);
             WebSettings settings = view.getSettings();
             settings.setJavaScriptEnabled(true);
@@ -219,10 +222,6 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             settings.setSupportMultipleWindows(false);
             settings.setLoadWithOverviewMode(true);
             settings.setUseWideViewPort(true);
-            if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.DOCUMENT_START_SCRIPT)) {
-                androidx.webkit.WebViewCompat.addDocumentStartJavaScript(view,WebPageScripts.compatibility(this),
-                        java.util.Collections.singleton(baseUrl.substring(0,baseUrl.length()-1)));
-            }
             if (getSharedPreferences(Constants.PREFS, MODE_PRIVATE)
                     .getBoolean(Constants.KEY_DESKTOP_MODE, false)) {
                 settings.setUserAgentString(WebPreviewPolicy.desktopUserAgent(settings.getUserAgentString()));
@@ -248,13 +247,26 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         } catch (RuntimeException | LinkageError e) {
             destroyWebView();
             if (PreviewFallback.open(this, authUrl, authCookie)) return;
-            Log.w("DSHA", "系统 WebView 初始化失败: " + e.getClass().getSimpleName());
-            showError("系统 WebView 无法启动", "请更新或启用 Android System WebView / Chrome，"
-                    + "也可以使用系统浏览器进入对话。");
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("系统 WebView 初始化失败: ") + e.getClass().getSimpleName());
+            showError(com.deepseekharness.app.util.UiText.text("系统 WebView 无法启动"), com.deepseekharness.app.util.UiText.text("请更新或启用 Android System WebView / Chrome，")
+                    + com.deepseekharness.app.util.UiText.text("也可以使用系统浏览器进入对话。"));
         }
     }
 
     private void attachClients(WebView view) {
+        updateDocumentLanguage(view);
+        if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.WEB_MESSAGE_LISTENER)) {
+            androidx.webkit.WebViewCompat.removeWebMessageListener(view,"DshaLanguage");
+            androidx.webkit.WebViewCompat.addWebMessageListener(view,"DshaLanguage",
+                java.util.Collections.singleton(baseUrl.substring(0,baseUrl.length()-1)),
+                (source,message,origin,mainFrame,reply)->{
+                    if(source!=webView||!mainFrame||!WebPreviewPolicy.sameService(baseUrl,source.getUrl()))return;
+                    try {
+                        String language=message.getData();
+                        if(com.deepseekharness.app.util.UiLanguagePreference.supported(language))LanguageController.select(this,language);
+                    } catch(IllegalStateException ignored) { }
+                });
+        }
         view.setWebViewClient(new PreviewClient());
         view.setWebChromeClient(new PreviewChromeClient());
         view.setDownloadListener((url, agent, disposition, mime, length) -> {
@@ -267,6 +279,17 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             downloads.start(baseUrl,url,CookieManager.getInstance().getCookie(url),
                     name,length,null);
         });
+    }
+
+    /** 保留网页实例时同步后续文档的启动脚本，避免重载时短暂回到旧语言。 */
+    private void updateDocumentLanguage(WebView view) {
+        if(!androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.DOCUMENT_START_SCRIPT))return;
+        String language=new com.deepseekharness.app.core.ConfigStore(this).getUiLanguage();
+        if(retained.compatibilityScript!=null&&language.equals(retained.scriptLanguage))return;
+        if(retained.compatibilityScript!=null)retained.compatibilityScript.remove();
+        retained.compatibilityScript=androidx.webkit.WebViewCompat.addDocumentStartJavaScript(view,WebPageScripts.compatibility(this),
+            java.util.Collections.singleton(baseUrl.substring(0,baseUrl.length()-1)));
+        retained.scriptLanguage=language;
     }
 
     private class PreviewClient extends WebViewClient {
@@ -297,14 +320,15 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             if (webView != view || pageFailed) return;
             progress.setVisibility(View.GONE);
             if (!WebPreviewPolicy.sameService(baseUrl, url)) return;
-            view.evaluateJavascript(CAPABILITY_CHECK, result -> {
+            // 厂商内核可能不提供 DOCUMENT_START_SCRIPT；页面入口已提前补齐，这里再幂等核验。
+            view.evaluateJavascript(WebPageScripts.compatibility(WebPreviewActivity.this)+"\n"+CAPABILITY_CHECK, result -> {
                 if (webView != view || pageFailed || isFinishing() || isDestroyed()) return;
                 try {
                     Object missing = new org.json.JSONTokener(result).nextValue();
                     if (missing instanceof String && !((String) missing).isEmpty()) {
                         if (PreviewFallback.open(WebPreviewActivity.this, authUrl, authCookie)) return;
-                        showError("系统 WebView 需要更新", "当前内核缺少：" + missing
-                                + "。\n更新 Android System WebView / Chrome 后重试，或在浏览器中打开。");
+                        showError(com.deepseekharness.app.util.UiText.text("系统 WebView 需要更新"), com.deepseekharness.app.util.UiText.text("当前内核缺少：") + missing
+                                + com.deepseekharness.app.util.UiText.text("。\n更新 Android System WebView / Chrome 后重试，或在浏览器中打开。"));
                     }
                 } catch (org.json.JSONException ignored) { }
             });
@@ -313,8 +337,8 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (webView != view || !request.isForMainFrame()) return;
-            showError("暂时无法连接对话服务", "服务可能仍在启动或已退出。请稍后重试，"
-                    + "持续失败时返回启动页查看日志。\n错误代码：" + error.getErrorCode());
+            showError(com.deepseekharness.app.util.UiText.text("暂时无法连接对话服务"), com.deepseekharness.app.util.UiText.text("服务可能仍在启动或已退出。请稍后重试，")
+                    + com.deepseekharness.app.util.UiText.text("持续失败时返回启动页查看日志。\n错误代码：") + error.getErrorCode());
         }
 
         @Override
@@ -329,17 +353,17 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                 loadSession(false);
                 return;
             }
-            showError(code == 401 || code == 403 ? "对话认证已失效" : "对话页面加载失败",
-                    "HTTP " + code + "。请返回启动页重新进入对话，或稍后重试。");
+            showError(code == 401 || code == 403 ? com.deepseekharness.app.util.UiText.text("对话认证已失效") : com.deepseekharness.app.util.UiText.text("对话页面加载失败"),
+                    "HTTP " + code + com.deepseekharness.app.util.UiText.text("。请返回启动页重新进入对话，或稍后重试。"));
         }
 
         @androidx.annotation.RequiresApi(26)
         @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
             if (webView == view) {
                 destroyWebView();
-                showError("网页渲染进程已退出", detail.didCrash()
-                        ? "系统 WebView 发生异常，点击重试可重新打开；持续出现时请更新内核。"
-                        : "系统可能因内存不足回收了网页，点击重试可重新打开。");
+                showError(com.deepseekharness.app.util.UiText.text("网页渲染进程已退出"), detail.didCrash()
+                        ? com.deepseekharness.app.util.UiText.text("系统 WebView 发生异常，点击重试可重新打开；持续出现时请更新内核。")
+                        : com.deepseekharness.app.util.UiText.text("系统可能因内存不足回收了网页，点击重试可重新打开。"));
             }
             return true;
         }
@@ -352,9 +376,10 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                     && webView != null && WebPreviewPolicy.sameService(baseUrl, webView.getUrl())) {
                 try {
                     org.json.JSONObject event = new org.json.JSONObject(message.message().substring(12));
-                    if (diagnostics.pageEvent(startupGeneration, event)) showError("网页插件加载失败",
-                            com.deepseekharness.app.util.SensitiveData.redact(event.optString("message"))
-                                    + "\n返回启动页可查看插件详情，或安全启动进入基础界面。");
+                    if (diagnostics.pageEvent(startupGeneration, event)) {
+                        com.deepseekharness.app.core.HarnessController.get(WebPreviewActivity.this).failedWebPage(startupGeneration,event.optString("message"));
+                        startActivity(new Intent(WebPreviewActivity.this,StartupRecoveryActivity.class));finish();
+                    }
                 } catch (Exception ignored) { }
                 return true;
             }
@@ -393,7 +418,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                     filePicker.launch(WebUploads.fallback(primary));
                 } catch (RuntimeException ignored) {
                     cancelFileSelection();
-                    Toast.makeText(WebPreviewActivity.this, "无法打开文件选择器，请启用系统文件应用", Toast.LENGTH_LONG).show();
+                    Toast.makeText(WebPreviewActivity.this, com.deepseekharness.app.util.UiText.text("无法打开文件选择器，请启用系统文件应用"), Toast.LENGTH_LONG).show();
                 }
             }
             return true;
@@ -402,11 +427,11 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
 
     private void showError(String title, String detail) {
         if (isFinishing() || isDestroyed()) return;
-        com.deepseekharness.app.core.DiagnosticLog.record(this, "WEB_PAGE", title + "：" + detail);
+        com.deepseekharness.app.core.DiagnosticLog.record(this, "WEB_PAGE", title + com.deepseekharness.app.util.UiText.text("：") + detail);
         pageFailed = true;
         progress.setVisibility(View.GONE);
         errorTitle.setText(title);
-        errorDetail.setText(detail + "\n\n" + browserInfo);
+        errorDetail.setText(com.deepseekharness.app.util.UiText.text(detail + "\n\n" + browserInfo));
         errorPanel.setVisibility(View.VISIBLE);
     }
 
@@ -417,7 +442,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE));
         } catch (RuntimeException e) {
-            Toast.makeText(this, "未找到可用的系统浏览器", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, com.deepseekharness.app.util.UiText.text("未找到可用的系统浏览器"), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -452,6 +477,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         WebView previous = webView;
         webView = null;
         if (retained != null) retained.view = null;
+        if(retained!=null){retained.compatibilityScript=null;retained.scriptLanguage=null;}
         if (retained != null && retained.blobDownload != null) { retained.blobDownload.close(); retained.blobDownload = null; }
         if (previous != null) {
             container.removeView(previous);
@@ -473,6 +499,9 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
     @Override protected void onResume() {
         super.onResume();
         if (webView != null) webView.onResume();
+        if(webView!=null&&WebPreviewPolicy.sameService(baseUrl,webView.getUrl())) {
+            updateDocumentLanguage(webView);webView.evaluateJavascript(WebPageScripts.language(this),null);
+        }
         String current = com.deepseekharness.app.core.HarnessController.get(this).getWebAuthUrl();
         if (previewAuth != null && !current.isEmpty() && !current.equals(authUrl)) loadSession();
     }

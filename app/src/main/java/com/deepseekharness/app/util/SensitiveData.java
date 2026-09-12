@@ -11,7 +11,7 @@ public final class SensitiveData {
 
     public static String redact(String s) {
         if (s == null) return null;
-        String safe = s.replaceAll("(?s)-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----.*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", "[私钥已隐藏]");
+        String safe = s.replaceAll("(?s)-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----.*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", com.deepseekharness.app.util.UiText.text("[私钥已隐藏]"));
         safe = safe.replaceAll("(?im)((?:authorization|proxy-authorization|cookie|set-cookie)\\s*:\\s*)[^\\r\\n]+", "$1***");
         safe = safe.replaceAll("(?i)([?&](?:token|api[_-]?key|access[_-]?token|refresh[_-]?token|auth|secret|password)=)[^\\s&#'\"<>]+", "$1***");
         safe = safe.replaceAll("(?i)(\\b(?:[A-Z0-9_]*API_KEY|api[_-]?key|authorization|cookie|access[_-]?token|refresh[_-]?token|token|password|passwd|secret)\\b[\"']?\\s*[:=：]\\s*)(?:\"[^\"]*\"|'[^']*'|[^\\s,;<>]+)", "$1***");

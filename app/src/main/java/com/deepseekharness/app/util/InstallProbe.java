@@ -25,20 +25,20 @@ public final class InstallProbe {
         List<Check> all = new ArrayList<>();
         all.add(new Check(2, "curl", "curl", "curl --version"));
         all.add(new Check(2, "git", "git", "git --version"));
-        all.add(new Check(2, "python", "Python 与标准库", "python3 -B -c 'import ssl, sqlite3, readline, tarfile, zipfile, sys; print(sys.version); ssl.create_default_context()'"));
+        all.add(new Check(2, "python", com.deepseekharness.app.util.UiText.text("Python 与标准库"), "python3 -B -c 'import ssl, sqlite3, readline, tarfile, zipfile, sys; print(sys.version); ssl.create_default_context()'"));
         all.add(new Check(3, "node", "Node.js", "node --version"));
         all.add(new Check(4, "pnpm", "pnpm", "pnpm --version"));
-        all.add(new Check(5, "dsh", "dsh 入口与版本", "test -x /usr/local/bin/dsh && node -e "
+        all.add(new Check(5, "dsh", com.deepseekharness.app.util.UiText.text("dsh 入口与版本"), "test -x /usr/local/bin/dsh && node -e "
                 + ShellQuote.arg("const p=require('/usr/local/lib/node_modules/@deepseek-ai/dsh/package.json'); if(!/^\\d+\\./.test(p.version))process.exit(1); console.log(p.version)")));
-        all.add(new Check(6, "dns", "DNS 配置", "grep -Eq '^[[:space:]]*nameserver[[:space:]]+[^[:space:]#]+' /etc/resolv.conf || { echo '缺少 nameserver 配置'; exit 1; }"));
-        all.add(new Check(6, "session", "会话写入补丁", "found=0; for f in " + ShellQuote.arg(SESSION_TOP) + " " + ShellQuote.arg(SESSION_NESTED)
+        all.add(new Check(6, "dns", com.deepseekharness.app.util.UiText.text("DNS 配置"), "grep -Eq '^[[:space:]]*nameserver[[:space:]]+[^[:space:]#]+' /etc/resolv.conf || { echo '缺少 nameserver 配置'; exit 1; }"));
+        all.add(new Check(6, "session", com.deepseekharness.app.util.UiText.text("会话写入补丁"), "found=0; for f in " + ShellQuote.arg(SESSION_TOP) + " " + ShellQuote.arg(SESSION_NESTED)
                 + "; do [ -f \"$f\" ] || continue; found=1; if grep -Fq 'await link(tmp, finalPath)' \"$f\" && ! grep -Fq "
                 + ShellQuote.arg(SESSION_PUBLISH_IMPORT) + " \"$f\"; then echo \"会话写入补丁缺失：$f\"; exit 1; fi; done; [ \"$found\" = 1 ] || { echo '会话模块缺失'; exit 1; }"));
-        all.add(new Check(6, "settings", "局域网设置补丁", "test -f " + ShellQuote.arg(SETTINGS)
+        all.add(new Check(6, "settings", com.deepseekharness.app.util.UiText.text("局域网设置补丁"), "test -f " + ShellQuote.arg(SETTINGS)
                 + " || { echo '设置模块缺失'; exit 1; }; if grep -Fq "
                 + ShellQuote.arg("const persistence = ctx.remote.$host.isLoopback ? \"host\" : \"memory\";")
                 + " " + ShellQuote.arg(SETTINGS) + "; then echo '局域网设置补丁缺失'; exit 1; fi"));
-        all.add(new Check(6, "groups", "Android 用户组", "id -Gn"));
+        all.add(new Check(6, "groups", com.deepseekharness.app.util.UiText.text("Android 用户组"), "id -Gn"));
         if (selected != 0) all.removeIf(check -> check.step != selected);
         return all;
     }
@@ -90,9 +90,9 @@ public final class InstallProbe {
         public synchronized String detail(int step) {
             StringBuilder out = new StringBuilder();
             for (Check check : checks) if (check.step == step) {
-                if (out.length() > 0) out.append("；");
+                if (out.length() > 0) out.append(com.deepseekharness.app.util.UiText.text("；"));
                 Integer code = codes.get(check.key);
-                out.append(check.label).append(code == null ? "：未收到结果" : code == 0 ? "：正常" : "：失败（退出码 " + code + "）");
+                out.append(check.label).append(code == null ? com.deepseekharness.app.util.UiText.text("：未收到结果") : code == 0 ? com.deepseekharness.app.util.UiText.text("：正常") : com.deepseekharness.app.util.UiText.text("：失败（退出码 ") + code + com.deepseekharness.app.util.UiText.text("）"));
             }
             return out.toString();
         }

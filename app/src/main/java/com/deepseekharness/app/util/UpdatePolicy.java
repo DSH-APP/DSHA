@@ -41,7 +41,7 @@ public final class UpdatePolicy {
     }
 
     public static Release select(List<Release> releases, int currentCode, String flavor, int sdk, String channel) {
-        if (!STABLE.equals(channel) && !PREVIEW.equals(channel)) throw new IllegalArgumentException("未知更新通道");
+        if (!STABLE.equals(channel) && !PREVIEW.equals(channel)) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("未知更新通道"));
         Release best = null;
         for (Release r : releases) {
             if (!r.valid() || !flavor.equals(r.flavor) || r.minSdk > sdk || r.versionCode <= currentCode) continue;

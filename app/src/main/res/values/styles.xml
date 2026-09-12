@@ -7,7 +7,7 @@
 
     <style name="InstallStep" parent="Widget.DSHA.Button">
         <item name="android:minHeight">56dp</item>
-        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:gravity">center</item>
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingRight">16dp</item>
         <item name="android:paddingTop">12dp</item>
@@ -17,6 +17,7 @@
     </style>
 
     <style name="PluginAction" parent="DshaText.Label">
+        <item name="android:includeFontPadding">false</item>
         <item name="android:minHeight">48dp</item>
         <item name="android:minWidth">48dp</item>
         <item name="android:gravity">center</item>
@@ -80,6 +81,8 @@
          本项目已经在「同一份配置散落两处」上栽过几次
          （补丁标记版本不同步、插件安置两套实现并存）。 -->
     <style name="Widget.DSHA.Button" parent="Widget.Material3.Button.TextButton">
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:background">@drawable/bg_btn</item>
         <item name="backgroundTint">@null</item>
         <item name="android:backgroundTint">@null</item>
@@ -98,6 +101,8 @@
     </style>
 
     <style name="Widget.DSHA.PlatformButton" parent="android:style/Widget.Material.Button">
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:background">@drawable/bg_btn</item>
         <item name="android:backgroundTint">@null</item>
         <item name="android:textColor">@color/button_text</item>

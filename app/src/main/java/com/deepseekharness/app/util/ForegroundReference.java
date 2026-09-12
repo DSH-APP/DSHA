@@ -7,7 +7,7 @@ public final class ForegroundReference<T> {
     private WeakReference<T> current = new WeakReference<>(null);
 
     public synchronized void resumed(T owner) {
-        if (owner == null) throw new IllegalArgumentException("前台宿主不能为空");
+        if (owner == null) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("前台宿主不能为空"));
         current = new WeakReference<>(owner);
     }
 

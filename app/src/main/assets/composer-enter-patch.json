@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dshVersion": "0.1.5-rc.1",
+  "dshVersion": "0.1.5-rc.2",
   "patches": [
     {
       "before": "\t\t\t\tif (event?.shiftKey === true) return false;\n\t\t\t\tif (event !== null && isComposingEvent(event, recentlyComposing)) return true;",
@@ -13,6 +13,10 @@
     {
       "before": "\t\t\t\t\"aria-multiline\": \"true\",\n\t\t\t\t\"data-composer-input\": true,",
       "after": "\t\t\t\t\"aria-multiline\": \"true\",\n\t\t\t\tenterKeyHint: \"enter\",\n\t\t\t\t\"aria-description\": \"回车换行，点击箭头发送；Ctrl / ⌘ + Enter 快捷发送\",\n\t\t\t\t\"data-dsha-enter-mode\": \"newline\",\n\t\t\t\t\"data-composer-input\": true,"
+    },
+    {
+      "before": "\t\t\t\tif (locked || editor === null) return;\n\t\t\t\teditor.getRootElement()?.focus({ preventScroll: true });\n\t\t\t\teditor.focus(() => {\n\t\t\t\t\trevealSelection();\n\t\t\t\t});",
+      "after": "\t\t\t\t// DSHA_COMPOSER_EXPLICIT_FOCUS_V1：切换会话不自动唤起键盘。\n\t\t\t\tif (locked || editor === null || document.activeElement !== editor.getRootElement()) return;\n\t\t\t\trevealSelection();"
     }
   ]
 }

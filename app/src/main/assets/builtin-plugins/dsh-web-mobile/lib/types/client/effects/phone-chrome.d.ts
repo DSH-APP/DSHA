@@ -1,4 +1,4 @@
-import type { Context as ClientContext } from '@deepseek-ai/cordis';
+import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
 import type { ReconcilerTask } from '../core/reconciler-core.ts';
 /** Same width bound as the shell's SIDEBAR_AUTO_COLLAPSE (viewport < 1024),
  *  ANDed with a touch-primary pointer guard. Width alone cannot tell a phone
@@ -14,12 +14,20 @@ export declare const MOBILE_QUERY = "(max-width: 1023px) and (pointer: coarse)";
  *  guard is the CSS hide block in misc.css.ts — the exact complement of
  *  MOBILE_QUERY — because slot-rendered controls exist at every width. */
 export declare const DESKTOP_QUERY = "(min-width: 1024px)";
+/** Pointer-only guard for the ONE feature that has no desktop equivalent:
+ *  the session-delete menu injection. Armed on touch-primary devices at
+ *  EVERY width — a large tablet in landscape (e.g. 1238px) keeps the desktop
+ *  layout but still gets the 「删除会话」 item. Mouse-driven or pointer-less
+ *  windows never arm it, at any width. */
+export declare const TOUCH_QUERY = "(pointer: coarse)";
 /**
- * Re-arm a mobile-only DOM effect on every width change. Replaces the
+ * Re-arm a mobile-only DOM effect on every query change. Replaces the
  * repeated matchMedia + change-listener scaffold so all breakpoint strings
- * live in one place.
+ * live in one place. `query` defaults to MOBILE_QUERY; effects that arm on a
+ * different condition (e.g. TOUCH_QUERY) pass their own string instead of
+ * building a private matchMedia scaffold.
  */
-export declare function installMobileEffect(ctx: ClientContext, label: string, install: (narrow: MediaQueryList) => (() => void) | undefined): void;
+export declare function installMobileEffect(ctx: ClientContext, label: string, install: (narrow: MediaQueryList) => (() => void) | undefined, query?: string): void;
 /** The AppFrame element: direct parent of the shell overlay layer. */
 export declare function findFrame(): HTMLElement | null;
 /** Resolve the plugin-owned frame marker, falling back to the raw shell frame. */
@@ -48,21 +56,48 @@ export declare function installReconciler(ctx: ClientContext): () => void;
 /** Register a reconciler task. The returned disposer removes it immediately. */
 export declare function addReconcilerTask(task: ReconcilerTask): () => void;
 /**
+ * Whether the page runs on iOS / iPadOS WebKit, where focusing a text field
+ * whose computed font-size is below 16px zooms the whole visual viewport
+ * (#45). Every other engine ignores field font-size, so the 16px floor in
+ * misc.css.ts is gated on this marker instead of applying to every phone —
+ * Android would only get bigger search boxes for no benefit.
+ *
+ * Pure and injectable so the decision table is unit-testable:
+ * - The feature probe is the reliable signal: `font: -apple-system-body` is
+ *   Safari-only and `-webkit-touch-callout` is an iOS property, so the pair
+ *   is true on iOS WebKit (including Chrome / Edge / Opera on iOS, which are
+ *   WebKit and zoom identically) and false on Chromium (measured) and on
+ *   macOS Safari.
+ * - The UA fallback covers engines whose CSS.supports is missing or which
+ *   parse the probe differently: iPhone / iPad / iPod UAs, plus iPadOS 13+
+ *   which reports a Macintosh UA and is told apart by its touch points.
+ */
+export declare function detectIosWebKit(nav: {
+    userAgent: string;
+    maxTouchPoints: number;
+}, supports: ((condition: string) => boolean) | null): boolean;
+/**
  * Phone chrome: KEEP the system status bar (no fullscreen) and make it
  * blend into the page. On narrow screens:
- * - The viewport meta gains viewport-fit=cover, so env(safe-area-inset-top)
- *   is the real status-bar / notch height and the stylesheet can push every
- *   surface below it (off notched phones, or in a browser tab where the
- *   layout viewport already sits below the status bar, the inset is 0 and
- *   nothing shifts).
+ * - The viewport meta is OWNED by the plugin while armed:
+ *   width=device-width, initial-scale=1, viewport-fit=cover, re-asserted on
+ *   every host rewrite, node replacement, or late injection, so
+ *   env(safe-area-inset-top) stays the real status-bar / notch height
+ *   instead of silently going stale when the host touches the meta. No zoom
+ *   tokens here: iOS 10+ ignores them for user pinch but other engines
+ *   honor them, and the focus-zoom fix is the >=16px field floor (#45), not
+ *   a zoom ban. Dispose restores the host's own content as observed at arm
+ *   time.
  * - A theme-color meta tracks the shell background (the official theme is
  *   toggled by body[data-ds-dark-theme], which flips --dsw-alias-bg-base):
  *   Android then paints the status bar / URL bar with the page's own base
  *   color, so the status bar reads as part of the UI instead of a foreign
  *   strip. The drawer paints the same strip on iOS / notch displays.
- * - gesturestart is suppressed as the legacy-iOS fallback for double-tap
- *   zoom; modern browsers are covered by the stylesheet's
- *   touch-action: manipulation (which keeps pan and pinch zoom).
+ * - documentElement carries data-mobile-nav-ios on iOS WebKit so the
+ *   stylesheet can hold every text field at >=16px and Safari never
+ *   focus-zooms the viewport (#45). Double-tap zoom is off through
+ *   touch-action; pinch zoom stays available on purpose — it is the only way
+ *   back out of a zoom the browser applied on its own.
  */
 export declare function installPhoneChrome(ctx: ClientContext): void;
 /**

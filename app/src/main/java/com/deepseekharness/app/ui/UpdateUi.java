@@ -20,7 +20,7 @@ final class UpdateUi {
                 && (state.stage == UpdateRepository.Stage.IDLE || state.stage == UpdateRepository.Stage.DOWNLOADING);
         boolean indeterminate = verifyingInstall || state.stage != UpdateRepository.Stage.DOWNLOADING || state.total <= 0;
         RadioGroup channels = root.findViewById(R.id.update_channels);
-        ((TextView) root.findViewById(R.id.update_status)).setText(state.message);
+        ((TextView) root.findViewById(R.id.update_status)).setText(com.deepseekharness.app.util.UiStateText.render(state.message));
         ((TextView) root.findViewById(R.id.update_notes)).setText(state.release == null ? ""
                 : state.release.version + " · " + String.format(java.util.Locale.ROOT, "%.2f MiB", state.release.bytes / 1048576.0) + "\n\n" + state.release.notes);
         ProgressBar progress = root.findViewById(R.id.update_progress);
@@ -35,11 +35,11 @@ final class UpdateUi {
         root.findViewById(R.id.update_install).setVisibility(state.apk != null ? android.view.View.VISIBLE : android.view.View.GONE);
         Button check = root.findViewById(R.id.update_check);
         check.setEnabled(!busy);
-        check.setText(state.release == null ? "检查更新" : "重新检查");
+        check.setText(state.release == null ? com.deepseekharness.app.util.UiText.text("检查更新") : com.deepseekharness.app.util.UiText.text("重新检查"));
         check.setBackgroundResource(state.release == null ? R.drawable.bg_btn_primary : R.drawable.bg_btn);
         check.setTextColor(androidx.core.content.ContextCompat.getColorStateList(root.getContext(),state.release == null ? R.color.button_primary_text : R.color.button_text));
         root.findViewById(R.id.update_download).setEnabled(!busy && state.release != null);
-        ((Button) root.findViewById(R.id.update_download)).setText(state.downloaded > 0 && state.apk == null ? "继续下载" : "下载更新");
+        ((Button) root.findViewById(R.id.update_download)).setText(state.downloaded > 0 && state.apk == null ? com.deepseekharness.app.util.UiText.text("继续下载") : com.deepseekharness.app.util.UiText.text("下载更新"));
         root.findViewById(R.id.update_install).setEnabled(!busy && state.apk != null);
         root.findViewById(R.id.update_cancel).setVisibility(state.busy && !installing ? View.VISIBLE : View.GONE);
         for (int i = 0; i < channels.getChildCount(); i++) channels.getChildAt(i).setEnabled(!busy);

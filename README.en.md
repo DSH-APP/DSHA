@@ -22,35 +22,36 @@
 
 ---
 
-## DSHA v0.1.5-rc1 — official release · Latest
+## DSHA v0.1.5-rc2 — official release · Latest
 
-Maintained and published by contributor [@ym2025szz](https://github.com/ym2025szz), with thanks to original author [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) and the other contributors. The refactor preview announcements are consolidated here; historical releases and the original 1.1.10-and-earlier documentation below are preserved.
+Maintained and published by contributor [@ym2025szz](https://github.com/ym2025szz), with thanks to original author [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) and the other contributors.
 
-**[Latest official release](https://github.com/DSH-APP/DSHA/releases/latest)** · [Full changes and preview comparison](docs/releases/v0.1.5-rc1-notes.md) · [Device verification](docs/releases/v0.1.5-rc1.md)
+**[Latest official release](https://github.com/DSH-APP/DSHA/releases/latest)** · [Changes and comparison with previous releases](docs/releases/v0.1.5-rc2-notes.md) · [Verification record](docs/releases/v0.1.5-rc2-build129.md)
 
 | Build | Devices | Download | Size |
 |---|---|---|---:|
-| Standard | Android 11+ / arm64, system WebView | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1.apk.sha256) | 176.06 MiB |
-| Compatibility | Android 6+ / arm64, bundled Gecko fallback | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc1/dsha-0.1.5-rc1low.apk.sha256) | 252.82 MiB |
+| Standard | Android 11+ / arm64, system WebView | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc2/dsha-0.1.5-rc2.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc2/dsha-0.1.5-rc2.apk.sha256) | 176.69 MiB |
+| Compatibility | Android 6+ / arm64, bundled Gecko fallback | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc2/dsha-0.1.5-rc2low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.5-rc2/dsha-0.1.5-rc2low.apk.sha256) | 253.23 MiB |
 
-This official GitHub Release retains the tested APK version **0.1.5-rc1**, version code **116**, and historical signing certificate. Bundled dsh is **0.1.5-rc.1** and the Ubuntu base version is **10**. Both builds share the application ID and data; they cannot coexist.
+GitHub marks this as a **regular release / Latest**, retaining the tested APK name **0.1.5-rc2**, version code **129**, and original publishing certificate. Bundled dsh is **0.1.5-rc.2**; the Ubuntu base remains **10**. Both builds share the application ID and data.
 
-### What's included
+### What's new
 
-- **Updated models and previews:** DeepSeek-V41-Flash plus existing V4 choices; Markdown, HTML, PDF, image, code and long-text previews, scrolling, code copying, and centered tab-close buttons.
-- **Startup and installation:** separate Ubuntu/dsh archives, reuse of unchanged browser bundles, complete offline tools and certificate installation, and a fix for the first native-module load. On the tested Android 16 device, authentication was ready in **3.43–3.66 seconds**, and cold installation plus full validation took about **19.3 seconds**.
-- **Data-preserving maintenance:** update only managed runtime files when the Ubuntu base is unchanged; protect and restore personal data when rebuilding a different base. Manual backups, recovery and rollback remain; launch-count automatic backups and full-directory startup scans are removed.
-- **Diagnostics and recovery:** real startup phases, plugin errors, exit codes and downloadable logs; continued waiting after 60 seconds, an isolated safe profile, verified Web PID handling, and terminal/background-process cleanup before maintenance.
-- **Consolidated preview features:** standard/compatibility builds, plugin installation/import/export/toggles/updates/rollback, background APK downloads and verification, wireless ADB, the Shizuku fallback, LAN access and PTYs. Device-command policies protect system paths and critical processes.
-- **Mobile interaction:** keyboard/system-bar spacing, Enter for newlines, tooltip cleanup, image drafts, reading-position restoration, and clearer configuration, plugin and diagnostic pages.
+- **Consistent interface:** unified cards, buttons, dialogs, permissions and day/night themes; short-screen and large-font layouts; smoother page transitions. Installation and diagnostic logs scroll inside bounded panels, and the About dialog has clearer actions.
+- **Separate terminal tabs:** PTY and simple terminals retain their processes, output and input across navigation, rotation and language changes. Display numbers reuse gaps; after closing all terminals, the next one is Terminal 1.
+- **Chinese and English:** native screens, app statuses and both browser engines follow the selected language. Switching language keeps Web and terminal processes running; user text, commands, filenames and original third-party errors remain unchanged.
+- **Plugins and presets:** working ascending/descending name sorting, enabled/update-first sorting, framed controls and bundled dsh-web-mobile 2.4.1-dsha.2. Four presets use real server confirmation; tablet controls sit on the right next to a working file button.
+- **Browser and file compatibility:** fixes multiple-file selection loss (#64), older-WebView Iterator/PDF Worker initialization, and missing AbortSignal APIs before plugins load.
+- **Startup and recovery:** port-conflict fallback, continued waiting for slow authentication, clearer failure records and an independent recovery screen. Fixes older tablet environment migration without discarding personal data.
+- **Device access and networks:** consolidated capability grants, Shizuku manager discovery and reconnection for compatible forks, and DNS fallback for affected networks (#63), without replaying HTTP requests.
 
-Compared with the last published preview, **v1.2.0-rc1.4**, dsh moves from `0.1.2-rc.1` to `0.1.5-rc.1`; the standard APK is about **17.3% smaller**, and the compatibility APK about **12.7% smaller**. The full notes compare alpha.2, rc1, rc1.2, rc1.3 and rc1.4 without modifying their historical Releases.
+Compared with the preceding official release, this moves dsh to rc.2, adds the interface/terminal/language work and includes the subsequent compatibility fixes through build 129. Earlier refactor features—offline Ubuntu, model choices, file previews, backups, plugins and device channels—remain available. See the linked release notes for a version-by-version comparison.
 
 ### Upgrading and verification
 
-Keep a manual backup of important data, then install the matching APK over the existing app. Published v1.2 previews used Ubuntu base 9, so moving to base 10 requires data protection and a rebuild. Local alpha builds already on base 10 can use a partial update; alpha.2 → this build took about **7.45 seconds** on the test device. That figure does not describe every older-version upgrade.
+Install over the existing app using the same signing certificate; keep a manual backup of important data. Base-10 environments update managed runtime files in place. Older base-9 environments first protect personal data before rebuilding; an Android 17 tablet completed this migration in testing. The full direct-upgrade matrix from 1.1.10 and earlier has not been revalidated.
 
-Android 16 checks cover real model/image/file/tool requests, WebView and Gecko, previews, upgrades, cold installation, repeated starts, terminal cleanup, plugins and backup/restore. Each build has **330 unit tests: 329 passed, 1 skipped, no failures**, with no Lint errors; signing, hashes, offline bundles and ELF checks pass. Android 6/7 and real 16 KB kernels still need hardware coverage; see the verification report for limits.
+Each build has **383 unit tests: 382 passed, 1 skipped, no failures**, and no Lint errors. Device checks include WebView 116, Gecko, multi-file callbacks, Shizuku reconnection, PDF Worker startup, and phone/tablet layouts. Android 6/7, real 16 KiB page-size devices and the actual thedjchi fork were not retested in this final round; fork support follows its public protocol.
 
 [Issues and feedback](https://github.com/DSH-APP/DSHA/issues) · QQ group **975836806**. Include the device, Android version, reproduction steps and a redacted diagnostic report.
 
@@ -346,7 +347,7 @@ QQ group **975836806** — test builds, bug reports, plugin talk.
 
 ## Star History
 
-<a href="https://github.com/qiannianhuanxiang/DSHA/stargazers">
+<a href="https://github.com/DSH-APP/DSHA/stargazers">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/star-history-dark.svg" />
     <source media="(prefers-color-scheme: light)" srcset="docs/star-history.svg" />
@@ -354,8 +355,5 @@ QQ group **975836806** — test builds, bug reports, plugin talk.
   </picture>
 </a>
 
-<sub>Generated weekly by [`tools/gen-star-history.py`](tools/gen-star-history.py)
-([workflow](.github/workflows/star-history.yml)). Since 2026-06-30 GitHub restricts the
-stargazers API to a repository's own admins and collaborators, which breaks third-party
-live-embedded charts — so we fetch the data and draw the chart ourselves.</sub>
+<sub>Updated weekly from GitHub stargazer timestamps by [`tools/gen-star-history.py`](tools/gen-star-history.py) ([workflow](.github/workflows/star-history.yml)). Light and dark SVG charts are stored in this repository; the curve reflects currently retained stars.</sub>
 

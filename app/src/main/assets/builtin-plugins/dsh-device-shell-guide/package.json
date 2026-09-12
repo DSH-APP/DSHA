@@ -1,7 +1,7 @@
 {
   "name": "dsh-device-shell-guide",
-  "description": "DSHA builtin plugin: inject device-shell (ADB/Shizuku) steering into each new conversation's system prompt",
-  "version": "0.1.16",
+  "description": "DSHA builtin plugin: protected device commands through root, Shizuku or ADB",
+  "version": "0.1.19",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -17,8 +17,8 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-system-prompt": "0.1.5-rc.1",
-    "@deepseek-ai/dsh-llm": "0.1.5-rc.1"
+    "@deepseek-ai/dsh-system-prompt": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.5-rc.2"
   },
   "license": "MIT"
 }

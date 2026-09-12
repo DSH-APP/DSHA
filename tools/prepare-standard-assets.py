@@ -101,7 +101,14 @@ def main():
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(path, destination)
     # Gecko 内容脚本处于隔离世界；把同一份兼容代码注入页面世界，供新版 PDF.js 使用。
-    compatibility = (source / 'web-integration/compat.js').read_text(encoding='utf-8')
+    # 核验锁定的兼容代码和构建输入；离线打包无需现场安装 npm 依赖。
+    compat_meta = json.loads((source / 'web-integration/es-compat.inputs.json').read_text(encoding='utf-8'))
+    repo = Path(__file__).resolve().parents[1]
+    if any(sha256(repo / name) != digest for name, digest in compat_meta['inputs'].items()) \
+            or sha256(source / 'web-integration/es-compat.js') != compat_meta['sha256']:
+        raise ValueError('网页兼容代码与依赖锁不一致，请运行 tools/prepare-web-compat.mjs')
+    compatibility = (source / 'web-integration/es-compat.js').read_text(encoding='utf-8')
+    compatibility += '\n' + (source / 'web-integration/compat.js').read_text(encoding='utf-8')
     compatibility += '\n' + (source / 'web-integration/startup.js').read_text(encoding='utf-8')
     injector = "(function(){function install(){var root=document.head||document.documentElement;if(!root)return;var script=document.createElement('script');script.textContent=" \
         + json.dumps(compatibility, ensure_ascii=True) + ";root.appendChild(script);script.remove();}if(document.documentElement)install();else document.addEventListener('DOMContentLoaded',install,{once:true});})();\n"

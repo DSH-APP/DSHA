@@ -69,6 +69,14 @@ public final class MaintenanceFixtureInstrumentation extends Instrumentation {
             if (fixture.base.getUsableSpace() < 3L * 1024 * 1024 * 1024)
                 throw new IOException("fixture 至少需要 3 GiB 可用空间，已中止；未清理任何文件");
             freshInitialization(harness);
+            if ("personal".equals(args.getString("case"))) {
+                personalMigration(harness);
+                result.putString("status", "PASS"); result.putInt("assertions", assertions);
+                check(fixture.base.getCanonicalPath().startsWith(getTargetContext().getCacheDir().getCanonicalPath() + File.separator)
+                        && fixture.base.getName().startsWith("maintenance-fixture-"), "清理必须限制在本次隔离目录");
+                EnvironmentMaintenance.deleteTree(fixture.base);
+                finish(Activity.RESULT_OK, result); return;
+            }
             if ("fresh".equals(args.getString("case", "all"))) {
                 result.putString("status", "PASS"); result.putInt("assertions", assertions);
                 result.putString("stream", "PASS " + assertions + " fresh assertions；fixture 原样保留：" + fixture.base);
@@ -497,6 +505,47 @@ public final class MaintenanceFixtureInstrumentation extends Instrumentation {
         String output = harness.proot().execAndReadWithProot("python3 -B -c " + ShellQuote.arg(script
                 + "\nprint('MAINTENANCE_FIXTURE_OK')") + " 2>&1", 120_000);
         check(output != null && output.contains("MAINTENANCE_FIXTURE_OK"), "fixture Python：" + output);
+    }
+
+    private void personalMigration(FixtureHarness harness) throws Exception {
+        report("建立独立迁移夹具：2048 个项目文件、16 MiB 内容、登记工作区和链接");
+        python(harness, """
+                import os,json,hashlib
+                from pathlib import Path
+                root=Path('/root/迁移项目'); root.mkdir()
+                for i in range(2048): (root/('part-'+str(i))).write_text('个人项目'+str(i)+'x'*2048)
+                data=os.urandom(16*1024*1024); (root/'large.bin').write_bytes(data)
+                (root/'expected.sha256').write_text(hashlib.sha256(data).hexdigest())
+                os.link(root/'expected.sha256',root/'hardlink.txt')
+                (root/'relative-link').symlink_to('part-12')
+                (root/'external-link').symlink_to('/sdcard')
+                work=Path('/var/dsha-registered-project');work.mkdir();(work/'user.txt').write_text('登记工作区')
+                home=Path('/mnt/local-project');home.mkdir(parents=True);(home/'user.txt').write_text('rootfs 本地文件')
+                reg=Path('/root/.dsh/storages/workspace.json');reg.parent.mkdir(parents=True,exist_ok=True)
+                reg.write_text(json.dumps({'tables':{'workspaces':{'fixture':{'path':str(work)}}}}))
+                """);
+        java.util.List<String> stages = new java.util.ArrayList<>();
+        long started = android.os.SystemClock.elapsedRealtime();
+        String rebuilt = BackupManager.runDataTask(harness, () -> EnvironmentMaintenance.rebuild(harness, stage -> {
+            stages.add(stage); report(stage);
+        }));
+        check(rebuilt.contains("环境更新完成"), "个人数据重建流程成功");
+        check(stages.stream().anyMatch(s -> s.contains("项，") && s.contains("秒")), "真实文件进度已持续反馈");
+        check(stages.stream().anyMatch(s -> s.contains("快速文件迁移")), "此真机走经过验证的快速路径");
+        python(harness, """
+                import hashlib,os
+                from pathlib import Path
+                root=Path('/root/迁移项目')
+                assert len(list(root.glob('part-*')))==2048
+                assert (root/'part-12').read_text()=='个人项目12'+'x'*2048
+                assert hashlib.sha256((root/'large.bin').read_bytes()).hexdigest()==(root/'expected.sha256').read_text()
+                assert (root/'hardlink.txt').read_text()==(root/'expected.sha256').read_text()
+                assert os.readlink(root/'relative-link')=='part-12'
+                assert os.readlink(root/'external-link')=='/sdcard'
+                assert Path('/var/dsha-registered-project/user.txt').read_text()=='登记工作区'
+                assert Path('/mnt/local-project/user.txt').read_text()=='rootfs 本地文件'
+                """);
+        report("PERSONAL_REBUILD_VERIFIED ms=" + (android.os.SystemClock.elapsedRealtime() - started));
     }
     private File find(File parent, String relative) {
         File[] entries = parent.listFiles();

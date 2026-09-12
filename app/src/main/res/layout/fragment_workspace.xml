@@ -2,38 +2,35 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_pad">
         <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp">
-            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="备份与恢复" />
-            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="按需备份全部数据、对话、设置或插件。" />
-            <Button android:id="@+id/workspace_backup" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="创建备份" />
-            <Button android:id="@+id/workspace_restore" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="从文件恢复" />
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="@string/ui_m0099" />
+            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="@string/ui_m0130" />
+            <CheckBox android:id="@+id/config_backup_key" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="8dp" android:saveEnabled="false" android:text="@string/ui_m0100" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/ui_m0051" />
+            <Button android:id="@+id/workspace_backup" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0073" />
+            <Button android:id="@+id/workspace_restore" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0052" />
             <TextView android:id="@+id/workspace_backup_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
-            <Button android:id="@+id/workspace_restore_latest" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="预览最近备份" />
-            <Button android:id="@+id/workspace_location" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="保存位置：Download/DSHA" />
-            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="备份可能包含密钥、配置和插件凭据，请妥善保存。" />
+            <Button android:id="@+id/workspace_restore_latest" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/ui_m0214" />
+            <Button android:id="@+id/workspace_location" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="@string/ui_m0058" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/ui_m0101" />
         </LinearLayout>
         <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
-            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="工作区" />
-            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="运行环境中的工作目录名" />
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="@string/ui_m0112" />
+            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="@string/ui_m0197" />
             <EditText android:id="@+id/workspace_path" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="8dp" android:background="@drawable/bg_input" android:padding="12dp" android:singleLine="true" android:hint="deepseek-harness" />
-            <Button android:id="@+id/workspace_apply" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="应用路径" />
+            <Button android:id="@+id/workspace_apply" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0116" />
             <TextView android:id="@+id/workspace_info" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="" />
         </LinearLayout>
         <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
-            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="文件共享" />
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="@string/ui_m0141" />
             <TextView android:id="@+id/workspace_share_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="" />
         </LinearLayout>
+
         <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
-            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="设备 Shell · Shizuku" />
-            <TextView android:id="@+id/workspace_shizuku_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Shizuku 未授权" />
-            <Button android:id="@+id/workspace_shizuku_auth" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="授权 Shizuku" />
-            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="授权后，助手可使用设备 Shell 能力。" />
-        </LinearLayout>
-        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
-            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="环境维护" />
-            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="重置与清除操作会再次询问，请先做好备份。" />
-            <Button android:id="@+id/workspace_clean_sessions" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="清理损坏会话" />
-            <Button android:id="@+id/workspace_reset" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="重置配置，保留对话" />
-            <Button android:id="@+id/workspace_clear" style="@style/Widget.DSHA.DangerButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="清除环境" />
+            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:text="@string/ui_m0019" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="@string/ui_m0210" />
+            <Button android:id="@+id/workspace_clean_sessions" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0165" />
+            <Button android:id="@+id/workspace_reset" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0211" />
+            <Button android:id="@+id/workspace_clear" style="@style/Widget.DSHA.DangerButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0166" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

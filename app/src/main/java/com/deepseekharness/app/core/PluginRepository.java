@@ -43,7 +43,7 @@ public final class PluginRepository extends AndroidViewModel {
     private volatile boolean installationSucceeded;
     private volatile PluginTask activeTask;
     private final android.os.Handler main = new android.os.Handler(android.os.Looper.getMainLooper());
-    private String installedDescription = "";
+    private Preview installedPreview;
     private final MutableLiveData<Preview> preview = new MutableLiveData<>();
 
     public static final class Item {
@@ -82,19 +82,27 @@ public final class PluginRepository extends AndroidViewModel {
         Preview(JSONObject json) throws Exception {
             id = json.getString("previewId");
             if (!id.matches("[a-f0-9]{32}")) throw new IOException("插件预览标识无效");
+            data=new JSONObject(json.toString());
+            JSONArray packages=data.getJSONArray("items");
+            for(int i=0;i<packages.length();i++)packages.getJSONObject(i).getString("name");
+            description=description();
+        }
+        private final JSONObject data;
+        public String description() {
+            JSONObject json=data;
             StringBuilder text = new StringBuilder();
-            JSONArray packages = json.getJSONArray("items");
+            JSONArray packages = json.optJSONArray("items");
             for (int i = 0; i < packages.length(); i++) {
-                JSONObject pkg = packages.getJSONObject(i);
-                text.append(pkg.getString("name")).append(" · ").append(pkg.optString("version"))
-                        .append("\n作者：").append(pkg.optString("author", "未注明"))
+                JSONObject pkg = packages.optJSONObject(i);
+                text.append(pkg.optString("name")).append(" · ").append(pkg.optString("version"))
+                        .append(com.deepseekharness.app.util.UiText.text("\n作者：")).append(pkg.optString("author", com.deepseekharness.app.util.UiText.text("未注明")))
                         .append("\n").append(pkg.optString("description"))
-                        .append("\n").append(pkg.optString("compatibilityMessage")).append("\n\n");
+                        .append("\n").append(com.deepseekharness.app.util.UiStateText.render(pkg.optString("compatibilityMessage"))).append("\n\n");
             }
-            text.append("来源：").append(json.optString("source").isEmpty() ? "本地插件包" : json.optString("source"))
+            text.append(com.deepseekharness.app.util.UiText.text("来源：")).append(json.optString("source").isEmpty() ? com.deepseekharness.app.util.UiText.text("本地插件包") : json.optString("source"))
                     .append("\nSHA-256：").append(json.optString("sha256"))
-                    .append("\n\n确认后安装并登记；完成后重启 Web 生效。同名更新会保留上一版供回退。");
-            description = SensitiveData.redact(text.toString());
+                    .append(com.deepseekharness.app.util.UiText.text("\n\n确认后安装并登记；完成后重启 Web 生效。同名更新会保留上一版供回退。"));
+            return SensitiveData.redact(text.toString());
         }
     }
 
@@ -121,7 +129,7 @@ public final class PluginRepository extends AndroidViewModel {
     public boolean isBusy() { return working.get(); }
     public boolean isSafeMode() { return safeMode; }
     public boolean installationSucceeded() { return installationSucceeded; }
-    public String installedDescription() { return installedDescription; }
+    public String installedDescription() { return installedPreview==null?"":installedPreview.description(); }
     public LiveData<Preview> preview() { return preview; }
 
     public void selectionMessage(String message) {
@@ -336,7 +344,7 @@ public final class PluginRepository extends AndroidViewModel {
             return operationMessage(output);
         }, null, true, () -> {
             installationSucceeded = false;
-            installedDescription = selected.description;
+            installedPreview = selected;
             preview.setValue(null);
         });
     }

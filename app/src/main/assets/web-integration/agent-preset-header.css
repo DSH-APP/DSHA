@@ -1,0 +1,50 @@
+/* 预设按钮不能依赖窄屏插件来清除浏览器默认边框。 */
+.dsha-preset-header-anchor {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 220px;
+}
+.dsha-preset-header-anchor [data-dsha-agent-preset="header"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, inherit);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.dsha-preset-header-anchor [data-dsha-agent-preset="header"] > svg {
+  flex: none;
+}
+.dsha-preset-header-anchor [data-dsha-agent-preset="header"] > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dsha-preset-header-anchor [data-dsha-agent-preset="header"]:focus:not(:focus-visible) {
+  outline: none;
+}
+.dsha-preset-header-anchor [data-dsha-agent-preset="header"]:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary, #4f6ef7);
+  outline-offset: 2px;
+}
+.dsha-preset-header-anchor [data-dsha-agent-preset="header"]:hover {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
+}
+@media (pointer: coarse) {
+  [data-phase] header [class*="_headerActions"] {
+    margin-inline-start: auto;
+  }
+}

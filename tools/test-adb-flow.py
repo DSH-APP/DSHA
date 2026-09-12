@@ -151,7 +151,7 @@ class FlowTest(unittest.TestCase):
         self.stack.enter_context(patch.dict(sys.modules, mods))
         self.stack.enter_context(patch.object(adb.sys, 'argv', ['adb-shell.py', '--host', '192.0.2.1', '--port', '39000'] + command))
         self.stack.enter_context(patch.object(adb.os, 'environ', {}))
-        self.native_plan = self.stack.enter_context(patch.object(adb, 'request_device_plan',
+        self.native_plan = self.stack.enter_context(patch.object(adb, 'request_native_execution',
             side_effect=adb.policy.Blocked('策略拒绝') if blocked else None,
             return_value={'version': 1, 'kind': 'READ', 'argv': ['id'], 'su': root}))
         self.stack.enter_context(patch.object(adb.os.path, 'isfile', side_effect=lambda p: p in (adb.KEY, adb.KEYPUB)
@@ -165,7 +165,7 @@ class FlowTest(unittest.TestCase):
         self.assertEqual(5, result)
         self.assertTrue(out.getvalue().endswith('[EXIT=5]\n'))
         confirm.assert_not_called()
-        self.native_plan.assert_called_once_with('id', False)
+        self.native_plan.assert_called_once_with('id', False, True)
         wrapper = (ASSETS / 'adb-setup.sh').read_text(encoding='utf-8').split("cat > /root/dsh-bin/adb-shell <<'EOF'", 1)[1].split('\nEOF', 1)[0]
         self.assertNotIn('dsh-confirm.sh', wrapper)
         self.assertIn('exec python3', wrapper)
@@ -186,14 +186,14 @@ class FlowTest(unittest.TestCase):
         with patch.object(adb, 'request_confirm', return_value=True) as confirm, contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(0, adb.main())
         confirm.assert_not_called()
-        self.native_plan.assert_called_once_with('id', True)
+        self.native_plan.assert_called_once_with('id', True, True)
 
     def test_confirmation_switch_never_bypasses_native_policy(self):
         self.main_fakes(['id'], disabled=True)
         with patch.object(adb, 'request_confirm') as confirm, contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(0, adb.main())
         confirm.assert_not_called()
-        self.native_plan.assert_called_once_with('id', False)
+        self.native_plan.assert_called_once_with('id', False, True)
 
     def test_internal_flag_never_bypasses_native_denial(self):
         self.main_fakes(['setenforce 0'], root=True, disabled=True, blocked=True)
@@ -259,10 +259,55 @@ class FlowTest(unittest.TestCase):
 
     def test_script_and_wrapper_version_match_java(self):
         for file in ['adb-shell.py', 'adb-pair.py', 'adb-setup.sh']:
-            self.assertIn('DSHA_ADB_SCRIPT_VERSION=16', (ASSETS / file).read_text(encoding='utf-8'))
+            self.assertIn('DSHA_ADB_SCRIPT_VERSION=17', (ASSETS / file).read_text(encoding='utf-8'))
         source = (ROOT / 'app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java').read_text(encoding='utf-8')
-        self.assertIn('SCRIPT_VERSION = "16"', source)
+        self.assertIn('SCRIPT_VERSION = "17"', source)
         self.assertIn("grep -q '^# DSHA_ADB_SCRIPT_VERSION=", source)
+
+
+class NativeRouteTest(unittest.TestCase):
+    def test_root_or_shizuku_success_needs_no_adb_keys_or_dependencies(self):
+        for code in (0, 17, 126):
+            output = 'native result\n[EXIT=%d]' % code
+            with patch.object(adb.sys, 'argv', ['adb-shell.py', 'id']), \
+                 patch.object(adb, 'request_native_execution', return_value=adb.ShellResult(output, code)) as request, \
+                 patch.object(adb.os.path, 'isfile', side_effect=AssertionError('不能读取 ADB 密钥')), \
+                 patch.object(adb, 'connect_with_retry', side_effect=AssertionError('不能调用 ADB')), \
+                 contextlib.redirect_stdout(io.StringIO()) as stdout:
+                self.assertEqual(code, adb.main())
+            request.assert_called_once_with('id', False, False)
+            self.assertEqual(output + '\n', stdout.getvalue())
+
+    def test_lost_native_response_never_falls_back_to_adb(self):
+        with patch.object(adb.sys, 'argv', ['adb-shell.py', 'id']), \
+             patch.object(adb, 'request_native_execution', side_effect=adb.ExecutionUnknown('已发送')), \
+             patch.object(adb, 'connect_with_retry', side_effect=AssertionError('不能重放')), \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(125, adb.main())
+
+    def invoke_bridge(self, value=None, error=None):
+        response = Mock()
+        response.__enter__ = Mock(return_value=response); response.__exit__ = Mock(return_value=False)
+        response.read.return_value = json.dumps({'result': json.dumps(value)}).encode()
+        opener = Mock(); opener.open.return_value = response; opener.open.side_effect = error
+        with patch.object(adb, 'open', return_value=io.StringIO('fake-token'), create=True), \
+             patch.object(urllib.request, 'build_opener', return_value=opener):
+            try:
+                return adb.request_native_execution('id')
+            finally:
+                opener.open.assert_called_once()
+                self.assertNotIn('fake-token', opener.open.call_args.args[0].full_url)
+
+    def test_only_explicit_plan_can_trigger_adb(self):
+        plan = {'version': 1, 'kind': 'READ', 'argv': ['id'], 'su': False}
+        self.assertEqual(plan, self.invoke_bridge({'state': 'adb', 'plan': plan}))
+        result = self.invoke_bridge({'state': 'completed', 'output': 'uid=0(root)\n[EXIT=0]', 'exit': 0})
+        self.assertEqual(0, result.exit_code)
+        for bad in ({'kind': 'READ', 'argv': ['id']}, {'state': 'adb'},
+                    {'state': 'completed', 'output': 'truncated'},
+                    {'state': 'completed', 'output': 'x', 'exit': 999}):
+            with self.assertRaises(adb.ExecutionUnknown): self.invoke_bridge(bad)
+        with self.assertRaises(adb.ExecutionUnknown): self.invoke_bridge(error=TimeoutError())
 
 
 class DiscoveryTest(unittest.TestCase):

@@ -1,0 +1,219 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="ui_m0000" formatted="false">"下一步"</string>
+    <string name="ui_m0001" formatted="false">"下载更新"</string>
+    <string name="ui_m0002" formatted="false">"保存配置"</string>
+    <string name="ui_m0003" formatted="false">"取消检查"</string>
+    <string name="ui_m0004" formatted="false">"名称排序"</string>
+    <string name="ui_m0005" formatted="false">"启动"</string>
+    <string name="ui_m0006" formatted="false">"备份并重建环境"</string>
+    <string name="ui_m0007" formatted="false">"安全启动"</string>
+    <string name="ui_m0008" formatted="false">"安装与修复"</string>
+    <string name="ui_m0009" formatted="false">"导出插件包"</string>
+    <string name="ui_m0010" formatted="false">"开始配对"</string>
+    <string name="ui_m0011" formatted="false">"恢复选项"</string>
+    <string name="ui_m0012" formatted="false">"手动地址与端口"</string>
+    <string name="ui_m0013" formatted="false">"打开插件管理"</string>
+    <string name="ui_m0014" formatted="false">"按需修复"</string>
+    <string name="ui_m0015" formatted="false">"授权 Shizuku"</string>
+    <string name="ui_m0016" formatted="false">"插件"</string>
+    <string name="ui_m0017" formatted="false">"未检查"</string>
+    <string name="ui_m0018" formatted="false">"检查更新"</string>
+    <string name="ui_m0019" formatted="false">"环境维护"</string>
+    <string name="ui_m0020" formatted="false">"白天"</string>
+    <string name="ui_m0021" formatted="false">"终端"</string>
+    <string name="ui_m0022" formatted="false">"设备能力授权"</string>
+    <string name="ui_m0023" formatted="false">"设置"</string>
+    <string name="ui_m0024" formatted="false">"输入命令，回车执行"</string>
+    <string name="ui_m0025" formatted="false">"还没有日志。"</string>
+    <string name="ui_m0026" formatted="false">"配对与端口说明"</string>
+    <string name="ui_m0027" formatted="false">"重启"</string>
+    <string name="ui_m0028" formatted="false">"3080（1—65535，避开 3081 / 3090）"</string>
+    <string name="ui_m0029" formatted="false">"6 位配对码"</string>
+    <string name="ui_m0030" formatted="false">"ADB 已关闭。不用无线调试就保持关闭。"</string>
+    <string name="ui_m0031" formatted="false">"ADB 无线配对"</string>
+    <string name="ui_m0032" formatted="false">"API key、安装、工作区、备份"</string>
+    <string name="ui_m0033" formatted="false">"DNS · 会话 · Android 用户组"</string>
+    <string name="ui_m0034" formatted="false">"DSH 未运行"</string>
+    <string name="ui_m0035" formatted="false">"DeepSeek Harness 一键启动器\n\n内置 Linux 环境，无需 Termux，\n自动安装并启动，开箱即用。"</string>
+    <string name="ui_m0036" formatted="false">"GitHub 仓库 · QQ 交流群 · 开源协议"</string>
+    <string name="ui_m0037" formatted="false">"JavaScript 运行环境"</string>
+    <string name="ui_m0038" formatted="false">"Linux 环境"</string>
+    <string name="ui_m0039" formatted="false">"Shizuku 未授权"</string>
+    <string name="ui_m0040" formatted="false">"deepseek-harness：默认最新 RC"</string>
+    <string name="ui_m0041" formatted="false">"dsh / npm 损坏时用；配置与对话记录会保留"</string>
+    <string name="ui_m0042" formatted="false">"dsh 入口与版本"</string>
+    <string name="ui_m0043" formatted="false">"▸ 高级：端口"</string>
+    <string name="ui_m0044" formatted="false">"三步上手"</string>
+    <string name="ui_m0045" formatted="false">"下一页会自动解压内置 Linux 环境，不用自己装"</string>
+    <string name="ui_m0046" formatted="false">"下载日志"</string>
+    <string name="ui_m0047" formatted="false">"下载错误日志"</string>
+    <string name="ui_m0048" formatted="false">"下载错误日志 · 环境检查 · 故障修复"</string>
+    <string name="ui_m0050" formatted="false">"中止"</string>
+    <string name="ui_m0051" formatted="false">"仅控制应用中填写的 DeepSeek API Key，开关即时保存。关闭后，恢复时需重新填写；插件配置仍可能含其他凭据。"</string>
+    <string name="ui_m0052" formatted="false">"从文件恢复"</string>
+    <string name="ui_m0053" formatted="false">"传感器与手电"</string>
+    <string name="ui_m0054" formatted="false">"使用 proroot 运行时"</string>
+    <string name="ui_m0055" formatted="false">"使用兼容浏览内核"</string>
+    <string name="ui_m0056" formatted="false">"使用提示"</string>
+    <string name="ui_m0057" formatted="false">"使用桌面版网页布局"</string>
+    <string name="ui_m0058" formatted="false">"保存位置：Download/DSHA"</string>
+    <string name="ui_m0059" formatted="false">"保持系统配对弹窗开启，用分屏返回 DSHA，输入当前的 6 位数字。"</string>
+    <string name="ui_m0060" formatted="false">"修复工具"</string>
+    <string name="ui_m0061" formatted="false">"停止"</string>
+    <string name="ui_m0062" formatted="false">"允许 Root Shell"</string>
+    <string name="ui_m0063" formatted="false">"允许局域网访问"</string>
+    <string name="ui_m0064" formatted="false">"允许当前 DSHA 环境中的助手和插件查询本 Android 用户的短信，包括号码、正文和可能存在的验证码。预授权后无需逐条确认，关闭可撤销。仅允许查询；Android 仍可能拒绝访问。  使用已授权的 root 或 ADB 通道。Shizuku 不执行短信查询。"</string>
+    <string name="ui_m0065" formatted="false">"允许查询设备目录；根目录、相册及 Android/data 等目录只读。禁止改分区、系统设置和不认识的命令；结束应用前刷新完整清单，保护系统应用与关键进程。普通下载文件操作和结束普通用户应用可直接执行。"</string>
+    <string name="ui_m0066" formatted="false">"允许读取位置"</string>
+    <string name="ui_m0067" formatted="false">"关于"</string>
+    <string name="ui_m0068" formatted="false">"关于 DSHA"</string>
+    <string name="ui_m0069" formatted="false">"关于 DSHA · 加入交流"</string>
+    <string name="ui_m0070" formatted="false">"其他文件选择器"</string>
+    <string name="ui_m0071" formatted="false">"内置环境会自动解压，填 key 就能用；没有 key 也能先装"</string>
+    <string name="ui_m0072" formatted="false">"切换页面后任务继续，返回可查看结果。修复只处理失败项；停止请求会等待当前操作安全收尾。"</string>
+    <string name="ui_m0073" formatted="false">"创建备份"</string>
+    <string name="ui_m0074" formatted="false">"到「启动」页启动即可使用"</string>
+    <string name="ui_m0075" formatted="false">"到「设置 → 配置」填入；也可跳过，之后在 WebUI 里配置第三方 API"</string>
+    <string name="ui_m0076" formatted="false">"包管理器"</string>
+    <string name="ui_m0077" formatted="false">"反馈问题"</string>
+    <string name="ui_m0078" formatted="false">"取消当前任务"</string>
+    <string name="ui_m0079" formatted="false">"取消当前操作"</string>
+    <string name="ui_m0080" formatted="false">"另存为"</string>
+    <string name="ui_m0081" formatted="false">"只看自己装的"</string>
+    <string name="ui_m0082" formatted="false">"可留空，也可在对话页设置官方或第三方接口与模型。"</string>
+    <string name="ui_m0083" formatted="false">"同步本机安装状态"</string>
+    <string name="ui_m0084" formatted="false">"后台断连时，可允许 DSHA 后台运行并减少电池限制。厂商仍可能暂停后台；恢复前先确认无线调试已开启，再点「验证已有连接」。"</string>
+    <string name="ui_m0085" formatted="false">"后台运行"</string>
+    <string name="ui_m0086" formatted="false">"启动 Web UI"</string>
+    <string name="ui_m0087" formatted="false">"启动 Web UI，点「进入」在软件里打开"</string>
+    <string name="ui_m0088" formatted="false">"启动、终端、市场、设置，底栏一切换"</string>
+    <string name="ui_m0089" formatted="false">"启动时检查更新"</string>
+    <string name="ui_m0090" formatted="false">"启用 ADB 设备通道（默认关闭）"</string>
+    <string name="ui_m0091" formatted="false">"四个页面"</string>
+    <string name="ui_m0092" formatted="false">"在 DSHA「设备能力授权」中启用 ADB，并保持手机连接 Wi-Fi。"</string>
+    <string name="ui_m0093" formatted="false">"在本机 Web 运行时，通过 3081 端口供同一 Wi-Fi 的设备访问对话。需要局域网权限，请仅在可信网络开启。"</string>
+    <string name="ui_m0094" formatted="false">"在浏览器查看发布页"</string>
+    <string name="ui_m0095" formatted="false">"在系统浏览器中打开"</string>
+    <string name="ui_m0096" formatted="false">"基础工具"</string>
+    <string name="ui_m0097" formatted="false">"填入 API key（可跳过）"</string>
+    <string name="ui_m0098" formatted="false">"备份"</string>
+    <string name="ui_m0099" formatted="false">"备份与恢复"</string>
+    <string name="ui_m0100" formatted="false">"备份包含 API Key"</string>
+    <string name="ui_m0101" formatted="false">"备份可能包含密钥、配置和插件凭据，请妥善保存。"</string>
+    <string name="ui_m0102" formatted="false">"复制"</string>
+    <string name="ui_m0103" formatted="false">"复制反馈"</string>
+    <string name="ui_m0104" formatted="false">"安全模式：恢复此前启用的第三方插件"</string>
+    <string name="ui_m0105" formatted="false">"安装或修改插件后，重启 Web 生效。支持 GitHub、npm 和 ZIP / TAR / TAR.GZ / TGZ 的已构建插件包；导出包可在其他 DSHA 中导入。"</string>
+    <string name="ui_m0106" formatted="false">"安装插件"</string>
+    <string name="ui_m0107" formatted="false">"安装更新"</string>
+    <string name="ui_m0108" formatted="false">"导入插件包"</string>
+    <string name="ui_m0109" formatted="false">"导出报告"</string>
+    <string name="ui_m0110" formatted="false">"少提醒我"</string>
+    <string name="ui_m0111" formatted="false">"尝试使用 proroot 加快容器运行；部分设备或命令不兼容时可关闭，使用 proot。保存并重启 Web 后生效。"</string>
+    <string name="ui_m0112" formatted="false">"工作区"</string>
+    <string name="ui_m0113" formatted="false">"市场"</string>
+    <string name="ui_m0114" formatted="false">"常用设置"</string>
+    <string name="ui_m0115" formatted="false">"应用更新"</string>
+    <string name="ui_m0116" formatted="false">"应用路径"</string>
+    <string name="ui_m0117" formatted="false">"开启设备通道"</string>
+    <string name="ui_m0118" formatted="false">"强制使用内置 Gecko，适合系统网页白屏或不兼容时；关闭后由 App 自动选择可用内核。保存后重新进入对话生效。"</string>
+    <string name="ui_m0119" formatted="false">"当前版本"</string>
+    <string name="ui_m0121" formatted="false">"悬浮显示 AI 输出"</string>
+    <string name="ui_m0122" formatted="false">"悬浮条设置 ›"</string>
+    <string name="ui_m0123" formatted="false">"所有文件访问权限 ›"</string>
+    <string name="ui_m0124" formatted="false">"手机已 root 时可直接使用 su，无需 ADB 配对。首次执行请在 root 管理器中授权 DSHA；设备保护规则始终生效。"</string>
+    <string name="ui_m0125" formatted="false">"打开 Shizuku 管理器"</string>
+    <string name="ui_m0126" formatted="false">"打开数据与备份"</string>
+    <string name="ui_m0127" formatted="false">"打开无线调试"</string>
+    <string name="ui_m0128" formatted="false">"打开无线调试设置"</string>
+    <string name="ui_m0129" formatted="false">"把 AI 回复和工具执行状态显示在其他 App 上方；保存后需允许悬浮窗权限。旁人也可能看到输出。"</string>
+    <string name="ui_m0130" formatted="false">"按需备份全部数据、对话、设置或插件。"</string>
+    <string name="ui_m0131" formatted="false">"按需要连接设备通道并授予权限。设备命令优先使用已启用的 root，其次 Shizuku，再使用 ADB。"</string>
+    <string name="ui_m0132" formatted="false">"授权后自动连接，无需启用 ADB。服务重启后会恢复绑定。"</string>
+    <string name="ui_m0133" formatted="false">"插件市场"</string>
+    <string name="ui_m0134" formatted="false">"插件操作状态，点按查看完整信息"</string>
+    <string name="ui_m0135" formatted="false">"插件管理"</string>
+    <string name="ui_m0137" formatted="false">"插件链接或 npm 包名"</string>
+    <string name="ui_m0138" formatted="false">"搜索插件名称或描述"</string>
+    <string name="ui_m0139" formatted="false">"收集启动失败、崩溃和最近运行输出。下载后可在 Download/DSHA 中找到。"</string>
+    <string name="ui_m0140" formatted="false">"敏感能力"</string>
+    <string name="ui_m0141" formatted="false">"文件共享"</string>
+    <string name="ui_m0142" formatted="false">"新建终端"</string>
+    <string name="ui_m0143" formatted="false">"显示与运行"</string>
+    <string name="ui_m0144" formatted="false">"普通对话、插件和 App 自身的通知等功能不需要 ADB。\n\nADB 用于助手执行受支持的 Android 设备命令，例如查看应用与系统状态、读取有限日志、操作允许目录内的文件。所有命令仍需通过 DSHA 策略检查；开启 ADB 不会放开静默装卸应用、修改系统设置或刷机。\n\n短信查询需在「设置 → 设备能力授权」中预授权，或逐次确认。屏幕点击与输入使用下方的屏幕操作权限。\n\n使用无线配对需要 Android 11+ 的「无线调试」功能；部分厂商可能限制。更低版本可在可用时使用 Shizuku，或继续使用无需 ADB 的功能。"</string>
+    <string name="ui_m0145" formatted="false">"暂无终端\n点击「新建」打开一个终端"</string>
+    <string name="ui_m0146" formatted="false">"更多"</string>
+    <string name="ui_m0147" formatted="false">"更新 App 与运行脚本"</string>
+    <string name="ui_m0148" formatted="false">"更新通道"</string>
+    <string name="ui_m0149" formatted="false">"本次配对码"</string>
+    <string name="ui_m0150" formatted="false">"本页开关即时保存。先准备离线依赖，再获取新配对码，避免等待时配对码失效。"</string>
+    <string name="ui_m0151" formatted="false">"来自系统配对弹窗，失效后需重新获取"</string>
+    <string name="ui_m0152" formatted="false">"查看崩溃日志"</string>
+    <string name="ui_m0153" formatted="false">"检查全部六项组件，查看每项结果；缺失时再按需修复。"</string>
+    <string name="ui_m0154" formatted="false">"检查日志"</string>
+    <string name="ui_m0155" formatted="false">"检查环境"</string>
+    <string name="ui_m0156" formatted="false">"检查结果"</string>
+    <string name="ui_m0157" formatted="false">"检查运行环境、证书和插件状态。"</string>
+    <string name="ui_m0158" formatted="false">"检测已安装插件"</string>
+    <string name="ui_m0159" formatted="false">"检测插件"</string>
+    <string name="ui_m0160" formatted="false">"正在准备运行环境"</string>
+    <string name="ui_m0161" formatted="false">"浏览、安装、开关插件"</string>
+    <string name="ui_m0162" formatted="false">"浏览目录"</string>
+    <string name="ui_m0163" formatted="false">"涉及精确位置，默认关闭。"</string>
+    <string name="ui_m0164" formatted="false">"清理"</string>
+    <string name="ui_m0165" formatted="false">"清理损坏会话"</string>
+    <string name="ui_m0166" formatted="false">"清除环境"</string>
+    <string name="ui_m0167" formatted="false">"点击下方验证按钮。重启手机或重新开启无线调试后，可再次验证。"</string>
+    <string name="ui_m0168" formatted="false">"版本说明"</string>
+    <string name="ui_m0169" formatted="false">"环境检查"</string>
+    <string name="ui_m0170" formatted="false">"申请授权并验证 root"</string>
+    <string name="ui_m0171" formatted="false">"短信读取"</string>
+    <string name="ui_m0172" formatted="false">"稳定 / 预览更新通道"</string>
+    <string name="ui_m0173" formatted="false">"稳定版"</string>
+    <string name="ui_m0174" formatted="false">"稳定版仅接收正式发布；预览版也包含测试版本。自动匹配当前设备。"</string>
+    <string name="ui_m0175" formatted="false">"端口"</string>
+    <string name="ui_m0176" formatted="false">"等环境解压完"</string>
+    <string name="ui_m0177" formatted="false">"简易"</string>
+    <string name="ui_m0178" formatted="false">"简易终端"</string>
+    <string name="ui_m0179" formatted="false">"粘贴链接"</string>
+    <string name="ui_m0180" formatted="false">"维护与信息"</string>
+    <string name="ui_m0181" formatted="false">"自动读取本次配对码"</string>
+    <string name="ui_m0182" formatted="false">"补充复现步骤，不要填写密钥或私人对话"</string>
+    <string name="ui_m0183" formatted="false">"解压时请保持屏幕常亮，不要杀后台。"</string>
+    <string name="ui_m0184" formatted="false">"解析插件"</string>
+    <string name="ui_m0185" formatted="false">"解析链接"</string>
+    <string name="ui_m0186" formatted="false">"让对话页按电脑浏览器显示，适合大屏；手机通常保持关闭。保存后重新进入对话生效。"</string>
+    <string name="ui_m0187" formatted="false">"设备 Shell · Shizuku"</string>
+    <string name="ui_m0188" formatted="false">"设备命令保护始终开启"</string>
+    <string name="ui_m0189" formatted="false">"设备权限与 ADB"</string>
+    <string name="ui_m0190" formatted="false">"设置屏幕操作权限"</string>
+    <string name="ui_m0191" formatted="false">"设置电池优化"</string>
+    <string name="ui_m0192" formatted="false">"诊断与日志"</string>
+    <string name="ui_m0193" formatted="false">"诊断报告"</string>
+    <string name="ui_m0194" formatted="false">"调整悬浮条底色、透明度、行数、字号和停留时间；也可选择是否显示思考过程和命令原文。"</string>
+    <string name="ui_m0195" formatted="false">"输入本次配对码"</string>
+    <string name="ui_m0196" formatted="false">"运行日志"</string>
+    <string name="ui_m0197" formatted="false">"运行环境中的工作目录名"</string>
+    <string name="ui_m0198" formatted="false">"运行脚本随 APK 更新；这里打开真实版本检查与下载页面。"</string>
+    <string name="ui_m0199" formatted="false">"运行补丁"</string>
+    <string name="ui_m0200" formatted="false">"返回"</string>
+    <string name="ui_m0201" formatted="false">"返回上一页"</string>
+    <string name="ui_m0202" formatted="false">"返回启动页处理插件 / 安全启动"</string>
+    <string name="ui_m0203" formatted="false">"进 Linux 环境敲命令"</string>
+    <string name="ui_m0204" formatted="false">"进入 App 后在后台检查所选稳定 / 预览通道；发现新版本时提示，由你决定是否下载。"</string>
+    <string name="ui_m0205" formatted="false">"进入开发者选项 → 无线调试，开启后选择「使用配对码配对设备」。"</string>
+    <string name="ui_m0206" formatted="false">"连接这台手机的 Android 系统，需要 Android 11+ 无线调试功能。"</string>
+    <string name="ui_m0207" formatted="false">"配对后验证连接"</string>
+    <string name="ui_m0208" formatted="false">"重新解压内置环境"</string>
+    <string name="ui_m0209" formatted="false">"重新诊断"</string>
+    <string name="ui_m0210" formatted="false">"重置与清除操作会再次询问，请先做好备份。"</string>
+    <string name="ui_m0211" formatted="false">"重置配置，保留对话"</string>
+    <string name="ui_m0212" formatted="false">"重试"</string>
+    <string name="ui_m0213" formatted="false">"错误日志"</string>
+    <string name="ui_m0214" formatted="false">"预览最近备份"</string>
+    <string name="ui_m0215" formatted="false">"预览版"</string>
+    <string name="ui_m0216" formatted="false">"首次启动需要解压内置环境，请稍候…"</string>
+    <string name="ui_m0217" formatted="false">"验证已有连接"</string>
+    <string name="ui_m0218" formatted="false">"＋ 新建"</string>
+</resources>

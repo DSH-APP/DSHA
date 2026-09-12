@@ -25,7 +25,7 @@ public final class LocalNetworkAccess {
                     com.deepseekharness.app.core.HarnessController.get(app);
             com.deepseekharness.app.LanProxyService.start(
                     controller.proot().getRootfsDir().getAbsolutePath(), app,
-                    config.getPortInt(), controller.getWebGeneration());
+                    controller.getWebPort(), controller.getWebGeneration());
         }
     }
 }

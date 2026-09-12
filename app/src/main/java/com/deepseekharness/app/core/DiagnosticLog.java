@@ -27,8 +27,8 @@ public final class DiagnosticLog {
         synchronized (LOCK) {
             try {
                 File file = new File(context.getFilesDir(), "diagnostic-events.txt");
-                return file.isFile() ? SensitiveData.redact(com.deepseekharness.app.util.TextLogTail.read(file, 32 * 1024)) : "暂无失败或操作记录\n";
-            } catch (Exception e) { return "无法读取操作记录\n"; }
+                return file.isFile() ? SensitiveData.redact(com.deepseekharness.app.util.TextLogTail.read(file, 32 * 1024)) : com.deepseekharness.app.util.UiText.text("暂无失败或操作记录\n");
+            } catch (Exception e) { return com.deepseekharness.app.util.UiText.text("无法读取操作记录\n"); }
         }
     }
     public static void installCrashHandler(Context context) {

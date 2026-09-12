@@ -1,0 +1,16 @@
+<resources>
+    <string name="device_open_access">Manage file access</string>
+    <string name="device_location">Location access</string>
+    <string name="device_sensors">Sensor access</string>
+    <string name="device_screen">Screen control</string>
+    <string name="device_background">Background activity</string>
+    <string name="device_maintenance">Runtime maintenance</string>
+    <string name="about_tagline">DeepSeek Harness for Android</string>
+    <string name="about_community">QQ community</string>
+    <string name="about_close_button">Close</string>
+    <string name="about_qq_button">QQ group</string>
+    <string name="device_checking">Checking authorization…</string>
+    <string name="device_files_title">All files access</string>
+    <string name="device_permissions">Permission access</string>
+    <string name="device_channels">Device command channels</string>
+</resources>

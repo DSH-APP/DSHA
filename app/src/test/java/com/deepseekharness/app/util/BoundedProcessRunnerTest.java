@@ -14,6 +14,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.Assert.*;
 
 public class BoundedProcessRunnerTest {
+    @Test public void progressKeepsUtf8AcrossChunksAndReportsFinalLineAfterOutputCap() throws Exception {
+        Child process = new Child(new Pipe("开始迁移\n校验完成\nDSHA_ENV_DATA=结果") {
+            @Override public int available() { return Math.min(1, bytes.available()); }
+        }, 0);
+        process.exitOnStdinClose = true;
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        BoundedProcessRunner.Result result = BoundedProcessRunner.collect(process, 1000, 4, Process::destroy, lines::add);
+        assertEquals(java.util.Arrays.asList("开始迁移", "校验完成", "DSHA_ENV_DATA=结果"), lines);
+        assertTrue(result.truncated); assertFalse(result.timedOut); assertEquals(0, result.exitCode);
+        process.assertClosed();
+    }
     private static class Pipe extends InputStream {
         volatile boolean closed;
         final ByteArrayInputStream bytes;

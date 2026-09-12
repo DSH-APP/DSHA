@@ -22,18 +22,18 @@ final class PreviewAuth {
             String cookie = null;
             String error = null;
             try {
-                if (url.isEmpty()) error = "Web 尚未就绪，请返回启动页查看服务状态";
+                if (url.isEmpty()) error = com.deepseekharness.app.util.UiText.text("Web 尚未就绪，请返回启动页查看服务状态");
                 else {
                     cookie = controller.exchangeDshAuthCookie();
                     if (cookie == null) error = controller.getWebAuthFailure();
                 }
-            } catch (RuntimeException failure) { error = "无法验证 Web 访问权限，请稍后重试"; }
+            } catch (RuntimeException failure) { error = com.deepseekharness.app.util.UiText.text("无法验证 Web 访问权限，请稍后重试"); }
             String readyCookie = cookie, failure = error;
             activity.runOnUiThread(() -> {
                 if (id != request || activity.isFinishing() || activity.isDestroyed()) return;
                 busy = false;
                 if (generation != controller.getWebGeneration() || !url.equals(controller.getWebAuthUrl())) {
-                    callback.complete(null, null, "服务在鉴权期间重新启动，请稍后重试"); return;
+                    callback.complete(null, null, com.deepseekharness.app.util.UiText.text("服务在鉴权期间重新启动，请稍后重试")); return;
                 }
                 callback.complete(url, readyCookie, failure);
             });

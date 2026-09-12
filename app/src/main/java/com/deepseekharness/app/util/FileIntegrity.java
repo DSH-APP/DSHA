@@ -18,7 +18,7 @@ public final class FileIntegrity {
         }
     }
     public static Result copy(InputStream in, OutputStream out, long limit) throws IOException {
-        if (in == null || limit < 0) throw new IOException("无法读取文件");
+        if (in == null || limit < 0) throw new IOException(com.deepseekharness.app.util.UiText.text("无法读取文件"));
         MessageDigest digest;
         try { digest = MessageDigest.getInstance("SHA-256"); }
         catch (NoSuchAlgorithmException e) { throw new IOException(e); }
@@ -26,8 +26,8 @@ public final class FileIntegrity {
         long size = 0;
         int count;
         while ((count = in.read(block)) != -1) {
-            if (Thread.currentThread().isInterrupted()) throw new IOException("操作已取消");
-            if (count > limit - size) throw new IOException("文件超出允许大小");
+            if (Thread.currentThread().isInterrupted()) throw new IOException(com.deepseekharness.app.util.UiText.text("操作已取消"));
+            if (count > limit - size) throw new IOException(com.deepseekharness.app.util.UiText.text("文件超出允许大小"));
             if (out != null) out.write(block, 0, count);
             digest.update(block, 0, count);
             size += count;

@@ -1,0 +1,7 @@
+<resources>
+    <string name="plugin_sort_title">插件排序</string>
+    <string name="plugin_sort_az">名称 A–Z</string>
+    <string name="plugin_sort_za">名称 Z–A</string>
+    <string name="plugin_sort_enabled">已启用优先</string>
+    <string name="plugin_sort_updates">可更新优先</string>
+</resources>

@@ -24,11 +24,11 @@ final class PluginTask implements AutoCloseable {
         return new JSONObject();
     }
     synchronized void cancel() throws IOException {
-        if (!cancel.createNewFile() && !cancel.isFile()) throw new IOException("无法发送取消请求");
+        if (!cancel.createNewFile() && !cancel.isFile()) throw new IOException(com.deepseekharness.app.util.UiText.text("无法发送取消请求"));
         requested = true;
     }
     boolean requested() { return requested; }
-    void check() throws IOException { if (requested) throw new IOException("已取消"); }
+    void check() throws IOException { if (requested) throw new IOException(com.deepseekharness.app.util.UiText.text("已取消")); }
     @Override public synchronized void close() {
         progress.delete(); cancel.delete();
         new File(progress.getPath() + ".tmp").delete();

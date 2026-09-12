@@ -11,5 +11,5 @@
         android:id="@+id/remind_less"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="少提醒我" />
+        android:text="@string/ui_m0110" />
 </LinearLayout>

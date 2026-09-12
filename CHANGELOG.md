@@ -2,6 +2,18 @@
 
 > 只记面向用户的变化。完整历史见 [commit log](https://github.com/qiannianhuanxiang/DSHA/commits/main)。
 
+### v0.1.5-rc2 / v0.1.5-rc2low（正式版）
+
+由贡献者 [@ym2025szz](https://github.com/ym2025szz) 发布，版本码 **129**，dsh **0.1.5-rc.2**，Ubuntu 基础环境 **10**，沿用原发布签名。完整内容见[正式版说明与历史对比](docs/releases/v0.1.5-rc2-notes.md)。
+
+- 统一日夜主题、卡片、权限、弹窗与切换动画，完善短屏/大字体；检查日志和诊断报告独立滚动，重排关于弹窗。
+- PTY 与简易终端支持独立标签，切换语言及页面保留进程；关闭后复用最小空缺编号，全部关闭后从 1 开始。
+- 中英文原生/网页状态同步，修复缓存状态混用语言；用户输入、命令和第三方原始内容保持原文。
+- 插件排序与操作框、dsh-web-mobile 2.4.1-dsha.2、真实 Agent 预设切换和宽屏文件入口。
+- 修复 #64 多文件选择、旧 WebView/PDF Worker、#63 DNS 兼容；补齐 Shizuku 改包名识别和主动连接恢复。
+- 完善端口冲突、慢鉴权、原生恢复与固定配置快照，修复旧平板环境迁移路径；保留数据与进程核验。
+- 两版各 383 项单测（382 通过、1 跳过）、Lint 无错误。详见[最终验证范围](docs/releases/v0.1.5-rc2-build129.md)。
+
 ### v0.1.5-rc1 / v0.1.5-rc1low（正式版）
 
 - 由贡献者 [@ym2025szz](https://github.com/ym2025szz) 发布为 GitHub 正式 Release / Latest；主线汇总此前重构预览改进，历史 Release 与 1.1.10 及更早说明保留。完整对比见[正式版更新介绍](docs/releases/v0.1.5-rc1-notes.md)。

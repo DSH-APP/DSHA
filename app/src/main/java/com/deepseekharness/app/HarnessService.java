@@ -74,7 +74,7 @@ public class HarnessService extends Service {
         try {
             showForegroundNotification();
         } catch (RuntimeException error) {
-            android.util.Log.w("DSHA", "前台服务未获系统允许: " + error.getClass().getSimpleName());
+            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("前台服务未获系统允许: ") + error.getClass().getSimpleName());
             stopSelf();
             return;
         }
@@ -93,7 +93,7 @@ public class HarnessService extends Service {
         try {
             showForegroundNotification();
         } catch (Throwable e) {
-            android.util.Log.w("DSHA", "onStartCommand startForeground 失败: "
+            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("onStartCommand startForeground 失败: ")
                     + SensitiveData.redact(String.valueOf(e)));
             stopSelf();
             return START_NOT_STICKY;
@@ -147,7 +147,7 @@ public class HarnessService extends Service {
                 wifiLock = null;
             }
         } catch (Throwable t) {
-            android.util.Log.w("DSHA", "[保活] 取锁失败（不致命）: "
+            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("[保活] 取锁失败（不致命）: ")
                     + SensitiveData.redact(String.valueOf(t)));
         }
     }
@@ -164,13 +164,13 @@ public class HarnessService extends Service {
         boolean keep = powerPolicy.keepCpu(eco, active, starting, pm == null || pm.isInteractive(),
                 lan, work, idle, android.os.SystemClock.elapsedRealtime());
         if (keep) acquireLocks(!eco || lan || work || !idle); else releaseLocks();
-        String state = c.isRestartBlocked() ? "连续失败，自动重启已暂停；点此查看恢复选项"
-                : !active ? "Web 已停止" : !eco ? "持续运行 · 后台保活已开启"
-                : keep ? "省电模式 · 有任务或状态待确认，继续保活" : "省电模式 · 已空闲，允许系统休眠";
+        String state = c.isRestartBlocked() ? com.deepseekharness.app.util.UiText.text("连续失败，自动重启已暂停；点此查看恢复选项")
+                : !active ? com.deepseekharness.app.util.UiText.text("Web 已停止") : !eco ? com.deepseekharness.app.util.UiText.text("持续运行 · 后台保活已开启")
+                : keep ? com.deepseekharness.app.util.UiText.text("省电模式 · 有任务或状态待确认，继续保活") : com.deepseekharness.app.util.UiText.text("省电模式 · 已空闲，允许系统休眠");
         if (!state.equals(notificationState)) {
             notificationState = state;
             NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            try { if (nm != null) nm.notify(NOTIF_ID, buildNotification("DSHA 后台服务", state)); }
+            try { if (nm != null) nm.notify(NOTIF_ID, buildNotification(com.deepseekharness.app.util.UiText.text("DSHA 后台服务"), state)); }
             catch (RuntimeException ignored) { }
         }
     }
@@ -250,7 +250,7 @@ public class HarnessService extends Service {
                 // Controller 在等待鉴权期间始终保持启动门控；等待时间过长不会触发自动重启。
                 if (c.restartWebAutomatically(generation, msg -> { })) {
                     lastRestartAt.set(now);
-                    android.util.Log.w("DSHA", "[保活] WebUI 连续失联，已提交自动重启");
+                    android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("[保活] WebUI 连续失联，已提交自动重启"));
                 }
             }
         }, "dsha-keepalive");
@@ -271,7 +271,7 @@ public class HarnessService extends Service {
     private boolean isWebUp() {
         int port;
         try {
-            port = c.config().getPortInt();
+            port = c.getWebPort();
         } catch (Exception e) {
             return false;
         }
@@ -304,7 +304,7 @@ public class HarnessService extends Service {
     }
 
     private void showForegroundNotification() {
-        Notification notification = buildNotification("DSHA运行中", "Web UI 正在后台保持运行");
+        Notification notification = buildNotification(com.deepseekharness.app.util.UiText.text("DSHA运行中"), com.deepseekharness.app.util.UiText.text("Web UI 正在后台保持运行"));
         if (Build.VERSION.SDK_INT >= 34)
             startForeground(NOTIF_ID, notification,
                     android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
@@ -316,8 +316,8 @@ public class HarnessService extends Service {
     private void createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel ch = new NotificationChannel(
-                    CHANNEL_ID, "DSHA后台服务", NotificationManager.IMPORTANCE_LOW);
-            ch.setDescription("保持 DeepSeek Harness Web UI 后台运行");
+                    CHANNEL_ID, com.deepseekharness.app.util.UiText.text("DSHA后台服务"), NotificationManager.IMPORTANCE_LOW);
+            ch.setDescription(com.deepseekharness.app.util.UiText.text("保持 DeepSeek Harness Web UI 后台运行"));
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) nm.createNotificationChannel(ch);
         }
@@ -337,7 +337,7 @@ public class HarnessService extends Service {
                 .setContentText(text)
                 .setContentIntent(pi)
                 .setOngoing(true)
-                .addAction(0, "停止", stopPi)
+                .addAction(0, com.deepseekharness.app.util.UiText.text("停止"), stopPi)
                 .build();
     }
 }

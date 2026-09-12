@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {apply} from '../app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/index.js';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import { Readable } from 'node:stream';
 function fixture(rejection) {
   let handler, checked=0, consulted=0;
   const ctx={effect(){},get(){consulted++;throw Error('不应访问会话');},inject(names,fn){
@@ -23,6 +24,14 @@ test('已鉴权但方法错误的请求仍不能删除会话',async()=>{
   await f.handler({method:'GET'},{writeHead:status=>code=status,end(){}});
   assert.equal(code,405);assert.equal(f.checked,1);assert.equal(f.consulted,0);
 });
+
+for(const value of ['null','[]','true','"x"','{bad',JSON.stringify({sessionId:'x'.repeat(5000)})])
+  test(`非法删除正文保持结构化错误：${value.slice(0,20)}`,async()=>{
+    const f=fixture(undefined);let code,body;
+    const req=Readable.from([value]);req.method='POST';
+    await f.handler(req,{writeHead:status=>code=status,end:text=>body=JSON.parse(text)});
+    assert.equal(code,400);assert.equal(body.error.code,'invalid-body');assert.equal(f.consulted,0);
+  });
 test('移动 UI 模块对文件面板声明完整服务依赖',()=>{
   let plugin;
   vm.runInNewContext(readFileSync('app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/client.js','utf8'),

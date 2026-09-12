@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="edition_description">兼容版 · Android 6+ · WebView / Gecko</string>
+    <string name="browser_description">旧系统 WebView 自动使用内置 Gecko；可手动开启兼容内核。</string>
+</resources>

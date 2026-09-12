@@ -10,9 +10,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL, fileURLToPath } = require('node:url');
 const Module = require('node:module');
+const uiPhrases = {"检查启动配置和插件清单": "Checking startup configuration and plugin list", "加载 DSH 和已启用插件": "Loading DSH and enabled plugins", "配置文件超过 1 MiB": "Configuration file exceeds 1 MiB", "dsh.profile.bundles 必须是插件名称数组": "dsh.profile.bundles must be an array of plugin names", "插件清单含无效名称": "The plugin list contains an invalid name", "缺少 dsh.bundle.patch 声明或补丁文件": "Missing dsh.bundle.patch declaration or patch file", "未知版本": "Unknown version", "读取启动恢复记录": "Read startup recovery records", "启动配置快照": "Startup configuration snapshot", "配置检查：": "Configuration check: ", "正在加载插件：": "Loading plugin: ", "插件加载完成：": "Plugin loaded: ", "插件等待服务：": "Plugin waiting for services: ", "启动配置检查失败：": "Startup configuration check failed: ", "加载器观察不可用，保留原始异常输出：": "Loader monitoring unavailable; original errors retained: ", "找不到插件目录，请到插件管理检查安装：": "Plugin directory not found; check its installation: "};
+function uiText(message) {
+  if (process.env.DSHA_UI_LANGUAGE !== "en") return message;
+  if (Object.hasOwn(uiPhrases, message)) return uiPhrases[message];
+  for (const [zh, en] of Object.entries(uiPhrases)) if (zh.endsWith("：") && message.startsWith(zh)) return en + uiText(message.slice(zh.length));
+  return message;
+}
 const prefix = '[DSHA_STARTUP] ';
 function emit(type, plugin, message, extra = {}) {
-  process.stdout.write(prefix + JSON.stringify({ type, plugin, message, ...extra }) + '\n');
+  // 观察和翻译失败不能被当成插件初始化失败，也不能改变原 Loader 的行为。
+  try { process.stdout.write(prefix + JSON.stringify({ type, plugin, message: uiText(message), ...extra }) + '\n'); }
+  catch (_) { }
 }
 const validName = name => typeof name === 'string' && name.length <= 214 && /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(name);
 const home = process.env.DSH_HOME || '/root/.dsh';
@@ -54,7 +63,7 @@ try {
       const patch = pkg.dsh?.bundle?.patch;
       if (typeof patch !== 'string' || !fs.existsSync(path.resolve(root, patch)))
         emit('issue', name, '缺少 dsh.bundle.patch 声明或补丁文件');
-      emit('plugin', name, '配置检查：' + name + ' @ ' + (pkg.version || '未知版本'), { path: root });
+      emit('plugin', name, '配置检查：' + name + ' @ ' + (pkg.version || uiText('未知版本')), { path: root });
       if (typeof patch === 'string') {
         // 只读取 id/module 的普通标量，不执行 YAML 的 !!js 用户表达式。
         const patchFile = path.resolve(root, patch);
@@ -74,7 +83,7 @@ function entryOwner(entry) { return moduleOwners.get(entry?.options?.name) || mo
   || plugins.find(p => p.name === entry?.options?.name)?.name || ''; }
 function errorDetail(error) {
   let detail = String(error?.stack || error);
-  if (error?.cause && error.cause !== error) detail += '\n原因：' + String(error.cause.stack || error.cause);
+  if (error?.cause && error.cause !== error) detail += (process.env.DSHA_UI_LANGUAGE === 'en' ? '\nCause: ' : '\n原因：') + String(error.cause.stack || error.cause);
   return detail;
 }
 // 使用已锁定 Cordis 的实际加载边界；同一模块缓存只加载一次，不拦截每一次 Node 依赖解析。

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingBottom="6dp">
+    <HorizontalScrollView android:id="@+id/terminal_tabs_scroll" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:scrollbars="none">
+        <LinearLayout android:id="@+id/terminal_tabs" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" />
+    </HorizontalScrollView>
+    <Button android:id="@+id/terminal_new" style="@style/Widget.DSHA.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="64dp" android:minHeight="48dp" android:text="@string/ui_m0218" android:contentDescription="@string/ui_m0142" />
+</LinearLayout>

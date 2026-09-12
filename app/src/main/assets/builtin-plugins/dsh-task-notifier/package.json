@@ -1,7 +1,7 @@
 {
   "name": "dsh-task-notifier",
   "description": "DSHA builtin server plugin: notify user when agent finishes a turn (via 3090 bridge)",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

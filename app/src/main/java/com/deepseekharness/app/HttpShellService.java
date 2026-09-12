@@ -123,9 +123,9 @@ public final class HttpShellService {
     /** 仅观察 debug fixture 的真实默认 HTTP 提问，不替换其前台宿主选择。 */
     HttpShellService(Context ctx, java.io.File fixtureTokenFile,
                      java.util.function.Consumer<BridgeAskDialog> fixtureAskObserver) {
-        if (fixtureTokenFile != null && !BuildConfig.DEBUG) throw new IllegalStateException("仅 debug 可注入 token 文件");
+        if (fixtureTokenFile != null && !BuildConfig.DEBUG) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("仅 debug 可注入 token 文件"));
         if (fixtureAskObserver != null && (!BuildConfig.DEBUG || fixtureTokenFile == null))
-            throw new IllegalStateException("仅隔离 debug fixture 可观察提问窗口");
+            throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("仅隔离 debug fixture 可观察提问窗口"));
         this.ctx = ctx.getApplicationContext();
         this.fixtureTokenFile = fixtureTokenFile;
         this.fixtureAskObserver = fixtureAskObserver;
@@ -216,10 +216,10 @@ public final class HttpShellService {
                     try {
                         Compat.chmod(tf, "rw-------");
                     } catch (Throwable e) {
-            android.util.Log.w("DSHA", "token 文件写入失败，3090 桥将无法鉴权: " + safeError(e));
+            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("token 文件写入失败，3090 桥将无法鉴权: ") + safeError(e));
         }
                 } catch (Throwable e) {
-            android.util.Log.w("DSHA", "token 文件读取/清理失败: " + safeError(e));
+            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("token 文件读取/清理失败: ") + safeError(e));
         }
             }
             return authToken;
@@ -243,7 +243,7 @@ public final class HttpShellService {
     private void noteBindError(String why) {
         String safe = safeDisplay(why);
         bindError = safe;
-        android.util.Log.e("DSHA", "3090 桥绑定失败：" + safe);
+        android.util.Log.e("DSHA", com.deepseekharness.app.util.UiText.text("3090 桥绑定失败：") + safe);
         com.deepseekharness.app.core.DiagnosticLog.record(ctx, "BRIDGE_BIND", safe);
         writeBridgeStatus("fail " + safe);
     }
@@ -301,7 +301,7 @@ public final class HttpShellService {
             }
             acceptLoop(run, run.server);
         } catch (java.net.BindException error) {
-            failure = "端口 " + PORT + " 被占用；释放端口后设备桥会重试，也可重启 Web：" + safeError(error);
+            failure = com.deepseekharness.app.util.UiText.choose("设备桥端口 3090 被占用，设备工具暂不可用；Web 可独立启动。关闭占用端口的其他实例后重试：", "Device bridge port 3090 is in use. Device tools are temporarily unavailable; Web can still start. Close the other instance using this port and retry: ") + safeError(error);
         } catch (IOException | RuntimeException error) {
             failure = safeError(error);
         } finally {
@@ -319,7 +319,7 @@ public final class HttpShellService {
             run.server6.bind(new java.net.InetSocketAddress(java.net.InetAddress.getByName("::1"), PORT));
             acceptLoop(run, run.server6);
         } catch (IOException | RuntimeException error) {
-            if (activeRun == run && running) android.util.Log.i("DSHA", "3090 的 IPv6 附加监听不可用：" + safeError(error));
+            if (activeRun == run && running) android.util.Log.i("DSHA", com.deepseekharness.app.util.UiText.text("3090 的 IPv6 附加监听不可用：") + safeError(error));
         } finally { closeSocket(run.server6); }
     }
 
@@ -428,9 +428,9 @@ public final class HttpShellService {
             }
             authToken = "";
             ensureToken();
-            android.util.Log.i("DSHA", "恢复后已重置 3090 桥 token（老备份里带的是别的机器的）");
+            android.util.Log.i("DSHA", com.deepseekharness.app.util.UiText.text("恢复后已重置 3090 桥 token（老备份里带的是别的机器的）"));
         } catch (Throwable e) {
-            android.util.Log.w("DSHA", "恢复后重置桥 token 失败: " + safeError(e));
+            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("恢复后重置桥 token 失败: ") + safeError(e));
         }
     }
 
@@ -448,7 +448,7 @@ public final class HttpShellService {
             String path = parts.length > 1 ? parts[1] : "/";
             String cmd = "";
             String route = path.split("\\?", 2)[0];
-            if (route.equals("/exec") || route.equals("/confirm") || route.equals("/device/plan")) {
+            if (route.equals("/exec") || route.equals("/confirm") || route.equals("/device/plan") || route.equals("/device/execute")) {
                 // 走统一的查询串解析（Query.param）：值要截断到 &，参数名要精确匹配。
                 // 旧实现是 path.indexOf("cmd=") —— 值截断修过了，但参数名边界一直没有，
                 // 于是 ?xcmd=junk&cmd=真命令 会取到 junk。/confirm 的 cmd 是<b>给用户看的
@@ -495,6 +495,9 @@ public final class HttpShellService {
                 result = "[UNAUTHORIZED]";
             } else if (route.equals("/device/plan")) {
                 result = devicePlan(cmd, "1".equals(getParam(queryOf(path), "su", "0")));
+            } else if (route.equals("/device/execute")) {
+                result = deviceExecute(cmd, "1".equals(getParam(queryOf(path), "su", "0")),
+                        "1".equals(getParam(queryOf(path), "adb", "0")));
             } else if (path.startsWith("/app/notify")) {
                 // agent 通过 App 发通知栏提醒（App 层交互）
                 result = appNotify(path);
@@ -554,8 +557,8 @@ public final class HttpShellService {
                 // 这些操作必须交给 /exec 或 ADB 原生计划执行器现场校验。
                 result = plan.kind == com.deepseekharness.app.util.DeviceShellPolicy.Kind.READ ? "YES" : "NO";
             } else if (route.equals("/exec")) {
-                com.deepseekharness.app.util.DeviceShellPolicy.Plan plan = com.deepseekharness.app.util.DeviceShellPolicy.inspect(cmd);
-                result = plan.allowed() ? ShizukuShell.exec(cmd) : plan.reason + "\n[EXIT=126]";
+                org.json.JSONObject execution = new org.json.JSONObject(deviceExecute(cmd, false, false));
+                result = execution.optString("output", com.deepseekharness.app.util.UiText.text("[ADB_REQUIRED] 请使用 adb-shell 执行此命令\n[EXIT=124]"));
             } else {
                 result = "[UNKNOWN_ENDPOINT]";
             }
@@ -578,6 +581,38 @@ public final class HttpShellService {
 
     // ================= App 层交互端点（agent 通过 3090 桥调用） =================
 
+    /** 在发送命令前选一次通道；只有明确返回 ADB 计划时客户端才可连接 ADB。 */
+    private String deviceExecute(String command, boolean forceRoot, boolean forceAdb) {
+        try {
+            String planned = devicePlan(command, forceRoot);
+            if (!planned.startsWith("{")) return completedExecution("policy", planned + "\n[EXIT=126]");
+            org.json.JSONObject plan = new org.json.JSONObject(planned);
+            if (plan.optString("kind").equals("DENY"))
+                return completedExecution("policy", plan.optString("reason") + "\n[EXIT=126]");
+            boolean sms = "sms.read".equals(plan.optString("capability"));
+            if (!forceAdb && RootShell.enabled(ctx) && RootShell.present()) {
+                int user = sms ? android.os.Process.myUid() / 100000 : -1;
+                return completedExecution("root", RootShell.exec(ctx, command, user));
+            }
+            if (!forceAdb && !forceRoot && !sms && ShizukuShell.hasPermission()) {
+                return completedExecution("shizuku", ShizukuShell.exec(command));
+            }
+            if (!DeviceBridgeService.isAdbEnabled(ctx))
+                return completedExecution("none", com.deepseekharness.app.util.UiText.text("[DEVICE_CHANNEL_UNAVAILABLE] 请在设置 → 设备能力授权中连接 root、Shizuku 或 ADB 通道\n[EXIT=124]"));
+            plan.put("su", forceRoot);
+            return new org.json.JSONObject().put("state", "adb").put("plan", plan).toString();
+        } catch (Exception error) {
+            // 此时可能已经向设备发过命令，绝不能返回可重试的 ADB 计划。
+            return completedExecution("unknown", "[EXECUTION_UNKNOWN] " + safeError(error) + "\n[EXIT=125]");
+        }
+    }
+    private String completedExecution(String transport, String output) {
+        try {
+            return new org.json.JSONObject().put("state", "completed").put("transport", transport)
+                    .put("output", output).put("exit", com.deepseekharness.app.util.DeviceCommandResult.exitCode(output)).toString();
+        } catch (org.json.JSONException error) { return com.deepseekharness.app.util.UiText.text("[EXECUTION_UNKNOWN] 结果编码失败\n[EXIT=125]"); }
+    }
+
     /** ADB 每次发送前向原生策略取计划；计划只包含已验证 argv，拒绝时没有可执行内容。 */
     private String devicePlan(String command, boolean root) {
         try {
@@ -587,7 +622,18 @@ public final class HttpShellService {
                     .put("operands", new org.json.JSONArray(plan.operands))
                     .put("paths", new org.json.JSONObject(com.deepseekharness.app.util.DeviceShellPolicy.pathRules()));
             if (root && !ctx.getSharedPreferences(Constants.PREFS, 0).getBoolean(Constants.KEY_ALLOW_ROOT_SHELL, false))
-                return value.put("kind", "DENY").put("argv", new org.json.JSONArray()).put("reason", "[POLICY_BLOCKED] 未允许 root shell").toString();
+                return value.put("kind", "DENY").put("argv", new org.json.JSONArray()).put("reason", com.deepseekharness.app.util.UiText.text("[POLICY_BLOCKED] 未允许 root shell")).toString();
+            if (plan.kind == com.deepseekharness.app.util.DeviceShellPolicy.Kind.SENSITIVE_READ) {
+                java.util.List<String> query = com.deepseekharness.app.util.SmsQuery.forUser(plan.argv, android.os.Process.myUid() / 100000);
+                boolean remembered = new com.deepseekharness.app.core.DeviceGrants(ctx).smsReadAllowed();
+                boolean approved = remembered || requestUserConfirm(com.deepseekharness.app.util.UiText.text("读取本 Android 用户的短信。\n")
+                        + com.deepseekharness.app.util.UiText.text("可能包含号码、正文和验证码；允许后内容会返回请求该操作的助手或插件。\n\n")
+                        + command + com.deepseekharness.app.util.UiText.text("\n\n本次允许只用于这条查询。需要自动化时，可在设置 → 设备能力授权中预先允许短信读取。"));
+                if (!approved) return value.put("kind", "DENY").put("argv", new org.json.JSONArray())
+                        .put("reason", com.deepseekharness.app.util.UiText.text("[POLICY_BLOCKED] 短信读取未获授权，可在设置中管理设备能力授权")).toString();
+                value.put("kind", "READ").put("argv", new org.json.JSONArray(query))
+                        .put("capability", "sms.read").put("authorization", remembered ? "remembered" : "once");
+            }
             if (plan.kind == com.deepseekharness.app.util.DeviceShellPolicy.Kind.STOP) {
                 // PackageManager 可能被厂商限制，只返回部分应用。这里只解析目标；
                 // 实际 ADB/Shizuku 执行器必须用自己的身份现场取得完整 pm/ps 清单才能停止。
@@ -605,18 +651,22 @@ public final class HttpShellService {
             // App 前台时不发通知（用户正看着页面，不打扰）——与 TaskNotifier 抑制一致
             if (TaskNotifier.appInForeground) return "FOREGROUND_SKIP";
             String q = queryOf(path);
-            String title = getParam(q, "title", "DSHA 通知");
+            String title = getParam(q, "title", com.deepseekharness.app.util.UiText.text("DSHA 通知"));
             String text = getParam(q, "text", "");
             if (text.isEmpty()) return "NO_TEXT";
             title = safeDisplay(title);
             text = safeDisplay(text);
+            if(title.startsWith("DSHA · ")) {
+                title=com.deepseekharness.app.util.UiText.text(title);
+                text=com.deepseekharness.app.util.UiText.text(text);
+            }
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm == null) return "NO_SERVICE";
             if (Build.VERSION.SDK_INT >= 26) {
                 NotificationChannel ch = new NotificationChannel(
-                        "dsh_agent_channel", "Agent 通知",
+                        "dsh_agent_channel", com.deepseekharness.app.util.UiText.text("Agent 通知"),
                         NotificationManager.IMPORTANCE_HIGH);
-                ch.setDescription("智能体通过 App 发送的通知");
+                ch.setDescription(com.deepseekharness.app.util.UiText.text("智能体通过 App 发送的通知"));
                 nm.createNotificationChannel(ch);
             }
             NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, "dsh_agent_channel")
@@ -677,11 +727,11 @@ public final class HttpShellService {
         if (!sensitive && System.currentTimeMillis() < uiGrantUntil) {
             return true;
         }
-        String where = pkg.isEmpty() ? "当前界面" : pkg;
+        String where = pkg.isEmpty() ? com.deepseekharness.app.util.UiText.text("当前界面") : pkg;
         String why = sensitive
-                ? "在【" + where + "】里：" + action
-                + "  # 这类应用涉及支付或隐私，每次都需要你确认"
-                : action + "  # 允许后 10 分钟内的屏幕操作不再询问";
+                ? com.deepseekharness.app.util.UiText.text("在【") + where + com.deepseekharness.app.util.UiText.text("】里：") + action
+                + com.deepseekharness.app.util.UiText.text("  # 这类应用涉及支付或隐私，每次都需要你确认")
+                : action + com.deepseekharness.app.util.UiText.text("  # 允许后 10 分钟内的屏幕操作不再询问");
         boolean ok = requestUserConfirm(why);
         if (ok && !sensitive) {
             uiGrantUntil = System.currentTimeMillis() + UI_GRANT_MS;
@@ -699,38 +749,38 @@ public final class HttpShellService {
         String q = queryOf(path);
         try {
             if (path.startsWith("/app/ui/dump")) {
-                if (!uiAuthorized("读取当前屏幕上的文字与控件")) return "[ERR] 你拒绝了这次屏幕读取";
+                if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("读取当前屏幕上的文字与控件"))) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次屏幕读取");
                 return DshaAccessibilityService.uiDump();
             }
             if (path.startsWith("/app/ui/tap")) {
                 String text = getParam(q, "text", "");
                 // 有文字就按文字点：控件位置会随滚动和动画变，文字不会
                 if (!text.isEmpty()) {
-                    if (!uiAuthorized("点击「" + shortText(text) + "」")) return "[ERR] 你拒绝了这次点击";
+                    if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("点击「") + shortText(text) + com.deepseekharness.app.util.UiText.text("」"))) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次点击");
                     return DshaAccessibilityService.uiTapText(text);
                 }
                 int x = intParam(q, "x", -1);
                 int y = intParam(q, "y", -1);
-                if (x < 0 || y < 0) return "[ERR] 需要 ?text=要点的文字 或 ?x=&y=坐标";
-                if (!uiAuthorized("点击坐标 (" + x + "," + y + ")")) return "[ERR] 你拒绝了这次点击";
+                if (x < 0 || y < 0) return com.deepseekharness.app.util.UiText.text("[ERR] 需要 ?text=要点的文字 或 ?x=&y=坐标");
+                if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("点击坐标 (") + x + "," + y + ")")) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次点击");
                 return DshaAccessibilityService.uiTap(x, y);
             }
             if (path.startsWith("/app/ui/input")) {
                 String text = getParam(q, "text", "");
-                if (text.isEmpty()) return "[ERR] 需要 ?text=";
-                if (!uiAuthorized("在输入框里填入「" + shortText(text) + "」")) {
-                    return "[ERR] 你拒绝了这次输入";
+                if (text.isEmpty()) return com.deepseekharness.app.util.UiText.text("[ERR] 需要 ?text=");
+                if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("在输入框里填入「") + shortText(text) + com.deepseekharness.app.util.UiText.text("」"))) {
+                    return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次输入");
                 }
                 return DshaAccessibilityService.uiInput(text);
             }
             if (path.startsWith("/app/ui/key")) {
                 String k = getParam(q, "name", "");
-                if (!uiAuthorized("按下系统按键 " + shortText(k))) return "[ERR] 你拒绝了这次按键";
+                if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("按下系统按键 ") + shortText(k))) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次按键");
                 return DshaAccessibilityService.uiKey(k);
             }
             if (path.startsWith("/app/ui/screenshot") || path.startsWith("/app/ui/shot")) {
                 // 截屏会把当前画面留到磁盘，等于一份可被后续读取的隐私快照
-                if (!uiAuthorized("截取当前屏幕并保存为图片")) return "[ERR] 你拒绝了这次截屏";
+                if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("截取当前屏幕并保存为图片"))) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次截屏");
                 return DshaAccessibilityService.uiScreenshot();
             }
             if (path.startsWith("/app/ui/swipe")) {
@@ -739,14 +789,14 @@ public final class HttpShellService {
                 int x2 = intParam(q, "x2", -1);
                 int y2 = intParam(q, "y2", -1);
                 if (x1 < 0 || y1 < 0 || x2 < 0 || y2 < 0) {
-                    return "[ERR] 需要 ?x1=&y1=&x2=&y2=（可选 &ms=时长）";
+                    return com.deepseekharness.app.util.UiText.text("[ERR] 需要 ?x1=&y1=&x2=&y2=（可选 &ms=时长）");
                 }
-                if (!uiAuthorized("滑动屏幕 (" + x1 + "," + y1 + ")→(" + x2 + "," + y2 + ")")) {
-                    return "[ERR] 你拒绝了这次滑动";
+                if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("滑动屏幕 (") + x1 + "," + y1 + ")→(" + x2 + "," + y2 + ")")) {
+                    return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次滑动");
                 }
                 return DshaAccessibilityService.uiSwipe(x1, y1, x2, y2, intParam(q, "ms", 300));
             }
-            return "[ERR] 未知端点（可用：dump/tap/input/key/swipe）";
+            return com.deepseekharness.app.util.UiText.text("[ERR] 未知端点（可用：dump/tap/input/key/swipe）");
         } catch (Throwable t) {
             return "[ERR] " + SensitiveData.redact(String.valueOf(t));
         }
@@ -820,78 +870,81 @@ public final class HttpShellService {
         return "BRIDGE_PROTOCOL=" + BRIDGE_PROTOCOL + "\n"
                 + "APP_VERSION=" + BuildConfig.VERSION_NAME + "\n"
                 + "APP_CODE=" + BuildConfig.VERSION_CODE + "\n"
-                + "HINT=端点清单见 /app/help；判版本请用 >= 而不是 ==\n";
+                + com.deepseekharness.app.util.UiText.text("HINT=端点清单见 /app/help；判版本请用 >= 而不是 ==\n");
     }
 
     private String appHelp() {
-        return "DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=" + BRIDGE_PROTOCOL + "）\n"
-            + "token 取自 /root/.dsh/.bridge_token，下面记为 $T。\n"
-            + "带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\n"
+        return com.deepseekharness.app.util.UiText.text("DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=") + BRIDGE_PROTOCOL + "）\n"
+            + com.deepseekharness.app.util.UiText.text("token 取自 /root/.dsh/.bridge_token，下面记为 $T。\n")
+            + com.deepseekharness.app.util.UiText.text("带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\n")
             + "\n"
-            + "== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\n"
-            + "读屏  curl -s \"127.0.0.1:3090/app/ui/dump?token=$T\"\n"
-            + "      → 每行「[序号] \"文字\" 可点击 中心=(x,y) 区域=l,t,r,b」\n"
-            + "点按  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=设置\" --data-urlencode \"token=$T\"\n"
-            + "      → 优先按文字点：控件位置随滚动/动画变，文字不变。没有文字才用 ?x=&y=\n"
-            + "输入  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=内容\" --data-urlencode \"token=$T\"\n"
-            + "      → 填到当前焦点框；没有焦点先 tap 一下输入框\n"
-            + "按键  /app/ui/key?name=back  （back/home/recents/notifications/quicksettings/lock）\n"
-            + "滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n"
-            + "截屏  /app/ui/screenshot   → 存 PNG 到 Download/DSHA 并返回路径（不回 base64）\n"
-            + "节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n"
+            + com.deepseekharness.app.util.UiText.text("== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\n")
+            + com.deepseekharness.app.util.UiText.text("读屏  curl -s \"127.0.0.1:3090/app/ui/dump?token=$T\"\n")
+            + com.deepseekharness.app.util.UiText.text("      → 每行「[序号] \"文字\" 可点击 中心=(x,y) 区域=l,t,r,b」\n")
+            + com.deepseekharness.app.util.UiText.text("点按  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=设置\" --data-urlencode \"token=$T\"\n")
+            + com.deepseekharness.app.util.UiText.text("      → 优先按文字点：控件位置随滚动/动画变，文字不变。没有文字才用 ?x=&y=\n")
+            + com.deepseekharness.app.util.UiText.text("输入  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=内容\" --data-urlencode \"token=$T\"\n")
+            + com.deepseekharness.app.util.UiText.text("      → 填到当前焦点框；没有焦点先 tap 一下输入框\n")
+            + com.deepseekharness.app.util.UiText.text("按键  /app/ui/key?name=back  （back/home/recents/notifications/quicksettings/lock）\n")
+            + com.deepseekharness.app.util.UiText.text("滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n")
+            + com.deepseekharness.app.util.UiText.text("截屏  /app/ui/screenshot   → 存 PNG 到 Download/DSHA 并返回路径（不回 base64）\n")
+            + com.deepseekharness.app.util.UiText.text("节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n")
             + "\n"
-            + "== 设备与应用 ==\n"
-            + "/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n"
-            + "/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n"
-            + "/app/launch?pkg=com.tencent.mm  启动应用\n"
-            + "/app/clip                       读剪贴板（需 App 在前台，系统限制）\n"
-            + "/app/clip + text=…              写剪贴板\n"
-            + "/app/readfile?path=/…          读取任意绝对路径的目录或文本，仍受 Android 权限限制\n"
-            + "设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n"
+            + com.deepseekharness.app.util.UiText.text("== 设备与应用 ==\n")
+            + com.deepseekharness.app.util.UiText.text("/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n")
+            + com.deepseekharness.app.util.UiText.text("/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n")
+            + com.deepseekharness.app.util.UiText.text("/app/launch?pkg=com.tencent.mm  启动应用\n")
+            + com.deepseekharness.app.util.UiText.text("/app/clip                       读剪贴板（需 App 在前台，系统限制）\n")
+            + com.deepseekharness.app.util.UiText.text("/app/clip + text=…              写剪贴板\n")
+            + com.deepseekharness.app.util.UiText.text("/app/readfile?path=/…          读取任意绝对路径的目录或文本，仍受 Android 权限限制\n")
+            + com.deepseekharness.app.util.UiText.text("设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n")
             + "\n"
-            + "== 与用户交互 ==\n"
-            + "/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n"
-            + "/app/notify?title=… + text=…      通知栏\n"
-            + "/app/toast + text=…               App 内提示\n"
-            + "/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n"
-            + "/app/share（text= 或 path=）      分享到其它应用\n"
-            + "/app/open?url=https://…           打开链接\n"
-            + "/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA\n"
-            + "建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n"
-            + "产出报告用 /app/export，别只留在容器里。\n"
+            + com.deepseekharness.app.util.UiText.text("== 与用户交互 ==\n")
+            + com.deepseekharness.app.util.UiText.text("/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n")
+            + com.deepseekharness.app.util.UiText.text("/app/notify?title=… + text=…      通知栏\n")
+            + com.deepseekharness.app.util.UiText.text("/app/toast + text=…               App 内提示\n")
+            + com.deepseekharness.app.util.UiText.text("/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n")
+            + com.deepseekharness.app.util.UiText.text("/app/share（text= 或 path=）      分享到其它应用\n")
+            + com.deepseekharness.app.util.UiText.text("/app/open?url=https://…           打开链接\n")
+            + com.deepseekharness.app.util.UiText.text("/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA\n")
+            + com.deepseekharness.app.util.UiText.text("建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n")
+            + com.deepseekharness.app.util.UiText.text("产出报告用 /app/export，别只留在容器里。\n")
             + "\n"
-            + "== 传感器与位置（默认关闭，需用户在配置页勾选）==\n"
-            + "/app/location（加 fresh=1 强制重新定位，可能等数秒）\n"
-            + "/app/sensors 列表 · /app/sensor?name=light 读值\n"
-            + "（light 环境光 lux / accel / gyro / magnet / pressure / proximity /\n"
-            + " gravity / rotation 姿态四元数 / steps 开机后步数）\n"
-            + "/app/torch?on=1 手电\n"
-            + "这三类返回 DISABLED（用户没开该能力）或 NO_PERMISSION（没授系统权限）时，\n"
-            + "照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n"
+            + com.deepseekharness.app.util.UiText.text("== 传感器与位置（默认关闭，需用户在配置页勾选）==\n")
+            + com.deepseekharness.app.util.UiText.text("/app/location（加 fresh=1 强制重新定位，可能等数秒）\n")
+            + com.deepseekharness.app.util.UiText.text("/app/sensors 列表 · /app/sensor?name=light 读值\n")
+            + com.deepseekharness.app.util.UiText.text("（light 环境光 lux / accel / gyro / magnet / pressure / proximity /\n")
+            + com.deepseekharness.app.util.UiText.text(" gravity / rotation 姿态四元数 / steps 开机后步数）\n")
+            + com.deepseekharness.app.util.UiText.text("/app/torch?on=1 手电\n")
+            + com.deepseekharness.app.util.UiText.text("这三类返回 DISABLED（用户没开该能力）或 NO_PERMISSION（没授系统权限）时，\n")
+            + com.deepseekharness.app.util.UiText.text("照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n")
             + "\n"
-            + "== 元信息 ==\n"
-            + "/app/version                          桥协议版本 + App 版本（特性检测用）\n"
-            + "/app/help                             本清单\n"
+            + com.deepseekharness.app.util.UiText.text("== 元信息 ==\n")
+            + com.deepseekharness.app.util.UiText.text("/app/version                          桥协议版本 + App 版本（特性检测用）\n")
+            + com.deepseekharness.app.util.UiText.text("/app/help                             本清单\n")
             + "\n"
-            + "== 插件状态 ==\n"
-            + "/app/plugins                          读回上次上报的加载状态\n"
-            + "/app/plugins?loaded=a,b&failed=c      上报（插件侧用）\n"
+            + com.deepseekharness.app.util.UiText.text("== 插件状态 ==\n")
+            + com.deepseekharness.app.util.UiText.text("/app/plugins                          读回上次上报的加载状态\n")
+            + com.deepseekharness.app.util.UiText.text("/app/plugins?loaded=a,b&failed=c      上报（插件侧用）\n")
             + "\n"
-            + "== 设备 shell（ADB 无线调试，用户可能没开）==\n"
-            + "/root/dsh-bin/adb-shell \"命令\"        shell 级（uid=2000）\n"
-            + "包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n"
-            + "仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n"
-            + "根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n"
-            + "结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n"
-            + "按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n"
-            + "策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n"
-            + "报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n"
-            + "「配置」页开「ADB 设备通道」并配对，别反复试同一条命令。\n"
-            + "不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n"
+            + com.deepseekharness.app.util.UiText.text("== 设备 shell（自动选择 root / Shizuku / ADB）==\n")
+            + com.deepseekharness.app.util.UiText.text("/root/dsh-bin/adb-shell \"命令\"        用 id 核验实际身份\n")
+            + com.deepseekharness.app.util.UiText.text("包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n")
+            + com.deepseekharness.app.util.UiText.text("短信只允许当前 Android 用户的 content query --uri content://sms，默认逐次确认；设置 → 设备能力授权可预授权或撤销。\n")
+            + com.deepseekharness.app.util.UiText.text("短信预授权可能返回正文及验证码；不允许发送、修改或删除，Android 仍可拒绝访问。Shizuku 不执行此敏感查询。\n")
+            + com.deepseekharness.app.util.UiText.text("仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n")
+            + com.deepseekharness.app.util.UiText.text("根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n")
+            + com.deepseekharness.app.util.UiText.text("结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n")
+            + com.deepseekharness.app.util.UiText.text("按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n")
+            + com.deepseekharness.app.util.UiText.text("策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n")
+            + com.deepseekharness.app.util.UiText.text("报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n")
+            + com.deepseekharness.app.util.UiText.text("设置 → 设备能力授权中连接可用通道，别反复试同一条命令。\n")
+            + com.deepseekharness.app.util.UiText.text("不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n")
             + "\n"
             + "== root（--su）==\n"
-            + "默认权限是 shell 级（uid=2000，非 root）。不要主动用 --su；\n"
-            + "只有用户明确要求 root 操作时才尝试，且要先到「配置」页开启授权；同一设备保护策略仍然生效。\n";
+            + com.deepseekharness.app.util.UiText.text("已启用并经 root 管理器授权的 su 可直接执行，无需 ADB 配对；其次使用 Shizuku，再使用 ADB。\n")
+            + com.deepseekharness.app.util.UiText.text("--su 仅在明确需要 root 时使用，须先在设备能力授权页允许；同一设备保护策略始终生效。\n")
+            + com.deepseekharness.app.util.UiText.text("[EXECUTION_UNKNOWN] 表示命令可能已执行，先核对实际状态，不能切换通道或自动重放。\n");
     }
 
     private String appPlugins(String path) {
@@ -899,24 +952,28 @@ public final class HttpShellService {
             String q = queryOf(path);
             String loaded = getParam(q, "loaded", null);
             String failed = getParam(q, "failed", null);
+            String pending = getParam(q, "pending", null);
             String safeLoaded = loaded == null ? null : safeDisplay(loaded.trim());
             String safeFailed = failed == null ? null : safeDisplay(failed.trim());
             android.content.SharedPreferences sp =
                     ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE);
-            if (loaded == null && failed == null) {
+            if (loaded == null && failed == null && pending == null) {
                 return "LOADED:" + sp.getString("plugin_loaded", "")
                         + "\nFAILED:" + sp.getString("plugin_failed", "")
+                        + "\nPENDING:" + sp.getString("plugin_pending", "")
                         + "\nAT:" + sp.getLong("plugin_report_ts", 0L);
             }
+            String previousFailure = sp.getString("plugin_failed", "");
             sp.edit()
                     .putString("plugin_loaded", safeLoaded == null ? "" : safeLoaded)
                     .putString("plugin_failed", safeFailed == null ? "" : safeFailed)
+                    .putString("plugin_pending", pending == null ? "" : safeDisplay(pending.trim()))
                     .putLong("plugin_report_ts", System.currentTimeMillis())
                     .apply();
             // 有加载失败的就写进活动日志 —— 那是用户唯一能看到「插件为什么没反应」的地方
-            if (failed != null && !failed.trim().isEmpty()) {
+            if (safeFailed != null && !safeFailed.isEmpty() && !safeFailed.equals(previousFailure)) {
                 try {
-                    HarnessController.get(ctx).logActivity("插件加载失败：" + safeFailed);
+                    HarnessController.get(ctx).logActivity(com.deepseekharness.app.util.UiText.text("插件加载失败：") + safeFailed);
                 } catch (Throwable ignored) {
                 }
             }
@@ -969,17 +1026,17 @@ public final class HttpShellService {
             String p = getParam(queryOf(path), "path", "");
             if (p.isEmpty()) return "NO_PATH";
             java.io.File f = new java.io.File(p);
-            if (!f.isAbsolute()) return "FORBIDDEN: 读取需要绝对路径";
+            if (!f.isAbsolute()) return com.deepseekharness.app.util.UiText.text("FORBIDDEN: 读取需要绝对路径");
             String canon;
             try {
                 canon = f.getCanonicalPath();
             } catch (Exception e) {
-                return "FORBIDDEN: 路径无法解析（" + p + "）";
+                return com.deepseekharness.app.util.UiText.text("FORBIDDEN: 路径无法解析（") + p + com.deepseekharness.app.util.UiText.text("）");
             }
             // 按用户策略放开可读目录；实际权限仍由 Android 执行，不把拒绝伪装成成功。
             if (f.isDirectory()) {
                 java.io.File[] children = f.listFiles();
-                if (children == null) return "NO_PERMISSION: Android 未授予读取此目录的权限";
+                if (children == null) return com.deepseekharness.app.util.UiText.text("NO_PERMISSION: Android 未授予读取此目录的权限");
                 StringBuilder listing = new StringBuilder();
                 for (java.io.File child : children) {
                     if (listing.length() > 250000) { listing.append("[OUTPUT_TRUNCATED]\n"); break; }
@@ -987,13 +1044,13 @@ public final class HttpShellService {
                 }
                 return listing.toString();
             }
-            if (!f.isFile()) return "NOT_FOUND_OR_NO_PERMISSION: 路径不存在或 Android 未授予读取权限：" + p;
+            if (!f.isFile()) return com.deepseekharness.app.util.UiText.text("NOT_FOUND_OR_NO_PERMISSION: 路径不存在或 Android 未授予读取权限：") + p;
             if (f.length() > 256 * 1024) return "TOO_LARGE: " + f.length();
             java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
             try (java.io.FileInputStream in = new java.io.FileInputStream(f)) {
                 byte[] buffer = new byte[8192]; int count;
                 while ((count = in.read(buffer)) != -1) {
-                    if (bytes.size() + count > 256 * 1024) return "TOO_LARGE: 内容超过 256 KiB";
+                    if (bytes.size() + count > 256 * 1024) return com.deepseekharness.app.util.UiText.text("TOO_LARGE: 内容超过 256 KiB");
                     bytes.write(buffer, 0, count);
                 }
             }
@@ -1089,7 +1146,7 @@ public final class HttpShellService {
             int n = 0;
             for (boolean system : new boolean[]{false, true}) {
                 if (system && userOnly) continue;
-                sb.append(system ? "[系统应用]\n" : "[用户应用]\n");
+                sb.append(system ? com.deepseekharness.app.util.UiText.text("[系统应用]\n") : com.deepseekharness.app.util.UiText.text("[用户应用]\n"));
                 for (int index = 0; index < inventory.entries.length(); index++) {
                     org.json.JSONObject app = inventory.entries.getJSONObject(index);
                     if (app.getBoolean("system") != system) continue;
@@ -1099,10 +1156,11 @@ public final class HttpShellService {
                     sb.append(name).append('\t').append(label).append(" uid=").append(app.getInt("uid")).append('\n'); n++;
                 }
             }
-            return sb.append("显示 ").append(n).append(" 个；完整清单 ").append(inventory.entries.length()).append(" 个").toString();
+            return sb.append(com.deepseekharness.app.util.UiText.text("显示 ")).append(n).append(com.deepseekharness.app.util.UiText.text(" 个；Android 返回 ")).append(inventory.entries.length())
+                    .append(com.deepseekharness.app.util.UiText.text(" 个可见应用。系统可能限制可见范围；结束应用前会另行核对完整清单。")).toString();
         } catch (Throwable e) {
-            return "[APP_LIST_UNAVAILABLE] Android 未提供完整应用清单；设备停止操作会通过 ADB/Shizuku 重新读取。"
-                    + "可用设备命令分别查询 pm list packages -U -3 和 pm list packages -U -s。原因：" + safeError(e);
+            return com.deepseekharness.app.util.UiText.text("[APP_LIST_UNAVAILABLE] Android 未提供完整应用清单；设备停止操作会通过 ADB/Shizuku 重新读取。")
+                    + com.deepseekharness.app.util.UiText.text("可用设备命令分别查询 pm list packages -U -3 和 pm list packages -U -s。原因：") + safeError(e);
         }
     }
 
@@ -1112,10 +1170,10 @@ public final class HttpShellService {
             String pkg = getParam(queryOf(path), "pkg", "");
             if (pkg.isEmpty()) return "NO_PKG";
             android.content.Intent i = ctx.getPackageManager().getLaunchIntentForPackage(pkg);
-            if (i == null) return "NOT_FOUND: " + pkg + "（该应用没有启动入口或未安装）";
+            if (i == null) return "NOT_FOUND: " + pkg + com.deepseekharness.app.util.UiText.text("（该应用没有启动入口或未安装）");
             i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-            return "OK: 已启动 " + pkg;
+            return com.deepseekharness.app.util.UiText.text("OK: 已启动 ") + pkg;
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
         }
@@ -1126,7 +1184,7 @@ public final class HttpShellService {
         final String text = getParam(queryOf(path), "text", "");
         try {
             // HTTP 工作线程有界等待。不能在排队后先报成功，也不能因等待超时就假定尚未写入。
-            if (Looper.myLooper() == Looper.getMainLooper()) return "ERROR: 剪贴板桥需由请求工作线程调用";
+            if (Looper.myLooper() == Looper.getMainLooper()) return com.deepseekharness.app.util.UiText.text("ERROR: 剪贴板桥需由请求工作线程调用");
             BoundedUiCall.Result<String> result = BoundedUiCall.call(new BoundedUiCall.Dispatcher() {
                 @Override public boolean post(Runnable task) { return mainHandler.post(task); }
                 @Override public void remove(Runnable task) { mainHandler.removeCallbacks(task); }
@@ -1135,23 +1193,23 @@ public final class HttpShellService {
                 if (cm == null) return "NO_SERVICE";
                 if (!text.isEmpty()) {
                     cm.setPrimaryClip(android.content.ClipData.newPlainText("DSHA", text));
-                    return "OK: 已写入剪贴板（" + text.length() + " 字）";
+                    return com.deepseekharness.app.util.UiText.text("OK: 已写入剪贴板（") + text.length() + com.deepseekharness.app.util.UiText.text(" 字）");
                 }
                 // 读取时复核真正前台窗口，WebView/Gecko 同样属于前台应用。
                 if (!ForegroundActivity.isResumed(ForegroundActivity.current()))
-                    return "[APP_BACKGROUND] 系统限制：只有 App 在前台时才能读剪贴板，可先用 /app/notify 提醒用户打开 DSHA";
+                    return com.deepseekharness.app.util.UiText.text("[APP_BACKGROUND] 系统限制：只有 App 在前台时才能读剪贴板，可先用 /app/notify 提醒用户打开 DSHA");
                 android.content.ClipData cd = cm.getPrimaryClip();
-                if (cd == null || cd.getItemCount() == 0) return "（剪贴板为空）";
+                if (cd == null || cd.getItemCount() == 0) return com.deepseekharness.app.util.UiText.text("（剪贴板为空）");
                 CharSequence cs = cd.getItemAt(0).coerceToText(ctx);
                 String value = cs == null ? "" : cs.toString();
-                return value.length() > 8192 ? value.substring(0, 8192) + "…（已截断）" : value;
+                return value.length() > 8192 ? value.substring(0, 8192) + com.deepseekharness.app.util.UiText.text("…（已截断）") : value;
             }, 3000);
             switch (result.status) {
                 case SUCCESS: return result.value;
-                case FAILED: return "ERROR: 剪贴板操作失败：" + safeError(result.error);
+                case FAILED: return com.deepseekharness.app.util.UiText.text("ERROR: 剪贴板操作失败：") + safeError(result.error);
                 case NOT_EXECUTED: return (result.interrupted ? "[INTERRUPTED] " : "[TIMEOUT] ")
-                        + "主线程尚未执行，已取消本次剪贴板操作；可重试";
-                default: return "[RESULT_UNKNOWN] 剪贴板操作已开始，但等待已结束，结果未知；请确认后再重试";
+                        + com.deepseekharness.app.util.UiText.text("主线程尚未执行，已取消本次剪贴板操作；可重试");
+                default: return com.deepseekharness.app.util.UiText.text("[RESULT_UNKNOWN] 剪贴板操作已开始，但等待已结束，结果未知；请确认后再重试");
             }
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
@@ -1171,7 +1229,7 @@ public final class HttpShellService {
                 // 只允许分享外部存储里的文件（App 私有目录需要 FileProvider 授权）
                 String canon = f.getCanonicalPath();
                 if (!canon.startsWith("/sdcard") && !canon.startsWith("/storage/emulated/0")) {
-                    return "FORBIDDEN: 只能分享 /sdcard 下的文件";
+                    return com.deepseekharness.app.util.UiText.text("FORBIDDEN: 只能分享 /sdcard 下的文件");
                 }
                 send.setType("*/*");
                 send.putExtra(android.content.Intent.EXTRA_STREAM, android.net.Uri.fromFile(f));
@@ -1182,10 +1240,10 @@ public final class HttpShellService {
                 send.setType("text/plain");
                 send.putExtra(android.content.Intent.EXTRA_TEXT, text);
             }
-            android.content.Intent chooser = android.content.Intent.createChooser(send, "分享");
+            android.content.Intent chooser = android.content.Intent.createChooser(send, com.deepseekharness.app.util.UiText.text("分享"));
             chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(chooser);
-            return "OK: 已弹出分享面板";
+            return com.deepseekharness.app.util.UiText.text("OK: 已弹出分享面板");
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
         }
@@ -1201,13 +1259,13 @@ public final class HttpShellService {
             if (!low.startsWith("http://") && !low.startsWith("https://")
                     && !low.startsWith("geo:") && !low.startsWith("tel:")
                     && !low.startsWith("mailto:") && !low.startsWith("market://")) {
-                return "FORBIDDEN: 只支持 http/https/geo/tel/mailto/market 链接";
+                return com.deepseekharness.app.util.UiText.text("FORBIDDEN: 只支持 http/https/geo/tel/mailto/market 链接");
             }
             android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_VIEW,
                     android.net.Uri.parse(url));
             i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
             ctx.startActivity(i);
-            return "OK: 已打开 " + safeDisplay(url);
+            return com.deepseekharness.app.util.UiText.text("OK: 已打开 ") + safeDisplay(url);
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
         }
@@ -1237,7 +1295,7 @@ public final class HttpShellService {
                 // Android 6：VibrationEffect 是 API 26，退回旧式 vibrate(ms)
                 v.vibrate(ms);
             }
-            return "OK: 震动 " + ms + "ms";
+            return com.deepseekharness.app.util.UiText.text("OK: 震动 ") + ms + "ms";
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
         }
@@ -1256,35 +1314,35 @@ public final class HttpShellService {
     /** 包内注入窗口宿主与较短期限；不向 HTTP 参数开放这些测试控制。 */
     String appAsk(String path, long timeoutMillis, androidx.fragment.app.FragmentActivity act,
                   java.util.function.Consumer<BridgeAskDialog> created) {
-        if (timeoutMillis <= 0 || timeoutMillis > 120_000) throw new IllegalArgumentException("无效的提问期限");
+        if (timeoutMillis <= 0 || timeoutMillis > 120_000) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("无效的提问期限"));
         String q = getParam(queryOf(path), "q", "");
         String optRaw = getParam(queryOf(path), "options", "");
         if (q.isEmpty()) return "NO_QUESTION";
         if (act == null) {
-            return "[APP_BACKGROUND] App 不在前台，弹不出提问 —— 可先 /app/notify 提醒用户打开 DSHA";
+            return com.deepseekharness.app.util.UiText.text("[APP_BACKGROUND] App 不在前台，弹不出提问 —— 可先 /app/notify 提醒用户打开 DSHA");
         }
-        String[] parts = optRaw.isEmpty() ? new String[] { "好" } : optRaw.split("\\|", -1);
+        String[] parts = optRaw.isEmpty() ? new String[] { com.deepseekharness.app.util.UiText.text("好") } : optRaw.split("\\|", -1);
         final String[] opts = parts.length <= 3 ? parts : new String[] { parts[0], parts[1], parts[2] };
         final String displayQuestion = safeDisplay(q);
         final String[] displayOptions = new String[opts.length];
         for (int i = 0; i < opts.length; i++) displayOptions[i] = safeDisplay(opts[i]);
         final BridgeQuestions.Request request;
         synchronized (LIFECYCLE) {
-            if (!running || instance != this) return "[STOPPED] 设备桥已停止，请稍后重试";
+            if (!running || instance != this) return com.deepseekharness.app.util.UiText.text("[STOPPED] 设备桥已停止，请稍后重试");
             request = questions.begin(timeoutMillis);
         }
-        if (request == null) return "[BUSY] 已有一个提问在等用户回答";
+        if (request == null) return com.deepseekharness.app.util.UiText.text("[BUSY] 已有一个提问在等用户回答");
         BridgeAskDialog dialog = new BridgeAskDialog(act, questions, request);
         try {
             if (created != null) created.accept(dialog);
             dialog.show(displayQuestion, opts, displayOptions);
             switch (questions.await(request)) {
                 case ANSWER: return request.answer();
-                case TIMEOUT: return "[TIMEOUT] 用户在提问期限内没有回答";
-                case DISMISSED: return "[DISMISSED] 用户关掉了提问框";
-                case BACKGROUND: return "[APP_BACKGROUND] 页面已离开或重建，请回到 DSHA 后重新提问";
-                case STOPPED: return "[STOPPED] 设备桥已停止，请稍后重试";
-                default: return "[UNAVAILABLE] 提问窗口已关闭或无法显示，请重新提问";
+                case TIMEOUT: return com.deepseekharness.app.util.UiText.text("[TIMEOUT] 用户在提问期限内没有回答");
+                case DISMISSED: return com.deepseekharness.app.util.UiText.text("[DISMISSED] 用户关掉了提问框");
+                case BACKGROUND: return com.deepseekharness.app.util.UiText.text("[APP_BACKGROUND] 页面已离开或重建，请回到 DSHA 后重新提问");
+                case STOPPED: return com.deepseekharness.app.util.UiText.text("[STOPPED] 设备桥已停止，请稍后重试");
+                default: return com.deepseekharness.app.util.UiText.text("[UNAVAILABLE] 提问窗口已关闭或无法显示，请重新提问");
             }
         } catch (InterruptedException e) {
             questions.cancel(request, BridgeQuestions.End.INTERRUPTED);
@@ -1319,7 +1377,7 @@ public final class HttpShellService {
             if (name.isEmpty()) name = f.getName();
             if (name.contains("/") || name.contains("..")) return "BAD_NAME";
             String out = BackupManager.exportToDownloads(ctx, f, name);
-            return out == null ? "ERROR: 导出失败（存储权限或空间不足）"
+            return out == null ? com.deepseekharness.app.util.UiText.text("ERROR: 导出失败（存储权限或空间不足）")
                     : "OK: " + SensitiveData.redact(out);
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
@@ -1371,31 +1429,31 @@ public final class HttpShellService {
                     () -> resolveConfirm(false, myEpoch));
             final androidx.fragment.app.FragmentActivity act = ForegroundActivity.current();
             if (act != null) {
-                final String prompt = "模型试图在设备上执行：\n" + safeDisplay(cmd) + "\n\n是否允许？";
+                final String prompt = com.deepseekharness.app.util.UiText.text("模型试图在设备上执行：\n") + safeDisplay(cmd) + com.deepseekharness.app.util.UiText.text("\n\n是否允许？");
                 act.runOnUiThread(() -> {
                     // 正在 finishing 的 Activity 上 show() 会抛 BadTokenException，
                     // 而这里是主线程，异常不在 handle() 的 catch 范围内 → 会崩 App
                     try {
                         if (!ForegroundActivity.isResumed(act) || confirmEpoch.get() != myEpoch
                                 || pendingLatch != latch || latch.getCount() == 0) return;
-                        pendingDialog = new androidx.appcompat.app.AlertDialog.Builder(act)
-                                .setTitle("DSHA 安全确认")
+                        pendingDialog = new com.deepseekharness.app.ui.DshaDialogBuilder(act)
+                                .setTitle(com.deepseekharness.app.util.UiText.text("DSHA 安全确认"))
                                 .setMessage(prompt)
                                 // 必须明确选一个：误触关闭不再被当作拒绝。也不要在
                                 // OnDismiss/OnCancel 里 countDown —— Activity 被 pause
                                 // 导致的 dismiss 会误判成「用户拒绝」，而用户还能从通知里点。
                                 .setCancelable(false)
-                                .setPositiveButton("允许", (d, w) -> resolveConfirm(true, myEpoch))
-                                .setNegativeButton("拒绝", (d, w) -> resolveConfirm(false, myEpoch))
+                                .setPositiveButton(com.deepseekharness.app.util.UiText.text("允许"), (d, w) -> resolveConfirm(true, myEpoch))
+                                .setNegativeButton(com.deepseekharness.app.util.UiText.text("拒绝"), (d, w) -> resolveConfirm(false, myEpoch))
                                 .show();
                     } catch (Throwable t) {
-                        android.util.Log.w("DSHA", "确认弹窗弹出失败，仍可从通知确认：" + safeError(t));
+                        android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("确认弹窗弹出失败，仍可从通知确认：") + safeError(t));
                     }
                 });
             } else if (!notificationsEnabled()) {
                 // 后台 + 通知被拒 = 用户看不到任何提示，只能干等 60s 超时被拒。
                 // 至少留下日志，别让这变成无从排查的「命令莫名被拒」。
-                android.util.Log.w("DSHA", "无前台界面且通知权限被拒，确认必然超时拒绝："
+                android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("无前台界面且通知权限被拒，确认必然超时拒绝：")
                         + safeDisplay(cmd));
             }
 
@@ -1431,7 +1489,7 @@ public final class HttpShellService {
      *  epoch 校验 + 原子认领：丢弃迟到的（属于上一个请求的）点击，以及同一轮里后到的那次。 */
     public void resolveConfirm(boolean allow, long epoch) {
         if (epoch != confirmEpoch.get()) {
-            android.util.Log.i("DSHA", "忽略过期的确认点击（epoch " + epoch + "）");
+            android.util.Log.i("DSHA", com.deepseekharness.app.util.UiText.text("忽略过期的确认点击（epoch ") + epoch + com.deepseekharness.app.util.UiText.text("）"));
             return;
         }
         CountDownLatch l = pendingLatch;
@@ -1477,12 +1535,12 @@ public final class HttpShellService {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification n = new NotificationCompat.Builder(ctx, CONFIRM_CHANNEL)
                 .setSmallIcon(R.drawable.ic_launch)
-                .setContentTitle("⚠️ DSHA 安全确认")
-                .setContentText("模型试图执行：" + shortCmd)
+                .setContentTitle(com.deepseekharness.app.util.UiText.text("⚠️ DSHA 安全确认"))
+                .setContentText(com.deepseekharness.app.util.UiText.text("模型试图执行：") + shortCmd)
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("模型试图在设备上执行：\n" + displayCmd + "\n\n是否允许？"))
-                .addAction(0, "允许", allowPi)
-                .addAction(0, "拒绝", denyPi)
+                        .bigText(com.deepseekharness.app.util.UiText.text("模型试图在设备上执行：\n") + displayCmd + com.deepseekharness.app.util.UiText.text("\n\n是否允许？")))
+                .addAction(0, com.deepseekharness.app.util.UiText.text("允许"), allowPi)
+                .addAction(0, com.deepseekharness.app.util.UiText.text("拒绝"), denyPi)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setOngoing(true)
                 .build();
@@ -1498,9 +1556,9 @@ public final class HttpShellService {
     private void createConfirmChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel ch = new NotificationChannel(
-                    CONFIRM_CHANNEL, "安全确认",
+                    CONFIRM_CHANNEL, com.deepseekharness.app.util.UiText.text("安全确认"),
                     NotificationManager.IMPORTANCE_HIGH);
-            ch.setDescription("模型执行危险操作时的确认提醒");
+            ch.setDescription(com.deepseekharness.app.util.UiText.text("模型执行危险操作时的确认提醒"));
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) nm.createNotificationChannel(ch);
         }

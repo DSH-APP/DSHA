@@ -1,75 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/install_scroll"
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:fillViewport="true" android:background="@color/surface">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="vertical" android:padding="@dimen/page_pad">
-        <TextView android:id="@+id/install_status" style="@style/DshaText.Label"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight" />
-        <Button android:id="@+id/install_btn" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:minHeight="48dp"
-            android:layout_marginTop="@dimen/gap_control" android:background="@drawable/bg_btn_primary"
-            android:textColor="@color/button_primary_text" android:text="仅检查环境" />
-        <Button android:id="@+id/install_repair" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight"
-            android:background="@drawable/bg_btn" android:text="检查并按需修复" />
-        <Button android:id="@+id/install_cancel" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight"
-            android:background="@drawable/bg_btn" android:text="取消检查" android:visibility="gone" />
+        <TextView style="@style/DshaText.Display" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0008" />
+        <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" android:text="@string/ui_m0153" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="18dp">
+            <Button android:id="@+id/install_btn" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:layout_marginEnd="5dp" android:minHeight="52dp" android:background="@drawable/bg_btn_primary"
+                android:textColor="@color/button_primary_text" android:text="@string/ui_m0155" />
+            <Button android:id="@+id/install_repair" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:layout_marginStart="5dp" android:minHeight="52dp" android:background="@drawable/bg_polished_action" android:text="@string/ui_m0014" />
+        </LinearLayout>
+        <TextView android:id="@+id/install_status" style="@style/DshaText.Label" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp" android:accessibilityLiveRegion="polite" />
+        <TextView android:id="@+id/install_progress" style="@style/DshaText.Caption" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="5dp" android:visibility="gone" />
         <ProgressBar android:id="@+id/install_progressbar" style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent" android:layout_height="@dimen/progress_bold"
-            android:layout_marginTop="@dimen/gap_control" android:indeterminateTint="@color/primary"
-            android:visibility="gone" />
-        <TextView android:id="@+id/install_progress" style="@style/DshaText.Label"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight" android:visibility="gone" />
-        <Button android:id="@+id/install_step1" style="@style/InstallStep"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight" android:text="1 · Linux 环境（rootfs）" />
-        <Button android:id="@+id/install_step2" style="@style/InstallStep"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight" android:text="2 · 基础工具\n补齐 curl / git / Python" />
-        <Button android:id="@+id/install_step3" style="@style/InstallStep"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight" android:text="3 · Node.js" />
-        <Button android:id="@+id/install_step4" style="@style/InstallStep"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight" android:text="4 · pnpm 包管理器" />
-        <Button android:id="@+id/install_step5" style="@style/InstallStep"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight" android:text="5 · deepseek-harness" />
-        <Button android:id="@+id/install_step6" style="@style/InstallStep"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_tight" android:text="6 · 运行补丁" />
-        <TextView android:id="@+id/install_steps" style="@style/DshaText.Body"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_block" android:textIsSelectable="true" />
-        <TextView android:id="@+id/install_error" style="@style/DshaText.Label"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap_control" android:background="@drawable/bg_card"
-            android:padding="@dimen/card_pad" android:textColor="@color/err"
-            android:textIsSelectable="true" android:visibility="gone" />
-        <Button android:id="@+id/install_copy" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight"
-            android:background="@drawable/bg_btn" android:text="复制脱敏日志" android:visibility="gone" />
-        <TextView style="@style/DshaText.Label" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_control"
-            android:text="详细输出" />
-        <ScrollView android:id="@+id/install_log_scroll" android:layout_width="match_parent"
-            android:layout_height="220dp" android:layout_marginTop="@dimen/gap_tight"
-            android:background="@drawable/bg_card" android:fillViewport="true">
-            <TextView android:id="@+id/install_log" style="@style/DshaText.Caption"
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:padding="@dimen/card_pad" android:fontFamily="monospace" android:textIsSelectable="true" />
-        </ScrollView>
-        <Button android:id="@+id/install_crash" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:text="查看崩溃日志" android:visibility="gone" />
-        <TextView style="@style/DshaText.Caption" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_block"
-            android:text="仅检查不会安装组件。按需修复只处理失败项，curl / git 缺失时会联网下载。切页或旋转后任务继续，返回可查看进度和结果；修复期间的停止请求会等待安全点。" />
-        <Button android:id="@+id/install_uninstall" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_section"
-            android:background="@drawable/bg_btn_danger" android:text="备份并重建环境" android:textColor="@color/button_danger_text" />
+            android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="8dp" android:visibility="gone" />
+        <Button android:id="@+id/install_cancel" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:text="@string/ui_m0003" android:visibility="gone" />
+        <LinearLayout android:id="@+id/install_steps" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="@drawable/bg_device_card" android:padding="16dp" android:layout_marginTop="16dp">
+            <LinearLayout android:id="@+id/install_step1" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
+                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
+                android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
+                    android:background="@drawable/bg_device_number" android:text="1" android:textStyle="bold"
+                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
+                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="@string/ui_m0038" android:textStyle="bold" />
+                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp" android:text="@string/ubuntu_rootfs" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state1" style="@style/DshaText.Caption" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
+                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
+                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
+            <LinearLayout android:id="@+id/install_step2" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
+                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
+                android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
+                    android:background="@drawable/bg_device_number" android:text="2" android:textStyle="bold"
+                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
+                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="@string/ui_m0096" android:textStyle="bold" />
+                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp" android:text="curl · git · Python" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state2" style="@style/DshaText.Caption" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
+                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
+                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
+            <LinearLayout android:id="@+id/install_step3" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
+                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
+                android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
+                    android:background="@drawable/bg_device_number" android:text="3" android:textStyle="bold"
+                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
+                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="Node.js" android:textStyle="bold" />
+                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp" android:text="@string/ui_m0037" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state3" style="@style/DshaText.Caption" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
+                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
+                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
+            <LinearLayout android:id="@+id/install_step4" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
+                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
+                android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
+                    android:background="@drawable/bg_device_number" android:text="4" android:textStyle="bold"
+                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
+                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="pnpm" android:textStyle="bold" />
+                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp" android:text="@string/ui_m0076" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state4" style="@style/DshaText.Caption" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
+                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
+                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
+            <LinearLayout android:id="@+id/install_step5" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
+                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
+                android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
+                    android:background="@drawable/bg_device_number" android:text="5" android:textStyle="bold"
+                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
+                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="deepseek-harness" android:textStyle="bold" />
+                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp" android:text="@string/ui_m0042" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state5" style="@style/DshaText.Caption" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
+                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
+                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
+            <LinearLayout android:id="@+id/install_step6" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
+                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
+                android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
+                    android:background="@drawable/bg_device_number" android:text="6" android:textStyle="bold"
+                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
+                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="@string/ui_m0199" android:textStyle="bold" />
+                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp" android:text="@string/ui_m0033" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state6" style="@style/DshaText.Caption" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
+                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
+                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:id="@+id/install_error" style="@style/DshaText.Label" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp" android:padding="16dp"
+            android:background="@drawable/bg_device_card" android:textColor="@color/err" android:textIsSelectable="true" android:visibility="gone" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+            android:layout_marginTop="16dp" android:padding="16dp" android:background="@drawable/bg_preview">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                <TextView style="@style/DshaText.Title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/ui_m0154" />
+                <Button android:id="@+id/install_copy" style="@style/Widget.DSHA.TextButton" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/ui_m0102" android:visibility="gone" />
+            </LinearLayout>
+            <com.deepseekharness.app.ui.LogScrollView android:id="@+id/install_log_scroll" android:layout_width="match_parent" android:layout_height="220dp"
+                android:layout_marginTop="8dp" android:fillViewport="true" android:scrollbars="vertical" android:fadeScrollbars="false">
+                <TextView android:id="@+id/install_log" style="@style/DshaText.Caption" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:fontFamily="monospace" android:textIsSelectable="true" />
+            </com.deepseekharness.app.ui.LogScrollView>
+        </LinearLayout>
+        <Button android:id="@+id/install_crash" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/ui_m0152" android:visibility="gone" />
+        <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="14dp" android:text="@string/ui_m0072" />
+        <Button android:id="@+id/install_uninstall" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="20dp" android:background="@drawable/bg_btn_danger"
+            android:text="@string/ui_m0006" android:textColor="@color/button_danger_text" />
     </LinearLayout>
 </ScrollView>

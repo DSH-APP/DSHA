@@ -37,8 +37,8 @@ final class BridgeAskDialog implements Application.ActivityLifecycleCallbacks {
             try {
                 activity.getApplication().registerActivityLifecycleCallbacks(this);
                 registered = true;
-                AlertDialog.Builder builder = new AlertDialog.Builder(activity)
-                        .setTitle("助手提问").setMessage(question)
+                AlertDialog.Builder builder = new com.deepseekharness.app.ui.DshaDialogBuilder(activity)
+                        .setTitle(com.deepseekharness.app.util.UiText.text("助手提问")).setMessage(question)
                         .setPositiveButton(displayOptions[0], (d, w) -> questions.answer(request, options[0]));
                 if (options.length > 1) builder.setNegativeButton(displayOptions[1],
                         (d, w) -> questions.answer(request, options[1]));

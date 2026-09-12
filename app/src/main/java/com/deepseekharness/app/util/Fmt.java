@@ -25,10 +25,10 @@ public final class Fmt {
 
     public static String eta(long seconds) {
         if (seconds < 0) return "--";
-        if (seconds < 60) return seconds + " 秒";
+        if (seconds < 60) return seconds + com.deepseekharness.app.util.UiText.text(" 秒");
         long m = seconds / 60;
-        if (m < 60) return m + " 分 " + (seconds % 60) + " 秒";
-        return (m / 60) + " 时 " + (m % 60) + " 分";
+        if (m < 60) return m + com.deepseekharness.app.util.UiText.text(" 分 ") + (seconds % 60) + com.deepseekharness.app.util.UiText.text(" 秒");
+        return (m / 60) + com.deepseekharness.app.util.UiText.text(" 时 ") + (m % 60) + com.deepseekharness.app.util.UiText.text(" 分");
     }
 
     /** 平滑速率估算：每 500ms 采样一次，避免数字乱跳。 */

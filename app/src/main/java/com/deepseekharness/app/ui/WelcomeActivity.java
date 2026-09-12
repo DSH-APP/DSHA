@@ -44,7 +44,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
         for (int i = 0; i < 3; i++) {
             TextView d = new TextView(this);
-            d.setText("●");
+            d.setText(com.deepseekharness.app.util.UiText.text("●"));
             d.setTextColor(getColor(R.color.text_muted));
             d.setTextSize(10);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
@@ -62,7 +62,7 @@ public class WelcomeActivity extends AppCompatActivity {
                 for (int i = 0; i < 3; i++) {
                     dots[i].setTextColor(getColor(i == position ? R.color.primary : R.color.text_muted));
                 }
-                btn.setText(position == 2 ? "开始" : "下一步");
+                btn.setText(position == 2 ? com.deepseekharness.app.util.UiText.text("开始") : com.deepseekharness.app.util.UiText.text("下一步"));
             }
         });
 

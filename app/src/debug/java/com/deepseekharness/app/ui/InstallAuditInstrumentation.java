@@ -100,7 +100,7 @@ public final class InstallAuditInstrumentation extends Instrumentation {
             manager.beginTransaction().add(R.id.fragment_container, fragment).commitNow();
             check(container.getChildCount() == 1 && container.getChildAt(0) == fragment.getView(),
                     "自测容器必须只包含真实安装 Fragment，不能混入静态示例视图");
-            if (task != repository) try {
+            try {
                 // 注入独立失败仓库仅用于本 debug 页面，不替换生产单例或修改用户 rootfs。
                 Field field = InstallFragment.class.getDeclaredField("repository"); field.setAccessible(true); field.set(fragment, task);
                 Field revision = InstallFragment.class.getDeclaredField("shownRevision"); revision.setAccessible(true); revision.setLong(fragment, -1);
@@ -118,6 +118,10 @@ public final class InstallAuditInstrumentation extends Instrumentation {
         Bundle result = new Bundle(); Context app = getTargetContext().getApplicationContext();
         output = new File(app.getCacheDir(), "install-audit"); output.mkdirs(); report.start(false, 0);
         try {
+            if ("fixture".equals(args.getString("mode"))) {
+                fixtureUi(app);
+                result.putString("result", "PASS"); result.putInt("assertions", assertions); return;
+            }
             check(BuildConfig.DEBUG, "仅允许 debug 包");
             HarnessController controller = HarnessController.get(app);
             check(!BackupTask.get(app).busy() && !BackupManager.isRestoring()
@@ -167,6 +171,31 @@ public final class InstallAuditInstrumentation extends Instrumentation {
             result.putString("reports", output.getAbsolutePath());
             finish(result.containsKey("failure") ? Activity.RESULT_CANCELED : Activity.RESULT_OK, result);
         }
+    }
+    private void fixtureUi(Context app) throws Exception {
+        String name=args.getString("name", "rc11-device-20260911");
+        check(name.matches("[a-z0-9-]+"), "无效的冷安装夹具名称");
+        File base=new File(app.getCacheDir(),"runtime-startup/cold-"+name+"/files");
+        check(base.isDirectory(), "需要本轮独立冷安装夹具");
+        Context isolated=new ContextWrapper(app) {
+            @Override public Context getApplicationContext() { return this; }
+            @Override public File getFilesDir() { return base; }
+        };
+        Constructor<InstallRepository> ctor=InstallRepository.class.getDeclaredConstructor(Context.class);
+        ctor.setAccessible(true);repository=ctor.newInstance(isolated);
+        for(String command:new String[]{"input keyevent 224","wm dismiss-keyguard",
+                "am start -W -n com.dsh.client/com.deepseekharness.app.ui.MainActivity --ez limited_entry true"}) {
+            try(android.os.ParcelFileDescriptor fd=getUiAutomation().executeShellCommand(command);
+                java.io.InputStream in=new android.os.ParcelFileDescriptor.AutoCloseInputStream(fd)){while(in.read()!=-1){}}
+        }
+        page=(LayoutPreviewActivity)startActivitySync(new Intent(app,LayoutPreviewActivity.class)
+                .putExtra("scene","fragment_install").putExtra("install_audit",true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        attach(repository);ui(()->page.findViewById(R.id.install_btn).performClick());ownsTask=true;
+        check(completed(repository).outcome==InstallTask.Outcome.SUCCEEDED,"独立冷环境六步检查失败："+repository.snapshot().log);
+        for(int id:new int[]{R.id.install_state1,R.id.install_state2,R.id.install_state3,R.id.install_state4,R.id.install_state5,R.id.install_state6})
+            await(()->uiText(id).equals("成功"),5000,"成功状态没有显示在对应组件行");
+        note("PASS 非调试包：独立冷环境检查全部六项，成功状态逐行可见");
+        failurePage(app);
     }
 
     private void processFailures(ProotBootstrap proot) throws Exception {
@@ -243,6 +272,10 @@ public final class InstallAuditInstrumentation extends Instrumentation {
         InstallTask.Snapshot state = completed(failure);
         check(state.outcome == InstallTask.Outcome.FAILED && !state.failure.isEmpty(), "缺环境未显示明确失败");
         await(() -> !uiText(R.id.install_error).isEmpty(), 5000, "失败原因未返回安装页面");
+        for (int status : new int[]{R.id.install_state1, R.id.install_state2, R.id.install_state3,
+                R.id.install_state4, R.id.install_state5, R.id.install_state6}) {
+            check(uiText(status).equals("失败"), "组件状态未直接显示在对应行");
+        }
         check(!new File(fixture, "linux").exists(), "仅检查创建了 fixture 环境");
         await(() -> failure.start(false, 1), 2000, "失败后任务入口未释放");
         check(completed(failure).outcome == InstallTask.Outcome.FAILED, "失败后重试未正常完成");

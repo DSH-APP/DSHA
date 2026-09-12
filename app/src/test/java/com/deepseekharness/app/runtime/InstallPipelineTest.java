@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 
 public class InstallPipelineTest {
     static final class Environment implements InstallPipeline.Environment {
-        boolean ready = true, empty, cancelDuringRepair, throwRepair, missingResult;
+        boolean ready = true, empty, cancelDuringRepair, throwRepair, missingResult, earlyExit;
         int launches, tools, pnpm, groups, patches, extractions;
         final Set<String> failures = new HashSet<>();
         InstallTask active;
@@ -35,6 +35,7 @@ public class InstallPipelineTest {
                 assertFalse(cancellable); patches++; failures.removeAll(Set.of("dns", "session", "settings")); return 0;
             }
             assertTrue(cancellable);
+            if (earlyExit) { output.accept("DSHA_CHECK_BEGIN:curl"); return 23; }
             Matcher matcher = Pattern.compile("DSHA_CHECK_BEGIN:([a-z]+)").matcher(script);
             while (matcher.find()) {
                 String key = matcher.group(1); output.accept("DSHA_CHECK_BEGIN:" + key);
@@ -61,6 +62,9 @@ public class InstallPipelineTest {
         InstallTask task = environment.run(false, 0);
         assertEquals(InstallTask.Outcome.FAILED, task.snapshot().outcome);
         assertEquals(1, environment.launches); assertEquals(0, environment.repairs());
+        assertEquals(InstallTask.Step.OK, task.snapshot().steps[2]);
+        assertEquals(InstallTask.Step.OK, task.snapshot().steps[4]);
+        for (InstallTask.Step step : task.snapshot().steps) assertTrue(step == InstallTask.Step.OK || step == InstallTask.Step.FAILED);
     }
     @Test public void pnpmRepairOnlyRepairsAndRechecksPnpm() throws Exception {
         Environment environment = new Environment(); environment.failures.add("pnpm");
@@ -73,6 +77,10 @@ public class InstallPipelineTest {
         InstallTask task = environment.run(true, 0);
         assertEquals(InstallTask.Outcome.FAILED, task.snapshot().outcome);
         assertEquals(0, environment.launches); assertEquals(0, environment.repairs());
+        for (int i = 0; i < 6; i++) {
+            assertEquals(InstallTask.Step.FAILED, task.snapshot().steps[i]);
+            assertFalse(task.snapshot().details[i].equals("尚未检查"));
+        }
     }
     @Test public void freshExtractionRequiresRepairRequest() throws Exception {
         Environment environment = new Environment(); environment.ready = false; environment.empty = true;
@@ -99,5 +107,16 @@ public class InstallPipelineTest {
         InstallTask task = environment.run(false, 3);
         assertEquals(InstallTask.Outcome.FAILED, task.snapshot().outcome);
         assertTrue(task.snapshot().log.contains("未收到结果"));
+    }
+    @Test public void earlyContainerExitLeavesAllSixResultsAndDoesNotStartRepairs() throws Exception {
+        Environment environment = new Environment(); environment.earlyExit = true;
+        InstallTask task = new InstallTask(); task.start(true, 0);
+        assertThrows(IOException.class, () -> new InstallPipeline(environment).run(task, true, 0));
+        assertEquals(InstallTask.Step.OK, task.snapshot().steps[0]);
+        for (int i = 1; i < 6; i++) {
+            assertEquals(InstallTask.Step.FAILED, task.snapshot().steps[i]);
+            assertTrue(task.snapshot().details[i].contains("未收到结果"));
+        }
+        assertEquals(0, environment.repairs());
     }
 }

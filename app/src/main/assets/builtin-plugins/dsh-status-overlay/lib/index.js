@@ -26,6 +26,7 @@
  *    所有 IO 与解析都包在 try/catch 里，失败就静默降级。
  */
 import { readFileSync } from 'node:fs'
+export const name = 'dsh-status-overlay'
 
 /** 桥地址（App 侧只监听回环，容器与宿主共享网络命名空间，所以直接连得上）。 */
 const BRIDGE = 'http://127.0.0.1:3090/app/overlay'
@@ -309,8 +310,7 @@ export function apply(ctx) {
  * 全程宽容：registry 的形状随 cordis 版本可能变，取不到就少报一点，绝不影响悬浮条本身。
  */
 export function collectPluginStates(ctx) {
-  const loaded = []
-  const failed = []
+  const loaded = new Set(), failed = new Set(), pending = new Set()
   try {
     const reg = ctx && ctx.registry
     const iter = reg && typeof reg.entries === 'function' ? reg.entries() : reg
@@ -325,49 +325,60 @@ export function collectPluginStates(ctx) {
       } catch (e) {
         fibers = []
       }
-      if (!fibers.length) {
-        failed.push(nm + ':无活动实例')
-        continue
-      }
-      let ok = false
-      let why = ''
       for (const f of fibers) {
         const raw = f && f.state !== undefined ? f.state : ''
         const st = String(raw).toLowerCase()
-        // 状态可能是字符串也可能是枚举数字，两种都认；认不出的一律当"没起来"上报，
-        // 宁可多报一条让用户去查，也不要漏掉真正卡住的插件
+        // 锁定的 Cordis：PENDING=0 / LOADING=1 / ACTIVE=2 / FAILED=3。
+        // 等待、卸载和未知状态都不是异常；同插件一个实例失败也不能被另一个成功掩盖。
         if (st === 'active' || st === '2') {
-          ok = true
-          break
-        }
-        why = st || '未知'
+          loaded.add(nm)
+        } else if (st === 'failed' || st === '3') failed.add(nm + ':加载失败')
+        else if (st === 'pending' || st === '0') pending.add(nm + ':等待依赖')
+        else if (st === 'loading' || st === '1') pending.add(nm + ':正在加载')
       }
-      if (ok) loaded.push(nm)
-      else failed.push(nm + ':' + why)
     }
   } catch (e) {
     // registry 结构对不上就别报了：少一份诊断信息可以接受，插件本身出问题不行
   }
-  return { loaded, failed }
+  return { loaded: [...loaded].sort(), failed: [...failed].sort(), pending: [...pending].sort() }
 }
 
-function reportPluginStates(ctx) {
-  const T = bridgeToken()
-  if (!T) return
-  // 延后再报：apply 阶段别的插件可能还在 LOADING，太早报会把它们全算成没加载起来
-  const timer = setTimeout(() => {
+export function reportPluginStates(ctx, io = {}) {
+  const getToken = io.token || bridgeToken, request = io.fetch || fetch
+  const later = io.setTimeout || setTimeout, cancel = io.clearTimeout || clearTimeout
+  let timer, disposed = false, sending = false, dirty = false, previous
+  function schedule(delay = 300) {
+    if (disposed) return
+    dirty = true
+    if (sending) return
+    cancel(timer)
+    timer = later(flush, delay); timer?.unref?.()
+  }
+  async function flush() {
+    timer = undefined
+    if (disposed || sending) return
+    sending = true; dirty = false
     try {
+      const T = getToken()
+      if (!T) return
       const st = collectPluginStates(ctx)
-      if (!st.loaded.length && !st.failed.length) return
+      const snapshot = JSON.stringify(st)
+      if (snapshot === previous) return
       const url = 'http://127.0.0.1:3090/app/plugins'
         + '?loaded=' + encodeURIComponent(st.loaded.join(','))
         + '&failed=' + encodeURIComponent(st.failed.join(','))
-        + '&token=' + encodeURIComponent(T)
-      fetch(url, { signal: AbortSignal.timeout(1500) }).then(response => response.text()).catch(() => {})
+        + '&pending=' + encodeURIComponent(st.pending.join(','))
+      const response = await request(url, { headers: { 'X-Token': T }, signal: AbortSignal.timeout(1500) })
+      if (response.ok && (await response.text()).trim() === 'OK') previous = snapshot
     } catch (e) {
       // 上报失败不影响任何既有功能
+    } finally {
+      sending = false
+      if (!disposed) schedule(dirty ? 300 : 30_000)
     }
-  }, 8000)
-  timer.unref?.()
-  ctx.on('dispose', () => clearTimeout(timer))
+  }
+  // 服务变化和 HMR 后重新采样；定期重试允许桥晚于插件启动。
+  for (const event of ['internal/status', 'internal/plugin']) ctx.on(event, () => schedule())
+  ctx.on('dispose', () => { disposed = true; cancel(timer) })
+  schedule(1000)
 }

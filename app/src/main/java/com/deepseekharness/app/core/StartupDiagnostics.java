@@ -15,14 +15,29 @@ public final class StartupDiagnostics {
     private final Context context;
     private String recentError = "";
     private int errorLines;
-    public StartupDiagnostics(Context context) { this.context = context.getApplicationContext(); }
+    private boolean explicitStartupFailure;
+    private final com.deepseekharness.app.util.StartupHistoryStore history;
+    private final java.util.concurrent.ScheduledExecutorService historyIo = java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
+    private String recordId="", result="starting", failure="";
+    private long started, lastSaved;
+    private volatile String historyError="";
+    public java.util.function.LongConsumer onHealthy = generation -> { };
+    public StartupDiagnostics(Context context) {
+        this.context = context.getApplicationContext();
+        history=new com.deepseekharness.app.util.StartupHistoryStore(context.getFilesDir());
+    }
     public synchronized void begin(long generation, boolean safe) {
-        owners.clear(); recentError = ""; errorLines = 0; trace.begin(generation, SystemClock.elapsedRealtime(), safe);
+        persistHistory(true);
+        owners.clear(); recentError = ""; errorLines = 0; explicitStartupFailure=false; trace.begin(generation, SystemClock.elapsedRealtime(), safe);
+        recordId=java.util.UUID.randomUUID().toString();started=System.currentTimeMillis();result="starting";failure="";
+        persistHistory(true);
     }
     public StartupTrace.Snapshot snapshot() { return trace.snapshot(SystemClock.elapsedRealtime()); }
+    public void message(long generation, String text) { trace.owned(generation, SystemClock.elapsedRealtime(), text); }
     public void stage(long generation, String stage) {
         trace.stage(generation, SystemClock.elapsedRealtime(), stage);
         DiagnosticLog.record(context, "STARTUP_STAGE", stage);
+        persistHistory(false);
     }
     public synchronized void output(long generation, String chunk) {
         if (!trace.isCurrent(generation) || chunk == null) return;
@@ -42,8 +57,8 @@ public final class StartupDiagnostics {
                         if (!id.isEmpty()) owners.put(key, owners.containsKey(key) && !name.equals(owners.get(key)) ? "" : name);
                     }
                     if ("stage".equals(type)) stage(generation, message);
-                    else if ("issue".equals(type)) issue(generation, name, message);
-                    else if (!message.isEmpty()) trace.add(generation, SystemClock.elapsedRealtime(), message);
+                    else if ("issue".equals(type)) { issue(generation, name, message);explicitStartupFailure=true; }
+                    else if (!message.isEmpty()) trace.owned(generation, SystemClock.elapsedRealtime(), message);
                     continue;
                 } catch (Exception ignored) { }
             }
@@ -57,9 +72,13 @@ public final class StartupDiagnostics {
                 if (!name.isEmpty()) issue(generation, name, recentError + "\n" + line);
             }
         }
+        persistHistory(false);
     }
     private String owner(String text) {
         return com.deepseekharness.app.util.PluginFailureOwner.find(owners, text);
+    }
+    public synchronized boolean hasExplicitStartupFailure(long generation) {
+        return trace.isCurrent(generation) && explicitStartupFailure && !snapshot().browserReady;
     }
     public synchronized void browser(long generation, String detail) {
         if (!trace.isCurrent(generation)) return;
@@ -72,27 +91,57 @@ public final class StartupDiagnostics {
         if ("ready".equals(type)) { browserReady(generation); return false; }
         if ("issue".equals(type)) {
             String name = owner("\"" + id + "\" " + detail);
-            issue(generation, name, (id.isEmpty() ? "" : id + "：") + detail);
+            issue(generation, name, (id.isEmpty() ? "" : id + com.deepseekharness.app.util.UiText.text("：")) + detail);
             if (name.isEmpty()) for (String line : detail.split("\n")) {
                 String candidate = owner(line);
                 if (!candidate.isEmpty()) issue(generation, candidate, line);
             }
             return event.optBoolean("fatal") && !snapshot().browserReady;
         }
-        trace.add(generation, SystemClock.elapsedRealtime(), detail);
+        trace.owned(generation, SystemClock.elapsedRealtime(), detail);
         return false;
     }
     public void issue(long generation, String name, String detail) {
         trace.issue(generation, SystemClock.elapsedRealtime(), name, detail);
         DiagnosticLog.record(context, "STARTUP_ERROR", name + ": " + SensitiveData.redact(detail));
     }
-    public void browserReady(long generation) { trace.browserReady(generation, SystemClock.elapsedRealtime()); }
+    public synchronized void browserReady(long generation) {
+        if(!trace.isCurrent(generation))return;
+        boolean capture=!trace.snapshot(SystemClock.elapsedRealtime()).browserReady;
+        trace.browserReady(generation, SystemClock.elapsedRealtime());result="ready";persistHistory(true);
+        if(capture && !snapshot().safe && snapshot().issues.isEmpty())historyIo.execute(()->onHealthy.accept(generation));
+    }
+    public synchronized void completed(long generation,String status,String reason) {
+        if(!trace.isCurrent(generation))return;
+        if("failed".equals(result) && "stopped".equals(status))return;
+        result=status;failure=reason==null?"":reason;persistHistory(true);
+    }
+    public synchronized String recordId() { return recordId; }
+    public java.util.List<com.deepseekharness.app.util.StartupHistoryStore.Entry> history() {
+        return history.list(com.deepseekharness.app.util.UiText.language());
+    }
+    public String failureReason() {
+        for(String detail:snapshot().issues.values()) {
+            int port=com.deepseekharness.app.util.WebPortPolicy.conflictPort(detail);
+            if(port>0)return com.deepseekharness.app.util.UiText.choose("Web 端口被占用：","Web port in use: ")+port;
+        }
+        return com.deepseekharness.app.util.UiText.choose("启动配置或插件加载失败","Startup configuration or plugin loading failed");
+    }
+    public String historyError() { return historyError; }
+    private synchronized void persistHistory(boolean force) {
+        if(recordId.isEmpty())return;
+        long now=SystemClock.elapsedRealtime();if(!force && now-lastSaved<1000)return;lastSaved=now;
+        String id=recordId,status=result,reason=failure;long date=started;
+        StartupTrace.Snapshot zh=trace.snapshot(now,"zh"),en=trace.snapshot(now,"en");
+        historyIo.execute(()->{try { history.save(id,date,status,reason,zh,en);historyError=""; }
+            catch(Exception error) { historyError=SensitiveData.redact(String.valueOf(error.getMessage()));DiagnosticLog.record(context,"STARTUP_HISTORY",historyError); }});
+    }
 
     /** 成功重试不得覆盖上次失败证据，供旧设备无输出退出时排查。 */
     public void preserveFailure(java.io.File runtimeLog, String reason) {
         try {
-            String text = "最近启动失败\n" + new java.util.Date() + "\n" + reason
-                    + "\n\n" + snapshot().log + "\n\n=== 进程输出 ===\n";
+            String text = com.deepseekharness.app.util.UiText.text("最近启动失败\n") + new java.util.Date() + "\n" + reason
+                    + "\n\n" + snapshot().log + com.deepseekharness.app.util.UiText.text("\n\n=== 进程输出 ===\n");
             if (runtimeLog.isFile() && !com.deepseekharness.app.util.Compat.isSymbolicLink(runtimeLog))
                 text += com.deepseekharness.app.util.TextLogTail.read(runtimeLog, 256 * 1024);
             com.deepseekharness.app.util.Compat.write(new java.io.File(context.getFilesDir(), "last-startup-failure.log"),
@@ -103,7 +152,7 @@ public final class StartupDiagnostics {
     public static String lastFailure(Context context) {
         try {
             java.io.File file = new java.io.File(context.getFilesDir(), "last-startup-failure.log");
-            return file.isFile() ? SensitiveData.redact(com.deepseekharness.app.util.TextLogTail.read(file, 384 * 1024)) : "暂无保留的失败记录\n";
-        } catch (Exception error) { return "失败记录暂不可读\n"; }
+            return file.isFile() ? SensitiveData.redact(com.deepseekharness.app.util.TextLogTail.read(file, 384 * 1024)) : com.deepseekharness.app.util.UiText.text("暂无保留的失败记录\n");
+        } catch (Exception error) { return com.deepseekharness.app.util.UiText.text("失败记录暂不可读\n"); }
     }
 }

@@ -5,10 +5,10 @@ public final class ConfigInput {
     private ConfigInput() { }
 
     public static int port(String value) {
-        int port = number(value, "端口请输入 1—65535 的整数");
-        if (port < 1 || port > 65535) throw new IllegalArgumentException("端口请输入 1—65535 的整数");
+        int port = number(value, com.deepseekharness.app.util.UiText.text("端口请输入 1—65535 的整数"));
+        if (port < 1 || port > 65535) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("端口请输入 1—65535 的整数"));
         if (port == Constants.LAN_BRIDGE_PORT || port == Constants.SHELL_BRIDGE_PORT)
-            throw new IllegalArgumentException("3081 和 3090 已用于 App 桥接，请换一个端口");
+            throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("3081 和 3090 已用于 App 桥接，请换一个端口"));
         return port;
     }
 

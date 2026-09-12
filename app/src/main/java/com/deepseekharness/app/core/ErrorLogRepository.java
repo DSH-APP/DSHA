@@ -32,7 +32,7 @@ public final class ErrorLogRepository extends AndroidViewModel {
         super(app);
         android.content.SharedPreferences saved = app.getSharedPreferences("dsha_log_exports", 0);
         String uri = saved.getString("last_uri", ""), name = saved.getString("last_name", "");
-        state.setValue(new State(false, uri.isEmpty() ? "日志保存在本机，导出时隐藏常见密钥字段。" : "上次保存：" + name + "（点按查看）", uri.isEmpty() ? null : Uri.parse(uri)));
+        state.setValue(new State(false, uri.isEmpty() ? com.deepseekharness.app.util.UiText.text("日志保存在本机，导出时隐藏常见密钥字段。") : com.deepseekharness.app.util.UiText.text("上次保存：") + name + com.deepseekharness.app.util.UiText.text("（点按查看）"), uri.isEmpty() ? null : Uri.parse(uri)));
     }
     public static String filename() {
         return "DSHA-error-log-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.ROOT).format(new java.util.Date()) + ".txt";
@@ -41,7 +41,7 @@ public final class ErrorLogRepository extends AndroidViewModel {
     public void export(Uri destination) {
         if (!working.compareAndSet(false, true)) return;
         State previous = state.getValue();
-        state.setValue(new State(true, "正在收集并保存错误日志…", previous == null ? null : previous.uri));
+        state.setValue(new State(true, com.deepseekharness.app.util.UiText.text("正在收集并保存错误日志…"), previous == null ? null : previous.uri));
         IO.execute(() -> {
             File staged = null;
             try {
@@ -56,12 +56,12 @@ public final class ErrorLogRepository extends AndroidViewModel {
                     com.deepseekharness.app.util.FileIntegrity.Result written;
                     try (InputStream in = new java.io.FileInputStream(staged);
                          OutputStream out = getApplication().getContentResolver().openOutputStream(destination, "wt")) {
-                        if (out == null) throw new java.io.IOException("无法写入所选位置");
+                        if (out == null) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("无法写入所选位置"));
                         written = com.deepseekharness.app.util.FileIntegrity.copy(in, out, staged.length());
                     }
                     try (InputStream in = getApplication().getContentResolver().openInputStream(destination)) {
                         if (!written.matches(com.deepseekharness.app.util.FileIntegrity.copy(in, null, staged.length())))
-                            throw new java.io.IOException("保存后的日志校验失败");
+                            throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("保存后的日志校验失败"));
                     }
                     uri = destination;
                     try (android.database.Cursor cursor = getApplication().getContentResolver().query(uri,
@@ -72,33 +72,36 @@ public final class ErrorLogRepository extends AndroidViewModel {
                     catch (SecurityException ignored) { }
                 }
                 getApplication().getSharedPreferences("dsha_log_exports", 0).edit().putString("last_uri", uri.toString()).putString("last_name", name).apply();
-                state.postValue(new State(false, (destination == null ? "已保存：Download/DSHA/" : "已保存到所选位置：") + name + "\n点按此处查看日志", uri));
+                state.postValue(new State(false, (destination == null ? com.deepseekharness.app.util.UiText.text("已保存：Download/DSHA/") : com.deepseekharness.app.util.UiText.text("已保存到所选位置：")) + name + com.deepseekharness.app.util.UiText.text("\n点按此处查看日志"), uri));
             } catch (Exception error) {
-                state.postValue(new State(false, "保存失败：" + SensitiveData.redact(String.valueOf(error.getMessage()))
-                        + "\n可点「另存为」选择位置后重试。", previous == null ? null : previous.uri));
+                state.postValue(new State(false, com.deepseekharness.app.util.UiText.text("保存失败：") + SensitiveData.redact(String.valueOf(error.getMessage()))
+                        + com.deepseekharness.app.util.UiText.text("\n可点「另存为」选择位置后重试。"), previous == null ? null : previous.uri));
             } finally { if (staged != null) staged.delete(); working.set(false); }
         });
     }
     public static String collect(android.content.Context context) {
-        StringBuilder text = new StringBuilder("DSHA 错误日志\n");
-        text.append("生成时间：").append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", java.util.Locale.ROOT).format(new java.util.Date())).append('\n');
-        text.append("版本：").append(BuildConfig.VERSION_NAME).append(" / ").append(BuildConfig.VERSION_CODE).append(BuildConfig.LOW_ANDROID ? " / 兼容版\n" : " / 标准版\n");
-        text.append("设备：").append(android.os.Build.MANUFACTURER).append(' ').append(android.os.Build.MODEL)
+        StringBuilder text = new StringBuilder(com.deepseekharness.app.util.UiText.text("DSHA 错误日志\n"));
+        text.append(com.deepseekharness.app.util.UiText.text("生成时间：")).append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", java.util.Locale.ROOT).format(new java.util.Date())).append('\n');
+        text.append(com.deepseekharness.app.util.UiText.text("版本：")).append(BuildConfig.VERSION_NAME).append(" / ").append(BuildConfig.VERSION_CODE).append(BuildConfig.LOW_ANDROID ? com.deepseekharness.app.util.UiText.text(" / 兼容版\n") : com.deepseekharness.app.util.UiText.text(" / 标准版\n"));
+        text.append(com.deepseekharness.app.util.UiText.text("设备：")).append(android.os.Build.MANUFACTURER).append(' ').append(android.os.Build.MODEL)
                 .append(" / Android ").append(android.os.Build.VERSION.RELEASE).append('\n');
         ConfigStore config = new ConfigStore(context);
-        text.append("最近失败阶段：").append(config.getWebFailureStage()).append('\n')
-                .append("最近失败原因：").append(config.getWebFailureReason()).append('\n');
-        text.append("\n=== 应用操作、崩溃与页面错误 ===\n").append(DiagnosticLog.read(context));
-        text.append("\n=== 本轮启动时间线 ===\n").append(HarnessController.get(context).startupDiagnostics().snapshot().log);
-        text.append("\n=== 上次失败（后续成功启动仍保留）===\n").append(StartupDiagnostics.lastFailure(context));
-        text.append("\n=== 最近运行输出（最多 256 KiB）===\n");
+        text.append(com.deepseekharness.app.util.UiText.text("最近失败阶段：")).append(config.getWebFailureStage()).append('\n')
+                .append(com.deepseekharness.app.util.UiText.text("最近失败原因：")).append(config.getWebFailureReason()).append('\n');
+        text.append(com.deepseekharness.app.util.UiText.text("\n=== 应用操作、崩溃与页面错误 ===\n")).append(DiagnosticLog.read(context));
+        text.append(com.deepseekharness.app.util.UiText.text("\n=== 本轮启动时间线 ===\n")).append(HarnessController.get(context).startupDiagnostics().snapshot().log);
+        text.append(com.deepseekharness.app.util.UiText.choose("\n=== 最近五次启动 ===\n","\n=== Last five starts ===\n"));
+        for(com.deepseekharness.app.util.StartupHistoryStore.Entry entry:HarnessController.get(context).startupDiagnostics().history())
+            text.append(entry.started).append(" / ").append(entry.status).append(" / ").append(entry.stage).append('\n').append(entry.log).append('\n');
+        text.append(com.deepseekharness.app.util.UiText.text("\n=== 上次失败（后续成功启动仍保留）===\n")).append(StartupDiagnostics.lastFailure(context));
+        text.append(com.deepseekharness.app.util.UiText.text("\n=== 最近运行输出（最多 256 KiB）===\n"));
         File log = new File(context.getFilesDir(), "linux/ubuntu/root/dsh-web.log");
         try {
-            if (Compat.isSymbolicLink(log)) text.append("运行日志路径为符号链接，未读取。\n");
+            if (Compat.isSymbolicLink(log)) text.append(com.deepseekharness.app.util.UiText.text("运行日志路径为符号链接，未读取。\n"));
             else if (log.isFile()) text.append(TextLogTail.read(log, 256 * 1024));
-            else text.append("暂无 Web 运行日志。\n");
-        } catch (Exception error) { text.append("运行日志读取失败：").append(error.getClass().getSimpleName()).append('\n'); }
-        text.append("\n仅保存于所选本机位置，没有自动上传；未读取配置全文、对话文件或终端历史。\n");
+            else text.append(com.deepseekharness.app.util.UiText.text("暂无 Web 运行日志。\n"));
+        } catch (Exception error) { text.append(com.deepseekharness.app.util.UiText.text("运行日志读取失败：")).append(error.getClass().getSimpleName()).append('\n'); }
+        text.append(com.deepseekharness.app.util.UiText.text("\n仅保存于所选本机位置，没有自动上传；未读取配置全文、对话文件或终端历史。\n"));
         return SensitiveData.redact(text.toString());
     }
 }

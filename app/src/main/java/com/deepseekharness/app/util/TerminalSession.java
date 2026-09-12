@@ -39,7 +39,7 @@ public final class TerminalSession {
 
     /** 下层可能已 fork，却在返回 Process 句柄前失败；不能把它当作确定的未启动。 */
     public static final class UncertainStart extends IOException {
-        public UncertainStart(Throwable cause) { super("启动失败且无法确认子进程已回收，保留环境占用", cause); }
+        public UncertainStart(Throwable cause) { super(com.deepseekharness.app.util.UiText.text("启动失败且无法确认子进程已回收，保留环境占用"), cause); }
     }
 
     private static final int MAX_COMMAND = 16 * 1024;
@@ -58,6 +58,7 @@ public final class TerminalSession {
     private Run active;
     private long commandId;
     private volatile State state = State.STOPPED;
+    private volatile boolean permanentlyClosing, disposed;
 
     private static final class Run {
         final String prefix = "\036DSHA_" + UUID.randomUUID().toString().replace("-", "") + ":";
@@ -77,44 +78,66 @@ public final class TerminalSession {
     }
 
     public State state() { return state; }
-    public void ensureStarted() { control.execute(this::start); }
+    private boolean submitControl(Runnable action) {
+        try {control.execute(action);return true;}
+        catch(java.util.concurrent.RejectedExecutionException error){if(disposed||permanentlyClosing)return false;throw error;}
+    }
+    public void ensureStarted() { if(!permanentlyClosing)submitControl(()->{if(!permanentlyClosing)start();}); }
 
     /** 接受后仅发送一次。未接受时调用方必须保留输入框文本。 */
     public boolean submit(String command) {
-        if (command == null || command.trim().isEmpty() || command.length() > MAX_COMMAND
+        if (permanentlyClosing || command == null || command.trim().isEmpty() || command.length() > MAX_COMMAND
                 || command.indexOf('\0') >= 0) return false;
-        control.execute(() -> {
+        return submitControl(() -> {
+            if(permanentlyClosing)return;
             pending.addLast(command);
             emit("$ " + command + "\n");
             if (active == null) start();
             pump();
         });
-        return true;
     }
 
     public void cancelAndRestart() {
-        control.execute(() -> {
+        if(permanentlyClosing)return;
+        submitControl(() -> {
+            if(permanentlyClosing)return;
             if (active == null) { start(); return; }
             requestStop(true);
         });
     }
 
     public void shutdown() {
-        control.execute(this::shutdownNow);
+        if(!disposed)submitControl(this::shutdownNow);
     }
 
     /** 维护线程在移动 rootfs 前使用；先确认关闭请求执行过，再等进程回收完成。 */
     public boolean shutdownAndWait(long timeoutMs) throws InterruptedException {
+        if(disposed)return true;
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.max(0, timeoutMs));
         java.util.concurrent.CountDownLatch dispatched = new java.util.concurrent.CountDownLatch(1);
-        control.execute(() -> { try { shutdownNow(); } finally { dispatched.countDown(); } });
+        if(!submitControl(() -> { try { shutdownNow(); } finally { dispatched.countDown(); } }))return disposed;
         if (!dispatched.await(Math.max(0, timeoutMs), TimeUnit.MILLISECONDS)) return false;
         while (state != State.STOPPED && state != State.FAILED && System.nanoTime() < deadline) Thread.sleep(25);
         return state == State.STOPPED;
     }
 
+    /** 用户移除标签时确认进程退出，再释放控制线程；失败仍保留会话，允许重试关闭。 */
+    public synchronized boolean disposeAndWait(long timeoutMs) throws InterruptedException {
+        if(disposed)return true;
+        permanentlyClosing=true;
+        try {
+            if(!shutdownAndWait(timeoutMs))return false;
+            disposed=true;control.shutdown();return true;
+        } finally {if(!disposed)permanentlyClosing=false;}
+    }
+
+    private void deliverExit(Run run, Exception failure) {
+        try {control.execute(()->exited(run,failure));}
+        catch(java.util.concurrent.RejectedExecutionException error){if(!disposed)throw error;}
+    }
+
     private void shutdownNow() {
-        if (!pending.isEmpty()) emit("[关闭会话：取消 " + pending.size() + " 条尚未发送的命令]\n");
+        if (!pending.isEmpty()) emit(com.deepseekharness.app.util.UiText.text("[关闭会话：取消 ") + pending.size() + com.deepseekharness.app.util.UiText.text(" 条尚未发送的命令]\n"));
         pending.clear();
         if (active != null) requestStop(false);
         else change(State.STOPPED);
@@ -125,7 +148,7 @@ public final class TerminalSession {
         Run run = new Run();
         active = run;
         change(State.STARTING);
-        emit("[正在启动简易终端；命令按顺序等待发送]\n");
+        emit(com.deepseekharness.app.util.UiText.text("[正在启动简易终端；命令按顺序等待发送]\n"));
         try {
             run.lifetime = backend.beginLifetime();
             run.process = backend.open();
@@ -138,14 +161,14 @@ public final class TerminalSession {
             reader.start();
             poll(run);
         } catch (Exception error) {
-            emit("[终端启动失败：" + error + "；未发送的命令保留，重试后继续]\n");
+            emit(com.deepseekharness.app.util.UiText.text("[终端启动失败：") + error + com.deepseekharness.app.util.UiText.text("；未发送的命令保留，重试后继续]\n"));
             if (error instanceof UncertainStart) {
                 run.uncertainStart = true;
                 change(State.FAILED);
-                emit("[无法取得进程句柄，禁止重启会话或移动环境；请结束应用进程后再恢复]\n");
+                emit(com.deepseekharness.app.util.UiText.text("[无法取得进程句柄，禁止重启会话或移动环境；请结束应用进程后再恢复]\n"));
             } else if (run.process == null) {
                 try { releaseLifetime(run); active = null; }
-                catch (Exception cleanup) { emit("[终端启动清理失败，保留环境占用：" + cleanup + "]\n"); }
+                catch (Exception cleanup) { emit(com.deepseekharness.app.util.UiText.text("[终端启动清理失败，保留环境占用：") + cleanup + "]\n"); }
                 change(State.FAILED);
             }
             else {
@@ -167,7 +190,7 @@ public final class TerminalSession {
             ByteBuffer bytes = ByteBuffer.allocate(8192);
             CharBuffer chars = CharBuffer.allocate(8192);
             while (true) {
-                if (Thread.currentThread().isInterrupted()) throw new InterruptedException("终端读取被中断");
+                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(com.deepseekharness.app.util.UiText.text("终端读取被中断"));
                 int available = input.available();
                 if (available > 0) {
                     int count = input.read(bytes.array(), bytes.position(), Math.min(available, bytes.remaining()));
@@ -188,12 +211,12 @@ public final class TerminalSession {
             java.nio.charset.CoderResult flushed = decoder.flush(chars);
             if (flushed.isError()) flushed.throwException();
             enqueueOutput(run, chars);
-            control.execute(() -> exited(run, null));
+            deliverExit(run, null);
         } catch (IOException error) {
-            control.execute(() -> exited(run, error));
+            deliverExit(run, error);
         } catch (InterruptedException error) {
             Thread.currentThread().interrupt();
-            control.execute(() -> exited(run, error));
+            deliverExit(run, error);
         }
     }
 
@@ -203,7 +226,7 @@ public final class TerminalSession {
         java.nio.charset.CoderResult result = decoder.decode(bytes, chars, end);
         if (result.isError()) result.throwException();
         // 输入缓冲最多 8192 字节，输出缓冲同长，UTF-8 不会产生更长的字符序列。
-        if (result.isOverflow()) throw new IOException("终端解码缓冲区溢出");
+        if (result.isOverflow()) throw new IOException(com.deepseekharness.app.util.UiText.text("终端解码缓冲区溢出"));
         bytes.compact();
         enqueueOutput(run, chars);
     }
@@ -214,10 +237,10 @@ public final class TerminalSession {
         chars.clear();
         if (chunk.isEmpty()) return;
         outputSlots.acquire();
-        control.execute(() -> {
+        try { control.execute(() -> {
             try { receive(run, chunk); }
             finally { outputSlots.release(); }
-        });
+        }); } catch(java.util.concurrent.RejectedExecutionException error) { outputSlots.release();if(!disposed)throw error; }
     }
 
     private void receive(Run run, String chunk) {
@@ -275,11 +298,11 @@ public final class TerminalSession {
         } catch (EnvironmentUnavailable blocked) {
             pending.addFirst(command);
             run.inFlight = 0;
-            emit("[" + blocked.getMessage() + "；命令尚未发送，已保留。完成后请重试重启]\n");
+            emit("[" + blocked.getMessage() + com.deepseekharness.app.util.UiText.text("；命令尚未发送，已保留。完成后请重试重启]\n"));
             requestStop(false);
         } catch (IOException error) {
             // 管道部分写入后无法证明命令是否执行，绝不自动重发可能有副作用的命令。
-            emit("[发送结果不确定，未自动重发：" + command + "；请检查执行结果。" + error + "]\n");
+            emit(com.deepseekharness.app.util.UiText.text("[发送结果不确定，未自动重发：") + command + com.deepseekharness.app.util.UiText.text("；请检查执行结果。") + error + "]\n");
             requestStop(true);
         }
     }
@@ -291,7 +314,7 @@ public final class TerminalSession {
         run.stopRequested = true;
         run.restartAfterStop = restart;
         change(State.STOPPING);
-        emit(restart ? "[正在中止本会话进程组并重启；尚未发送的命令保留]\n" : "[正在关闭简易终端]\n");
+        emit(restart ? com.deepseekharness.app.util.UiText.text("[正在中止本会话进程组并重启；尚未发送的命令保留]\n") : com.deepseekharness.app.util.UiText.text("[正在关闭简易终端]\n"));
         // 等待启动握手拿到本组 PID；此时还未发送任何用户命令，不能误杀容器启动器代替取消。
         if (run.ready || retryFailedStop || !alive(run.process)) stop(run);
     }
@@ -300,7 +323,7 @@ public final class TerminalSession {
         if (active != run) return;
         if (run.uncertainStart) {
             change(State.FAILED);
-            emit("[未确认启动进程已回收，继续保留环境占用，不创建新会话]\n");
+            emit(com.deepseekharness.app.util.UiText.text("[未确认启动进程已回收，继续保留环境占用，不创建新会话]\n"));
             return;
         }
         try {
@@ -308,11 +331,11 @@ public final class TerminalSession {
             releaseLifetime(run);
             active = null;
             change(State.STOPPED);
-            emit("[旧会话已结束]\n");
+            emit(com.deepseekharness.app.util.UiText.text("[旧会话已结束]\n"));
             if (run.restartAfterStop) start();
         } catch (Exception error) {
             change(State.FAILED);
-            emit("[中止失败，未创建新会话：" + error + "；待发命令保留，请再次点中止重试]\n");
+            emit(com.deepseekharness.app.util.UiText.text("[中止失败，未创建新会话：") + error + com.deepseekharness.app.util.UiText.text("；待发命令保留，请再次点中止重试]\n"));
         }
     }
 
@@ -327,8 +350,8 @@ public final class TerminalSession {
         if (active != run) return;
         emit(run.incoming.toString());
         run.incoming.setLength(0);
-        if (failure != null) emit("[终端读取失败：" + failure + "]\n");
-        emit("[会话已退出；已发送的命令不会自动重放]\n");
+        if (failure != null) emit(com.deepseekharness.app.util.UiText.text("[终端读取失败：") + failure + "]\n");
+        emit(com.deepseekharness.app.util.UiText.text("[会话已退出；已发送的命令不会自动重放]\n"));
         run.stopRequested = true;
         // 初始化失败不能自动重试，否则缺少 setsid 等环境问题会不断创建进程。
         run.restartAfterStop = run.ready && (run.restartAfterStop || !pending.isEmpty());
@@ -344,7 +367,7 @@ public final class TerminalSession {
                 // 给输出读取线程留时间提交最后一段；后台子进程持有 stdout 时不能一直等 EOF。
                 if (now - run.exitedAt > TimeUnit.MILLISECONDS.toNanos(500)) { exited(run, null); return; }
             } else if (!run.ready && now - run.openedAt > TimeUnit.SECONDS.toNanos(15)) {
-                emit("[终端初始化超时，未发送任何用户命令]\n");
+                emit(com.deepseekharness.app.util.UiText.text("[终端初始化超时，未发送任何用户命令]\n"));
                 run.stopRequested = true;
                 stop(run);
                 return;

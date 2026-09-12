@@ -47,14 +47,14 @@ public interface ContainerRuntime {
 
         @Override public String id() { return "proot"; }
 
-        @Override public String displayName() { return "proot（内置，稳定）"; }
+        @Override public String displayName() { return com.deepseekharness.app.util.UiText.text("proot（内置，稳定）"); }
 
         @Override public boolean available() {
             return nativeLibProot != null && nativeLibProot.exists();
         }
 
         @Override public String unavailableReason() {
-            return available() ? "" : "APK 内的 libproot.so 缺失（安装包可能损坏，建议重装）";
+            return available() ? "" : com.deepseekharness.app.util.UiText.text("APK 内的 libproot.so 缺失（安装包可能损坏，建议重装）");
         }
 
         @Override public List<String> baseArgv(File rootfsDir, boolean hardlinkSupported) {
@@ -121,7 +121,7 @@ public interface ContainerRuntime {
 
         @Override public String id() { return "proroot"; }
 
-        @Override public String displayName() { return "proroot（实验，零 ptrace 开销）"; }
+        @Override public String displayName() { return com.deepseekharness.app.util.UiText.text("proroot（实验，零 ptrace 开销）"); }
 
         @Override public boolean available() {
             for (String n : LIBS) {
@@ -138,7 +138,7 @@ public interface ContainerRuntime {
                 if (!f.isFile() || f.length() == 0) missing.add(n);
             }
             if (missing.isEmpty()) return "";
-            return "缺 " + missing.size() + " 个运行时文件（" + missing.get(0) + " 等）";
+            return com.deepseekharness.app.util.UiText.text("缺 ") + missing.size() + com.deepseekharness.app.util.UiText.text(" 个运行时文件（") + missing.get(0) + com.deepseekharness.app.util.UiText.text(" 等）");
         }
 
         @Override public List<String> baseArgv(File rootfsDir, boolean hardlinkSupported) {
@@ -180,7 +180,7 @@ public interface ContainerRuntime {
         @Override public void prepare() throws Exception {
             for (String n : LIBS) {
                 if (!new File(dir, n).isFile()) {
-                    throw new IllegalStateException("proroot 运行时缺 " + n);
+                    throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("proroot 运行时缺 ") + n);
                 }
             }
             //noinspection ResultOfMethodCallIgnored

@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#2B55A4</color>
-    <color name="primary_dark">#214685</color>
+    <color name="panel_top">#FFFFFF</color>
+    <color name="panel_bottom">#F2F5FA</color>
+    <color name="panel_outline">#CAD4E4</color>
+    <color name="primary">#315DB4</color>
+    <color name="primary_dark">#274E99</color>
     <color name="accent_on">#FFFFFF</color>
-    <color name="surface">#F7F8FB</color>
-    <color name="card">#FFFFFF</color>
-    <color name="raised">#EEF1F6</color>
-    <color name="line">#E2E6EE</color>
-    <color name="text">#1A2230</color>
-    <color name="text_secondary">#4A5568</color>
-    <color name="text_muted">#596579</color>
+    <color name="surface">#F3F5FC</color>
+    <color name="card">#FCFDFF</color>
+    <color name="raised">#E9EEFB</color>
+    <color name="line">#E0E6F4</color>
+    <color name="text">#111827</color>
+    <color name="text_secondary">#525F76</color>
+    <color name="text_muted">#5C6880</color>
     <color name="ok">#207348</color>
     <color name="warn">#825900</color>
     <color name="err">#AD3D45</color>
@@ -18,8 +21,8 @@
          会在浅色主题下变亮的 preview，否则就会出现浅灰底白字。 -->
     <color name="terminal_surface">#0A0D12</color>
     <color name="terminal_outline">#263041</color>
-    <color name="logo_top">#E8EEF8</color>
-    <color name="logo_bot">#D5DFF0</color>
+    <color name="logo_top">#E7EDFC</color>
+    <color name="logo_bot">#E7EDFC</color>
     <!-- 按压涟漪：主色低透明度，浅色底上淡淡一层 -->
     <color name="ripple">#1A3D6FD4</color>
     <color name="primary_ripple">#1F000000</color>

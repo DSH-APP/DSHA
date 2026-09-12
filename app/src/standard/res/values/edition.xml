@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="edition_description">标准版 · Android 11+ · 系统 WebView</string>
+    <string name="browser_description">使用系统 WebView，请保持 Android System WebView / Chrome 更新。</string>
+</resources>

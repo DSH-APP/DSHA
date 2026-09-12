@@ -9,7 +9,7 @@ public final class DshAuthLog {
         for (int i = 0; i < chunk.length(); i++) {
             char c = chunk.charAt(i);
             if (c == '\n') {
-                out.append(discarded ? "[已略过超长输出]" : DshAuthUrl.redact(pending.toString())).append('\n');
+                out.append(discarded ? com.deepseekharness.app.util.UiText.text("[已略过超长输出]") : DshAuthUrl.redact(pending.toString())).append('\n');
                 pending.setLength(0); discarded = false;
             } else if (!discarded) {
                 pending.append(c);

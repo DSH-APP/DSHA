@@ -23,13 +23,14 @@ public class MainActivity extends AppCompatActivity {
     private com.deepseekharness.app.core.UpdateEngine startupUpdates;
     private com.google.android.material.snackbar.Snackbar updateNotice;
     private boolean requestingLocalNetwork;
+    private String openedRecovery="";
     private final androidx.activity.result.ActivityResultLauncher<String> localNetworkPermission =
             registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
                     granted -> {
                         requestingLocalNetwork = false;
                         if (granted) com.deepseekharness.app.bridge.LocalNetworkAccess.applyConfiguredFeatures(this);
                         else android.widget.Toast.makeText(this,
-                                "未允许局域网访问；本机对话仍可使用，LAN / 无线 ADB 需在系统权限设置中开启",
+                                com.deepseekharness.app.util.UiText.text("未允许局域网访问；本机对话仍可使用，LAN / 无线 ADB 需在系统权限设置中开启"),
                                 android.widget.Toast.LENGTH_LONG).show();
                     });
 
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if(savedInstanceState!=null)openedRecovery=savedInstanceState.getString("opened_startup_recovery","");
         ConfigStore config = new ConfigStore(this);
         HarnessController controller = HarnessController.get(this);
         boolean skipExtract = com.deepseekharness.app.BuildConfig.DEBUG && getIntent().getBooleanExtra("skip_extract", false);
@@ -58,16 +60,20 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
-        if (com.deepseekharness.app.BackupManager.hasPendingMaintenance(controller)
-                || !skipExtract && !controller.isEnvironmentReady()) {
+        boolean limitedAllowed = getIntent().getBooleanExtra("limited_entry", false)
+                || config.allowsLimitedEntry(controller.proot().environmentIdentity());
+        if (!limitedAllowed && (com.deepseekharness.app.BackupManager.hasPendingMaintenance(controller)
+                || !skipExtract && !controller.isEnvironmentReady())) {
             startActivity(new Intent(this, ExtractActivity.class));
             finish();
             return;
         }
 
         setContentView(R.layout.activity_main);
+        TextView recovery = findViewById(R.id.environment_recovery_banner);
+        recovery.setOnClickListener(v -> startActivity(new Intent(this, ExtractActivity.class).putExtra("review_only", true)));
         String pendingLink = getSharedPreferences("dsha-install-link", MODE_PRIVATE).getString("pending", "");
-        if (!pendingLink.isEmpty()) {
+        if (!pendingLink.isEmpty() && !com.deepseekharness.app.core.EnvironmentAccess.needsRecovery(controller)) {
             getSharedPreferences("dsha-install-link", MODE_PRIVATE).edit().remove("pending").apply();
             try {
                 com.deepseekharness.app.util.PluginInstallLink.parse(pendingLink);
@@ -78,8 +84,8 @@ public class MainActivity extends AppCompatActivity {
         TextView title = findViewById(R.id.app_title);
         TextView theme = findViewById(R.id.btn_theme);
         boolean dark = ThemeController.isDark(this);
-        theme.setText(dark ? "黑夜" : "白天");
-        theme.setContentDescription(dark ? "当前黑夜模式，点击切换白天" : "当前白天模式，点击切换黑夜");
+        theme.setText(dark ? com.deepseekharness.app.util.UiText.text("黑夜") : com.deepseekharness.app.util.UiText.text("白天"));
+        theme.setContentDescription(dark ? com.deepseekharness.app.util.UiText.text("当前黑夜模式，点击切换白天") : com.deepseekharness.app.util.UiText.text("当前白天模式，点击切换黑夜"));
         theme.setOnClickListener(v -> ThemeController.toggle(this));
         findViewById(R.id.sub_back).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
         getSupportFragmentManager().addOnBackStackChangedListener(this::updateToolbar);
@@ -90,6 +96,12 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView nav = findViewById(R.id.bottom_nav);
         nav.setOnItemSelectedListener(item -> {
+            // 当前根页面再次点选时保留输入和滚动；从子页返回或外部打开插件仍执行导航。
+            if (nav.getSelectedItemId()==item.getItemId()
+                    && getSupportFragmentManager().getBackStackEntryCount()==0
+                    && getSupportFragmentManager().findFragmentById(R.id.fragment_container)!=null
+                    && !(getSupportFragmentManager().findFragmentById(R.id.fragment_container) instanceof EnvironmentRecoveryFragment)
+                    && !getIntent().getBooleanExtra("open_plugins",false)) return true;
             if (!getSupportFragmentManager().isStateSaved())
                 getSupportFragmentManager().popBackStackImmediate(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
             Fragment f;
@@ -98,7 +110,8 @@ public class MainActivity extends AppCompatActivity {
                 f = new LaunchFragment();
                 title.setText(R.string.nav_launch);
             } else if (id == R.id.nav_plugins) {
-                f = new PluginFragment();
+                f = com.deepseekharness.app.core.EnvironmentAccess.needsRecovery(controller)
+                        ? new EnvironmentRecoveryFragment() : new PluginFragment();
                 if (getIntent().getBooleanExtra("open_plugins", false)) {
                     Bundle args = new Bundle(); args.putBoolean("show_installed", true); f.setArguments(args);
                     getIntent().removeExtra("open_plugins");
@@ -109,11 +122,11 @@ public class MainActivity extends AppCompatActivity {
                 title.setText(R.string.nav_settings);
             } else {
                 // 终端：默认挂真 PTY 页（vim/htop/tmux 能跑），可在 PTY 页切回简易版
-                f = PtyTerminalFragment.preferred(this)
+                f = com.deepseekharness.app.core.EnvironmentAccess.needsRecovery(controller) ? new EnvironmentRecoveryFragment() : PtyTerminalFragment.preferred(this)
                         ? new PtyTerminalFragment() : new TerminalFragment();
                 title.setText(R.string.nav_terminal);
             }
-            getSupportFragmentManager().beginTransaction()
+            UiMotion.page(this, getSupportFragmentManager().beginTransaction())
                     .replace(R.id.fragment_container, f)
                     .commit();
             return true;
@@ -135,10 +148,10 @@ public class MainActivity extends AppCompatActivity {
         com.deepseekharness.app.util.UpdatePolicy.Release release = startupUpdates.startupNotice();
         if (release == null) return;
         updateNotice = com.google.android.material.snackbar.Snackbar.make(findViewById(android.R.id.content),
-                "发现新版本 " + release.version + " · " + com.deepseekharness.app.core.UpdateEngine.channelName(startupUpdates.channel()),
+                com.deepseekharness.app.util.UiText.text("发现新版本 ") + release.version + " · " + com.deepseekharness.app.core.UpdateEngine.channelName(startupUpdates.channel()),
                 com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
                 .setAnchorView(R.id.bottom_nav)
-                .setAction("查看更新", view -> startActivity(new Intent(this, UpdateActivity.class)));
+                .setAction(com.deepseekharness.app.util.UiText.text("查看更新"), view -> startActivity(new Intent(this, UpdateActivity.class)));
         updateNotice.addCallback(new com.google.android.material.snackbar.Snackbar.Callback() {
             @Override public void onShown(com.google.android.material.snackbar.Snackbar bar) {
                 if (hasWindowFocus() && getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED))
@@ -162,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override protected void onPause() {
+        recoveryHandler.removeCallbacks(refreshRecovery);
         if (updateNotice != null) { updateNotice.dismiss(); updateNotice = null; }
         super.onPause();
     }
@@ -182,19 +196,23 @@ public class MainActivity extends AppCompatActivity {
         boolean nested = getSupportFragmentManager().getBackStackEntryCount() > 0;
         findViewById(R.id.sub_back).setVisibility(nested ? android.view.View.VISIBLE : android.view.View.GONE);
         findViewById(R.id.app_logo).setVisibility(nested ? android.view.View.GONE : android.view.View.VISIBLE);
-        if (shown instanceof ConfigFragment) title.setText("配置");
-        else if (shown instanceof WorkspaceFragment) title.setText("数据与备份");
-        else if (shown instanceof InstallFragment) title.setText("安装与修复");
-        else if (shown instanceof SettingsFragment) title.setText("设置");
-        else if (shown instanceof PluginFragment) title.setText("插件");
-        else if (shown instanceof TerminalFragment || shown instanceof PtyTerminalFragment) title.setText("终端");
-        else title.setText("启动");
+        if (shown instanceof ConfigFragment) title.setText(com.deepseekharness.app.util.UiText.text("配置"));
+        else if (shown instanceof DeviceGrantsFragment) title.setText(com.deepseekharness.app.util.UiText.text("设备能力授权"));
+        else if (shown instanceof WorkspaceFragment) title.setText(com.deepseekharness.app.util.UiText.text("数据与备份"));
+        else if (shown instanceof InstallFragment) title.setText(com.deepseekharness.app.util.UiText.text("安装与修复"));
+        else if (shown instanceof SettingsFragment) title.setText(com.deepseekharness.app.util.UiText.text("设置"));
+        else if (shown instanceof PluginFragment) title.setText(com.deepseekharness.app.util.UiText.text("插件"));
+        else if (shown instanceof TerminalFragment || shown instanceof PtyTerminalFragment) title.setText(com.deepseekharness.app.util.UiText.text("终端"));
+        else title.setText(com.deepseekharness.app.util.UiText.text("启动"));
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if(!new ConfigStore(this).getUiLanguage().equals(com.deepseekharness.app.util.UiText.language()))LanguageController.apply(this);
         current = this;
+        recoveryHandler.removeCallbacks(refreshRecovery);
+        recoveryHandler.post(refreshRecovery);
         updateToolbar();
         if (!isFinishing() && findViewById(R.id.bottom_nav) != null
                 && (new ConfigStore(this).isLanMode()
@@ -210,6 +228,34 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private final android.os.Handler recoveryHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable refreshRecovery = new Runnable() {
+        @Override public void run() {
+            TextView banner = findViewById(R.id.environment_recovery_banner);
+            if (banner == null || isFinishing()) return;
+            boolean limited = com.deepseekharness.app.core.EnvironmentAccess.needsRecovery(HarnessController.get(MainActivity.this));
+            boolean busy = com.deepseekharness.app.core.BackupTask.get(MainActivity.this).maintenanceBusy();
+            banner.setVisibility(limited || busy ? android.view.View.VISIBLE : android.view.View.GONE);
+            banner.setText(busy ? com.deepseekharness.app.util.UiText.text("环境维护进行中 · 点击查看进度") : com.deepseekharness.app.util.UiText.text("受限模式：环境需要恢复 · 点击处理"));
+            com.deepseekharness.app.util.BackupTaskState.Snapshot task=com.deepseekharness.app.core.BackupTask.get(MainActivity.this).snapshot();
+            if(busy && task.busy())banner.setText((task.status==com.deepseekharness.app.util.BackupTaskState.Status.PREVIEW
+                    ?com.deepseekharness.app.util.UiText.choose("等待确认恢复备份","Backup restore awaiting confirmation")
+                    :com.deepseekharness.app.util.StartupText.render(task.kind))
+                    +com.deepseekharness.app.util.UiText.choose(" · 点击查看进度"," · View progress"));
+            HarnessController controller=HarnessController.get(MainActivity.this);
+            boolean startupRecovery=controller.config().isStartupRecoveryRequested() || com.deepseekharness.app.core.StartupRepairs.pending(MainActivity.this);
+            String key=controller.startupDiagnostics().recordId()+":"+controller.config().getWebFailureReason()+":"+com.deepseekharness.app.core.StartupRepairs.pending(MainActivity.this);
+            if(startupRecovery && !limited && !busy && !controller.isStarting() && !controller.isStopping()
+                    && !key.equals(openedRecovery) && getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
+                openedRecovery=key;startActivity(new Intent(MainActivity.this,StartupRecoveryActivity.class));
+            }
+            recoveryHandler.postDelayed(this, 1000);
+        }
+    };
+
+    @Override protected void onSaveInstanceState(Bundle state) {
+        state.putString("opened_startup_recovery",openedRecovery);super.onSaveInstanceState(state);
+    }
     @Override
     protected void onDestroy() {
         if (current == this) current = null;

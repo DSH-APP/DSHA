@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources><string name="web_port_fallback_hint">If the preferred port is in use, an available port is used automatically. See the Start page for the actual address.</string></resources>

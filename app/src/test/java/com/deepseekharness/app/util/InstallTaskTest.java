@@ -24,8 +24,10 @@ public class InstallTaskTest {
         InstallTask task = new InstallTask(); task.start(false, 0);
         task.stage(2, "检查工具", true); task.result(2, true, "已通过");
         InstallTask.Snapshot oldPage = task.snapshot(); oldPage.steps[1] = InstallTask.Step.FAILED;
+        oldPage.details[1] = "被外部修改";
         task.append("切页后继续输出"); task.finish(InstallTask.Outcome.SUCCEEDED, "全部完成");
         assertEquals(InstallTask.Step.OK, task.snapshot().steps[1]);
+        assertEquals("已通过", task.snapshot().details[1]);
         assertTrue(task.snapshot().log.contains("切页后继续输出")); assertFalse(task.snapshot().busy());
     }
     @Test public void cancellationBlocksEnteringNextWriteStage() {

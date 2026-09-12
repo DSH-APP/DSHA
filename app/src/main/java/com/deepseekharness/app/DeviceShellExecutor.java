@@ -17,6 +17,9 @@ public final class DeviceShellExecutor {
     static String execute(String command, Runner runner) {
         DeviceShellPolicy.Plan plan = DeviceShellPolicy.inspect(command);
         if (!plan.allowed()) return plan.reason + "\n[EXIT=126]";
+        // UserService 不持有 App 的授权记录；短信必须先经过原生授权桥再走 ADB。
+        if (plan.kind == DeviceShellPolicy.Kind.SENSITIVE_READ)
+            return com.deepseekharness.app.util.UiText.text("[POLICY_BLOCKED] 短信读取请使用 ADB 通道，并在 DSHA 授权\n[EXIT=126]");
         try {
             if (plan.kind == DeviceShellPolicy.Kind.STOP) {
                 String users = checked(runner.run(Arrays.asList("pm", "list", "packages", "-U", "-3")));
@@ -30,7 +33,7 @@ public final class DeviceShellExecutor {
                 for (String target : targets) {
                     // 按包名操作，避免检查完 PID 后号码复用而误伤系统进程。
                     String result = runner.run(Arrays.asList("am", "force-stop", target));
-                    output.append("停止用户应用：").append(target).append('\n').append(result).append('\n');
+                    output.append(com.deepseekharness.app.util.UiText.text("停止用户应用：")).append(target).append('\n').append(result).append('\n');
                     if (!result.endsWith("[EXIT=0]")) break;
                 }
                 return output.toString().trim();
@@ -49,7 +52,7 @@ public final class DeviceShellExecutor {
 
     private static String checked(String output) throws IOException {
         if (output == null || !output.endsWith("[EXIT=0]") || output.contains("[OUTPUT_TRUNCATED]"))
-            throw new IOException("无法取得完整设备信息，未执行写入或停止操作");
+            throw new IOException(com.deepseekharness.app.util.UiText.text("无法取得完整设备信息，未执行写入或停止操作"));
         return output.substring(0, output.length() - "[EXIT=0]".length()).trim();
     }
 
@@ -73,20 +76,20 @@ public final class DeviceShellExecutor {
     }
 
     private static File checkedPath(String value) throws IOException {
-        if (!DeviceShellPolicy.writeAllowed(value)) throw new IOException("受保护目录只读：" + value);
+        if (!DeviceShellPolicy.writeAllowed(value)) throw new IOException(com.deepseekharness.app.util.UiText.text("受保护目录只读：") + value);
         File file = new File(DeviceShellPolicy.normalize(value));
         String canonical = file.getCanonicalPath();
-        if (!DeviceShellPolicy.writeAllowed(canonical)) throw new IOException("链接实际指向受保护目录：" + value);
+        if (!DeviceShellPolicy.writeAllowed(canonical)) throw new IOException(com.deepseekharness.app.util.UiText.text("链接实际指向受保护目录：") + value);
         // 共享存储别名已统一；写入链上出现其它链接时不猜测行为。
         for (File parent = file; parent != null && DeviceShellPolicy.writeAllowed(parent.getPath()); parent = parent.getParentFile()) {
             try {
                 android.system.StructStat metadata = android.system.Os.lstat(parent.getPath());
                 if (android.system.OsConstants.S_ISLNK(metadata.st_mode))
-                    throw new IOException("写入路径含符号链接，请使用明确的实际目录：" + value);
+                    throw new IOException(com.deepseekharness.app.util.UiText.text("写入路径含符号链接，请使用明确的实际目录：") + value);
             } catch (android.system.ErrnoException error) {
                 // 新建路径可以不存在；无权读取元数据不能被当成“不是链接”。
                 if (error.errno != android.system.OsConstants.ENOENT)
-                    throw new IOException("无法核对路径元数据，未执行写入：" + value, error);
+                    throw new IOException(com.deepseekharness.app.util.UiText.text("无法核对路径元数据，未执行写入：") + value, error);
             }
         }
         return file;
@@ -95,12 +98,12 @@ public final class DeviceShellExecutor {
         java.util.ArrayDeque<File> pending = new java.util.ArrayDeque<>(); pending.add(file);
         while (!pending.isEmpty()) {
             File current = pending.removeLast();
-            if (++count[0] > 20000) throw new IOException("目录过大，无法完整核验；请缩小操作范围");
+            if (++count[0] > 20000) throw new IOException(com.deepseekharness.app.util.UiText.text("目录过大，无法完整核验；请缩小操作范围"));
             checkedPath(current.getPath());
             if (current.isDirectory()) {
                 File[] children = current.listFiles();
-                if (children == null) throw new IOException("目录无法读取，未执行写入：" + current.getPath());
-                if (children.length + count[0] > 20000) throw new IOException("目录过大，请缩小操作范围");
+                if (children == null) throw new IOException(com.deepseekharness.app.util.UiText.text("目录无法读取，未执行写入：") + current.getPath());
+                if (children.length + count[0] > 20000) throw new IOException(com.deepseekharness.app.util.UiText.text("目录过大，请缩小操作范围"));
                 pending.addAll(Arrays.asList(children));
             }
         }

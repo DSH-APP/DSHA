@@ -18,6 +18,11 @@
              Switch / CheckBox / Slider / AlertDialog 都吃这几个语义色，
              补齐后系统控件才会和自绘的卡片按钮同色系。 -->
         <item name="colorSurface">@color/card</item>
+        <item name="colorSurfaceContainerLowest">@color/surface</item>
+        <item name="colorSurfaceContainerLow">@color/card</item>
+        <item name="colorSurfaceContainer">@color/card</item>
+        <item name="colorSurfaceContainerHigh">@color/card</item>
+        <item name="colorSurfaceContainerHighest">@color/raised</item>
         <item name="colorOnSurface">@color/text</item>
         <item name="colorSurfaceVariant">@color/raised</item>
         <item name="colorOnSurfaceVariant">@color/text_secondary</item>
@@ -57,6 +62,11 @@
     <style name="Dialog.DSHA.Alert" parent="Theme.Material3.DayNight.Dialog.Alert">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorSurface">@color/card</item>
+        <item name="colorSurfaceContainerLowest">@color/surface</item>
+        <item name="colorSurfaceContainerLow">@color/card</item>
+        <item name="colorSurfaceContainer">@color/card</item>
+        <item name="colorSurfaceContainerHigh">@color/card</item>
+        <item name="colorSurfaceContainerHighest">@color/raised</item>
         <item name="colorOnSurface">@color/text</item>
         <item name="android:textColorPrimary">@color/text</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
@@ -67,8 +77,20 @@
 
     <!-- MaterialAlertDialogBuilder 专用（必须是 ThemeOverlay） -->
     <style name="Dialog.DSHA.Material" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="android:backgroundDimAmount">0.22</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.DSHA.DialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.DSHA.DialogButton</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.DSHA.DialogButton</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/TextAppearance.DSHA.DialogTitle</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/TextAppearance.DSHA.DialogBody</item>
         <item name="colorPrimary">@color/primary</item>
         <item name="colorSurface">@color/card</item>
+        <item name="colorSurfaceContainerLowest">@color/surface</item>
+        <item name="colorSurfaceContainerLow">@color/card</item>
+        <item name="colorSurfaceContainer">@color/card</item>
+        <item name="colorSurfaceContainerHigh">@color/card</item>
+        <item name="colorSurfaceContainerHighest">@color/raised</item>
         <item name="colorOnSurface">@color/text</item>
         <item name="android:colorAccent">@color/primary</item>
         <item name="android:textColorHint">@color/text_muted</item>
@@ -77,6 +99,6 @@
 
     <style name="Shape.DSHA.Dialog" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">@dimen/radius_card</item>
+        <item name="cornerSize">24dp</item>
     </style>
 </resources>

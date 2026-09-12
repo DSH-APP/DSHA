@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources><string name="web_port_fallback_hint">首选端口被占用时会自动使用空闲端口，实际地址见启动页。</string></resources>

@@ -97,8 +97,8 @@ public class TaskNotifier {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification n = new NotificationCompat.Builder(ctx, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launch)
-                .setContentTitle("DSHA · 任务完成")
-                .setContentText("智能体已结束任务，点击查看结果")
+                .setContentTitle(com.deepseekharness.app.util.UiText.text("DSHA · 任务完成"))
+                .setContentText(com.deepseekharness.app.util.UiText.text("智能体已结束任务，点击查看结果"))
                 .setContentIntent(pi)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -110,9 +110,9 @@ public class TaskNotifier {
     private void createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel ch = new NotificationChannel(
-                    CHANNEL_ID, "任务完成提醒",
+                    CHANNEL_ID, com.deepseekharness.app.util.UiText.text("任务完成提醒"),
                     NotificationManager.IMPORTANCE_HIGH);
-            ch.setDescription("智能体任务完成时通知");
+            ch.setDescription(com.deepseekharness.app.util.UiText.text("智能体任务完成时通知"));
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) nm.createNotificationChannel(ch);
         }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# DSHA_ADB_SCRIPT_VERSION=16
+# DSHA_ADB_SCRIPT_VERSION=17
 """无线配对只握手一次；配对授权与连接验证分别反馈。
 
 PAIR_OK 表示配对完成；只有 CONNECT_OK 才能执行设备命令。

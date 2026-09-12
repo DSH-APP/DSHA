@@ -15,10 +15,10 @@ put(path.join(profile, 'package.json'), {dsh:{profile:{bundles:['test-broken']}}
 put(path.join(plugin, 'package.json'), {name:'test-broken',version:'1.0.0',type:'module',dsh:{bundle:{patch:'cordis.patch.yml'}}});
 put(path.join(plugin, 'cordis.patch.yml'), '- insert:\n    - id: test-broken\n      name: test-broken\n');
 const observer = path.join(assets, 'startup-observer.cjs');
-function execute(source) {
+function execute(source, language = "zh") {
   put(path.join(plugin, 'index.js'), source);
   return spawnSync(process.execPath, ['--import', pathToFileURL(observer).href, path.join(plugin, 'index.js')], {
-    env:{...process.env, DSH_HOME:fixture, DSHA_OBSERVER_INSTALL:fixture, DSHA_STARTUP_PROFILE:'web'}, encoding:'utf8', timeout:10000
+    env:{...process.env, DSH_HOME:fixture, DSHA_OBSERVER_INSTALL:fixture, DSHA_STARTUP_PROFILE:'web', DSHA_UI_LANGUAGE:language}, encoding:'utf8', timeout:10000
   });
 }
 let result = execute("import 'nonexistent-dsha-fixture';\n");
@@ -31,6 +31,15 @@ assert(result.stdout.includes('test-broken') && result.stdout.includes('fixture 
 result = execute("console.log('EXECUTED_ONCE');\n");
 assert.equal(result.status, 0, result.stderr);
 assert.equal(result.stdout.match(/EXECUTED_ONCE/g).length, 1);
+
+for (const language of ['zh', 'en']) {
+  result = execute("console.log('EXECUTED_ONCE');\n", language);
+  assert.equal(result.status, 0, result.stderr);
+  const localized = result.stdout.split('\n').filter(line => line.startsWith('[DSHA_STARTUP] ')).map(line => JSON.parse(line.slice(15)));
+  assert(localized.some(event => event.type === 'plugin' && event.message.includes(language === 'en' ? 'Configuration check: test-broken' : '配置检查：test-broken')));
+  assert(localized.some(event => event.type === 'stage' && event.message.includes(language === 'en' ? 'Loading DSH' : '加载 DSH')));
+  if (language === 'en') assert(localized.every(event => !/[\p{Script=Han}]/u.test(event.message)));
+}
 
 const source = fs.readFileSync(path.join(assets, 'web-integration/startup.js'), 'utf8');
 const reports = [], listeners = {};

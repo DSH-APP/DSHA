@@ -4,6 +4,7 @@
   if (window.top !== window || window.__dshaStartupObserved) return;
   window.__dshaStartupObserved = true;
   var ready = false, seenBoot = false, lastFailure = '', count = 0;
+  function uiText(zh, en) { return window.__DSHA_LANGUAGE__ === 'en' ? en : zh; }
   function report(type, id, message, fatal) {
     if (count++ > 500) return;
     var text = JSON.stringify({type:type, id:String(id || '').slice(0,214), message:String(message || '').slice(0,6000), fatal:!!fatal && !ready});
@@ -17,13 +18,13 @@
     if (!descriptor || !descriptor.writable) return value;
     var original = value.apply;
     value.apply = function () {
-      report('loading', id, '正在初始化网页插件：' + id);
+      report('loading', id, uiText('正在初始化网页插件：', 'Initializing web plugin: ') + id);
       try {
         var result = original.apply(this, arguments);
         if (result && typeof result.then === 'function') return result.then(function (v) {
-          report('active', id, '网页插件初始化返回：' + id); return v;
+          report('active', id, uiText('网页插件初始化返回：', 'Web plugin initialization returned: ') + id); return v;
         }, function (error) { report('issue', id, detail(error)); throw error; });
-        report('active', id, '网页插件初始化返回：' + id); return result;
+        report('active', id, uiText('网页插件初始化返回：', 'Web plugin initialization returned: ') + id); return result;
       } catch (error) { report('issue', id, detail(error)); throw error; }
     };
     return value;
@@ -69,7 +70,7 @@
     }
     var root = document.getElementById('root');
     if (document.querySelector('[data-composer-input]') || (seenBoot && !boot && root && root.children.length)) {
-      ready = true; report('ready', '', '网页已就绪'); observer.disconnect();
+      ready = true; report('ready', '', uiText('网页已就绪', 'Web page ready')); observer.disconnect();
     }
   });
   observer.observe(document, {childList:true, subtree:true, characterData:true});

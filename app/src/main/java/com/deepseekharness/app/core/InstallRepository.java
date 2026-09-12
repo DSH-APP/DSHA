@@ -40,8 +40,8 @@ public final class InstallRepository {
     public boolean cancel() { return task.requestCancel(); }
     public synchronized boolean start(boolean repair, int selected) {
         if (running) return false;
-        if (selected < 0 || selected > 6) throw new IllegalArgumentException("安装步骤必须为 0—6");
-        EnvironmentTaskGate.Lease lease = EnvironmentTaskGate.tryAcquire(repair ? "安装与按需修复" : "安装检查");
+        if (selected < 0 || selected > 6) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("安装步骤必须为 0—6"));
+        EnvironmentTaskGate.Lease lease = EnvironmentTaskGate.tryAcquire(repair ? com.deepseekharness.app.util.UiText.text("安装与按需修复") : com.deepseekharness.app.util.UiText.text("安装检查"));
         if (lease == null) return false;
         boolean submitted = false;
         try {
@@ -52,7 +52,7 @@ public final class InstallRepository {
             submitted = true;
             return true;
         } catch (Throwable error) {
-            if (running) task.finish(InstallTask.Outcome.FAILED, "无法启动安装任务：" + error);
+            if (running) task.finish(InstallTask.Outcome.FAILED, com.deepseekharness.app.util.UiText.text("无法启动安装任务：") + error);
             running = false; return false;
         } finally {
             // 排队失败、维护未完成或校验拒绝时，凭据尚未移交 worker。
@@ -66,13 +66,13 @@ public final class InstallRepository {
             } catch (Throwable error) {
                 InstallProcess.CleanupFailure cleanup = InstallProcess.cleanupFailure(error);
                 if (cleanup != null) {
-                    task.cleaningUp("本次进程尚未退出，正在继续回收；其他环境任务暂不可开始");
+                    task.cleaningUp(com.deepseekharness.app.util.UiText.text("本次进程尚未退出，正在继续回收；其他环境任务暂不可开始"));
                     while (!cleanup.awaitExit(1000)) cleanup.retry();
-                    task.finish(InstallTask.Outcome.FAILED, "本次进程已回收，检查未完成，请重新检查");
-                } else if (InstallPipeline.isCancellation(error)) task.finish(InstallTask.Outcome.CANCELLED, "任务已取消，已完成的结果与修复保留");
-                else { task.append("任务异常：" + error); task.finish(InstallTask.Outcome.FAILED, "任务失败：" + error); }
+                    task.finish(InstallTask.Outcome.FAILED, com.deepseekharness.app.util.UiText.text("本次进程已回收，检查未完成，请重新检查"));
+                } else if (InstallPipeline.isCancellation(error)) task.finish(InstallTask.Outcome.CANCELLED, com.deepseekharness.app.util.UiText.text("任务已取消，已完成的结果与修复保留"));
+                else { task.append(com.deepseekharness.app.util.UiText.text("任务异常：") + error); task.finish(InstallTask.Outcome.FAILED, com.deepseekharness.app.util.UiText.text("任务失败：") + error); }
             } finally {
-                if (task.snapshot().busy()) task.finish(InstallTask.Outcome.FAILED, "任务异常结束，请查看详细输出后重试");
+                if (task.snapshot().busy()) task.finish(InstallTask.Outcome.FAILED, com.deepseekharness.app.util.UiText.text("任务异常结束，请查看详细输出后重试"));
             }
         } finally {
             // 全局凭据释放完才允许下一次安装；页面销毁不参与这一生命周期。

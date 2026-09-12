@@ -1,0 +1,16 @@
+<resources>
+    <string name="device_open_access">管理文件访问权限</string>
+    <string name="device_location">定位访问</string>
+    <string name="device_sensors">传感器访问</string>
+    <string name="device_screen">屏幕操作</string>
+    <string name="device_background">后台运行</string>
+    <string name="device_maintenance">运行环境维护</string>
+    <string name="about_tagline">DeepSeek Harness 安卓启动器</string>
+    <string name="about_community">QQ 交流群</string>
+    <string name="about_close_button">关闭</string>
+    <string name="about_qq_button">QQ 群</string>
+    <string name="device_checking">正在读取授权状态…</string>
+    <string name="device_files_title">所有文件访问权限</string>
+    <string name="device_permissions">权限访问</string>
+    <string name="device_channels">设备命令通道</string>
+</resources>

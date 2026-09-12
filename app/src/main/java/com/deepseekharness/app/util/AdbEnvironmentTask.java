@@ -25,7 +25,7 @@ public final class AdbEnvironmentTask {
                                 EnvironmentTaskGate.Operation<T> operation) throws Exception {
         // 必须在持有 Lease 后检查磁盘事务；owner 身份也不能绕过中断维护。
         if (pendingMaintenance.getAsBoolean())
-            throw new Busy(BLOCKED + "；请先恢复中断的环境维护");
+            throw new Busy(BLOCKED + com.deepseekharness.app.util.UiText.text("；请先恢复中断的环境维护"));
         return operation.run();
     }
 }

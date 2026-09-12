@@ -8,11 +8,11 @@ final class WebRecovery {
     private final ConfigStore config;
     private final RestartBudget budget;
     private long generation;
-    private String stage = "服务健康检查";
+    private String stage = com.deepseekharness.app.util.UiText.text("服务健康检查");
 
     WebRecovery(ConfigStore config) { this.config = config; budget = new RestartBudget(config.getWebFailures()); }
     void begin(long next, boolean manual) {
-        generation = next; budget.begin(next, manual); stage = "准备运行环境";
+        generation = next; budget.begin(next, manual); stage = com.deepseekharness.app.util.UiText.text("准备运行环境");
         if (manual) config.recordWebRecovery(0, "", "");
     }
     void stage(long expected, String value) { if (generation == expected) stage = value; }

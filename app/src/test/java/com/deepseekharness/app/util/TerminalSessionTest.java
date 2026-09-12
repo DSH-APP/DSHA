@@ -42,6 +42,28 @@ public final class TerminalSessionTest {
         assertEquals(1, backend.processes.size());
     }
 
+    @Test public void permanentCloseDoesNotReopenAndOtherSessionContinues() throws Exception {
+        FakeBackend otherBackend=new FakeBackend();
+        TerminalSession other=new TerminalSession(otherBackend,ignored->{},ignored->{});
+        try {
+            terminal.ensureStarted();FakeProcess first=backend.opened(0);first.ready();
+            other.ensureStarted();FakeProcess second=otherBackend.opened(0);second.ready();
+            await(()->terminal.state()==TerminalSession.State.READY&&other.state()==TerminalSession.State.READY);
+            assertTrue(terminal.disposeAndWait(2000));assertTrue(terminal.disposeAndWait(2000));
+            assertFalse(first.alive);assertTrue(second.alive);assertFalse(terminal.submit("echo closed"));
+            terminal.ensureStarted();terminal.cancelAndRestart();terminal.shutdown();
+            assertTrue(other.submit("echo other"));await(()->second.commands.size()==1);
+            assertEquals(1,backend.processes.size());assertTrue(second.commands.get(0).contains("echo other"));
+        } finally {otherBackend.failStop=false;other.disposeAndWait(2000);}
+    }
+
+    @Test public void failedPermanentCloseRetainsProtectionUntilRetry() throws Exception {
+        terminal.ensureStarted();FakeProcess process=backend.opened(0);process.ready();
+        await(()->terminal.state()==TerminalSession.State.READY);backend.failStop=true;
+        assertFalse(terminal.disposeAndWait(1000));assertTrue(process.alive);
+        backend.failStop=false;assertTrue(terminal.disposeAndWait(2000));assertFalse(process.alive);
+    }
+
     @Test public void exitThenImmediateCommandRunsOnceOnNewShell() throws Exception {
         terminal.submit("exit");
         FakeProcess old = backend.opened(0); old.ready();

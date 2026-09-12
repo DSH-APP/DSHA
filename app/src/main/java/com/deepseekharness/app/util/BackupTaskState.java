@@ -10,7 +10,7 @@ public final class BackupTaskState {
     public synchronized long start(String kind) {
         if (busy()) return -1;
         id = Math.max(System.currentTimeMillis(), id + 1);
-        this.kind = kind; status = Status.RUNNING; detail = "正在准备…";
+        this.kind = kind; status = Status.RUNNING; detail = com.deepseekharness.app.util.UiText.text("正在准备…");
         return id;
     }
     public synchronized boolean busy() { return status == Status.RUNNING || status == Status.PREVIEW; }
@@ -20,7 +20,7 @@ public final class BackupTaskState {
     }
     public synchronized boolean confirm(long expected) {
         if (id != expected || status != Status.PREVIEW) return false;
-        status = Status.RUNNING; detail = "正在恢复…"; return true;
+        status = Status.RUNNING; detail = com.deepseekharness.app.util.UiText.text("正在恢复…"); return true;
     }
     public synchronized Snapshot snapshot() { return new Snapshot(id, kind, status, detail); }
     public synchronized void restore(long id, String kind, Status status, String detail) {
@@ -28,7 +28,7 @@ public final class BackupTaskState {
         this.detail = SensitiveData.redact(detail);
         if (busy()) {
             this.status = Status.INTERRUPTED;
-            this.detail = "上次任务因进程退出而中断，未自动重试。请先处理未完成的维护或重新选择备份。\n" + this.detail;
+            this.detail = com.deepseekharness.app.util.UiText.text("上次任务因进程退出而中断，未自动重试。请先处理未完成的维护或重新选择备份。\n") + this.detail;
         }
     }
     public static final class Snapshot {

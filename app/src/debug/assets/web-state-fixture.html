@@ -2,7 +2,7 @@
 <main data-mobile-nav="frame" data-sidebar-collapsed data-details-collapsed>
   <div data-shell-overlay></div><div data-slot="conversation.session" id="reader" style="height:180px;overflow:auto"><div style="height:2400px;background:linear-gradient(white,lightblue)">独立测试阅读区域</div></div>
   <textarea id="text" aria-label="独立草稿"></textarea><p id="state">等待测试</p>
-  <input id="upload" type="file" accept="image/*" aria-label="独立图片上传">
+  <input id="upload" type="file" multiple accept="image/*" aria-label="独立图片上传">
 </main>
 <script>
 window.__ModuleLoader__={load(definition){window.integration=definition.factory()}};
@@ -11,7 +11,7 @@ if (!AbortSignal.any) AbortSignal.any = signals => {const c=new AbortController(
 const report=(key,value='ok')=>fetch('/report?key='+encodeURIComponent(key)+'&value='+encodeURIComponent(value));
 document.querySelector('#upload').addEventListener('change',async event=>{
  const bytes=new Uint8Array(await event.target.files[0].arrayBuffer());
- report('uploaded',btoa(String.fromCharCode(...bytes)));
+ const all=[];for(const file of event.target.files)all.push({name:file.name,bytes:btoa(String.fromCharCode(...new Uint8Array(await file.arrayBuffer())))});report('uploaded',JSON.stringify(all));
 });
 window.addEventListener('error',event=>report('scriptError',event.message));
 window.addEventListener('unhandledrejection',event=>report('scriptError',String(event.reason)));
@@ -45,7 +45,7 @@ setInterval(async()=>{
  if(command==='download'){const a=document.createElement('a');a.href='/file.zip';a.download='fixture.zip';document.body.append(a);a.click();a.remove()}
  if(command==='blobDownload'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['owned-blob-download'],{type:'text/plain'}));a.download='DSHA-web-check-blob.txt';document.body.append(a);a.click();a.remove()}
  if(command==='upload'){
-   const input=document.querySelector('#upload');input.style.cssText='position:fixed;top:280px;left:12px;width:220px;height:48px;z-index:1000;background:white';
+   const input=document.querySelector('#upload');input.value='';input.style.cssText='position:fixed;top:280px;left:12px;width:220px;height:48px;z-index:1000;background:white';
    const rect=input.getBoundingClientRect();report('uploadReady',JSON.stringify({x:rect.left+50,y:rect.top+24,width:innerWidth}));
  }
  if(command==='deleteImages'){shell.imageIds=[];for(const fn of subscriptions)fn();setTimeout(()=>report('deleted'),700)}

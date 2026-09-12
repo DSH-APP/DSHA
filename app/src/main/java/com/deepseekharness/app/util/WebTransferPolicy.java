@@ -19,7 +19,7 @@ public final class WebTransferPolicy {
         return stem+suffix;
     }
     public static void checkSize(long actual, long expected, long limit, boolean complete) {
-        if (actual < 0 || actual > limit || expected > limit) throw new IllegalArgumentException("文件超过允许大小");
-        if (complete && expected >= 0 && actual != expected) throw new IllegalArgumentException("文件未下载完整，请重试");
+        if (actual < 0 || actual > limit || expected > limit) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("文件超过允许大小"));
+        if (complete && expected >= 0 && actual != expected) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("文件未下载完整，请重试"));
     }
 }

@@ -14,6 +14,8 @@ public class DshaApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        com.deepseekharness.app.ui.LanguageController.apply(this);
+        ShizukuShell.init(this);
         com.deepseekharness.app.ui.ThemeController.apply(this);
         com.deepseekharness.app.core.RuntimeTasks.initialize(this);
         com.deepseekharness.app.core.DiagnosticLog.installCrashHandler(this);
@@ -22,7 +24,7 @@ public class DshaApp extends Application {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager nm = getSystemService(NotificationManager.class);
             nm.createNotificationChannel(new NotificationChannel(
-                    "dsh_task_channel", "任务通知", NotificationManager.IMPORTANCE_LOW));
+                    "dsh_task_channel", com.deepseekharness.app.util.UiText.text("任务通知"), NotificationManager.IMPORTANCE_LOW));
         }
     }
 }

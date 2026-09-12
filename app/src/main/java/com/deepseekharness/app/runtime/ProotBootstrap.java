@@ -130,20 +130,20 @@ public class ProotBootstrap {
     /** 解压和适配全部在事务的 stage 下完成，此时既有运行时和个人目录保持原位。 */
     public List<String> stageManagedRuntime(File stage, java.util.function.Consumer<String> progress) throws IOException {
         File root = new File(stage, "linux/ubuntu");
-        if (!root.mkdirs()) throw new IOException("无法建立独立运行时暂存目录");
+        if (!root.mkdirs()) throw new IOException(com.deepseekharness.app.util.UiText.text("无法建立独立运行时暂存目录"));
         final String prefix = com.deepseekharness.app.util.ManagedRuntimeLayout.DSH;
-        progress.accept("正在解压新版 dsh（保留现有 Ubuntu 与个人目录）…");
+        progress.accept(com.deepseekharness.app.util.UiText.text("正在解压新版 dsh（保留现有 Ubuntu 与个人目录）…"));
         try (ZipFile apk = new ZipFile(ctx.getPackageCodePath())) {
             boolean split = apk.getEntry("assets/offline-rootfs.layout") != null;
             ZipEntry bundle = split ? apk.getEntry("assets/dsh-runtime.bin") : findBundleEntry(apk);
-            if (bundle == null) throw new IOException("APK 没有内置运行时");
+            if (bundle == null) throw new IOException(com.deepseekharness.app.util.UiText.text("APK 没有内置运行时"));
             try (InputStream input = apk.getInputStream(bundle)) {
                 TarGzipExtractor.extractSelected(input, root, 0, name -> name.equals(prefix)
                         || name.startsWith(prefix + "/") || com.deepseekharness.app.util.ManagedRuntimeLayout.alias(name)
                         || name.equals("usr/local/share/dsha/dsh-runtime.version"));
             }
         }
-        progress.accept("正在准备新版内置插件和界面适配…");
+        progress.accept(com.deepseekharness.app.util.UiText.text("正在准备新版内置插件和界面适配…"));
         RuntimeTools.stage(ctx, root);
         for (String name : com.deepseekharness.app.util.BuiltinPlugins.DEFAULT_BUILTINS) {
             File link = new File(root, com.deepseekharness.app.util.BuiltinPlugins.entityDir(name).substring(1) + "/node_modules");
@@ -154,11 +154,11 @@ public class ProotBootstrap {
         for (String name : com.deepseekharness.app.util.ManagedRuntimeLayout.paths()) paths.add("linux/ubuntu/" + name);
         File global = new File(root, "usr/local/lib/node_modules");
         File[] packages = global.listFiles();
-        if (packages == null) throw new IOException("新版 dsh 依赖目录缺失");
+        if (packages == null) throw new IOException(com.deepseekharness.app.util.UiText.text("新版 dsh 依赖目录缺失"));
         for (File file : packages) {
             if (file.getName().startsWith("@") && !Compat.isSymbolicLink(file)) {
                 File[] scoped = file.listFiles();
-                if (scoped == null) throw new IOException("新版 dsh 作用域目录无法读取");
+                if (scoped == null) throw new IOException(com.deepseekharness.app.util.UiText.text("新版 dsh 作用域目录无法读取"));
                 for (File child : scoped) addManagedAlias(paths, root, child);
             } else addManagedAlias(paths, root, file);
         }
@@ -174,7 +174,7 @@ public class ProotBootstrap {
     private void addManagedAlias(List<String> paths, File stageRoot, File staged) throws IOException {
         if (!Compat.isSymbolicLink(staged)) return;
         String relative = staged.getAbsolutePath().substring(stageRoot.getAbsolutePath().length() + 1).replace(File.separatorChar, '/');
-        if (!com.deepseekharness.app.util.ManagedRuntimeLayout.alias(relative)) throw new IOException("运行时别名不在受管范围");
+        if (!com.deepseekharness.app.util.ManagedRuntimeLayout.alias(relative)) throw new IOException(com.deepseekharness.app.util.UiText.text("运行时别名不在受管范围"));
         File current = new File(rootfsDir, relative);
         // 用户另外安装的全局实体或自行改写的链接保持原样。
         boolean owned = Compat.isSymbolicLink(current) && current.getCanonicalPath().startsWith(
@@ -183,9 +183,9 @@ public class ProotBootstrap {
     }
 
     public void markOfflineExtracted() throws IOException {
-        if (!baseDir.isDirectory() && !baseDir.mkdirs()) throw new IOException("无法建立安装标记目录");
+        if (!baseDir.isDirectory() && !baseDir.mkdirs()) throw new IOException(com.deepseekharness.app.util.UiText.text("无法建立安装标记目录"));
         String identity = environmentIdentity();
-        if (identity.isEmpty()) throw new IOException("APK 缺少有效环境版本，无法确认安装完成");
+        if (identity.isEmpty()) throw new IOException(com.deepseekharness.app.util.UiText.text("APK 缺少有效环境版本，无法确认安装完成"));
         writeInstallMarker(offlineVersionFile(), readAssetString(OFFLINE_VERSION_ASSET).trim());
         writeInstallMarker(new File(baseDir, ".offline-identity"), identity);
         writeInstallMarker(offlineMarkerFile, identity);
@@ -196,7 +196,7 @@ public class ProotBootstrap {
         try (FileOutputStream out = new FileOutputStream(temporary)) {
             out.write(value.getBytes(java.nio.charset.StandardCharsets.UTF_8)); out.getFD().sync();
         }
-        if (!temporary.renameTo(target)) throw new IOException("无法提交安装标记：" + target.getName());
+        if (!temporary.renameTo(target)) throw new IOException(com.deepseekharness.app.util.UiText.text("无法提交安装标记：") + target.getName());
     }
 
     /** 撤销解压标记：下次启动走 ExtractActivity 重新解压（配置保留在 .dsh，不删除）。 */
@@ -300,7 +300,7 @@ public class ProotBootstrap {
 
     private void ensureNetworkTools() {
         try { RuntimeTools.prepare(ctx, getRootfsDir()); }
-        catch (IOException error) { Log.w("DSHA", "运行工具准备失败：" + SensitiveData.redact(String.valueOf(error))); }
+        catch (IOException error) { Log.w("DSHA", com.deepseekharness.app.util.UiText.text("运行工具准备失败：") + SensitiveData.redact(String.valueOf(error))); }
     }
 
     // ================= dsh 运行补丁（dsh 1.2-alpha 在 Android proot 下的兼容） =================
@@ -317,17 +317,9 @@ public class ProotBootstrap {
      */
     public void ensureDshRuntimePatches() {
         try {
-            File resolv = new File(rootfsDir, "etc/resolv.conf");
-            String r = resolv.isFile()
-                    ? new String(Compat.readAllBytes(resolv),
-                    java.nio.charset.StandardCharsets.UTF_8) : "";
-            if (!r.contains("nameserver")) {
-                Compat.write(resolv, "nameserver 8.8.8.8\nnameserver 223.5.5.5\n"
-                                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                Log.i("DSHA", "已写入容器 /etc/resolv.conf（node DNS 修复）");
-            }
+            RuntimeTools.prepareResolver(ctx,rootfsDir);
         } catch (Throwable e) {
-            Log.w("DSHA", "resolv.conf 写入失败: " + SensitiveData.redact(String.valueOf(e)));
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("resolv.conf 写入失败: ") + SensitiveData.redact(String.valueOf(e)));
         }
         String[][] jsonlCopies = {
                 {"usr/local/lib/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js",
@@ -385,9 +377,9 @@ public class ProotBootstrap {
             String replacement = "const persistence = \"host\"; // DSHA patch: LAN 代理场景强制 host 持久化";
             Compat.write(f, c.replace(target, replacement).getBytes(
                     java.nio.charset.StandardCharsets.UTF_8));
-            Log.i("DSHA", "已 patch dsh 客户端 settings persistence→host（局域网可用）");
+            Log.i("DSHA", com.deepseekharness.app.util.UiText.text("已 patch dsh 客户端 settings persistence→host（局域网可用）"));
         } catch (Throwable e) {
-            Log.w("DSHA", "settings persistence patch 失败（不影响启动）: "
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("settings persistence patch 失败（不影响启动）: ")
                     + SensitiveData.redact(String.valueOf(e)));
         }
     }
@@ -427,10 +419,10 @@ public class ProotBootstrap {
             String out = execAndRead(cmd, 120_000);
             if (out != null && out.contains("flattened=")
                     && !out.contains("flattened=0 dangling=0 removed=0")) {
-                Log.i("DSHA", "l2s 摊平完成: " + out.trim().replace("\n", " | "));
+                Log.i("DSHA", com.deepseekharness.app.util.UiText.text("l2s 摊平完成: ") + out.trim().replace("\n", " | "));
             }
         } catch (Throwable e) {
-            Log.w("DSHA", "l2s 摊平失败（不影响启动）: "
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("l2s 摊平失败（不影响启动）: ")
                     + SensitiveData.redact(String.valueOf(e)));
         }
     }
@@ -445,7 +437,7 @@ public class ProotBootstrap {
         c = c.replace("import { link, mkdir, mkdtemp, open,",
                 "import { mkdir, mkdtemp, open, rename,");
         Compat.write(f, c.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        Log.i("DSHA", "已 patch dsh session 持久化 link→rename: " + f.getAbsolutePath());
+        Log.i("DSHA", com.deepseekharness.app.util.UiText.text("已 patch dsh session 持久化 link→rename: ") + f.getAbsolutePath());
     }
 
     // ================= 内置插件注册 =================
@@ -488,16 +480,17 @@ public class ProotBootstrap {
     private String runBuiltinScript(String extraArgs) {
         synchronized (PLUGIN_SCRIPT_LOCK) {
         if (!isEnvironmentReady()) return "ENV_NOT_READY";
-        if (!ensureBundledPython()) return "ERROR: Ubuntu Python 环境未就绪";
+        if (!ensureBundledPython()) return com.deepseekharness.app.util.UiText.text("ERROR: Ubuntu Python 环境未就绪");
         ensureBundledPnpm(); // 包管理器异常不能阻断列表、开关和删除；缺依赖的安装会单独报错。
         try {
             // 资产由同一运行时准备器按摘要安装；重复改写会让启动缓存每次失效。
             RuntimeTools.prepare(ctx, rootfsDir);
             String cmd = "python3 -u /root/.dsh/" + BUILTIN_REGISTER_SCRIPT
                     + (extraArgs.isEmpty() ? "" : " " + extraArgs) + " 2>&1";
-            return execAndRead(cmd, 90_000);
+            // 插件配置写入从一开始使用稳定的 proot；不能在 proroot 部分执行后重放变更。
+            return execAndReadWithProot(cmd, 90_000);
         } catch (Throwable e) {
-            Log.w("DSHA", "内置插件脚本执行失败: " + SensitiveData.redact(String.valueOf(e)));
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("内置插件脚本执行失败: ") + SensitiveData.redact(String.valueOf(e)));
             return "ERROR: " + SensitiveData.redact(String.valueOf(e));
         }
         }
@@ -521,17 +514,17 @@ public class ProotBootstrap {
     public String runPluginManager(String extraArgs, String taskId) {
         synchronized (PLUGIN_SCRIPT_LOCK) {
             if (!isEnvironmentReady()) return "ENV_NOT_READY";
-            if (!ensureBundledPython()) return "ERROR: Ubuntu Python 环境未就绪";
+            if (!ensureBundledPython()) return com.deepseekharness.app.util.UiText.text("ERROR: Ubuntu Python 环境未就绪");
             ensureBundledPnpm();
             try {
                 // RuntimeTools 原子写入所有共用资产，终端与界面使用同一套版本解析和管理脚本。
                 RuntimeTools.prepare(ctx, getRootfsDir());
                 String task = taskId != null && taskId.matches("[a-f0-9]{32}")
                         ? "DSHA_PLUGIN_TASK=" + taskId + " " : "";
-                return execAndRead(task + "python3 /root/.dsh/" + PLUGIN_MANAGER_SCRIPT
+                return execAndReadWithProot(task + "python3 /root/.dsh/" + PLUGIN_MANAGER_SCRIPT
                         + (extraArgs == null || extraArgs.isEmpty() ? "" : " " + extraArgs) + " 2>&1", 600_000);
             } catch (Throwable e) {
-                Log.w("DSHA", "插件管理脚本执行失败: " + SensitiveData.redact(String.valueOf(e)));
+                Log.w("DSHA", com.deepseekharness.app.util.UiText.text("插件管理脚本执行失败: ") + SensitiveData.redact(String.valueOf(e)));
                 return "ERROR: " + SensitiveData.redact(String.valueOf(e));
             }
         }
@@ -551,7 +544,7 @@ public class ProotBootstrap {
             }
             return true;
         } catch (Throwable e) {
-            Log.w("DSHA", "推文件进容器失败: " + SensitiveData.redact(String.valueOf(e)));
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("推文件进容器失败: ") + SensitiveData.redact(String.valueOf(e)));
             return false;
         }
     }
@@ -571,7 +564,7 @@ public class ProotBootstrap {
             }
             return true;
         } catch (Throwable e) {
-            Log.w("DSHA", "从容器取文件失败: " + SensitiveData.redact(String.valueOf(e)));
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("从容器取文件失败: ") + SensitiveData.redact(String.valueOf(e)));
             return false;
         }
     }
@@ -652,12 +645,12 @@ public class ProotBootstrap {
             }
             if (need.length() == 0) return;
             Compat.append(groupFile, need.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            Log.i("DSHA", "已补 " + groups.size() + " 个 Android 组到 /etc/group");
+            Log.i("DSHA", com.deepseekharness.app.util.UiText.text("已补 ") + groups.size() + com.deepseekharness.app.util.UiText.text(" 个 Android 组到 /etc/group"));
             // 兜底：把 /etc/bash.bashrc 里登录时执行的 $(groups) 改成吞掉 stderr。
             // 未来出现未列出的新 GID 时，id 仍会打 cannot find name，但不会再刷到终端里。
             patchBashrcGroups(groupFile);
         } catch (Throwable e) {
-            Log.w("DSHA", "补 /etc/group 失败（不影响核心功能）: "
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("补 /etc/group 失败（不影响核心功能）: ")
                     + SensitiveData.redact(String.valueOf(e)));
         }
     }
@@ -701,7 +694,7 @@ public class ProotBootstrap {
                 Log.i("DSHA", "已 patch /etc/bash.bashrc：$(groups) 加 2>/dev/null");
             }
         } catch (Throwable e) {
-            Log.w("DSHA", "patch /etc/bash.bashrc 失败: "
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("patch /etc/bash.bashrc 失败: ")
                     + SensitiveData.redact(String.valueOf(e)));
         }
     }
@@ -731,14 +724,14 @@ public class ProotBootstrap {
                 ok = dst.isFile() && dst.length() == 2;
             } catch (Throwable e) {
                 ok = false;
-                Log.w("DSHA", "硬链接探测失败，保留 --link2symlink: "
+                Log.w("DSHA", com.deepseekharness.app.util.UiText.text("硬链接探测失败，保留 --link2symlink: ")
                         + SensitiveData.redact(String.valueOf(e)));
             } finally {
                 src.delete();
                 dst.delete();
             }
             hardlinkOk = ok;
-            Log.i("DSHA", "硬链接支持=" + ok);
+            Log.i("DSHA", com.deepseekharness.app.util.UiText.text("硬链接支持=") + ok);
             return ok;
         }
     }
@@ -766,11 +759,11 @@ public class ProotBootstrap {
                     pr.prepare();
                     return pr;
                 }
-                Log.w("DSHA", "proroot 不可用，本次降回 proot: "
+                Log.w("DSHA", com.deepseekharness.app.util.UiText.text("proroot 不可用，本次降回 proot: ")
                         + SensitiveData.redact(pr.unavailableReason()));
             }
         } catch (Throwable e) {
-            Log.w("DSHA", "选择运行时失败，降回 proot: "
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("选择运行时失败，降回 proot: ")
                     + SensitiveData.redact(String.valueOf(e)));
         }
         return new ContainerRuntime.Proot(ctx, findNativeLib("libproot.so"));
@@ -815,13 +808,14 @@ public class ProotBootstrap {
                 "/root/dsh-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin");
         pb.environment().put("TMPDIR", "/tmp");
         pb.environment().put("DEBIAN_FRONTEND", "noninteractive");
-        RuntimeTools.applyEnvironment(pb.environment());
+        RuntimeTools.applyEnvironment(ctx, rootfsDir, pb.environment());
     }
 
     // ================= 执行 =================
 
     /** 在 rootfs 内执行 bash 命令，返回进程（stderr 并入 stdout）。 */
     public Process execRootfs(String bashCommand) throws IOException {
+        requireUserRuntime();
         ContainerRuntime rt = runtime();
         boolean hardlinks = hardlinkSupported();
         ensureNetworkTools();
@@ -877,10 +871,10 @@ public class ProotBootstrap {
         try {
             com.deepseekharness.app.util.BoundedProcessRunner.Result result =
                     collectRootfs(bashCommand, timeoutMs, forceProot);
-            if (result.timedOut) return "ERROR: 命令执行超时（" + timeoutMs / 1000 + " 秒），本次进程已停止";
+            if (result.timedOut) return com.deepseekharness.app.util.UiText.text("ERROR: 命令执行超时（") + timeoutMs / 1000 + com.deepseekharness.app.util.UiText.text(" 秒），本次进程已停止");
             return result.output;
         } catch (InterruptedException error) {
-            Thread.currentThread().interrupt(); return "ERROR: 命令等待被中断";
+            Thread.currentThread().interrupt(); return com.deepseekharness.app.util.UiText.text("ERROR: 命令等待被中断");
         } catch (Throwable e) {
             return "ERROR: " + SensitiveData.redact(String.valueOf(e));
         }
@@ -910,20 +904,53 @@ public class ProotBootstrap {
         return execAndRead(bashCommand, timeoutMs, true);
     }
 
+    /** 维护读取实际 rootfs，避开 guest 的 Android 挂载；全程持锁并逐行反馈。 */
+    public com.deepseekharness.app.util.BoundedProcessRunner.Result runPersonalMaintenance(
+            String command, java.util.function.Consumer<String> onLine, boolean fast, long timeoutMs)
+            throws IOException, InterruptedException {
+        if (!com.deepseekharness.app.BackupManager.isDataTaskOwner())
+            throw new IOException(com.deepseekharness.app.util.UiText.text("个人数据迁移必须持有维护任务锁"));
+        ContainerRuntime rt = fast
+                ? new ContainerRuntime.Proroot(ctx, ContainerRuntime.Proroot.defaultDir(ctx))
+                : new ContainerRuntime.Proot(ctx, findNativeLib("libproot.so"));
+        if (fast && (!IsolatedInstallProcess.supported() || !rt.available()))
+            throw new IOException(com.deepseekharness.app.util.UiText.text("快速维护运行时不可用"));
+        com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin();
+        Process process = null;
+        try {
+            List<String> argv = rt.baseArgv(rootfsDir, false);
+            argv.add("-b"); argv.add(rootfsDir.getAbsolutePath() + ":/run/dsha-maintenance-root");
+            argv.add("/bin/bash"); argv.add("-c"); argv.add(command);
+            ProcessBuilder pb = new ProcessBuilder(argv).redirectErrorStream(true);
+            Compat.redirectStdinDevNull(pb);
+            applyProotEnv(pb, rt, false);
+            process = fast ? IsolatedInstallProcess.start(pb, tmpDir) : pb.start();
+            return com.deepseekharness.app.util.BoundedProcessRunner.collect(
+                    process, timeoutMs, 256 * 1024, Compat::destroy, onLine);
+        } finally {
+            try { if (process instanceof IsolatedInstallProcess) ((IsolatedInstallProcess) process).close(); }
+            finally {
+                if (process != null && !com.deepseekharness.app.util.ProcessTermination.exited(process))
+                    work.retainUntilExit(process);
+                else work.close();
+            }
+        }
+    }
+
     /** 同步执行 rootfs 命令，退出码非 0 抛异常。 */
     public String execChecked(String bashCommand) throws IOException {
         try {
             com.deepseekharness.app.util.BoundedProcessRunner.Result result = collectRootfs(bashCommand, 600_000, false);
-            if (result.timedOut) throw new IOException("命令执行超时（600 秒），本次进程已停止");
+            if (result.timedOut) throw new IOException(com.deepseekharness.app.util.UiText.text("命令执行超时（600 秒），本次进程已停止"));
             if (result.exitCode != 0) {
                 String out = result.output;
-                throw new IOException("退出码 " + result.exitCode + "：\n"
+                throw new IOException(com.deepseekharness.app.util.UiText.text("退出码 ") + result.exitCode + "：\n"
                         + SensitiveData.redact(out.length() > 600 ? out.substring(out.length() - 600) : out));
             }
             return result.output;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IOException("命令被中断", e);
+            throw new IOException(com.deepseekharness.app.util.UiText.text("命令被中断"), e);
         }
     }
 
@@ -960,6 +987,7 @@ public class ProotBootstrap {
 
     /** PTY 会话的 argv：与 execRootfs 共用同一份 proot 构造逻辑（见 AGENTS.md 单源约束）。 */
     public String[] ptyArgv(String... guestCmd) {
+        try { requireUserRuntime(); } catch (IOException error) { throw new IllegalStateException(error.getMessage(), error); }
         java.util.List<String> argv = baseProotArgv();
         if (guestCmd == null || guestCmd.length == 0) {
             // 部分 Android/容器运行时组合创建的 PTY 会保留 -echo（输入看不到、回车却执行）。
@@ -972,6 +1000,12 @@ public class ProotBootstrap {
             java.util.Collections.addAll(argv, guestCmd);
         }
         return argv.toArray(new String[0]);
+    }
+
+    public void requireUserRuntime() throws IOException {
+        if (com.deepseekharness.app.BackupManager.isDataTaskOwner()) return;
+        if (!isEnvironmentReady() || com.deepseekharness.app.BackupManager.hasPendingMaintenance(baseDir.getParentFile()))
+            throw new IOException(com.deepseekharness.app.util.UiText.text("运行环境尚未恢复，可先在主界面查看日志与配置，再进入安装与修复页处理"));
     }
 
     /** PTY 会话的环境变量（KEY=VALUE）。借临时 ProcessBuilder 复用 applyProotEnv，避免重抄漏项。 */
@@ -998,7 +1032,7 @@ public class ProotBootstrap {
         try {
             ensureRuntimeFiles();
             StringBuilder diag = new StringBuilder();
-            diag.append("proot 路径: ").append(prootPath()).append("\n");
+            diag.append(com.deepseekharness.app.util.UiText.text("proot 路径: ")).append(prootPath()).append("\n");
             diag.append("nativeLibDir: ").append(nativeLibDir).append("\n");
             String out = execAndRead("/bin/echo SMOKE_OK");
             diag.append("rootfs exec: ").append(out == null ? "" : out.trim()).append("\n");
@@ -1064,11 +1098,11 @@ public class ProotBootstrap {
         // 进程重启后旧环境可能正被维护日志保护；必须在任何目录/资产写入之前拒绝覆盖。
         if (com.deepseekharness.app.BackupManager.hasPendingMaintenance(ctx.getFilesDir())
                 && !com.deepseekharness.app.BackupManager.isDataTaskOwner())
-            throw new IOException("上次环境维护尚未完成，请先恢复中断维护；现有目录未覆盖");
+            throw new IOException(com.deepseekharness.app.util.UiText.text("上次环境维护尚未完成，请先恢复中断维护；现有目录未覆盖"));
         File[] previous = rootfsDir.listFiles();
         if (rootfsDir.exists() && (previous == null || previous.length != 0))
-            throw new IOException("已有运行环境，必须先通过备份和维护事务重建；禁止直接覆盖旧数据");
-        extractionStage(onProgress, "准备解压");
+            throw new IOException(com.deepseekharness.app.util.UiText.text("已有运行环境，必须先通过备份和维护事务重建；禁止直接覆盖旧数据"));
+        extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("准备解压"));
         ensureRuntimeFiles();
         ZipFile apk = null;
         InputStream raw = null;
@@ -1095,7 +1129,7 @@ public class ProotBootstrap {
                 }
             }
             if (raw == null) {
-                throw last != null ? last : new IOException("assets 里也没有离线包");
+                throw last != null ? last : new IOException(com.deepseekharness.app.util.UiText.text("assets 里也没有离线包"));
             }
         }
 
@@ -1120,28 +1154,28 @@ public class ProotBootstrap {
         // 覆盖安装换了内置包（版本不符）时，先清掉旧 rootfs 再解压，
         // 避免旧版残留文件（alpha.5 独有的 dsh 文件）与新包混在一起
         rootfsDir.mkdirs();
-        extractionStage(onProgress, "解压 Ubuntu 与 Node");
+        extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("解压 Ubuntu 与 Node"));
         TarGzipExtractor.extractAuto(counted, rootfsDir, 0);
         if ("split-runtime-v1".equals(readAssetString("offline-rootfs.layout").trim())) {
-            extractionStage(onProgress, "解压 dsh 与内置依赖");
+            extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("解压 dsh 与内置依赖"));
             ZipEntry runtime = apk == null ? null : apk.getEntry("assets/dsh-runtime.bin");
-            if (apk != null && runtime == null) throw new IOException("APK 缺少独立 dsh 运行时，安装未完成");
+            if (apk != null && runtime == null) throw new IOException(com.deepseekharness.app.util.UiText.text("APK 缺少独立 dsh 运行时，安装未完成"));
             try (InputStream input = apk == null ? ctx.getAssets().open("dsh-runtime.bin") : apk.getInputStream(runtime)) {
                 TarGzipExtractor.extractAuto(input, rootfsDir, 0);
             }
         }
-        extractionStage(onProgress, "安装 Python 与 pnpm");
+        extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("安装 Python 与 pnpm"));
         installBundledPython(rootfsDir);
         installBundledPnpm(rootfsDir);
-        extractionStage(onProgress, "准备应用工具");
+        extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("准备应用工具"));
         RuntimeTools.prepare(ctx, getRootfsDir());
         ensureAndroidGroups();
-        extractionStage(onProgress, "安装离线 curl、git 与证书");
+        extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("安装离线 curl、git 与证书"));
         installBundledUbuntuTools(onProgress);
-        extractionStage(onProgress, "适配 dsh 运行时");
+        extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("适配 dsh 运行时"));
         ensureDshRuntimePatches();
         markOfflineExtracted();
-        extractionStage(onProgress, "解压与离线安装完成");
+        extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("解压与离线安装完成"));
         } finally {
             try { if (raw != null) raw.close(); }
             finally { if (apk != null) apk.close(); }
@@ -1153,7 +1187,7 @@ public class ProotBootstrap {
     /** 在新解压环境中通过 dpkg 离线安装，保留正常包数据库与维护脚本。 */
     private void installBundledUbuntuTools(java.util.function.BiConsumer<Long, Long> progress) throws IOException {
         File packages = new File(rootfsDir, "root/.dsha-bundled-tools");
-        if (!packages.mkdir()) throw new IOException("离线工具临时目录已存在，已停止覆盖");
+        if (!packages.mkdir()) throw new IOException(com.deepseekharness.app.util.UiText.text("离线工具临时目录已存在，已停止覆盖"));
         try (InputStream input = ctx.getAssets().open("ubuntu-tools.bin")) {
             TarGzipExtractor.extractAuto(input, packages, 0);
         }
@@ -1163,18 +1197,18 @@ public class ProotBootstrap {
             com.deepseekharness.app.util.BoundedProcessRunner.Result result = null;
             if (fast) {
                 try { result = collectColdInstall(true); }
-                catch (IOException unavailable) { Log.w("DSHA", "快速离线安装不可用：" + SensitiveData.redact(String.valueOf(unavailable))); }
+                catch (IOException unavailable) { Log.w("DSHA", com.deepseekharness.app.util.UiText.text("快速离线安装不可用：") + SensitiveData.redact(String.valueOf(unavailable))); }
                 if (result == null || result.timedOut || result.exitCode != 0
                         || !result.output.contains("\nDSHA_UBUNTU_TOOLS_READY\n")) {
-                    extractionStage(progress, "使用兼容方式继续安装离线工具");
+                    extractionStage(progress, com.deepseekharness.app.util.UiText.text("使用兼容方式继续安装离线工具"));
                     result = collectColdInstall(false);
                 }
             } else result = collectColdInstall(false);
             if (result.timedOut || result.exitCode != 0 || !result.output.contains("\nDSHA_UBUNTU_TOOLS_READY\n"))
-                throw new IOException("离线基础工具安装失败，原环境可回切：\n" + SensitiveData.redact(
+                throw new IOException(com.deepseekharness.app.util.UiText.text("离线基础工具安装失败，原环境可回切：\n") + SensitiveData.redact(
                         result.output.substring(Math.max(0, result.output.length() - 1800))));
         } catch (InterruptedException error) {
-            Thread.currentThread().interrupt(); throw new IOException("离线基础工具安装被中断", error);
+            Thread.currentThread().interrupt(); throw new IOException(com.deepseekharness.app.util.UiText.text("离线基础工具安装被中断"), error);
         }
     }
 
@@ -1205,7 +1239,7 @@ public class ProotBootstrap {
                     TarGzipExtractor.extractAuto(input, stage, 0);
                 }
             }
-            if (!py.isFile() || !enc.isFile()) throw new IOException("Ubuntu Python 运行环境不完整");
+            if (!py.isFile() || !enc.isFile()) throw new IOException(com.deepseekharness.app.util.UiText.text("Ubuntu Python 运行环境不完整"));
             // 标准库的 C 扩展还依赖 SQLite/readline；仅有 Python 主程序并不代表它们可用。
             File sqlite = new File(stage, "usr/lib/aarch64-linux-gnu/libsqlite3.so.0");
             File readline = new File(stage, "usr/lib/aarch64-linux-gnu/libreadline.so.8");
@@ -1214,12 +1248,12 @@ public class ProotBootstrap {
                     TarGzipExtractor.extractAuto(input, stage, 0);
                 }
             }
-            if (!sqlite.isFile() || !readline.isFile()) throw new IOException("Python 动态库不完整");
+            if (!sqlite.isFile() || !readline.isFile()) throw new IOException(com.deepseekharness.app.util.UiText.text("Python 动态库不完整"));
             py.setExecutable(true, false);
             File command = new File(stage, "usr/bin/python3");
             if (!command.getCanonicalFile().equals(py.getCanonicalFile())) {
                 if ((command.exists() || Compat.isSymbolicLink(command)) && !command.delete())
-                    throw new IOException("无法更新 Python 命令入口");
+                    throw new IOException(com.deepseekharness.app.util.UiText.text("无法更新 Python 命令入口"));
                 try {
                     Compat.symlink("python3.12", command);
                 } catch (Exception error) {
@@ -1243,7 +1277,7 @@ public class ProotBootstrap {
             installBundledPython(rootfsDir);
             return true;
         } catch (Exception error) {
-            Log.w("DSHA", "Ubuntu Python 安装失败: " + SensitiveData.redact(String.valueOf(error)));
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("Ubuntu Python 安装失败: ") + SensitiveData.redact(String.valueOf(error)));
             return false;
         }
     }
@@ -1261,16 +1295,16 @@ public class ProotBootstrap {
                 try (InputStream input = ctx.getAssets().open("pnpm-runtime.bin")) {
                     TarGzipExtractor.extractAuto(input, stage, 0);
                 }
-                if (!entry.isFile()) throw new IOException("离线 pnpm 入口缺失");
+                if (!entry.isFile()) throw new IOException(com.deepseekharness.app.util.UiText.text("离线 pnpm 入口缺失"));
                 Compat.write(marker, "10.34.5\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
             }
             File wrapper = new File(stage, "root/dsh-bin/pnpm");
             if (!wrapper.isFile() || wrapper.length() == 0) {
                 File directory = wrapper.getParentFile();
                 if (!directory.isDirectory() && !directory.mkdirs())
-                    throw new IOException("无法创建 pnpm 命令目录");
+                    throw new IOException(com.deepseekharness.app.util.UiText.text("无法创建 pnpm 命令目录"));
                 if ((wrapper.exists() || Compat.isSymbolicLink(wrapper)) && !wrapper.delete())
-                    throw new IOException("无法更新 pnpm 命令入口");
+                    throw new IOException(com.deepseekharness.app.util.UiText.text("无法更新 pnpm 命令入口"));
                 Compat.write(wrapper, ("#!/bin/sh\n"
                         + "exec /usr/local/bin/node /usr/local/lib/dsha-pnpm/bin/pnpm.cjs \"$@\"\n")
                         .getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -1284,7 +1318,7 @@ public class ProotBootstrap {
             installBundledPnpm(rootfsDir);
             return true;
         } catch (Exception error) {
-            Log.w("DSHA", "离线 pnpm 安装失败: " + SensitiveData.redact(String.valueOf(error)));
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("离线 pnpm 安装失败: ") + SensitiveData.redact(String.valueOf(error)));
             return false;
         }
     }

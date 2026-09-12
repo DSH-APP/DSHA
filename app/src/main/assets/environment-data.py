@@ -9,6 +9,9 @@ from pathlib import Path, PurePosixPath
 import shutil
 import stat
 import tarfile
+import re
+import time
+from collections import deque
 
 MANIFEST = '.dsha-environment-data.json'
 SYSTEM = {'bin', 'sbin', 'lib', 'lib64', 'usr', 'etc', 'var', 'tmp', 'run', 'proc', 'dev', 'sys',
@@ -16,19 +19,108 @@ SYSTEM = {'bin', 'sbin', 'lib', 'lib64', 'usr', 'etc', 'var', 'tmp', 'run', 'pro
 EXTERNAL = {'proc', 'dev', 'sys', 'sdcard', 'storage', 'system', 'apex'}
 HOME_GENERATED = {'.dsh', '.cache', '.npm', '.pnpm-store', '.dsha-bundled-before-maintenance',
                   '.dsha-stopped', '.dsha-web.pid', '.dsha-web-activity.json',
-                  '.dsha-bundled-tools', '.dsha-ubuntu-tools-version',
+                  '.dsha-bundled-tools', '.dsha-ubuntu-tools-version', '.dsha-environment-data.py',
                   'dsha-device-shell-guide', 'dsha-task-notifier', 'dsha-status-overlay',
                   'dsha-web-mobile', 'dsha-app-integration'}
 MAX_BYTES = 16 * 1024 ** 3
 MAX_FILES = 300_000
 REPLACED_TOOLS = ('data/data/com.termux/files/usr', 'root/.local/share/pnpm/store')
+# proot 为宿主绝对路径绑定建立的占位目录，不是个人文件；不能宽泛排除 /data。
+HOST_ROOT = re.compile(r'^/?data/(?:data|user(?:_de)?/[0-9]+)/com\.dsh\.client/files/linux/ubuntu(?=/|$)')
 
 
-def digest(path):
+def runtime_cache(name):
+    relative = HOST_ROOT.sub('', name, count=1).lstrip('/')
+    return relative == '.l2s' or relative.startswith('.l2s/')
+
+
+def guest_target(target, rootfs):
+    """旧版 L2S 链含宿主绝对路径，读取时映射回独立 rootfs，而不是宿主绑定别名。"""
+    prefix = str(rootfs).rstrip('/')
+    if prefix and target.startswith(prefix + '/'):
+        return target[len(prefix):]
+    if target.startswith('/') and HOST_ROOT.match(target):
+        return '/' + HOST_ROOT.sub('', target, count=1).lstrip('/')
+    return target
+
+
+def resolve_internal_link(rootfs, source):
+    """按 guest 根解析模拟硬链接；限制跳数、边界及外部挂载，不跟随宿主绝对链接。"""
+    pending = deque(source.relative_to(rootfs).parts)
+    parts, hops = [], 0
+    while pending:
+        part = pending.popleft()
+        if part in ('', '.'):
+            continue
+        if part == '..':
+            if not parts:
+                raise ValueError('模拟硬链接超出个人环境边界')
+            parts.pop()
+            continue
+        candidate = rootfs.joinpath(*parts, part)
+        info = candidate.lstat()
+        if stat.S_ISLNK(info.st_mode):
+            hops += 1
+            if hops > 40:
+                raise ValueError('模拟硬链接存在循环')
+            target = PurePosixPath(guest_target(os.readlink(candidate), rootfs))
+            if target.is_absolute():
+                parts = []
+                target = target.relative_to('/')
+            pending.extendleft(reversed(target.parts))
+        else:
+            parts.append(part)
+            if parts[0] in EXTERNAL:
+                raise ValueError('模拟硬链接指向外部挂载')
+    resolved = rootfs.joinpath(*parts)
+    if not resolved.is_file():
+        raise ValueError('模拟硬链接没有可读取的文件内容')
+    return resolved
+
+
+class Progress:
+    def __init__(self):
+        self.started = time.monotonic()
+        self.last = 0
+
+    def report(self, stage, files, size, force=False):
+        now = time.monotonic()
+        if not force and now - self.last < 1:
+            return
+        self.last = now
+        print('DSHA_ENV_PROGRESS=' + json.dumps({'stage': stage, 'files': files,
+              'bytes': size, 'seconds': int(now - self.started)}, ensure_ascii=False), flush=True)
+
+
+class HashingReader:
+    """随归档写入计算摘要，不再为每个源文件额外完整读取一遍。"""
+    def __init__(self, stream, progress):
+        self.stream, self.progress = stream, progress
+        self.hash = hashlib.sha256()
+        self.size = 0
+
+    def read(self, size=-1):
+        block = self.stream.read(size)
+        self.hash.update(block)
+        self.size += len(block)
+        self.progress(self.size)
+        return block
+
+
+def generated_home(name):
+    return name in HOME_GENERATED or bool(re.fullmatch(
+        r'\.dsha-personal-(?:input-)?[0-9a-f-]{36}\.tar\.gz(?:\.part)?', name))
+
+
+def digest(path, on_bytes=None):
     result = hashlib.sha256()
+    size = 0
     with open(path, 'rb') as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b''):
             result.update(block)
+            size += len(block)
+            if on_bytes:
+                on_bytes(size)
     return result.hexdigest()
 
 
@@ -48,7 +140,7 @@ def selection(rootfs, workdir):
     roots = [p.name for p in rootfs.iterdir() if p.name not in SYSTEM]
     home = rootfs / 'root'
     if home.is_dir():
-        roots.extend('root/' + p.name for p in home.iterdir() if p.name not in HOME_GENERATED)
+        roots.extend('root/' + p.name for p in home.iterdir() if not generated_home(p.name))
     workspaces = [workdir if workdir.startswith('/') else '/root/' + workdir]
     registry = home / '.dsh/storages/workspace.json'
     if registry.is_file():
@@ -80,6 +172,8 @@ def selection(rootfs, workdir):
 
 def snapshot(rootfs, output, workdir='deepseek-harness'):
     rootfs, output = Path(rootfs).resolve(), Path(output).absolute()
+    progress = Progress()
+    progress.report('正在选择个人目录与登记工作区', 0, 0, True)
     if output.exists():
         raise ValueError('个人数据安全副本已存在，禁止覆盖')
     roots = selection(rootfs, workdir)
@@ -89,6 +183,8 @@ def snapshot(rootfs, output, workdir='deepseek-harness'):
 
     def add(archive, source, name):
         nonlocal total
+        if runtime_cache(name):
+            return  # 在 lstat/遍历之前跳过 000 权限挂载占位；真实个人目录错误仍会中止。
         if any(name == prefix or name.startswith(prefix + '/') for prefix in REPLACED_TOOLS):
             return
         if source.absolute() in (output, temporary):
@@ -100,10 +196,10 @@ def snapshot(rootfs, output, workdir='deepseek-harness'):
         if stat.S_ISLNK(info.st_mode):
             target = os.readlink(source)
             # proot 模拟硬链接属于文件内容，不把指向旧 rootfs 的 .l2s 链带到新环境。
-            if '.l2s' in target:
-                resolved = source.resolve(strict=True)
-                if resolved.is_file():
-                    return add(archive, resolved, name)
+            if any(part == '.l2s' or part.startswith('.l2s.') for part in PurePosixPath(target).parts):
+                resolved = resolve_internal_link(rootfs, source)
+                checks.append((source, ('link', target)))
+                return add(archive, resolved, name)
             entry.type, entry.linkname = tarfile.SYMTYPE, target
             archive.addfile(entry)
             inventory[name] = {'link': target}
@@ -122,8 +218,10 @@ def snapshot(rootfs, output, workdir='deepseek-harness'):
                 raise ValueError('个人数据超过迁移容量上限，原环境保持原位')
             entry.size = info.st_size
             with source.open('rb') as stream:
-                archive.addfile(entry, stream)
-            inventory[name] = {'size': info.st_size, 'sha256': digest(source)}
+                hashed = HashingReader(stream, lambda size: progress.report(
+                    '正在保护个人文件', len(inventory), total - info.st_size + size))
+                archive.addfile(entry, hashed)
+            inventory[name] = {'size': info.st_size, 'sha256': hashed.hash.hexdigest()}
             after = source.stat()
             if (info.st_size, info.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
                 raise ValueError('个人文件在快照期间变化，请稍后重试：' + name)
@@ -134,12 +232,14 @@ def snapshot(rootfs, output, workdir='deepseek-harness'):
             raise ValueError('个人目录包含不能迁移的特殊文件：' + name)
         if len(inventory) > MAX_FILES:
             raise ValueError('个人数据文件数超过迁移上限')
+        progress.report('正在保护个人文件', len(inventory), total)
 
     try:
-        with tarfile.open(temporary, 'w:gz', compresslevel=3) as archive:
+        with tarfile.open(temporary, 'w:gz', compresslevel=1) as archive:
             for name in roots:
                 add(archive, rootfs / name, name)
             for source, before in checks:
+                progress.report('正在核对源文件状态', len(inventory), total)
                 if before[0] == 'link':
                     current = ('link', os.readlink(source))
                 elif before[0] == 'directory':
@@ -153,15 +253,19 @@ def snapshot(rootfs, output, workdir='deepseek-harness'):
             entry = tarfile.TarInfo(MANIFEST); entry.size = len(manifest)
             archive.addfile(entry, io.BytesIO(manifest))
         # 逐文件重新读取压缩归档验证，不能只校验压缩文件本身可读。
-        verify_archive(temporary)
+        verify_archive(temporary, progress)
         os.replace(temporary, output)
     finally:
         if temporary.exists():
             temporary.unlink()
-    return {'files': len(inventory), 'bytes': total, 'archiveBytes': output.stat().st_size, 'sha256': digest(output)}
+    progress.report('正在校验完整安全副本', len(inventory), total, True)
+    result = {'files': len(inventory), 'bytes': total, 'archiveBytes': output.stat().st_size,
+              'sha256': digest(output, lambda size: progress.report('正在校验完整安全副本', len(inventory), size))}
+    progress.report('个人文件保护校验完成', len(inventory), total, True)
+    return result
 
 
-def verify_archive(archive_path):
+def verify_archive(archive_path, progress=None):
     records = {}
     total = 0
     with tarfile.open(archive_path, 'r:gz') as archive:
@@ -190,11 +294,15 @@ def verify_archive(archive_path):
                 with archive.extractfile(entry) as stream:
                     for block in iter(lambda: stream.read(1024 * 1024), b''):
                         value.update(block)
+                        if progress:
+                            progress.report('正在逐文件校验安全副本', len(records), total)
                 records[name] = {'size': entry.size, 'sha256': value.hexdigest()}
             else:
                 raise ValueError('个人数据归档含不支持的类型')
             if len(records) > MAX_FILES:
                 raise ValueError('个人数据归档超出文件数上限')
+            if progress:
+                progress.report('正在逐文件校验安全副本', len(records), total)
         if not isinstance(manifest, dict) or manifest.get('version') != 1 or manifest.get('inventory') != records:
             raise ValueError('个人数据逐文件校验失败')
         roots = manifest.get('roots')
@@ -227,8 +335,10 @@ def safe_destination(rootfs, name):
 
 def restore(rootfs, archive_path):
     rootfs = Path(rootfs).resolve()
-    manifest = verify_archive(archive_path)
+    progress = Progress()
+    manifest = verify_archive(archive_path, progress)
     directories = []
+    files, size = 0, 0
     with tarfile.open(archive_path, 'r:gz') as archive:
         for entry in archive:
             name = entry.name.rstrip('/')
@@ -248,21 +358,28 @@ def restore(rootfs, archive_path):
                 target.symlink_to(entry.linkname)
             else:
                 with archive.extractfile(entry) as stream, target.open('wb') as out:
-                    shutil.copyfileobj(stream, out, 1024 * 1024)
+                    for block in iter(lambda: stream.read(1024 * 1024), b''):
+                        out.write(block)
+                        size += len(block)
+                        progress.report('正在恢复个人文件', files, size)
                 os.chmod(target, entry.mode & 0o777)
                 os.utime(target, (entry.mtime, entry.mtime))
+            files += 1
+            progress.report('正在恢复个人文件', files, size)
     for target, mode, mtime in reversed(directories):
         os.chmod(target, mode & 0o777)
         os.utime(target, (mtime, mtime))
     # 恢复后对实际落盘文件再校验；通过此关才能提交环境切换、释放旧运行时。
     for name, expected in manifest['inventory'].items():
+        progress.report('正在校验恢复后的文件', files, size)
         target = safe_destination(rootfs, name)
         if 'link' in expected:
             actual = {'link': os.readlink(target)} if target.is_symlink() else {}
         elif expected.get('directory'):
             actual = {'directory': True} if target.is_dir() and not target.is_symlink() else {}
         else:
-            actual = {'size': target.stat().st_size, 'sha256': digest(target)} if target.is_file() and not target.is_symlink() else {}
+            actual = {'size': target.stat().st_size, 'sha256': digest(target, lambda read: progress.report(
+                '正在校验恢复后的文件', files, read))} if target.is_file() and not target.is_symlink() else {}
         if actual != expected:
             raise ValueError('个人文件恢复后校验失败：' + name)
     return {'files': len(manifest['inventory']), 'bytes': manifest['bytes'], 'verified': True}

@@ -29,7 +29,7 @@ public final class DownloadsExport {
     }
     public static Result write(Context context, File source, String name) throws Exception {
         if (name == null || name.isEmpty() || !name.equals(new File(name).getName())
-                || name.contains("\\") || name.equals(".") || name.equals("..")) throw new IOException("文件名无效");
+                || name.contains("\\") || name.equals(".") || name.equals("..")) throw new IOException(com.deepseekharness.app.util.UiText.text("文件名无效"));
         FileIntegrity.Result expected;
         try (InputStream in = new FileInputStream(source)) { expected = FileIntegrity.copy(in, null, source.length()); }
         if (Build.VERSION.SDK_INT >= 29) return media(context, source, name, expected);
@@ -43,19 +43,19 @@ public final class DownloadsExport {
         values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/DSHA/");
         values.put(MediaStore.MediaColumns.IS_PENDING, 1);
         Uri uri = context.getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-        if (uri == null) throw new IOException("无法创建下载文件");
+        if (uri == null) throw new IOException(com.deepseekharness.app.util.UiText.text("无法创建下载文件"));
         boolean published = false;
         try {
             try (InputStream in = new FileInputStream(source); OutputStream out = context.getContentResolver().openOutputStream(uri, "w")) {
-                if (out == null) throw new IOException("无法写入下载文件");
-                if (!expected.matches(FileIntegrity.copy(in, out, expected.size))) throw new IOException("源文件在导出期间发生变化");
+                if (out == null) throw new IOException(com.deepseekharness.app.util.UiText.text("无法写入下载文件"));
+                if (!expected.matches(FileIntegrity.copy(in, out, expected.size))) throw new IOException(com.deepseekharness.app.util.UiText.text("源文件在导出期间发生变化"));
             }
             try (InputStream in = context.getContentResolver().openInputStream(uri)) {
-                if (!expected.matches(FileIntegrity.copy(in, null, expected.size))) throw new IOException("导出摘要校验失败");
+                if (!expected.matches(FileIntegrity.copy(in, null, expected.size))) throw new IOException(com.deepseekharness.app.util.UiText.text("导出摘要校验失败"));
             }
             ContentValues ready = new ContentValues();
             ready.put(MediaStore.MediaColumns.IS_PENDING, 0);
-            if (context.getContentResolver().update(uri, ready, null, null) != 1) throw new IOException("下载文件发布失败");
+            if (context.getContentResolver().update(uri, ready, null, null) != 1) throw new IOException(com.deepseekharness.app.util.UiText.text("下载文件发布失败"));
             String actualName = name;
             try (Cursor cursor = context.getContentResolver().query(uri, new String[]{MediaStore.MediaColumns.DISPLAY_NAME}, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) actualName = cursor.getString(0);
@@ -69,7 +69,7 @@ public final class DownloadsExport {
     @SuppressWarnings("deprecation")
     private static Result direct(File source, String name, FileIntegrity.Result expected) throws Exception {
         File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "DSHA");
-        if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException("无法创建 Download/DSHA，请检查存储权限");
+        if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException(com.deepseekharness.app.util.UiText.text("无法创建 Download/DSHA，请检查存储权限"));
         File target = new File(dir, name);
         if (target.exists()) {
             int dot = name.indexOf('.');
@@ -78,13 +78,13 @@ public final class DownloadsExport {
         File part = new File(dir, ".dsha-export-" + UUID.randomUUID() + ".part");
         try {
             try (InputStream in = new FileInputStream(source); FileOutputStream out = new FileOutputStream(part)) {
-                if (!expected.matches(FileIntegrity.copy(in, out, expected.size))) throw new IOException("源文件在导出期间发生变化");
+                if (!expected.matches(FileIntegrity.copy(in, out, expected.size))) throw new IOException(com.deepseekharness.app.util.UiText.text("源文件在导出期间发生变化"));
                 out.getFD().sync();
             }
             try (InputStream in = new FileInputStream(part)) {
-                if (!expected.matches(FileIntegrity.copy(in, null, expected.size))) throw new IOException("导出摘要校验失败");
+                if (!expected.matches(FileIntegrity.copy(in, null, expected.size))) throw new IOException(com.deepseekharness.app.util.UiText.text("导出摘要校验失败"));
             }
-            if (target.exists() || !part.renameTo(target)) throw new IOException("下载文件提交失败，已有备份已保留");
+            if (target.exists() || !part.renameTo(target)) throw new IOException(com.deepseekharness.app.util.UiText.text("下载文件提交失败，已有备份已保留"));
             return new Result(Uri.fromFile(target), target.getName(), expected);
         } finally { if (part.exists()) part.delete(); }
     }

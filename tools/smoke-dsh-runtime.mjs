@@ -91,6 +91,14 @@ try {
         const later = page.getByRole('button', { name: '稍后配置', exact: true });
         await later.waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
         if (await later.isVisible()) await later.click();
+        if (process.argv.includes('--device-layout')) {
+          const fab=page.locator('[data-mobile-nav="fab"]');
+          await fab.waitFor({state:'visible'});
+          const bounds=await fab.boundingBox();
+          if(!bounds || Math.abs(bounds.x)>1 || Math.abs(bounds.y)>1 || bounds.width<44 || bounds.height<44)
+            throw new Error('首页侧栏入口没有贴齐左上角：'+JSON.stringify(bounds));
+          await page.screenshot({path:resolve(home,'browser-home-top-left.png'),fullPage:true});
+        }
         await page.getByRole('button', { name: '选择工作区', exact: true }).click();
         await page.getByRole('button', { name: '编辑路径', exact: true }).click();
         const pathInput = page.locator('input:visible').first();
@@ -109,6 +117,12 @@ try {
             await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({type:'server-response',rpcId:body.rpcId,result:{ok:true,value:{accepted:true}}})});
           });
           const editor=page.locator('[data-composer-input]');
+          if(process.argv.includes('--device-layout')) {
+            const typography=await page.evaluate(()=>Object.fromEntries(['[data-composer-input]','[data-composer-placeholder]']
+              .map(selector=>[selector,document.querySelector(selector)?getComputedStyle(document.querySelector(selector)).fontSize:null])));
+            writeFileSync(resolve(home,'device-typography.json'),JSON.stringify(typography,null,2));
+            if(Object.values(typography).some(size=>size!=='13px')) throw new Error('输入层与占位字未统一到 13px：'+JSON.stringify(typography));
+          }
           if (await editor.getAttribute('enterkeyhint')!=='enter') throw new Error('输入法未提示换行');
           await editor.fill('第一行');await editor.press('End');await editor.press('Enter');await page.keyboard.insertText('第二行');
           await editor.press('Shift+Enter');await page.keyboard.insertText('第三行');

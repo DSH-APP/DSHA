@@ -26,7 +26,7 @@ final class IsolatedInstallProcess extends Process implements AutoCloseable {
 
     @android.annotation.SuppressLint("NewApi") // 入口先检查 API 26 与 setsid，再访问 ProcessBuilder.Redirect。
     static IsolatedInstallProcess start(ProcessBuilder target, File temporary) throws IOException {
-        if (!supported()) throw new IOException("此系统不支持独立安装进程组");
+        if (!supported()) throw new IOException(com.deepseekharness.app.util.UiText.text("此系统不支持独立安装进程组"));
         File status = new File(temporary, "cold-install-" + java.util.UUID.randomUUID() + ".status");
         StringBuilder shell = new StringBuilder("IFS= read -r DSHA_START || exit 125\n"
                 + "[ \"$DSHA_START\" = DSHA_START ] || exit 125\n");
@@ -53,9 +53,9 @@ final class IsolatedInstallProcess extends Process implements AutoCloseable {
                 }
                 Thread.sleep(5);
             }
-            throw new IOException("无法建立独立安装进程组");
+            throw new IOException(com.deepseekharness.app.util.UiText.text("无法建立独立安装进程组"));
         } catch (InterruptedException error) {
-            Thread.currentThread().interrupt(); throw new IOException("安装准备被中断", error);
+            Thread.currentThread().interrupt(); throw new IOException(com.deepseekharness.app.util.UiText.text("安装准备被中断"), error);
         } finally {
             // 握手前只等 stdin，没有创建 guest 子进程；握手写入失败也回收整个已核验的组。
             if (!accepted) {
@@ -88,7 +88,7 @@ final class IsolatedInstallProcess extends Process implements AutoCloseable {
                 }
             } catch (IOException ignored) { }
         }
-        throw new IllegalThreadStateException("安装进程组尚未结束");
+        throw new IllegalThreadStateException(com.deepseekharness.app.util.UiText.text("安装进程组尚未结束"));
     }
     @Override public boolean isAlive() {
         try { exitValue(); return false; } catch (IllegalThreadStateException running) { return true; }
@@ -107,11 +107,11 @@ final class IsolatedInstallProcess extends Process implements AutoCloseable {
         closing = true;
         ProcessIdentity current = readIdentity(identity.pid);
         if (!identity.sameProcess(current) || !current.ownsSession())
-            throw new IllegalStateException("安装进程组身份不可确认，已停止后续维护");
+            throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("安装进程组身份不可确认，已停止后续维护"));
         try { Os.kill(-identity.pid, OsConstants.SIGKILL); }
-        catch (android.system.ErrnoException error) { throw new IllegalStateException("无法回收安装进程组", error); }
+        catch (android.system.ErrnoException error) { throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("无法回收安装进程组"), error); }
         if (!ProcessTermination.awaitExit(supervisor, 3000))
-            throw new IllegalStateException("安装监督进程未退出");
+            throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("安装监督进程未退出"));
         boolean interrupted = Thread.interrupted();
         long deadline = SystemClock.elapsedRealtime() + 3000;
         try {
@@ -119,7 +119,7 @@ final class IsolatedInstallProcess extends Process implements AutoCloseable {
                 try { Thread.sleep(10); } catch (InterruptedException error) { interrupted = true; }
             }
         } finally { if (interrupted) Thread.currentThread().interrupt(); }
-        if (!groupGone()) throw new IllegalStateException("安装子进程尚未完全退出，已暂停后续维护");
+        if (!groupGone()) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("安装子进程尚未完全退出，已暂停后续维护"));
         closed = true;
         status.delete();
     }

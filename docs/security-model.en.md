@@ -45,10 +45,7 @@ Each one is **off by default**, toggled in-app, revocable at any time.
 
 ### Wireless ADB (Workspace page)
 
-**What granting it means**: the agent gets `shell` user privileges (uid 2000). It can tap,
-swipe, take screenshots, install and uninstall apps, read system logs, list installed
-packages, and change some system settings. **This is the second most powerful thing this
-project can hand out**, behind only root.
+The ADB connection has `shell` privileges (uid 2000). Bundled device command entry points allow recognized queries, ordinary file operations and stopping verified user applications. They reject package installation/removal, clearing application data and changing system settings. App UI operations use separate endpoints and authorization. This parser does not isolate arbitrary container code from stored ADB credentials.
 
 - The pairing code is used once; a keypair maintains the connection afterwards. DSHA never stores your pairing code
 - To revoke: turn off Wireless debugging in system settings, or revoke all debugging authorizations
@@ -56,11 +53,17 @@ project can hand out**, behind only root.
 
 ### Root shell (Config page, off by default)
 
-**What granting it means**: everything. With root there are no boundaries left to discuss.
+Bundled device commands still apply the same policy when Root is enabled. The Ubuntu guest's root identity does not grant Android Root.
 
 - Requires a rooted device (KernelSU / Magisk). DSHA neither provides nor requests root
 - The flag is `allow_root_shell`, default false
 - Don't enable it unless you know exactly why you are
+
+### SMS reads (Settings → Device capability permissions, added in 0.1.5-rc1.1)
+
+Strict `content query --uri content://sms` requests for the current Android user require confirmation by default. Explicit native preauthorization allows assistants and plugins to query numbers, message bodies and timestamps through ADB, potentially including verification codes. Turning it off restores confirmation for subsequent queries. This permission is excluded from Android backup and device transfer.
+
+It does not allow sending, changing or deleting messages, reading other users or querying other content providers. Android can still deny access. Shizuku does not execute these sensitive queries. The policy applies to bundled entry points and is not a separate UID sandbox for arbitrary container code.
 
 ### "All files access" (prompted on first launch)
 

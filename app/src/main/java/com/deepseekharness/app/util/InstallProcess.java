@@ -24,9 +24,9 @@ public final class InstallProcess {
             process.getOutputStream().close();
             while (true) {
                 if (cancellable && cancelled.getAsBoolean()) throw new InstallTask.Cancelled();
-                if (Thread.currentThread().isInterrupted()) throw new InterruptedException("安装命令等待被中断");
+                if (Thread.currentThread().isInterrupted()) throw new InterruptedException(com.deepseekharness.app.util.UiText.text("安装命令等待被中断"));
                 if (System.nanoTime() >= deadline)
-                    throw new IOException("命令超时（" + timeoutMs / 1000 + " 秒），当前步骤未完成，请重新检查");
+                    throw new IOException(com.deepseekharness.app.util.UiText.text("命令超时（") + timeoutMs / 1000 + com.deepseekharness.app.util.UiText.text(" 秒），当前步骤未完成，请重新检查"));
                 // 只读已到达的管道字节，不再留下卡在 read/close 的后台读线程。
                 int available = input.available();
                 if (available > 0) {
@@ -65,7 +65,7 @@ public final class InstallProcess {
         private final Process process;
         private final Consumer<Process> destroy;
         public CleanupFailure(Process process, Consumer<Process> destroy, Throwable cause) {
-            super("本次进程仍未退出，不能开始下一任务", cause); this.process = process; this.destroy = destroy;
+            super(com.deepseekharness.app.util.UiText.text("本次进程仍未退出，不能开始下一任务"), cause); this.process = process; this.destroy = destroy;
         }
         public boolean awaitExit(long millis) { return ProcessTermination.awaitExit(process, millis); }
         public void retry() {
@@ -94,7 +94,7 @@ public final class InstallProcess {
             line.reset(); boolean hide = overflow || value.length() > 4096; overflow = false;
             if (hide) {
                 if (value.contains("-----BEGIN ") && value.contains("PRIVATE KEY-----")) output.accept("-----BEGIN PRIVATE KEY-----");
-                output.accept("[输出行过长，已隐藏]");
+                output.accept(com.deepseekharness.app.util.UiText.text("[输出行过长，已隐藏]"));
             } else if (!value.isEmpty()) output.accept(value);
         }
     }

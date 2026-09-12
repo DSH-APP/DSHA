@@ -45,11 +45,11 @@ public final class RuntimeTasks implements AutoCloseable {
      * 原调用方后续 close（包括 try-with-resources）不会提前解除保护；监听启动失败也保留 token。
      */
     public void retainUntilExit(Process process) {
-        if (process == null) throw new IllegalArgumentException("待等待的进程不能为空");
+        if (process == null) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("待等待的进程不能为空"));
         synchronized (RuntimeTasks.class) {
-            if (closed) throw new IllegalStateException("已释放的工作锁不能重新保留进程");
+            if (closed) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("已释放的工作锁不能重新保留进程"));
             if (retainedProcess != null) {
-                if (retainedProcess != process) throw new IllegalStateException("同一工作锁不能交给不同进程");
+                if (retainedProcess != process) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("同一工作锁不能交给不同进程"));
                 return;
             }
             token.detach();
@@ -61,7 +61,7 @@ public final class RuntimeTasks implements AutoCloseable {
             watcher.start();
         } catch (RuntimeException | Error failure) {
             // 故意保留 retainedProcess/token；不能因线程资源不足而把仍存活的进程当成已结束。
-            throw new IllegalStateException("无法启动进程退出监听，已保留环境保护；请结束后台进程后重启 App", failure);
+            throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("无法启动进程退出监听，已保留环境保护；请结束后台进程后重启 App"), failure);
         }
     }
     private void waitForRetainedExit(Process process) {
@@ -78,7 +78,7 @@ public final class RuntimeTasks implements AutoCloseable {
             }
         } catch (RuntimeException | Error failure) {
             // 无法确认退出时继续占用原 token；不扫描、终止或转移到任何其他进程。
-            android.util.Log.w("DSHA", "无法确认后台进程退出，保留环境保护："
+            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("无法确认后台进程退出，保留环境保护：")
                     + com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(failure)));
         } finally { if (interrupted) Thread.currentThread().interrupt(); }
     }

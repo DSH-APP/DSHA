@@ -15,8 +15,8 @@ android {
         applicationId "com.dsh.client"
         minSdk 30
         targetSdk 37
-        versionCode 116
-        versionName "0.1.5-rc1"
+        versionCode 129
+        versionName "0.1.5-rc2"
         testInstrumentationRunner project.findProperty('dsha.testRunner') ?: "com.deepseekharness.app.Rc13Instrumentation"
         ndk {
             abiFilters 'arm64-v8a'
@@ -29,16 +29,12 @@ android {
             dimension 'androidSupport'
             minSdk 30
             buildConfigField 'boolean', 'LOW_ANDROID', 'false'
-            resValue 'string', 'edition_description', '标准版 · Android 11+ · 系统 WebView'
-            resValue 'string', 'browser_description', '使用系统 WebView，请保持 Android System WebView / Chrome 更新。'
         }
         low {
             dimension 'androidSupport'
             minSdk 23
-            versionName '0.1.5-rc1low'
+            versionName '0.1.5-rc2low'
             buildConfigField 'boolean', 'LOW_ANDROID', 'true'
-            resValue 'string', 'edition_description', '兼容版 · Android 6+ · WebView / Gecko'
-            resValue 'string', 'browser_description', '旧系统 WebView 自动使用内置 Gecko；可手动开启兼容内核。'
         }
     }
 
@@ -109,12 +105,15 @@ android {
 
     sourceSets {
         main.assets.setSrcDirs([layout.buildDirectory.dir("generated/standardAssets")])
+        main.java.srcDir(layout.buildDirectory.dir("generated/uiLanguage").get().asFile)
     }
 }
 
 def prepareStandardAssets = tasks.register("prepareStandardAssets", Exec) {
     inputs.dir("src/main/assets")
     inputs.file(rootProject.file("tools/prepare-standard-assets.py"))
+    inputs.file(rootProject.file("tools/prepare-web-compat.mjs"))
+    inputs.files(rootProject.files("tools/web-compat/entry.cjs", "tools/web-compat/package.json", "tools/web-compat/package-lock.json"))
     inputs.file(rootProject.file("tools/build-dsh-runtime.py"))
     inputs.dir(rootProject.file("tools/dsh-runtime"))
     inputs.file(rootProject.file("tools/prepare-ubuntu-tools.py"))
@@ -127,6 +126,15 @@ def prepareStandardAssets = tasks.register("prepareStandardAssets", Exec) {
             "--output", layout.buildDirectory.dir("generated/standardAssets").get().asFile.absolutePath)
 }
 tasks.named("preBuild").configure { dependsOn(prepareStandardAssets) }
+def prepareUiLanguages = tasks.register("prepareUiLanguages", Exec) {
+    inputs.file(rootProject.file("tools/prepare-ui-languages.py"))
+    inputs.file(rootProject.file("tools/i18n/messages.json"))
+    outputs.dir(layout.buildDirectory.dir("generated/uiLanguage"))
+    commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B",
+            rootProject.file("tools/prepare-ui-languages.py").absolutePath,
+            "--output", layout.buildDirectory.dir("generated/uiLanguage").get().asFile.absolutePath)
+}
+tasks.named("preBuild").configure { dependsOn(prepareUiLanguages) }
 
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
@@ -135,8 +143,11 @@ dependencies {
     // 1.15 保留 API 23；1.16 起要求 API 24，不能用于兼容版。
     implementation 'androidx.webkit:webkit:1.15.0'
     implementation 'com.google.android.material:material:1.11.0'
-    implementation 'dev.rikka.shizuku:api:12.2.0'
-    implementation 'dev.rikka.shizuku:provider:12.2.0'
+    standardImplementation 'dev.rikka.shizuku:api:13.1.5'
+    standardImplementation 'dev.rikka.shizuku:provider:13.1.5'
+    // 13.1.5 从 API 24 起可用；兼容版以 12.2.0 的相同 Binder 协议支持 Android 6。
+    lowImplementation 'dev.rikka.shizuku:api:12.2.0'
+    lowImplementation 'dev.rikka.shizuku:provider:12.2.0'
     // 真 PTY 终端：Termux 拆出的 terminal-view/terminal-emulator（Apache 2.0），
     // 自带 JNI PTY 层（openpty+fork/exec）。坐标是 JitPack 多模块真实 groupId
     // （com.termux.termux-app），不是 Wiki 上会 401 的 com.termux:terminal-view。

@@ -63,7 +63,7 @@ public final class BackupScope {
     /** 统一生成归档名，防止调用方绕过范围前缀约定。 */
     public static String archiveName(int scope, String suffix) {
         if (suffix == null || !suffix.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,80}")) {
-            throw new IllegalArgumentException("备份文件标识无效");
+            throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("备份文件标识无效"));
         }
         return fileNamePrefix(scope) + suffix + ".tar.gz";
     }
@@ -88,10 +88,10 @@ public final class BackupScope {
     /** 给用户看的名字。 */
     public static String label(int scope) {
         switch (scope) {
-            case SESSIONS: return "仅备份对话记录";
-            case PLUGINS:  return "仅备份插件";
-            case SETTINGS: return "仅备份设置";
-            default:       return "备份全部数据";
+            case SESSIONS: return com.deepseekharness.app.util.UiText.text("仅备份对话记录");
+            case PLUGINS:  return com.deepseekharness.app.util.UiText.text("仅备份插件");
+            case SETTINGS: return com.deepseekharness.app.util.UiText.text("仅备份设置");
+            default:       return com.deepseekharness.app.util.UiText.text("备份全部数据");
         }
     }
 
@@ -99,22 +99,22 @@ public final class BackupScope {
     public static String describe(int scope) {
         switch (scope) {
             case SESSIONS:
-                return "只打包会话、索引、附件与工作区结构，恢复时不动设置与插件";
+                return com.deepseekharness.app.util.UiText.text("只打包会话、索引、附件与工作区结构，恢复时不动设置与插件");
             case PLUGINS:
-                return "只打包插件清单、配置和已安装插件数据";
+                return com.deepseekharness.app.util.UiText.text("只打包插件清单、配置和已安装插件数据");
             case SETTINGS:
-                return "打包 settings.yaml 和运行参数；原生 API Key 遵循备份密钥开关";
+                return com.deepseekharness.app.util.UiText.text("打包 settings.yaml 和运行参数；原生 API Key 遵循备份密钥开关");
             default:
-                return "配置、对话、附件、插件与工作区 .env/日志，换机或重装用这个";
+                return com.deepseekharness.app.util.UiText.text("配置、对话、附件、插件与工作区 .env/日志，换机或重装用这个");
         }
     }
 
     public static String restoreImpact(int scope) {
         switch (scope) {
-            case SESSIONS: return "覆盖聊天记录、会话索引与附件，不改设置和插件";
-            case SETTINGS: return "覆盖 settings.yaml 和原生运行设置，不改聊天记录和插件";
-            case PLUGINS: return "覆盖插件 profile 和插件源码，不改聊天记录和设置";
-            default: return "覆盖配置、聊天记录、附件、插件与工作区 .env/日志";
+            case SESSIONS: return com.deepseekharness.app.util.UiText.text("覆盖聊天记录、会话索引与附件，不改设置和插件");
+            case SETTINGS: return com.deepseekharness.app.util.UiText.text("覆盖 settings.yaml 和原生运行设置，不改聊天记录和插件");
+            case PLUGINS: return com.deepseekharness.app.util.UiText.text("覆盖插件 profile 和插件源码，不改聊天记录和设置");
+            default: return com.deepseekharness.app.util.UiText.text("覆盖配置、聊天记录、附件、插件与工作区 .env/日志");
         }
     }
 

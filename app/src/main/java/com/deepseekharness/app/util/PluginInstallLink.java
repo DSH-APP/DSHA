@@ -41,7 +41,7 @@ public final class PluginInstallLink {
                 if (link.version.length() > 100) throw new IllegalArgumentException();
             }
             return link;
-        } catch (Exception e) { throw new IllegalArgumentException("安装链接无效，请从 dsha.cc 重新选择插件，或在插件页粘贴下载链接"); }
+        } catch (Exception e) { throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("安装链接无效，请从 dsha.cc 重新选择插件，或在插件页粘贴下载链接")); }
     }
     private static boolean validName(String value) { return value.length() <= 214 && value.matches("(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*"); }
 }

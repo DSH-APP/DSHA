@@ -11,22 +11,23 @@ public final class InstallTask {
     private static final int LOG_LIMIT = 48 * 1024;
     private final ArrayDeque<String> lines = new ArrayDeque<>();
     private final Step[] steps = new Step[6];
+    private final String[] details = new String[6];
     private Outcome outcome = Outcome.IDLE;
     private boolean repair, cancelRequested, cancellable = true, privateKey, truncated;
     private int selected, current, logSize;
     private long started, stageStarted, finished, revision;
-    private String phase = "尚未检查", failure = "";
+    private String phase = com.deepseekharness.app.util.UiText.text("尚未检查"), failure = "";
 
-    public InstallTask() { Arrays.fill(steps, Step.PENDING); }
+    public InstallTask() { Arrays.fill(steps, Step.PENDING); Arrays.fill(details, com.deepseekharness.app.util.UiText.text("尚未检查")); }
 
     public synchronized boolean start(boolean repair, int selected) {
-        if (selected < 0 || selected > 6) throw new IllegalArgumentException("安装步骤必须为 0—6");
+        if (selected < 0 || selected > 6) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("安装步骤必须为 0—6"));
         if (outcome == Outcome.RUNNING) return false;
         this.repair = repair; this.selected = selected;
         outcome = Outcome.RUNNING; cancelRequested = false; cancellable = true;
         current = 0; started = stageStarted = System.nanoTime(); finished = 0;
-        phase = "准备检查"; failure = ""; privateKey = truncated = false;
-        lines.clear(); logSize = 0; Arrays.fill(steps, Step.PENDING); revision++;
+        phase = com.deepseekharness.app.util.UiText.text("准备检查"); failure = ""; privateKey = truncated = false;
+        lines.clear(); logSize = 0; Arrays.fill(steps, Step.PENDING); Arrays.fill(details, com.deepseekharness.app.util.UiText.text("尚未检查")); revision++;
         return true;
     }
 
@@ -34,23 +35,25 @@ public final class InstallTask {
     public synchronized void stage(int step, String label, boolean cancellable) {
         checkCancelled();
         current = step; phase = safe(label); stageStarted = System.nanoTime(); this.cancellable = cancellable;
-        if (step > 0) steps[step - 1] = Step.RUNNING;
+        if (step > 0) { steps[step - 1] = Step.RUNNING; details[step - 1] = safe(label); }
         append(label); revision++;
     }
 
     public synchronized void result(int step, boolean ok, String detail) {
         steps[step - 1] = ok ? Step.OK : Step.FAILED;
-        append((ok ? "通过 · " : "未通过 · ") + NAMES[step - 1] + "：" + detail); revision++;
+        details[step - 1] = safe(detail);
+        append((ok ? com.deepseekharness.app.util.UiText.text("通过 · ") : com.deepseekharness.app.util.UiText.text("未通过 · ")) + NAMES[step - 1] + com.deepseekharness.app.util.UiText.text("：") + detail); revision++;
     }
 
     public synchronized void skip(int step, String detail) {
-        steps[step - 1] = Step.SKIPPED; append("跳过 · " + NAMES[step - 1] + "：" + detail); revision++;
+        steps[step - 1] = Step.SKIPPED; details[step - 1] = safe(detail);
+        append(com.deepseekharness.app.util.UiText.text("跳过 · ") + NAMES[step - 1] + com.deepseekharness.app.util.UiText.text("：") + detail); revision++;
     }
 
     public synchronized boolean requestCancel() {
         if (outcome != Outcome.RUNNING || cancelRequested) return false;
         cancelRequested = true;
-        append(cancellable ? "已请求取消检查，正在结束探测进程…" : "已请求停止；等待当前修复完成安全收尾，再停止后续步骤。");
+        append(cancellable ? com.deepseekharness.app.util.UiText.text("已请求取消检查，正在结束探测进程…") : com.deepseekharness.app.util.UiText.text("已请求停止；等待当前修复完成安全收尾，再停止后续步骤。"));
         revision++; return true;
     }
     public synchronized boolean cancellationRequested() { return cancelRequested; }
@@ -65,7 +68,11 @@ public final class InstallTask {
         if (outcome != Outcome.RUNNING) return;
         outcome = result; finished = System.nanoTime(); phase = safe(detail); cancellable = false;
         for (int i = 0; i < steps.length; i++) {
-            if (steps[i] == Step.RUNNING) steps[i] = result == Outcome.FAILED ? Step.FAILED : Step.SKIPPED;
+            if (steps[i] == Step.RUNNING || (steps[i] == Step.PENDING && (selected == 0 || selected == i + 1)
+                    && (result == Outcome.FAILED || result == Outcome.CANCELLED))) {
+                steps[i] = result == Outcome.FAILED ? Step.FAILED : Step.SKIPPED;
+                details[i] = safe(com.deepseekharness.app.util.UiText.text("检查未完成：") + detail);
+            }
         }
         if (result == Outcome.FAILED) failure = safe(detail);
         append(detail); revision++;
@@ -77,7 +84,7 @@ public final class InstallTask {
         for (String line : value.split("\\r?\\n|\\r", -1)) {
             if (line.isEmpty()) continue;
             if (line.contains("-----BEGIN ") && line.contains("PRIVATE KEY-----")) {
-                privateKey = !line.contains("-----END "); line = "[私钥已隐藏]";
+                privateKey = !line.contains("-----END "); line = com.deepseekharness.app.util.UiText.text("[私钥已隐藏]");
             } else if (privateKey) {
                 if (line.contains("-----END ") && line.contains("PRIVATE KEY-----")) privateKey = false;
                 continue;
@@ -92,9 +99,9 @@ public final class InstallTask {
     }
 
     private static String safe(String value) {
-        if (value.contains("-----BEGIN ") && value.contains("PRIVATE KEY-----")) return "[私钥已隐藏]";
+        if (value.contains("-----BEGIN ") && value.contains("PRIVATE KEY-----")) return com.deepseekharness.app.util.UiText.text("[私钥已隐藏]");
         // 超长行整体隐藏，避免截断破坏带引号凭据的识别边界。
-        if (value.length() > 4096) return "[输出行过长，已隐藏]";
+        if (value.length() > 4096) return com.deepseekharness.app.util.UiText.text("[输出行过长，已隐藏]");
         return SensitiveData.redact(value.replaceAll("\\x1B\\[[0-?]*[ -/]*[@-~]", "")
                 .replaceAll("[\\p{Cntrl}&&[^\\t]]", ""));
     }
@@ -102,10 +109,10 @@ public final class InstallTask {
 
     public synchronized Snapshot snapshot() {
         long now = outcome == Outcome.RUNNING ? System.nanoTime() : finished;
-        StringBuilder log = new StringBuilder(truncated ? "[较早输出已省略，仅保留最近 48 KiB]\n" : "");
+        StringBuilder log = new StringBuilder(truncated ? com.deepseekharness.app.util.UiText.text("[较早输出已省略，仅保留最近 48 KiB]\n") : "");
         for (String line : lines) log.append(line);
         return new Snapshot(outcome, repair, selected, current, cancelRequested, cancellable,
-                safe(phase), failure, steps.clone(), log.toString(), elapsed(now, started),
+                safe(phase), failure, steps.clone(), details.clone(), log.toString(), elapsed(now, started),
                 elapsed(now, stageStarted), revision);
     }
 
@@ -115,18 +122,19 @@ public final class InstallTask {
         public final int selected, current;
         public final String phase, failure, log;
         public final Step[] steps;
+        public final String[] details;
         public final long elapsedSeconds, stageSeconds, revision;
         Snapshot(Outcome outcome, boolean repair, int selected, int current, boolean cancelRequested,
-                 boolean cancellable, String phase, String failure, Step[] steps, String log,
+                 boolean cancellable, String phase, String failure, Step[] steps, String[] details, String log,
                  long elapsedSeconds, long stageSeconds, long revision) {
             this.outcome = outcome; this.repair = repair; this.selected = selected; this.current = current;
             this.cancelRequested = cancelRequested; this.cancellable = cancellable; this.phase = phase;
-            this.failure = failure; this.steps = steps; this.log = log;
+            this.failure = failure; this.steps = steps; this.details = details; this.log = log;
             this.elapsedSeconds = elapsedSeconds; this.stageSeconds = stageSeconds; this.revision = revision;
         }
         public boolean busy() { return outcome == Outcome.RUNNING; }
     }
     public static final class Cancelled extends RuntimeException {
-        public Cancelled() { super("任务已取消"); }
+        public Cancelled() { super(com.deepseekharness.app.util.UiText.text("任务已取消")); }
     }
 }

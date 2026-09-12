@@ -11,7 +11,7 @@ public final class RuntimeTaskRegistry {
     public synchronized Token begin(boolean detached) {
         Thread owner = Thread.currentThread();
         if (maintenance != null && (detached || maintenance.owner != owner))
-            throw new IllegalStateException("正在维护环境，请完成后再启动终端或后台任务");
+            throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("正在维护环境，请完成后再启动终端或后台任务"));
         Token token = new Token(); active.put(token, detached ? null : owner); return token;
     }
     public synchronized int count() { return active.size(); }
@@ -43,7 +43,7 @@ public final class RuntimeTaskRegistry {
         @Override public void close() {
             synchronized (RuntimeTaskRegistry.this) {
                 if (closed) return;
-                if (Thread.currentThread() != owner) throw new IllegalStateException("维护保护只能由持有线程释放");
+                if (Thread.currentThread() != owner) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("维护保护只能由持有线程释放"));
                 closed = true;
                 if (maintenance == this) maintenance = null;
             }

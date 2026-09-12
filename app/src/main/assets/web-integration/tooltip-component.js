@@ -1,5 +1,5 @@
 /* 替换锁定版本的 Tooltip，保留其布局与 React 管理的 DOM。 */
-function Ar({label, side = "right", delayMs = 0, disabled = false, maxWidth, children}) {
+function Fr({label, side = "right", delayMs = 0, disabled = false, maxWidth, children}) {
   const anchor = I.useRef(null), bubble = I.useRef(null), childRef = children.ref;
   const ref = I.useCallback(element => {
     anchor.current = element;
@@ -44,15 +44,15 @@ function Ar({label, side = "right", delayMs = 0, disabled = false, maxWidth, chi
     update(); window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, [placement, position, text, side]);
-  return a.jsxs(a.Fragment, {children: [I.cloneElement(children, {
+  return d.jsxs(d.Fragment, {children: [I.cloneElement(children, {
     ref,
     onPointerEnter: event => { children.props.onPointerEnter?.(event); behavior.pointerEnter(event); },
     onPointerLeave: event => { children.props.onPointerLeave?.(event); behavior.pointerLeave(); },
     onFocus: event => { children.props.onFocus?.(event); behavior.focus(); },
     onBlur: event => { children.props.onBlur?.(event); behavior.blur(); },
     onClick: event => { try { children.props.onClick?.(event); } finally { behavior.activate(); } }
-  }), position !== null && a.jsx("span", {
-    ref: bubble, className: Vf.bubble, "data-side": placement, "data-dsha-tooltip": "1",
+  }), position !== null && d.jsx("span", {
+    ref: bubble, className: zd.bubble, "data-side": placement, "data-dsha-tooltip": "1",
     style: {left: position.x, top, ...(maxWidth === undefined ? {} : {maxWidth})}, role: "tooltip", children: text
   })]});
 }

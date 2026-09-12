@@ -30,9 +30,9 @@ public final class DiagnosticActivity extends AppCompatActivity {
         new Thread(() -> {
             String message;
             try (java.io.OutputStream stream = getContentResolver().openOutputStream(uri, "wt")) {
-                if (stream == null) throw new java.io.IOException("无法写入所选位置");
-                stream.write(report.getBytes(java.nio.charset.StandardCharsets.UTF_8)); message = "诊断报告已导出";
-            } catch (Exception error) { message = "导出失败：" + error.getClass().getSimpleName(); }
+                if (stream == null) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("无法写入所选位置"));
+                stream.write(report.getBytes(java.nio.charset.StandardCharsets.UTF_8)); message = com.deepseekharness.app.util.UiText.text("诊断报告已导出");
+            } catch (Exception error) { message = com.deepseekharness.app.util.UiText.text("导出失败：") + error.getClass().getSimpleName(); }
             String done = message; runOnUiThread(() -> Toast.makeText(getApplicationContext(), done, Toast.LENGTH_LONG).show());
         }, "diagnostic-export").start();
     });
@@ -43,10 +43,10 @@ public final class DiagnosticActivity extends AppCompatActivity {
         findViewById(R.id.diagnostic_logs_download).setOnClickListener(v -> logs.download());
         findViewById(R.id.diagnostic_logs_save_as).setOnClickListener(v -> {
             try { logExporter.launch(com.deepseekharness.app.core.ErrorLogRepository.filename()); }
-            catch (RuntimeException error) { Toast.makeText(this, "无法打开文件管理器，请尝试下载到默认目录", Toast.LENGTH_LONG).show(); }
+            catch (RuntimeException error) { Toast.makeText(this, com.deepseekharness.app.util.UiText.text("无法打开文件管理器，请尝试下载到默认目录"), Toast.LENGTH_LONG).show(); }
         });
         logs.state.observe(this, state -> {
-            ((TextView) findViewById(R.id.diagnostic_logs_status)).setText(state.message);
+            ((TextView) findViewById(R.id.diagnostic_logs_status)).setText(com.deepseekharness.app.util.UiStateText.render(state.message));
             findViewById(R.id.diagnostic_logs_download).setEnabled(!state.busy);
             findViewById(R.id.diagnostic_logs_save_as).setEnabled(!state.busy);
             findViewById(R.id.diagnostic_logs_status).setEnabled(!state.busy && state.uri != null);
@@ -58,7 +58,7 @@ public final class DiagnosticActivity extends AppCompatActivity {
                 android.net.Uri uri = state.uri;
                 if ("file".equals(uri.getScheme())) uri = androidx.core.content.FileProvider.getUriForFile(this, getPackageName() + ".updates", new java.io.File(uri.getPath()));
                 startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW).setDataAndType(uri, "text/plain").addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION));
-            } catch (RuntimeException error) { Toast.makeText(this, "无法打开日志，可在文件管理器的 Download/DSHA 中查看，或重新下载", Toast.LENGTH_LONG).show(); }
+            } catch (RuntimeException error) { Toast.makeText(this, com.deepseekharness.app.util.UiText.text("无法打开日志，可在文件管理器的 Download/DSHA 中查看，或重新下载"), Toast.LENGTH_LONG).show(); }
         });
         steps = findViewById(R.id.diagnostic_steps);
         findViewById(R.id.diagnostic_back).setOnClickListener(v -> finish());
@@ -68,18 +68,18 @@ public final class DiagnosticActivity extends AppCompatActivity {
         findViewById(R.id.diagnostic_copy).setOnClickListener(v -> {
             try {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                if (clipboard == null) throw new IllegalStateException("剪贴板不可用");
-                clipboard.setPrimaryClip(ClipData.newPlainText("DSHA 诊断", completeReport()));
-                Toast.makeText(this, "已复制脱敏报告", Toast.LENGTH_SHORT).show();
-            } catch (Exception error) { Toast.makeText(this, "复制失败，可尝试导出报告", Toast.LENGTH_LONG).show(); }
+                if (clipboard == null) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("剪贴板不可用"));
+                clipboard.setPrimaryClip(ClipData.newPlainText(com.deepseekharness.app.util.UiText.text("DSHA 诊断"), completeReport()));
+                Toast.makeText(this, com.deepseekharness.app.util.UiText.text("已复制脱敏报告"), Toast.LENGTH_SHORT).show();
+            } catch (Exception error) { Toast.makeText(this, com.deepseekharness.app.util.UiText.text("复制失败，可尝试导出报告"), Toast.LENGTH_LONG).show(); }
         });
         findViewById(R.id.diagnostic_export).setOnClickListener(v -> {
             try { exporter.launch("DSHA-diagnostic-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.ROOT).format(new java.util.Date()) + ".txt"); }
-            catch (RuntimeException error) { Toast.makeText(this, "无法打开保存位置，请使用复制报告或检查系统文件管理器", Toast.LENGTH_LONG).show(); }
+            catch (RuntimeException error) { Toast.makeText(this, com.deepseekharness.app.util.UiText.text("无法打开保存位置，请使用复制报告或检查系统文件管理器"), Toast.LENGTH_LONG).show(); }
         });
         repository.report.observe(this, text -> ((TextView) findViewById(R.id.diagnostic_report)).setText(text));
         repository.busy.observe(this, busy -> {
-            ((TextView) findViewById(R.id.diagnostic_status)).setText(busy ? "正在检查环境…" : "报告保留在本机，复制或导出后可用于反馈");
+            ((TextView) findViewById(R.id.diagnostic_status)).setText(busy ? com.deepseekharness.app.util.UiText.text("正在检查环境…") : com.deepseekharness.app.util.UiText.text("报告保留在本机，复制或导出后可用于反馈"));
             for (int id : new int[]{R.id.diagnostic_refresh,R.id.diagnostic_repair,R.id.diagnostic_copy,R.id.diagnostic_export}) findViewById(id).setEnabled(!busy);
         });
         if (saved == null) {
@@ -88,6 +88,6 @@ public final class DiagnosticActivity extends AppCompatActivity {
         }
     }
     private String completeReport() {
-        return SensitiveData.redact(String.valueOf(repository.report.getValue()) + "\n用户补充复现步骤：\n" + (steps == null ? "" : steps.getText().toString()));
+        return SensitiveData.redact(String.valueOf(repository.report.getValue()) + com.deepseekharness.app.util.UiText.text("\n用户补充复现步骤：\n") + (steps == null ? "" : steps.getText().toString()));
     }
 }

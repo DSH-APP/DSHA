@@ -1,5 +1,5 @@
 #!/bin/bash
-# DSHA_ADB_SCRIPT_VERSION=16
+# DSHA_ADB_SCRIPT_VERSION=17
 # DSHA ADB 无线配对环境安装（幂等；rootfs 内执行）
 # 步骤：依赖(adb_shell_wifi/spake2-cffi) → 密钥 → 包装命令 /root/dsh-bin/adb-shell
 # 依赖走「离线 wheel 包」（/root/.dsh/wheels，由 App 注入），不依赖 apt/网络/编译器。
@@ -109,7 +109,7 @@ echo "== [4/4] 安装 /root/dsh-bin/adb-shell 包装命令"
 mkdir -p /root/dsh-bin
 cat > /root/dsh-bin/adb-shell <<'EOF'
 #!/bin/bash
-# DSHA_ADB_SCRIPT_VERSION=16
+# DSHA_ADB_SCRIPT_VERSION=17
 # 确认只由 Python 入口处理；直调脚本与包装器共用一次确认及真实退出码。
 exec python3 /root/.dsh/adb-shell.py "$@"
 EOF

@@ -36,17 +36,31 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
         androidx.fragment.app.Fragment old = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (old != null) getSupportFragmentManager().beginTransaction().remove(old).commitNow();
         frame.removeAllViews();
+        if(scene.startsWith("recovery")) {
+            StartupRecoveryLayout page=new StartupRecoveryLayout(this,com.deepseekharness.app.util.UiText.choose("启动配置或插件加载失败","Startup configuration or plugin loading failed"),()->{});
+            String[] zh={"重试启动","安全启动基础界面","新建配置文件","恢复中断的配置修复","环境安装与修复","查看并下载日志","刷新恢复记录"};
+            String[] en={"Retry startup","Start the basic interface in safe mode","Create configuration file","Recover interrupted configuration repair","Environment installation and repair","View and download logs","Refresh recovery records"};
+            int[] icons={R.drawable.ic_recovery_refresh,R.drawable.ic_recovery_shield,R.drawable.ic_recovery_new_file,R.drawable.ic_recovery_wrench,R.drawable.ic_recovery_gear,R.drawable.ic_recovery_document,R.drawable.ic_recovery_refresh};
+            for(int i=0;i<zh.length;i++)page.action(i<4?page.recovery:page.tools,com.deepseekharness.app.util.UiText.choose(zh[i],en[i]),icons[i],()->{},true);
+            if(scene.equals("recovery_empty"))page.label(page.attempts,com.deepseekharness.app.util.UiText.choose("还没有启动记录。下一次启动会自动记录。","No startup records yet. The next start will be recorded automatically."),13,R.color.text_muted);
+            else {
+                page.action(page.attempts,"2026-09-11 22:03 · "+com.deepseekharness.app.util.UiText.choose("失败","Failed")+" · 4.9s",0,()->{},true);
+                page.action(page.snapshots,com.deepseekharness.app.util.UiText.choose("健康启动","Healthy start")+" · 2026-09-11 21:40",0,()->{},true);
+                page.pluginCard.setVisibility(View.VISIBLE);page.action(page.plugins,"example-plugin · "+com.deepseekharness.app.util.UiText.choose("卸载","Remove"),0,()->{},true);
+            }
+            canvas=page.root;frame.addView(canvas,new FrameLayout.LayoutParams(dp(LayoutAuditInstrumentation.width),dp(LayoutAuditInstrumentation.height),Gravity.TOP|Gravity.CENTER_HORIZONTAL));return;
+        }
         int layout = getResources().getIdentifier(scene.startsWith("update")?"activity_update":scene.startsWith("plugins")?"fragment_plugins":scene.startsWith("launch")?"fragment_launch":scene,"layout",getPackageName());
         View body = getLayoutInflater().inflate(layout,null,false);
         boolean fragment = scene.startsWith("fragment_") || scene.startsWith("plugins") || scene.startsWith("launch");
         canvas = fragment ? getLayoutInflater().inflate(R.layout.activity_main,null,false) : body;
         if (fragment) {
             ((FrameLayout)canvas.findViewById(R.id.fragment_container)).addView(body,new FrameLayout.LayoutParams(-1,-1));
-            String title = scene.contains("config")?"配置":scene.contains("workspace")?"数据与备份":scene.contains("install")?"安装与修复":scene.contains("settings")?"设置":scene.startsWith("plugins")?"插件":scene.contains("terminal")?"终端":"启动";
-            ((TextView)canvas.findViewById(R.id.app_title)).setText(title);
-            boolean nested = scene.contains("config") || scene.contains("workspace") || scene.equals("fragment_install");
+            String title = scene.contains("device_grants")?"设备能力授权":scene.contains("config")?"配置":scene.contains("workspace")?"数据与备份":scene.contains("install")?"安装与修复":scene.contains("settings")?"设置":scene.startsWith("plugins")?"插件":scene.contains("terminal")?"终端":"启动";
+            ((TextView)canvas.findViewById(R.id.app_title)).setText(com.deepseekharness.app.util.UiText.text(title));
+            boolean nested = scene.contains("config") || scene.contains("workspace") || scene.equals("fragment_install") || scene.contains("device_grants");
             visible(R.id.sub_back,nested);visible(R.id.app_logo,!nested);
-            ((TextView)canvas.findViewById(R.id.btn_theme)).setText(ThemeController.isDark(this)?"黑夜":"白天");
+            ((TextView)canvas.findViewById(R.id.btn_theme)).setText(com.deepseekharness.app.util.UiText.text(ThemeController.isDark(this)?"黑夜":"白天"));
             com.google.android.material.bottomnavigation.BottomNavigationView nav = canvas.findViewById(R.id.bottom_nav);
             nav.setSelectedItemId(title.equals("插件")?R.id.nav_plugins:title.equals("终端")?R.id.nav_terminal:title.equals("启动")?R.id.nav_launch:R.id.nav_settings);
         }
@@ -61,7 +75,7 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
         }
     }
     private int dp(float value) { return Math.round(value*getResources().getDisplayMetrics().density); }
-    private void text(int id,String text) { TextView view=canvas.findViewById(id);if(view!=null)view.setText(text); }
+    private void text(int id,String text) { TextView view=canvas.findViewById(id);if(view!=null)view.setText(com.deepseekharness.app.util.UiText.text(text)); }
     private void visible(int id,boolean visible) { View view=canvas.findViewById(id);if(view!=null)view.setVisibility(visible?View.VISIBLE:View.GONE); }
     private void bind(String scene) {
         if (scene.startsWith("update")) {
@@ -79,7 +93,7 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
         } else if (scene.startsWith("launch")) {
             text(R.id.launch_status,scene.equals("launch_error")?"连续启动失败，自动重启已暂停。可检查插件后再试。":"准备好后点击启动，进入本机对话。");
             text(R.id.launch_log,"[布局样例] 检查运行环境\n[布局样例] 等待启动\n\n本页面不启动 dsh，不执行模型请求。");
-            if (scene.equals("launch_error")) { visible(R.id.launch_recovery,true);text(R.id.launch_recovery,"失败 3/3 · 查看恢复选项");text(R.id.launch_run_state,"自动重启已暂停"); }
+            if (scene.equals("launch_error")) { visible(R.id.launch_recovery,true);text(R.id.launch_recovery,"恢复选项");text(R.id.launch_run_state,"自动重启已暂停"); }
         } else if (scene.startsWith("plugins")) {
             boolean management=scene.equals("plugins_installed");
             visible(R.id.pluginMarketCard,!management);visible(R.id.pluginWebsiteSection,!management);visible(R.id.pluginLinkSection,!management);visible(R.id.marketHelp,!management);visible(R.id.installedControls,management);

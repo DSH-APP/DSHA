@@ -67,8 +67,8 @@ test('严格模式的卸载/重新挂载仍可工作',()=>{
 });
 test('组件仍转发原按钮事件，异常动作也关闭提示，不自行删除 React DOM',()=>{
   const calls=[], behavior={mount:()=>()=>{},dismiss(){},pointerEnter:()=>calls.push('enter'),pointerLeave(){},focus(){},blur(){},activate:()=>calls.push('close')};
-  const context=vm.createContext({dshaTooltipRuntime:{create:()=>behavior},I:{useRef:value=>({current:value}),useState:value=>[value,()=>{}],useCallback:fn=>fn,useEffect(){},useLayoutEffect(){},cloneElement:(child,props)=>({props:{...child.props,...props}})},a:{Fragment:'fragment',jsxs:(type,props)=>props,jsx:(type,props)=>props}});
-  vm.runInContext(component+'\nglobalThis.render = Ar;',context);
+  const context=vm.createContext({dshaTooltipRuntime:{create:()=>behavior},I:{useRef:value=>({current:value}),useState:value=>[value,()=>{}],useCallback:fn=>fn,useEffect(){},useLayoutEffect(){},cloneElement:(child,props)=>({props:{...child.props,...props}})},d:{Fragment:'fragment',jsxs:(type,props)=>props,jsx:(type,props)=>props}});
+  vm.runInContext(component+'\nglobalThis.render = Fr;',context);
   const event={pointerType:'mouse'}, click=()=>{calls.push('action');throw new Error('expected');};
   const result=context.render({label:'发送',children:{props:{onClick:click,onPointerEnter:e=>{assert.equal(e,event);calls.push('childEnter');}}}});
   result.children[0].props.onPointerEnter(event);assert.deepEqual(calls,['childEnter','enter']);calls.length=0;
@@ -77,5 +77,5 @@ test('组件仍转发原按钮事件，异常动作也关闭提示，不自行�
 test('固定补丁只替换 Tooltip，保留其余前端模块并刷新入口缓存标记',()=>{
   assert.ok(patched.includes('DSHA_TOOLTIP_INTERACTION_V1'));assert.ok(patched.includes('data-dsha-tooltip'));
   const html=readFileSync(frontend + 'index.html','utf8');
-  assert.equal(html.split(spec.indexBefore).length-1,1);assert.ok(html.replace(spec.indexBefore,spec.indexAfter).includes('?dsha-tooltip=3'));
+  assert.equal(html.split(spec.indexBefore).length-1,1);assert.ok(html.replace(spec.indexBefore,spec.indexAfter).includes('?dsha-tooltip=4'));
 });

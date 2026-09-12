@@ -32,14 +32,36 @@ public class ConfigStore {
         prefs.edit().putBoolean(Constants.KEY_WELCOMED, v).apply();
     }
 
+    public boolean allowsLimitedEntry(String identity) {
+        return identity.equals(text("limited_entry_identity", ""));
+    }
+    public void allowLimitedEntry(String identity) {
+        prefs.edit().putString("limited_entry_identity", identity).apply();
+    }
+
     public String getUiTheme() {
         return com.deepseekharness.app.util.UiThemePreference.normalize(text("ui_theme", "system"));
+    }
+    public String getUiLanguage() {
+        return com.deepseekharness.app.util.UiLanguagePreference.normalize(text("ui_language", "zh"));
+    }
+    public void setUiLanguage(String value) {
+        prefs.edit().putString("ui_language", com.deepseekharness.app.util.UiLanguagePreference.normalize(value)).apply();
     }
     public void setUiTheme(String value) {
         prefs.edit().putString("ui_theme", com.deepseekharness.app.util.UiThemePreference.normalize(value)).apply();
     }
+    public com.deepseekharness.app.util.PluginSort.Mode getPluginSort() {
+        return com.deepseekharness.app.util.PluginSort.Mode.parse(text("plugin_sort_order", "NAME_ASC"));
+    }
+    public void setPluginSort(com.deepseekharness.app.util.PluginSort.Mode mode) {
+        prefs.edit().putString("plugin_sort_order",mode.name()).apply();
+    }
 
     // ================= 接入 =================
+
+    public String getDnsMode() { return com.deepseekharness.app.util.ResolverConfig.mode(text("dns_mode", "auto")); }
+    public void setDnsMode(String value) { prefs.edit().putString("dns_mode",com.deepseekharness.app.util.ResolverConfig.mode(value)).apply(); }
 
     public String getApiKey() {
         return vault.decrypt(text(Constants.KEY_API_KEY, ""));
@@ -166,6 +188,13 @@ public class ConfigStore {
     }
 
     public int getWebFailures() { return integer("web_consecutive_failures", 0); }
+    /** 本机备用端口不迁移到其他设备，也不覆盖用户设置的首选端口。 */
+    public int fallbackWebPort(int preferred) { return integer("web_fallback_for",0)==preferred?integer("web_fallback_port",0):0; }
+    public void rememberFallbackWebPort(int preferred,int actual) {
+        prefs.edit().putInt("web_fallback_for",preferred).putInt("web_fallback_port",actual).apply();
+    }
+    public boolean isStartupRecoveryRequested() { return flag("web_startup_recovery_requested",false); }
+    public void requestStartupRecovery(boolean value) { prefs.edit().putBoolean("web_startup_recovery_requested",value).commit(); }
     public boolean isEcoMode() { return flag("runtime_eco_mode", false); }
     public void setEcoMode(boolean value) { prefs.edit().putBoolean("runtime_eco_mode", value).apply(); }
     public String getWebFailureStage() { return text("web_failure_stage", ""); }
@@ -181,7 +210,7 @@ public class ConfigStore {
         out.put("formatVersion", 1).put("port", getPort()).put("workdir", getWorkdir())
                 .put("permissionMode", getPermissionMode()).put("confirmShell", isConfirmShell())
                 .put("desktopMode", isDesktopMode()).put("checkUpdate", isCheckUpdate())
-                .put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme());
+                .put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme()).put("uiLanguage", getUiLanguage());
         if (isBackupKey() && !getApiKey().isEmpty()) out.put("apiKey", getApiKey());
         return out;
     }
@@ -197,18 +226,19 @@ public class ConfigStore {
         if (data.has("apiKey")) {
             String plain = data.optString("apiKey");
             String encrypted = vault.encrypt(plain);
-            if (!plain.isEmpty() && encrypted.isEmpty()) throw new java.io.IOException("API Key 加密失败，未写入恢复配置");
+            if (!plain.isEmpty() && encrypted.isEmpty()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("API Key 加密失败，未写入恢复配置"));
             edit.putString(Constants.KEY_API_KEY, encrypted);
         }
         if (data.has("ecoMode")) edit.putBoolean("runtime_eco_mode", data.optBoolean("ecoMode"));
         if (data.has("uiTheme")) edit.putString("ui_theme", com.deepseekharness.app.util.UiThemePreference.normalize(data.optString("uiTheme")));
-        if (!edit.commit()) throw new java.io.IOException("原生设置写入失败");
+        if (data.has("uiLanguage")) edit.putString("ui_language", com.deepseekharness.app.util.UiLanguagePreference.normalize(data.optString("uiLanguage")));
+        if (!edit.commit()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("原生设置写入失败"));
     }
 
     private static final String[] BACKUP_SETTING_KEYS = {
             Constants.KEY_PORT, Constants.KEY_WORKDIR, Constants.KEY_PERMISSION_MODE,
             Constants.KEY_CONFIRM_SHELL, Constants.KEY_DESKTOP_MODE, Constants.KEY_CHECK_UPDATE,
-            Constants.KEY_API_KEY, "runtime_eco_mode", "ui_theme"
+            Constants.KEY_API_KEY, "runtime_eco_mode", "ui_theme", "ui_language"
     };
 
     /** 保存的是 Keystore 密文和原始偏好值，供跨进程中断恢复使用。 */
@@ -217,7 +247,7 @@ public class ConfigStore {
         java.util.Map<String, ?> all = prefs.getAll();
         for (String key : BACKUP_SETTING_KEYS) before.put(key, all.containsKey(key) ? all.get(key) : org.json.JSONObject.NULL);
         if (!prefs.edit().putString("backup_restore_previous_settings", before.toString()).commit())
-            throw new java.io.IOException("无法保留恢复前设置");
+            throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("无法保留恢复前设置"));
     }
 
     public void finishRestoreSettings(boolean rollback) throws Exception {
@@ -235,7 +265,7 @@ public class ConfigStore {
                 else edit.putString(key, String.valueOf(value));
             }
         }
-        if (!edit.remove("backup_restore_previous_settings").commit()) throw new java.io.IOException("恢复设置事务写入失败");
+        if (!edit.remove("backup_restore_previous_settings").commit()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("恢复设置事务写入失败"));
     }
 
     public void recordBackupResult(String uri, String name, String failure, int scope) {

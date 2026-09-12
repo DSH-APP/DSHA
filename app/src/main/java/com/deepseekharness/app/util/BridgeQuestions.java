@@ -30,7 +30,7 @@ public final class BridgeQuestions {
     BridgeQuestions(LongSupplier clock) { this.clock = clock; }
 
     public synchronized Request begin(long timeoutMillis) {
-        if (timeoutMillis <= 0) throw new IllegalArgumentException("提问期限必须大于零");
+        if (timeoutMillis <= 0) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("提问期限必须大于零"));
         if (active != null) return null;
         active = new Request(++generation, clock.getAsLong(), TimeUnit.MILLISECONDS.toNanos(timeoutMillis));
         return active;
@@ -49,7 +49,7 @@ public final class BridgeQuestions {
     }
 
     public synchronized void cancel(Request request, End why) {
-        if (why == End.ANSWER) throw new IllegalArgumentException("回答必须经 answer 提交");
+        if (why == End.ANSWER) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("回答必须经 answer 提交"));
         if (active == request && request.end == null) complete(request, why, "");
     }
 

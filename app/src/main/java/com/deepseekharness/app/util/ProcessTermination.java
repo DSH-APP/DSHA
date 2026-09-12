@@ -29,6 +29,6 @@ public final class ProcessTermination {
             if (awaitExit(process, graceMs)) return;
         }
         try { force.run(); } catch (RuntimeException e) { signalFailure = e; }
-        if (!awaitExit(process, forceMs)) throw new IllegalStateException("本次进程仍未退出，不能开始下一任务", signalFailure);
+        if (!awaitExit(process, forceMs)) throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("本次进程仍未退出，不能开始下一任务"), signalFailure);
     }
 }

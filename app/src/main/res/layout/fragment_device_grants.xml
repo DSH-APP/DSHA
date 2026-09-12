@@ -1,0 +1,99 @@
+<ScrollView xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_pad">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0131" android:layout_marginTop="8dp" style="@style/DshaText.Caption" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/device_permissions" android:layout_marginTop="8dp" style="@style/DshaText.Title" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_recovery_document" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/device_files_title" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <TextView android:id="@+id/config_all_files_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text_muted" android:layout_marginTop="8dp" android:text="@string/device_checking" />
+            <LinearLayout android:id="@+id/config_all_files" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="56dp" android:padding="12dp" android:layout_marginTop="12dp" android:background="@drawable/bg_polished_action" android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/device_open_access" android:layout_marginTop="0dp" style="@style/DshaText.Body" android:layout_weight="1" />
+                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_recovery_right" app:tint="@color/primary" android:importantForAccessibility="no" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_ui_shield" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/device_location" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <CheckBox android:id="@+id/config_cap_location" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0066" android:minHeight="48dp" android:layout_marginTop="8dp" android:paddingStart="0dp" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_marginBottom="8dp" android:text="@string/ui_m0163" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_settings" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/device_sensors" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <CheckBox android:id="@+id/config_cap_sensors" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0053" android:minHeight="48dp" android:layout_marginTop="8dp" android:paddingStart="0dp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_ui_shield" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui_m0140" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/device_sms" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/ui_m0171" android:textColor="@color/text" android:textSize="16sp" />
+            <TextView android:id="@+id/device_sms_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginStart="0dp" android:padding="12dp" android:background="@drawable/bg_selection" android:text="@string/device_checking" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0064" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_ui_shield" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/device_screen" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <TextView android:id="@+id/config_a11y_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="0dp" android:layout_marginTop="8dp" android:padding="12dp" android:background="@drawable/bg_selection" android:text="@string/device_checking" />
+            <Button android:id="@+id/config_a11y" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@drawable/bg_btn" android:text="@string/ui_m0190" android:textAllCaps="false" android:textColor="@color/primary" android:textSize="@dimen/text_body" android:minHeight="@dimen/btn_height" style="@style/Widget.DSHA.Button" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_recovery_clock" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/device_background" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <TextView android:id="@+id/config_battery_opt_hint" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_hair" android:text="@string/ui_m0084" />
+            <Button android:id="@+id/config_battery_opt" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@drawable/bg_btn" android:text="@string/ui_m0191" android:textAllCaps="false" android:textColor="@color/primary" android:textSize="@dimen/text_body" android:minHeight="@dimen/btn_height" style="@style/Widget.DSHA.Button" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_recovery_refresh" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/device_maintenance" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <TextView android:id="@+id/config_runtime_status" android:text="@string/ui_m0198" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:layout_marginTop="@dimen/gap_hair" />
+            <Button android:id="@+id/config_runtime_update" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@drawable/bg_btn" android:text="@string/ui_m0147" android:textAllCaps="false" android:textColor="@color/primary" android:textSize="@dimen/text_body" android:minHeight="@dimen/btn_height" style="@style/Widget.DSHA.Button" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight" android:text="@string/ui_m0150" />
+        </LinearLayout>
+        <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="@string/device_channels" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_terminal" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="Root" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <CheckBox android:id="@+id/config_root_shell" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingStart="0dp" android:text="@string/ui_m0062" android:layout_marginTop="8dp" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_marginBottom="8dp" android:text="@string/ui_m0124" />
+            <TextView android:id="@+id/device_root_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginStart="0dp" android:padding="12dp" android:background="@drawable/bg_selection" android:text="@string/device_checking" />
+            <TextView android:id="@+id/config_guard_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:layout_marginTop="@dimen/gap_hair" android:visibility="gone" />
+            <Button android:id="@+id/device_root_verify" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0170" android:textColor="@color/primary" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_ui_shield" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="Shizuku" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <TextView android:id="@+id/workspace_shizuku_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0039" android:layout_marginStart="0dp" android:padding="12dp" android:background="@drawable/bg_selection" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0132" />
+            <Button android:id="@+id/workspace_shizuku_auth" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0015" android:textColor="@color/primary" />
+            <Button android:id="@+id/device_shizuku_open" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0125" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" style="@style/DshaCard">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_logo" android:padding="8dp" android:src="@drawable/ic_ui_link" app:tint="@color/primary" android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui_m0031" android:layout_marginTop="0dp" style="@style/DshaText.Title" android:layout_weight="1" android:layout_marginStart="12dp" />
+            </LinearLayout>
+            <CheckBox android:id="@+id/config_adb_enable" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:minHeight="48dp" android:paddingStart="0dp" android:text="@string/ui_m0090" />
+            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_hair" android:text="@string/ui_m0144" />
+            <TextView android:id="@+id/config_adb_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0030" android:layout_marginStart="0dp" android:padding="12dp" android:background="@drawable/bg_selection" />
+            <Button android:id="@+id/config_adb_pair" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@drawable/bg_btn" android:text="@string/ui_m0031" android:textAllCaps="false" android:textColor="@color/primary" android:textSize="@dimen/text_body" android:minHeight="@dimen/btn_height" style="@style/Widget.DSHA.Button" />
+        </LinearLayout>
+        <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_marginBottom="8dp" android:text="@string/ui_m0065" />
+    </LinearLayout>
+</ScrollView>

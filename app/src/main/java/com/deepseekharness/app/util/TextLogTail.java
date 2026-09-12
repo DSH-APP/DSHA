@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 public final class TextLogTail {
     private TextLogTail() { }
     public static String read(File file, int maxBytes) throws IOException {
-        if (maxBytes <= 0) throw new IllegalArgumentException("日志大小限制必须为正数");
+        if (maxBytes <= 0) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("日志大小限制必须为正数"));
         try (RandomAccessFile input = new RandomAccessFile(file, "r")) {
             long length = input.length(), offset = Math.max(0, length - maxBytes);
             boolean boundary = offset == 0;
@@ -21,7 +21,7 @@ public final class TextLogTail {
             int start = 0;
             // 不导出被截断的首行，避免密钥字段名被截掉后只剩无法识别的值；同时保持 UTF-8 字符完整。
             if (!boundary) { while (start < count && bytes[start++] != '\n') { } }
-            return (offset > 0 ? "（较早输出已省略，以下为最近日志）\n" : "")
+            return (offset > 0 ? com.deepseekharness.app.util.UiText.text("（较早输出已省略，以下为最近日志）\n") : "")
                     + new String(bytes, start, count - start, StandardCharsets.UTF_8);
         }
     }

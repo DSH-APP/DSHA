@@ -58,18 +58,28 @@ public final class FunctionalAuditInstrumentation extends Instrumentation {
     private void write(String name,String text) throws Exception {
         try(FileOutputStream out=new FileOutputStream(new File(folder,name))) { out.write(SensitiveData.redact(text).getBytes(StandardCharsets.UTF_8)); }
     }
+    private boolean matchesLabel(String wanted,CharSequence value) {
+        String actual=String.valueOf(value);if(wanted.equals(actual))return true;
+        switch(wanted){
+            case "继续":return "Continue".equals(actual);
+            case "稍后配置":return java.util.Arrays.asList("Later","Not now","Set up later","Skip for now","Configure later").contains(actual);
+            case "发送消息":return "Send message".equals(actual);
+            case "选择工作区":return "Select workspace".equals(actual)||"Choose workspace".equals(actual);
+            default:return false;
+        }
+    }
     private boolean visibleLabel(android.view.accessibility.AccessibilityNodeInfo node,String label) {
         if(node==null)return false;
-        if(node.isVisibleToUser()&&(label.contentEquals(String.valueOf(node.getText()))
-                ||label.contentEquals(String.valueOf(node.getContentDescription()))))return true;
+        if(node.isVisibleToUser()&&(matchesLabel(label,node.getText())
+                ||matchesLabel(label,node.getContentDescription())))return true;
         for(int i=0;i<node.getChildCount();i++)if(visibleLabel(node.getChild(i),label))return true;
         return false;
     }
     private boolean clickVisibleLabel(android.view.accessibility.AccessibilityNodeInfo node,String label) {
         if(node==null)return false;
         if (!getTargetContext().getPackageName().contentEquals(String.valueOf(node.getPackageName()))) return false;
-        if(node.isVisibleToUser()&&(label.contentEquals(String.valueOf(node.getText()))
-                ||label.contentEquals(String.valueOf(node.getContentDescription())))) {
+        if(node.isVisibleToUser()&&(matchesLabel(label,node.getText())
+                ||matchesLabel(label,node.getContentDescription()))) {
             android.graphics.Rect bounds = new android.graphics.Rect(); node.getBoundsInScreen(bounds);
             // Gecko 部分节点的 AX 点击会返回成功却不触发网页处理器，直接模拟可见位置的触摸。
             if(bounds.isEmpty())return false;
@@ -106,6 +116,7 @@ public final class FunctionalAuditInstrumentation extends Instrumentation {
                 else engine.remove(Constants.KEY_GECKO_CORE);
                 engine.commit();
             }
+            if(previous.has("languagePresent")){SharedPreferences.Editor language=prefs.edit();if(previous.getBoolean("languagePresent"))language.putString("ui_language",previous.getString("language"));else language.remove("ui_language");language.commit();}
             SharedPreferences.Editor edit=prefs.edit();if(previous.has("count"))edit.putInt("backup_launch_count",previous.getInt("count"));else edit.remove("backup_launch_count");edit.commit();
             require(checkpoint.delete(),"测试状态恢复文件无法清理");
         } catch(Exception e) { result.putString("failure","无法恢复上次测试配置："+e.getClass().getSimpleName());finish(1,result);return; }
@@ -114,16 +125,19 @@ public final class FunctionalAuditInstrumentation extends Instrumentation {
         Object oldCount=prefs.getAll().get("backup_launch_count");
         String oldPort=config.getPort();
         boolean hadGecko=prefs.contains(Constants.KEY_GECKO_CORE),oldGecko=prefs.getBoolean(Constants.KEY_GECKO_CORE,false);
+        boolean hadLanguage=prefs.contains("ui_language");String oldLanguage=config.getUiLanguage();
         Activity webPage=null,main=null; boolean started=false,changedKey=false;
         File keyFile=new File(folder,"test-key");
         try {
             require(!controller.isWebRunning()&&!controller.isStarting(),"Web 已在运行，保留现场，稍后再测");
             org.json.JSONObject checkpointState=new org.json.JSONObject().put("encryptedKey",oldKey);
             checkpointState.put("port",oldPort).put("geckoPresent",hadGecko).put("geckoCore",oldGecko);
+            checkpointState.put("languagePresent",hadLanguage).put("language",oldLanguage);
             if(oldCount!=null)checkpointState.put("count",oldCount);
             try(FileOutputStream out=new FileOutputStream(checkpoint)){out.write(checkpointState.toString().getBytes(StandardCharsets.UTF_8));out.getFD().sync();}
             boolean geckoMode="gecko".equals(args.getString("mode"))||"gecko-input".equals(args.getString("mode"))||"gecko-preview".equals(args.getString("mode"))||"gecko-manual".equals(args.getString("mode"));
             if(geckoMode)prefs.edit().putBoolean(Constants.KEY_GECKO_CORE,true).commit();
+            if(args.containsKey("language"))runOnMainSync(()->LanguageController.select(app,args.getString("language")));
             if(keyFile.isFile()) {
                 require(keyFile.length()>10&&keyFile.length()<256,"私有测试凭据未完整写入");
                 byte[] keyBytes;try(FileInputStream in=new FileInputStream(keyFile)) { keyBytes=new byte[(int)keyFile.length()];require(in.read(keyBytes)==keyBytes.length,"测试凭据读取失败"); }
@@ -199,7 +213,11 @@ public final class FunctionalAuditInstrumentation extends Instrumentation {
                                 openedUngrouped = clickVisibleLabel(getUiAutomation().getRootInActiveWindow(), "未分组");
                             Thread.sleep(200);
                         }
-                        require(clicked, "Gecko 未找到预览入口：" + label); Thread.sleep(700);
+                        require(clicked, "Gecko 未找到预览入口：" + label);
+                        if (label.equals(sessionLabel)) {
+                            Thread.sleep(80);clickVisibleLabel(getUiAutomation().getRootInActiveWindow(), label);
+                        }
+                        Thread.sleep(700);
                     }
                     Thread.sleep(3000);
                     android.graphics.Bitmap preview = getUiAutomation().takeScreenshot();
@@ -346,6 +364,7 @@ public final class FunctionalAuditInstrumentation extends Instrumentation {
             SharedPreferences.Editor engine=prefs.edit();
             if(hadGecko)engine.putBoolean(Constants.KEY_GECKO_CORE,oldGecko);else engine.remove(Constants.KEY_GECKO_CORE);
             engine.commit();
+            SharedPreferences.Editor language=prefs.edit();if(hadLanguage)language.putString("ui_language",oldLanguage);else language.remove("ui_language");language.commit();runOnMainSync(()->LanguageController.apply(app));
             SharedPreferences.Editor edit=prefs.edit();if(oldCount==null)edit.remove("backup_launch_count");else edit.putInt("backup_launch_count",(Integer)oldCount);edit.commit();
             keyFile.delete();
             checkpoint.delete();

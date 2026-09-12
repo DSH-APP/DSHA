@@ -35,11 +35,11 @@ public class ExtractActivity extends AppCompatActivity {
         setContentView(R.layout.activity_extract);
         controller = HarnessController.get(this); task = BackupTask.get(this);
         rebuildRequested = saved != null ? saved.getBoolean("rebuild_requested", false)
-                : getIntent().getBooleanExtra("force_extract", false) || "重建环境".equals(task.snapshot().kind);
+                : getIntent().getBooleanExtra("force_extract", false) || com.deepseekharness.app.util.UiText.text("重建环境").equals(task.snapshot().kind);
         status = findViewById(R.id.extract_status); detail = findViewById(R.id.extract_detail);
         error = findViewById(R.id.extract_error); spinner = findViewById(R.id.extract_bar);
         progress = findViewById(R.id.extract_progress);
-        ((TextView) findViewById(R.id.extract_title)).setText("运行环境维护");
+        ((TextView) findViewById(R.id.extract_title)).setText(com.deepseekharness.app.util.UiText.text("运行环境维护"));
         LinearLayout content = (LinearLayout) status.getParent();
         retry = new Button(this); enter = new Button(this);
         content.addView(retry, new LinearLayout.LayoutParams(-1, -2));
@@ -47,20 +47,20 @@ public class ExtractActivity extends AppCompatActivity {
         retry.setOnClickListener(v -> {
             boolean recovery = task.pendingMaintenance();
             boolean update = !rebuildRequested && controller.proot().canUpdateManagedRuntime();
-            new android.app.AlertDialog.Builder(this).setTitle(recovery ? "恢复原环境？" : update ? "更新运行时？" : "备份并重建环境？")
-                    .setMessage(recovery ? "先停止 Web，再回切旧环境，保留所有安全副本。"
-                            : update ? "会停止 Web 和终端任务，再更新 dsh 和内置插件，个人目录、会话和配置保持原位。验证失败回切原运行时。"
-                            : "会停止 Web 并中断正在执行的任务，创建并校验安全备份后重建环境。备份失败不切换环境，后续失败回切旧环境。")
-                    .setPositiveButton("继续", (d, w) -> {
+            new com.deepseekharness.app.ui.DshaDialogBuilder(this).setTitle(recovery ? com.deepseekharness.app.util.UiText.text("恢复原环境？") : update ? com.deepseekharness.app.util.UiText.text("更新运行时？") : com.deepseekharness.app.util.UiText.text("备份并重建环境？"))
+                    .setMessage(recovery ? com.deepseekharness.app.util.UiText.text("先停止 Web，再回切旧环境，保留所有安全副本。")
+                            : update ? com.deepseekharness.app.util.UiText.text("会停止 Web 和终端任务，再更新 dsh 和内置插件，个人目录、会话和配置保持原位。验证失败回切原运行时。")
+                            : com.deepseekharness.app.util.UiText.text("会停止 Web 并中断正在执行的任务，创建并校验安全备份后重建环境。备份失败不切换环境，后续失败回切旧环境。"))
+                    .setPositiveButton(com.deepseekharness.app.util.UiText.text("继续"), (d, w) -> {
                         if (recovery ? task.recoverMaintenance() : rebuildRequested ? task.rebuild() : task.updateEnvironment()) taskId = task.snapshot().id;
                         render();
-                    }).setNegativeButton("取消", null).show();
+                    }).setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null).show();
         });
-        enter.setText("进入主界面"); enter.setOnClickListener(v -> proceed());
+        enter.setText(com.deepseekharness.app.util.UiText.text("进入主界面")); enter.setOnClickListener(v -> proceed());
         taskId = saved == null ? getIntent().getLongExtra("data_task_id", 0) : saved.getLong("data_task_id", 0);
         automaticEntry = saved != null && saved.getBoolean("automatic_entry", false);
         if (task.busy()) taskId = task.snapshot().id;
-        else if (saved == null && taskId == 0 && !task.pendingMaintenance()) {
+        else if (saved == null && taskId == 0 && !task.pendingMaintenance() && !getIntent().getBooleanExtra("review_only", false)) {
             boolean force = getIntent().getBooleanExtra("force_extract", false);
             if (!force && controller.isEnvironmentReady()) { proceed(); return; }
             android.content.SharedPreferences attempts = getSharedPreferences("dsha_environment_upgrade", MODE_PRIVATE);
@@ -79,6 +79,11 @@ public class ExtractActivity extends AppCompatActivity {
                 }
             }
         }
+        // 从受限主界面重新查看时也展示上次失败；自动重试判定已完成，不能因此阻止修复包升级。
+        BackupTaskState.Snapshot previous=task.snapshot();
+        if(taskId==0 && !controller.isEnvironmentReady()
+                && (previous.status==BackupTaskState.Status.FAILED || previous.status==BackupTaskState.Status.INTERRUPTED))
+            taskId=previous.id;
         render();
     }
     private final Runnable refresh = new Runnable() {
@@ -95,20 +100,23 @@ public class ExtractActivity extends AppCompatActivity {
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         spinner.setVisibility(busy ? View.VISIBLE : View.GONE);
         progress.setVisibility(busy ? View.VISIBLE : View.GONE); progress.setIndeterminate(true);
-        status.setText(busy ? s.kind : pending ? "上次维护未完成，请先恢复原环境" : "环境维护");
+        status.setText(busy ? com.deepseekharness.app.util.UiStateText.render(s.kind) : pending ? com.deepseekharness.app.util.UiText.text("上次维护未完成，请先恢复原环境") : com.deepseekharness.app.util.UiText.text("环境维护"));
         boolean mine = taskId != 0 && taskId == s.id;
         detail.setVisibility(View.VISIBLE);
-        detail.setText(mine ? s.detail : "相同基础环境只更新 dsh 与内置插件，个人数据保持原位；基础环境变更时先保护数据再重建。验证失败可恢复原环境。");
+        detail.setText(mine ? com.deepseekharness.app.util.UiStateText.render(s.detail) : com.deepseekharness.app.util.UiText.text("相同基础环境只更新 dsh 与内置插件，个人数据保持原位；基础环境变更时先保护数据再重建。验证失败可恢复原环境。"));
         boolean failed = mine && (s.status == BackupTaskState.Status.FAILED || s.status == BackupTaskState.Status.INTERRUPTED);
         error.setVisibility(failed ? View.VISIBLE : View.GONE);
-        error.setText(failed ? "任务未完成。请按上方原因处理后重试；本页不会自动覆盖环境。" : "");
-        retry.setText(pending ? "恢复中断维护" : !rebuildRequested && controller.proot().canUpdateManagedRuntime() ? "更新运行时" : "备份并重建环境"); retry.setEnabled(!busy);
-        enter.setVisibility(!busy && !pending && controller.isEnvironmentReady() ? View.VISIBLE : View.GONE);
+        error.setText(failed ? com.deepseekharness.app.util.UiText.text("任务未完成。请按上方原因处理后重试；本页不会自动覆盖环境。") : "");
+        retry.setText(pending ? com.deepseekharness.app.util.UiText.text("恢复中断维护") : !rebuildRequested && controller.proot().canUpdateManagedRuntime() ? com.deepseekharness.app.util.UiText.text("更新运行时") : com.deepseekharness.app.util.UiText.text("备份并重建环境")); retry.setEnabled(!busy);
+        enter.setVisibility(View.VISIBLE);
+        enter.setText(!busy && !pending && controller.isEnvironmentReady() ? com.deepseekharness.app.util.UiText.text("进入主界面") : com.deepseekharness.app.util.UiText.text("进入受限主界面 · 查看日志与配置"));
         if (automaticEntry && mine && s.status == BackupTaskState.Status.SUCCEEDED && !busy && !pending) proceed();
     }
     private void proceed() {
-        if (task.busy() || task.pendingMaintenance() || !controller.isEnvironmentReady()) return;
+        boolean limited = task.busy() || task.pendingMaintenance() || !controller.isEnvironmentReady();
+        if (limited) controller.config().allowLimitedEntry(controller.proot().environmentIdentity());
         Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("limited_entry", limited);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent); finish();
     }

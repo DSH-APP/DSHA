@@ -224,7 +224,7 @@ public class DshaAccessibilityService extends AccessibilityService {
         if (s == null) return NOT_READY;
         try {
             AccessibilityNodeInfo root = s.getRootInActiveWindow();
-            if (root == null) return "[ERR] 取不到当前窗口（可能停在锁屏或系统弹窗上）";
+            if (root == null) return com.deepseekharness.app.util.UiText.text("[ERR] 取不到当前窗口（可能停在锁屏或系统弹窗上）");
             StringBuilder sb = new StringBuilder();
             CharSequence pkg = root.getPackageName();
             sb.append("窗口应用: ").append(pkg == null ? "未知" : pkg).append('\n');
@@ -240,7 +240,7 @@ public class DshaAccessibilityService extends AccessibilityService {
             if (n[0] == 0) sb.append("（没有可读节点）\n");
             return sb.toString();
         } catch (Throwable t) {
-            return "[ERR] 读屏失败：" + SensitiveData.redact(String.valueOf(t));
+            return com.deepseekharness.app.util.UiText.text("[ERR] 读屏失败：") + SensitiveData.redact(String.valueOf(t));
         }
     }
 
@@ -297,13 +297,13 @@ public class DshaAccessibilityService extends AccessibilityService {
     public static String uiTapText(String text) {
         DshaAccessibilityService s = instance;
         if (s == null) return NOT_READY;
-        if (text == null || text.isEmpty()) return "[ERR] 要点的文字不能为空";
+        if (text == null || text.isEmpty()) return com.deepseekharness.app.util.UiText.text("[ERR] 要点的文字不能为空");
         AccessibilityNodeInfo root = null;
         try {
             root = s.getRootInActiveWindow();
-            if (root == null) return "[ERR] 取不到当前窗口";
+            if (root == null) return com.deepseekharness.app.util.UiText.text("[ERR] 取不到当前窗口");
             AccessibilityNodeInfo hit = findClickableByText(root, text, 0);
-            if (hit == null) return "[ERR] 屏幕上找不到可点击的「" + text + "」（先用 dump 看看实际文字）";
+            if (hit == null) return com.deepseekharness.app.util.UiText.text("[ERR] 屏幕上找不到可点击的「") + text + "」（先用 dump 看看实际文字）";
             boolean ok;
             try {
                 ok = hit.performAction(AccessibilityNodeInfo.ACTION_CLICK);
@@ -313,9 +313,9 @@ public class DshaAccessibilityService extends AccessibilityService {
                 } catch (Throwable ignored) {
                 }
             }
-            return ok ? "OK 已点击「" + text + "」" : "[ERR] 点击被系统拒绝（控件可能不可用）";
+            return ok ? com.deepseekharness.app.util.UiText.text("OK 已点击「") + text + "」" : com.deepseekharness.app.util.UiText.text("[ERR] 点击被系统拒绝（控件可能不可用）");
         } catch (Throwable t) {
-            return "[ERR] 点击失败：" + SensitiveData.redact(String.valueOf(t));
+            return com.deepseekharness.app.util.UiText.text("[ERR] 点击失败：") + SensitiveData.redact(String.valueOf(t));
         } finally {
             if (root != null) {
                 try {
@@ -361,14 +361,14 @@ public class DshaAccessibilityService extends AccessibilityService {
     public static String uiInput(String text) {
         DshaAccessibilityService s = instance;
         if (s == null) return NOT_READY;
-        if (text == null) return "[ERR] 文本不能为空";
+        if (text == null) return com.deepseekharness.app.util.UiText.text("[ERR] 文本不能为空");
         AccessibilityNodeInfo root = null;
         try {
             root = s.getRootInActiveWindow();
-            if (root == null) return "[ERR] 取不到当前窗口";
+            if (root == null) return com.deepseekharness.app.util.UiText.text("[ERR] 取不到当前窗口");
             AccessibilityNodeInfo target = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
             if (target == null) target = findEditable(root, 0);
-            if (target == null) return "[ERR] 屏幕上没有输入框（先点一下要输入的位置）";
+            if (target == null) return com.deepseekharness.app.util.UiText.text("[ERR] 屏幕上没有输入框（先点一下要输入的位置）");
             android.os.Bundle args = new android.os.Bundle();
             args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text);
             boolean ok;
@@ -380,9 +380,9 @@ public class DshaAccessibilityService extends AccessibilityService {
                 } catch (Throwable ignored) {
                 }
             }
-            return ok ? "OK 已输入 " + text.length() + " 个字符" : "[ERR] 输入被系统拒绝";
+            return ok ? com.deepseekharness.app.util.UiText.text("OK 已输入 ") + text.length() + " 个字符" : com.deepseekharness.app.util.UiText.text("[ERR] 输入被系统拒绝");
         } catch (Throwable t) {
-            return "[ERR] 输入失败：" + SensitiveData.redact(String.valueOf(t));
+            return com.deepseekharness.app.util.UiText.text("[ERR] 输入失败：") + SensitiveData.redact(String.valueOf(t));
         } finally {
             if (root != null) {
                 try {
@@ -423,17 +423,17 @@ public class DshaAccessibilityService extends AccessibilityService {
             case "notifications": case "notification": action = GLOBAL_ACTION_NOTIFICATIONS; break;
             case "quicksettings": case "quick": action = GLOBAL_ACTION_QUICK_SETTINGS; break;
             case "lock":
-                if (android.os.Build.VERSION.SDK_INT < 28) return "[ERR] 锁屏需要 Android 9+";
+                if (android.os.Build.VERSION.SDK_INT < 28) return com.deepseekharness.app.util.UiText.text("[ERR] 锁屏需要 Android 9+");
                 action = GLOBAL_ACTION_LOCK_SCREEN;
                 break;
             default:
-                return "[ERR] 不认识的按键「" + name
+                return com.deepseekharness.app.util.UiText.text("[ERR] 不认识的按键「") + name
                         + "」（可用：back/home/recents/notifications/quicksettings/lock）";
         }
         try {
-            return s.performGlobalAction(action) ? "OK 已发送 " + k : "[ERR] 系统拒绝了 " + k;
+            return s.performGlobalAction(action) ? com.deepseekharness.app.util.UiText.text("OK 已发送 ") + k : com.deepseekharness.app.util.UiText.text("[ERR] 系统拒绝了 ") + k;
         } catch (Throwable t) {
-            return "[ERR] 按键失败：" + SensitiveData.redact(String.valueOf(t));
+            return com.deepseekharness.app.util.UiText.text("[ERR] 按键失败：") + SensitiveData.redact(String.valueOf(t));
         }
     }
 
@@ -482,13 +482,13 @@ public class DshaAccessibilityService extends AccessibilityService {
                     latch.countDown();
                 }
             }, null);
-            if (!accepted) return "[ERR] 手势未被接受（" + what + "）";
+            if (!accepted) return com.deepseekharness.app.util.UiText.text("[ERR] 手势未被接受（") + what + "）";
             if (!latch.await(6, java.util.concurrent.TimeUnit.SECONDS)) {
-                return "[ERR] 手势超时（" + what + "）";
+                return com.deepseekharness.app.util.UiText.text("[ERR] 手势超时（") + what + "）";
             }
-            return ok[0] ? "OK 已" + what : "[ERR] 手势被取消（" + what + "，可能被其它手势打断）";
+            return ok[0] ? com.deepseekharness.app.util.UiText.text("OK 已") + what : com.deepseekharness.app.util.UiText.text("[ERR] 手势被取消（") + what + "，可能被其它手势打断）";
         } catch (Throwable t) {
-            return "[ERR] 手势失败：" + SensitiveData.redact(String.valueOf(t));
+            return com.deepseekharness.app.util.UiText.text("[ERR] 手势失败：") + SensitiveData.redact(String.valueOf(t));
         }
     }
 
@@ -500,11 +500,11 @@ public class DshaAccessibilityService extends AccessibilityService {
         DshaAccessibilityService s = instance;
         if (s == null) return NOT_READY;
         if (android.os.Build.VERSION.SDK_INT < 30) {
-            return "[ERR] 截屏需要 Android 11 及以上（当前 API "
+            return com.deepseekharness.app.util.UiText.text("[ERR] 截屏需要 Android 11 及以上（当前 API ")
                     + android.os.Build.VERSION.SDK_INT + "）";
         }
         final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
-        final String[] out = {"[ERR] 截屏无结果"};
+        final String[] out = {com.deepseekharness.app.util.UiText.text("[ERR] 截屏无结果")};
         try {
             s.takeScreenshot(android.view.Display.DEFAULT_DISPLAY,
                     java.util.concurrent.Executors.newSingleThreadExecutor(),
@@ -515,13 +515,13 @@ public class DshaAccessibilityService extends AccessibilityService {
                                 android.graphics.Bitmap bmp = android.graphics.Bitmap.wrapHardwareBuffer(
                                         result.getHardwareBuffer(), result.getColorSpace());
                                 if (bmp == null) {
-                                    out[0] = "[ERR] 截屏数据无法解析";
+                                    out[0] = com.deepseekharness.app.util.UiText.text("[ERR] 截屏数据无法解析");
                                 } else {
                                     out[0] = saveShot(bmp);
                                     bmp.recycle();
                                 }
                             } catch (Throwable t) {
-                                out[0] = "[ERR] 保存截屏失败："
+                                out[0] = com.deepseekharness.app.util.UiText.text("[ERR] 保存截屏失败：")
                                         + SensitiveData.redact(String.valueOf(t));
                             } finally {
                                 try {
@@ -535,17 +535,17 @@ public class DshaAccessibilityService extends AccessibilityService {
                         @Override
                         public void onFailure(int errorCode) {
                             // 5 = 频率限制：系统对连续截屏有节流
-                            out[0] = "[ERR] 截屏被系统拒绝（错误码 " + errorCode
+                            out[0] = com.deepseekharness.app.util.UiText.text("[ERR] 截屏被系统拒绝（错误码 ") + errorCode
                                     + (errorCode == 5 ? "，太频繁了，隔一秒再试" : "") + "）";
                             latch.countDown();
                         }
                     });
             if (!latch.await(10, java.util.concurrent.TimeUnit.SECONDS)) {
-                return "[ERR] 截屏超时";
+                return com.deepseekharness.app.util.UiText.text("[ERR] 截屏超时");
             }
             return out[0];
         } catch (Throwable t) {
-            return "[ERR] 截屏失败：" + SensitiveData.redact(String.valueOf(t));
+            return com.deepseekharness.app.util.UiText.text("[ERR] 截屏失败：") + SensitiveData.redact(String.valueOf(t));
         }
     }
 
@@ -556,7 +556,7 @@ public class DshaAccessibilityService extends AccessibilityService {
                     android.os.Environment.getExternalStoragePublicDirectory(
                             android.os.Environment.DIRECTORY_DOWNLOADS), "DSHA");
             if (!dir.isDirectory() && !dir.mkdirs()) {
-                return "[ERR] 建不了目录 " + dir;
+                return com.deepseekharness.app.util.UiText.text("[ERR] 建不了目录 ") + dir;
             }
             java.io.File f = new java.io.File(dir, "screen-"
                     + new java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.ROOT)
@@ -564,10 +564,10 @@ public class DshaAccessibilityService extends AccessibilityService {
             try (java.io.FileOutputStream fo = new java.io.FileOutputStream(f)) {
                 bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, fo);
             }
-            return "OK 截屏已保存：" + f.getAbsolutePath()
+            return com.deepseekharness.app.util.UiText.text("OK 截屏已保存：") + f.getAbsolutePath()
                     + "（" + bmp.getWidth() + "x" + bmp.getHeight() + "）";
         } catch (Throwable t) {
-            return "[ERR] 写截屏文件失败：" + SensitiveData.redact(String.valueOf(t));
+            return com.deepseekharness.app.util.UiText.text("[ERR] 写截屏文件失败：") + SensitiveData.redact(String.valueOf(t));
         }
     }
 
