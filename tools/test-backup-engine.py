@@ -29,6 +29,69 @@ def read_following_links(path):
     return Path(os.path.realpath(path))
 
 
+class LocalDeviceCredentialsTest(unittest.TestCase):
+    """备份包不得携带「本机设备」凭据。
+
+    真机实测：老备份把 .bridge_token 打进 Download/DSHA/（任何有存储权限的应用可读），
+    同机任意应用据此即可完全接管 3090 桥。本机凭据必须留在本机。
+    """
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        (self.root / ".dsh").mkdir()
+        self.archive = self.root / "backup.tar.gz"
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def put(self, name, data):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(data, encoding="utf-8")
+
+    def test_bridge_token_and_device_id_are_excluded(self):
+        self.put(".dsh/.bridge_token", "bridgetok-should-not-ship\n")
+        self.put(".dsh/.anonymous-user-id", "anon-should-not-ship\n")
+        self.put(".dsh/settings.yaml", "model: test\n")
+        engine.make_backup(self.root, self.archive, "full")
+        with tarfile.open(self.archive) as tar:
+            names = tar.getnames()
+        self.assertFalse(any(".bridge_token" in n for n in names),
+                         ".bridge_token 不能进备份：同机任意应用可读公共目录")
+        self.assertFalse(any("anonymous-user-id" in n for n in names),
+                         ".anonymous-user-id 是本机标识，不能进备份")
+
+    def test_credentials_keep_user_keys_but_drop_local_record(self):
+        self.put(".dsh/.credentials.yaml", "version: 1\nrefs:\n  DEEPSEEK_API_KEY: sk-user-key\n"
+                 "records:\n  client-connection/browser-session:\n    kind: grant\n"
+                 "    payload:\n      version: 1\n      secret: LOCAL-ONLY-SECRET\n")
+        engine.make_backup(self.root, self.archive, "full")
+        with tarfile.open(self.archive) as tar:
+            body = tar.extractfile(".dsh/.credentials.yaml").read().decode("utf-8")
+            manifest = json.loads(tar.extractfile(engine.MANIFEST).read())
+        self.assertIn("sk-user-key", body, "用户的 API key 必须保留（否则换机后全丢）")
+        self.assertNotIn("LOCAL-ONLY-SECRET", body, "本机登录 cookie 密钥必须剔除")
+        self.assertEqual(["client-connection/browser-session"], manifest.get("prunedCredentialRecords"))
+
+    def test_other_credential_records_survive(self):
+        self.put(".dsh/.credentials.yaml", "version: 1\nrecords:\n"
+                 "  client-connection/browser-session:\n    kind: grant\n"
+                 "  other-provider/token:\n    kind: grant\n    payload:\n      keep: yes\n")
+        engine.make_backup(self.root, self.archive, "full")
+        with tarfile.open(self.archive) as tar:
+            body = tar.extractfile(".dsh/.credentials.yaml").read().decode("utf-8")
+        self.assertIn("other-provider/token", body, "不能误删非本机记录")
+        self.assertNotIn("client-connection/browser-session", body)
+
+    def test_trim_is_pure_text_and_tolerates_odd_input(self):
+        # 解析不了也要给出可用结果，不能抛异常让备份整个失败
+        for text in ["", "version: 1\n", "records:\n", "refs:\n  A: b\n"]:
+            trimmed, removed = engine.trim_local_records(text)
+            self.assertEqual([], removed)
+            self.assertEqual(text, trimmed)
+
+
 class BackupTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -444,6 +507,7 @@ class BackupTest(unittest.TestCase):
         self.assertEqual('1', json.loads(
             read_following_links(
                 a / 'node_modules/plugin-b/node_modules/dep/package.json').read_text())['version'])
+
 
     @unittest.skipIf(os.name == 'nt', '真实依赖链接由 Linux 验证')
     def test_unregistered_plugin_and_unpublished_source_history_survive(self):

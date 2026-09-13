@@ -902,7 +902,7 @@ public final class HttpShellService {
             + com.deepseekharness.app.util.UiText.text("/app/launch?pkg=com.tencent.mm  启动应用\n")
             + com.deepseekharness.app.util.UiText.text("/app/clip                       读剪贴板（需 App 在前台，系统限制）\n")
             + com.deepseekharness.app.util.UiText.text("/app/clip + text=…              写剪贴板\n")
-            + com.deepseekharness.app.util.UiText.text("/app/readfile?path=/…          读取任意绝对路径的目录或文本，仍受 Android 权限限制\n")
+            + com.deepseekharness.app.util.UiText.text("/app/readfile?path=/…          读取绝对路径的目录或文本，仍受 Android 权限限制；凭据区（.dsh/.ssh/.android）不可读\n")
             + com.deepseekharness.app.util.UiText.text("设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n")
             + "\n"
             + com.deepseekharness.app.util.UiText.text("== 与用户交互 ==\n")
@@ -912,7 +912,7 @@ public final class HttpShellService {
             + com.deepseekharness.app.util.UiText.text("/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n")
             + com.deepseekharness.app.util.UiText.text("/app/share（text= 或 path=）      分享到其它应用\n")
             + com.deepseekharness.app.util.UiText.text("/app/open?url=https://…           打开链接\n")
-            + com.deepseekharness.app.util.UiText.text("/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA\n")
+            + com.deepseekharness.app.util.UiText.text("/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA；凭据区不可导出\n")
             + com.deepseekharness.app.util.UiText.text("建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n")
             + com.deepseekharness.app.util.UiText.text("产出报告用 /app/export，别只留在容器里。\n")
             + "\n"
@@ -1033,12 +1033,22 @@ public final class HttpShellService {
             if (p.isEmpty()) return "NO_PATH";
             java.io.File f = new java.io.File(p);
             if (!f.isAbsolute()) return com.deepseekharness.app.util.UiText.text("FORBIDDEN: 读取需要绝对路径");
+            // 凭据/运行时内部状态不开放给桥读取：读到的内容会回到会话里，
+            // 再经 /app/export 就能落到公共目录（真机实测过这条链路）。
+            if (com.deepseekharness.app.util.BridgePathPolicy.denied(p))
+                return "FORBIDDEN: " + com.deepseekharness.app.util.BridgePathPolicy.reason();
             String canon;
             try {
                 canon = f.getCanonicalPath();
             } catch (Exception e) {
                 return com.deepseekharness.app.util.UiText.text("FORBIDDEN: 路径无法解析（") + p + com.deepseekharness.app.util.UiText.text("）");
             }
+            // 复核 canonical：软链接不能成为读凭据的跳板。
+            if (exportDeniedByCanonical(f))
+                return "FORBIDDEN: " + com.deepseekharness.app.util.BridgePathPolicy.reason();
+            // canon 之后用于目录遍历的越界复核，避免同一路径被解析两遍产生竞态。
+            if (canon == null || canon.isEmpty())
+                return com.deepseekharness.app.util.UiText.text("FORBIDDEN: 路径无法解析（") + p + com.deepseekharness.app.util.UiText.text("）");
             // 按用户策略放开可读目录；实际权限仍由 Android 执行，不把拒绝伪装成成功。
             if (f.isDirectory()) {
                 java.io.File[] children = f.listFiles();
@@ -1046,6 +1056,9 @@ public final class HttpShellService {
                 StringBuilder listing = new StringBuilder();
                 for (java.io.File child : children) {
                     if (listing.length() > 250000) { listing.append("[OUTPUT_TRUNCATED]\n"); break; }
+                    // 列出上层目录时也不能暴露凭据区条目（名字本身就是情报）。
+                    if (com.deepseekharness.app.util.BridgePathPolicy.denied(child.getPath())
+                            || exportDeniedByCanonical(child)) continue;
                     listing.append(child.isDirectory() ? "d\t" : "f\t").append(child.getName()).append('\n');
                 }
                 return listing.toString();
@@ -1366,6 +1379,10 @@ public final class HttpShellService {
             String q = queryOf(path);
             String src = getParam(q, "path", "");
             if (src.isEmpty()) return "NO_PATH";
+            // 凭据/运行时内部状态不可导出到公共目录。真机实测过攻击链：
+            // 导出 .bridge_token 后，同机任意应用即可完全接管本桥。
+            if (com.deepseekharness.app.util.BridgePathPolicy.denied(src))
+                return "FORBIDDEN: " + com.deepseekharness.app.util.BridgePathPolicy.reason();
             String name = getParam(q, "name", "");
             java.io.File f = new java.io.File(src);
             if (!f.isFile()) {
@@ -1379,6 +1396,8 @@ public final class HttpShellService {
                 }
             }
             if (!f.isFile()) return "NOT_FOUND: " + SensitiveData.redact(src);
+            // 字符串判据之后再核 canonical：挡住「先建软链接指向凭据」的绕法。
+            if (exportDeniedByCanonical(f)) return "FORBIDDEN: " + com.deepseekharness.app.util.BridgePathPolicy.reason();
             if (f.length() > 64L * 1024 * 1024) return "TOO_LARGE: " + f.length();
             if (name.isEmpty()) name = f.getName();
             if (name.contains("/") || name.contains("..")) return "BAD_NAME";
@@ -1387,6 +1406,34 @@ public final class HttpShellService {
                     : "OK: " + SensitiveData.redact(out);
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
+        }
+    }
+
+    /**
+     * 用 canonical 路径复核访问目标，拦住「先建软链接指向凭据」的绕过。
+     *
+     * <p>只看调用方给的字符串不够：容器里可以先建
+     * {@code ln -s /root/.dsh/.bridge_token /root/innocent.md}，
+     * 让字符串判据通过。{@code getCanonicalPath()} 会把软链接解析到真实目标，
+     * 据此就能认出它是凭据。
+     *
+     * <p>注意不能直接用 {@code denied(canonical)}：容器 rootfs 本身就在
+     * {@code /data/data/com.dsh.client/files/linux/ubuntu} 下，通用拒绝表里的
+     * {@code /data/data} 会把整个 rootfs 封死（连正常产物都导不出去）。
+     * 所以这里交给 {@code deniedGuestView}，由它区分「rootfs 内」与「App 私有数据」。
+     */
+    private boolean exportDeniedByCanonical(java.io.File file) {
+        try {
+            String canonical = file.getCanonicalPath();
+            String rootfs = null;
+            try {
+                rootfs = HarnessController.get(ctx).getProot().getRootfsDir().getCanonicalPath();
+            } catch (Throwable ignored) {
+            }
+            return com.deepseekharness.app.util.BridgePathPolicy.deniedGuestView(canonical, rootfs);
+        } catch (Throwable unreadable) {
+            // 取不到 canonical（异常路径）按拒绝处理，不放过。
+            return true;
         }
     }
 

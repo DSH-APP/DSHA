@@ -13,6 +13,7 @@ from pathlib import Path, PurePosixPath
 import re
 import shutil
 import stat
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -25,6 +26,17 @@ SCOPES = {"full": None, "sessions": ("sessions", "storages", "attachments"),
           "plugins": ("profiles", "plugin-src", "plugin-sources.json", "plugin-history", "plugin-safe-mode.json")}
 HOT = ("sessions", "storages", "attachments", "settings.yaml")
 MANIFEST = ".dsha-backup-manifest.json"
+# 属于「这台机器」而不是用户的凭据/标识：换机后无意义，恢复后由对应组件重新生成。
+# 实测确认：把它们打进备份等于把可用凭据写进公共目录（见 docs/security-model.md）。
+LOCAL_DEVICE_FILES = {
+    # 3090 桥 token：本机 loopback 桥的共享凭据
+    ".bridge_token",
+    # 匿名设备标识
+    ".anonymous-user-id",
+}
+# 凭据文件里需要剔除的「本机」记录（字段级剔除，保留用户的 API key）
+CREDENTIAL_FILE = ".credentials.yaml"
+CREDENTIAL_RECORDS = ("client-connection/",)
 SKIP = {".pnpm-store", ".cache", "session_projcache", "dist-cache",
         "node_modules", MANIFEST, ".dsha-plugin-src", "DSHA-README.txt"}
 # 仅排除 App 管理的顶层缓存；插件内同名目录与配对密钥均属于备份内容。
@@ -98,6 +110,58 @@ def unlink_symlink(path):
     path = Path(path)
     if path.is_symlink():
         path.unlink()
+
+
+def trim_local_records(text, prefixes=CREDENTIAL_RECORDS):
+    """从凭据 YAML 文本里剔除「本机」记录，返回 (新文本, 被剔除的键)。
+
+    字段级剔除而不是整文件排除：`.credentials.yaml` 的 `refs` 里是用户的
+    API key（换机后还要用），`records` 里的 `client-connection/browser-session`
+    才是本机 cookie 签名密钥（恢复后由 dsh 重新生成）。
+
+    用文本行处理而非 YAML 库：容器内不保证有 pyyaml，而且这里只需要
+    「删掉某个顶层键及其子行」这一种操作。解析失败不抛异常 —— 交回原文本，
+    由调用方决定是否因此阻断备份（宁可少删也不能删错结构）。
+    """
+    lines = text.splitlines(keepends=True)
+    out, removed, index = [], [], 0
+    while index < len(lines):
+        line = lines[index]
+        match = re.match(r'^([ \t]{2})(["\']?)([^"\':]+)\2\s*:\s*$', line.rstrip("\n"))
+        if match and match.group(3).startswith(tuple(prefixes)):
+            removed.append(match.group(3))
+            index += 1
+            while index < len(lines):
+                following = lines[index]
+                if following.strip() == "":
+                    index += 1
+                    continue
+                indent = len(following) - len(following.lstrip(" "))
+                if indent <= 2:
+                    break
+                index += 1
+            continue
+        out.append(line)
+        index += 1
+    return "".join(out), removed
+
+
+def copy_credentials(src, dst, checks=None):
+    """复制凭据文件，剔除本机记录。返回被剔除的键列表。"""
+    src, dst = Path(src), Path(dst)
+    resolved = src.resolve(strict=True)
+    before = resolved.stat()
+    text = resolved.read_text(encoding="utf-8")
+    trimmed, removed = trim_local_records(text)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(trimmed, encoding="utf-8")
+    os.chmod(dst, 0o600)
+    after = resolved.stat()
+    if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
+        raise ValueError("备份期间凭据文件变化，请停止 Web 后重试：" + str(src))
+    if checks is not None:
+        checks.append((resolved, (after.st_size, after.st_mtime_ns), None))
+    return removed
 
 
 def copy_data(src, dst, exclude=(), ancestors=(), checks=None):
@@ -219,11 +283,20 @@ def make_backup(root, output, scope, app_version="unknown", app_code=0,
         if names is None:
             names = sorted(p.name for p in (root / ".dsh").iterdir() if p.name not in SKIP | TOP_CACHE)
             checks.append((root / ".dsh", names, SKIP | TOP_CACHE))
+        pruned_credentials = []
         for name in names:
             if name == "plugin-src":
                 continue  # 已安装源码按 profile 依赖内联，避免重复和无引用缓存。
             src = root / ".dsh" / name
             if os.path.lexists(src):
+                # 本机凭据不进备份：它们只对这台机器有意义，打进包等于把可用凭据
+                # 写进公共目录（Download/DSHA 任何有存储权限的应用可读）。
+                if scope == "full" and name in LOCAL_DEVICE_FILES:
+                    continue
+                # 凭据文件按字段剔除本机记录，保留用户的 API key。
+                if scope == "full" and name == CREDENTIAL_FILE and src.is_file():
+                    pruned_credentials = copy_credentials(src, stage / ".dsh" / name, checks)
+                    continue
                 if scope == "full" and name == "adb-wheels.tar.gz" and bundled_cache(src, ADB_ARCHIVE_SHA256, cache_checks):
                     continue
                 if scope == "full" and name == "wheels":
@@ -264,7 +337,9 @@ def make_backup(root, output, scope, app_version="unknown", app_code=0,
             version = json.loads(installed.read_text()).get("version", "unknown")
         manifest = {"formatVersion": 4, "scope": scope, "createdAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                     "appVersion": app_version, "appVersionCode": app_code, "dshVersion": version,
-                    "workdir": workdir, "plugins": plugins, "pluginDependencyGraph": getattr(plugins, "graph", {}), "inventory": entries, "bytes": total}
+                    "workdir": workdir, "plugins": plugins, "pluginDependencyGraph": getattr(plugins, "graph", {}),
+                    "inventory": entries, "bytes": total,
+                    "prunedCredentialRecords": pruned_credentials}
         dump(stage / MANIFEST, manifest)
         temp_out = output.with_name(output.name + ".part")
         try:

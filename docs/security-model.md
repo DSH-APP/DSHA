@@ -120,7 +120,7 @@ APK 装完、什么权限都不给的情况下：
 | 对话记录 | `Documents/dshdata`（公开）或私有目录 | ⚠️ 放在公开目录时，**任何拿到存储权限的应用都能读**。这是「卸载不丢数据」的代价 |
 | 备份文件 | `Download/DSHA/` | ⚠️ 同上，公共目录。里面有你的**全部对话记录**。分享这个文件前请想清楚 |
 | dsh 自己的凭据 | `.dsh/.credentials.yaml` | 刻意留在私有目录，不迁到公开区。但它**会进备份** |
-| 3090 桥 token | `.dsh/.bridge_token` | 私有目录，权限 600。**已从备份里排除** —— 它属于这台机器 |
+| 3090 桥 token | `.dsh/.bridge_token` | 私有目录，权限 600。**属于这台机器，已从备份排除**（`LOCAL_DEVICE_FILES`）|
 
 **我们不收集任何数据。** DSHA 没有遥测、没有统计上报、没有崩溃收集。
 唯一的对外网络请求是：你点检查更新时访问 GitHub API、热更新脚本时访问
@@ -147,6 +147,46 @@ gh attestation verify deepseekharness-arm64-vX.Y.Z.apk --repo qiannianhuanxiang/
 
 ---
 
+### 桥的凭据护栏（v0.1.5 起）
+
+`/app/export` 与 `/app/readfile` 原先接受任意绝对路径。已确认的攻击链是：
+
+```
+容器内一行 curl → /app/export?path=/root/.dsh/.bridge_token
+  → 文件落到 /sdcard/Download/DSHA/（任何有存储权限的应用可读）
+  → 另一应用拿到桥 token → 读屏 / 点按 / 输入 / 执行设备命令
+```
+
+同样可被带走的是 `.dsh/.credentials.yaml`（API key 与会话密钥）与 `.dsh/adbkeys/adbkey`（ADB 私钥）。
+
+现在的判据在 `util/BridgePathPolicy`（纯逻辑，有单测）：
+
+- 拒绝 `.dsh`、`.ssh`、`.android`、`.aws`、`.kube`、`.dsha-*` 等凭据区；空值与相对路径一律拒绝；
+- 目录穿越、重复斜杠、反斜杠等混淆写法先规范化再判；
+- 字符串判据之后再用 `getCanonicalPath()` 复核，挡住「先建软链接指向凭据」的绕法；
+- 列出上层目录时跳过凭据区条目（名字本身也是情报）。
+
+桥的正当用途（`/app/export?path=/root/report.md`）不受影响。
+
+### 备份里的本机凭据（v0.1.5 起）
+
+备份包会落到 `Download/DSHA/`，任何有存储权限的应用都能读。此前打进包里的
+本机设备凭据因此等价于「公开」：
+
+| 文件 | 处理 |
+|---|---|
+| `.dsh/.bridge_token` | 整文件排除（本机 loopback 桥的共享凭据）|
+| `.dsh/.anonymous-user-id` | 整文件排除（本机标识）|
+| `.dsh/.credentials.yaml` | **字段级剔除**：删 `records.client-connection/browser-session`，保留 `refs`（用户 API key）|
+
+字段级而不是整文件的原因：`refs` 里是用户换机后仍要用的 API key，
+`records` 里那条是本机登录 cookie 的 HMAC 签名密钥 —— 恢复后旧 cookie 早已失效，
+dsh 会在记录缺失时自动重新生成（`dsh-client-connection` 的 `initializeSecret()`）。
+
+恢复流程在提交成功后会调用 `HttpShellService.resetTokenAfterRestore()` 让本机
+凭据重新对齐 —— 老备份（仍带别的机器的 token）恢复后不会再出现
+「需要 token，请在 DSHA 应用内打开」。
+
 ## 已知的弱点
 
 不藏着：
@@ -154,10 +194,12 @@ gh attestation verify deepseekharness-arm64-vX.Y.Z.apk --repo qiannianhuanxiang/
 | 弱点 | 现状 |
 |---|---|
 | `danger-full-access` | Android sepolicy 挡住 bubblewrap，dsh 没有沙箱。容器内的 agent 对容器有完全控制权 |
+| 3090 桥无 Android 权限保护 | 桥绑 `127.0.0.1/::1`，**同一台手机的任意应用都能连接**，唯一防线是随机 token。token 一旦泄露（例如经 `/app/export` 导出到公共目录），该应用即可读屏、点按、输入与执行设备命令 |
 | 设备入口保护不是 OS 沙箱 | 随包入口采用原生白名单；任意容器代码、可读 ADB 凭据及直接共享存储仍由 Android 沙箱限定 |
 | 备份在公共目录 | 全部对话记录明文躺在 `Download/DSHA/`，任何有存储权限的应用可读 |
-| `.credentials.yaml` 进备份 | dsh 的凭据文件随备份进公共目录；是否给它一个排除开关还没定 |
+| ~~`.credentials.yaml` 进备份~~ | **已修**：按字段剔除本机记录，保留用户的 API key。备份包里的 `refs`（`DEEPSEEK_API_KEY` 等）仍在，`records.client-connection/browser-session`（本机登录 cookie 的签名密钥）被剔除；恢复后由 dsh 的 `initializeSecret()` 自动重新生成 |
 | `/sdcard` 默认可达 | agent 默认就能读相册和下载目录，目前没有开关 |
+| 凭据区已加桥护栏，但备份仍会带走 | `/app/export`、`/app/readfile` 现在拒绝 `.dsh`、`.ssh`、`.android` 等凭据区（见下）；**但备份包仍会把 `.credentials.yaml` 写到公共目录**，这一项还没解决 |
 | 签名密钥待轮换 | 线上包用的是一把 debug keystore（历史原因，换掉会让所有人无法覆盖升级）。密钥轮换按 APK Signature Scheme v3 rotation 单独排期 |
 
 发现别的问题请开 issue，或者到 QQ 群 975836806 说。安全相关的问题优先处理。
