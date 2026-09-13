@@ -85,6 +85,21 @@ def remove(path):
         shutil.rmtree(path)
 
 
+def unlink_symlink(path):
+    """若目标是软链，先摘掉**链接本身**再让调用方建普通文件。
+
+    归档里这条文件条目表达的意思就是「这里应该是一个普通文件」。``open("xb")`` 是
+    ``O_EXCL``，但对一条**已存在的悬空软链**它会穿过链接去创建目标 —— 内容就落到
+    链接指向的地方，而不是路径本身。
+
+    现有调用方都传全新临时目录，本来碰不到；摘掉链接是让这条不变式不依赖调用方
+    守规矩（tools/test-backup-engine.py 里有断言钉住）。
+    """
+    path = Path(path)
+    if path.is_symlink():
+        path.unlink()
+
+
 def copy_data(src, dst, exclude=(), ancestors=(), checks=None):
     """热目录解引用，同时检测循环、特殊文件和复制期间的变化。"""
     src, dst = Path(src), Path(dst)
@@ -306,6 +321,7 @@ def inspect_archive(archive, stage, filename_scope="full"):
                 if shutil.disk_usage(stage).free < member.size + RESERVE:
                     raise ValueError("空间不足，尚未修改现有数据")
                 dst.parent.mkdir(parents=True, exist_ok=True)
+                unlink_symlink(dst)
                 with tar.extractfile(member) as src, dst.open("xb") as out:
                     shutil.copyfileobj(src, out, 1024 * 1024)
                 if dst.stat().st_size != member.size:
