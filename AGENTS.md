@@ -24,7 +24,7 @@ Material3、单 Gradle 模块 `:app`。
 - 网页 ES 兼容依赖锁在 `tools/web-compat/`，运行 `node tools/prepare-web-compat.mjs` 生成随包脚本、许可和输入摘要；构建核验摘要。官方 PDF 模块与独立 Worker 都需要兼容代码，旧 Chromium 的非特殊 URL 文件协议需单独适配；不能只在桌面新浏览器或预热环境验证。
 - Agent 预设切换必须调用锁定 Host 的 `agentPresets.select` 并核对返回值。已有内容的会话保留，通过同工作区新会话应用所选预设；禁止只改标签伪装切换成功。
 - 预设按钮自身提供基础样式，不能仅依赖窄屏移动插件消除浏览器默认边框。触屏宽屏的预设与文件入口靠右，文件入口调用真实 `sidebarRight.openTab('files')`；验证窄屏/平板横屏及菜单、文件面板行为，保留键盘焦点提示。
-- 中英文界面默认中文。文案目录为 `tools/i18n/messages.json`，构建生成 Java 文案字典；布局使用对应中文/英文资源。语言切换只重建界面，不能停止终端或 Web；用户输入、聊天、文件名及命令原文不做自动替换。系统 WebView 与 Gecko 通过同源桥同步到实际 locale 服务。
+- 中英文界面默认跟随系统：偏好值为 `system`（默认）/ `zh` / `en`，系统语言是中文（或无法识别）落中文，其余落英文（英语是唯一可用的国际语言，比中文更可能被看懂）；旧版本只写过 zh/en，老用户升级后保持原语言。**系统语言必须在进程最早时刻锁存**（`SystemLanguage.initialize()`，早于任何 `Locale.setDefault`），否则 `Resources.getSystem()` 会被界面语言污染，「跟随系统」切一次就自我锁死。文案目录为 `tools/i18n/messages.json`，构建生成 Java 文案字典；布局使用对应中文/英文资源。语言切换只重建界面，不能停止终端或 Web；用户输入、聊天、文件名及命令原文不做自动替换。系统 WebView 与 Gecko 通过同源桥同步到实际 locale 服务。
 - 应用状态在显示边界通过 `UiStateText` 重新渲染，不能缓存某种语言后一直显示；动态文案只匹配目录中声明的完整模板，参数与第三方插件描述保持原文。应用弹窗统一使用 `DshaDialogBuilder`，自定义内容必须能在短屏和大字体下滚动。
 - DNS 默认 `auto`：Node 双栈 `lookup` 仅在 `EAI_AGAIN` / `EAI_FAIL` 时重试一次 IPv4，不重放 HTTP 请求，不降级显式 IPv6。配置页另有 `ipv4`（glibc `no-aaaa`）与 `native`；只增删受管解析选项，保留用户 nameserver/search/options。Web、插件、普通 shell 与 PTY 共用 `RuntimeTools` 的预加载环境，Ubuntu 基础环境版本不因该修复变化。
 - 原生按钮和选项统一居中与字体边距；普通卡片、主按钮及文字状态共用主题资源，不能再用独立渐变或硬编码颜色制造同类框色差。布局修订运行 `LayoutAuditInstrumentation` 的 `style` 中英文验收，覆盖日夜、短屏和 1.3 倍字体；滚动内容按标题与底部按钮的实际高度分配，不写死英文标题所需高度。

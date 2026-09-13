@@ -88,20 +88,50 @@ public class SettingsFragment extends Fragment {
         v.findViewById(R.id.settings_selftest).setOnClickListener(x -> runSelftest());
         v.findViewById(R.id.settings_reextract).setOnClickListener(x -> confirmReextract());
 
-        TextView language=new TextView(requireContext());
-        language.setText(com.deepseekharness.app.util.UiText.choose("语言 · 简体中文", "Language · English"));
-        language.setTextColor(requireContext().getColor(R.color.text));language.setTextSize(15);
-        language.setGravity(Gravity.CENTER);language.setIncludeFontPadding(false);
-        language.setFocusable(true);
-        language.setPadding(dp(16),dp(14),dp(16),dp(14));language.setMinHeight(dp(56));
-        language.setBackgroundResource(R.drawable.bg_polished_action);language.setId(R.id.settings_language);
-        LinearLayout.LayoutParams languageLayout=new LinearLayout.LayoutParams(-1,-2);languageLayout.topMargin=dp(10);
-        tabs.addView(language,languageLayout);
-        language.setOnClickListener(x->new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
-            .setTitle(com.deepseekharness.app.util.UiText.choose("界面语言", "Interface language"))
-            .setSingleChoiceItems(new String[]{com.deepseekharness.app.util.UiText.choose("简体中文", "Simplified Chinese"),"English"},
-                "en".equals(config.getUiLanguage())?1:0,(dialog,which)->{dialog.dismiss();LanguageController.select(requireContext(),which==1?"en":"zh");})
-            .setNegativeButton(com.deepseekharness.app.util.UiText.choose("取消", "Cancel"),null).show());
+        // 语言入口：标题在中文界面下也带英文「Language」（只写「语言 · 简体中文」时，
+        // 非中文用户根本认不出这是语言开关）；摘要直接显示当前生效语言。
+        // 放在「常用设置」分组最前面，不用滚动就能看到。
+        String preference = config.getUiLanguagePreference();
+        boolean followSystem = com.deepseekharness.app.util.UiLanguagePreference.followsSystem(preference);
+        String effective = config.getUiLanguage();
+        String[] optionValues = {
+                com.deepseekharness.app.util.UiLanguagePreference.SYSTEM,
+                com.deepseekharness.app.util.UiLanguagePreference.ZH,
+                com.deepseekharness.app.util.UiLanguagePreference.EN};
+        String[] optionLabels = {
+                com.deepseekharness.app.util.UiText.choose("跟随系统", "Follow system"),
+                com.deepseekharness.app.util.UiText.choose("简体中文", "Simplified Chinese"),
+                "English"};
+        int checked = followSystem ? 0 : ("en".equals(preference) ? 2 : 1);
+        // 摘要始终显示当前**生效**语言的名字：跟随系统时补上来由，用户一眼能看出实际结果。
+        String currentLabel = "en".equals(effective)
+                ? com.deepseekharness.app.util.UiText.choose("English", "English")
+                : com.deepseekharness.app.util.UiText.choose("简体中文", "Simplified Chinese");
+        String summary = followSystem
+                ? com.deepseekharness.app.util.UiText.choose("跟随系统 · ", "Follow system · ") + currentLabel
+                : currentLabel;
+        LinearLayout languageRow = buildLanguageRow(
+                com.deepseekharness.app.util.UiText.choose("语言 / Language", "Language"), summary);
+        LinearLayout.LayoutParams languageLayout = new LinearLayout.LayoutParams(-1, -2);
+        languageLayout.topMargin = dp(10);
+        // 位置保持在 4 个模块行【之后】（index 4）：这是既有验收契约 ——
+        // LayoutAuditInstrumentation 按 getChildAt(1) 找「配置」、UiMotionAudit 遍历
+        // getChildAt(0..3) 点四个模块，插到最前面会让它们全部错位。
+        // 可发现性靠标题带英文「Language」解决，不靠挪位置。
+        tabs.addView(languageRow, languageLayout);
+        View.OnClickListener openLanguageDialog = x -> new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
+                .setTitle(com.deepseekharness.app.util.UiText.choose("界面语言 / Interface language", "Interface language"))
+                .setSingleChoiceItems(optionLabels, checked,
+                        (dialog, which) -> { dialog.dismiss(); LanguageController.select(requireContext(), optionValues[which]); })
+                .setNegativeButton(com.deepseekharness.app.util.UiText.choose("取消", "Cancel"), null).show();
+        languageRow.setOnClickListener(openLanguageDialog);
+        // 自动化验收与无障碍点击落在摘要（带 settings_language id）上，它必须自己可点。
+        View languageValue = languageRow.findViewById(R.id.settings_language);
+        if (languageValue != null) {
+            languageValue.setClickable(true);
+            languageValue.setFocusable(true);
+            languageValue.setOnClickListener(openLanguageDialog);
+        }
 
         return v;
     }
@@ -211,6 +241,58 @@ public class SettingsFragment extends Fragment {
                 .replace(R.id.fragment_container, opt.factory.get())
                 .addToBackStack("settings")
                 .commit());
+        return row;
+    }
+
+    /**
+     * 语言行：与设置页其它行一致的卡片样式 + 右侧「›」，表明可点。
+     *
+     * <p>文档 id 落在摘要 TextView 上（{@code settings_language}），这样自动化验收点它
+     * 就能拿到当前语言；整行、标题和摘要都挂了同一个点击监听，点哪都能打开选择框。
+     */
+    private LinearLayout buildLanguageRow(String title, String summary) {
+        LinearLayout row = new LinearLayout(requireContext());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(16), dp(12), dp(16), dp(12));
+        row.setMinimumHeight(dp(64));
+        row.setFocusable(true);
+        row.setBackgroundResource(R.drawable.bg_polished_action);
+
+        LinearLayout body = new LinearLayout(requireContext());
+        body.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams bodyParams =
+                new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        bodyParams.leftMargin = dp(12);
+        bodyParams.rightMargin = dp(8);
+        body.setLayoutParams(bodyParams);
+
+        TextView head = new TextView(requireContext());
+        head.setText(title);
+        head.setTextSize(16);
+        head.setTextColor(requireContext().getColor(R.color.text));
+        head.setTypeface(head.getTypeface(), android.graphics.Typeface.BOLD);
+
+        TextView sub = new TextView(requireContext());
+        sub.setText(summary);
+        sub.setTextSize(13);
+        sub.setTextColor(requireContext().getColor(R.color.text_muted));
+        sub.setId(R.id.settings_language);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        slp.topMargin = dp(2);
+        sub.setLayoutParams(slp);
+
+        body.addView(head);
+        body.addView(sub);
+
+        TextView chev = new TextView(requireContext());
+        chev.setText(com.deepseekharness.app.util.UiText.text("›"));
+        chev.setTextSize(18);
+        chev.setTextColor(requireContext().getColor(R.color.text_muted));
+
+        row.addView(body);
+        row.addView(chev);
         return row;
     }
 

@@ -263,7 +263,11 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                     if(source!=webView||!mainFrame||!WebPreviewPolicy.sameService(baseUrl,source.getUrl()))return;
                     try {
                         String language=message.getData();
-                        if(com.deepseekharness.app.util.UiLanguagePreference.supported(language))LanguageController.select(this,language);
+                        // 网页只有「中文 / English」两个显式选项，不接受 system：
+                        // 把网页当成用户显式选择，避免页面误传偏好值后行为含糊。
+                        if(com.deepseekharness.app.util.UiLanguagePreference.EN.equals(language)
+                                ||com.deepseekharness.app.util.UiLanguagePreference.ZH.equals(language))
+                            LanguageController.select(this,language);
                     } catch(IllegalStateException ignored) { }
                 });
         }

@@ -7314,14 +7314,6 @@
     ]
   },
   {
-    "id": "m0899",
-    "zh": "DSHA · 任务完成",
-    "en": "DSHA · Task complete",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/TaskNotifier.java"
-    ]
-  },
-  {
     "id": "m0900",
     "zh": "DSHA 后台服务",
     "en": "DSHA background service",
@@ -9699,14 +9691,6 @@
     "en": "Task failed: ",
     "files": [
       "app/src/main/java/com/deepseekharness/app/core/InstallRepository.java"
-    ]
-  },
-  {
-    "id": "m1197",
-    "zh": "任务完成提醒",
-    "en": "Task completion alerts",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/TaskNotifier.java"
     ]
   },
   {
@@ -13032,22 +13016,6 @@
     "en": "Show ",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
-    ]
-  },
-  {
-    "id": "m1613",
-    "zh": "智能体任务完成时通知",
-    "en": "Notify when an agent task finishes",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/TaskNotifier.java"
-    ]
-  },
-  {
-    "id": "m1614",
-    "zh": "智能体已结束任务，点击查看结果",
-    "en": "The agent finished its task. Tap to view the result.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/TaskNotifier.java"
     ]
   },
   {
@@ -17208,6 +17176,70 @@
     "en": "Manager installed, service not connected. Tap Authorize to reconnect. If it still fails, start the service in the manager and check whether hidden mode allows DSHA.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
+    ]
+  },
+  {
+    "id": "m0899",
+    "zh": "DSHA · 任务完成",
+    "en": "DSHA · Task complete",
+    "files": [
+      "app/src/main/assets/builtin-plugins/dsh-task-notifier/lib/index.js"
+    ]
+  },
+  {
+    "id": "m1614",
+    "zh": "智能体已结束任务，点击查看结果",
+    "en": "The agent finished its task. Tap to view the result.",
+    "files": [
+      "app/src/main/assets/builtin-plugins/dsh-task-notifier/lib/index.js"
+    ]
+  },
+  {
+    "id": "m9001",
+    "zh": "语言 / Language",
+    "en": "Language",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9002",
+    "zh": "界面语言 / Interface language",
+    "en": "Interface language",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9003",
+    "zh": "跟随系统",
+    "en": "Follow system",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9004",
+    "zh": "简体中文",
+    "en": "Simplified Chinese",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9005",
+    "zh": " · 当前",
+    "en": " · current",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9006",
+    "zh": "中文",
+    "en": "Chinese",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
     ]
   }
 ]

@@ -23,6 +23,13 @@ public class MainActivity extends AppCompatActivity {
     private com.deepseekharness.app.core.UpdateEngine startupUpdates;
     private com.google.android.material.snackbar.Snackbar updateNotice;
     private boolean requestingLocalNetwork;
+    /**
+     * 通知点击带来的「进入后自动打开 Web」意图，只在一次导航创建 LaunchFragment 期间有效。
+     *
+     * <p>必须在 {@code setSelectedItemId} 触发监听器之前置位、在创建时立刻消费掉，
+     * 否则会残留下来，让用户之后手动点启动页时被意外带进 Web。
+     */
+    private boolean pendingOpenWeb;
     private String openedRecovery="";
     private final androidx.activity.result.ActivityResultLauncher<String> localNetworkPermission =
             registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
@@ -108,6 +115,12 @@ public class MainActivity extends AppCompatActivity {
             int id = item.getItemId();
             if (id == R.id.nav_launch) {
                 f = new LaunchFragment();
+                if (pendingOpenWeb) {
+                    pendingOpenWeb = false;
+                    Bundle args = new Bundle();
+                    args.putBoolean(LaunchFragment.ARG_OPEN_WEB, true);
+                    f.setArguments(args);
+                }
                 title.setText(R.string.nav_launch);
             } else if (id == R.id.nav_plugins) {
                 f = com.deepseekharness.app.core.EnvironmentAccess.needsRecovery(controller)
@@ -132,6 +145,9 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
+        // 通知点击进入：必须在 setSelectedItemId 之前登记 —— setSelectedItemId 会【同步】
+        // 触发监听器创建 LaunchFragment，那时再置标记已经晚了（参数带不进去）。
+        consumeOpenWeb(getIntent());
         if (savedInstanceState == null) {
             nav.setSelectedItemId(getIntent().getBooleanExtra("open_plugins", false) ? R.id.nav_plugins : R.id.nav_launch);
         }
@@ -186,6 +202,38 @@ public class MainActivity extends AppCompatActivity {
         if (nav != null && intent.getBooleanExtra("open_plugins", false)) nav.setSelectedItemId(R.id.nav_plugins);
         if (nav != null && intent.getBooleanExtra("open_launch", false)) {
             intent.removeExtra("open_launch"); nav.setSelectedItemId(R.id.nav_launch);
+        }
+        consumeOpenWeb(intent);
+    }
+
+    /**
+     * 消费通知/外部的 {@code open_web} 意图：切到启动页，并把「进来后自动进 Web」的意图
+     * 交给 {@link LaunchFragment}（只有它知道鉴权是否就绪）。
+     *
+     * <p>时序很关键：{@code setSelectedItemId} 会<b>同步</b>触发
+     * {@code OnItemSelectedListener} 去创建 fragment，所以标记必须在那之前设好；
+     * 否则 fragment 已经建完，参数永远带不进去（表现为"点了通知没反应"）。
+     *
+     * <p>Web 未就绪时（例如服务刚被系统回收）只切页不报错：停在启动页让用户看到真实状态，
+     * 比弹一个必然失败的错误更合适。
+     */
+    private void consumeOpenWeb(Intent intent) {
+        if (intent == null || !intent.getBooleanExtra("open_web", false)) return;
+        intent.removeExtra("open_web");
+        BottomNavigationView nav = findViewById(R.id.bottom_nav);
+        if (nav == null) return;
+        pendingOpenWeb = true;
+        if (nav.getSelectedItemId() != R.id.nav_launch) {
+            nav.setSelectedItemId(R.id.nav_launch);
+            return;
+        }
+        // 已经停在启动页（通知点击时 App 可能就在启动页）：不会触发监听器，
+        // 直接把意图交给当前这个 LaunchFragment；没有就等下次创建。
+        getSupportFragmentManager().executePendingTransactions();
+        Fragment shown = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (shown instanceof LaunchFragment) {
+            pendingOpenWeb = false;
+            ((LaunchFragment) shown).requestAutoEnterWeb();
         }
     }
 

@@ -42,8 +42,26 @@ public class ConfigStore {
     public String getUiTheme() {
         return com.deepseekharness.app.util.UiThemePreference.normalize(text("ui_theme", "system"));
     }
+    /**
+     * 语言偏好：{@code system}（默认）/ {@code zh} / {@code en}。
+     *
+     * <p>从未设置过的用户走 {@code system}，由系统语言决定中文还是英文；
+     * 老版本写过 {@code zh}/{@code en} 的用户保持原选择，升级不改变语言。
+     */
+    public String getUiLanguagePreference() {
+        return com.deepseekharness.app.util.UiLanguagePreference.normalize(text("ui_language", null));
+    }
+    /** 用户是否从未显式选择过语言（界面据此显示「跟随系统」）。 */
+    public boolean hasChosenUiLanguage() {
+        return com.deepseekharness.app.util.UiLanguagePreference.supported(text("ui_language", null));
+    }
+    /** 实际生效语言（zh/en）：显式选择优先，否则解析系统语言。 */
     public String getUiLanguage() {
-        return com.deepseekharness.app.util.UiLanguagePreference.normalize(text("ui_language", "zh"));
+        return com.deepseekharness.app.util.UiLanguagePreference.resolve(
+                getUiLanguagePreference(), com.deepseekharness.app.util.SystemLanguage.tag());
+    }
+    public String getUiLanguageForBackup() {
+        return getUiLanguagePreference();
     }
     public void setUiLanguage(String value) {
         prefs.edit().putString("ui_language", com.deepseekharness.app.util.UiLanguagePreference.normalize(value)).apply();
@@ -210,7 +228,7 @@ public class ConfigStore {
         out.put("formatVersion", 1).put("port", getPort()).put("workdir", getWorkdir())
                 .put("permissionMode", getPermissionMode()).put("confirmShell", isConfirmShell())
                 .put("desktopMode", isDesktopMode()).put("checkUpdate", isCheckUpdate())
-                .put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme()).put("uiLanguage", getUiLanguage());
+                .put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme()).put("uiLanguage", getUiLanguageForBackup());
         if (isBackupKey() && !getApiKey().isEmpty()) out.put("apiKey", getApiKey());
         return out;
     }
@@ -231,7 +249,11 @@ public class ConfigStore {
         }
         if (data.has("ecoMode")) edit.putBoolean("runtime_eco_mode", data.optBoolean("ecoMode"));
         if (data.has("uiTheme")) edit.putString("ui_theme", com.deepseekharness.app.util.UiThemePreference.normalize(data.optString("uiTheme")));
-        if (data.has("uiLanguage")) edit.putString("ui_language", com.deepseekharness.app.util.UiLanguagePreference.normalize(data.optString("uiLanguage")));
+        if (data.has("uiLanguage")) {
+            // 老备份里的 zh/en 保持原样；新备份可能带 system（跟随系统）。
+            String preference = com.deepseekharness.app.util.UiLanguagePreference.normalize(data.optString("uiLanguage"));
+            edit.putString("ui_language", preference);
+        }
         if (!edit.commit()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("原生设置写入失败"));
     }
 
