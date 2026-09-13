@@ -18,6 +18,17 @@ engine = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(engine)
 
 
+def read_following_links(path):
+    """读一个要走过多层相对软链的文件（见下面 test_nested_versions 的说明）。
+
+    为什么要 realpath 绕一手：本项目的 proroot 容器里，**做过创建的那个进程**随后用
+    stat/open 走自己刚建的嵌套相对软链，会间歇性拿到 ENOENT；同一路径交给新进程
+    （shell 的 ls/test、或子进程 python）一律正常。realpath 用 readlink 在用户态手工
+    展开，因此不受影响，而断言强度不变 —— 链真断了照样 FileNotFoundError。
+    """
+    return Path(os.path.realpath(path))
+
+
 class BackupTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -424,8 +435,15 @@ class BackupTest(unittest.TestCase):
         shutil.rmtree(self.root / base)
         engine.restore_archive(self.root, self.archive, 'plugins')
         a = self.root / base / 'plugin-a'
-        self.assertEqual('2', json.loads((a / 'node_modules/dep/package.json').read_text())['version'])
-        self.assertEqual('1', json.loads((a / 'node_modules/plugin-b/node_modules/dep/package.json').read_text())['version'])
+        # 这两条路径要连穿两层相对软链（profile 里的 plugin-a → 依赖池的 key →
+        # key 内的 node_modules/<name>）。产物本身是对的 —— 实测 Node 从这棵树上
+        # require 出来就是 dep=2、plugin-b 里的 dep=1，正是本测试要守的不变式；
+        # 只是 proroot 下同进程再走一遍会间歇性 ENOENT，所以经 realpath 展开。
+        self.assertEqual('2', json.loads(
+            read_following_links(a / 'node_modules/dep/package.json').read_text())['version'])
+        self.assertEqual('1', json.loads(
+            read_following_links(
+                a / 'node_modules/plugin-b/node_modules/dep/package.json').read_text())['version'])
 
     @unittest.skipIf(os.name == 'nt', '真实依赖链接由 Linux 验证')
     def test_unregistered_plugin_and_unpublished_source_history_survive(self):
@@ -478,6 +496,85 @@ class BackupTest(unittest.TestCase):
             for path in stage.iterdir(): archive.add(path, arcname=path.name)
         engine.restore_archive(self.root, self.archive, 'plugins')
         self.assertEqual('old-plugin-content', (self.root / '.dsh/profiles/web/node_modules/old-plugin/index.js').read_text())
+
+
+@unittest.skipIf(os.name == 'nt', '依赖真实软链接，由 Linux 验证')
+class ExtractionSymlinkSafetyTest(unittest.TestCase):
+    """归档成员写入不得穿过已存在的软链。
+
+    归档里一条文件条目表达的意思就是「这里应该是一个普通文件」。``open("xb")`` 是
+    ``O_EXCL``，但对一条**已存在的悬空软链**它会穿过链接去创建目标 —— 内容落到链接
+    指向的地方，而不是路径本身。
+
+    这一版 inspect_archive 的所有调用方都传全新临时目录，本不会碰到；但阶段目录是
+    调用方给的，这条不变式不该靠调用方守规矩来成立。摘掉链接本身是 1.1.x 支线
+    修过的同一个形状（writeFile 直接 new FileOutputStream 会把归档内容写到
+    sessions/storages 那些指向公开数据目录的软链后面）。
+    """
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.stage = self.root / "stage"
+        self.stage.mkdir()
+        (self.stage / ".dsh").mkdir()
+        self.archive = self.root / "backup.tar.gz"
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def make_archive(self, members):
+        with tarfile.open(self.archive, "w:gz") as tar:
+            for name, data in members:
+                info = tarfile.TarInfo(name)
+                info.size = len(data)
+                tar.addfile(info, io.BytesIO(data))
+
+    def test_file_member_wins_over_preexisting_dangling_symlink(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        victim = outside / "victim.txt"
+        target = self.stage / ".dsh" / "settings.yaml"
+        # 阶段目录里预先放一条指向 stage 之外的悬空软链。
+        target.symlink_to(victim)
+        self.make_archive([(".dsh/settings.yaml", b"real backup payload\n")])
+
+        engine.inspect_archive(self.archive, self.stage, "full")
+
+        self.assertFalse(target.is_symlink(), "写入前应先摘掉链接本身")
+        self.assertEqual(target.read_bytes(), b"real backup payload\n",
+                         "归档内容必须落在路径本身")
+        self.assertFalse(victim.exists(), "内容不得穿过软链写到 stage 之外")
+        self.assertEqual(sorted(p.name for p in outside.iterdir()), [])
+
+    def test_file_member_wins_over_symlink_to_existing_file(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        victim = outside / "victim.txt"
+        victim.write_bytes(b"ORIGINAL-DO-NOT-TOUCH")
+        target = self.stage / ".dsh" / "settings.yaml"
+        target.symlink_to(victim)
+        self.make_archive([(".dsh/settings.yaml", b"real backup payload\n")])
+
+        engine.inspect_archive(self.archive, self.stage, "full")
+
+        self.assertEqual(target.read_bytes(), b"real backup payload\n")
+        self.assertEqual(victim.read_bytes(), b"ORIGINAL-DO-NOT-TOUCH",
+                         "链接指向的既有文件不能被覆盖")
+
+    def test_normal_stage_is_untouched(self):
+        # 回归护栏：没有软链时行为不变，仍是原子的独占创建。
+        self.make_archive([(".dsh/settings.yaml", b"payload")])
+        engine.inspect_archive(self.archive, self.stage, "full")
+        self.assertEqual((self.stage / ".dsh" / "settings.yaml").read_bytes(), b"payload")
+
+    def test_duplicate_member_is_still_rejected(self):
+        # 换一个空阶段目录：独占创建本就会因已存在而失败，重复成员要在更早处拒绝。
+        fresh = self.root / "stage-2"
+        (fresh / ".dsh").mkdir(parents=True)
+        self.make_archive([(".dsh/settings.yaml", b"a"), (".dsh/settings.yaml", b"b")])
+        with self.assertRaisesRegex(ValueError, "重复路径"):
+            engine.inspect_archive(self.archive, fresh, "full")
 
 
 if __name__ == "__main__":
