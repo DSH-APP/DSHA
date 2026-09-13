@@ -44,6 +44,9 @@ public final class HttpShellService {
     public static final int PORT = 3090;
     private static final String CONFIRM_CHANNEL = "dsh_confirm_channel";
     private static final int CONFIRM_NOTIF_ID = Constants.NOTIF_SHELL_CONFIRM;
+    /** 智能体通知：与确认通知使用不同 id / requestCode，互不覆盖。 */
+    private static final int AGENT_NOTIF_ID = 2002;
+    private static final int AGENT_NOTIF_REQUEST = 2002;
     private static final long CONFIRM_TIMEOUT_S = 60;
 
     /** Error text can echo a URL/header supplied by the caller; responses and
@@ -651,8 +654,8 @@ public final class HttpShellService {
     /** /app/notify?title=&text= ：发通知栏提醒 */
     private String appNotify(String path) {
         try {
-            // App 前台时不发通知（用户正看着页面，不打扰）——与 TaskNotifier 抑制一致
-            if (TaskNotifier.appInForeground) return "FOREGROUND_SKIP";
+            // App 前台时不发通知（用户正看着页面，不打扰）——与前台抑制一致
+            if (ForegroundActivity.current() != null) return "FOREGROUND_SKIP";
             String q = queryOf(path);
             String title = getParam(q, "title", com.deepseekharness.app.util.UiText.text("DSHA 通知"));
             String text = getParam(q, "text", "");
@@ -678,12 +681,33 @@ public final class HttpShellService {
                     .setContentText(text)
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    // 点击必须回到 App：以前漏了 setContentIntent，通知点不动（等于只能手动切回）。
+                    .setContentIntent(agentNotificationIntent())
                     .setAutoCancel(true);
-            nm.notify(2002, b.build());
+            nm.notify(AGENT_NOTIF_ID, b.build());
             return "OK";
         } catch (Throwable e) {
             return "ERROR: " + safeError(e);
         }
+    }
+
+    /**
+     * 智能体通知的点击出口：回到 App 并<b>直接进入 Web 会话</b>。
+     *
+     * <p>以前这里没有 {@code setContentIntent}，通知点不动；补上之后还必须让点击有实际去处 ——
+     * 只停在启动页对「查看结果」这个文案是名不副实的，所以带上 {@code open_web}：
+     * {@link com.deepseekharness.app.ui.MainActivity} 收到后切到启动页并尝试进入 Web
+     * （Web 未就绪时只切页，不报错）。
+     *
+     * <p>用 {@code SINGLE_TOP + CLEAR_TOP} 复用已有任务，不新开一层；requestCode 与
+     * 其它通知区分，避免 {@code FLAG_UPDATE_CURRENT} 让后建的通知覆盖前一个的 PendingIntent。
+     */
+    private PendingIntent agentNotificationIntent() {
+        Intent intent = new Intent(ctx, com.deepseekharness.app.ui.MainActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .putExtra("open_web", true);
+        return PendingIntent.getActivity(ctx, AGENT_NOTIF_REQUEST, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     /** /app/toast?text= ：弹 App 内 Toast */
