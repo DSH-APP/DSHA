@@ -447,6 +447,9 @@ public final class HttpShellService {
             String[] parts = line.split(" ");
             String path = parts.length > 1 ? parts[1] : "/";
             String cmd = "";
+            // route 已剥掉查询串。下面 /app/* 一律精确匹配：用 startsWith 的话
+            // /app/readfileXXX 也能命中读文件端点，而 /app/ui 那组之前是靠
+            // 「写在前面」才没被吃掉 —— 顺序型防御一次改动就会破。
             String route = path.split("\\?", 2)[0];
             if (route.equals("/exec") || route.equals("/confirm") || route.equals("/device/plan") || route.equals("/device/execute")) {
                 // 走统一的查询串解析（Query.param）：值要截断到 &，参数名要精确匹配。
@@ -498,56 +501,56 @@ public final class HttpShellService {
             } else if (route.equals("/device/execute")) {
                 result = deviceExecute(cmd, "1".equals(getParam(queryOf(path), "su", "0")),
                         "1".equals(getParam(queryOf(path), "adb", "0")));
-            } else if (path.startsWith("/app/notify")) {
+            } else if (route.equals("/app/notify")) {
                 // agent 通过 App 发通知栏提醒（App 层交互）
                 result = appNotify(path);
-            } else if (path.startsWith("/app/toast")) {
+            } else if (route.equals("/app/toast")) {
                 // agent 弹 App 内 Toast
                 result = appToast(path);
-            } else if (path.startsWith("/app/readfile")) {
+            } else if (route.equals("/app/readfile")) {
                 // agent 读外部文件（rootfs 挂载 /sdcard 的补充；支持路径参数）
                 result = appReadFile(path);
-            } else if (path.startsWith("/health")) {
+            } else if (route.equals("/health")) {
                 result = "OK"; // 存活探测（仍需 token）：客户端可据此区分「桥没起」与「命令失败」
-            } else if (path.startsWith("/app/ui/")) {
+            } else if (route.startsWith("/app/ui/")) {
+                // 唯一保留前缀的组：它是一个端点命名空间，真子路径在 appUi 内再精确分发
                 result = appUi(path);
-            } else if (path.startsWith("/app/device")) {
+            } else if (route.equals("/app/device")) {
                 result = appDevice();
-            } else if (path.startsWith("/app/apps")) {
+            } else if (route.equals("/app/apps")) {
                 result = appList(path);
-            } else if (path.startsWith("/app/launch")) {
+            } else if (route.equals("/app/launch")) {
                 result = appLaunch(path);
-            } else if (path.startsWith("/app/clip")) {
+            } else if (route.equals("/app/clip")) {
                 result = appClip(path);
-            } else if (path.startsWith("/app/share")) {
+            } else if (route.equals("/app/share")) {
                 result = appShare(path);
-            } else if (path.startsWith("/app/open")) {
+            } else if (route.equals("/app/open")) {
                 result = appOpen(path);
-            } else if (path.startsWith("/app/vibrate")) {
+            } else if (route.equals("/app/vibrate")) {
                 result = appVibrate(path);
-            } else if (path.startsWith("/app/ask")) {
+            } else if (route.equals("/app/ask")) {
                 result = appAsk(path);
-            } else if (path.startsWith("/app/version")) {
+            } else if (route.equals("/app/version")) {
                 result = appVersion();
-            } else if (path.startsWith("/app/help")) {
+            } else if (route.equals("/app/help")) {
                 result = appHelp();
-            } else if (path.startsWith("/app/plugins")) {
+            } else if (route.equals("/app/plugins")) {
                 result = appPlugins(path);
-            } else if (path.startsWith("/app/overlay")) {
+            } else if (route.equals("/app/overlay")) {
                 result = appOverlay(path);
-            } else if (path.startsWith("/app/location")) {
+            } else if (route.equals("/app/location")) {
                 // 位置 / 传感器 / 手电：手机相对服务器真正独有的那几样能力。
-                // 顺序要紧 —— /app/sensors 必须在 /app/sensor 之前判，
-                // 否则 startsWith 会让「列表」被「读单个」抢走。
+                // /app/sensors 与 /app/sensor 是两条独立精确路由，不再有先后依赖。
                 result = DeviceSense.location(ctx, "1".equals(getParam(queryOf(path), "fresh", "")));
-            } else if (path.startsWith("/app/sensors")) {
+            } else if (route.equals("/app/sensors")) {
                 result = DeviceSense.sensorList(ctx);
-            } else if (path.startsWith("/app/sensor")) {
+            } else if (route.equals("/app/sensor")) {
                 result = DeviceSense.sensorRead(ctx, getParam(queryOf(path), "name", "light"));
-            } else if (path.startsWith("/app/torch")) {
+            } else if (route.equals("/app/torch")) {
                 String on = getParam(queryOf(path), "on", "1");
                 result = DeviceSense.torch(ctx, !"0".equals(on) && !"off".equalsIgnoreCase(on));
-            } else if (path.startsWith("/app/export")) {
+            } else if (route.equals("/app/export")) {
                 result = appExport(path);
             } else if (cmd.isEmpty()) {
                 result = "[NO_CMD]";
@@ -747,12 +750,15 @@ public final class HttpShellService {
 
     private String appUi(String path) {
         String q = queryOf(path);
+        // 命名空间内的子端点也走精确匹配：startsWith 会让 /app/ui/shotXXX
+        // 命中截屏，而截屏会把当前画面留到磁盘。
+        String r = path.split("\\?", 2)[0];
         try {
-            if (path.startsWith("/app/ui/dump")) {
+            if (r.equals("/app/ui/dump")) {
                 if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("读取当前屏幕上的文字与控件"))) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次屏幕读取");
                 return DshaAccessibilityService.uiDump();
             }
-            if (path.startsWith("/app/ui/tap")) {
+            if (r.equals("/app/ui/tap")) {
                 String text = getParam(q, "text", "");
                 // 有文字就按文字点：控件位置会随滚动和动画变，文字不会
                 if (!text.isEmpty()) {
@@ -765,7 +771,7 @@ public final class HttpShellService {
                 if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("点击坐标 (") + x + "," + y + ")")) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次点击");
                 return DshaAccessibilityService.uiTap(x, y);
             }
-            if (path.startsWith("/app/ui/input")) {
+            if (r.equals("/app/ui/input")) {
                 String text = getParam(q, "text", "");
                 if (text.isEmpty()) return com.deepseekharness.app.util.UiText.text("[ERR] 需要 ?text=");
                 if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("在输入框里填入「") + shortText(text) + com.deepseekharness.app.util.UiText.text("」"))) {
@@ -773,17 +779,17 @@ public final class HttpShellService {
                 }
                 return DshaAccessibilityService.uiInput(text);
             }
-            if (path.startsWith("/app/ui/key")) {
+            if (r.equals("/app/ui/key")) {
                 String k = getParam(q, "name", "");
                 if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("按下系统按键 ") + shortText(k))) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次按键");
                 return DshaAccessibilityService.uiKey(k);
             }
-            if (path.startsWith("/app/ui/screenshot") || path.startsWith("/app/ui/shot")) {
+            if (r.equals("/app/ui/screenshot") || r.equals("/app/ui/shot")) {
                 // 截屏会把当前画面留到磁盘，等于一份可被后续读取的隐私快照
                 if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("截取当前屏幕并保存为图片"))) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次截屏");
                 return DshaAccessibilityService.uiScreenshot();
             }
-            if (path.startsWith("/app/ui/swipe")) {
+            if (r.equals("/app/ui/swipe")) {
                 int x1 = intParam(q, "x1", -1);
                 int y1 = intParam(q, "y1", -1);
                 int x2 = intParam(q, "x2", -1);
