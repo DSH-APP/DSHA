@@ -55,6 +55,11 @@ public class ConfigFragment extends Fragment {
         EditText port = v.findViewById(R.id.config_port);
         CheckBox checkUpdate = v.findViewById(R.id.config_check_update);
         CheckBox desktop = v.findViewById(R.id.config_desktop_mode);
+        CheckBox picture = v.findViewById(R.id.config_picture_in_picture);
+        TextView pictureHint = v.findViewById(R.id.config_picture_in_picture_hint);
+        picture.setChecked(c.isPictureInPictureEnabled());
+        picture.setEnabled(PictureInPictureActivity.supported(ctx));
+        pictureHint.setText(picture.isEnabled() ? R.string.picture_in_picture_hint : R.string.picture_in_picture_unsupported);
         CheckBox proroot = v.findViewById(R.id.config_proroot);
         CheckBox lan = v.findViewById(R.id.config_lan_mode);
         CheckBox overlay = v.findViewById(R.id.config_overlay_stream);
@@ -97,6 +102,7 @@ public class ConfigFragment extends Fragment {
             c.setPort(String.valueOf(chosenPort));
             c.setCheckUpdate(checkUpdate.isChecked());
             c.setDesktopMode(desktop.isChecked());
+            if (picture.isEnabled()) c.setPictureInPictureEnabled(picture.isChecked());
             if (com.deepseekharness.app.BuildConfig.LOW_ANDROID) c.setGeckoCore(gecko.isChecked());
             c.setProroot(proroot.isChecked());
             c.setDnsMode(dns.getCheckedRadioButtonId()==R.id.dns_ipv4?"ipv4":dns.getCheckedRadioButtonId()==R.id.dns_native?"native":"auto");
@@ -106,7 +112,12 @@ public class ConfigFragment extends Fragment {
             if (lan.isChecked() && getActivity() instanceof MainActivity)
                 ((MainActivity) getActivity()).requestLocalNetwork();
             Toast.makeText(ctx, com.deepseekharness.app.util.UiText.text("已保存；网页显示选项重新进入对话生效，端口与运行时需重启 Web"), Toast.LENGTH_LONG).show();
-            if (overlay.isChecked() && !OverlayController.permitted(ctx)) openOverlayPermission();
+            if (android.os.Build.VERSION.SDK_INT >= 26 && picture.isChecked() && picture.isEnabled() && !PictureInPictureActivity.allowed(ctx)) {
+                Toast.makeText(ctx, R.string.picture_in_picture_permission, Toast.LENGTH_LONG).show();
+                try { startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.getPackageName()))); }
+                catch (RuntimeException ignored) { }
+            }
+            else if (overlay.isChecked() && !OverlayController.permitted(ctx)) openOverlayPermission();
             return null;
             });
             } catch (Exception e) {

@@ -54,6 +54,9 @@ public final class Constants {
     public static final String KEY_CHECK_UPDATE = "check_update";
     /** 电脑模式（预览用桌面浏览器 UA）。 */
     public static final String KEY_DESKTOP_MODE = "desktop_mode";
+    /** 仅内置 DSH 网页支持画中画，默认关闭。 */
+    public static final String KEY_PICTURE_IN_PICTURE = "picture_in_picture";
+    public static final String KEY_PICTURE_IN_PICTURE_LAYOUT = "picture_in_picture_layout";
     /** 备份是否包含 API key。 */
     public static final String KEY_BACKUP_KEY = "backup_key";
     /** 局域网访问开关。 */

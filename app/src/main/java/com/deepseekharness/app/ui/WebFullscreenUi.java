@@ -25,6 +25,10 @@ public final class WebFullscreenUi {
         View content = activity.findViewById(android.R.id.content);
         content.setBackgroundColor(activity.getColor(R.color.surface));
         ViewCompat.setOnApplyWindowInsetsListener(content, (view, insets) -> {
+            if (PictureInPictureActivity.showing(activity)) {
+                view.setPadding(0, 0, 0, 0);
+                return WindowInsetsCompat.CONSUMED;
+            }
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
                     | WindowInsetsCompat.Type.displayCutout());
             // 顶部保留稳定安全区，避免 ROM 在键盘/焦点切换时短暂报告状态栏不可见而把正文顶上去。
@@ -40,6 +44,7 @@ public final class WebFullscreenUi {
     }
 
     public static void applySystemBars(Activity activity) {
+        if (PictureInPictureActivity.showing(activity)) return;
         WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(
                 activity.getWindow(), activity.getWindow().getDecorView());
         controller.setAppearanceLightStatusBars(androidx.core.graphics.ColorUtils.calculateLuminance(

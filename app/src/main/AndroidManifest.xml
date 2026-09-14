@@ -112,6 +112,9 @@
         <activity
             android:name=".ui.WebPreviewActivity"
             android:exported="false"
+            android:launchMode="singleTask"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.DeepseekHarness" />
 
