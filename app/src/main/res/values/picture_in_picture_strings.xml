@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="picture_in_picture_title">对话画中画</string>
+    <string name="picture_in_picture_hint">保存后，退出 DSH 对话页或返回桌面时保留网页小窗；停止 DSH 后收起。点小窗可切换横/竖版，展开后继续输入。原生页面不进入画中画。</string>
+    <string name="picture_in_picture_landscape">切换横版</string>
+    <string name="picture_in_picture_portrait">切换竖版</string>
+    <string name="picture_in_picture_unsupported">当前设备不支持系统画中画，需要 Android 8.0+ 及设备支持。</string>
+    <string name="picture_in_picture_permission">已保存。请在系统设置中允许 DSHA 使用画中画。</string>
+</resources>

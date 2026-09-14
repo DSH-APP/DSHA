@@ -17209,5 +17209,41 @@
     "files": [
       "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
     ]
+  },
+  {
+    "id": "picture_in_picture_title",
+    "zh": "对话画中画",
+    "en": "Chat picture-in-picture",
+    "files": ["app/src/main/res/layout/fragment_config.xml"]
+  },
+  {
+    "id": "picture_in_picture_hint",
+    "zh": "保存后，退出 DSH 对话页或返回桌面时保留网页小窗；停止 DSH 后收起。点小窗可切换横/竖版，展开后继续输入。原生页面不进入画中画。",
+    "en": "After saving, leaving DSH chat or going Home keeps the web page in a small window until DSH stops. Tap to switch portrait/landscape; expand to type. Native pages stay outside picture-in-picture.",
+    "files": ["app/src/main/res/layout/fragment_config.xml"]
+  },
+  {
+    "id": "picture_in_picture_landscape",
+    "zh": "切换横版",
+    "en": "Switch to landscape",
+    "files": ["app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java"]
+  },
+  {
+    "id": "picture_in_picture_portrait",
+    "zh": "切换竖版",
+    "en": "Switch to portrait",
+    "files": ["app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java"]
+  },
+  {
+    "id": "picture_in_picture_unsupported",
+    "zh": "当前设备不支持系统画中画，需要 Android 8.0+ 及设备支持。",
+    "en": "Picture-in-picture requires Android 8.0+ and a supported device.",
+    "files": ["app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"]
+  },
+  {
+    "id": "picture_in_picture_permission",
+    "zh": "已保存。请在系统设置中允许 DSHA 使用画中画。",
+    "en": "Saved. Allow picture-in-picture for DSHA in system settings.",
+    "files": ["app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"]
   }
 ]

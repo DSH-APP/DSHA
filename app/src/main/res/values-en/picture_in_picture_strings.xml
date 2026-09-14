@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="picture_in_picture_title">Chat picture-in-picture</string>
+    <string name="picture_in_picture_hint">After saving, leaving DSH chat or going Home keeps the web page in a small window until DSH stops. Tap to switch portrait/landscape; expand to type. Native pages stay outside picture-in-picture.</string>
+    <string name="picture_in_picture_landscape">Switch to landscape</string>
+    <string name="picture_in_picture_portrait">Switch to portrait</string>
+    <string name="picture_in_picture_unsupported">Picture-in-picture requires Android 8.0+ and a supported device.</string>
+    <string name="picture_in_picture_permission">Saved. Allow picture-in-picture for DSHA in system settings.</string>
+</resources>

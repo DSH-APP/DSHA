@@ -136,6 +136,18 @@ public class ConfigStore {
         prefs.edit().putBoolean(Constants.KEY_DESKTOP_MODE, v).apply();
     }
 
+    public boolean isPictureInPictureEnabled() { return flag(Constants.KEY_PICTURE_IN_PICTURE, false); }
+    public void setPictureInPictureEnabled(boolean value) {
+        prefs.edit().putBoolean(Constants.KEY_PICTURE_IN_PICTURE, value).apply();
+    }
+    public String getPictureInPictureLayout() {
+        return com.deepseekharness.app.util.PictureInPicturePolicy.layout(text(Constants.KEY_PICTURE_IN_PICTURE_LAYOUT, "auto"));
+    }
+    public void setPictureInPictureLayout(String value) {
+        prefs.edit().putString(Constants.KEY_PICTURE_IN_PICTURE_LAYOUT,
+                com.deepseekharness.app.util.PictureInPicturePolicy.layout(value)).apply();
+    }
+
     public boolean isBackupKey() {
         return flag(Constants.KEY_BACKUP_KEY, true);
     }
@@ -210,6 +222,8 @@ public class ConfigStore {
         out.put("formatVersion", 1).put("port", getPort()).put("workdir", getWorkdir())
                 .put("permissionMode", getPermissionMode()).put("confirmShell", isConfirmShell())
                 .put("desktopMode", isDesktopMode()).put("checkUpdate", isCheckUpdate())
+                .put("pictureInPicture", isPictureInPictureEnabled())
+                .put("pictureInPictureLayout", getPictureInPictureLayout())
                 .put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme()).put("uiLanguage", getUiLanguage());
         if (isBackupKey() && !getApiKey().isEmpty()) out.put("apiKey", getApiKey());
         return out;
@@ -222,6 +236,9 @@ public class ConfigStore {
         if (data.has("permissionMode")) edit.putString(Constants.KEY_PERMISSION_MODE, data.optString("permissionMode", "danger-full-access"));
         if (data.has("confirmShell")) edit.putBoolean(Constants.KEY_CONFIRM_SHELL, data.optBoolean("confirmShell", true));
         if (data.has("desktopMode")) edit.putBoolean(Constants.KEY_DESKTOP_MODE, data.optBoolean("desktopMode"));
+        if (data.has("pictureInPicture")) edit.putBoolean(Constants.KEY_PICTURE_IN_PICTURE, data.optBoolean("pictureInPicture", false));
+        if (data.has("pictureInPictureLayout")) edit.putString(Constants.KEY_PICTURE_IN_PICTURE_LAYOUT,
+                com.deepseekharness.app.util.PictureInPicturePolicy.layout(data.optString("pictureInPictureLayout")));
         if (data.has("checkUpdate")) edit.putBoolean(Constants.KEY_CHECK_UPDATE, data.optBoolean("checkUpdate", true));
         if (data.has("apiKey")) {
             String plain = data.optString("apiKey");
@@ -238,7 +255,8 @@ public class ConfigStore {
     private static final String[] BACKUP_SETTING_KEYS = {
             Constants.KEY_PORT, Constants.KEY_WORKDIR, Constants.KEY_PERMISSION_MODE,
             Constants.KEY_CONFIRM_SHELL, Constants.KEY_DESKTOP_MODE, Constants.KEY_CHECK_UPDATE,
-            Constants.KEY_API_KEY, "runtime_eco_mode", "ui_theme", "ui_language"
+            Constants.KEY_API_KEY, Constants.KEY_PICTURE_IN_PICTURE, Constants.KEY_PICTURE_IN_PICTURE_LAYOUT,
+            "runtime_eco_mode", "ui_theme", "ui_language"
     };
 
     /** 保存的是 Keystore 密文和原始偏好值，供跨进程中断恢复使用。 */
