@@ -18,6 +18,80 @@ engine = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(engine)
 
 
+def read_following_links(path):
+    """读一个要走过多层相对软链的文件（见下面 test_nested_versions 的说明）。
+
+    为什么要 realpath 绕一手：本项目的 proroot 容器里，**做过创建的那个进程**随后用
+    stat/open 走自己刚建的嵌套相对软链，会间歇性拿到 ENOENT；同一路径交给新进程
+    （shell 的 ls/test、或子进程 python）一律正常。realpath 用 readlink 在用户态手工
+    展开，因此不受影响，而断言强度不变 —— 链真断了照样 FileNotFoundError。
+    """
+    return Path(os.path.realpath(path))
+
+
+class LocalDeviceCredentialsTest(unittest.TestCase):
+    """备份包不得携带「本机设备」凭据。
+
+    真机实测：老备份把 .bridge_token 打进 Download/DSHA/（任何有存储权限的应用可读），
+    同机任意应用据此即可完全接管 3090 桥。本机凭据必须留在本机。
+    """
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        (self.root / ".dsh").mkdir()
+        self.archive = self.root / "backup.tar.gz"
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def put(self, name, data):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(data, encoding="utf-8")
+
+    def test_bridge_token_and_device_id_are_excluded(self):
+        self.put(".dsh/.bridge_token", "bridgetok-should-not-ship\n")
+        self.put(".dsh/.anonymous-user-id", "anon-should-not-ship\n")
+        self.put(".dsh/settings.yaml", "model: test\n")
+        engine.make_backup(self.root, self.archive, "full")
+        with tarfile.open(self.archive) as tar:
+            names = tar.getnames()
+        self.assertFalse(any(".bridge_token" in n for n in names),
+                         ".bridge_token 不能进备份：同机任意应用可读公共目录")
+        self.assertFalse(any("anonymous-user-id" in n for n in names),
+                         ".anonymous-user-id 是本机标识，不能进备份")
+
+    def test_credentials_keep_user_keys_but_drop_local_record(self):
+        self.put(".dsh/.credentials.yaml", "version: 1\nrefs:\n  DEEPSEEK_API_KEY: sk-user-key\n"
+                 "records:\n  client-connection/browser-session:\n    kind: grant\n"
+                 "    payload:\n      version: 1\n      secret: LOCAL-ONLY-SECRET\n")
+        engine.make_backup(self.root, self.archive, "full")
+        with tarfile.open(self.archive) as tar:
+            body = tar.extractfile(".dsh/.credentials.yaml").read().decode("utf-8")
+            manifest = json.loads(tar.extractfile(engine.MANIFEST).read())
+        self.assertIn("sk-user-key", body, "用户的 API key 必须保留（否则换机后全丢）")
+        self.assertNotIn("LOCAL-ONLY-SECRET", body, "本机登录 cookie 密钥必须剔除")
+        self.assertEqual(["client-connection/browser-session"], manifest.get("prunedCredentialRecords"))
+
+    def test_other_credential_records_survive(self):
+        self.put(".dsh/.credentials.yaml", "version: 1\nrecords:\n"
+                 "  client-connection/browser-session:\n    kind: grant\n"
+                 "  other-provider/token:\n    kind: grant\n    payload:\n      keep: yes\n")
+        engine.make_backup(self.root, self.archive, "full")
+        with tarfile.open(self.archive) as tar:
+            body = tar.extractfile(".dsh/.credentials.yaml").read().decode("utf-8")
+        self.assertIn("other-provider/token", body, "不能误删非本机记录")
+        self.assertNotIn("client-connection/browser-session", body)
+
+    def test_trim_is_pure_text_and_tolerates_odd_input(self):
+        # 解析不了也要给出可用结果，不能抛异常让备份整个失败
+        for text in ["", "version: 1\n", "records:\n", "refs:\n  A: b\n"]:
+            trimmed, removed = engine.trim_local_records(text)
+            self.assertEqual([], removed)
+            self.assertEqual(text, trimmed)
+
+
 class BackupTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -424,8 +498,16 @@ class BackupTest(unittest.TestCase):
         shutil.rmtree(self.root / base)
         engine.restore_archive(self.root, self.archive, 'plugins')
         a = self.root / base / 'plugin-a'
-        self.assertEqual('2', json.loads((a / 'node_modules/dep/package.json').read_text())['version'])
-        self.assertEqual('1', json.loads((a / 'node_modules/plugin-b/node_modules/dep/package.json').read_text())['version'])
+        # 这两条路径要连穿两层相对软链（profile 里的 plugin-a → 依赖池的 key →
+        # key 内的 node_modules/<name>）。产物本身是对的 —— 实测 Node 从这棵树上
+        # require 出来就是 dep=2、plugin-b 里的 dep=1，正是本测试要守的不变式；
+        # 只是 proroot 下同进程再走一遍会间歇性 ENOENT，所以经 realpath 展开。
+        self.assertEqual('2', json.loads(
+            read_following_links(a / 'node_modules/dep/package.json').read_text())['version'])
+        self.assertEqual('1', json.loads(
+            read_following_links(
+                a / 'node_modules/plugin-b/node_modules/dep/package.json').read_text())['version'])
+
 
     @unittest.skipIf(os.name == 'nt', '真实依赖链接由 Linux 验证')
     def test_unregistered_plugin_and_unpublished_source_history_survive(self):
@@ -478,6 +560,85 @@ class BackupTest(unittest.TestCase):
             for path in stage.iterdir(): archive.add(path, arcname=path.name)
         engine.restore_archive(self.root, self.archive, 'plugins')
         self.assertEqual('old-plugin-content', (self.root / '.dsh/profiles/web/node_modules/old-plugin/index.js').read_text())
+
+
+@unittest.skipIf(os.name == 'nt', '依赖真实软链接，由 Linux 验证')
+class ExtractionSymlinkSafetyTest(unittest.TestCase):
+    """归档成员写入不得穿过已存在的软链。
+
+    归档里一条文件条目表达的意思就是「这里应该是一个普通文件」。``open("xb")`` 是
+    ``O_EXCL``，但对一条**已存在的悬空软链**它会穿过链接去创建目标 —— 内容落到链接
+    指向的地方，而不是路径本身。
+
+    这一版 inspect_archive 的所有调用方都传全新临时目录，本不会碰到；但阶段目录是
+    调用方给的，这条不变式不该靠调用方守规矩来成立。摘掉链接本身是 1.1.x 支线
+    修过的同一个形状（writeFile 直接 new FileOutputStream 会把归档内容写到
+    sessions/storages 那些指向公开数据目录的软链后面）。
+    """
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.stage = self.root / "stage"
+        self.stage.mkdir()
+        (self.stage / ".dsh").mkdir()
+        self.archive = self.root / "backup.tar.gz"
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def make_archive(self, members):
+        with tarfile.open(self.archive, "w:gz") as tar:
+            for name, data in members:
+                info = tarfile.TarInfo(name)
+                info.size = len(data)
+                tar.addfile(info, io.BytesIO(data))
+
+    def test_file_member_wins_over_preexisting_dangling_symlink(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        victim = outside / "victim.txt"
+        target = self.stage / ".dsh" / "settings.yaml"
+        # 阶段目录里预先放一条指向 stage 之外的悬空软链。
+        target.symlink_to(victim)
+        self.make_archive([(".dsh/settings.yaml", b"real backup payload\n")])
+
+        engine.inspect_archive(self.archive, self.stage, "full")
+
+        self.assertFalse(target.is_symlink(), "写入前应先摘掉链接本身")
+        self.assertEqual(target.read_bytes(), b"real backup payload\n",
+                         "归档内容必须落在路径本身")
+        self.assertFalse(victim.exists(), "内容不得穿过软链写到 stage 之外")
+        self.assertEqual(sorted(p.name for p in outside.iterdir()), [])
+
+    def test_file_member_wins_over_symlink_to_existing_file(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        victim = outside / "victim.txt"
+        victim.write_bytes(b"ORIGINAL-DO-NOT-TOUCH")
+        target = self.stage / ".dsh" / "settings.yaml"
+        target.symlink_to(victim)
+        self.make_archive([(".dsh/settings.yaml", b"real backup payload\n")])
+
+        engine.inspect_archive(self.archive, self.stage, "full")
+
+        self.assertEqual(target.read_bytes(), b"real backup payload\n")
+        self.assertEqual(victim.read_bytes(), b"ORIGINAL-DO-NOT-TOUCH",
+                         "链接指向的既有文件不能被覆盖")
+
+    def test_normal_stage_is_untouched(self):
+        # 回归护栏：没有软链时行为不变，仍是原子的独占创建。
+        self.make_archive([(".dsh/settings.yaml", b"payload")])
+        engine.inspect_archive(self.archive, self.stage, "full")
+        self.assertEqual((self.stage / ".dsh" / "settings.yaml").read_bytes(), b"payload")
+
+    def test_duplicate_member_is_still_rejected(self):
+        # 换一个空阶段目录：独占创建本就会因已存在而失败，重复成员要在更早处拒绝。
+        fresh = self.root / "stage-2"
+        (fresh / ".dsh").mkdir(parents=True)
+        self.make_archive([(".dsh/settings.yaml", b"a"), (".dsh/settings.yaml", b"b")])
+        with self.assertRaisesRegex(ValueError, "重复路径"):
+            engine.inspect_archive(self.archive, fresh, "full")
 
 
 if __name__ == "__main__":

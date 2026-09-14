@@ -317,6 +317,12 @@ public final class BackupManager {
                 JSONObject result = run(controller, "restore --archive " + ShellQuote.arg("/root/" + prepared.archive.getName())
                         + " --scope " + BackupScope.id(prepared.scope) + " --defer-commit");
                 if (!result.optBoolean("committed")) throw new IOException(com.deepseekharness.app.util.UiText.text("恢复尚未提交"));
+                // 恢复出来的 .dsh 可能带着【备份那台机器】的本机凭据：
+                //   · .bridge_token —— 3090 桥的共享凭据（新版备份已排除，但老备份仍带）
+                //   · browser-session —— 登录 cookie 的签名密钥（新版按字段剔除）
+                // 与本机内存里的值不一致时桥会拒绝所有请求，用户看到「需要 token，
+                // 请在 DSHA 应用内打开」。这里在提交之后立即让本机凭据重新对齐。
+                com.deepseekharness.app.HttpShellService.resetTokenAfterRestore();
                 JSONObject nativeConfig = result.optJSONObject("nativeConfig");
                 if (nativeConfig != null) controller.config().importBackupSettings(nativeConfig);
                 run(controller, "finalize");

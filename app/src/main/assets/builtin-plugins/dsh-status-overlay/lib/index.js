@@ -139,6 +139,29 @@ function tail(s) {
   return one.slice(from)
 }
 
+/** 从桥的响应里取出真正的结果字符串。
+ *
+ *  **桥返回的是 JSON**：`{"result":"OK"}`（HttpShellService 统一包装，注释里专门写过
+ *  「result 必须包引号，否则是非法 JSON」）。这个插件原来直接把整段 body 拿去和
+ *  'DISABLED' 做等值比较 —— 永远不成立。
+ *
+ *  代价是**冷却机制从来没生效过**：用户没开悬浮条、或者没给悬浮窗权限时，插件照样
+ *  每轮发一次 HTTP，一路发到会话结束。不崩、不报错、日志里也看不出来，只是白烧电。
+ *  reportPluginStates 的 `=== 'OK'` 同理 —— previous 永远设不上，状态没变化也重报。
+ *
+ *  解析失败时原样返回：将来桥要是改成纯文本，这里不用跟着改。 */
+function unwrap(raw) {
+  const s = (raw || '').trim()
+  if (!s) return ''
+  try {
+    const j = JSON.parse(s)
+    if (j && typeof j.result === 'string') return j.result.trim()
+  } catch {
+    // 不是 JSON —— 当纯文本用
+  }
+  return s
+}
+
 async function send(key, kind, text) {
   const tok = bridgeToken()
   if (!tok) return
@@ -151,7 +174,7 @@ async function send(key, kind, text) {
       headers: { 'X-Token': tok },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
-    const body = (await res.text()).trim()
+    const body = unwrap(await res.text())
     if (body === 'DISABLED' || body === 'NO_PERMISSION') {
       // 用户没开这个功能或没授权 —— 进冷却，别一直敲一扇关着的门
       cooldownUntil = Date.now() + COOLDOWN_MS
@@ -369,7 +392,7 @@ export function reportPluginStates(ctx, io = {}) {
         + '&failed=' + encodeURIComponent(st.failed.join(','))
         + '&pending=' + encodeURIComponent(st.pending.join(','))
       const response = await request(url, { headers: { 'X-Token': T }, signal: AbortSignal.timeout(1500) })
-      if (response.ok && (await response.text()).trim() === 'OK') previous = snapshot
+      if (response.ok && unwrap(await response.text()) === 'OK') previous = snapshot
     } catch (e) {
       // 上报失败不影响任何既有功能
     } finally {

@@ -14,6 +14,9 @@ public class DshaApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        // 必须在【任何 Locale.setDefault 之前】锁存系统语言：真机上 Resources.getSystem()
+        // 会被 LanguageController 的 setDefault 污染，导致「跟随系统」自我锁死。
+        com.deepseekharness.app.util.SystemLanguage.initialize();
         com.deepseekharness.app.ui.LanguageController.apply(this);
         ShizukuShell.init(this);
         com.deepseekharness.app.ui.ThemeController.apply(this);

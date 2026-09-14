@@ -26,6 +26,9 @@ import com.deepseekharness.app.util.Constants;
  */
 public class LaunchFragment extends Fragment {
 
+    /** 通知点击进入时带上的参数：Web 就绪后自动打开会话。 */
+    public static final String ARG_OPEN_WEB = "open_web";
+
     private HarnessController controller;
     private TextView lanAddrText;
     private TextView launchLog;
@@ -39,10 +42,20 @@ public class LaunchFragment extends Fragment {
     private long logRevision = -1;
     private String logUrl = "";
     private final android.os.Handler ui = new android.os.Handler(android.os.Looper.getMainLooper());
+    /** 通知点击进来、待自动进入 Web 的意图；由既有每秒刷新循环消费，就绪即进。 */
+    private boolean pendingAutoEnter;
     private final Runnable refreshState = new Runnable() {
         @Override public void run() {
             refreshRunState();
             refreshLanAddr();
+            // 通知点击进来的自动进入：复用这个每秒循环等鉴权链接，不另开定时器。
+            // 判据只认「鉴权链接已出现」——它就是进入 Web 的前提，也是按钮变「进入」的
+            // 同一条件。不能拿 getWebAuthFailure() 判成败：那是最近一次鉴权结果消息，
+            // 初始值与成功值都非 null（成功时是"鉴权成功"），用它当成功判据会永不进入。
+            if (pendingAutoEnter && !webEntryUrl().isEmpty()) {
+                pendingAutoEnter = false;
+                enterWeb();
+            }
             ui.postDelayed(this, 1000);
         }
     };
@@ -87,6 +100,12 @@ public class LaunchFragment extends Fragment {
             // startWeb 本身串行执行「清旧进程 → 启动」，无需拆成两次请求。
             doStart(activity, status, start);
         });
+
+        // 通知点击进来：置待进入标记，由每秒刷新循环在鉴权链接就绪后自动进入。
+        if (getArguments() != null && getArguments().getBoolean(ARG_OPEN_WEB, false)) {
+            getArguments().remove(ARG_OPEN_WEB);
+            pendingAutoEnter = true;
+        }
 
         stop.setOnClickListener(x -> {
             invalidateWebEntry();
@@ -150,6 +169,16 @@ public class LaunchFragment extends Fragment {
         } catch (Throwable t) {
             android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("拉起保活服务失败: ") + t.getMessage());
         }
+    }
+
+    /**
+     * 外部（通知点击）请求：下一次刷新周期自动进入 Web。
+     *
+     * <p>页面不可见时由 {@code onPause} 清掉，避免用户回来时被意外带走。
+     */
+    void requestAutoEnterWeb() {
+        pendingAutoEnter = true;
+        if (getView() != null) ui.post(refreshState);
     }
 
     /** 打开 WebPreviewActivity 进入 dsh WebUI。 */
@@ -267,6 +296,8 @@ public class LaunchFragment extends Fragment {
 
     @Override
     public void onPause() {
+        // 页面不可见时撤销自动进入：用户离开了启动页，回来不该被"突袭"打开 Web。
+        pendingAutoEnter = false;
         if (enteringWeb && getView() != null) {
             ((TextView) getView().findViewById(R.id.launch_status)).setText(com.deepseekharness.app.util.UiText.text("返回后可重新进入 Web"));
         }
