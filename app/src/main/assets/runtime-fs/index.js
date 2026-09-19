@@ -71,3 +71,5 @@ export function createPublisher(renameNoReplace = kernelPublish) {
 }
 export const publishExclusive = createPublisher();
 export function publishSessionExclusive(source, target) { return publishExclusive(source, target, true); }
+// 图片、文件及不可变别名都保留源对象；不支持排他 rename 的内核使用相同协作锁。
+export function publishAttachmentExclusive(source, target) { return publishExclusive(source, target, true); }

@@ -1,0 +1,15 @@
+{
+  "dshVersion": "0.1.6-alpha.2",
+  "module": "@deepseek-ai/dsh-llm-deepseek/lib/index.js",
+  "patches": [
+    {
+      "before": "function serialize(options, connection, history, images, access, onReplayDegrade, fileIds) {",
+      "after": "function serialize(options, connection, history, images, access, onReplayDegrade, fileIds) {",
+      "prependAsset": "dsha-deepseek-messages-compat.js"
+    },
+    {
+      "before": "\t\tif (block.type !== \"image\") return unsupported(`user/tool-result content ${block.type}`);",
+      "after": "\t\tif (block.type === \"tool-call\") return [dshaMessagesProjectedToolCall(block)];\n\t\tif (block.type === \"tool-result\") return input(block.content);\n\t\tif (block.type !== \"image\") return unsupported(`user/tool-result content ${block.type}`);"
+    }
+  ]
+}

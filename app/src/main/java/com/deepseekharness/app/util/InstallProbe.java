@@ -12,6 +12,8 @@ public final class InstallProbe {
     public static final String SESSION_TOP = SESSION_BASE + "dsh-session-persistence-jsonl/lib/index.js";
     public static final String SESSION_NESTED = SESSION_BASE + "dsh/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js";
     public static final String SESSION_PUBLISH_IMPORT = "import { publishSessionExclusive as link } from \"dsha-runtime-fs\";";
+    /** alpha.2 的会话后端用受管 cwd 直达提示，仍保留真实磁盘读取与格式校验。 */
+    public static final String SESSION_DIRECT_HINT_MARKER = "DSHA_SESSION_DIRECT_HINTS_V1";
     public static final String SETTINGS = SESSION_BASE + "dsh/node_modules/@deepseek-ai/dsh-client-ui-settings/lib/client.js";
 
     public static final class Check {
@@ -33,7 +35,8 @@ public final class InstallProbe {
         all.add(new Check(6, "dns", com.deepseekharness.app.util.UiText.text("DNS 配置"), "grep -Eq '^[[:space:]]*nameserver[[:space:]]+[^[:space:]#]+' /etc/resolv.conf || { echo '缺少 nameserver 配置'; exit 1; }"));
         all.add(new Check(6, "session", com.deepseekharness.app.util.UiText.text("会话写入补丁"), "found=0; for f in " + ShellQuote.arg(SESSION_TOP) + " " + ShellQuote.arg(SESSION_NESTED)
                 + "; do [ -f \"$f\" ] || continue; found=1; if grep -Fq 'await link(tmp, finalPath)' \"$f\" && ! grep -Fq "
-                + ShellQuote.arg(SESSION_PUBLISH_IMPORT) + " \"$f\"; then echo \"会话写入补丁缺失：$f\"; exit 1; fi; done; [ \"$found\" = 1 ] || { echo '会话模块缺失'; exit 1; }"));
+                + ShellQuote.arg(SESSION_PUBLISH_IMPORT) + " \"$f\" && ! grep -Fq " + ShellQuote.arg(SESSION_DIRECT_HINT_MARKER)
+                + " \"$f\"; then echo \"会话写入补丁缺失：$f\"; exit 1; fi; done; [ \"$found\" = 1 ] || { echo '会话模块缺失'; exit 1; }"));
         all.add(new Check(6, "settings", com.deepseekharness.app.util.UiText.text("局域网设置补丁"), "test -f " + ShellQuote.arg(SETTINGS)
                 + " || { echo '设置模块缺失'; exit 1; }; if grep -Fq "
                 + ShellQuote.arg("const persistence = ctx.remote.$host.isLoopback ? \"host\" : \"memory\";")

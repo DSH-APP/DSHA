@@ -11,6 +11,7 @@ import java.io.IOException;
 
 /** 应用级任务；Activity/Fragment 只读快照，不保存输入副本或后台线程。 */
 public final class BackupTask {
+    private static final String FACTORY_RESET_KIND="DSHA_FACTORY_RESET_V1";
     private static BackupTask instance;
     private final Context app;
     private final HarnessController controller;
@@ -18,6 +19,14 @@ public final class BackupTask {
     private final BackupTaskState state = new BackupTaskState();
     private final Object decision = new Object();
     private Boolean accepted;
+    private volatile com.deepseekharness.app.backup.BackupControl activeCancellation;
+    private volatile long persistedCompletion;
+    private static final ThreadLocal<com.deepseekharness.app.backup.BackupControl> OWNER_CONTROL=new ThreadLocal<>();
+    public static com.deepseekharness.app.backup.BackupControl currentControl(com.deepseekharness.app.backup.BackupControl.Progress progress){
+        var current=OWNER_CONTROL.get();return current==null?new com.deepseekharness.app.backup.BackupControl(progress):current.withProgress(progress);
+    }
+    public void cancel(){if(!cancellable())return;var current=activeCancellation;if(current!=null)current.cancel();synchronized(decision){if(accepted==null)accepted=false;decision.notifyAll();}}
+    public boolean cancellable(){var snapshot=state.snapshot();return !(snapshot.busy()&&isFactoryReset(snapshot));}
 
     public static synchronized BackupTask get(Context context) {
         if (instance == null) instance = new BackupTask(context.getApplicationContext());
@@ -33,6 +42,7 @@ public final class BackupTask {
         try {
             state.restore(saved.getLong("id", 0), saved.getString("kind", ""),
                     Status.valueOf(saved.getString("status", "IDLE")), saved.getString("detail", ""));
+            if (!state.busy()) persistedCompletion = state.snapshot().id;
         } catch (RuntimeException e) {
             state.restore(0, com.deepseekharness.app.util.UiText.text("任务记录"), Status.INTERRUPTED, com.deepseekharness.app.util.UiText.text("上次任务记录无法读取，请检查数据状态。"));
         }
@@ -64,7 +74,11 @@ public final class BackupTask {
         try { persist(); }
         catch (IOException e) { state.update(id, Status.FAILED, e.getMessage()); lease.close(); return false; }
         synchronized (decision) { accepted = null; }
+        var cancellation=new com.deepseekharness.app.backup.BackupControl(null);activeCancellation=cancellation;
+        try{com.deepseekharness.app.backup.DataProtectionService.start(app);}
+        catch(IOException error){state.update(id,Status.FAILED,error.getMessage());lease.close();activeCancellation=null;try{persist();}catch(IOException ignored){}return false;}
         Thread worker = new Thread(() -> {
+            OWNER_CONTROL.set(cancellation);
             try (lease) {
             try {
                 String result = lease.run(() -> {
@@ -73,14 +87,16 @@ public final class BackupTask {
                 });
                 state.update(id, Status.SUCCEEDED, result);
             } catch (Cancelled e) { state.update(id, Status.CANCELLED, com.deepseekharness.app.util.UiText.text("已取消恢复，当前数据未覆盖。")); }
-            catch (Exception e) { state.update(id, Status.FAILED, BackupManager.safeError(e)); }
+            catch (Exception e) { state.update(id, e instanceof java.io.InterruptedIOException&&!pendingMaintenance()?Status.CANCELLED:Status.FAILED, BackupManager.safeError(e)); }
             finally {
-                try { persist(); } catch (IOException e) { state.update(id, Status.FAILED, e.getMessage()); }
+                OWNER_CONTROL.remove();if(activeCancellation==cancellation)activeCancellation=null;
+                try { persist(); persistedCompletion=id; } catch (IOException e) { state.update(id, Status.FAILED, e.getMessage()); }
             }
             }
         }, "dsha-data-task");
         try { worker.start(); }
         catch (RuntimeException e) {
+            activeCancellation=null;
             state.update(id, Status.FAILED, BackupManager.safeError(e)); lease.close();
             try { persist(); } catch (IOException ignored) { }
             return false;
@@ -126,19 +142,97 @@ public final class BackupTask {
     public boolean recoverMaintenance() {
         return start(com.deepseekharness.app.util.UiText.text("恢复中断维护"), true, true, id -> EnvironmentMaintenance.recover(controller));
     }
+    public boolean factoryReset() {
+        // 格式化是用户主动选择的中断恢复出口，允许存在未完成维护记录。应用内
+        // 清理保留当前界面进程，完成后由 ExtractActivity 直接切到欢迎页。
+        return start(FACTORY_RESET_KIND, true, false, id -> {
+            var control=currentControl((stage,entries,bytes)->progress(id,formatProgress(stage,entries,bytes)));
+            com.deepseekharness.app.backup.AutomaticBackups.suspendForFactoryReset(app,control);
+            java.util.concurrent.atomic.AtomicBoolean destructive=new java.util.concurrent.atomic.AtomicBoolean();
+            try{
+                com.deepseekharness.app.backup.FactoryReset.Result result=BackupManager.runDataTask(controller,()->{
+                    destructive.set(true);
+                    return com.deepseekharness.app.backup.FactoryReset.eraseApplicationData(app,control);
+                });
+                return result.hasWarnings()?com.deepseekharness.app.util.UiText.choose(
+                        "格式化完成；部分旧公共、外置目录或系统可再生缓存暂时无法移除，详情已保存在本机提示记录。正在打开欢迎页…",
+                        "Formatting is complete. Some legacy public, external, or system-regenerable cache items could not be removed; details were retained locally. Opening the welcome screen…"):
+                        com.deepseekharness.app.util.UiText.choose(
+                                "格式化完成，正在打开欢迎页…",
+                                "Formatting is complete. Opening the welcome screen…");
+            }catch(Exception failure){
+                // 尚未开始删除时恢复正常调度；一旦进入删除阶段则继续封住写者，
+                // 允许用户在同一页面重试并避免后台任务写入部分清理的目录。
+                if(!destructive.get())com.deepseekharness.app.backup.AutomaticBackups.abortFactoryReset(app);
+                throw failure;
+            }
+        });
+    }
+    private static String formatProgress(String stage,long entries,long bytes){
+        String count=entries<=0?"":com.deepseekharness.app.util.UiText.choose(
+                "\n已安全清理 "+entries+" 项 · ","\nSafely removed "+entries+" items · ")
+                +com.deepseekharness.app.util.Fmt.bytes(bytes);
+        if(com.deepseekharness.app.backup.FactoryReset.STAGE_PUBLIC.equals(stage))return com.deepseekharness.app.util.UiText.choose(
+                "正在尝试清理旧版 Documents/dshdata；手动导出的备份与其他个人目录会保留…",
+                "Attempting to remove legacy Documents/dshdata; exported backups and other personal folders stay untouched…")+count;
+        if(com.deepseekharness.app.backup.FactoryReset.STAGE_RUNTIME.equals(stage))return com.deepseekharness.app.util.UiText.choose(
+                "正在清除运行环境、会话和插件…","Removing the runtime, conversations, and plugins…")+count;
+        if(com.deepseekharness.app.backup.FactoryReset.STAGE_PRIVATE.equals(stage))return com.deepseekharness.app.util.UiText.choose(
+                "正在清除本机备份和应用私有文件…","Removing local backups and private app files…")+count;
+        if(com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))return com.deepseekharness.app.util.UiText.choose(
+                "正在清理缓存和临时文件…","Clearing caches and temporary files…")+count;
+        if(com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))return com.deepseekharness.app.util.UiText.choose(
+                "正在重置设置、设备授权和 API Key…","Resetting settings, device grants, and the API key…")+count;
+        return com.deepseekharness.app.util.UiText.choose("格式化完成，正在返回欢迎页…","Formatting is complete. Returning to welcome…")+count;
+    }
+    private static boolean isFactoryReset(BackupTaskState.Snapshot snapshot){
+        return FACTORY_RESET_KIND.equals(snapshot.kind)||"格式化 DSHA".equals(snapshot.kind)||"Format DSHA".equals(snapshot.kind);
+    }
+    public boolean isFactoryReset(long id){
+        BackupTaskState.Snapshot snapshot=state.snapshot();return id!=0&&snapshot.id==id&&isFactoryReset(snapshot);
+    }
+    public boolean isCompletedFactoryReset(long id){
+        BackupTaskState.Snapshot snapshot=state.snapshot();
+        return id!=0&&id==persistedCompletion&&snapshot.id==id&&snapshot.status==Status.SUCCEEDED&&isFactoryReset(snapshot);
+    }
+    /** 只在格式化成功并已持久化后消费结果；随后新安装看到的是干净任务状态。 */
+    public synchronized boolean completeFactoryReset(long id){
+        if(!isCompletedFactoryReset(id))return false;
+        boolean cleared=saved.edit().clear().commit();
+        if(!cleared)return false;
+        try{com.deepseekharness.app.backup.AutomaticBackups.completeFactoryReset(app);}
+        catch(RuntimeException incomplete){return false;}
+        controller.startupDiagnostics().completeFactoryResetDrain();
+        state.reset();persistedCompletion=0;
+        com.deepseekharness.app.backup.AutomaticBackups.schedule(app);
+        com.deepseekharness.app.backup.PostUpgradeCleanupService.schedule(app);
+        return true;
+    }
+    public boolean rollbackRuntime(String operation){
+        return start(com.deepseekharness.app.util.UiText.choose("回退兼容运行时", "Roll back compatible runtime"),false,true,
+                id->EnvironmentMaintenance.rollbackRuntime(controller,operation,detail->progress(id,detail)));
+    }
+    public boolean selectDataHome(com.deepseekharness.app.backup.UserDataLayout.Home home){
+        return start(com.deepseekharness.app.util.UiText.choose("选择数据目录", "Select data directory"),true,true,id->{
+            // 此动作只选择已有目录，不复制、清空或修复其中的数据。
+            var fs=new com.deepseekharness.app.backup.AndroidBackupFileSystem();java.io.File files=app.getFilesDir().getCanonicalFile();
+            if(!com.deepseekharness.app.backup.HostPendingTransactions.pending(fs,files).isEmpty()
+                    ||!com.deepseekharness.app.backup.ManagedRuntimeTransaction.pending(fs,files).isEmpty()
+                    ||com.deepseekharness.app.util.MaintenanceTransaction.pending(files)!=null||com.deepseekharness.app.util.RuntimeUpdateTransaction.pending(files)!=null
+                    ||com.deepseekharness.app.backup.EnvironmentRebuildTransaction.pending(fs,files)!=null
+                    ||!new com.deepseekharness.app.backup.ConfigurationSnapshots(fs,files,new java.io.File(files,com.deepseekharness.app.backup.UserDataLayout.LEGACY)).pendingNative().isEmpty())throw new IOException("RECOVERY_PENDING");
+            var layout=new com.deepseekharness.app.backup.UserDataLayout(fs,files);
+            layout.choose(home);return com.deepseekharness.app.util.UiText.choose("已选择数据目录，另一份原件仍保留。", "Data directory selected; the other original remains retained.");
+        });
+    }
     public boolean resetConfig() {
         return start(com.deepseekharness.app.util.UiText.text("重置配置"), false, true, id -> {
-            progress(id, com.deepseekharness.app.util.UiText.text("正在备份重置前的数据…"));
-            MaintenanceTransaction safety = MaintenanceTransaction.create(app.getFilesDir());
-            safety.verify(BackupManager.createMaintenanceBackup(controller, safety.archive()));
-            progress(id, com.deepseekharness.app.util.UiText.text("安全备份校验通过，正在重置配置…"));
-            String result = controller.resetConfig();
-            if (result.startsWith("重置失败")) throw new IOException(result + com.deepseekharness.app.util.UiText.text("\n安全备份：") + safety.archive());
-            return result + com.deepseekharness.app.util.UiText.text("\n重置前安全备份：") + safety.archive();
+            progress(id, com.deepseekharness.app.util.UiText.choose("正在由 Android 校验并保留重置前配置…", "Android is verifying and retaining the original configuration…"));
+            return controller.resetConfig();
         });
     }
     public boolean repairStartup(org.json.JSONObject request) {
-        return start(com.deepseekharness.app.util.UiText.choose("修复启动配置", "Repair startup configuration"), false, true,
+        return start(com.deepseekharness.app.util.UiText.choose("修复启动配置", "Repair startup configuration"), "recover".equals(request.optString("command")), true,
                 id -> StartupRepairs.change(app,controller,request));
     }
     public boolean removeStartupPlugin(String name) {

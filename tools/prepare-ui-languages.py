@@ -20,9 +20,11 @@ def generate(root,output):
             lines.append('values.put('+json.dumps(zh,ensure_ascii=False)+','+json.dumps(en,ensure_ascii=False)+');')
         lines.append('}')
     lines.append('static final String[][] FORMATS = new String[][] {')
-    for item in translated:
-        if item.get('uiFormat'):
-            lines.append('{'+json.dumps(item['zh'],ensure_ascii=False)+','+json.dumps(item['en'],ensure_ascii=False)+'},')
+    # 更完整的模板先匹配，避免“检查通过：%s”吞掉后面的另一段应用状态。
+    formats=sorted((item for item in translated if item.get('uiFormat')),
+                   key=lambda item:max(len(item['zh'].replace('%s','')),len(item['en'].replace('%s',''))),reverse=True)
+    for item in formats:
+        lines.append('{'+json.dumps(item['zh'],ensure_ascii=False)+','+json.dumps(item['en'],ensure_ascii=False)+'},')
     lines.append('};')
     lines.append('}')
     target=output/'com/deepseekharness/app/util/UiMessages.java';target.parent.mkdir(parents=True,exist_ok=True)

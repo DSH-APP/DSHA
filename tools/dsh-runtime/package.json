@@ -1,8 +1,27 @@
 {
   "name": "dsha-locked-dsh-runtime",
-  "version": "0.1.5-rc.2",
+  "version": "0.1.6-alpha.2",
   "private": true,
   "dependencies": {
-    "@deepseek-ai/dsh": "0.1.5-rc.2"
+    "@deepseek-ai/dsh": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-browser-use": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-computer-use": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-agent-team": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-agent-team-profile": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-agent-team-web-profile": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-auto-review": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-browser-use-chrome-devtools-mcp": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-browser-use-playwright-mcp": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-browser-use-runtime": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-browser-use-stagehand-native": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-client-ui-agent-team": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-computer-use-cua-driver-mcp": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-computer-use-cua-driver-native": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-ptc-runtime-python": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-experimental-tool-agent-team": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-fs-ssh": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-sandbox-ssh": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-ssh": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-subprocess-ssh": "0.1.6-alpha.2"
   }
 }

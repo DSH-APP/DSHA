@@ -1,0 +1,22 @@
+{
+  "dshVersion": "0.1.6-alpha.2",
+  "module": "@deepseek-ai/dsh-client-ui-subagent/lib/client.js",
+  "patches": [
+    {
+      "before": "onClick: openTitle === void 0 ? void 0 : () => {",
+      "after": "\"data-dsha-lineage-trigger\": true,\n                        onClick: openTitle === void 0 ? () => changeOpen(!open) : () => {"
+    },
+    {
+      "before": "const scheduleHoverOpen = () => {",
+      "after": "const scheduleHoverOpen = () => {\n                if (window.matchMedia(\"(pointer: coarse)\").matches) return;"
+    },
+    {
+      "before": "const scheduleHoverClose = () => {",
+      "after": "const scheduleHoverClose = () => {\n                if (window.matchMedia(\"(pointer: coarse)\").matches) return;"
+    },
+    {
+      "before": "className: SubagentHeaderLineage_module_css_default.menu,",
+      "after": "className: SubagentHeaderLineage_module_css_default.menu + \" dsha-lineage-menu\","
+    }
+  ]
+}

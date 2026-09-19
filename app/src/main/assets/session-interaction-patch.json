@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dshVersion": "0.1.5-rc.2",
+  "dshVersion": "0.1.6-alpha.2",
   "patches": [
     {
       "before": "\t\tfunction SearchResultItem({ result, currentId, onOpen, t }) {",

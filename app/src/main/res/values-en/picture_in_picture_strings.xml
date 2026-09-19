@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="picture_in_picture_title">System picture-in-picture</string>
+    <string name="picture_in_picture_hint">Picture-in-picture is controlled only by Android system settings.</string>
+    <string name="picture_in_picture_allowed">Allowed by the system; the chat stays in a small window when you go Home or switch apps.</string>
+    <string name="picture_in_picture_disabled">Disabled by the system; no small window appears in the background. Tap to change.</string>
+    <string name="picture_in_picture_landscape">Switch to landscape</string>
+    <string name="picture_in_picture_portrait">Switch to portrait</string>
+    <string name="picture_in_picture_unsupported">Picture-in-picture requires Android 8.0+ and a supported device.</string>
+    <string name="picture_in_picture_permission">Allow picture-in-picture for DSHA in system settings.</string>
+    <string name="picture_in_picture_settings_unavailable">Could not open the system picture-in-picture settings.</string>
+</resources>

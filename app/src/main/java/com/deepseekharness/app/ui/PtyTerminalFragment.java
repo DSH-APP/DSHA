@@ -150,8 +150,8 @@ public final class PtyTerminalFragment extends Fragment
     /** 已有会话就接回去（切页面回来不丢历史），没有就起一个。 */
     private void startTerminal() {
         try {
-            if (com.deepseekharness.app.BackupManager.isEnvironmentTaskBusy())
-                throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("正在维护环境，请完成后再启动终端"));
+            String blocked=TerminalFragment.terminalBlockMessage(c.proot());
+            if(!blocked.isEmpty()){title.setText(blocked);return;}
             // 初始 80x24 只是占位：attachSession 之后 TerminalView 会按控件实测的字宽
             // 重新算行列并通知 PTY（否则 TUI 的边框会错位）。
             PtySession ns = PtySession.start(c.proot(), 80, 24, null);

@@ -12,6 +12,10 @@ import shutil
 import tarfile
 import importlib.util
 
+GLOBAL_PACKAGE_ALIASES = {
+    '@deepseek-ai/dsh-workflow-worker-thread': '@deepseek-ai/dsh-workflow-ptc',
+}
+
 
 def excluded_platform(values, current):
     if isinstance(values, str):
@@ -57,7 +61,7 @@ def replaced_runtime(name):
         return True
     # 四个内置插件改由可审查的 APK 资产安装，不再同时保留旧的压缩树。
     return any(name == prefix or name.startswith(prefix + '/') for prefix in (
-        'root/dsha-device-shell-guide', 'root/dsha-task-notifier', 'root/dsha-status-overlay', 'root/dsha-web-mobile'))
+        'root/dsha-device-shell-guide', 'root/dsha-task-notifier', 'root/dsha-status-overlay', 'root/dsha-web-mobile', 'root/dsha-computer-use-android', 'root/dsha-auto-review'))
 
 
 def valid_overlay(item, name):
@@ -74,9 +78,10 @@ def valid_overlay(item, name):
         return item.issym() and posixpath.normpath(posixpath.join(posixpath.dirname(name), item.linkname)).startswith(prefix)
     global_prefix = 'usr/local/lib/node_modules/'
     package = name.removeprefix(global_prefix)
+    target_package = GLOBAL_PACKAGE_ALIASES.get(package, package)
     return item.issym() and name.startswith(global_prefix) and package not in ('npm', '@deepseek-ai/dsh') \
         and re.fullmatch(r'(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*', package) is not None \
-        and posixpath.normpath(posixpath.join(posixpath.dirname(name), item.linkname)) == prefix + 'node_modules/' + package
+        and posixpath.normpath(posixpath.join(posixpath.dirname(name), item.linkname)) == prefix + 'node_modules/' + target_package
 
 
 def main():

@@ -27,14 +27,13 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.util.Constants;
 import com.deepseekharness.app.util.WebPreviewPolicy;
 
 /** 标准版预览：系统 WebView、异步鉴权、文件选择与可恢复的加载错误。 */
-public class WebPreviewActivity extends AppCompatActivity implements WebFullscreenUi.Host {
+public class WebPreviewActivity extends PictureInPictureActivity implements WebFullscreenUi.Host {
     private static final String EXTRA_URL = "url";
     private static final String EXTRA_COOKIE = "cookie";
     // 检查真实页面能力，包括上游 polyfill 的结果，不凭伪装 UA 判断。
@@ -70,6 +69,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
 
     public static final class Retained extends androidx.lifecycle.ViewModel {
         WebView view;
+        boolean ready;
         String authUrl;
         androidx.webkit.ScriptHandler compatibilityScript;
         String scriptLanguage;
@@ -263,7 +263,11 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
                     if(source!=webView||!mainFrame||!WebPreviewPolicy.sameService(baseUrl,source.getUrl()))return;
                     try {
                         String language=message.getData();
-                        if(com.deepseekharness.app.util.UiLanguagePreference.supported(language))LanguageController.select(this,language);
+                        // 网页只有「中文 / English」两个显式选项，不接受 system：
+                        // 把网页当成用户显式选择，避免页面误传偏好值后行为含糊。
+                        if(com.deepseekharness.app.util.UiLanguagePreference.EN.equals(language)
+                                ||com.deepseekharness.app.util.UiLanguagePreference.ZH.equals(language))
+                            LanguageController.select(this,language);
                     } catch(IllegalStateException ignored) { }
                 });
         }
@@ -310,6 +314,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
 
         @Override public void onPageStarted(WebView view, String url, Bitmap favicon) {
             if (webView != view) return;
+            retained.ready = false; refreshPictureInPicture();
             pageFailed = false;
             errorPanel.setVisibility(View.GONE);
             progress.setProgress(0);
@@ -320,6 +325,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
             if (webView != view || pageFailed) return;
             progress.setVisibility(View.GONE);
             if (!WebPreviewPolicy.sameService(baseUrl, url)) return;
+            retained.ready = true; refreshPictureInPicture();
             // 厂商内核可能不提供 DOCUMENT_START_SCRIPT；页面入口已提前补齐，这里再幂等核验。
             view.evaluateJavascript(WebPageScripts.compatibility(WebPreviewActivity.this)+"\n"+CAPABILITY_CHECK, result -> {
                 if (webView != view || pageFailed || isFinishing() || isDestroyed()) return;
@@ -429,6 +435,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         if (isFinishing() || isDestroyed()) return;
         com.deepseekharness.app.core.DiagnosticLog.record(this, "WEB_PAGE", title + com.deepseekharness.app.util.UiText.text("：") + detail);
         pageFailed = true;
+        retained.ready = false; refreshPictureInPicture();
         progress.setVisibility(View.GONE);
         errorTitle.setText(title);
         errorDetail.setText(com.deepseekharness.app.util.UiText.text(detail + "\n\n" + browserInfo));
@@ -437,6 +444,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
 
     private void openExternal(String url) {
         if (url == null) return;
+        if(PluginNavigation.open(this,url))return;
         Uri uri = Uri.parse(url);
         if (!"http".equals(uri.getScheme()) && !"https".equals(uri.getScheme())) return;
         try {
@@ -454,7 +462,7 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         Runnable fallback = () -> {
             if (!navigatingBack || webView != current || isDestroyed()) return;
             navigatingBack = false;
-            if (current.canGoBack()) current.goBack(); else finish();
+            if (current.canGoBack()) current.goBack(); else leavePreview();
         };
         current.postDelayed(fallback,1200);
         current.evaluateJavascript(WebPageScripts.back(this), result -> {
@@ -476,7 +484,8 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
         cancelFileSelection();
         WebView previous = webView;
         webView = null;
-        if (retained != null) retained.view = null;
+        if (retained != null) { retained.view = null; retained.ready = false; }
+        refreshPictureInPicture();
         if(retained!=null){retained.compatibilityScript=null;retained.scriptLanguage=null;}
         if (retained != null && retained.blobDownload != null) { retained.blobDownload.close(); retained.blobDownload = null; }
         if (previous != null) {
@@ -492,13 +501,27 @@ public class WebPreviewActivity extends AppCompatActivity implements WebFullscre
 
     @Override protected void onPause() {
         PluginFragment.invalidateInstalledState();
-        if (webView != null) webView.onPause();
         super.onPause();
+    }
+
+    @Override protected boolean pictureInPictureContentReady() {
+        return webView != null && retained != null && retained.ready && !pageFailed
+                && WebPreviewPolicy.sameService(baseUrl, webView.getUrl());
+    }
+
+    // 画中画仍可见但 Activity 已暂停；完全不可见时才暂停网页绘制。
+    @Override protected void onStop() {
+        if (webView != null) webView.onPause();
+        super.onStop();
+    }
+
+    @Override protected void onStart() {
+        super.onStart();
+        if (webView != null) webView.onResume();
     }
 
     @Override protected void onResume() {
         super.onResume();
-        if (webView != null) webView.onResume();
         if(webView!=null&&WebPreviewPolicy.sameService(baseUrl,webView.getUrl())) {
             updateDocumentLanguage(webView);webView.evaluateJavascript(WebPageScripts.language(this),null);
         }

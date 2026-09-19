@@ -12,6 +12,14 @@ import java.io.IOException;
 public final class TerminalProcessCloser {
     private TerminalProcessCloser() { }
 
+    /** proot 自己负责回收 tracee；结束后调用者还须核验本次独立会话已空。 */
+    public static void closeProot(ProcessIdentity expected)throws IOException{
+        ProcessIdentity current=read(expected.pid,expected.pid);
+        if(current==null||current.exited())return;
+        if(!expected.sameProcess(current)||!current.ownsSession())throw new IOException(com.deepseekharness.app.util.UiText.text("无法核验终端独立会话，原环境保持保护"));
+        signal(expected,OsConstants.SIGQUIT);
+    }
+
     public static void close(ProcessIdentity expected, long timeoutMs) throws IOException, InterruptedException {
         ProcessIdentity leader = read(expected.pid, expected.pid);
         if (leader == null || leader.exited()) {
@@ -82,11 +90,21 @@ public final class TerminalProcessCloser {
     }
 
     private static ProcessIdentity read(int pid, int session) throws IOException {
-        try { return ProcessIdentity.inSession(Compat.readAll(new File("/proc/" + pid + "/stat")), pid, session); }
-        catch (java.io.FileNotFoundException gone) {
-            if (!new File("/proc/" + pid).exists()) return null;
-            throw gone;
-        }
+        long deadline=SystemClock.elapsedRealtime()+500;IOException failure=null;
+        do {
+            try {
+                ProcessIdentity current=ProcessIdentity.inSession(Compat.readAll(new File("/proc/"+pid+"/stat")),pid,session);
+                if(current!=null)return current;
+                failure=new IOException(com.deepseekharness.app.util.UiText.text("终端进程身份暂不可读，保留环境保护"));
+            }catch(IOException error){failure=error;}
+            // exec/退出窗口内空读或不完整 stat 不是“进程已消失”。用独立内核会话查询核实。
+            int actual=NativeProcess.sessionId(pid);
+            if(actual==-OsConstants.ESRCH||actual>0&&actual!=session)return null;
+            if(actual<0)throw new IOException(com.deepseekharness.app.util.UiText.text("无法查询终端会话（errno=")+-actual+com.deepseekharness.app.util.UiText.text("），请稍后重试"),failure);
+            if(SystemClock.elapsedRealtime()>=deadline)break;
+            try{Thread.sleep(20);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IOException("TERMINAL_IDENTITY_INTERRUPTED",interrupted);}
+        }while(true);
+        throw new IOException(com.deepseekharness.app.util.UiText.text("无法核验终端独立会话，原环境保持保护"),failure);
     }
 
     private static void signal(ProcessIdentity expected, int signal) throws IOException {

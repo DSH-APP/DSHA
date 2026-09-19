@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "dependencies": [
+    {
+      "group": "com.google.code.gson",
+      "name": "gson",
+      "version": "2.13.1",
+      "sha256": "94855942d4992f112946d3de1c334e709237b8126d8130bf07807c018a4a2120",
+      "license": "Apache-2.0",
+      "licenseAsset": "licenses/gson-LICENSE.txt",
+      "source": "https://github.com/google/gson/tree/gson-parent-2.13.1"
+    },
+    {
+      "group": "org.bouncycastle",
+      "name": "bcprov-jdk15to18",
+      "version": "1.85.2",
+      "sha256": "d698b3a4b81f6ca987a6b2ed3363c7dfa2609c6910a8eb0405ad72a3d9bcb4f8",
+      "license": "Bouncy-Castle (MIT-style)",
+      "licenseAsset": "licenses/bouncycastle-LICENSE.txt",
+      "source": "https://www.bouncycastle.org/download/bouncy-castle-java/"
+    }
+  ]
+}

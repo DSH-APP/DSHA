@@ -10,26 +10,26 @@
     <!-- 页面左右边距：所有全屏页统一 -->
     <dimen name="page_pad">16dp</dimen>
     <!-- 居中式启动/引导页的宽边距（内容少，留白更多才不显空） -->
-    <dimen name="page_pad_wide">32dp</dimen>
+    <dimen name="page_pad_wide">24dp</dimen>
     <!-- 卡片内部留白 -->
     <dimen name="card_pad">16dp</dimen>
     <!-- 区块之间（卡片与卡片、段与段） -->
-    <dimen name="gap_section">20dp</dimen>
+    <dimen name="gap_section">16dp</dimen>
     <!-- 段内小节之间 -->
-    <dimen name="gap_block">16dp</dimen>
+    <dimen name="gap_block">14dp</dimen>
     <!-- 控件之间（按钮行、标签行） -->
-    <dimen name="gap_control">12dp</dimen>
+    <dimen name="gap_control">10dp</dimen>
     <!-- 紧邻元素（标题与副标题、图标与文字） -->
     <dimen name="gap_tight">8dp</dimen>
     <dimen name="gap_hair">4dp</dimen>
 
     <!-- ========== 圆角阶梯 ========== -->
     <!-- 大容器：卡片、预览框 -->
-    <dimen name="radius_card">16dp</dimen>
+    <dimen name="radius_card">18dp</dimen>
     <!-- 控件：按钮、输入框 -->
-    <dimen name="radius_control">16dp</dimen>
+    <dimen name="radius_control">13dp</dimen>
     <!-- 小控件：标签、tab、小徽章 -->
-    <dimen name="radius_small">12dp</dimen>
+    <dimen name="radius_small">10dp</dimen>
     <!-- 全圆：chip、进度条 -->
     <dimen name="radius_pill">999dp</dimen>
 

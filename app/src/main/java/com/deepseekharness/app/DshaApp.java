@@ -14,10 +14,15 @@ public class DshaApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        // 必须早于界面 Locale.setDefault；保留系统原始语言供「跟随系统」使用。
+        com.deepseekharness.app.util.SystemLanguage.initialize();
+        com.deepseekharness.app.data.PortableSettings.initialize(this);
         com.deepseekharness.app.ui.LanguageController.apply(this);
         ShizukuShell.init(this);
         com.deepseekharness.app.ui.ThemeController.apply(this);
         com.deepseekharness.app.core.RuntimeTasks.initialize(this);
+        com.deepseekharness.app.backup.AutomaticBackups.schedule(this);
+        com.deepseekharness.app.backup.PostUpgradeCleanupService.schedule(this);
         com.deepseekharness.app.core.DiagnosticLog.installCrashHandler(this);
         registerActivityLifecycleCallbacks(new com.deepseekharness.app.ui.ModernAndroidUi());
         registerActivityLifecycleCallbacks(new ForegroundActivity());

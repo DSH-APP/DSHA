@@ -1,0 +1,72 @@
+// 独立测试包与用户安装隔离；不改变标准 Release 的包名、签名或源码集合。
+// 用户已停用此交付方式；仅在以后明确重新授权时才可打开历史入口。
+if (System.getenv('DSHA_ENABLE_LEGACY_AUDIT') != '1') {
+    throw new GradleException('已停用额外审计 APK：请使用同签名正式 Release 覆盖安装验收。')
+}
+gradle.beforeProject { project ->
+    if (project.path == ':app') {
+        project.plugins.withId('com.android.application') {
+            def auditPackage=project.findProperty('dsha.auditPackage') ?: 'com.dsh.client.rc21audit'
+            if(!(auditPackage in ['com.dsh.client.rc21audit','com.dsh.client.stabilityaudit']))throw new GradleException('Only isolated audit application IDs are allowed')
+            def auditSources = project.layout.buildDirectory.dir('generated/deviceStyleAudit')
+            def nativeAuditSources=project.layout.buildDirectory.dir('generated/deviceAuditSources')
+            def prepareNativeAudit=project.tasks.register('prepareNativeDeviceAudit') {
+                inputs.dir(project.file('src/deviceAudit/java'));inputs.property('auditPackage',auditPackage);outputs.dir(nativeAuditSources)
+                doLast { project.fileTree('src/deviceAudit/java').matching { include '**/*.java' }.files.each { source ->
+                    def relative=project.file('src/deviceAudit/java').toPath().relativize(source.toPath()).toString()
+                    def target=new File(nativeAuditSources.get().asFile,relative);target.parentFile.mkdirs();target.setText(source.getText('UTF-8').replace('com.dsh.client.rc21audit',auditPackage),'UTF-8')
+                } }
+            }
+            def scriptAssets=project.layout.buildDirectory.dir('generated/deviceScriptAssets')
+            def prepareScripts=project.tasks.register('prepareDeviceScriptAudit', Copy) {
+                into(scriptAssets)
+                from(project.rootProject.file('tools')) {
+                    include 'test-plugin-discovery.py', 'test-plugin-dependencies.py', 'test-plugin-transactions.py', 'test-plugin-review.py', 'test-attachment-store.mjs'
+                    into 'device-checks/tools'
+                }
+                from(project.file('src/main/assets')) {
+                    include 'plugin-manager.py', 'plugin-lifecycle.py', 'plugin-dependencies.py', 'plugin-transactions.py', 'register-builtin-plugins.py', 'backup-plugin-graph.py', 'plugin-semver.cjs'
+                    into 'device-checks/app/src/main/assets'
+                }
+            }
+            def prepareStyle = project.tasks.register('prepareDeviceStyleAudit') {
+                def names = ['LayoutAuditInstrumentation', 'LayoutPreviewActivity']
+                inputs.files(names.collect { project.file("src/debug/java/com/deepseekharness/app/ui/${it}.java") })
+                inputs.property('auditPackage',auditPackage)
+                outputs.dir(auditSources)
+                doLast {
+                    def destination = new File(auditSources.get().asFile, 'com/deepseekharness/app/ui')
+                    destination.mkdirs()
+                    names.each { name ->
+                        def source = project.file("src/debug/java/com/deepseekharness/app/ui/${name}.java").getText('UTF-8')
+                        if (name == 'LayoutAuditInstrumentation') {
+                            source = source.replace('com.dsh.client/com.deepseekharness.app.ui.MainActivity', 'com.dsh.client.rc21audit/com.deepseekharness.app.ui.MainActivity')
+                            source = source.replace('Bundle result=new Bundle();ConfigStore store=new ConfigStore(getTargetContext());',
+                                'Bundle result=new Bundle(); if(!getTargetContext().getPackageName().equals("com.dsh.client.rc21audit")){finish(1,result);return;} ConfigStore store=new ConfigStore(getTargetContext());boolean auditWelcomed=store.isWelcomed();boolean auditRecovery=store.isStartupRecoveryRequested();store.requestStartupRecovery(false);store.setWelcomed(true);')
+                            source = source.replace('new File(getTargetContext().getCacheDir(),"layout-audit")',
+                                'new File(getTargetContext().getExternalFilesDir(null),"device-style-"+java.util.UUID.randomUUID())')
+                            source = source.replace('finish("PASS".equals(result.getString("result"))?',
+                                'result.putString("artifactDirectory",folder.getAbsolutePath());store.setWelcomed(auditWelcomed);store.requestStartupRecovery(auditRecovery);finish("PASS".equals(result.getString("result"))?')
+                        }
+                        new File(destination, name+'.java').setText(source.replace('com.dsh.client.rc21audit',auditPackage), 'UTF-8')
+                    }
+                }
+            }
+            project.tasks.configureEach { task ->
+                if (task.name.endsWith('DeviceAuditJavaWithJavac') || task.name.endsWith('DeviceAuditKotlin')) task.dependsOn(prepareStyle,prepareNativeAudit)
+                if(task.name.contains('DeviceAudit'))task.dependsOn(prepareScripts)
+            }
+            project.androidComponents.finalizeDsl { android ->
+                android.buildTypes.create('deviceAudit') {
+                    initWith android.buildTypes.release
+                    applicationIdSuffix auditPackage.substring('com.dsh.client'.length())
+                    debuggable false
+                    matchingFallbacks = ['release']
+                }
+                android.sourceSets.deviceAudit.java.setSrcDirs([nativeAuditSources.get().asFile,auditSources.get().asFile])
+                android.sourceSets.deviceAudit.assets.srcDir(scriptAssets.get().asFile)
+                android.sourceSets.deviceAudit.manifest.srcFile('src/deviceAudit/AndroidManifest.xml')
+            }
+        }
+    }
+}

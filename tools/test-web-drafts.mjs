@@ -7,6 +7,12 @@ vm.runInNewContext(await readFile(new URL('../app/src/main/assets/app-integratio
   {window:{__ModuleLoader__:{load:d=>{api=d.factory()}}},Blob,File,Promise,Date,Math,Map,Array,JSON,Error});
 const file = new File(['original-image'],'a.png',{type:'image/png'});
 const record = {id:'session',revision:'saved',files:[{blob:file,name:file.name,type:file.type,lastModified:0}],bytes:file.size};
+test('alpha.2 使用驻留 Session binding，不能遍历 WeakMap 或激活冷会话',()=>{
+ const a={},b={},shellA={},shellB={},calls=[];
+ const ctx={sessions:{list:{getSnapshot:()=>({byId:{a:{id:'a'},b:{id:'b'},cold:{id:'cold'}}})},binding:id=>id==='a'?{ctx:a}:id==='b'?{ctx:b}:undefined},
+ conversation:{input:{shells:new WeakMap(),for(context){calls.push(context);return context===a?shellA:shellB;}}}};
+ const inputs=api.residentInputs(ctx);assert.equal(inputs.size,2);assert.equal(inputs.get('a'),shellA);assert.equal(inputs.get('b'),shellB);assert.deepEqual(calls,[a,b]);
+});
 function fixture(saved = record) {
   let release, writes=[], listeners=new Set(), notices=[];
   const storage = new Map([['dsha.images.revision:session','saved']]);

@@ -1,0 +1,18 @@
+{
+  "dshVersion": "0.1.6-alpha.2",
+  "module": "@deepseek-ai/dsh-client-ui-settings-general/lib/client.js",
+  "patches": [
+    {
+      "before": "const openSection = (0, react.useCallback)((id) => {\n\t\t\t\tsetActiveId(id);\n\t\t\t\tsetOpen(true);\n\t\t\t}, []);",
+      "after": "const openSection = (0, react.useCallback)((id) => {\n\t\t\t\tsetActiveId(id);\n\t\t\t\tsetOpen(true);\n\t\t\t}, []);\n            // DSHA_MODELS_ENTRY_V2: reuse the real upstream model editor.\n            (0, react.useEffect)(() => {\n                const openModels = () => { if (!window.__DSHA_OPEN_MODELS__) return;\n                    window.__DSHA_OPEN_MODELS__ = false; props.dshaOpenSidebar(); openSection(\"models\"); };\n                window.addEventListener(\"dsha-open-models\", openModels); openModels();\n                return () => window.removeEventListener(\"dsha-open-models\", openModels);\n            }, [openSection, props.dshaOpenSidebar]);"
+    },
+    {
+      "before": "const shellInjected = () => ({",
+      "after": "const shellInjected = () => ({\n                // 设置面板挂载在侧栏内；窄屏抽屉收起时必须先通过真实布局服务展开。\n                dshaOpenSidebar: () => {\n                    if (document.querySelector(\"[data-sidebar-collapsed]\")) ctx.layout.toggleSidebar();\n                },"
+    },
+    {
+      "before": "\"remote.settings\",\n\t\t\t\"settingsScope\"",
+      "after": "\"remote.settings\",\n            \"layout\",\n\t\t\t\"settingsScope\""
+    }
+  ]
+}

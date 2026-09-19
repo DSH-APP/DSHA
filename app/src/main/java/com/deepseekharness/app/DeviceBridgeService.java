@@ -4,6 +4,7 @@ import com.deepseekharness.app.util.Compat;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -197,7 +198,19 @@ public class DeviceBridgeService extends Service {
                 .setContentTitle("DSHA")
                 .setContentText(text)
                 .setSmallIcon(android.R.drawable.ic_menu_manage)
+                .setContentIntent(dshaNotificationIntent(false))
+                .setAutoCancel(false)
                 .build();
+    }
+
+    /** 通知正文点击回到 DSHA；不会直接跳到外部页面或自动启动 Web。 */
+    private PendingIntent dshaNotificationIntent(boolean openWeb) {
+        Intent intent = new Intent(this, com.deepseekharness.app.ui.MainActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .putExtra("open_launch", true);
+        if (openWeb) intent.putExtra("open_web", true);
+        return PendingIntent.getActivity(this, 3006, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     private void startKeepAlive() {
@@ -488,6 +501,8 @@ public class DeviceBridgeService extends Service {
                     .setContentTitle(title)
                     .setContentText(text)
                     .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                    .setContentIntent(dshaNotificationIntent(false))
+                    .setAutoCancel(true)
                     .build());
         } catch (Throwable ignored) {
         }

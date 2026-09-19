@@ -14,12 +14,15 @@ public final class ManagedRuntimeLayout {
         out.add(DSH);
         out.add("usr/local/share/dsha/dsh-runtime.version");
         out.add("usr/local/share/dsha/ca-certificates.crt");
+        out.add("usr/local/share/dsha/dns-compat.cjs");
+        out.add("usr/local/share/dsha/managed-assets-v2");
         out.add("etc/profile.d/dsha-runtime-env.sh");
+        out.add("root/dsha-builtin.txt");
         out.add("root/dsha-app-integration");
         for (String name : BuiltinPlugins.DEFAULT_BUILTINS) out.add(BuiltinPlugins.entityDir(name).substring(1));
-        for (String name : new String[]{"plugin-manager.py", "plugin-lifecycle.py", "plugin-semver.cjs",
-                "register-builtin-plugins.py", "device-shell-policy.py", "adb-shell.py"}) out.add("root/.dsh/" + name);
-        for (String name : new String[]{"npm", "npx", "dsha-plugin", "install-ubuntu-tools"}) out.add("root/dsh-bin/" + name);
+        for (String name : new String[]{"plugin-manager.py", "plugin-lifecycle.py", "plugin-dependencies.py", "plugin-transactions.py", "backup-plugin-graph.py", "plugin-semver.cjs",
+                "register-builtin-plugins.py", "startup-observer.cjs", "startup-recovery.py", "startup-checkpoints.py", "device-shell-policy.py", "adb-shell.py"}) out.add("root/.dsh/" + name);
+        for (String name : new String[]{"npm", "npx", "dsha-plugin", "adb-shell", "install-ubuntu-tools"}) out.add("root/dsh-bin/" + name);
         return out;
     }
 
@@ -35,6 +38,7 @@ public final class ManagedRuntimeLayout {
     public static boolean allowed(String path) {
         if (path == null || path.contains("..") || path.contains("\\") || path.startsWith("/")) return false;
         if (path.equals("linux/.offline-identity") || path.equals("linux/.offline-version") || path.equals("linux/.offline-extracted")) return true;
+        if(path.equals("linux/.runtime-descriptor.json")||path.equals("linux/.runtime-health.json"))return true;
         if (!path.startsWith(ROOT)) return false;
         String relative = path.substring(ROOT.length());
         return paths().contains(relative) || alias(relative);

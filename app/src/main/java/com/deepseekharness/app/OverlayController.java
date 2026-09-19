@@ -97,6 +97,14 @@ public final class OverlayController {
     private static LinearLayout confirmRow;
     private static TextView confirmHint;
     private static Runnable hideTask;
+    private static final com.deepseekharness.app.util.OverlayFrameBuffer frames=new com.deepseekharness.app.util.OverlayFrameBuffer();
+    private static Runnable renderTask;
+    private static volatile long lastStreamAt;
+    private static volatile boolean previewing;
+    private static GradientDrawable background;
+    private static int appliedColor=Integer.MIN_VALUE,appliedSp=-1,appliedLines=-1;
+    private static android.content.ComponentCallbacks configurationListener;
+    private static Context windowContext;
     private static String activeKey = "";
     /** 确认进行中：这期间不自动淡出、也不让流式内容盖掉命令。 */
     private static volatile boolean confirming;
@@ -196,8 +204,8 @@ public final class OverlayController {
         synchronized (LOCK) {
             if ("clear".equals(k)) {
                 BUFFERS.remove(key);
-                if (key.equals(activeKey)) activeKey = "";
-                hideNow();
+                LAST_SEEN.remove(key);
+                if (key.equals(activeKey)) {activeKey = "";frames.clear();hideNow();}
                 return;
             }
             String prev = BUFFERS.get(key);
@@ -212,7 +220,8 @@ public final class OverlayController {
             } else {
                 next = text == null ? "" : text;   // text / tool
             }
-            next = capRaw(collapse(next));
+            // 保留 token 尾部空格和换行，避免 "hello " + "world" 被拼成一词。
+            next = capRaw(next.replace("\r\n","\n"));
             BUFFERS.put(key, next);
             while (BUFFERS.size() > MAX_SESSIONS) {
                 BUFFERS.remove(BUFFERS.keySet().iterator().next());
@@ -225,8 +234,8 @@ public final class OverlayController {
             // 这里存的是**未分行的原文**：分行留给主线程做（见 showStream），
             // 只有那边拿得到 label 的实测宽度与字号。
             line = next;
+            showStream(ctx, key, line);
         }
-        showStream(ctx, key, line);
     }
 
     /** 会话标识压成两三个字符，多路并发时用来分辨谁在说话。 */
@@ -263,6 +272,8 @@ public final class OverlayController {
     static void askConfirm(Context ctx, String cmd, Runnable onAllow, Runnable onDeny) {
         if (ctx == null || !enabled(ctx) || !permitted(ctx) || !confirmOnOverlay(ctx)) return;
         confirming = true;
+        previewing = false;
+        frames.clear();
         final String text = com.deepseekharness.app.util.UiText.text("⚠ 请求执行：") + collapse(cmd);
         mainHandler().post(() -> {
             try {
@@ -270,6 +281,7 @@ public final class OverlayController {
                 if (label == null || confirmRow == null) return;
                 // 命令可能很长，确认时多给几行看清楚（比配置的行数多，但不超过 8）
                 int cmdLines = Math.max(3, Math.min(8, lines(ctx) + 2));
+                label.setMinLines(1);
                 label.setMaxLines(cmdLines);
                 // 命令按宽度切好再显示，而且取**开头**几行：交给系统折行会被 maxLines
                 // 从尾部截掉，而用户正要判断「这条命令能不能跑」——rm -rf 这种关键部分
@@ -308,7 +320,7 @@ public final class OverlayController {
             try {
                 if (confirmRow != null) confirmRow.setVisibility(View.GONE);
                 if (confirmHint != null) confirmHint.setVisibility(View.GONE);
-                if (label != null) label.setMaxLines(lines(ctx));
+                applyStyle(ctx);
                 scheduleHide(ctx);
             } catch (Throwable ignored) {
             }
@@ -325,27 +337,33 @@ public final class OverlayController {
      * 窄了则白留一截空白。用户报的「换行也很奇怪」就是这个。
      */
     private static void showStream(Context ctx, String key, String raw) {
-        mainHandler().post(() -> {
+        Context app=ctx.getApplicationContext();
+        previewing = false;
+        lastStreamAt=android.os.SystemClock.uptimeMillis();
+        if(!frames.offer(key,raw))return;
+        renderTask=() -> {
+            var frame=frames.take();
+            if(!frames.current(frame)||confirming||!enabled(app)||!permitted(app))return;
             try {
-                ensureView(ctx);
+                ensureView(app);
+                applyStyle(app);
                 if (label != null) {
-                    int maxLines = lines(ctx);
-                    label.setMaxLines(maxLines);
-                    CharSequence body = tailLines(ctx, label, raw, maxLines);
+                    int maxLines = lines(app);
                     // 会话标识只在**最近真有多路在说话**时才贴，而且贴在可见的第一行
-                    if (multiActive()) body = shortTag(key) + " " + body;
-                    label.setText(body);
+                    String full=multiActive()?shortTag(frame.key)+" "+frame.text:frame.text;
+                    CharSequence body = tailLines(app, label, full, maxLines);
+                    if(!body.toString().contentEquals(label.getText()))label.setText(body);
                 }
                 if (root != null) {
-                    applyStyle(ctx);
                     if (root.getVisibility() != View.VISIBLE) root.setVisibility(View.VISIBLE);
                 }
-                scheduleHide(ctx);
+                scheduleHide(app);
             } catch (Throwable e) {
                 android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("悬浮条更新失败: ")
                         + SensitiveData.redact(String.valueOf(e)));
             }
-        });
+        };
+        mainHandler().postDelayed(renderTask,32);
     }
 
     /** 悬浮条宽度：屏幕的 94%。定死而不用 WRAP_CONTENT —— 包裹内容会让条子随文字多少
@@ -353,7 +371,8 @@ public final class OverlayController {
     private static int overlayWidthPx(Context ctx) {
         try {
             int w = ctx.getResources().getDisplayMetrics().widthPixels;
-            if (w > 0) return (int) (w * 0.94f);
+            if(Build.VERSION.SDK_INT>=30 && wm!=null)w=wm.getMaximumWindowMetrics().getBounds().width();
+            if (w > 0) return Math.min((int)(w*0.94f),dp(ctx,720));
         } catch (Throwable ignored) {
         }
         return dp(ctx, 320);
@@ -383,6 +402,8 @@ public final class OverlayController {
             android.text.StaticLayout sl = android.text.StaticLayout.Builder
                     .obtain(raw, 0, raw.length(), tv.getPaint(), width)
                     .setIncludePad(false)
+                    .setBreakStrategy(android.graphics.text.LineBreaker.BREAK_STRATEGY_SIMPLE)
+                    .setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE)
                     .build();
             int n = sl.getLineCount();
             if (n <= maxLines) return raw;
@@ -408,6 +429,7 @@ public final class OverlayController {
     private static void show(Context ctx, String line, boolean sticky) {
         mainHandler().post(() -> {
             try {
+                previewing = false;
                 ensureView(ctx);
                 if (label != null) {
                     label.setMaxLines(lines(ctx));
@@ -428,28 +450,40 @@ public final class OverlayController {
     private static void scheduleHide(Context ctx) {
         Handler h = mainHandler();
         if (hideTask != null) h.removeCallbacks(hideTask);
-        hideTask = OverlayController::hideNow;
+        hideTask = () -> {
+            // 到期回调不再二次排队；新 token 已到达时不允许旧回调藏起窗口。
+            if(android.os.SystemClock.uptimeMillis()-lastStreamAt<holdMs(ctx)){scheduleHide(ctx);return;}
+            hideNow();
+        };
         h.postDelayed(hideTask, holdMs(ctx));
     }
 
     private static void hideNow() {
-        mainHandler().post(() -> {
+        Runnable hide=() -> {
             try {
                 if (confirming) return;      // 有待批准的命令时不许自己消失
                 if (root != null) root.setVisibility(View.GONE);
             } catch (Throwable ignored) {
             }
-        });
+        };
+        if(Looper.myLooper()==Looper.getMainLooper())hide.run();else mainHandler().post(hide);
     }
 
     /** 彻底移除窗口（关开关 / 撤权限 / 改样式后重建时用）。 */
-    static void teardown(Context ctx) {
+    public static void teardown(Context ctx) {
+        frames.clear();
         mainHandler().post(() -> {
             synchronized (LOCK) {
                 BUFFERS.clear();
+                LAST_SEEN.clear();
                 activeKey = "";
             }
             confirming = false;
+            previewing = false;
+            if(hideTask!=null)mainHandler().removeCallbacks(hideTask);
+            if(renderTask!=null)mainHandler().removeCallbacks(renderTask);
+            if(windowContext!=null&&configurationListener!=null)windowContext.unregisterComponentCallbacks(configurationListener);
+            configurationListener=null;windowContext=null;background=null;appliedColor=Integer.MIN_VALUE;appliedSp=-1;appliedLines=-1;
             try {
                 if (wm != null && root != null) wm.removeViewImmediate(root);
             } catch (Throwable ignored) {
@@ -461,6 +495,9 @@ public final class OverlayController {
             wm = null;
         });
     }
+
+    /** 应用内格式化不结束进程，显式撤下旧悬浮窗与其中可能显示的会话内容。 */
+    public static void resetForFreshStart(Context ctx) { teardown(ctx.getApplicationContext()); }
 
     /** 配置改了之后立刻看到效果（底色/透明度/行数都能热应用）。 */
     public static void applyStyleNow(Context ctx) {
@@ -474,15 +511,78 @@ public final class OverlayController {
         });
     }
 
+    /**
+     * 在样式编辑页显示一段短暂的真实悬浮条预览。预览不写入偏好，也不
+     * 改变悬浮条总开关；它只复用同一个 WindowManager View，让用户能确认
+     * 透明度、字号和行数确实会影响系统悬浮窗。后续真实流式内容到达时
+     * 会自然接管这块 View。
+     */
+    public static void showStylePreview(Context ctx, int bgIndex, int alphaPercent, int maxLines,
+                                        int textSizeSp, boolean showReasoning, boolean showCommand) {
+        if (ctx == null || !permitted(ctx)) return;
+        Context app = ctx.getApplicationContext();
+        mainHandler().post(() -> {
+            try {
+                ensureView(app);
+                if (root == null || label == null) return;
+                int index = clamp(bgIndex, 0, BG_PRESETS.length - 1);
+                int alpha = clamp(alphaPercent, 20, 100);
+                int count = clamp(maxLines, 1, 6);
+                int sp = Math.max(6, Math.min(28, textSizeSp));
+                if (background == null) {
+                    background = new GradientDrawable();
+                    background.setCornerRadius(dp(app, 16));
+                    root.setBackground(background);
+                }
+                background.setColor((Math.round(alpha * 255f / 100f) << 24) | (BG_PRESETS[index] & 0xFFFFFF));
+                label.setTextSize(sp);
+                label.setMinLines(1);
+                label.setMaxLines(count);
+                StringBuilder text = new StringBuilder();
+                text.append(com.deepseekharness.app.util.UiText.text("DSHA · 样式预览\n"));
+                if (showReasoning)
+                    text.append(com.deepseekharness.app.util.UiText.text("正在思考：先检查文件内容。\n"));
+                if (showCommand)
+                    text.append(com.deepseekharness.app.util.UiText.text("正在执行命令：ls -la\n"));
+                text.append(com.deepseekharness.app.util.UiText.text("文件已整理完成，可以继续下一步。"));
+                label.setText(text.toString());
+                if (confirmRow != null) confirmRow.setVisibility(View.GONE);
+                if (confirmHint != null) confirmHint.setVisibility(View.GONE);
+                previewing = true;
+                root.setVisibility(View.VISIBLE);
+                if (hideTask != null) mainHandler().removeCallbacks(hideTask);
+                hideTask = () -> { if (!confirming && root != null) root.setVisibility(View.GONE); };
+                mainHandler().postDelayed(hideTask, 3500L);
+            } catch (Throwable error) {
+                android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("悬浮条预览显示失败: ")
+                        + SensitiveData.redact(String.valueOf(error)));
+            }
+        });
+    }
+
+    /** 离开样式页时收起临时预览，保留正常流式悬浮条状态。 */
+    public static void hideStylePreview(Context ctx) {
+        mainHandler().post(() -> {
+            if (!confirming && previewing && root != null) root.setVisibility(View.GONE);
+            previewing = false;
+        });
+    }
+
     private static void applyStyle(Context ctx) {
         if (root == null) return;
-        GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(ctx, 16));
-        bg.setColor(bgColor(ctx));
-        root.setBackground(bg);
+        if(background==null){background=new GradientDrawable();background.setCornerRadius(dp(ctx,16));appliedColor=bgColor(ctx);background.setColor(appliedColor);root.setBackground(background);}
+        int color=bgColor(ctx);if(appliedColor!=color){background.setColor(color);appliedColor=color;}
         // 字号每次显示都重新应用：用户在配置页拉完滑块，下一条内容就是新字号，
         // 不必重启 App。断行宽度是从 paint 量的，所以它跟着自动变。
-        if (label != null) label.setTextSize(textSp(ctx));
+        if (label != null) {
+            int sp=textSp(ctx),count=lines(ctx);
+            if(appliedSp!=sp){label.setTextSize(sp);appliedSp=sp;}
+            // 固定为用户选择的行数，流式换行不反复改变 WindowManager 的窗口高度。
+            if(!confirming&&(appliedLines!=count||label.getMinLines()!=count)){label.setLines(count);appliedLines=count;}
+        }
+        if(root.getLayoutParams() instanceof WindowManager.LayoutParams params){
+            int width=overlayWidthPx(ctx);if(params.width!=width){params.width=width;wm.updateViewLayout(root,params);}
+        }
     }
 
     private static Handler mainHandler() {
@@ -505,6 +605,9 @@ public final class OverlayController {
         TextView tv = new TextView(app);
         tv.setTextColor(Color.WHITE);
         tv.setTextSize(textSp(app));
+        tv.setIncludeFontPadding(false);
+        tv.setBreakStrategy(android.graphics.text.LineBreaker.BREAK_STRATEGY_SIMPLE);
+        tv.setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE);
         tv.setMaxLines(DEF_LINES);
         // 不设 ellipsize：分行由我们自己按宽度算好（见 OverlayLines），文本不会超宽。
         // 原先设的是 TruncateAt.START —— 那是单行时代「新字始终在右边可见」的做法，
@@ -528,7 +631,7 @@ public final class OverlayController {
 
         // 点条子本身收起（确认时不收 —— 那两个按钮才是出口）
         box.setOnClickListener(v -> {
-            if (!confirming) v.setVisibility(View.GONE);
+            if (!confirming) {frames.clear();v.setVisibility(View.GONE);}
         });
 
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
@@ -555,6 +658,12 @@ public final class OverlayController {
             label = tv;
             confirmRow = row;
             confirmHint = hint;
+            windowContext=app;
+            configurationListener=new android.content.ComponentCallbacks(){
+                @Override public void onConfigurationChanged(android.content.res.Configuration value){appliedSp=-1;applyStyleNow(app);}
+                @Override public void onLowMemory(){}
+            };
+            app.registerComponentCallbacks(configurationListener);
             applyStyle(app);
         } catch (Throwable e) {
             // 权限被撤或某些 ROM 拒绝 → 安静降级，不影响 agent 干活

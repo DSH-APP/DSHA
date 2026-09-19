@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="alpha_models">Model settings</string>
+    <string name="alpha_models_hint">DeepSeek · Custom providers · Model catalog</string>
+    <string name="alpha_community">Community plugins</string>
+    <string name="alpha_runtime_options">Runtime compatibility</string>
+    <string name="alpha_static_loader">Use the proroot static loader</string>
+    <string name="alpha_no_seccomp">Disable proot seccomp acceleration</string>
+    <string name="alpha_runtime_options_hint">Adjust only for runtime incompatibilities. Diagnostics record the actual route and failures.</string>
+</resources>

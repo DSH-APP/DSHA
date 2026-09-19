@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <application android:requestLegacyExternalStorage="true">
         <activity android:name=".ui.GeckoPreviewActivity" android:exported="false"
+            android:launchMode="singleTask"
+            android:supportsPictureInPicture="true" android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.DeepseekHarness" />
     </application>
 </manifest>

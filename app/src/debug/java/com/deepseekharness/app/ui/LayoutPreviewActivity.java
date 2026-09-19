@@ -96,7 +96,7 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
             if (scene.equals("launch_error")) { visible(R.id.launch_recovery,true);text(R.id.launch_recovery,"恢复选项");text(R.id.launch_run_state,"自动重启已暂停"); }
         } else if (scene.startsWith("plugins")) {
             boolean management=scene.equals("plugins_installed");
-            visible(R.id.pluginMarketCard,!management);visible(R.id.pluginWebsiteSection,!management);visible(R.id.pluginLinkSection,!management);visible(R.id.marketHelp,!management);visible(R.id.installedControls,management);
+            visible(R.id.pluginMarketCard,!management);visible(R.id.pluginWebsiteSection,!management);visible(R.id.pluginLinkSection,!management);visible(R.id.pluginLocalTitle,!management);visible(R.id.pluginLocalCard,!management);visible(R.id.installedControls,management);
             text(R.id.pluginLinkHint,"支持 npm、GitHub 和已构建压缩包");text(R.id.statusText,"请选择插件来源，解析后核对实际信息。");text(R.id.pluginCount,"共 12 个插件");
             if(management) { visible(R.id.pluginEmpty,true);text(R.id.pluginEmpty,"布局检查样例：插件列表会显示在这里"); }
         } else if (scene.equals("fragment_workspace")) {

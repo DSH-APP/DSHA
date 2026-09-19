@@ -18,6 +18,14 @@ public class BuiltinPluginsTest {
         org.junit.Assert.assertFalse(BuiltinPlugins.internal("@other/my-plugin"));
     }
 
+    @Test public void signedSystemSetAlwaysProtectsEveryApkPlugin() {
+        for (String name : BuiltinPlugins.DEFAULT_BUILTINS) assertTrue(BuiltinPlugins.system(name));
+        assertTrue(BuiltinPlugins.system("dsh-app-integration"));
+        assertTrue(BuiltinPlugins.system("@deepseek-ai/dsh-base"));
+        assertTrue(BuiltinPlugins.system("@deepseek-ai/dsh-web-app"));
+        assertFalse(BuiltinPlugins.system("user-plugin"));
+    }
+
     @Test
     public void parseBuiltinNames_逐行解析_跳过空行与注释() {
         String txt = "# 内置插件\n\ndsh-device-shell-guide\n  dsh-task-notifier  \n\n# 注释行\ndsh-status-overlay\ndsh-web-mobile\n";

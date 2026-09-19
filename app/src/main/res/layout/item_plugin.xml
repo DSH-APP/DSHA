@@ -1,27 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/gap_control" android:background="@drawable/bg_polished_action"
-    android:orientation="vertical" android:padding="@dimen/card_pad">
-
-    <TextView android:id="@+id/pluginName" style="@style/DshaText.Body"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:fontFamily="sans" android:breakStrategy="simple" android:textSize="17sp"
-        android:textStyle="bold" />
-    <TextView android:id="@+id/pluginDesc" style="@style/DshaText.Caption"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/gap_tight" android:maxLines="3" android:ellipsize="end" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/gap_control" android:orientation="horizontal"
-        android:gravity="center_vertical">
-        <TextView android:id="@+id/pluginStatus" style="@style/DshaText.Caption"
-            android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/gap_tight" />
-        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/pluginSwitch" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:minHeight="48dp"
-            android:showText="false" />
-        <TextView android:id="@+id/pluginActions" style="@style/PluginAction"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/gap_tight" android:background="@drawable/bg_polished_action" android:text="@string/ui_m0146" />
+<?xml version='1.0' encoding='utf-8'?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/gap_control" android:background="@drawable/bg_card" android:orientation="vertical" android:padding="@dimen/card_pad">
+    <TextView android:id="@+id/pluginName" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="sans" android:breakStrategy="simple" android:textSize="14sp" android:textStyle="bold" />
+    <TextView android:id="@+id/pluginDesc" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight" android:maxLines="3" android:ellipsize="end" android:textSize="12sp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_control" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/pluginStatus" style="@style/DshaText.Caption" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/gap_tight" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/pluginSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="48dp" android:showText="false" />
+        <TextView android:id="@+id/pluginActions" style="@style/PluginAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:background="@drawable/bg_polished_action" android:text="@string/ui_m0146" />
     </LinearLayout>
+    <Button android:id="@+id/pluginExpand" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="44dp" />
+    <TextView android:id="@+id/pluginDetails" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:textIsSelectable="true" android:visibility="gone" />
+    <Button android:id="@+id/pluginDelete" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="44dp" android:textColor="@color/err" android:visibility="gone" />
 </LinearLayout>

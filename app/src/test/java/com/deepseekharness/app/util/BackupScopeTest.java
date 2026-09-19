@@ -4,6 +4,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
@@ -56,9 +57,9 @@ public class BackupScopeTest {
         for (int scope : BackupScope.ALL) {
             assertEquals(scope, BackupScope.fromId(BackupScope.id(scope)));
         }
-        // 认不出的标识一律当全量（老备份没有该字段 = 全量）
-        assertEquals(BackupScope.FULL, BackupScope.fromId("bogus"));
-        assertEquals(BackupScope.FULL, BackupScope.fromId(null));
+        // 未知范围拒绝；无范围的历史包必须通过专门预检与用户确认。
+        org.junit.Assert.assertThrows(IllegalArgumentException.class, () -> BackupScope.fromId("bogus"));
+        assertThrows(IllegalArgumentException.class, () -> BackupScope.fromId(null));
     }
 
     @Test

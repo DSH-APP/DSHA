@@ -1,0 +1,20 @@
+{
+  "name": "dsh-auto-review",
+  "version": "0.1.0",
+  "description": "Expose the official experimental Auto review choice without selecting it by default",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-experimental-auto-review": "0.1.6-alpha.2"
+  }
+}

@@ -12,6 +12,15 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     });
   }
   function attachmentIds(shell) { return Array.from(shell.state.getSnapshot().attachmentIds || []); }
+  // alpha.2 输入框按 Session binding 管理，内部 WeakMap 不可枚举；只读取已驻留会话。
+  function residentInputs(ctx) {
+    const shells=new Map();
+    for(const row of Object.values(ctx.sessions.list.getSnapshot().byId)) {
+      const binding=ctx.sessions.binding(row.id);if(!binding)continue;
+      try{shells.set(row.id,ctx.conversation.input.for(binding.ctx));}catch{}
+    }
+    return shells;
+  }
   function usable(record, revision) {
     return record && record.revision === revision && Array.isArray(record.files) && record.files.length <= 20
       && record.files.every(f => f.blob instanceof Blob && /^image\//.test(f.type) && typeof f.name === 'string')
@@ -70,12 +79,14 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     return () => { if (!disposed) { disposed = true; off(); } };
   }
   function installReadingPosition(ctx) {
-    let restoring = true, touched = false, lastSession = ctx.sessions.list.getSnapshot().current ?? null,
+    const currentId = () => Object.values(ctx.sessions.list.getSnapshot().byId)
+      .find(row => (row.retainedBy?.mainView ?? 0) > 0)?.id ?? null;
+    let restoring = true, touched = false, lastSession = currentId(),
       positions = [], deadline = Date.now()+10000, lastSaved = '', leaving = false;
     const storageKey = 'dsha.reading-position';
     let previous;
     try { previous = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch {}
-    const currentId = () => ctx.sessions.list.getSnapshot().current ?? null;
+    let requestedRestore = false;
     const interact = () => { touched = true; restoring = false; };
     document.addEventListener('pointerdown',interact,true); document.addEventListener('keydown',interact,true);
     const pathFor = element => {
@@ -118,8 +129,9 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     const timer = setInterval(() => {
       if (document.hidden || leaving) return;
       const snapshot = ctx.sessions.list.getSnapshot();
-      if (restoring && !touched && previous?.id && snapshot.byId?.[previous.id] && snapshot.current !== previous.id) {
-        ctx.sessions.open(previous.id); return;
+      if (restoring && !touched && !requestedRestore && snapshot.phase === 'ready'
+          && previous?.id && snapshot.byId?.[previous.id] && currentId() !== previous.id) {
+        requestedRestore = true;ctx.uiWorkspace.openSession(previous.id); return;
       }
       const id = currentId();
       if (lastSession !== id) { lastSession = id; positions = []; }
@@ -161,8 +173,7 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
       const stopReading = installReadingPosition(ctx);
       const scan = () => {
         if (!db || !alive) return;
-        const shells = ctx.conversation.input.shells;
-        if (!(shells instanceof Map)) return;
+        const shells = residentInputs(ctx);
         for (const [id,shell] of shells) {
           if (entries.has(id)) continue;
           const entry = {shell,off:null,active:true}; entries.set(id,entry);
@@ -171,7 +182,7 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
         for (const [id,entry] of entries) if (shells.get(id) !== entry.shell) { entry.active = false; entry.off?.(); entries.delete(id); }
       };
       openDatabase().then(database => { if (!alive) database.close(); else { db = database; scan(); } }).catch(() => {
-        if (!warned) { warned = true; ctx.conversation.input.shells?.values().next().value?.notify?.('error','图片草稿存储不可用，退出前请保留原图。'); }
+        if (!warned) { warned = true; residentInputs(ctx).values().next().value?.notify?.('error','图片草稿存储不可用，退出前请保留原图。'); }
       });
       const timer = setInterval(scan,250);
       return () => { alive = false; clearInterval(timer); for (const entry of entries.values()) { entry.active = false; entry.off?.(); }
@@ -179,5 +190,5 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
         db?.close(); stopReading(); document.removeEventListener('dsha-close-details',closeDetails); };
     },'dsha-browser-state');
   }
-  return {inject:['conversation','sessions','layout','sidebarRight'],apply,watchDraft,usable,writeDraft};
+  return {inject:['conversation','sessions','layout','sidebarRight','uiWorkspace'],apply,watchDraft,usable,writeDraft,residentInputs};
 }});

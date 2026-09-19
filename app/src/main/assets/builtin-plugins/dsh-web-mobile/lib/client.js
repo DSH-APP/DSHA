@@ -1359,7 +1359,7 @@ const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
  * Hidden entirely on wide screens (CSS media query).
  */
 function MobileDrawerFooter({ useSessions, downloadSessionLog, toggleSidebar, openFiles, t }) {
-    const sessionId = useSessions((state) => state.current);
+    const sessionId = useSessions((state) => Object.values(state.byId).find(row => (row.retainedBy?.mainView ?? 0) > 0)?.id);
     const openExplorer = () => { openFiles(); toggleSidebar(); };
     return ((0, jsx_runtime_1.jsxs)("div", { "data-mobile-nav": "drawer-actions", children: [(0, jsx_runtime_1.jsxs)("button", { type: "button", "data-mobile-nav": "explorer", "aria-label": t('files'), title: t('files'), onClick: openExplorer, children: [(0, jsx_runtime_1.jsx)(dsh_client_ui_primitives_1.IconPanelLeftOutline16, { size: 14 }), (0, jsx_runtime_1.jsx)("span", { children: t('files') })] }), (0, jsx_runtime_1.jsxs)("button", { type: "button", "data-mobile-nav": "session-log", "aria-label": t('sessionLog'), title: t('sessionLog'), disabled: sessionId === undefined, onClick: () => {
                     if (sessionId !== undefined)
@@ -2121,7 +2121,9 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     gap: 2px;
     padding-left: 20px;
   }
-  [data-mobile-nav="frame"] [data-phase] header > :first-child > :first-child {
+  /* alpha.2 在 titleRow 最前面增加了 headerLeading。它即使为空也仍是
+     第一个子节点，不能用结构选择器给它弹性，否则会白占一半标题栏。 */
+  [data-mobile-nav="frame"] [data-phase] header [class*="_titleCluster"] {
     display: flex !important;
     align-items: center;
     flex: 1 1 auto;
@@ -2518,7 +2520,9 @@ __modules["styles/compat.css.js"] = function (require, module, exports) {
 // cascade (compat intentionally overrides layout), just not for syntax.
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.COMPAT_CSS = void 0;
-exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
+exports.COMPAT_CSS = `
+@media (pointer: coarse) { .dsha-lineage-menu { left: 8px !important; right: 8px !important; width: auto !important; max-width: none !important; max-height: min(60dvh, 480px) !important; z-index: 150 !important; } .dsha-lineage-menu [role="treeitem"] { min-height: 48px; touch-action: manipulation; } }
+@media (max-width: 1023px) and (pointer: coarse) {
   /* ---------- dsh-web-ui family compatibility ----------
      The linxin666 plugin suite extends the shell frame directly:
        - aionui-panel appends two trailing grid columns (explorer / preview)
@@ -5302,7 +5306,8 @@ function installSessionMenuDelete(ctx) {
                 yesButton.textContent = navT('deletePending');
                 if (errorLine !== null)
                     errorLine.hidden = true;
-                const wasCurrent = ctx.sessions.list.getSnapshot().current === sessionId;
+                const currentId = () => Object.values(ctx.sessions.list.getSnapshot().byId).find(row => (row.retainedBy?.mainView ?? 0) > 0)?.id;
+                const wasCurrent = currentId() === sessionId;
                 try {
                     const response = await fetch('/api/mobile-nav.session.delete', {
                         method: 'POST',
@@ -5320,8 +5325,8 @@ function installSessionMenuDelete(ctx) {
                     return;
                 }
                 closeDialog();
-                if (wasCurrent)
-                    ctx.sessions.clear();
+                if (wasCurrent && currentId() === sessionId)
+                    ctx.uiWorkspace.startSession();
                 // Repull the baseline so the deleted row disappears. Must be called AS
                 // A METHOD on ctx.sessions: refresh() reads `this.manager`, and an
                 // extracted reference would throw "this is undefined" — the failure
@@ -5705,6 +5710,7 @@ exports.zh = {
     'backdrop': '点击关闭目录',
     'sessionLog': '导出会话日志',
     'files': '文件浏览',
+    'fileUpload': '添加文件',
     'previewFullscreen': '全屏预览',
     'previewExitFullscreen': '退出全屏',
     'deleteSession': '删除会话',
@@ -5725,6 +5731,7 @@ exports.en = {
     'backdrop': 'Click to close directory',
     'sessionLog': 'Session log',
     'files': 'Files',
+    'fileUpload': 'Add files',
     'previewFullscreen': 'Fullscreen preview',
     'previewExitFullscreen': 'Exit fullscreen',
     'deleteSession': 'Delete session',
@@ -5739,6 +5746,161 @@ exports.en = {
     'deleteErrorGeneric': 'Delete failed: {message}',
 };
 };
+__modules["effects/composer-file-upload.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installComposerFileUpload = installComposerFileUpload;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+
+/*
+ * The upstream composer owns the real multi-file input and normally exposes it
+ * through its `+` action.  Keep that original control untouched.  A fallback
+ * is added only when the host action is genuinely absent, and it delegates to
+ * the same input so validation, multi-select and WebUploads remain the single
+ * source of truth.
+ */
+const CARD = '[data-composer-card]';
+const MARK = 'data-dsha-file-upload';
+function installComposerFileUpload(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: composer file upload', () => {
+        const translate = ctx.locale.bind('mobileNav');
+        const label = () => {
+            try { return translate('fileUpload'); } catch (_) { return '添加文件'; }
+        };
+        let pending = 0;
+        const ensure = () => {
+            pending = 0;
+            for (const card of document.querySelectorAll(CARD)) {
+                const input = card.querySelector('input[type="file"]');
+                const row = [...card.querySelectorAll('[class*="_row"]')]
+                    .find((candidate) => candidate.querySelector('[class*="_tools"]') !== null);
+                const tools = row?.querySelector('[class*="_tools"]');
+                if (input === null || tools === null)
+                    continue;
+                let button = tools.querySelector(`[${MARK}]`);
+                const plus = tools.querySelector('button[class*="_add"], button[aria-haspopup="listbox"]');
+                if (plus instanceof HTMLButtonElement && !plus.hidden) {
+                    button?.remove();
+                    continue;
+                }
+                if (button === null) {
+                    button = document.createElement('button');
+                    button.type = 'button';
+                    button.setAttribute(MARK, '');
+                    button.setAttribute('aria-label', label());
+                    button.title = label();
+                    const template = tools.querySelector('button');
+                    if (template instanceof HTMLButtonElement)
+                        button.className = template.className;
+                    button.textContent = '+';
+                    tools.insertBefore(button, tools.firstChild);
+                    button.addEventListener('pointerdown', (event) => event.preventDefault());
+                    button.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const currentCard = event.currentTarget instanceof Element ? event.currentTarget.closest(CARD) : null;
+                        const currentInput = currentCard?.querySelector('input[type="file"]');
+                        if (currentInput instanceof HTMLInputElement && !currentInput.disabled)
+                            currentInput.click();
+                    });
+                }
+                button.setAttribute('aria-label', label());
+                button.title = label();
+                button.disabled = input.disabled;
+            }
+        };
+        const schedule = () => {
+            if (pending !== 0)
+                return;
+            pending = window.requestAnimationFrame(ensure);
+        };
+        const observer = new MutationObserver(schedule);
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] });
+        ensure();
+        return () => {
+            observer.disconnect();
+            if (pending !== 0)
+                window.cancelAnimationFrame(pending);
+            document.querySelectorAll(`[${MARK}]`).forEach((node) => node.remove());
+        };
+    }, phone_chrome_ts_1.TOUCH_QUERY);
+}
+};
+__modules["effects/job-menu-position.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installJobMenuPosition = installJobMenuPosition;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+
+/* Keep the jobs popover in the visible viewport.  Some host/plugin layout
+ * combinations clip the absolutely positioned child even though React has
+ * correctly set aria-expanded=true. */
+const MENU = '[class*="QsffPG_menu"]';
+const ROOT = '[class*="QsffPG_root"]';
+function installJobMenuPosition(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: background job popover', () => {
+        let frame = 0;
+        const position = () => {
+            frame = 0;
+            const menus = [...document.querySelectorAll(MENU)];
+            if (menus.length === 0)
+                return;
+            const viewport = window.visualViewport;
+            const viewportLeft = viewport?.offsetLeft ?? 0;
+            const viewportTop = viewport?.offsetTop ?? 0;
+            const viewportWidth = viewport?.width ?? window.innerWidth;
+            const viewportHeight = viewport?.height ?? window.innerHeight;
+            const viewportRight = viewportLeft + viewportWidth;
+            const viewportBottom = viewportTop + viewportHeight;
+            for (const menu of menus) {
+                const root = menu.closest(ROOT);
+                const trigger = root?.querySelector('button[aria-expanded="true"]');
+                menu.style.setProperty('position', 'fixed', 'important');
+                menu.style.setProperty('z-index', '2147482000', 'important');
+                menu.style.setProperty('right', 'auto', 'important');
+                menu.style.setProperty('bottom', 'auto', 'important');
+                menu.style.setProperty('transform', 'none', 'important');
+                const rect = trigger?.getBoundingClientRect();
+                const width = Math.min(336, Math.max(120, viewportWidth - 16));
+                menu.style.setProperty('width', `${width}px`, 'important');
+                const menuHeight = Math.min(menu.scrollHeight || 420, Math.max(48, viewportHeight - 24));
+                const left = Math.max(viewportLeft + 8, Math.min((rect?.left ?? viewportLeft + 8), viewportRight - width - 8));
+                const below = (rect?.bottom ?? 48) + 6;
+                const top = below + menuHeight <= viewportBottom - 8
+                    ? below
+                    : Math.max(viewportTop + 8, (rect?.top ?? viewportBottom - 48) - menuHeight - 6);
+                menu.style.setProperty('left', `${Math.round(left)}px`, 'important');
+                menu.style.setProperty('top', `${Math.round(top)}px`, 'important');
+                menu.style.setProperty('max-height', `${Math.max(48, Math.min(420, viewportBottom - top - 8))}px`, 'important');
+            }
+        };
+        const schedule = () => {
+            if (frame === 0)
+                frame = window.requestAnimationFrame(position);
+        };
+        const observer = new MutationObserver(schedule);
+        observer.observe(document.body, { childList: true, subtree: true });
+        window.addEventListener('resize', schedule, { passive: true });
+        window.addEventListener('scroll', schedule, { passive: true, capture: true });
+        window.visualViewport?.addEventListener('resize', schedule, { passive: true });
+        window.visualViewport?.addEventListener('scroll', schedule, { passive: true });
+        schedule();
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', schedule);
+            window.removeEventListener('scroll', schedule, true);
+            window.visualViewport?.removeEventListener('resize', schedule);
+            window.visualViewport?.removeEventListener('scroll', schedule);
+            if (frame !== 0)
+                window.cancelAnimationFrame(frame);
+            document.querySelectorAll(MENU).forEach((menu) => {
+                for (const property of ['position', 'z-index', 'right', 'bottom', 'transform', 'width', 'left', 'top', 'max-height'])
+                    menu.style.removeProperty(property);
+            });
+        };
+    }, phone_chrome_ts_1.TOUCH_QUERY);
+}
+};
 __modules["index.js"] = function (require, module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -5752,12 +5914,14 @@ const sidebar_swipe_ts_1 = require("./effects/sidebar-swipe.js");
 const subagent_chip_touch_ts_1 = require("./effects/subagent-chip-touch.js");
 const session_menu_ts_1 = require("./effects/session-menu.js");
 const composer_keyboard_guard_ts_1 = require("./effects/composer-keyboard-guard.js");
+const composer_file_upload_ts_1 = require("./effects/composer-file-upload.js");
+const job_menu_position_ts_1 = require("./effects/job-menu-position.js");
 const aionui_compat_ts_1 = require("./effects/aionui-compat.js");
 const raf_scheduler_ts_1 = require("./core/raf-scheduler.js");
 const debug_ts_1 = require("./debug.js");
 const locales_ts_1 = require("./i18n/locales.js");
 /** Required services (cordis fiber inject — the loader passes all module exports as an object plugin). */
-exports.inject = ['slots', 'layout', 'locale', 'sessionLogDownload', 'sessions', 'workspaces', 'sidebarRight'];
+exports.inject = ['slots', 'layout', 'locale', 'sessionLogDownload', 'sessions', 'workspaces', 'sidebarRight', 'uiWorkspace'];
 /**
  * Mobile-adaptive shell, browser half: injects the mobile stylesheet, then
  * contributes the directory toggle to the session header and the backdrop +
@@ -5961,10 +6125,16 @@ function apply(ctx) {
     (0, sidebar_swipe_ts_1.installSidebarSwipe)(ctx);
     // Lineage-count chip: reliable open/close on touch pointers (upstream is
     // hover-timer driven and has no onClick on the count variant).
-    (0, subagent_chip_touch_ts_1.installSubagentChipTouch)(ctx);
+    // DSHA alpha.1 在官方 React 组件内处理点击，不再用合成按键和点击拦截重复切换。
     // iOS: tapping the composer's send/stop/+ buttons must not re-raise the
     // dismissed keyboard (upstream keepFocus focuses the editor on mousedown).
     (0, composer_keyboard_guard_ts_1.installComposerKeyboardGuard)(ctx);
+    // Preserve the host's original `+` action. If an older host omits it, add
+    // a same-row fallback that still delegates to the real multi-file input.
+    (0, composer_file_upload_ts_1.installComposerFileUpload)(ctx);
+    // Keep the background-job popover above the header and inside the visible
+    // viewport without changing the host's React open/close behavior.
+    (0, job_menu_position_ts_1.installJobMenuPosition)(ctx);
     (0, phone_chrome_ts_1.installPhoneChrome)(ctx);
     (0, aionui_compat_ts_1.installAionuiCompat)(ctx);
     // Debug badge (?mobile-nav-debug=1): live state overlay for phone-side

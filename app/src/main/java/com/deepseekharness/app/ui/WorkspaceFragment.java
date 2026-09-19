@@ -37,7 +37,12 @@ public class WorkspaceFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_workspace, container, false);
         controller = HarnessController.get(requireContext());
         task = com.deepseekharness.app.core.BackupTask.get(requireContext());
+        ((TextView)v.findViewById(R.id.workspace_path)).setText(controller.config().getWorkdir());
+        v.findViewById(R.id.workspace_retained).setOnClickListener(x->startActivity(new android.content.Intent(requireContext(),RetainedDataActivity.class)));
+        ((TextView)v.findViewById(R.id.workspace_apply)).setText(com.deepseekharness.app.util.UiText.choose("查看目录与共享方式","Directory and sharing details"));
+        v.findViewById(R.id.workspace_apply).setOnClickListener(x->CardSheet.show(requireContext(),com.deepseekharness.app.util.UiText.choose("数据位置与共享","Data location and sharing"),controller.config().getWorkdir()+"\n\n"+((TextView)v.findViewById(R.id.workspace_share_status)).getText()));
         android.widget.CheckBox backupKey = v.findViewById(R.id.config_backup_key);
+        backupKey.setVisibility(View.GONE);
         backupKey.setChecked(controller.config().isBackupKey());
         backupKey.setOnClickListener(button -> {
             com.deepseekharness.app.util.EnvironmentTaskGate.Lease saving =
@@ -51,15 +56,22 @@ public class WorkspaceFragment extends Fragment {
             finally { saving.close(); }
         });
 
-        v.findViewById(R.id.workspace_backup).setOnClickListener(x -> chooseScopeAndBackup());
-        v.findViewById(R.id.workspace_restore).setOnClickListener(x -> confirmRestore());
-        v.findViewById(R.id.workspace_location).setOnClickListener(x ->
-                Toast.makeText(requireContext(), com.deepseekharness.app.util.UiText.text("备份保存在 Download/DSHA/"), Toast.LENGTH_LONG).show());
+        v.findViewById(R.id.workspace_backup).setOnClickListener(x -> startActivity(new android.content.Intent(requireContext(),NativeDataActivity.class).putExtra("data_mode","export")));
+        v.findViewById(R.id.workspace_restore).setOnClickListener(x -> startActivity(new android.content.Intent(requireContext(),NativeDataActivity.class).putExtra("data_mode","restore")));
+        v.findViewById(R.id.workspace_location).setOnClickListener(x -> startActivity(new android.content.Intent(requireContext(),NativeDataActivity.class)));
         v.findViewById(R.id.workspace_restore_latest).setOnClickListener(x -> {
             String uri = controller.config().getLastBackupUri();
             if (!uri.isEmpty()) doRestore(Uri.parse(uri));
         });
+        android.widget.LinearLayout content=(android.widget.LinearLayout)((android.widget.ScrollView)v).getChildAt(0);
+        android.widget.LinearLayout extra=new android.widget.LinearLayout(requireContext());extra.setOrientation(android.widget.LinearLayout.VERTICAL);extra.setBackgroundResource(R.drawable.bg_card);
+        CardPage helper=new CardPage(requireContext(),"","");
+        helper.entry(extra,com.deepseekharness.app.util.UiText.choose("自动备份","Automatic backups"),com.deepseekharness.app.util.UiText.choose("开关、备份时机与最近副本","Switch, schedule and recent copies"),R.drawable.ic_recovery_document,()->startActivity(new android.content.Intent(requireContext(),AutomaticBackupActivity.class)));
+        helper.entry(extra,com.deepseekharness.app.util.UiText.choose("存储空间","Storage"),com.deepseekharness.app.util.UiText.choose("查看占用与清理缓存","Review usage and clean caches"),R.drawable.ic_ui2_box,()->startActivity(new android.content.Intent(requireContext(),StorageActivity.class)));
+        content.addView(extra,Math.min(2,content.getChildCount()),new android.widget.LinearLayout.LayoutParams(-1,-2));
         refreshBackupStatus(v);
+        v.findViewById(R.id.workspace_backup_status).setOnClickListener(x->CardSheet.show(requireContext(),com.deepseekharness.app.util.UiText.choose("备份与维护记录","Backup and maintenance history"),((TextView)v.findViewById(R.id.workspace_backup_status)).getText().toString()));
+
 
         // 文件共享（DocumentsProvider，MT 管理器可发现）
         TextView shareStatus = v.findViewById(R.id.workspace_share_status);
@@ -77,86 +89,15 @@ public class WorkspaceFragment extends Fragment {
         v.findViewById(R.id.workspace_reset).setOnClickListener(x -> {
             if (task.busy() || task.pendingMaintenance()) { taskRejected(); return; }
             new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.text("重置配置？"))
-                    .setMessage(com.deepseekharness.app.util.UiText.text("先停止 Web（会中断正在执行的任务）并创建校验安全备份，再重置 settings.yaml 和 .env；保留对话。"))
-                    .setPositiveButton(com.deepseekharness.app.util.UiText.text("备份并重置"), (d, w) -> { if (!task.resetConfig()) taskRejected(); })
+                    .setMessage(com.deepseekharness.app.util.UiText.choose("先停止 Web、终端和写任务，再由 Android 保存原配置并重置 settings.yaml 与工作目录的 .env。对话和原生凭据保留；无需旧 Python。外部目录或链接需先单独确认，不会强行覆盖。", "Stop Web, terminals and writers, then let Android retain the original configuration and reset settings.yaml and the workspace .env. Conversations and native credentials stay intact. The old Python is not required. External folders and links require separate review and will not be overwritten."))
+                    .setPositiveButton(com.deepseekharness.app.util.UiText.choose("保留原件并重置", "Retain originals and reset"), (d, w) -> { if (!task.resetConfig()) taskRejected(); })
                     .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null).show();
-        });
-        v.findViewById(R.id.workspace_clear).setOnClickListener(x -> {
-            if (task.busy()) { taskRejected(); return; }
-            boolean recovery = task.pendingMaintenance();
-            new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext()).setTitle(recovery ? com.deepseekharness.app.util.UiText.text("恢复中断维护") : com.deepseekharness.app.util.UiText.text("备份并重建环境？"))
-                    .setMessage(recovery ? com.deepseekharness.app.util.UiText.text("停止 Web 后回切原环境；安全备份及失败的新环境都会保留。")
-                            : com.deepseekharness.app.util.UiText.text("先停止 Web（会中断正在执行的任务），完整备份并校验配置、会话和本地插件，再重建环境并恢复数据。\n\n")
-                            + com.deepseekharness.app.util.UiText.text("旧环境和安全备份留在 App 私有目录，占用额外空间；任何失败均停止并尝试回切。额外安装的系统软件留在旧环境中。"))
-                    .setPositiveButton(recovery ? com.deepseekharness.app.util.UiText.text("恢复原环境") : com.deepseekharness.app.util.UiText.text("备份并重建"), (d, w) -> {
-                        if (!(recovery ? task.recoverMaintenance() : task.rebuild())) taskRejected();
-                    }).setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null).show();
         });
         return v;
     }
 
-    private void chooseScopeAndBackup() {
-        final CharSequence[] choices = new CharSequence[BackupScope.ALL.length];
-        for (int i = 0; i < BackupScope.ALL.length; i++) {
-            choices[i] = BackupScope.label(BackupScope.ALL[i]) + "\n" + BackupScope.describe(BackupScope.ALL[i]);
-        }
-        final int[] selected = {0};
-        new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
-                .setTitle(com.deepseekharness.app.util.UiText.text("选择备份范围"))
-                .setSingleChoiceItems(choices, 0, (d, which) -> selected[0] = which)
-                .setPositiveButton(com.deepseekharness.app.util.UiText.text("下一步"), (d, which) -> confirmBackup(BackupScope.ALL[selected[0]]))
-                .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null)
-                .show();
-    }
-
-    private void confirmBackup(final int scope) {
-        String summary = com.deepseekharness.app.util.UiText.text("即将备份：") + BackupScope.label(scope)
-                + "\n" + BackupScope.describe(scope)
-                + com.deepseekharness.app.util.UiText.text("\n\n保存到 Download/DSHA，每次使用独立文件名。")
-                + com.deepseekharness.app.util.UiText.text("\n快照期间若数据变化，备份会失败，可在任务完成后重试。")
-                + (scope == BackupScope.FULL || scope == BackupScope.SETTINGS
-                ? com.deepseekharness.app.util.UiText.text("\n原生 API Key：") + (controller.config().isBackupKey() ? com.deepseekharness.app.util.UiText.text("按当前设置包含") : com.deepseekharness.app.util.UiText.text("按当前设置不包含")) : "")
-                + com.deepseekharness.app.util.UiText.text("\n配置文件和插件自身保存的凭据会随原文件一起备份。");
-        new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
-                .setTitle(com.deepseekharness.app.util.UiText.text("确认备份"))
-                .setMessage(com.deepseekharness.app.util.UiText.text(summary))
-                .setPositiveButton(com.deepseekharness.app.util.UiText.text("开始备份"), (d, w) -> doBackup(scope))
-                .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null)
-                .show();
-    }
-
-    private void doBackup(final int scope) {
-        if (!task.backup(scope)) taskRejected();
-    }
-    private final androidx.activity.result.ActivityResultLauncher<String[]> restorePicker =
-            registerForActivityResult(
-                    new androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
-                    uri -> {
-                        if (uri != null) doRestore(uri);
-                    });
-
-    private void confirmRestore() {
-        if (task.busy() || task.pendingMaintenance()) { taskRejected(); return; }
-        new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
-                .setTitle(com.deepseekharness.app.util.UiText.text("恢复备份"))
-                .setMessage(com.deepseekharness.app.util.UiText.text("选择 .tar.gz 备份文件。预检会显示范围和版本，不停止 Web；确认恢复时才停止 Web，并中断正在执行的任务。"))
-                .setPositiveButton(com.deepseekharness.app.util.UiText.text("选择文件"), (d, w) -> {
-                    android.util.Log.i("DSHA-restore", com.deepseekharness.app.util.UiText.text("选择文件按钮点击，准备 launch"));
-                    try {
-                        restorePicker.launch(new String[]{"application/gzip", "*/*"});
-                        android.util.Log.i("DSHA-restore", com.deepseekharness.app.util.UiText.text("launch 已调用"));
-                    } catch (Throwable t) {
-                        android.util.Log.e("DSHA-restore", com.deepseekharness.app.util.UiText.text("launch 异常: ") + t, t);
-                        Toast.makeText(requireContext(), com.deepseekharness.app.util.UiText.text("打开选择器失败：") + t.getMessage(),
-                                Toast.LENGTH_LONG).show();
-                    }
-                })
-                .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null)
-                .show();
-    }
-
     private void doRestore(Uri backupUri) {
-        if (!task.prepareRestore(backupUri)) taskRejected();
+        startActivity(new android.content.Intent(requireContext(),NativeDataActivity.class).putExtra("restore_uri",backupUri.toString()));
     }
 
     private void taskRejected() {
@@ -172,12 +113,14 @@ public class WorkspaceFragment extends Fragment {
     };
     private void refreshBackupStatus(View view) {
         long time = controller.config().getLastBackupSuccess();
-        String success = time == 0 ? com.deepseekharness.app.util.UiText.text("还没有成功备份") : com.deepseekharness.app.util.UiText.text("最近成功：")
+        String success = time == 0 ? com.deepseekharness.app.util.UiText.choose("还没有手动导出备份", "No manually exported backup yet") : com.deepseekharness.app.util.UiText.choose("最近手动备份：", "Latest manual backup: ")
                 + java.text.DateFormat.getDateTimeInstance().format(new java.util.Date(time))
                 + "\n" + controller.config().getLastBackupName();
+        long automatic=com.deepseekharness.app.backup.AutomaticBackups.prefs(requireContext()).getLong("last",0);
+        if(automatic>0)success+="\n"+com.deepseekharness.app.util.UiText.choose("最近自动副本：", "Latest automatic copy: ")+java.text.DateFormat.getDateTimeInstance().format(new java.util.Date(automatic));
         String failure = controller.config().getLastBackupError();
         com.deepseekharness.app.util.BackupTaskState.Snapshot s = task.snapshot();
-        boolean busy = task.busy(), pending = task.pendingMaintenance();
+        boolean busy = task.busy(), pending = EnvironmentUiStatus.get(requireContext()).recovery;
         android.widget.CheckBox backupKey = view.findViewById(R.id.config_backup_key);
         backupKey.setChecked(controller.config().isBackupKey());
         backupKey.setEnabled(!busy && !com.deepseekharness.app.util.EnvironmentTaskGate.isBusy());
@@ -188,9 +131,6 @@ public class WorkspaceFragment extends Fragment {
         for (int id : new int[]{R.id.workspace_backup, R.id.workspace_restore, R.id.workspace_reset, R.id.workspace_apply})
             view.findViewById(id).setEnabled(!busy && !pending);
         view.findViewById(R.id.workspace_restore_latest).setEnabled(!busy && !pending && !controller.config().getLastBackupUri().isEmpty());
-        android.widget.Button clear = view.findViewById(R.id.workspace_clear);
-        clear.setEnabled(!busy);
-        clear.setText(pending ? com.deepseekharness.app.util.UiText.text("恢复中断维护") : com.deepseekharness.app.util.UiText.text("备份并重建环境"));
         if (s.status == com.deepseekharness.app.util.BackupTaskState.Status.PREVIEW && previewDialog == null && isResumed()) {
             previewDialog = new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.text("恢复预览"))
                     .setMessage(com.deepseekharness.app.util.UiStateText.render(s.detail))

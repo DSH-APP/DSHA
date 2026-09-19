@@ -29,7 +29,7 @@ import com.deepseekharness.app.util.SensitiveData;
 /** 配对任务由 ViewModel 持有；页面重建不重跑握手，不丢进度与结果。 */
 public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
     private TextView statusText;
-    private EditText codeEt;
+    private EditText codeEt, hostEt, portEt;
     private Button startBtn, verifyBtn, autoBtn, manualBtn;
     private PairModel model;
 
@@ -39,7 +39,9 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
         model.restore(saved);
         setContentView(buildUi());
         model.status.observe(this, text -> {
-            statusText.setText(text);
+            statusText.setText(text == null ? "" : text.split("\n\n",2)[0]);
+            hostEt.setEnabled(!model.busy);portEt.setEnabled(!model.busy);
+            if(!model.busy&&!portEt.hasFocus())portEt.setText(model.pairPort);
             startBtn.setEnabled(!model.busy);
             verifyBtn.setEnabled(!model.busy);
             autoBtn.setEnabled(!model.busy);
@@ -70,6 +72,8 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
 
     private View buildUi() {
         View root = getLayoutInflater().inflate(com.deepseekharness.app.R.layout.activity_adb_pair, null);
+        hostEt=root.findViewById(com.deepseekharness.app.R.id.adb_pair_host);portEt=root.findViewById(com.deepseekharness.app.R.id.adb_pair_port);
+        hostEt.setText(model.host);portEt.setText(model.pairPort);
         codeEt = root.findViewById(com.deepseekharness.app.R.id.adb_pair_code);
         codeEt.setSaveEnabled(false); // 一次性配对码不进入磁盘上的 Activity 状态。
         codeEt.setText(com.deepseekharness.app.util.UiText.text(model.code));
@@ -83,14 +87,21 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
         autoBtn = root.findViewById(com.deepseekharness.app.R.id.adb_pair_auto);
         manualBtn = root.findViewById(com.deepseekharness.app.R.id.adb_pair_manual);
         statusText = root.findViewById(com.deepseekharness.app.R.id.adb_pair_status);
+        statusText.setMaxLines(3);statusText.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        TextView detail=new TextView(this);detail.setText(com.deepseekharness.app.util.UiText.choose("查看连接详情 ›","Connection details ›"));detail.setTextSize(12);detail.setTextColor(getColor(com.deepseekharness.app.R.color.primary));detail.setGravity(Gravity.CENTER_VERTICAL);detail.setMinHeight((int)(40*getResources().getDisplayMetrics().density));detail.setFocusable(true);
+        ((LinearLayout)statusText.getParent()).addView(detail);detail.setOnClickListener(v->CardSheet.show(this,com.deepseekharness.app.util.UiText.choose("连接详情","Connection details"),String.valueOf(model.status.getValue())));
         startBtn.setOnClickListener(v -> {
-            if (!LocalNetworkAccess.granted(this)) requestNetworkPermission(); else model.start(false, "", 0);
+            if (!LocalNetworkAccess.granted(this)) requestNetworkPermission(); else if(readAddress()) model.start(false, "", 0);
         });
         verifyBtn.setOnClickListener(v -> {
-            if (!LocalNetworkAccess.granted(this)) requestNetworkPermission(); else model.start(true, "", 0);
+            if (!LocalNetworkAccess.granted(this)) requestNetworkPermission(); else if(readAddress()) model.start(true, "", 0);
         });
         autoBtn.setOnClickListener(v -> autoRead());
-        manualBtn.setOnClickListener(v -> manualPorts());
+        manualBtn.setOnClickListener(v -> {readAddress();manualPorts();});
+        root.findViewById(com.deepseekharness.app.R.id.adb_pair_disconnect).setOnClickListener(v->{
+            getSharedPreferences(com.deepseekharness.app.util.Constants.PREFS,0).edit().putBoolean("adb_enabled",false).apply();stopService(new Intent(this,DeviceBridgeService.class));
+            model.message(com.deepseekharness.app.util.UiText.choose("ADB 已关闭，配对密钥保留。需要时可验证连接重新启用。","ADB disabled. Pairing keys are retained; verify the connection to enable it again."));
+        });
         root.findViewById(com.deepseekharness.app.R.id.adb_pair_back).setOnClickListener(v -> finish());
         root.findViewById(com.deepseekharness.app.R.id.adb_pair_settings).setOnClickListener(v -> openWirelessSettings());
         root.findViewById(com.deepseekharness.app.R.id.adb_pair_help).setOnClickListener(v ->
@@ -103,15 +114,17 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
         return root;
     }
 
+    private boolean readAddress(){
+        try{String host=hostEt.getText().toString().trim();String port=portEt.getText().toString().trim();AdbResult.port(port);
+            if(!host.isEmpty()&&!AdbBridge.localAddresses().contains(host)){hostEt.setError(com.deepseekharness.app.util.UiText.choose("请填写本机无线调试显示的 IP","Enter this device's wireless debugging IP"));return false;}
+            model.host=host;model.pairPort=port;return true;
+        }catch(IllegalArgumentException invalid){portEt.setError(com.deepseekharness.app.util.UiText.choose("端口应为 1–65535，或留空自动发现","Use a port from 1–65535, or leave blank"));return false;}
+    }
+
     private void autoRead() {
         if (!LocalNetworkAccess.granted(this)) { requestNetworkPermission(); return; }
         if (!DshaAccessibilityService.enabled(this)) {
-            new com.deepseekharness.app.ui.DshaDialogBuilder(this).setTitle(com.deepseekharness.app.util.UiText.text("需要先开启无障碍服务"))
-                    .setMessage(com.deepseekharness.app.util.UiText.text("开启后请返回这里，再点自动读取。仅在你发起后的两分钟内读取系统配对弹窗；配对码不保存、不上传。"))
-                    .setPositiveButton(com.deepseekharness.app.util.UiText.text("去开启"), (d, w) -> {
-                        try { startActivity(new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)); }
-                        catch (RuntimeException e) { model.message(com.deepseekharness.app.util.UiText.text("无法打开无障碍设置，请手动进入系统设置开启")); }
-                    }).setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null).show();
+            startActivity(new Intent(this,AccessibilitySetupActivity.class));
             return;
         }
         model.watch();
@@ -128,43 +141,23 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
     }
 
     private void manualPorts() {
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.VERTICAL);
-        int pad = (int) (16 * getResources().getDisplayMetrics().density);
-        row.setPadding(pad, pad, pad, 0);
-        EditText host = new EditText(this);
-        host.setHint(com.deepseekharness.app.util.UiText.text("本机 IP（可留空自动选择）"));
-        host.setText(com.deepseekharness.app.util.UiText.text(model.host));
-        row.addView(host);
-        EditText pp = new EditText(this);
-        pp.setHint(com.deepseekharness.app.util.UiText.text("配对弹窗端口（留空重新发现）"));
-        pp.setInputType(InputType.TYPE_CLASS_NUMBER);
-        pp.setText(model.pairPort);
-        row.addView(pp);
-        EditText cp = new EditText(this);
-        cp.setHint(com.deepseekharness.app.util.UiText.text("主页面连接端口（留空重新发现）"));
-        cp.setInputType(InputType.TYPE_CLASS_NUMBER);
-        cp.setText(model.connectPort);
-        row.addView(cp);
-        androidx.appcompat.app.AlertDialog dialog = new com.deepseekharness.app.ui.DshaDialogBuilder(this)
-                .setTitle(com.deepseekharness.app.util.UiText.text("手动地址与端口")).setView(row).setPositiveButton(com.deepseekharness.app.util.UiText.text("保存"), null)
-                .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null).create();
-        dialog.setOnShowListener(d -> dialog.getButton(-1).setOnClickListener(v -> {
-            try {
-                AdbResult.port(pp.getText().toString());
-                AdbResult.port(cp.getText().toString());
-                String address = host.getText().toString().trim();
-                if (!address.isEmpty() && !AdbBridge.localAddresses().contains(address)) {
-                    host.setError(com.deepseekharness.app.util.UiText.text("请填写本机无线调试页面的 IP")); return;
-                }
-                model.host = address;
-                model.pairPort = pp.getText().toString().trim();
-                model.connectPort = cp.getText().toString().trim();
-                model.message(com.deepseekharness.app.util.UiText.text("手动设置已保存。配对端口只用于下一次尝试，之后重新发现；可留空恢复自动发现。"));
-                dialog.dismiss();
-            } catch (IllegalArgumentException e) { pp.setError(e.getMessage()); cp.setError(e.getMessage()); }
-        }));
-        dialog.show();
+        CardPage page=new CardPage(this,com.deepseekharness.app.util.UiText.choose("手动连接设置","Manual connection"),com.deepseekharness.app.util.UiText.choose("配对端口来自六位码弹窗；连接端口来自无线调试主页面。","Pairing port comes from the code dialog; connection port comes from the main Wireless debugging page."));
+        LinearLayout card=page.card();
+        EditText host=portField(page,card,com.deepseekharness.app.util.UiText.choose("本机 IP · 可留空","Device IP · Optional"),model.host,false);
+        EditText pp=portField(page,card,com.deepseekharness.app.util.UiText.choose("配对端口 · 留空自动发现","Pairing port · Auto if blank"),model.pairPort,true);
+        EditText cp=portField(page,card,com.deepseekharness.app.util.UiText.choose("连接端口 · 留空自动发现","Connection port · Auto if blank"),model.connectPort,true);
+        TextView error=page.text("",12,com.deepseekharness.app.R.color.err);page.content.addView(error);var dialog=CardSheet.create(this,page);
+        page.button(page.footer,com.deepseekharness.app.util.UiText.choose("保存","Save"),true,()->{
+            try{AdbResult.port(pp.getText().toString());AdbResult.port(cp.getText().toString());String address=host.getText().toString().trim();
+                if(!address.isEmpty()&&!AdbBridge.localAddresses().contains(address)){host.setError(com.deepseekharness.app.util.UiText.choose("请填写本机无线调试页面的 IP","Enter this device's wireless debugging IP"));return;}
+                model.host=address;model.pairPort=pp.getText().toString().trim();model.connectPort=cp.getText().toString().trim();hostEt.setText(address);portEt.setText(model.pairPort);
+                model.message(com.deepseekharness.app.util.UiText.choose("连接设置已保存，可开始配对或验证已有连接。","Connection settings saved. Pair or verify the existing connection."));dialog.dismiss();
+            }catch(IllegalArgumentException invalid){error.setText(com.deepseekharness.app.util.UiText.choose("端口应为 1–65535，或留空自动发现。","Use a port from 1–65535, or leave blank."));}
+        });page.button(page.footer,com.deepseekharness.app.util.UiText.choose("取消","Cancel"),false,dialog::dismiss);CardSheet.show(dialog,this);
+    }
+    private EditText portField(CardPage page,LinearLayout card,String title,String value,boolean number){
+        TextView label=page.text(title,12,com.deepseekharness.app.R.color.text_secondary);label.setPadding(0,page.dp(10),0,page.dp(8));card.addView(label);
+        EditText input=new EditText(this);input.setText(value);input.setTextSize(14);input.setTextColor(getColor(com.deepseekharness.app.R.color.text));input.setBackgroundResource(com.deepseekharness.app.R.drawable.bg_input);input.setPadding(page.dp(12),page.dp(12),page.dp(12),page.dp(12));input.setSingleLine(true);input.setMinHeight(page.dp(48));input.setInputType(number?InputType.TYPE_CLASS_NUMBER:InputType.TYPE_CLASS_TEXT);card.addView(input,new LinearLayout.LayoutParams(-1,-2));return input;
     }
 
     /** 只持有 Application；自动读码及后台任务不会捕获旧 Activity。 */
@@ -200,9 +193,10 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
         void watch() {
             final long epoch = ++watchEpoch;
             message(com.deepseekharness.app.util.UiText.text("已开始监听，两分钟内有效。请打开系统的「使用配对码配对设备」弹窗。"));
-            DshaAccessibilityService.startWatch((value, address, port) -> main.post(() -> {
+            DshaAccessibilityService.startWatch((value, address, port, connectionPort) -> main.post(() -> {
                 if (cleared || busy || epoch != watchEpoch) return;
                 code = value;
+                if(!connectionPort.isEmpty())connectPort=connectionPort;
                 int p;
                 try { p = AdbResult.port(port); } catch (IllegalArgumentException e) { p = 0; }
                 start(false, address, p);
@@ -296,7 +290,12 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
                 if (cleared || Thread.currentThread().isInterrupted()) return com.deepseekharness.app.util.UiText.text("ADB 操作已取消");
                 message(verify ? com.deepseekharness.app.util.UiText.text("正在验证已配对的设备连接，最多约 1 分钟…")
                         : com.deepseekharness.app.util.UiText.text("正在完成一次配对握手并验证连接，最多约 2 分钟；随后检查自动恢复授权…"));
-                String out = verify ? AdbBridge.verify(proot, cp, address) : AdbBridge.pair(proot, value, port, cp, address);
+                String connectionPort=cp;
+                if(connectionPort.isEmpty()){
+                    AdbBridge.Endpoint endpoint=AdbBridge.discover(getApplication(),"_adb-tls-connect._tcp.",5000,this::message);
+                    if(endpoint!=null){connectionPort=String.valueOf(endpoint.port);if(address.isEmpty())address=endpoint.host;}
+                }
+                String out = verify ? AdbBridge.verify(proot, connectionPort, address) : AdbBridge.pair(proot, value, port, connectionPort, address);
                 if (AdbResult.marker(out, "ENVIRONMENT_BUSY")) throw new AdbEnvironmentTask.Busy(out);
                 AdbResult.PairState state = AdbResult.pairState(out);
                 DeviceBridgeService.recordPairResult(getApplication(), state, out);

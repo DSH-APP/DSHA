@@ -12,6 +12,7 @@ import java.util.Map;
 /** 统一准备插件与终端的证书和命令入口，无需先手动运行安装第 2 步。 */
 final class RuntimeTools {
     static final String CERT_PATH = "/usr/local/share/dsha/ca-certificates.crt";
+    private static final String MANAGED_MARKER = "usr/local/share/dsha/managed-assets-v2";
     private static final Object LOCK = new Object();
     private static String preparedRoot;
     private static String preparedApk;
@@ -28,6 +29,16 @@ final class RuntimeTools {
         synchronized (LOCK) {
             try { prepareResolver(context, rootfs); }
             catch(IOException error) { android.util.Log.w("DSHA","DNS configuration unchanged",error); }
+            File installedDescriptor = new File(rootfs.getParentFile(), ".runtime-descriptor.json");
+            if (requireNpm && installedDescriptor.isFile()
+                    && !com.deepseekharness.app.BackupManager.isDataTaskOwner()) {
+                // 已登记运行时的主体只能由维护事务切换。身份完全一致时仍允许修复 APK 自有
+                // 脚本/内置插件覆盖层，解决旧版提前 return 后长期沿用旧文件的问题。
+                String expected = assetRuntimeId(context);
+                if (expected.equals(descriptorRuntimeId(installedDescriptor)))
+                    prepareManagedOverlay(context, rootfs, expected);
+                return;
+            }
             File apk = new File(context.getPackageCodePath());
             String identity = apk.getPath() + ":" + apk.length() + ":" + apk.lastModified();
             String root = rootfs.getCanonicalPath();
@@ -35,29 +46,8 @@ final class RuntimeTools {
                     && preparedStamp != null && preparedStamp.equals(stamp(rootfs))) return;
             preparedStamp = null;
             preparedFiles.clear();
-            install(context, rootfs, "ca-certificates.crt", CERT_PATH.substring(1), false);
-            install(context, rootfs, "dns-compat.cjs", "usr/local/share/dsha/dns-compat.cjs", false);
-            install(context, rootfs, "plugin-manager.py", "root/.dsh/plugin-manager.py", false);
-            install(context, rootfs, "plugin-lifecycle.py", "root/.dsh/plugin-lifecycle.py", false);
-            install(context, rootfs, "plugin-semver.cjs", "root/.dsh/plugin-semver.cjs", false);
-            install(context, rootfs, "register-builtin-plugins.py", "root/.dsh/register-builtin-plugins.py", false);
-            install(context, rootfs, "startup-observer.cjs", "root/.dsh/startup-observer.cjs", false);
-            install(context, rootfs, "startup-recovery.py", "root/.dsh/startup-recovery.py", false);
-            install(context, rootfs, "startup-checkpoints.py", "root/.dsh/startup-checkpoints.py", false);
-            install(context, rootfs, "device-shell-policy.py", "root/.dsh/device-shell-policy.py", false);
-            install(context, rootfs, "adb-shell.py", "root/.dsh/adb-shell.py", false);
-            install(context, rootfs, "dsha-device-shell.sh", "root/dsh-bin/adb-shell", true);
-            for (String file : new String[]{"package.json", "cordis.patch.yml", "index.js", "activity.js", "runtime-plugins.js", "client.js"})
-                install(context, rootfs, "app-integration/" + file, "root/dsha-app-integration/" + file, false);
-            for (String name : com.deepseekharness.app.util.BuiltinPlugins.DEFAULT_BUILTINS) {
-                String destination = com.deepseekharness.app.util.BuiltinPlugins.entityDir(name).substring(1) + "/";
-                for (String file : new String[]{"package.json", "cordis.patch.yml", "lib/index.js"})
-                    install(context, rootfs, "builtin-plugins/" + name + "/" + file, destination + file, false);
-                if (name.equals("dsh-web-mobile")) for (String file : new String[]{"lib/client.js", "lib/compress.js", "lib/delete-session.js", "LICENSE"})
-                    install(context, rootfs, "builtin-plugins/" + name + "/" + file, destination + file, false);
-            }
-            install(context, rootfs, "dsha-plugin.sh", "root/dsh-bin/dsha-plugin", true);
-            install(context, rootfs, "install-ubuntu-tools.sh", "root/dsh-bin/install-ubuntu-tools", true);
+            String managedIdentity = assetRuntimeId(context);
+            installManagedAssets(context, rootfs);
             for (String command : new String[]{"npm", "npx"}) {
                 File cli = new File(rootfs, "usr/local/lib/node_modules/npm/bin/" + command + "-cli.js");
                 if (requireNpm && !cli.isFile()) throw new IOException(com.deepseekharness.app.util.UiText.text("内置 npm 文件缺失：") + command + "-cli.js");
@@ -66,15 +56,24 @@ final class RuntimeTools {
                 writeIfChanged(wrapper, ("#!/bin/sh\nexec /usr/local/bin/node /usr/local/lib/node_modules/npm/bin/"
                         + command + "-cli.js \"$@\"\n").getBytes(java.nio.charset.StandardCharsets.UTF_8), true);
             }
-            install(context, rootfs, "dsha-runtime-env.sh", "etc/profile.d/dsha-runtime-env.sh", false);
             patchComposerInput(context, rootfs);
             patchSessionNavigation(context, rootfs);
             patchPdfCompatibility(context, rootfs);
             patchAgentPresets(context, rootfs);
+            patchClientModule(context, rootfs, "persona-compat-patch.json", "旧版 persona 预设");
+            patchClientModule(context, rootfs, "models-navigation-patch.json", "模型配置入口");
+            patchClientModule(context, rootfs, "subagent-navigation-patch.json", "子代理触摸导航");
+            patchClientModule(context, rootfs, "plugin-manager-policy-patch.json", "插件审阅");
+            patchClientModule(context, rootfs, "plugin-manager-navigation-patch.json", "插件原生入口");
+            patchClientModule(context, rootfs, "office-fonts-patch.json", "Office 字体");
+            patchClientModule(context, rootfs, "deepseek-messages-compat-patch.json", "DeepSeek Messages 会话兼容");
             patchClientLanguage(context, rootfs);
             patchTooltips(context, rootfs);
             patchBrowserBootstrap(context, rootfs);
             patchClientCombos(context, rootfs);
+            patchLanSettingsPersistence(rootfs);
+            writeIfChanged(new File(rootfs, MANAGED_MARKER),
+                    com.deepseekharness.app.util.ManagedAssetVersion.bytes(managedIdentity), false);
             preparedRoot = root;
             preparedApk = identity;
             preparedStamp = stamp(rootfs);
@@ -82,6 +81,101 @@ final class RuntimeTools {
     }
 
     static void invalidate() { synchronized (LOCK) { preparedStamp = null; } }
+
+    private static void prepareManagedOverlay(Context context, File rootfs, String identity) throws IOException {
+        File marker = new File(rootfs, MANAGED_MARKER);
+        String current = marker.isFile() && !Compat.isSymbolicLink(marker) ? Compat.readAll(marker) : "";
+        // 标记只说明上次完整写入时的身份，不能证明脚本或插件实体后来没有被删改。
+        // 每次只核对并按需重写固定数量的 APK 自有文件；不会遍历会话、项目或第三方插件。
+        boolean markerCurrent = com.deepseekharness.app.util.ManagedAssetVersion.current(current, identity);
+        preparedStamp = null;
+        preparedFiles.clear();
+        installManagedAssets(context, rootfs);
+        patchClientModule(context, rootfs, "deepseek-messages-compat-patch.json", "DeepSeek Messages 会话兼容");
+        prepareBuiltinDependencies(rootfs);
+        if (!markerCurrent || !marker.isFile() || Compat.isSymbolicLink(marker))
+            writeIfChanged(marker, com.deepseekharness.app.util.ManagedAssetVersion.bytes(identity), false);
+    }
+
+    private static String assetRuntimeId(Context context) throws IOException {
+        try {
+            String value = new org.json.JSONObject(assetText(context, "runtime-descriptor.json")).getString("runtimeId");
+            if (!com.deepseekharness.app.util.ManagedAssetVersion.validRuntimeId(value)) throw new IOException("RUNTIME_DESCRIPTOR_ASSET");
+            return value;
+        }
+        catch (org.json.JSONException error) { throw new IOException("RUNTIME_DESCRIPTOR_ASSET", error); }
+    }
+
+    private static String descriptorRuntimeId(File descriptor) throws IOException {
+        try {
+            String value = new org.json.JSONObject(Compat.readAll(descriptor)).getString("runtimeId");
+            if (!com.deepseekharness.app.util.ManagedAssetVersion.validRuntimeId(value)) throw new IOException("RUNTIME_DESCRIPTOR_INSTALLED");
+            return value;
+        }
+        catch (org.json.JSONException error) { throw new IOException("RUNTIME_DESCRIPTOR_INSTALLED", error); }
+    }
+
+    /** 仅覆盖 DSHA 自有脚本和内置实体；用户插件、profile、配置、会话与凭据不在清单内。 */
+    private static void installManagedAssets(Context context, File rootfs) throws IOException {
+        install(context, rootfs, "ca-certificates.crt", CERT_PATH.substring(1), false);
+        install(context, rootfs, "dns-compat.cjs", "usr/local/share/dsha/dns-compat.cjs", false);
+        install(context, rootfs, "dsha-builtin.txt", "root/dsha-builtin.txt", false);
+        for (String name : new String[]{"plugin-manager.py", "plugin-lifecycle.py", "plugin-dependencies.py",
+                "plugin-transactions.py", "backup-plugin-graph.py", "plugin-semver.cjs",
+                "register-builtin-plugins.py", "startup-observer.cjs", "startup-recovery.py",
+                "startup-checkpoints.py", "device-shell-policy.py", "adb-shell.py"})
+            install(context, rootfs, name, "root/.dsh/" + name, false);
+        install(context, rootfs, "dsha-device-shell.sh", "root/dsh-bin/adb-shell", true);
+        for (String file : new String[]{"package.json", "cordis.patch.yml", "index.js", "activity.js", "runtime-plugins.js", "client.js"})
+            install(context, rootfs, "app-integration/" + file, "root/dsha-app-integration/" + file, false);
+        for (String name : com.deepseekharness.app.util.BuiltinPlugins.DEFAULT_BUILTINS) {
+            String destination = com.deepseekharness.app.util.BuiltinPlugins.entityDir(name).substring(1) + "/";
+            for (String file : new String[]{"package.json", "cordis.patch.yml", "lib/index.js"})
+                install(context, rootfs, "builtin-plugins/" + name + "/" + file, destination + file, false);
+            if (name.equals("dsh-computer-use-android"))
+                install(context,rootfs,"builtin-plugins/"+name+"/lib/server.cjs",destination+"lib/server.cjs",false);
+            if (name.equals("dsh-web-mobile")) for (String file : new String[]{"lib/client.js", "lib/compress.js", "lib/delete-session.js", "LICENSE"})
+                install(context, rootfs, "builtin-plugins/" + name + "/" + file, destination + file, false);
+        }
+        install(context, rootfs, "dsha-plugin.sh", "root/dsh-bin/dsha-plugin", true);
+        install(context, rootfs, "install-ubuntu-tools.sh", "root/dsh-bin/install-ubuntu-tools", true);
+        install(context, rootfs, "dsha-runtime-env.sh", "etc/profile.d/dsha-runtime-env.sh", false);
+    }
+
+    /** 局域网代理仍由宿主鉴权；冷安装与候选树必须在计算健康摘要前应用同一设置补丁。 */
+    static void patchLanSettingsPersistence(File rootfs) throws IOException {
+        synchronized (LOCK) { prepareLanSettingsPersistence(rootfs); }
+    }
+    private static void prepareLanSettingsPersistence(File rootfs) throws IOException {
+        File module = new File(rootfs, "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/"
+                + "@deepseek-ai/dsh-client-ui-settings/lib/client.js");
+        if (!module.isFile()) throw new IOException("LAN_SETTINGS_MODULE_MISSING");
+        if (Compat.isSymbolicLink(module) || !module.getCanonicalPath().startsWith(rootfs.getCanonicalPath() + File.separator))
+            throw new IOException("LAN_SETTINGS_MODULE_PATH");
+        String source = Compat.readAll(module);
+        try {
+            String patched = com.deepseekharness.app.util.ExactTextPatch.apply(source,
+                    "const persistence = ctx.remote.$host.isLoopback ? \"host\" : \"memory\";",
+                    "const persistence = \"host\"; // DSHA patch: LAN 代理场景强制 host 持久化");
+            preparedFiles.add(module);
+            if (!source.equals(patched)) writeIfChanged(module, patched.getBytes(java.nio.charset.StandardCharsets.UTF_8), false);
+        } catch (IllegalArgumentException error) { throw new IOException("LAN_SETTINGS_PATCH_MISMATCH", error); }
+    }
+
+    /** 冷安装与受管候选共用；只准备内置实体依赖，不注册或改写用户 web profile。 */
+    static void prepareBuiltinDependencies(File rootfs)throws IOException{
+        var fs=new com.deepseekharness.app.backup.AndroidBackupFileSystem();File root=rootfs.getCanonicalFile();
+        String target="../../usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules";
+        if(!fs.stat(new File(root,"usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules")).type.equals("DIRECTORY"))throw new IOException("BUNDLED_MODULES_MISSING");
+        var names=new java.util.ArrayList<>(com.deepseekharness.app.util.BuiltinPlugins.DEFAULT_BUILTINS);names.add("dsh-app-integration");
+        for(String name:names){
+            File link=fs.child(root,com.deepseekharness.app.util.BuiltinPlugins.entityDir(name).substring(1)+"/node_modules");var node=fs.stat(link);
+            if(node.type.equals("LINK")&&target.equals(fs.readLink(link)))continue;
+            if(node.type.equals("DIRECTORY")&&fs.list(link).isEmpty())fs.delete(link);
+            else if(!node.type.equals("MISSING"))throw new IOException("BUNDLED_MODULES_CONFLICT:"+name);
+            fs.symlink(target,link);fs.syncDirectory(link.getParentFile());
+        }
+    }
 
     /** 只 stat 固定数量的受管文件；不读取大 JS，不遍历会话、附件和项目依赖。 */
     private static String stamp(File rootfs) throws IOException {
@@ -139,14 +233,14 @@ final class RuntimeTools {
     }
 
     static void applyEnvironment(Context context, File rootfs, Map<String, String> environment) {
+        environment.put("DSHA_NATIVE_PLUGIN_MANAGER","1");
+        environment.put("DSHA_ANDROID_RUNTIME","1");
         environment.put("DSHA_DNS_MODE",new com.deepseekharness.app.core.ConfigStore(context).getDnsMode());
         String preload="--require=/usr/local/share/dsha/dns-compat.cjs";
         if(new File(rootfs,"usr/local/share/dsha/dns-compat.cjs").isFile()) {
             String previous=environment.getOrDefault("NODE_OPTIONS","");
             if(!Arrays.asList(previous.split("\\s+")).contains(preload))environment.put("NODE_OPTIONS",preload+(previous.isEmpty()?"":" "+previous));
         }
-        // 原生扩展已在私有运行时中；复制缓存使用 link+unlink，在 link2symlink 下首次变成悬链。
-        environment.putIfAbsent("NARB_DISABLE_NATIVE_CACHE", "1");
         // 原生扩展已在私有运行时中；复制缓存使用 link+unlink，在 link2symlink 下首次变成悬链。
         environment.putIfAbsent("NARB_DISABLE_NATIVE_CACHE", "1");
         for (String key : new String[]{"SSL_CERT_FILE", "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE", "GIT_SSL_CAINFO"})

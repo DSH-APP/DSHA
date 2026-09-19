@@ -15,8 +15,8 @@ android {
         applicationId "com.dsh.client"
         minSdk 30
         targetSdk 37
-        versionCode 129
-        versionName "0.1.5-rc2"
+        versionCode 141
+        versionName "0.1.6-alpha2"
         testInstrumentationRunner project.findProperty('dsha.testRunner') ?: "com.deepseekharness.app.Rc13Instrumentation"
         ndk {
             abiFilters 'arm64-v8a'
@@ -33,7 +33,7 @@ android {
         low {
             dimension 'androidSupport'
             minSdk 23
-            versionName '0.1.5-rc2low'
+            versionNameSuffix 'low'
             buildConfigField 'boolean', 'LOW_ANDROID', 'true'
         }
     }
@@ -125,6 +125,48 @@ def prepareStandardAssets = tasks.register("prepareStandardAssets", Exec) {
             "--source", file("src/main/assets").absolutePath,
             "--output", layout.buildDirectory.dir("generated/standardAssets").get().asFile.absolutePath)
 }
+def prepareBackupAssets = tasks.register("prepareBackupAssets", Exec) {
+    inputs.file(rootProject.file("tools/prepare-backup-assets.py"))
+    inputs.file(file("src/main/assets/dsh-runtime.bin"))
+    outputs.file(file("src/main/assets/managed-package-proofs.json"))
+    commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B", rootProject.file("tools/prepare-backup-assets.py").absolutePath)
+}
+prepareStandardAssets.configure { dependsOn(prepareBackupAssets) }
+def prepareRuntimeDescriptor = tasks.register("prepareRuntimeDescriptor", Exec) {
+    inputs.file(rootProject.file("tools/prepare-runtime-descriptor.py"))
+    inputs.files(fileTree("src/main/assets") { exclude "runtime-descriptor.json", "managed-package-proofs.json" })
+    inputs.files(fileTree("src/main/jniLibs"), fileTree("src/low/jniLibs"), fileTree("src/main/java/com/deepseekharness/app/runtime"),
+            file("src/main/java/com/deepseekharness/app/util/WebProcSel.java"), file("src/main/java/com/deepseekharness/app/util/WebPidIdentity.java"))
+    outputs.file(file("src/main/assets/runtime-descriptor.json"))
+    commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B", rootProject.file("tools/prepare-runtime-descriptor.py").absolutePath)
+}
+prepareStandardAssets.configure { dependsOn(prepareRuntimeDescriptor) }
+
+def verifyBackupDependencies = tasks.register("verifyBackupDependencies") {
+    inputs.file(rootProject.file("tools/backup-dependencies.lock.json"))
+    doLast {
+        def lock = new groovy.json.JsonSlurper().parse(rootProject.file("tools/backup-dependencies.lock.json"))
+        if (lock.version != 1 || lock.dependencies.size() != 2) throw new GradleException("备份依赖锁格式错误")
+        ["standardReleaseRuntimeClasspath", "lowReleaseRuntimeClasspath"].each { name ->
+            def resolved = configurations.getByName(name).resolvedConfiguration.resolvedArtifacts
+            lock.dependencies.each { expected ->
+                def selected = resolved.findAll { it.moduleVersion.id.group == expected.group && it.name == expected.name }
+                if (selected.size() != 1 || selected[0].moduleVersion.id.version != expected.version)
+                    throw new GradleException("备份依赖版本未锁定：${expected.group}:${expected.name}")
+                def hash = java.security.MessageDigest.getInstance("SHA-256")
+                selected[0].file.withInputStream { input ->
+                    byte[] buffer = new byte[65536]; int count
+                    while ((count = input.read(buffer)) != -1) hash.update(buffer, 0, count)
+                }
+                if (hash.digest().encodeHex().toString() != expected.sha256)
+                    throw new GradleException("备份依赖摘要不符：${expected.name}")
+                if (!file("src/main/assets/${expected.licenseAsset}").isFile())
+                    throw new GradleException("缺少备份依赖许可：${expected.name}")
+            }
+        }
+    }
+}
+tasks.withType(JavaCompile).configureEach { dependsOn(verifyBackupDependencies) }
 tasks.named("preBuild").configure { dependsOn(prepareStandardAssets) }
 def prepareUiLanguages = tasks.register("prepareUiLanguages", Exec) {
     inputs.file(rootProject.file("tools/prepare-ui-languages.py"))
@@ -152,5 +194,8 @@ dependencies {
     // 自带 JNI PTY 层（openpty+fork/exec）。坐标是 JitPack 多模块真实 groupId
     // （com.termux.termux-app），不是 Wiki 上会 401 的 com.termux:terminal-view。
     implementation 'com.termux.termux-app:terminal-view:0.118.0'
+    // 宿主备份：流式 JSON 清单与跨 API 23 的 PBKDF2-SHA256 / AES-GCM 实现，版本锁定。
+    implementation 'com.google.code.gson:gson:2.13.1'
+    implementation 'org.bouncycastle:bcprov-jdk15to18:1.85.2'
     testImplementation 'junit:junit:4.13.2'
 }

@@ -1,6 +1,6 @@
 {
   "name": "dsh-web-mobile",
-  "version": "2.4.1-dsha.2",
+  "version": "2.4.1-dsha.5",
   "description": "尽可能的使dsh适配竖屏等移动端设备",
   "license": "MIT",
   "author": "mexiaosh",
@@ -64,22 +64,23 @@
         "@deepseek-ai/dsh-client-ui-settings",
         "@deepseek-ai/dsh-client-ui-sidebar",
         "@deepseek-ai/dsh-session-log-export",
-        "@deepseek-ai/dsh-client-ui-sidebar-right"
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-ui-workspace"
       ]
     }
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-client-locale": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-client-ui-conversation": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-client-ui-layout": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-client-ui-settings": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-client-ui-sidebar": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-client-ui-slots": "0.1.5-rc.2",
-    "@deepseek-ai/dsh-session-log-export": "0.1.5-rc.2",
+    "@deepseek-ai/dsh-client-locale": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-client-ui-layout": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-session-log-export": "0.1.6-alpha.2",
     "react": "^18.2.0",
-    "@deepseek-ai/dsh-client-ui-sidebar-right": "0.1.5-rc.2"
+    "@deepseek-ai/dsh-client-ui-sidebar-right": "0.1.6-alpha.2"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

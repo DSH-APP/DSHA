@@ -4,6 +4,7 @@ import android.content.Context;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
+import com.deepseekharness.app.util.CredentialRead;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
@@ -66,18 +67,52 @@ public class KeyVault {
         }
     }
 
-    /** 解密。失败返回空串。 */
+    /** 兼容旧调用名；失败明确抛出状态，不能静默改成未配置。 */
     public String decrypt(String stored) {
-        if (stored == null || stored.isEmpty()) return "";
+        return read(stored).requireValue();
+    }
+
+    /** 宿主备份明确区分未设置与旧设备密钥不可用；解密时绝不生成替代主密钥。 */
+    public String decryptChecked(String stored) throws java.io.IOException {
+        try{return read(stored).requireValue();}
+        catch(CredentialRead.Unavailable unavailable){throw new java.io.IOException(unavailable.getMessage());}
+    }
+    public CredentialRead read(String stored) {
+        if(stored==null||stored.isEmpty())return CredentialRead.missing();
         try {
-            byte[] all = Base64.decode(stored, Base64.NO_WRAP);
-            Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
-            c.init(Cipher.DECRYPT_MODE, getOrCreateKey(),
-                    new GCMParameterSpec(GCM_TAG_BITS, all, 0, IV_BYTES));
-            byte[] pt = c.doFinal(all, IV_BYTES, all.length - IV_BYTES);
-            return new String(pt, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            return "";
+            if(android.os.Build.VERSION.SDK_INT>=24){android.os.UserManager users=ctx.getSystemService(android.os.UserManager.class);
+                if(users!=null&&!users.isUserUnlocked())return CredentialRead.failed(CredentialRead.Reason.DEVICE_LOCKED);}
+            KeyStore store=KeyStore.getInstance(KEYSTORE);store.load(null);
+            java.security.Key key=store.getKey(ALIAS,null);if(key==null)return CredentialRead.failed(CredentialRead.Reason.KEY_MISSING);
+            byte[] all=Base64.decode(stored,Base64.NO_WRAP);if(all.length<IV_BYTES+16)return CredentialRead.failed(CredentialRead.Reason.UNREADABLE);
+            Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.DECRYPT_MODE,key,new GCMParameterSpec(GCM_TAG_BITS,all,0,IV_BYTES));
+            return CredentialRead.available(new String(cipher.doFinal(all,IV_BYTES,all.length-IV_BYTES),StandardCharsets.UTF_8));
+        }catch(Exception error){return classify(error);}
+    }
+
+    /** 格式化时移除本应用的凭据密钥；密文偏好会由调用方独立同步清空。 */
+    public boolean clearForFactoryReset() {
+        try {
+            KeyStore store = KeyStore.getInstance(KEYSTORE);
+            store.load(null);
+            if (store.containsAlias(ALIAS)) store.deleteEntry(ALIAS);
+            return !store.containsAlias(ALIAS);
+        } catch (Exception unavailable) {
+            return false;
         }
+    }
+    static CredentialRead classify(Throwable error){
+            // 仅按平台明确分类细分；认证失败不等于“密文损坏”。不保留含供应商细节的原异常。
+            java.util.Set<Throwable> seen=java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+            for(Throwable item=error;item!=null&&seen.size()<8&&seen.add(item);item=item.getCause()){
+                if(item instanceof android.security.keystore.KeyPermanentlyInvalidatedException)return CredentialRead.failed(CredentialRead.Reason.KEY_INVALIDATED);
+                if(item instanceof android.security.keystore.UserNotAuthenticatedException)return CredentialRead.failed(CredentialRead.Reason.AUTHENTICATION_REQUIRED);
+                if(android.os.Build.VERSION.SDK_INT>=33&&Api33.transientFailure(item))return CredentialRead.failed(CredentialRead.Reason.TRANSIENT_STORE);
+            }
+            return CredentialRead.failed(CredentialRead.Reason.UNREADABLE);
+    }
+    @androidx.annotation.RequiresApi(33)
+    private static final class Api33 {
+        static boolean transientFailure(Throwable failure){return failure instanceof android.security.KeyStoreException&&((android.security.KeyStoreException)failure).isTransientFailure();}
     }
 }

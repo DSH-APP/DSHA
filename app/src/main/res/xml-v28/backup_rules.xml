@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="sharedpref" path="dsha-portable-settings.xml" />
+    <include domain="file" path="user-data-v5/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="data-locations-v5.json" requireFlags="clientSideEncryption" />
+    <include domain="file" path="linux/ubuntu/root/.dsh/sessions/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="linux/ubuntu/root/.dsh/storages/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="linux/ubuntu/root/.dsh/attachments/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="linux/ubuntu/root/.dsh/settings.yaml" requireFlags="clientSideEncryption" />
+    <include domain="file" path="linux/ubuntu/root/.dsh/profiles/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="linux/ubuntu/root/.dsh/plugin-src/" requireFlags="clientSideEncryption" />
+</full-backup-content>

@@ -20,4 +20,19 @@ public final class EnvironmentIdentity {
     public static boolean shouldAutoStart(boolean ready, boolean busy, boolean pending, String identity, String attempted) {
         return !ready && !busy && !pending && identity != null && !identity.isEmpty() && !identity.equals(attempted);
     }
+    /**
+     * 前台服务和看门狗的运行时门禁。包内描述无法认证时必须阻止启动；同一候选已经
+     * 尝试失败时，则允许后续门禁决定是否继续使用经过健康确认的兼容前代。
+     */
+    public static boolean shouldBlockRuntimeStart(boolean latest, boolean candidateReadable,
+                                                  boolean busy, boolean pending,
+                                                  String candidate, String attempted) {
+        if (latest) return false;
+        if (!candidateReadable) return true;
+        return shouldAutoStart(false, busy, pending, candidate, attempted);
+    }
+    /** 成功文案不是就绪证明；维护之后仍未就绪时留在原生页，不能再次进入跳转循环。 */
+    public static boolean mayAdvanceAfterMaintenance(boolean automatic,boolean mine,boolean succeeded,boolean busy,boolean pending,boolean ready){
+        return automatic&&mine&&succeeded&&!busy&&!pending&&ready;
+    }
 }

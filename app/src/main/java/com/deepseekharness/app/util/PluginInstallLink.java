@@ -7,6 +7,10 @@ import java.util.Map;
 
 /** 网页只传入下载请求；作者和版本最终由实际压缩包校验，不执行链接中的命令。 */
 public final class PluginInstallLink {
+    /** 网页只导航到原生管理页；不接受任意路径、参数或嵌入命令。 */
+    public static boolean management(String value) {
+        return "https://dsha.cc/app/plugins".equals(value)||"https://dsha.cc/app/plugins/".equals(value);
+    }
     public final String url, sha256, name, version, builtin;
     private PluginInstallLink(Map<String, String> params) {
         url=params.getOrDefault("url", ""); sha256=params.getOrDefault("sha256", "");

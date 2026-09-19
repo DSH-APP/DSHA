@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 public class InstallProcessTest {
     private Process child(String mode) throws IOException {
         return new ProcessBuilder(new File(System.getProperty("java.home"), "bin/java").getPath(),
-                "-Dfile.encoding=UTF-8", "-cp", System.getProperty("java.class.path"), Child.class.getName(), mode).redirectErrorStream(true).start();
+                "-Dfile.encoding=UTF-8", "-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8", "-cp", System.getProperty("java.class.path"), Child.class.getName(), mode).redirectErrorStream(true).start();
     }
     @Test public void receivesEachLineBeforeProcessExitAndKeepsNonzeroExit() throws Exception {
         Process process = child("stream"); CountDownLatch first = new CountDownLatch(1);

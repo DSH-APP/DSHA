@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="picture_in_picture_title">系统画中画设置</string>
+    <string name="picture_in_picture_hint">画中画只由 Android 系统设置控制。</string>
+    <string name="picture_in_picture_allowed">系统已允许；切到桌面或其他应用时保留对话小窗。</string>
+    <string name="picture_in_picture_disabled">系统已关闭；切到后台时不显示小窗。点此更改。</string>
+    <string name="picture_in_picture_landscape">切换横版</string>
+    <string name="picture_in_picture_portrait">切换竖版</string>
+    <string name="picture_in_picture_unsupported">当前设备不支持系统画中画，需要 Android 8.0+ 及设备支持。</string>
+    <string name="picture_in_picture_permission">请在系统设置中允许 DSHA 使用画中画。</string>
+    <string name="picture_in_picture_settings_unavailable">无法打开系统画中画设置。</string>
+</resources>

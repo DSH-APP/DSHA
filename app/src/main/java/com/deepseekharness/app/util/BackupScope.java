@@ -40,14 +40,15 @@ public final class BackupScope {
         }
     }
 
-    /** 从清单里的标识反解。认不出来一律当全量 —— 老备份没有这个字段，而它们就是全量。 */
+    /** 清单中的未知范围必须拒绝；无范围旧包由历史格式预检识别，不能默认覆盖全部数据。 */
     public static int fromId(String id) {
-        if (id == null) return FULL;
+        if (id == null) throw new IllegalArgumentException("UNKNOWN_BACKUP_SCOPE");
         String s = id.trim();
         if (s.equals("sessions")) return SESSIONS;
         if (s.equals("plugins")) return PLUGINS;
         if (s.equals("settings")) return SETTINGS;
-        return FULL;
+        if (s.equals("full")) return FULL;
+        throw new IllegalArgumentException("UNKNOWN_BACKUP_SCOPE");
     }
 
     /** 文件名前缀。部分备份刻意不叫 DSHA-backup-（见类注释）。 */

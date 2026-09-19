@@ -76,6 +76,8 @@ public class HarnessController {
     public ConfigStore config() {
         return config;
     }
+    /** 数据协调器只持有应用 Context，不持有页面实例。 */
+    Context context() { return ctx; }
 
     public ProotBootstrap proot() {
         return proot;
@@ -209,6 +211,16 @@ public class HarnessController {
 
     private boolean requestStart(Consumer<String> onStatus, boolean automatic, long expectedGeneration, boolean safeMode) {
         synchronized (lifecycle) {
+            // 覆盖安装后，前台 START_STICKY 服务可能先于 MainActivity 被系统重建。
+            // 尚未尝试的新受管候选必须先走维护事务；否则看门狗会用兼容但过期的
+            // 运行时重新拉起 Web，令本 APK 的运行补丁和系统插件尚未落地。
+            // 已经尝试失败的候选仍可使用通过健康确认的兼容前代。
+            if (!proot.isEnvironmentReady() || EnvironmentAccess.shouldAttemptRuntimeUpdate(this)) {
+                if (onStatus != null) onStatus.accept(com.deepseekharness.app.util.UiText.choose(
+                        "运行环境缺失或需要更新，请进入安装与修复；配置安全启动不能修复系统文件。",
+                        "The runtime is missing or needs an update. Open installation and repair; safe configuration cannot repair system files."));
+                return false;
+            }
             if (StartupRepairs.pending(ctx)) {
                 if(onStatus!=null)onStatus.accept(com.deepseekharness.app.util.UiText.choose("配置修复尚未完成，请先进入启动恢复。","Configuration repair is incomplete. Open Startup Recovery first."));
                 return false;
@@ -277,6 +289,8 @@ public class HarnessController {
                 reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.text("存在未完成的环境维护，请先恢复中断维护"));
                 return;
             }
+            // 凭据不可读时在停止/准备运行环境前暂停，不以空 Key 启动造成误导性认证失败。
+            config.readApiKey().requireValue();
             com.deepseekharness.app.LanProxyService.stop();
             setWebStage(generation, com.deepseekharness.app.util.UiText.text("停止旧 Web 进程"));
             String stopError = webProc.stop();
@@ -304,28 +318,24 @@ public class HarnessController {
             if (!lifecycle.isCurrent(generation)) return;
             if (!safeMode) {
             setWebStage(generation, com.deepseekharness.app.util.UiText.text("注册插件"));
-            // 内置四插件注册：rootfs 烘焙的实体要登记进 web profile 才会被 dsh 加载。
+            // 内置插件注册：rootfs 烘焙的实体要登记进 web profile 才会被 dsh 加载。
             // 覆盖安装（rootfs 保留）与全新安装（rootfs 重新解压）都靠这一步补齐；
-            // 失败不阻塞启动（插件页打开时会再触发一次，dsh 下次重启生效）。
-            try {
-                String r = boot.registerBuiltinPlugins();
-                startupDiagnostics.message(generation, r);
-                if (r != null && (r.contains("BUILTIN_REGISTER_OK")
-                        || r.contains("BUILTIN_REGISTER_PARTIAL")
-                        || r.contains("FAIL"))) {
-                    Log.i("DSHA", com.deepseekharness.app.util.UiText.text("内置插件注册: ") + r.trim());
-                }
-            } catch (Throwable error) {
-                startupDiagnostics.issue(generation, "", com.deepseekharness.app.util.UiText.text("插件注册失败：") + error);
+            // 注册失败时停止在原生恢复页，不能带着一半旧插件继续启动 Web。
+            String r = boot.registerBuiltinPlugins();
+            startupDiagnostics.message(generation, r);
+            if (r == null || !r.contains("BUILTIN_REGISTER_OK")) {
+                String detail = com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(r));
+                if (detail.length() > 1200) detail = detail.substring(detail.length() - 1200);
+                startupDiagnostics.issue(generation, "", com.deepseekharness.app.util.UiText.text("插件注册失败：") + detail);
+                throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("内置插件未完整注册，请先修复环境：") + detail);
             }
+            Log.i("DSHA", com.deepseekharness.app.util.UiText.text("内置插件注册: ") + r.trim());
             }
             String startupProfile = "web";
+            if (!safeMode)PluginActivationHooks.beforeLaunch(this,startupDiagnostics.recordId());
             if (safeMode) {
                 setWebStage(generation, com.deepseekharness.app.util.UiText.text("准备独立基础配置"));
-                String result = boot.execAndReadWithProot("python3 /root/.dsh/startup-recovery.py", 90_000);
-                java.util.regex.Matcher profile = java.util.regex.Pattern.compile("(?m)^DSHA_RECOVERY_PROFILE=(dsha-recovery-[0-9a-f]{16})$").matcher(result.trim());
-                if (!profile.find()) throw new IOException(com.deepseekharness.app.util.UiText.text("安全配置创建失败：") + result);
-                startupProfile = profile.group(1);
+                startupProfile = StartupRepairs.prepareSafeProfile(this);
                 reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.text("安全启动仅加载官方基础界面；原插件开关和配置保留，点普通重启可返回。"));
             }
             // 只有当前启动任务能清哨兵；延迟进入容器的旧 shell 不再自行删除它。
@@ -381,10 +391,14 @@ public class HarnessController {
             io.schedule(() -> reportSlowStart(generation, onStatus), 60, TimeUnit.SECONDS);
             draining = true;
         } catch (Exception e) {
-            Log.e("DSHA", "startWeb failed", e);
+            String failure;
+            if(e instanceof com.deepseekharness.app.util.CredentialRead.Unavailable){
+                var unreadable=((com.deepseekharness.app.util.CredentialRead.Unavailable)e).result;
+                Log.w("DSHA","credential read: "+unreadable.reason.name());failure=ConfigStore.credentialMessage(unreadable);
+            }else{Log.e("DSHA", "startWeb failed", e);failure=com.deepseekharness.app.util.UiText.text("启动失败：")+e.getMessage();}
             lifecycle.finishStart(generation);
-            recordWebFailure(generation, com.deepseekharness.app.util.UiText.text("启动失败：") + e.getMessage());
-            reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.text("启动失败：") + e.getMessage());
+            recordWebFailure(generation, failure);
+            reportStatus(generation, onStatus, failure);
         } finally {
             if (!draining) lifecycle.finishStart(generation);
         }
@@ -596,10 +610,12 @@ public class HarnessController {
 
     /** 立即禁用自动拉起，实际停止在共享队列执行，回调在后台线程。 */
     public void stopWeb(Consumer<String> onStatus) {
+        com.deepseekharness.app.HttpShellService.revokeScreenGrant();
         enqueueStop(onStatus);
     }
 
     private Future<?> enqueueStop(Consumer<String> onStatus) {
+        com.deepseekharness.app.HttpShellService.revokeScreenGrant();
         synchronized (lifecycle) {
             if (lifecycle.isStopping()) return stopTask;
             long previous = lifecycle.generation();
@@ -616,7 +632,8 @@ public class HarnessController {
             stopTask = io.submit(() -> {
                 String stopError = "";
                 try {
-                    stopError = webProc.stop(); // 仍用原 PID 判据，绝不直接 destroy proot。
+                    stopError = webProc.stop();
+                    if(stopError.isEmpty()&&!com.deepseekharness.app.BackupManager.isEnvironmentTaskBusy()){com.deepseekharness.app.backup.AutomaticBackups.stopped(context());com.deepseekharness.app.backup.PostUpgradeCleanupService.schedule(context());} // 仍用原 PID 判据，绝不直接 destroy proot。
                     com.deepseekharness.app.LanProxyService.stop(previous);
                 } finally {
                     synchronized (lifecycle) {
@@ -687,6 +704,7 @@ public class HarnessController {
             if (!lifecycle.isCurrent(generation) || !recovery.fail(generation, reason)) return;
             startupDiagnostics.completed(generation,"failed",reason);
             startupDiagnostics.preserveFailure(new File(proot.getRootfsDir(), "root/dsh-web.log"),reason);
+            if(!startupDiagnostics.snapshot().safe)PluginActivationHooks.failed(this,generation,startupDiagnostics.recordId());
             if(!startupDiagnostics.snapshot().browserReady || recovery.blocked())config.requestStartupRecovery(true);
             DiagnosticLog.record(ctx, "WEB_FAILURE", config.getWebFailureStage() + com.deepseekharness.app.util.UiText.text("：") + reason);
             if (recovery.blocked()) {
@@ -740,40 +758,23 @@ public class HarnessController {
     }
 
     /** 重置容器内配置（settings.yaml + .env），保留对话记录，并按当前 App 配置重写 .env。 */
-    public String resetConfig() {
-        try {
-            boolean any = false;
-            java.io.File settings = new java.io.File(proot.getRootfsDir(), "root/.dsh/settings.yaml");
-            if (settings.isFile()) {
-                //noinspection ResultOfMethodCallIgnored
-                settings.delete();
-                any = true;
-            }
-            String wd = config.getWorkdir();
-            java.io.File env = new java.io.File(proot.getRootfsDir(),
-                    "root/" + (wd.startsWith("/") ? wd.substring(1) : wd) + "/.env");
-            if (env.isFile()) {
-                //noinspection ResultOfMethodCallIgnored
-                env.delete();
-                any = true;
-            }
-            writeEnvFile(env);
-            return any
-                    ? com.deepseekharness.app.util.UiText.text("配置已重置，对话记录已保留\n（.env 已按当前配置重写）")
-                    : com.deepseekharness.app.util.UiText.text("没有可重置的配置（.env 已重写）");
-        } catch (Throwable e) {
-            return "重置失败：" + com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(e));
-        }
-    }
-
-    /** 用当前 App 配置重写 rootfs 内的 .env。 */
-    private void writeEnvFile(java.io.File env) throws Exception {
-        if (env.getParentFile() != null) env.getParentFile().mkdirs();
-        String apiKey = config.getApiKey();
+    public String resetConfig() throws IOException {
+        if(!com.deepseekharness.app.BackupManager.isDataTaskOwner())throw new IOException("RESET_REQUIRES_MAINTENANCE");
+        String apiKey;
+        try{apiKey=config.exportPortableSettings(true).optString("apiKey","");}
+        catch(org.json.JSONException error){throw new IOException("SETTINGS_FORMAT",error);}
         String keyLine = apiKey.isEmpty()
                 ? "# DEEPSEEK_API_KEY=\n"
                 : "DEEPSEEK_API_KEY=" + com.deepseekharness.app.util.ShellQuote.arg(apiKey) + "\n";
-        Compat.write(env, keyLine.getBytes(StandardCharsets.UTF_8));
+        java.io.File saved=com.deepseekharness.app.backup.NativeConfigurationReset.reset(new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
+                ctx.getFilesDir().getCanonicalFile(),config.getWorkdir(),keyLine.getBytes(StandardCharsets.UTF_8),nativeSettingsTransaction(),null,BackupTask.currentControl(null));
+        return com.deepseekharness.app.util.UiText.choose("配置已重置，对话及原生凭据保留。重置前配置原件：\n", "Configuration reset; conversations and native credentials retained. Original configuration:\n")+saved;
+    }
+    com.deepseekharness.app.backup.HostDataTransaction.Settings nativeSettingsTransaction(){
+        return new com.deepseekharness.app.backup.HostDataTransaction.Settings(){
+            public java.util.Map<String,Object> current(){return config.hostSettingsState();}
+            public void apply(java.util.Map<String,Object> values)throws IOException{config.applyHostSettings(values);}
+        };
     }
 
     /** proot 冒烟测试，返回诊断文本。 */

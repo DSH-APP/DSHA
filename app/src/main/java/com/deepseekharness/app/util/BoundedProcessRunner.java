@@ -14,13 +14,26 @@ public final class BoundedProcessRunner {
 
     public static final class Result {
         public final String output;
+        public final String tail;
+        public final long totalBytes;
+        public final int maxBytes;
         public final int exitCode;
         public final boolean timedOut, truncated;
-        private Result(ByteArrayOutputStream bytes, int exitCode, boolean timedOut, boolean truncated) {
-            this.output = new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+        private Result(ProcessOutputCapture bytes, int exitCode, boolean timedOut, boolean truncated) {
+            this.output = bytes.head();
+            this.tail = bytes.tail();
+            this.totalBytes = bytes.totalBytes();
+            this.maxBytes = bytes.headLimit();
             this.exitCode = exitCode;
             this.timedOut = timedOut;
             this.truncated = truncated;
+        }
+        public String diagnostic() {
+            String head = output.substring(0, Math.min(output.length(), 1200));
+            String end = tail.substring(Math.max(0, tail.length() - 2400));
+            return "exit=" + exitCode + " timedOut=" + timedOut + " bytes=" + totalBytes
+                    + " maxBytes=" + maxBytes + " truncated=" + truncated
+                    + "\nHEAD:\n" + head + "\nTAIL:\n" + end;
         }
     }
 
@@ -36,7 +49,7 @@ public final class BoundedProcessRunner {
         if (timeoutMillis <= 0 || maxBytes < 0) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("无效的进程限制"));
         final long started = System.nanoTime();
         final long budget = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream(Math.min(maxBytes, 8192));
+        ProcessOutputCapture bytes = new ProcessOutputCapture(maxBytes, Math.min(maxBytes, 8192));
         InputStream input = process.getInputStream();
         byte[] buffer = new byte[8192];
         ByteArrayOutputStream line = new ByteArrayOutputStream();
@@ -53,8 +66,7 @@ public final class BoundedProcessRunner {
                 if (available > 0) {
                     int count = input.read(buffer, 0, Math.min(buffer.length, available));
                     if (count > 0) {
-                        int kept = Math.min(count, maxBytes - bytes.size());
-                        bytes.write(buffer, 0, kept);
+                        bytes.write(buffer, 0, count);
                         if (onLine != null) {
                             for (int i = 0; i < count; i++) {
                                 if (buffer[i] == '\n') {
@@ -63,7 +75,7 @@ public final class BoundedProcessRunner {
                                 } else if (line.size() < 16384) line.write(buffer[i]);
                             }
                         }
-                        truncated |= kept < count;
+                        truncated = bytes.truncated();
                         continue; // 每个块都重新核对总期限，达到输出上限后继续排空管道。
                     }
                 }

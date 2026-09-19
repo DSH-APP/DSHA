@@ -30,6 +30,7 @@ public class DshaDocumentsProvider extends DocumentsProvider {
     private static final String[] ROOT_COLUMNS = {"root_id", "mime_types", "flags", "title", "summary", "document_id", "icon", "query_args"};
     private static final String[] DOCUMENT_COLUMNS = {"document_id", "mime_type", "_display_name", "last_modified", "flags", "_size"};
     private DocumentPaths paths;
+    private com.deepseekharness.app.backup.UserDataLayout dataLayout;
     private String authority;
     // 测试子类只替换目录，生产入口不接受任意宿主路径。
     protected File documentBase() { return getContext().getFilesDir(); }
@@ -37,7 +38,8 @@ public class DshaDocumentsProvider extends DocumentsProvider {
         authority = info.authority; super.attachInfo(context, info);
     }
     @Override public boolean onCreate() {
-        try { paths = new DocumentPaths(documentBase(), DshaDocumentsProvider::link); return true; }
+        try { dataLayout=new com.deepseekharness.app.backup.UserDataLayout(new com.deepseekharness.app.backup.AndroidBackupFileSystem(),documentBase().getCanonicalFile());
+            paths = new DocumentPaths(documentBase(), DshaDocumentsProvider::link,dataLayout.documents()); return true; }
         catch (IOException error) { android.util.Log.e("DshaDocs", com.deepseekharness.app.util.UiText.text("文件接口初始化失败"), error); return false; }
     }
     @Override public Cursor querySearchDocuments(String root, String[] projection, android.os.Bundle args) throws FileNotFoundException {
@@ -66,7 +68,9 @@ public class DshaDocumentsProvider extends DocumentsProvider {
     }
     private File resolve(String id, boolean followLast) throws IOException {
         if (paths == null) throw new IOException(com.deepseekharness.app.util.UiText.text("文件接口未初始化"));
-        return paths.resolve(id, followLast);
+        File resolved=paths.resolve(id, followLast);
+        if(dataLayout.privateDocument(resolved))throw new IOException(com.deepseekharness.app.util.UiText.choose("此目录为应用内部数据保护记录", "This directory contains private data protection records"));
+        return resolved;
     }
     private File existing(String id) throws IOException {
         File file = resolve(id, true);
@@ -117,7 +121,7 @@ public class DshaDocumentsProvider extends DocumentsProvider {
         } catch (IOException error) { throw failure(error); }
     }
     @Override public boolean isChildDocument(String parent, String child) {
-        try (RuntimeTasks ignored = lease(false)) { return paths.childOf(parent, child); }
+        try (RuntimeTasks ignored = lease(false)) { resolve(child,true);return paths.childOf(parent, child); }
         catch (IOException error) { return false; }
     }
     @Override public String getDocumentType(String id) throws FileNotFoundException {

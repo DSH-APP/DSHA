@@ -60,6 +60,7 @@ public final class PtySession implements TerminalSessionClient {
     private volatile com.deepseekharness.app.util.ProcessIdentity identity;
     private com.deepseekharness.app.core.RuntimeTasks work;
     private volatile boolean maintenanceClosing;
+    private boolean prootLauncher;
     private static final java.util.Set<PtySession> pending = java.util.Collections.newSetFromMap(
             new java.util.concurrent.ConcurrentHashMap<PtySession, Boolean>());
 
@@ -89,12 +90,13 @@ public final class PtySession implements TerminalSessionClient {
         PtySession ps = new PtySession();
         ps.attachListener(l);
         // 必须先登记异步寿命，再准备目录和 fork，避免维护切换与终端启动交错。
-        ps.work = com.deepseekharness.app.core.RuntimeTasks.beginDetached();
+        ps.work = com.deepseekharness.app.core.RuntimeTasks.beginDetached("终端");
         pending.add(ps);
         try {
         try { proot.requireUserRuntime(); } catch (java.io.IOException error) { throw new IllegalStateException(error.getMessage(), error); }
         proot.ensureAndroidGroups(); // 登录 shell 的 $(groups) 依赖 /etc/group 里有 Android GID
         String[] argv = proot.ptyArgv();
+        ps.prootLauncher = com.deepseekharness.app.util.ProcessIdentity.isProot(argv[0]);
         String[] env = proot.ptyEnv();
         // args 就是 argv（含 argv[0]）：查过 termux.c，Java 数组原样转成 argv 后
         // 直接 execvp(cmd, argv)，没有任何加工 —— 与 ProcessBuilder 的行为一致。
@@ -160,11 +162,10 @@ public final class PtySession implements TerminalSessionClient {
         if (isRunning()) {
             com.deepseekharness.app.util.ProcessIdentity expected = identity;
             if (expected == null) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("无法确认终端身份，原环境保持保护"));
-            try {
-                String executable = android.system.Os.readlink("/proc/" + expected.pid + "/exe");
-                if (com.deepseekharness.app.util.ProcessIdentity.isProot(executable)) finish();
-                else com.deepseekharness.app.runtime.TerminalProcessCloser.close(expected, timeoutMs);
-            } catch (android.system.ErrnoException error) { throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("无法确认终端可执行文件"), error); }
+            // 启动方式在 fork 前由可信 argv 记录，PID 身份仍用出生握手与当前 stat 双重核验。
+            // /proc/PID/exe 在退出及非调试应用 exec 窗口可能不可读，不能把它当成永久维护故障。
+            if (prootLauncher) com.deepseekharness.app.runtime.TerminalProcessCloser.closeProot(expected);
+            else com.deepseekharness.app.runtime.TerminalProcessCloser.close(expected, timeoutMs);
         }
         long deadline = android.os.SystemClock.elapsedRealtime() + timeoutMs;
         while (isRunning() && android.os.SystemClock.elapsedRealtime() < deadline)

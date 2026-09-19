@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <instrumentation android:name="com.deepseekharness.app.core.Rc21RecoveryAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.Rc21AttachmentAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
     <application>
         <provider android:name=".DocumentsAuditProvider" android:authorities="${applicationId}.documents.audit"
             android:exported="true" android:grantUriPermissions="true" android:permission="android.permission.MANAGE_DOCUMENTS">

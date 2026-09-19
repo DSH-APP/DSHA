@@ -31,6 +31,8 @@ public final class BackupTaskState {
             this.detail = com.deepseekharness.app.util.UiText.text("上次任务因进程退出而中断，未自动重试。请先处理未完成的维护或重新选择备份。\n") + this.detail;
         }
     }
+    /** 已完成的应用内格式化被欢迎页接管后，移除旧任务结果。 */
+    public synchronized void reset() { id = 0; kind = ""; detail = ""; status = Status.IDLE; }
     public static final class Snapshot {
         public final long id;
         public final String kind, detail;

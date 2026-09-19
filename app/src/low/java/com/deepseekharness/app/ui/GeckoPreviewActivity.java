@@ -12,7 +12,6 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.util.Constants;
@@ -34,7 +33,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 /** 兼容版浏览器：鉴权、文件上传、错误恢复与系统 WebView 入口保持一致。 */
-public final class GeckoPreviewActivity extends AppCompatActivity implements WebFullscreenUi.Host {
+public final class GeckoPreviewActivity extends PictureInPictureActivity implements WebFullscreenUi.Host {
     private GeckoSession session;
     private GeckoView browser;
     private FrameLayout container;
@@ -54,6 +53,7 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
     private PreviewAuth previewAuth;
     public static final class Retained extends androidx.lifecycle.ViewModel {
         GeckoSession session;
+        boolean ready;
         String authUrl;
         GeckoSession.SessionState history;
         boolean canGoBack;
@@ -164,12 +164,15 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
                     retained.history = new GeckoSession.SessionState(state);
                 }
                 @Override public void onPageStart(GeckoSession s, String url) {
+                    if (s != session) return;
+                    retained.ready = false; refreshPictureInPicture();
                     progress.setProgress(0);
                     progress.setVisibility(View.VISIBLE);
                 }
                 @Override public void onProgressChange(GeckoSession s, int value) { progress.setProgress(value); }
                 @Override public void onPageStop(GeckoSession s, boolean success) {
                     if (s != session) return;
+                    retained.ready = success; refreshPictureInPicture();
                     progress.setVisibility(View.GONE);
                     if (!success) showError(com.deepseekharness.app.util.UiText.text("页面未完成加载"), com.deepseekharness.app.util.UiText.text("服务可能已退出，点击重试或返回启动页。"));
                     else if (savedHistory != null) {
@@ -302,7 +305,7 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
         catch (Exception error) { backPending = false; historyBack(); return; }
         container.postDelayed(() -> { if (backPending && id == backSequence) { backPending = false; historyBack(); } },1200);
     }
-    private void historyBack() { if (session != null && canGoBack) session.goBack(); else finish(); }
+    private void historyBack() { if (session != null && canGoBack) session.goBack(); else leavePreview(); }
     private void loadInitial(GeckoSession current) {
         // 先由 Gecko 自己完成 token → Cookie 交换；成功后再恢复历史，避免进程重建绕过鉴权。
         current.loadUri(authUrl);
@@ -342,18 +345,24 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
                     @Override public void onDisconnect(WebExtension.Port source) { if (pagePort == source) { pagePort = null; retained.port = null; } }
                 });
                 try { port.postMessage(new org.json.JSONObject().put("type","language")
-                        .put("language",new com.deepseekharness.app.core.ConfigStore(GeckoPreviewActivity.this).getUiLanguage())); }
+                        .put("openModels",getIntent().getBooleanExtra("dsha_open_models",false))
+                        .put("language",new com.deepseekharness.app.core.ConfigStore(GeckoPreviewActivity.this).getUiLanguage()));
+                    getIntent().removeExtra("dsha_open_models");
+                }
                 catch(org.json.JSONException ignored) { }
             }
         },"dsha");
         if (retained.port != null) current.getWebExtensionController().getMessageDelegate(extension,"dsha").onConnect(retained.port);
     }
     private void external(String url) {
+        if(url!=null&&PluginNavigation.open(this,url))return;
         if (url == null || !(url.startsWith("https://") || url.startsWith("http://"))) return;
         try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addCategory(Intent.CATEGORY_BROWSABLE)); }
         catch (RuntimeException error) { Toast.makeText(this, com.deepseekharness.app.util.UiText.text("没有可用的系统浏览器"), Toast.LENGTH_SHORT).show(); }
     }
     private void showError(String title, String detail) {
+        if (retained != null) retained.ready = false;
+        refreshPictureInPicture();
         com.deepseekharness.app.core.DiagnosticLog.record(this, "GECKO_PAGE", title + com.deepseekharness.app.util.UiText.text("：") + detail);
         if (isFinishing() || isDestroyed()) return;
         ((TextView) findViewById(R.id.web_error_title)).setText(title);
@@ -364,16 +373,29 @@ public final class GeckoPreviewActivity extends AppCompatActivity implements Web
         cancelFilePrompt();
         if (browser != null) { browser.releaseSession(); container.removeView(browser); browser = null; }
         if (session != null) { session.close(); session = null; }
-        if (retained != null) retained.session = null;
+        if (retained != null) { retained.session = null; retained.ready = false; }
+        refreshPictureInPicture();
         pagePort = null;
         if (retained != null) retained.port = null;
     }
     @Override protected void onPause() {
         PluginFragment.invalidateInstalledState();
-        if (session != null) session.setActive(false); super.onPause();
+        super.onPause();
+    }
+    @Override protected boolean pictureInPictureContentReady() {
+        return session != null && retained != null && retained.ready && baseUrl != null
+                && errorPanel != null && errorPanel.getVisibility() != View.VISIBLE;
+    }
+    @Override protected void onStop() {
+        if (session != null) session.setActive(false);
+        super.onStop();
+    }
+    @Override protected void onStart() {
+        super.onStart();
+        if (session != null) session.setActive(true);
     }
     @Override protected void onResume() {
-        super.onResume(); if (session != null) session.setActive(true);
+        super.onResume();
         if(pagePort!=null)try{pagePort.postMessage(new org.json.JSONObject().put("type","language")
                 .put("language",new com.deepseekharness.app.core.ConfigStore(this).getUiLanguage()));}
         catch(org.json.JSONException ignored) { }

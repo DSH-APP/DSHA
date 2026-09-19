@@ -1,7 +1,11 @@
 {
-  "dshVersion": "0.1.5-rc.2",
+  "dshVersion": "0.1.6-alpha.2",
   "module": "@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js",
   "patches": [
+    {
+      "before": "items: [\"standard\", \"ptc\", \"minimal\", \"cordis\"].map(id => state.options.find(option => option.id === id)).filter(Boolean).map((option) => {",
+      "after": "items: state.options.map((option) => {"
+    },
     {
       "before": "const en = {",
       "after": "const en = { dshaHeaderHint: \"Switch agent preset. Existing conversations are preserved and a new session is opened in the same workspace.\", dshaSwitchAria: \"Switch agent preset, current: {name}\", dshaNewSessionPrefix: \"New session · \","
@@ -24,32 +28,28 @@
       "prependAsset": "web-integration/agent-preset-switch.js"
     },
     {
-      "before": "function AgentPresetSeat({ load, select, introduced, useAgentPresetSeat, t }) {",
-      "after": "function AgentPresetSeat({ load, select, introduced, useAgentPresetSeat, t, header = false }) {"
-    },
-    {
-      "before": "items: state.options.map((option) => {",
-      "after": "items: [\"standard\", \"ptc\", \"minimal\", \"cordis\"].map(id => state.options.find(option => option.id === id)).filter(Boolean).map((option) => {"
+      "before": "function AgentPresetSeat({ sessionId, useSessionRetainInfo, load, select, introduced, useAgentPresetSeat, t }) {",
+      "after": "function AgentPresetSeat({ sessionId, useSessionRetainInfo, load, select, introduced, useAgentPresetSeat, t, header = false }) {"
     },
     {
       "before": "title: state.error ?? t(\"seatHint\"),",
       "after": "title: state.error ?? (header ? t(\"dshaHeaderHint\") : t(\"seatHint\")),\n                    \"aria-label\": t(\"dshaSwitchAria\", { name: label }),\n                    \"data-dsha-agent-preset\": header ? \"header\" : \"home\",\n                    style: { minHeight: 44, cursor: \"pointer\" },"
     },
     {
-      "before": "const seatInjected = () => ({",
-      "after": "const switchPreset = createDshaAgentPresetSwitcher(scope, seat);\n                const seatInjected = () => ({"
+      "before": "const seatInjected = (sessionId) => {",
+      "after": "const presetSwitchers = new WeakMap();\n                const seatInjected = (sessionId) => {"
     },
     {
-      "before": "select: (id) => seat.select(id),",
-      "after": "select: switchPreset,"
+      "before": "const seat = binding === void 0 ? unboundSeat : seatFor(scope, binding);\n\t\t\t\t\treturn {",
+      "after": "const seat = binding === void 0 ? unboundSeat : seatFor(scope, binding);\n                    if (!presetSwitchers.has(seat)) presetSwitchers.set(seat, createDshaAgentPresetSwitcher(scope, seat));\n                    const switchPreset = presetSwitchers.get(seat);\n\t\t\t\t\treturn {"
     },
     {
       "before": "const labelInjected = () => ({\n\t\t\t\t\thooks: { agentPresets: controller.store },\n\t\t\t\t\tload: () => controller.load()\n\t\t\t\t});",
       "after": "const labelInjected = seatInjected;"
     },
     {
-      "before": "async apply() {\n\t\t\t\tconst staged = this.staged;",
-      "after": "async apply() {\n                if (this.store.getSnapshot().busy) return;\n\t\t\t\tconst staged = this.staged;"
+      "before": "async apply() {\n\t\t\t\tconst staged = this.staged.id;",
+      "after": "async apply() {\n                if (this.store.getSnapshot().busy) return;\n\t\t\t\tconst staged = this.staged.id;"
     },
     {
       "before": "const result = await this.ctx.remote.agentPresets.select(session.id, staged);",
@@ -62,6 +62,10 @@
     {
       "before": "const css = ",
       "after": "const css = \"/* 预设按钮不能依赖窄屏插件来清除浏览器默认边框。 */\\n.dsha-preset-header-anchor {\\n  display: inline-flex;\\n  min-width: 0;\\n  max-width: 220px;\\n}\\n.dsha-preset-header-anchor [data-dsha-agent-preset=\\\"header\\\"] {\\n  -webkit-appearance: none;\\n  appearance: none;\\n  display: inline-flex;\\n  align-items: center;\\n  gap: 4px;\\n  box-sizing: border-box;\\n  width: 100%;\\n  max-width: 100%;\\n  height: 44px;\\n  padding: 0 8px;\\n  border: 0;\\n  border-radius: 8px;\\n  box-shadow: none;\\n  background: transparent;\\n  color: var(--dsw-alias-label-secondary, inherit);\\n  font: inherit;\\n  font-size: 13px;\\n  cursor: pointer;\\n}\\n.dsha-preset-header-anchor [data-dsha-agent-preset=\\\"header\\\"] > svg {\\n  flex: none;\\n}\\n.dsha-preset-header-anchor [data-dsha-agent-preset=\\\"header\\\"] > span {\\n  min-width: 0;\\n  overflow: hidden;\\n  text-overflow: ellipsis;\\n  white-space: nowrap;\\n}\\n.dsha-preset-header-anchor [data-dsha-agent-preset=\\\"header\\\"]:focus:not(:focus-visible) {\\n  outline: none;\\n}\\n.dsha-preset-header-anchor [data-dsha-agent-preset=\\\"header\\\"]:focus-visible {\\n  outline: 2px solid var(--dsw-alias-state-business-primary, #4f6ef7);\\n  outline-offset: 2px;\\n}\\n.dsha-preset-header-anchor [data-dsha-agent-preset=\\\"header\\\"]:hover {\\n  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));\\n}\\n@media (pointer: coarse) {\\n  [data-phase] header [class*=\\\"_headerActions\\\"] {\\n    margin-inline-start: auto;\\n  }\\n}\\n\" + "
+    },
+    {
+      "before": "select: (id) => seat.select(id),",
+      "after": "select: switchPreset,"
     }
   ]
 }

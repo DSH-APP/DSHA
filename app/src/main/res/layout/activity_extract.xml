@@ -1,73 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/surface"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="@dimen/page_pad_wide">
-
-    <FrameLayout
-        android:layout_width="92dp"
-        android:layout_height="92dp"
-        android:layout_marginBottom="@dimen/gap_section"
-        android:background="@drawable/bg_card">
-
-        <ProgressBar
-            android:id="@+id/extract_bar"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_gravity="center"
-            android:indeterminateTint="@color/primary" />
-    </FrameLayout>
-
-    <TextView
-        android:id="@+id/extract_title"
-        style="@style/DshaText.Display"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/ui_m0160" />
-
-    <TextView
-        android:id="@+id/extract_status"
-        style="@style/DshaText.Label"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/gap_tight"
-        android:gravity="center"
-        android:text="@string/ui_m0216" />
-
-    <ProgressBar
-        android:id="@+id/extract_progress"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/progress_bold"
-        android:layout_marginTop="@dimen/gap_section"
-        android:max="1000"
-        android:progress="0"
-        android:progressDrawable="@drawable/progress_determinate"
-        android:visibility="invisible" />
-
-    <TextView
-        android:id="@+id/extract_detail"
-        style="@style/DshaText.Caption"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/gap_tight"
-        android:fontFamily="monospace"
-        android:gravity="center"
-        android:visibility="invisible" />
-
-    <TextView
-        android:id="@+id/extract_error"
-        style="@style/DshaText.Label"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/gap_section"
-        android:background="@drawable/bg_error_box"
-        android:gravity="start"
-        android:padding="@dimen/card_pad"
-        android:textColor="@color/err"
-        android:textIsSelectable="true"
-        android:visibility="gone" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/surface" android:padding="24dp">
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="DSHA" android:textStyle="bold" android:textSize="18sp" android:textColor="@color/text" android:layout_marginBottom="24dp"/>
+<TextView android:id="@+id/extract_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="27sp" android:textStyle="bold" android:textColor="@color/text"/>
+<ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="20dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="16dp" android:background="@drawable/bg_card">
+<ProgressBar android:id="@+id/extract_bar" android:layout_width="28dp" android:layout_height="28dp" android:indeterminateTint="@color/primary"/>
+<TextView android:id="@+id/extract_status" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:textColor="@color/text" android:textSize="15sp" android:textStyle="bold"/>
+</LinearLayout>
+<ProgressBar android:id="@+id/extract_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="5dp" android:layout_marginTop="14dp" android:indeterminateTint="@color/primary"/>
+<TextView android:id="@+id/extract_detail" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="150dp" android:layout_marginTop="18dp" android:padding="16dp" android:background="@drawable/bg_ui2_console" android:textColor="@color/ui2_log_text" android:fontFamily="monospace" android:textSize="12sp" android:lineSpacingExtra="5dp"/>
+<TextView android:id="@+id/extract_error" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:padding="14dp" android:textSize="12sp" android:textColor="@color/err" android:background="@drawable/bg_error_box" android:visibility="gone"/>
+</LinearLayout></ScrollView>
+<LinearLayout android:id="@+id/extract_actions" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="12dp"/>
 </LinearLayout>
