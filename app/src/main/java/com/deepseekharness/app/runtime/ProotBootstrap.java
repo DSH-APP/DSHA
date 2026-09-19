@@ -289,11 +289,15 @@ public class ProotBootstrap {
         baseDir.mkdirs();
         tmpDir.mkdirs();
         libDir.mkdirs();
-        // 这两个是 proot 的 NEEDED 依赖；proroot 只链 libdl/libc，用不到
-        if ("proot".equals(runtime().id())) {
-            copyExec(findNativeLib("libtalloc.so"), new File(libDir, "libtalloc.so.2"));
-            copyExec(findNativeLib("libandroidshmem.so"), new File(libDir, "libandroid-shmem.so"));
-        }
+        // 这两个是 proot 的 NEEDED 依赖。复制必须无条件执行，不能按当前选择的运行时
+        // 开关跳过：用户偏好 proroot 时这里若不复制，环境维护事务（MaintenanceTransaction
+        // 移动的 environment 是 files/linux 整棵，lib/ 包含在内）换上的新环境 libDir 就是
+        // 空目录；而个人数据迁移（runPersonalMaintenance fast=false）、维护回滚与安装管线
+        // 固定用 proot，proot 一启动就 CANNOT LINK EXECUTABLE（libtalloc.so.2 not found），
+        // 维护卡在「个人文件迁移失败（退出码 1）」，用户数据停在中间态。
+        // proroot 自身不读 libDir（五件套在 nativeLibraryDir），多复制两个小文件无副作用。
+        copyExec(findNativeLib("libtalloc.so"), new File(libDir, "libtalloc.so.2"));
+        copyExec(findNativeLib("libandroidshmem.so"), new File(libDir, "libandroid-shmem.so"));
         ensureDshRuntimePatches();
         if (hasBash()) ensureNetworkTools();
     }
@@ -918,6 +922,17 @@ public class ProotBootstrap {
         com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin();
         Process process = null;
         try {
+            // 本入口固定用 proot 执行维护迁移，不经过 ensureRuntimeFiles 的其他调用点
+            //（诊断/启动序列）。维护事务刚换过 files/linux 整棵时 libDir 可能是空的，
+            // 这里必须像 execRootfsForInstall 一样先补齐 proot 的 NEEDED 依赖，
+            // 否则迁移进程在 exec 阶段直接 CANNOT LINK EXECUTABLE，整个维护卡死。
+            if ("proot".equals(rt.id())) {
+                synchronized (ProotBootstrap.class) {
+                    baseDir.mkdirs(); tmpDir.mkdirs(); libDir.mkdirs();
+                    copyExec(findNativeLib("libtalloc.so"), new File(libDir, "libtalloc.so.2"));
+                    copyExec(findNativeLib("libandroidshmem.so"), new File(libDir, "libandroid-shmem.so"));
+                }
+            }
             List<String> argv = rt.baseArgv(rootfsDir, false);
             argv.add("-b"); argv.add(rootfsDir.getAbsolutePath() + ":/run/dsha-maintenance-root");
             argv.add("/bin/bash"); argv.add("-c"); argv.add(command);
