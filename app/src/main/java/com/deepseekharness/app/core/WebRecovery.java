@@ -24,6 +24,12 @@ final class WebRecovery {
     void healthy(long expected, long now) {
         if (budget.healthy(expected, now)) config.recordWebRecovery(0, "", "");
     }
+    /** 明确的启动成功（拿到鉴权链接）：不等 120 秒稳定期，立即清零连续失败计数。 */
+    void succeed(long expected) {
+        if (expected != generation) return;
+        budget.begin(expected, true);
+        config.recordWebRecovery(0, "", "");
+    }
     void unhealthy(long expected) { budget.unhealthy(expected); }
     boolean blocked() { return budget.blocked(); }
     boolean failed(long expected) { return budget.failed(expected); }

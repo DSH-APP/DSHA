@@ -20,4 +20,20 @@ public class WebRuntimeFallbackTest {
         assertFalse(WebRuntimeFallback.shouldRetry("bxroot",true,false,false,true,139));
         assertFalse(WebRuntimeFallback.shouldRetry("bxroot",false,true,false,true,139));
     }
+
+    @Test public void threeStrikesForcesProotForExperimentalRuntimes() {
+        assertFalse(WebRuntimeFallback.shouldForceProot(0, "proroot"));
+        assertFalse(WebRuntimeFallback.shouldForceProot(1, "proroot"));
+        assertFalse(WebRuntimeFallback.shouldForceProot(2, "proroot"));
+        assertTrue(WebRuntimeFallback.shouldForceProot(3, "proroot"));
+        assertTrue(WebRuntimeFallback.shouldForceProot(4, "proroot"));
+        assertTrue(WebRuntimeFallback.shouldForceProot(3, "bxroot"));
+    }
+
+    @Test public void prootNeverForcesItself() {
+        assertFalse(WebRuntimeFallback.shouldForceProot(3, "proot"));
+        assertFalse(WebRuntimeFallback.shouldForceProot(99, "proot"));
+        assertFalse(WebRuntimeFallback.shouldForceProot(3, null));
+        assertFalse(WebRuntimeFallback.shouldForceProot(3, ""));
+    }
 }

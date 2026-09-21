@@ -196,6 +196,9 @@ def snapshot(rootfs, output, workdir='deepseek-harness'):
         if stat.S_ISLNK(info.st_mode):
             target = os.readlink(source)
             # proot 模拟硬链接属于文件内容，不把指向旧 rootfs 的 .l2s 链带到新环境。
+            # bxroot（第三运行时）布局同样命中：客户文件 symlink → /.l2s/.l2s.<名>，
+            # target 含 .l2s. → 实体化进备份（数据正确）；集中目录 <rootfs>/.l2s
+            # 本身已在上方 EXCLUDE 清单（'.l2s'），不会重复打包。
             if any(part == '.l2s' or part.startswith('.l2s.') for part in PurePosixPath(target).parts):
                 resolved = resolve_internal_link(rootfs, source)
                 checks.append((source, ('link', target)))

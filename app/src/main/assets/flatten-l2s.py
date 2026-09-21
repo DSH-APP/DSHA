@@ -29,6 +29,9 @@ import sys
 import tempfile
 
 L2S_MARK = ".l2s."
+# bxroot（第三运行时）用集中目录 <rootfs>/.l2s + .cnt 计数文件，客户文件的
+# 链同样以 .l2s. 命名 —— 本脚本对它同样安全（实体化 = 官方语义）。
+# 集中目录本身在 <rootfs>/.l2s，不在本脚本的默认扫描范围（/root/.dsh 与工作区）。
 DEFAULT_ROOT = "/root/.dsh"
 LOG_PATH = "/root/.dsh/flatten-l2s.log"
 

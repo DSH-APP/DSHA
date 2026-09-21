@@ -1074,7 +1074,7 @@ def check_runtime():
     """
     actual = arg("runtime") or "proot"
     pref = arg("runtime-pref") or "proot"
-    names = {"proot": "proot（内置，稳定）", "proroot": "proroot（实验，零 ptrace）"}
+    names = {"proot": "proot（内置，稳定）", "proroot": "proroot（实验，零 ptrace）", "bxroot": "bxroot（实验，LD_PRELOAD 零 ptrace）"}
     if actual == pref:
         add("PASS", "容器运行时", "%s" % names.get(actual, actual))
     else:

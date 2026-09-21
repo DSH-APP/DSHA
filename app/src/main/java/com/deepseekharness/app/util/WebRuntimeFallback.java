@@ -16,4 +16,12 @@ public final class WebRuntimeFallback {
                                       boolean pluginFailure, boolean current, Integer exitCode) {
         return isExperimental(runtime) && !retried && !hadAuth && !pluginFailure && current && exitCode != null;
     }
+
+    /** 连续失败达到 {@code failures} 次后，实验运行时不再重试，直接切回 proot（三振切回）。 */
+    public static final int FORCE_PROOT_FAILURES = 3;
+
+    /** {@code failures} 达到上限且当前选的是实验运行时 → 自动改回 proot。proot 本身不触发。 */
+    public static boolean shouldForceProot(int failures, String runtime) {
+        return failures >= FORCE_PROOT_FAILURES && isExperimental(runtime);
+    }
 }

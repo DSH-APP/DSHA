@@ -421,6 +421,8 @@ public class HarnessController {
                         }
                         webAuthUrl = url;
                         webProc.recordIdentity();
+                        // 拿到鉴权链接 = 本轮启动成功；立即清零连续失败计数（120 秒稳定期兜底仍保留）。
+                        recovery.succeed(generation);
                         setWebStage(generation, com.deepseekharness.app.util.UiText.text("服务已就绪，等待进入网页"));
                         lifecycle.finishStart(generation);
                         reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.text("鉴权链接已就绪，点「进入对话」即可进入 dsh"));
@@ -689,6 +691,18 @@ public class HarnessController {
             startupDiagnostics.preserveFailure(new File(proot.getRootfsDir(), "root/dsh-web.log"),reason);
             if(!startupDiagnostics.snapshot().browserReady || recovery.blocked())config.requestStartupRecovery(true);
             DiagnosticLog.record(ctx, "WEB_FAILURE", config.getWebFailureStage() + com.deepseekharness.app.util.UiText.text("：") + reason);
+            // 三振切回：实验运行时（proroot/bxroot）连续 3 次启动失败后，自动改回 proot。
+            // 切换发生在运行时选择层，之后 isExperimental 不再命中，此分支自然只执行一次。
+            if (com.deepseekharness.app.util.WebRuntimeFallback.shouldForceProot(config.getWebFailures(), config.runtime())) {
+                String from = config.runtime();
+                config.setRuntime("proot");
+                Log.w("DSHA", com.deepseekharness.app.util.UiText.choose(
+                        from + " 连续 3 次启动失败，已自动切回 proot；如需继续实验可在「配置」页重新选择",
+                        from + " failed to start 3 times in a row; switched back to proot automatically. Re-select it in Settings if you want to keep trying"));
+                reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.choose(
+                        from + " 连续 3 次启动失败，已自动切回 proot；如需继续实验可在「配置」页重新选择",
+                        from + " failed to start 3 times in a row; switched back to proot automatically. Re-select it in Settings if you want to keep trying"));
+            }
             if (recovery.blocked()) {
                 // 立即撤销失败代次；停止仍只使用哨兵和 Web PID，不杀容器启动器。
                 stopWeb(null);
