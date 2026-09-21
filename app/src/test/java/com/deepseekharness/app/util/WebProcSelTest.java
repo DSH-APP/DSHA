@@ -31,6 +31,72 @@ public class WebProcSelTest {
         assertFalse(WebProcSel.looksLikeWeb("libproroot-bridge.so dsh web"));
         assertFalse(WebProcSel.looksLikeWeb(command.replace("/usr/local/bin/dsh web", "/usr/local/bin/dsh\u0000web injected")));
     }
+
+    // ================= bxroot（第三运行时）=================
+
+    private static final String BXROOT_LAUNCHER =
+            "libbxroot.so -r /data/user/0/com.dsh.client/files/linux/ubuntu -0 -w /root "
+            + "-b /dev:/dev --link2symlink ";
+
+    @Test public void recognizesBxrootLauncherWebPayload() {
+        // 形态 A（launcher 直启）。真实 /proc/pid/cmdline 用 NUL 分隔且
+        // bash -c 的命令是**单个 argv 元素**。构造必须逐段 NUL 连接，
+        // 不能"拼空格串再整体 replace"——那会把 cmd 内部空格也变成 NUL，
+        // 命令文本被切碎，isBxrootWebPayload 的 contains 判定失效。
+        String[] argv = {"libbxroot.so", "-r",
+                "/data/user/0/com.dsh.client/files/linux/ubuntu", "-0", "-w", "/root",
+                "-b", "/dev:/dev", "--link2symlink", "/bin/bash", "-c",
+                "cd /root && rm -f /root/.dsha-web.identity; "
+                + "echo $$ > /root/.dsha-web.pid; exec dsh web --no-open --host 127.0.0.1 --port 3080"};
+        String nul = String.join("\0", argv) + "\0";
+        assertTrue(WebProcSel.looksLikeWeb(nul));
+        assertTrue(WebProcSel.maySignalWeb(nul));
+        // exec 全路径形态
+        String[] argv2 = {"libbxroot.so", "-r",
+                "/data/user/0/com.dsh.client/files/linux/ubuntu", "-0", "-w", "/root",
+                "--link2symlink", "/bin/bash", "-c",
+                "exec /usr/local/bin/dsh web --no-open --port 3080"};
+        assertTrue(WebProcSel.looksLikeWeb(String.join("\0", argv2) + "\0"));
+    }
+
+    @Test public void neverMistakesBxrootLauncherForWeb() {
+        // ★ 核心安全断言（bxroot 侧 docs/DSHA-适配说明.md 点名的 trap）：
+        //   "bxroot" 不含 "proot" 子串，旧的 contains("proot") 排除对它无效；
+        //   而 launcher cmdline 含 guest 命令文本。以下形态都**不是** Web，
+        //   杀到启动器 = 整个环境连带 App 一起没。
+        assertFalse(WebProcSel.looksLikeWeb(nul(
+                "libbxroot.so", "-r", "/data/user/0/com.dsh.client/files/linux/ubuntu",
+                "--link2symlink", "/bin/bash", "-c", "echo 'dsh web'")));
+        // 非 exec 形态的 dsh 调用（诊断类命令）
+        assertFalse(WebProcSel.looksLikeWeb(nul(
+                "libbxroot.so", "-r", "/data/user/0/com.dsh.client/files/linux/ubuntu",
+                "--link2symlink", "/bin/bash", "-c", "dsh plugin list")));
+        assertFalse(WebProcSel.looksLikeWeb(nul(
+                "libbxroot.so", "-r", "/data/user/0/com.dsh.client/files/linux/ubuntu",
+                "--link2symlink", "/bin/bash", "-c", "dsh --version")));
+        // 没有 -r（不是 bxroot 启动器形态）
+        assertFalse(WebProcSel.looksLikeWeb(nul(
+                "libbxroot.so", "-w", "/root", "/bin/bash", "-c", "exec dsh web")));
+        // 任何含 libbxroot 的其它形态：宁漏杀不误杀
+        assertFalse(WebProcSel.looksLikeWeb("libbxroot-runtime.so -r ..."));
+    }
+
+    @Test public void bxrootStillRecognizedThroughProrootBridgeForm() {
+        // 形态 B（bridge+linker，preload 指向 bxroot runtime）——
+        // 现有 isProrootWebPayload 硬编码 libproroot-runtime.so，识别不到；
+        // 该形态目前不在 DSHA 使用（DSHA 走形态 A），此处只锁"不误判成 proot 启动器"。
+        String bForm = "libproroot-bridge.so /data/app/pkg/lib/arm64/libproroot-linker.so "
+                + "--argv0 node --preload /data/app/pkg/lib/arm64/libbxroot-runtime.so "
+                + "/data/data/com.dsh.client/files/linux/ubuntu/usr/local/bin/node "
+                + "/usr/local/bin/dsh web --no-open --port 3080";
+        // 不误杀为启动器（launchers 排除集不含它，但它也不是已知 Web 载荷 →
+        // 停止走 pid 文件兜底；这条断言锁定"不因 bxroot 命名而崩溃/误判启动器"）
+        assertFalse(WebProcSel.looksLikeWeb("libbxroot.so " + bForm));
+    }
+
+    /** 用 NUL 连接 argv，模拟真实 /proc/pid/cmdline。 */
+    private static String nul(String... argv) { return String.join("\0", argv) + "\0"; }
+
     @org.junit.Test public void pidFileContainsOnlyOneSafePid() {
         org.junit.Assert.assertEquals(1234, WebProcSel.parsePid("1234\n"));
         for (String value : new String[]{"", "0", "1", "-1234", "+1234", "1234;echo bad", "1234\n5678", "9999999999", "１２３４"})

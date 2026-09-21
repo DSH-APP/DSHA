@@ -32,7 +32,7 @@ public final class StartupText {
     }
     public static String render(String text, String language) {
         if (text == null) return "";
-        java.util.regex.Matcher exited=java.util.regex.Pattern.compile("^(proot|proroot)(?: 进程退出，退出码 | process exited with code )(-?[0-9]+) ?(?:（(鉴权前|鉴权后)）|\\((before authentication|after authentication)\\))$").matcher(text);
+        java.util.regex.Matcher exited=java.util.regex.Pattern.compile("^(proot|proroot|bxroot)(?: 进程退出，退出码 | process exited with code )(-?[0-9]+) ?(?:（(鉴权前|鉴权后)）|\\((before authentication|after authentication)\\))$").matcher(text);
         if(exited.matches())return exited.group(1)+choose(language," 进程退出，退出码 "," process exited with code ")+exited.group(2)
                 +("鉴权前".equals(exited.group(3))||"before authentication".equals(exited.group(4))?choose(language,"（鉴权前）"," (before authentication)"):choose(language,"（鉴权后）"," (after authentication)"));
         java.util.regex.Matcher created=java.util.regex.Pattern.compile("^dsh web (?:进程已创建|process created) → 127\\.0\\.0\\.1:([0-9]+)(?:（等待鉴权链接…）|\\(waiting for authentication link…\\))$").matcher(text);

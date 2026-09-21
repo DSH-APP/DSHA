@@ -221,4 +221,6 @@
     <string name="ui_m0216" formatted="false">"Extracting the bundled environment for first use. Please wait…"</string>
     <string name="ui_m0217" formatted="false">"Verify connection"</string>
     <string name="ui_m0218" formatted="false">"＋ New"</string>
+    <string name="ui_m2068" formatted="false">"Use bxroot runtime (experimental)"</string>
+    <string name="ui_m2069" formatted="false">"Experimental LD_PRELOAD runtime. Switch to proroot or proot if incompatible. Save and restart the Web service to apply."</string>
 </resources>

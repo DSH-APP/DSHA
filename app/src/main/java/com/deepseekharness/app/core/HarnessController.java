@@ -238,7 +238,7 @@ public class HarnessController {
                 recovery.begin(generation, !automatic);
                 config.requestStartupRecovery(false);
                 startupDiagnostics.begin(generation, safeMode);
-                startupDiagnostics.message(generation, com.deepseekharness.app.util.UiText.text("运行方式：") + (config.isProroot() && android.os.Build.VERSION.SDK_INT >= 26 ? "proroot" : "proot"));
+                startupDiagnostics.message(generation, com.deepseekharness.app.util.UiText.text("运行方式：") + (android.os.Build.VERSION.SDK_INT >= 26 ? config.runtime() : "proot"));
                 new File(proot.getRootfsDir(), "root/.dsha-web-activity.json").delete();
                 webAuthUrl = "";activeWebPort=0;
                 io.execute(() -> {
@@ -484,7 +484,7 @@ public class HarnessController {
             boolean namedFailure = startupDiagnostics.hasExplicitStartupFailure(generation) || startupDiagnostics.snapshot().issues.keySet().stream().anyMatch(name -> !name.isEmpty());
             if (com.deepseekharness.app.util.WebRuntimeFallback.shouldRetry(runtimeName, compatible, hadAuth,
                     namedFailure, lifecycle.isCurrent(generation), exitCode)) {
-                reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.text("proroot 已退出，正在自动使用 proot 兼容重试；本轮只重试一次。"));
+                reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.text(runtimeName + " 已退出，正在自动使用 proot 兼容重试；本轮只重试一次。"));
                 io.execute(() -> retryWithProot(generation, onStatus, safeMode));
                 return;
             }

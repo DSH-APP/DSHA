@@ -56,6 +56,7 @@ public class ConfigFragment extends Fragment {
         CheckBox checkUpdate = v.findViewById(R.id.config_check_update);
         CheckBox desktop = v.findViewById(R.id.config_desktop_mode);
         CheckBox proroot = v.findViewById(R.id.config_proroot);
+        CheckBox bxroot = v.findViewById(R.id.config_bxroot);
         CheckBox lan = v.findViewById(R.id.config_lan_mode);
         CheckBox overlay = v.findViewById(R.id.config_overlay_stream);
         Button save = v.findViewById(R.id.config_save);
@@ -74,7 +75,11 @@ public class ConfigFragment extends Fragment {
         gecko.setVisibility(com.deepseekharness.app.BuildConfig.LOW_ANDROID ? View.VISIBLE : View.GONE);
         v.findViewById(R.id.config_gecko_hint).setVisibility(com.deepseekharness.app.BuildConfig.LOW_ANDROID ? View.VISIBLE : View.GONE);
         gecko.setChecked(c.isGeckoCore());
-        proroot.setChecked(c.isProroot());
+        proroot.setChecked("proroot".equals(c.runtime()));
+        bxroot.setChecked("bxroot".equals(c.runtime()));
+        // 三选一互斥：勾一个自动取消另一个（两个都不勾 = 传统 proot）。
+        proroot.setOnCheckedChangeListener((b, on) -> { if (on) bxroot.setChecked(false); });
+        bxroot.setOnCheckedChangeListener((b, on) -> { if (on) proroot.setChecked(false); });
         lan.setChecked(c.isLanMode());
         overlay.setChecked(pref(ctx, "overlay_stream", false));
         // 悬浮条外观与行为（照 1.1.9.1：底色预设 + 不透明度/行数/字号/停留 + 行为开关）
@@ -98,7 +103,8 @@ public class ConfigFragment extends Fragment {
             c.setCheckUpdate(checkUpdate.isChecked());
             c.setDesktopMode(desktop.isChecked());
             if (com.deepseekharness.app.BuildConfig.LOW_ANDROID) c.setGeckoCore(gecko.isChecked());
-            c.setProroot(proroot.isChecked());
+            if (bxroot.isChecked()) c.setRuntime("bxroot");
+            else c.setProroot(proroot.isChecked());
             c.setDnsMode(dns.getCheckedRadioButtonId()==R.id.dns_ipv4?"ipv4":dns.getCheckedRadioButtonId()==R.id.dns_native?"native":"auto");
             c.setLanMode(lan.isChecked());
             setPref(ctx, "overlay_stream", overlay.isChecked());

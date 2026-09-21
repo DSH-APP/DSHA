@@ -86,8 +86,17 @@ public final class WebProcSel {
         String[] argv = cmdline.indexOf('\0') >= 0 ? cmdline.split("\u0000") : cmdline.trim().split("\\s+");
         if (argv.length > 0 && basename(argv[0]).equals("libproroot-bridge.so"))
             return isProrootWebPayload(argv);
+        // bxroot 启动器（libbxroot.so，静态二进制伪装成 .so）：argv 形态是
+        //   libbxroot.so -r <rootfs> -0 -w /root -b … --link2symlink /bin/bash -c <cmd>
+        // ★ 关键安全项（bxroot 侧 docs/DSHA-适配说明.md 点名的 trap）：
+        //   "bxroot" 不含 "proot" 子串，下面那个 contains("proot") 排除
+        //   对它不生效；而它的 cmdline 含 guest 命令文本（含 "dsh web"），
+        //   不先排除就会命中后面的 contains("dsh web") → 误杀启动器 =
+        //   停不掉的环境连带 App 一起没。只认精确的 argv 序列。
+        if (argv.length > 0 && basename(argv[0]).equals("libbxroot.so"))
+            return isBxrootWebPayload(argv);
         if (cmdline.contains("libproot.so") || cmdline.contains("libproroot")
-                || cmdline.contains("proot")) {
+                || cmdline.contains("proot") || cmdline.contains("libbxroot")) {
             return false;
         }
         cmdline = cmdline.replace('\0', ' ');
@@ -100,6 +109,39 @@ public final class WebProcSel {
                 // 停止时漏掉它，等于停完一两秒后又冒出来一个（「秒复活」）
                 || cmdline.contains("dsh-cmd.txt")
                 || cmdline.contains("dsh-web-restart.sh");
+    }
+
+    /**
+     * bxroot 启动器（形态 A，launcher 直启）的 Web 载荷判定。
+     * argv 序列与 {@link #isProrootWebPayload} 对齐：启动器之后必须出现
+     * {@code --argv0 node --preload libbxroot-runtime.so}？——不是：
+     * launcher 形态没有 bridge+linker 段，guest 段直接是
+     * {@code /bin/bash -c <cmd>}，而 dsh web 命令文本在 cmd 字符串里。
+     * 精确判据：basename(argv[0])=="libbxroot.so" 且 argv 中出现
+     * {@code -r <path>}（rootfs），并且 bash -c 的命令文本以
+     * {@code /usr/local/bin/dsh web} 或 {@code dsh web}（词边界）开头 ——
+     * 与 runCoreCommand 的固定命令形态对应，其余一律不是 Web。
+     */
+    private static boolean isBxrootWebPayload(String[] argv) {
+        if (argv.length < 4) return false;
+        // 必须有 -r/--rootfs（rootfs 路径参数），否则不是 bxroot 启动器形态。
+        boolean hasRootfs = false;
+        for (int i = 1; i < argv.length - 1; i++) {
+            if (argv[i].equals("-r") || argv[i].equals("--rootfs")) { hasRootfs = true; break; }
+        }
+        if (!hasRootfs) return false;
+        // bash -c 之后的命令文本必须与 runCoreCommand 的形态匹配：
+        // 以 "… exec dsh web …" 或 "/usr/local/bin/dsh web" 结尾序列。
+        for (int i = 1; i < argv.length - 1; i++) {
+            if (!argv[i].equals("-c")) continue;
+            String cmd = argv[i + 1];
+            // exec dsh web（pid 文件写在 exec 前）——runCoreCommand 的固定形态
+            if (cmd.contains("exec dsh web ")) return true;
+            if (cmd.contains("exec /usr/local/bin/dsh web ")) return true;
+            // 防御：-c 文本里出现 "dsh web" 子串但不是 exec 形态（如 echo 'dsh web'）
+            // 一律不算 —— 宁可漏杀（靠 pid 文件兜底）也不误杀启动器。
+        }
+        return false;
     }
 
     private static boolean isProrootWebPayload(String[] argv) {
@@ -124,6 +166,8 @@ public final class WebProcSel {
         if (cmdline == null || cmdline.isEmpty()) return false;
         String[] args = cmdline.indexOf('\0') >= 0 ? cmdline.split("\u0000") : cmdline.trim().split("\\s+");
         if (args.length > 0 && basename(args[0]).equals("libproroot-bridge.so")) return isProrootWebPayload(args);
+        // bxroot 启动器的信号判据与 looksLikeWeb 同一套（精确 argv 序列）。
+        if (args.length > 0 && basename(args[0]).equals("libbxroot.so")) return isBxrootWebPayload(args);
         if (args.length < 3 || !(basename(args[0]).equals("node") || basename(args[0]).equals("nodejs"))) return false;
         int entry = args[1].equals("--expose-internals") ? 2 : 1;
         if (entry + 1 >= args.length) return false;

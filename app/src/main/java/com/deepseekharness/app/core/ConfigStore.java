@@ -161,6 +161,21 @@ public class ConfigStore {
         prefs.edit().putString(Constants.KEY_CONTAINER_RUNTIME, v ? "proroot" : "proot").apply();
     }
 
+    /**
+     * 当前选择的运行时（"proot" / "proroot" / "bxroot"）。
+     * 历史键名与二值语义保留：旧版本写入的 "proroot"/"proot" 原样读回，
+     * 未知值一律按 "proot" 处理（与 {@link #isProroot()} 的判定一致）。
+     */
+    public String runtime() {
+        String v = text(Constants.KEY_CONTAINER_RUNTIME, "proot");
+        return ("proroot".equals(v) || "bxroot".equals(v)) ? v : "proot";
+    }
+
+    public void setRuntime(String v) {
+        prefs.edit().putString(Constants.KEY_CONTAINER_RUNTIME,
+                "proroot".equals(v) || "bxroot".equals(v) ? v : "proot").apply();
+    }
+
     public boolean isLanMode() {
         return flag(Constants.KEY_LAN_MODE, false);
     }

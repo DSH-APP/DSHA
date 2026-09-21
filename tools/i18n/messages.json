@@ -17209,5 +17209,21 @@
     "files": [
       "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
     ]
+  },
+  {
+    "id": "m2068",
+    "zh": "使用 bxroot 运行时（实验）",
+    "en": "Use bxroot runtime (experimental)",
+    "files": [
+      "app/src/main/res/layout/fragment_config.xml"
+    ]
+  },
+  {
+    "id": "m2069",
+    "zh": "LD_PRELOAD 方案的实验运行时；不兼容时请改用 proroot 或 proot。保存并重启 Web 后生效。",
+    "en": "Experimental LD_PRELOAD runtime. Switch to proroot or proot if incompatible. Save and restart the Web service to apply.",
+    "files": [
+      "app/src/main/res/layout/fragment_config.xml"
+    ]
   }
 ]

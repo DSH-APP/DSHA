@@ -21,6 +21,29 @@ DSHA 的 APK 内包含以下第三方二进制组件。
   （只有这样系统才会把它提取到可执行的 `nativeLibraryDir`），
   内容未作修改
 
+## bxroot
+
+- 来源：https://github.com/qiannianhuanxiang/bxroot（本仓库 commit
+  8803dcc59e62531324a8eff5688afb45cdfc34a4，2026-09-21；上游本地构建）
+- 许可：MIT（Copyright (c) 2026 bxroot contributors）
+- 在包内的位置：`lib/arm64-v8a/libbxroot.so`、`libbxroot-runtime.so`、
+  `libbxroot-linker.so`、
+  `libbxroot-bridge.so`、`libbxroot-stub-loader.so`
+- 用途：**实验性第三运行时**。LD_PRELOAD 进程内路径翻译，零 ptrace；
+  `libbxroot.so` 是静态链接的启动器二进制（CLI 与 proot 同构），
+  自行派生 `BXROOT_*` 环境变量后以 `LD_PRELOAD=libbxroot-runtime.so` 启动 guest
+- 构建方式：本仓库源码构建，链接加 `-Wl,-z,max-page-size=16384`
+  （Android 15+ 16KB 内核设备要求），全部 LOAD 段对齐 0x4000
+- 构建产物 sha256：
+
+```
+7d354cba519f8e45318915e9d70234969fa2bc56f8f11e5baedd4eed2b7f415b  libbxroot.so
+295b3c84b206c04085883ce7ff4137862d32497c06e952e0bc82d43afef95925  libbxroot-runtime.so
+8ce489307411d56b06640449baa51b9ea882064cb706be7ded6b1cedef4053be  libbxroot-bridge.so
+b6e2d80d4ebc6b043e38f0086a4a725c62d1517735f193841e115e6ff7cf3607  libbxroot-linker.so
+3d2bc84a99ad5c6512783f44f475447c32f4cc58a42341232aa9b4667a19b78b  libbxroot-stub-loader.so
+```
+
 ## proroot
 
 - 来源：https://github.com/coderredlab/proroot（v1.2.8）

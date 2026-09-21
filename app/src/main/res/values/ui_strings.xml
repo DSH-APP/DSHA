@@ -216,4 +216,6 @@
     <string name="ui_m0216" formatted="false">"首次启动需要解压内置环境，请稍候…"</string>
     <string name="ui_m0217" formatted="false">"验证已有连接"</string>
     <string name="ui_m0218" formatted="false">"＋ 新建"</string>
+    <string name="ui_m2068" formatted="false">"使用 bxroot 运行时（实验）"</string>
+    <string name="ui_m2069" formatted="false">"LD_PRELOAD 方案的实验运行时；不兼容时请改用 proroot 或 proot。保存并重启 Web 后生效。"</string>
 </resources>

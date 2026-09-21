@@ -755,8 +755,20 @@ public class ProotBootstrap {
 
     public ContainerRuntime runtime() {
         try {
-            if (!forceProot && android.os.Build.VERSION.SDK_INT >= 26 && "proroot".equals(ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
-                    .getString("container_runtime", "proot"))) {
+            String pref = forceProot ? "proot" : ctx.getSharedPreferences("deepseekharness", Context.MODE_PRIVATE)
+                    .getString("container_runtime", "proot");
+            // bxroot：实验第三运行时，同样要求 API 26+（与 proroot 门槛一致，
+            // low flavor 的 Android 6/7 兼容性未经真机验证）。
+            if (android.os.Build.VERSION.SDK_INT >= 26 && "bxroot".equals(pref)) {
+                ContainerRuntime bx = new BxrootRuntime(
+                        ctx, BxrootRuntime.defaultDir(ctx));
+                if (bx.available()) {
+                    bx.prepare();
+                    return bx;
+                }
+                Log.w("DSHA", com.deepseekharness.app.util.UiText.text("bxroot 不可用，本次降回 proot: ")
+                        + SensitiveData.redact(bx.unavailableReason()));
+            } else if (android.os.Build.VERSION.SDK_INT >= 26 && "proroot".equals(pref)) {
                 ContainerRuntime pr = new ContainerRuntime.Proroot(
                         ctx, ContainerRuntime.Proroot.defaultDir(ctx));
                 if (pr.available()) {
