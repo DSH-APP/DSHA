@@ -699,7 +699,7 @@ public class HarnessController {
                 Log.w("DSHA", com.deepseekharness.app.util.UiText.choose(
                         from + " 连续 3 次启动失败，已自动切回 proot；如需继续实验可在「配置」页重新选择",
                         from + " failed to start 3 times in a row; switched back to proot automatically. Re-select it in Settings if you want to keep trying"));
-                reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.choose(
+                startupDiagnostics.message(generation, com.deepseekharness.app.util.UiText.choose(
                         from + " 连续 3 次启动失败，已自动切回 proot；如需继续实验可在「配置」页重新选择",
                         from + " failed to start 3 times in a row; switched back to proot automatically. Re-select it in Settings if you want to keep trying"));
             }
