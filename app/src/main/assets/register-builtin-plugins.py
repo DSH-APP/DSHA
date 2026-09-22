@@ -61,6 +61,7 @@ DEFAULT_BUILTINS = (
     "dsh-web-mobile",
     "dsh-computer-use-android",
     "dsh-auto-review",
+    "dsh-tool-vscreen",
     "dsh-app-integration",
 )
 
@@ -331,14 +332,13 @@ def discover_plugins(home_directory=None, include_global=True):
                 with open(manifest, encoding='utf-8') as stream:
                     package = json.load(stream)
                 patch = package.get('dsh', {}).get('bundle', {}).get('patch')
-                # 锁定的 alpha.2 dsh-app-boot 会直接把 patch 交给 path.join；
-                # 数组虽曾被工具误收，却会在真实启动时报类型错误。
-                if package.get('name') != name or not isinstance(patch, str) or not patch:
+                patches = [patch] if isinstance(patch, str) else patch
+                if (package.get('name') != name or not isinstance(patches, list) or not patches
+                        or any(not isinstance(item, str) or not item for item in patches)):
                     continue
-                resolved_patch = os.path.realpath(os.path.join(directory, patch))
-                if (os.path.isabs(patch)
-                        or os.path.commonpath([directory, resolved_patch]) != directory
-                        or not os.path.isfile(resolved_patch)):
+                if any(os.path.isabs(item) or '\\' in item
+                        or os.path.commonpath([directory, os.path.realpath(os.path.join(directory, item))]) != directory
+                        or not os.path.isfile(os.path.realpath(os.path.join(directory, item))) for item in patches):
                     continue
             except (OSError, ValueError, TypeError, AttributeError):
                 continue

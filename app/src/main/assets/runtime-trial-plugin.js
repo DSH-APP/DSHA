@@ -89,11 +89,11 @@ export async function apply(ctx){
  // “session … not found”。用完整、可持久化的 header 建立真实会话，再
  // 通过持久化服务按同一 id 重开，验证跨进程以外的会话契约。
  const sessionId=randomUUID();
- const sample=Session.create(sessionId,[],{version:3,id:sessionId,createdAt:Date.now(),cwd:process.cwd(),isSeeded:false});
+ const sample=Session.create(sessionId,[],{version:4,id:sessionId,createdAt:Date.now(),cwd:process.cwd(),isSeeded:false});
  const writer=await ctx.sessionPersistence.create(sample.header);
  try{await writer.flush()}finally{await writer.close()}
  const reader=await ctx.sessionPersistence.open(sample.id,'read');
- try{const state=await reader.read();if(reader.header.id!==sample.id||reader.header.version!==3||state.events.length!==0)throw Error('Trial session reopen mismatch')}finally{await reader.close()}
+ try{const state=await reader.read();if(reader.header.id!==sample.id||reader.header.version!==4||state.events.length!==0)throw Error('Trial session reopen mismatch')}finally{await reader.close()}
  const hash=createHash('sha256').update(read).digest('hex');let renderer=false,failure='';
  const endpoint='/dsha-runtime-trial/'+nonce;
  ctx.effect(()=>ctx.webServer.register({kind:'exact',path:endpoint,handler:async(req,res)=>{

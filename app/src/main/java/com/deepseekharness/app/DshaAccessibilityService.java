@@ -225,6 +225,45 @@ public class DshaAccessibilityService extends AccessibilityService {
         }
     }
 
+    public static boolean isConnected() { return instance != null; }
+    public static org.json.JSONObject virtualControl(int displayId,String operation,org.json.JSONObject args){return com.deepseekharness.app.vscreen.VirtualScreenAccessibility.run(instance,displayId,operation,args);}
+
+    /** 只读取指定虚拟显示的窗口，绝不回退到手机主屏。 */
+    private static AccessibilityNodeInfo virtualRoot(int displayId) {
+        DshaAccessibilityService service=instance;
+        if(service==null||android.os.Build.VERSION.SDK_INT<30||displayId<=0)return null;
+        var windows=service.getWindowsOnAllDisplays().get(displayId);
+        if(windows==null)return null;
+        AccessibilityNodeInfo result=null;
+        try {
+            for(var window:windows){
+                if(window.getType()!=android.view.accessibility.AccessibilityWindowInfo.TYPE_APPLICATION)continue;
+                AccessibilityNodeInfo root=window.getRoot();
+                if(root==null)continue;
+                if(result==null||window.isActive()){if(result!=null)result.recycle();result=root;}else root.recycle();
+                if(window.isActive())break;
+            }
+            return result;
+        } finally { for(var window:windows)window.recycle(); }
+    }
+    public static String virtualDump(int displayId) {
+        if(instance==null)return "ACCESSIBILITY_UNAVAILABLE";
+        AccessibilityNodeInfo root=null;
+        try{root=virtualRoot(displayId);if(root==null)return "VIRTUAL_WINDOW_UNAVAILABLE";
+            StringBuilder out=new StringBuilder();dumpNode(root,out,0,new int[]{0});return out.toString();
+        }catch(Throwable e){return "VIRTUAL_TREE_UNAVAILABLE";}finally{if(root!=null)root.recycle();}
+    }
+    public static String virtualInput(int displayId,String text) {
+        if(instance==null)return "ACCESSIBILITY_REQUIRED_FOR_UNICODE";
+        AccessibilityNodeInfo root=null,target=null;
+        try{root=virtualRoot(displayId);if(root==null)return "VIRTUAL_WINDOW_UNAVAILABLE";
+            target=root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+            if(target==null||!target.isEditable())return "VIRTUAL_INPUT_NOT_FOCUSED";
+            android.os.Bundle args=new android.os.Bundle();args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,text);
+            return target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,args)?"OK":"VIRTUAL_INPUT_REJECTED";
+        }catch(Throwable e){return "VIRTUAL_INPUT_RESULT_UNKNOWN";}finally{if(target!=null)target.recycle();if(root!=null)root.recycle();}
+    }
+
     /** 读当前屏幕：输出带序号、文本、可点击性与坐标的清单，供 agent 决定下一步点哪个。 */
     public static String uiDump() {
         DshaAccessibilityService s = instance;

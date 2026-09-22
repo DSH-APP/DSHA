@@ -43,6 +43,7 @@ final class PictureInPictureFrame extends FrameLayout {
         }
     }
     void freezeViewport() { frozen = true; }
+    boolean isFrozen() { return frozen; }
     void resumeViewport() { if (!compact) { frozen = false; requestLayout(); } }
     void setCompact(boolean value) {
         if (compact == value) return;

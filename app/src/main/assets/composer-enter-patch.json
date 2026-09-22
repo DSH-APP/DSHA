@@ -1,7 +1,11 @@
 {
   "version": 1,
-  "dshVersion": "0.1.6-alpha.2",
+  "dshVersion": "0.1.7-alpha.1",
   "patches": [
+    {
+      "before": "\t\tfunction Gn(t) {\n\t\t\tconst e = _i(), n = e._inputState, o = Kr(), r = t.data, l = Hn(t);\n\t\t\tlet c = !1;",
+      "after": "\t\tfunction Gn(t) {\n\t\t\tconst e = _i(), n = e._inputState, o = Kr(), r = t.data, l = Hn(t);\n\t\t\t// DSHA_ANDROID_IME_DOM_COMMIT_V1：Android 原生 input 到达时文字已在 DOM；普通文本同步一次，不能把整段语音作为增量再插入。\n\t\t\tif (f && [\"insertText\", \"insertCompositionText\", \"insertFromComposition\"].includes(t.inputType) && ur(o)) {\n\t\t\t\tconst nativeSelection = Jl(Il(e));\n\t\t\t\tconst nativeRange = nativeSelection !== null ? nc(nativeSelection, e._rootElement) : null;\n\t\t\t\tconst nativeNode = nativeRange?.anchorNode;\n\t\t\t\tconst textNode = nativeNode && zs(nativeNode) ? Zs(nativeNode) : null;\n\t\t\t\tif (nativeRange && nativeNode === nativeRange.focusNode && Xo(textNode) && textNode.getType() === \"text\" && !textNode.isToken()) {\n\t\t\t\t\tul(true, e, r ?? void 0);\n\t\t\t\t\trl();\n\t\t\t\t\treturn true;\n\t\t\t\t}\n\t\t\t}\n\t\t\tlet c = !1;"
+    },
     {
       "before": "\t\t\t\tif (event?.shiftKey === true) return false;\n\t\t\t\tif (event !== null && isComposingEvent(event, recentlyComposing)) return true;",
       "after": "\t\t\t\tif (event !== null && isComposingEvent(event, recentlyComposing)) return true;\n\t\t\t\tif (event?.shiftKey === true) return false;"

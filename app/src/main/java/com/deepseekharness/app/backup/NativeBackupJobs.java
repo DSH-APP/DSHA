@@ -38,7 +38,7 @@ public final class NativeBackupJobs {
     private void loadLastState(){
         try {
             File root=new File(context.getFilesDir().getCanonicalFile(),"host-backup-operations");if(fs.stat(root).type.equals("MISSING"))return;
-            long newest=-1;List<String> names=fs.list(root);if(names.size()>64)throw new IOException("OPERATION_LIMIT");
+            long newest=-1;List<String> names=fs.list(root);if(names.size()>BackupLimits.TRANSACTION_RECORDS)throw new IOException("OPERATION_LIMIT");
             for(String name:names){if(!name.matches("[a-f0-9-]{36}"))continue;File owner=fs.child(root,name),record=fs.child(owner,"operation.json");
                 if(fs.stat(record).type.equals("MISSING"))record=fs.child(owner,"operation.json.previous");if(fs.stat(record).type.equals("MISSING"))continue;
                 Map<String,Object> value=BackupJson.read(fs.small(record,16384),16384);if(!name.equals(BackupJson.string(value,"id"))||BackupJson.number(value,"version")!=1)throw new IOException("OPERATION_RECORD");
@@ -56,7 +56,7 @@ public final class NativeBackupJobs {
         Copies(List<VerifiedBackupCopy> valid,Map<String,String> unreadable){this.valid=Collections.unmodifiableList(valid);this.unreadable=Collections.unmodifiableMap(unreadable);}
     }
     public Copies verifiedCopies()throws IOException{
-        File parent=operations();List<String> names=fs.list(parent);if(names.size()>64)throw new IOException("OPERATION_LIMIT");
+        File parent=operations();List<String> names=fs.list(parent);if(names.size()>BackupLimits.TRANSACTION_RECORDS)throw new IOException("OPERATION_LIMIT");
         List<VerifiedBackupCopy> result=new ArrayList<>();Map<String,String> unreadable=new LinkedHashMap<>();
         for(String name:names){
             if(!name.matches("[a-f0-9-]{36}"))continue;File directory=fs.child(parent,name);
@@ -70,7 +70,7 @@ public final class NativeBackupJobs {
         final VerifiedBackupCopy source;
         try{
             File parent=operations();source=VerifiedBackupCopy.inspect(fs,parent,sourceId);
-            if(fs.list(parent).size()>=32)throw new IOException("RETAINED_OPERATION_LIMIT");
+            if(fs.list(parent).size()>=BackupLimits.TRANSACTION_RECORDS)throw new IOException("RETAINED_OPERATION_LIMIT");
             task=new File(parent,UUID.randomUUID().toString());fs.directory(task);control=new BackupControl(this::progress);
             fs.atomic(task,"reexport.json",BackupJson.write(Map.of("version",1L,"source",sourceId,"sha256",source.sha256),4096));
             update("VERIFYING","","","",source.entries,source.bytes,true);foreground();
@@ -182,7 +182,7 @@ public final class NativeBackupJobs {
         try{for(BackupSource source:selection.documentProjects)frozen.documentProjects.add(source instanceof SafBackupSource?((SafBackupSource)source).copyForOperation():source);}
         catch(IOException error){Arrays.fill(password,'\0');return false;}
         try {
-            File parent=operations();if(fs.list(parent).size()>=32)throw new IOException("RETAINED_OPERATION_LIMIT");
+            File parent=operations();if(fs.list(parent).size()>=BackupLimits.TRANSACTION_RECORDS)throw new IOException("RETAINED_OPERATION_LIMIT");
             task=new File(parent,UUID.randomUUID().toString());fs.directory(task);
             control=new BackupControl(this::progress);update("PREPARING","","","",0,0,true);if(!automatic)foreground();
         }catch(IOException error){Arrays.fill(password,'\0');beginFailed(error);return false;}
@@ -280,7 +280,7 @@ public final class NativeBackupJobs {
         if(!NativeDataLocations.SCOPES.containsAll(selected)||selected.isEmpty())return false;
         if(!Set.of("PRIVATE","GUEST_HOME").contains(projects))return false;
         char[] password=supplied==null?null:supplied.clone();Set<String> scopes=new HashSet<>(selected);
-        try{File parent=operations();if(fs.list(parent).size()>=32)throw new IOException("RETAINED_OPERATION_LIMIT");task=new File(parent,UUID.randomUUID().toString());fs.directory(task);
+        try{File parent=operations();if(fs.list(parent).size()>=BackupLimits.TRANSACTION_RECORDS)throw new IOException("RETAINED_OPERATION_LIMIT");task=new File(parent,UUID.randomUUID().toString());fs.directory(task);
             control=new BackupControl(this::progress);decision=null;update("COPYING_INPUT","","","",0,0,true);foreground();}
         catch(IOException error){if(password!=null)Arrays.fill(password,'\0');beginFailed(error);return false;}
         File owned=task;BackupControl cancellation=control;

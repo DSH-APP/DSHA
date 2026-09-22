@@ -11,7 +11,7 @@ import java.util.Set;
 /** 设备命令默认拒绝：只接受可完整识别的单条 argv，不执行用户提供的 shell 程序。 */
 public final class DeviceShellPolicy {
     private DeviceShellPolicy() { }
-    public enum Kind { READ, FILE, STOP, SENSITIVE_READ, DENY }
+    public enum Kind { READ, FILE, STOP, SENSITIVE_READ, VIRTUAL_SCREEN, DENY }
     public static final class Plan {
         public final Kind kind;
         public final List<String> argv, operands;
@@ -105,6 +105,7 @@ public final class DeviceShellPolicy {
         if (name.equals("logcat")) return inspectLogcat(args);
         if (name.equals("am") && args.size() == 2 && args.get(1).equals("get-current-user"))
             return plan(Kind.READ, args, Collections.emptyList());
+        if (name.equals("app_process")) return inspectVirtualScreen(args);
         if (name.equals("am") && args.size() == 3 && set("force-stop kill").contains(args.get(1)) && packageName(args.get(2)))
             return plan(Kind.STOP, args, Collections.singletonList(args.get(2)));
         if (name.equals("kill") || name.equals("killall") || name.equals("pkill")) {
@@ -121,6 +122,19 @@ public final class DeviceShellPolicy {
         }
         if (FILE.contains(name)) return inspectFile(args);
         return deny(com.deepseekharness.app.util.UiText.text("不认识的命令不执行：") + name);
+    }
+
+    /** 仅允许 DSHA 自己生成的 app_process 启动器；不把 app_process 变成通用 shell。 */
+    private static Plan inspectVirtualScreen(List<String> args) {
+        if (args.size() != 9 || !args.get(1).startsWith("-Djava.class.path=/data/app/")
+                || !args.get(1).endsWith(".apk") || !args.get(2).equals("/system/bin")
+                || !args.get(3).equals("com.deepseekharness.app.vscreen.VirtualScreenCore")
+                || !args.get(4).equals("--launch") || !args.get(5).equals("--port")
+                || !args.get(7).equals("--token")
+                || !args.get(6).matches("8[0-9]{3,4}")
+                || !args.get(8).matches("[a-f0-9]{32,128}"))
+            return deny(com.deepseekharness.app.util.UiText.text("虚拟屏启动参数无法核验"));
+        return plan(Kind.VIRTUAL_SCREEN, args, Collections.emptyList());
     }
 
     private static Plan inspectFile(List<String> args) {

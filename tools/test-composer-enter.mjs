@@ -15,7 +15,8 @@ assert.ok(start>0 && end>start);
 function fixture() {
   const commands=new Map(), root=new EventTarget(); let now=100, composingRoot, menu='pass', allowed=true;
   const sent=[];
-  const editor={registerRootListener(fn){fn(root,null);composingRoot=fn;return()=>fn(null,root)},registerCommand(id,fn){commands.set(id,fn);return()=>commands.delete(id)}};
+  const attributes=new Set();root.toggleAttribute=(key,value)=>value?attributes.add(key):attributes.delete(key);root.removeAttribute=key=>attributes.delete(key);
+  const editor={isComposing:()=>false,update(fn,{onUpdate}){fn();onUpdate();},registerUpdateListener(){return()=>{}},registerRootListener(fn){fn(root,null);composingRoot=fn;return()=>fn(null,root)},registerCommand(id,fn){commands.set(id,fn);return()=>commands.delete(id)}};
   const handlers={arbitrate:()=>menu,canSubmit:()=>allowed,submit:accelerated=>sent.push(accelerated),dismissPopup(){},space:()=>false};
   const ctx={Date:{now:()=>now},Eu:(...disposers)=>()=>disposers.forEach(fn=>fn())};
   for(const name of ['sn$2','ln$2','hn$2','fn$1','an$1','cn$1','Je$2'])ctx[name]=name;

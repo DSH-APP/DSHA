@@ -3,6 +3,17 @@ import com.google.gson.*;
 import org.junit.Test;
 import static org.junit.Assert.*;
 public class ModelConfigurationTest {
+    @Test public void customHeadersRoundTripAndRejectAmbiguousOrInjectedFields(){
+        JsonObject configured=JsonParser.parseString("{\"x-opencode-session\":\"session-123\",\"User-Agent\":\"DSHA/1.0\"}").getAsJsonObject();
+        assertEquals(configured,ModelConfiguration.headers(ModelConfiguration.headerRows(configured)));
+        for(String invalid:new String[]{
+                "[{\"name\":\"X-Session\",\"value\":\"a\"},{\"name\":\"x-session\",\"value\":\"b\"}]",
+                "[{\"name\":\"bad name\",\"value\":\"x\"}]",
+                "[{\"name\":\"X-Test\",\"value\":\"ok\\r\\nInjected: yes\"}]",
+                "[{\"name\":\"Content-Length\",\"value\":\"99\"}]"})
+            assertThrows(IllegalArgumentException.class,()->ModelConfiguration.headers(JsonParser.parseString(invalid).getAsJsonArray()));
+        assertTrue(ModelConfiguration.headers(JsonParser.parseString("[{\"name\":\"\",\"value\":\"\"}]").getAsJsonArray()).isEmpty());
+    }
     @Test public void editPreservesUnknownFieldsAndUsesLeafPaths(){
         JsonObject original=JsonParser.parseString("{\"baseURL\":\"https://old.example/v1\",\"headers\":{\"custom\":\"retained\"},\"models\":[{\"id\":\"x\",\"compat\":{\"supportsStore\":false}}]}").getAsJsonObject();
         JsonObject edited=original.deepCopy();edited.addProperty("baseURL","https://new.example/v1");

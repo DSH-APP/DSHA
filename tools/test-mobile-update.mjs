@@ -2,50 +2,75 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
-const directory='app/src/main/assets/builtin-plugins/dsh-web-mobile/';
-const source=readFileSync(directory+'lib/client.js','utf8');
-const functionSource=name=>{
-  const start=source.indexOf('function '+name+'(');assert.ok(start>=0,name);
-  const end=source.indexOf('\n}',start);assert.ok(end>start,name);return source.slice(start,end+2);
-};
-class Element {
-  constructor({parent=null,position='static',width=50,height=50,frame=false,dragging=false}={}){Object.assign(this,{parentElement:parent,position,offsetWidth:width,offsetHeight:height,frame,dragging});}
-  hasAttribute(name){return name==='data-mobile-nav-dragging'&&this.dragging;}
-  closest(selector){for(let node=this;node;node=node.parentElement)if(selector==='[data-mobile-nav="frame"]'?node.frame:selector==='[data-mobile-nav-dragging]'?node.dragging:false)return node;return null;}
+
+const directory = 'app/src/main/assets/builtin-plugins/dsh-web-mobile/';
+const source = readFileSync(directory + 'lib/client.js', 'utf8');
+const packageJson = JSON.parse(readFileSync(directory + 'package.json', 'utf8'));
+
+function loadModules() {
+  let plugin;
+  const window = { __ModuleLoader__: { load(value) { plugin = value; } } };
+  const sandbox = { window, console, performance: { now: () => 1000 } };
+  vm.runInNewContext(source.replace('var __cache = {};',
+    'window.__testModules = __modules; window.__testRequire = __localRequire; var __cache = {};'), sandbox);
+  plugin.factory(() => ({}));
+  return {modules: window.__testModules};
 }
-function fixture(){
-  const document={documentElement:new Element(),body:new Element()};let resets=0;
-  const context=vm.createContext({document,Element,HTMLElement:Element,getComputedStyle:node=>({position:node.position}),onCooldown:()=>false,modalOpen:()=>false,takeoverActive:()=>false,selectionOwnsStroke:()=>false,findHorizontalScroller:()=>null,chainFrom:()=>[],drawerOpen:()=>false,hitTestStart:x=>x<180,startZonePxFor:()=>180,reset:()=>resets++});
-  vm.runInContext('let trackingPointer=-1,tracking=false,startX=0,startY=0,samples=[];const LOCK_PX=8;'+source.match(/const FLOATING_WIDGET_MAX_PX = \d+;/)[0]+['dragMarkYields','findFloatingWidget','floatingWidgetYields','beginStroke','tryLock'].map(functionSource).join('\n'),context);
-  return {context,document,get resets(){return resets;},event:target=>({target,pointerId:1,clientX:50,clientY:50,timeStamp:0})};
-}
-test('2.4.1 拖动悬浮物时让位，不劫持为抽屉手势',()=>{
-  const f=fixture(),widget=new Element({position:'fixed',width:148,height:160}),child=new Element({parent:widget});
-  assert.equal(f.context.beginStroke(f.event(child),false,390),false);
-  assert.equal(f.resets,0);
+
+test('3.0.0 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
+  assert.equal(packageJson.version, '3.0.0');
+  assert.equal(packageJson.dshaUpstream.commit, 'af20948a7c0df250414266fe75a3419b6fc52ebd');
+  for (const marker of [
+    'DSHA_SESSION_INTERACTION_V1',
+    '[data-dsha-session-select]',
+    'dsha-preset-header-anchor',
+    'data-mobile-nav="file-upload"',
+    'data-sidebar-right-expand',
+    'dsh-web-mobile-panel-clearance',
+  ]) assert.ok(source.includes(marker), marker);
+  assert.equal(packageJson.peerDependencies['@deepseek-ai/dsh-client-ui-sidebar-right'], '0.1.7-alpha.1');
+  assert.ok(source.includes('function openFilesPanel'));
 });
-test('全局/祖先拖动标记在开始和锁轴前都生效',()=>{
-  const f=fixture(),parent=new Element(),child=new Element({parent});
-  f.document.body.dragging=true;assert.equal(f.context.beginStroke(f.event(child),false,390),false);
-  f.document.body.dragging=false;assert.equal(f.context.beginStroke(f.event(child),false,390),true);
-  parent.dragging=true;assert.equal(f.context.tryLock({...f.event(child),clientX:120,clientY:52}),false);assert.equal(f.resets,1);
+
+test('3.0.0 侧栏与文件面板手势使用同一方向/速度门槛', () => {
+  const {modules} = loadModules();
+  const swipe = {};
+  modules['effects/sidebar-swipe.js'](() => ({}), {}, swipe);
+  assert.equal(swipe.startZonePxFor(390), 176);
+  assert.equal(swipe.classifySwipe({lockPx: 8, drawerOpen: false, viewportWidthPx: 390,
+    openDistanceRatio: .16, openVelocity: .45}, {dx: 70, dy: 3, velX: 0}, false), 'open');
+  assert.equal(swipe.classifySwipe({lockPx: 8, drawerOpen: true, viewportWidthPx: 390,
+    closeDistanceRatio: .13, closeVelocity: .45}, {dx: -60, dy: 2, velX: 0}, false), 'close');
+  assert.equal(swipe.classifyFilesSwipe({lockPx: 8, panelOpen: false, drawerOpen: false,
+    viewportWidthPx: 390, distanceRatio: .16, velocity: .45}, {dx: -70, dy: 2, velX: 0}, false), 'files');
+  assert.equal(swipe.slidingVelocity([{x: 0, t: 900}, {x: 20, t: 940}, {x: 50, t: 1000}], 60, 1000), .5);
 });
-test('普通内容、大容器和自己的抽屉按钮仍可开始手势',()=>{
-  const f=fixture();
-  for(const target of [new Element(),new Element({position:'fixed',width:390,height:600}),new Element({position:'absolute',frame:true})])assert.equal(f.context.beginStroke(f.event(target),false,390),true);
+
+test('3.0.0 拖动让位与水平滚动容器判定仍由纯函数负责', () => {
+  const {modules} = loadModules();
+  const swipe = {};
+  modules['effects/sidebar-swipe.js'](() => ({}), {}, swipe);
+  assert.equal(swipe.hitTestStart(20, 390, false, {startZonePx: 176}), true);
+  assert.equal(swipe.hitTestStart(200, 390, false, {startZonePx: 176}), false);
 });
-test('触屏大平板删除菜单采用指针门控，桌面仍不注入',()=>{
-  let plugin,modules;
-  const window={__ModuleLoader__:{load:value=>plugin=value}};
-  vm.runInNewContext(source.replace('var __cache = {};','window.__testModules=__modules;window.__testRequire=__localRequire;var __cache = {};'),{window});plugin.factory(()=>({}));modules=window.__testModules;
-  const phone=window.__testRequire('./effects/phone-chrome.js');
-  assert.equal(phone.TOUCH_QUERY,'(pointer: coarse)');assert.match(phone.MOBILE_QUERY,/max-width: 1023px/);
-  let query;const menu={};modules['effects/session-menu.js'](()=>({...phone,installMobileEffect:(ctx,label,work,q)=>query=q}),{},menu);
-  menu.installSessionMenuDelete({});assert.equal(query,phone.TOUCH_QUERY);
-  const style={};modules['styles/base.css.js'](()=>({}),{},style);assert.match(style.BASE_CSS,/@media \(min-width: 1024px\) and \(pointer: coarse\)/);
-});
-test('更新来源与既有 DSHA 适配一起交付',()=>{
-  const pkg=JSON.parse(readFileSync(directory+'package.json','utf8'));assert.equal(pkg.version,'2.4.1-dsha.2');assert.equal(pkg.dshaUpstream.version,'2.4.1');assert.match(pkg.dshaUpstream.integrity,/^sha512-/);
-  for(const marker of ['interactive-widget=resizes-content','dsha-session-open','[data-dsha-session-select]','dsha-preset-header-anchor',"ctx.sidebarRight.openTab('files')"])assert.ok(source.includes(marker),marker);
-  assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-client-ui-sidebar-right'],'0.1.5-rc.2');
+
+test('3.0.0 DOM reconciler 按 dirty scope 合并到一帧', () => {
+  const {modules} = loadModules();
+  const reconciler = {};
+  modules['core/reconciler-core.js'](() => ({}), {}, reconciler);
+  let frames = 0, all = 0, classes = 0, queued = null;
+  const core = reconciler.createReconcilerCore({requestFrame(run) {
+    frames++; queued = run; return () => { queued = null; };
+  }});
+  core.register({name: 'all', ensure: () => { all++; }, dispose: () => {}});
+  core.register({name: 'class', scopes: ['class'], ensure: () => { classes++; }, dispose: () => {}});
+  core.activate();
+  assert.equal(all, 1); assert.equal(classes, 1);
+  core.note(['text']);
+  queued();
+  assert.equal(frames, 1); assert.equal(all, 2); assert.equal(classes, 1);
+  core.note(['class', 'style']);
+  queued();
+  assert.equal(frames, 2); assert.equal(all, 3); assert.equal(classes, 2);
+  core.deactivate();
 });

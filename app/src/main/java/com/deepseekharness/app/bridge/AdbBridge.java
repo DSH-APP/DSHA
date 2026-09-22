@@ -90,6 +90,14 @@ public final class AdbBridge {
         return execOwned(proot, command, 60_000);
     }
 
+    /** 只供 VirtualScreenManager 使用的受管 app_process 启动入口。 */
+    public static String executeVirtualScreen(Context ctx, String command) {
+        ProotBootstrap proot = com.deepseekharness.app.core.HarnessController.get(ctx).proot();
+        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("启动虚拟屏核心"),
+                () -> execOwned(proot, "python3 /root/.dsh/adb-shell.py --timeout 20 --connect-timeout 20 -- "
+                        + ShellQuote.arg(command), 60_000));
+    }
+
     public static boolean injected(ProotBootstrap proot) {
         return "YES".equals(environmentResult(proot, com.deepseekharness.app.util.UiText.text("检查 ADB 脚本"), () -> injectedState(proot)));
     }

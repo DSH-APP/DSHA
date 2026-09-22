@@ -1,5 +1,5 @@
 {
-  "dshVersion": "0.1.6-alpha.2",
+  "dshVersion": "0.1.7-alpha.1",
   "module": "@deepseek-ai/dsh-llm-deepseek/lib/index.js",
   "patches": [
     {
@@ -8,8 +8,12 @@
       "prependAsset": "dsha-deepseek-messages-compat.js"
     },
     {
-      "before": "\t\tif (block.type !== \"image\") return unsupported(`user/tool-result content ${block.type}`);",
-      "after": "\t\tif (block.type === \"tool-call\") return [dshaMessagesProjectedToolCall(block)];\n\t\tif (block.type === \"tool-result\") return input(block.content);\n\t\tif (block.type !== \"image\") return unsupported(`user/tool-result content ${block.type}`);"
+      "before": "\t\tif (block.type === \"reasoning\" || block.type === \"tool-call\") return [];",
+      "after": "\t\tif (block.type === \"reasoning\") return [];\r\n\t\tif (block.type === \"tool-call\") return [dshaMessagesProjectedToolCall(block)];\r\n\t\tif (block.type === \"tool-result\") return input(block.content);"
+    },
+    {
+      "before": "\t\t}] : message.content.flatMap((block) => input([block]));",
+      "after": "\t\t}] : message.content.flatMap((block) => block.type === \"tool-result\" ? [{\r\n\t\t\ttype: \"tool_result\",\r\n\t\t\ttool_use_id: block.toolCallId,\r\n\t\t\tcontent: input(block.content),\r\n\t\t\t...block.isError === void 0 ? {} : { is_error: block.isError }\r\n\t\t}] : input([block]));"
     }
   ]
 }

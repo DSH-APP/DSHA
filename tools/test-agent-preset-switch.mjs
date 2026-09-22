@@ -19,6 +19,9 @@ test('预设样式在模块自身加载，旧补丁升级与重复应用都保�
  assert.ok(spec.patches.some(p=>p.after.includes(JSON.stringify(css))));
  for(const patch of spec.patches){const after=(patch.prependAsset?readFileSync(assets+patch.prependAsset,'utf8')+'\n':'')+patch.after;assert.ok(source.includes(after));}
  assert.match(css,/border: 0/);assert.match(css,/:focus-visible/);assert.match(css,/margin-inline-start: auto/);
+ assert.match(css,/@media \(max-width: 1023px\) and \(pointer: coarse\)/);
+ assert.match(css,/max-width: min\(40vw, 130px\) !important/);
+ assert.match(css,/height: 36px !important/);
 });
 function fixture(blank=true){const origin={id:'original',cwd:'/owned',blank,retainedBy:{mainView:1},projectionValues:{agentPreset:'standard'}};
  const list={current:'original',byId:{original:origin}},calls=[];

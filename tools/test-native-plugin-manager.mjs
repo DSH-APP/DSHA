@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import path from 'node:path';import vm from 'node:vm';import {pathToFileURL} from 'node:url';
 const runtime=path.resolve(process.env.DSHA_TEST_RUNTIME||'app/build/release136/host-runtime');
-const clientRuntime=path.resolve(process.env.DSHA_RAW_RUNTIME||'app/build/locked-dsh-runtime-138');
+const clientRuntime=path.resolve(process.env.DSHA_RAW_RUNTIME||'app/build/locked-dsh-runtime-017');
 const base=fs.mkdtempSync(path.resolve('app/build/release136/native-plugin-policy-'));
 const sdk=path.join(base,'sdk'),profile=path.join(base,'profile');fs.mkdirSync(profile,{recursive:true});fs.mkdirSync(sdk,{recursive:true});
 fs.writeFileSync(path.join(sdk,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh',dependencies:{'dsha-fixture-core':'1.0.0'}}));
@@ -50,6 +50,7 @@ function applyNavigation(value){for(const patch of navigation.patches){const bef
 let source=applyNavigation(fs.readFileSync(path.join(clientRuntime,'node_modules/@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js'),'utf8'));
 const migrated=applyNavigation(fs.readFileSync(path.join(runtime,'node_modules/@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js'),'utf8'));
 assert.equal(migrated,source,'已安装旧补丁必须无重复地迁移到当前补丁');
+assert.equal(applyNavigation(migrated),migrated,'插件原生入口补丁重复施加必须保持幂等');
 assert.equal(source.split('function dshaNativeReviewRoute').length-1,1,'review helper must be injected once');
 source=source.replace('exports.apply = apply;','exports.__Controller=PluginManagerController; exports.__packageView=packageView; exports.__EnableSwitch=EnableSwitch; exports.apply = apply;');
 vm.runInNewContext(source,{window,Map,Set,AbortController,console,URL,encodeURIComponent});
@@ -63,11 +64,11 @@ window.__DSHA_NATIVE_PLUGINS__=false;
 const desktop=client.__packageView({name:'third-party',installed:true,optional:false,enabled:false,rows:[],error:unresolved},[]);
 assert.equal(desktop.error.diagnostic,unresolved.diagnostic,'非 DSHA 网页不能显示原生审阅指引');
 window.__DSHA_NATIVE_PLUGINS__=true;
-const controller=new client.__Controller({get remote(){throw Error('Native navigation must not call an install RPC');}});
+const controller=new client.__Controller({configForms:{describe:()=>[]},get remote(){throw Error('Native navigation must not call an install RPC');}});
 controller.patchInstall({spec:'@example/demo@1.2.3'});await controller.runInstall();
 assert.equal(new URL(window.location.href).searchParams.get('url'),'@example/demo@1.2.3');
 controller.patch({packages:[{name:'third-party',dshaNativeReviewRequired:true,rows:[{entryId:'entry',dshaNativeReviewRequired:true}]}]});
-const actions=controller.inject({});
+const actions=controller.inject({configForms:{describe:()=>[]}});
 for(const invoke of [()=>actions.setEnabled('third-party',true),()=>actions.uninstall('third-party'),()=>actions.setRowEnabled('entry',true)]){
  window.location.href='';invoke();assert.equal(window.location.href,'https://dsha.cc/app/plugins');
 }

@@ -130,7 +130,15 @@ export function installResponseCompression() {
                 : origEnd.apply(this, [chunk, ...rest]);
         }
         deferred.delete(this);
-        if (chunk !== undefined)
+        // `end(callback)`: the function is a completion callback, never body
+        // data — keep it out of the buffers and replay it at the real end().
+        const callbacks = (typeof chunk === 'function' ? [chunk, ...rest] : rest)
+            .filter((arg) => typeof arg === 'function');
+        // `end(data, encoding)` and friends: the data is buffered above and the
+        // encoding is consumed by that buffering, so only the callbacks may be
+        // replayed — origEnd('utf8') would write the string as body data after
+        // the compressed payload (issue #78).
+        if (chunk !== undefined && typeof chunk !== 'function')
             bufferChunk(pending, chunk);
         const body = Buffer.concat(pending.chunks);
         // Small or empty JSON: replay the ORIGINAL header write and body verbatim
@@ -138,8 +146,8 @@ export function installResponseCompression() {
         if (body.byteLength < MIN_JSON_BYTES) {
             writeHeadWith(this, origWriteHead, pending, pending.headers);
             return body.byteLength === 0
-                ? origEnd.apply(this, rest)
-                : origEnd.apply(this, [body, ...rest]);
+                ? origEnd.apply(this, callbacks)
+                : origEnd.apply(this, [body, ...callbacks]);
         }
         // Large JSON: compress and rewrite the length-bearing headers.
         const compressed = pending.encoding === 'br'
@@ -155,7 +163,7 @@ export function installResponseCompression() {
         varyWithAcceptEncoding(headers);
         writeHeadWith(this, origWriteHead, pending, headers);
         origWrite.call(this, compressed);
-        return origEnd.apply(this, rest);
+        return origEnd.apply(this, callbacks);
     }
     proto.writeHead = patchedWriteHead;
     proto.write = patchedWrite;

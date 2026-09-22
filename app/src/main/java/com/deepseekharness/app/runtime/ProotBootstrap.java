@@ -479,6 +479,12 @@ public class ProotBootstrap {
         if (!f.isFile()) return;
         String c = new String(Compat.readAllBytes(f),
                 java.nio.charset.StandardCharsets.UTF_8);
+        // alpha.2 的受管构建已经把 link 发布器替换为
+        // dsha-runtime-fs.publishSessionExclusive。它仍保留 `link` 这个
+        // 局部别名，但不再导入原生 rename；再次套用旧补丁会把调用点改成
+        // 未定义的 rename，正是隔离试运行里暴露的失败。
+        if (c.contains("DSHA_SESSION_DIRECT_HINTS_V1")
+                || c.contains("publishSessionExclusive as link")) return;
         if (c.contains("DSHA_ATOMIC_PUBLISH_V1")) return; // 新版保留排他发布语义，不能降回旧 rename 补丁。
         if (!c.contains("await link(tmp, finalPath)")) return; // 已 patch 或版本不同
         c = c.replace("await link(tmp, finalPath);", "await rename(tmp, finalPath);");
@@ -828,7 +834,12 @@ public class ProotBootstrap {
     }
 
     /** 维护恢复后重新同步受管资产；此入口保留异常，让维护事务能回滚。 */
-    public void prepareRuntimeTools() throws IOException { RuntimeTools.invalidate(); RuntimeTools.prepare(ctx, rootfsDir); }
+    /**
+     * 运行时维护完成后重新核验受管资产，但不要强制把同一棵已打补丁的树再打一遍。
+     * EnvironmentMaintenance 在解压阶段已经完成一次完整准备；清掉内存 stamp 会让
+     * 链式前端补丁被当作原始源码重新施加，导致格式化后首次重开失败。
+     */
+    public void prepareRuntimeTools() throws IOException { RuntimeTools.prepare(ctx, rootfsDir); }
 
     /** 显式运行时入口不重读偏好；argv 与 env 必须属于同一个运行时。 */
     private void applyProotEnv(ProcessBuilder pb, ContainerRuntime rt, boolean hardlinks) {

@@ -82,12 +82,26 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     const currentId = () => Object.values(ctx.sessions.list.getSnapshot().byId)
       .find(row => (row.retainedBy?.mainView ?? 0) > 0)?.id ?? null;
     let restoring = true, touched = false, lastSession = currentId(),
-      positions = [], deadline = Date.now()+10000, lastSaved = '', leaving = false;
+      positions = [], deadline = Date.now()+10000, lastSaved = '', leaving = false,
+      dirty = false, scrollFrame = 0, storeTimer = 0;
     const storageKey = 'dsha.reading-position';
-    let previous;
-    try { previous = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch {}
+    const pendingScrolls = new Set();
+    let previous, previousRaw = null;
+    try {
+      previousRaw = localStorage.getItem(storageKey);
+      previous = JSON.parse(previousRaw || 'null');
+      if (previousRaw) lastSaved = previousRaw;
+    } catch {}
     let requestedRestore = false;
-    const interact = () => { touched = true; restoring = false; };
+    const scheduleStore = () => {
+      dirty = true;
+      if (storeTimer) clearTimeout(storeTimer);
+      storeTimer = setTimeout(() => { storeTimer = 0; store(); },180);
+    };
+    const interact = () => {
+      touched = true;
+      if (restoring) { restoring = false; scheduleStore(); }
+    };
     document.addEventListener('pointerdown',interact,true); document.addEventListener('keydown',interact,true);
     const pathFor = element => {
       if (element === document || element === document.scrollingElement) return {root:true};
@@ -107,24 +121,48 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
       for (const i of item.path) node = node?.children?.[i];
       return node;
     };
-    const store = () => {
-      if (restoring || leaving || document.hidden) return;
+    const syncSession = () => {
+      const id = currentId();
+      if (lastSession !== id) { lastSession = id; positions = []; dirty = true; }
+      return id;
+    };
+    function store(force = false) {
+      if (restoring || leaving || (!force && document.hidden)) return;
+      const id = syncSession();
+      if (!dirty) return;
       try {
-        const value = JSON.stringify({id:currentId(),url:location.pathname+location.search,positions});
+        const value = JSON.stringify({id,url:location.pathname+location.search,positions});
         if (value !== lastSaved) { localStorage.setItem(storageKey,value); lastSaved = value; }
       } catch {}
+      dirty = false;
+    }
+    const flushScrolls = force => {
+      if (restoring || leaving || (!force && document.hidden)) { pendingScrolls.clear(); return; }
+      syncSession();
+      let changed = false;
+      for (const node of pendingScrolls) {
+        const path = pathFor(node); if (!path) continue;
+        const key = JSON.stringify(path);
+        positions = positions.filter(p => JSON.stringify(p.path) !== key);
+        positions.push({path,top:node.scrollTop,left:node.scrollLeft});
+        positions = positions.slice(-8); changed = true;
+      }
+      pendingScrolls.clear();
+      if (changed) { dirty = true; if (!force) scheduleStore(); }
     };
     const scrolled = event => {
       if (restoring || leaving || document.hidden) return;
-      if (lastSession !== currentId()) { lastSession = currentId(); positions = []; }
       const node = event.target === document ? document.scrollingElement : event.target;
-      const path = pathFor(node); if (!path) return;
-      const key = JSON.stringify(path);
-      positions = positions.filter(p => JSON.stringify(p.path) !== key);
-      positions.push({path,top:node.scrollTop,left:node.scrollLeft}); positions = positions.slice(-8); store();
+      // 同一帧内同一个滚动容器只处理一次，避免触摸滚动每个事件都走 DOM 路径并同步写存储。
+      if (node && (pendingScrolls.size < 16 || pendingScrolls.has(node))) pendingScrolls.add(node);
+      if (!scrollFrame) scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; flushScrolls(false); });
     };
-    document.addEventListener('scroll',scrolled,true);
-    const pageHide = () => { store(); leaving = true; };
+    document.addEventListener('scroll',scrolled,{capture:true,passive:true});
+    const pageHide = () => {
+      if (scrollFrame) { cancelAnimationFrame(scrollFrame); scrollFrame = 0; }
+      if (storeTimer) { clearTimeout(storeTimer); storeTimer = 0; }
+      flushScrolls(true); store(true); leaving = true;
+    };
     window.addEventListener('pagehide',pageHide);
     const timer = setInterval(() => {
       if (document.hidden || leaving) return;
@@ -133,10 +171,9 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
           && previous?.id && snapshot.byId?.[previous.id] && currentId() !== previous.id) {
         requestedRestore = true;ctx.uiWorkspace.openSession(previous.id); return;
       }
-      const id = currentId();
-      if (lastSession !== id) { lastSession = id; positions = []; }
+      const id = syncSession();
       if (restoring) {
-        if (!previous || Date.now() > deadline || touched) { restoring = false; store(); return; }
+        if (!previous || Date.now() > deadline || touched) { restoring = false; dirty = true; store(); return; }
         if (previous.id !== id || previous.url !== location.pathname+location.search) return;
         const pending = Array.isArray(previous.positions) ? previous.positions.slice(0,8) : [];
         let ready = true;
@@ -145,10 +182,10 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
           if (!node || !Number.isFinite(item.top) || node.scrollHeight-node.clientHeight < item.top) { ready = false; continue; }
           node.scrollTop = Math.max(0,item.top); node.scrollLeft = Math.max(0,item.left || 0);
         }
-        if (ready && document.readyState === 'complete') { positions = pending; restoring = false; store(); }
+        if (ready && document.readyState === 'complete') { positions = pending; restoring = false; }
       } else store();
-    },500);
-    return () => { store(); clearInterval(timer); document.removeEventListener('scroll',scrolled,true);
+    },750);
+    return () => { pageHide(); clearInterval(timer); document.removeEventListener('scroll',scrolled,true);
       window.removeEventListener('pagehide',pageHide);
       document.removeEventListener('pointerdown',interact,true); document.removeEventListener('keydown',interact,true); };
   }
@@ -184,11 +221,12 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
       openDatabase().then(database => { if (!alive) database.close(); else { db = database; scan(); } }).catch(() => {
         if (!warned) { warned = true; residentInputs(ctx).values().next().value?.notify?.('error','图片草稿存储不可用，退出前请保留原图。'); }
       });
-      const timer = setInterval(scan,250);
+      // Session shell 没有可枚举订阅；低频扫描只负责发现驻留输入框，不参与每帧渲染。
+      const timer = setInterval(scan,750);
       return () => { alive = false; clearInterval(timer); for (const entry of entries.values()) { entry.active = false; entry.off?.(); }
         document.documentElement.removeAttribute('data-dsha-integration');
         db?.close(); stopReading(); document.removeEventListener('dsha-close-details',closeDetails); };
     },'dsha-browser-state');
   }
-  return {inject:['conversation','sessions','layout','sidebarRight','uiWorkspace'],apply,watchDraft,usable,writeDraft,residentInputs};
+  return {inject:['conversation','sessions','layout','sidebarRight','uiWorkspace'],apply,watchDraft,usable,writeDraft,residentInputs,installReadingPosition};
 }});

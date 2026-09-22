@@ -387,12 +387,12 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity impleme
                 && errorPanel != null && errorPanel.getVisibility() != View.VISIBLE;
     }
     @Override protected void onStop() {
-        if (session != null) session.setActive(false);
+        if (!pictureInPictureActiveOrTransitioning() && session != null) session.setActive(false);
         super.onStop();
     }
     @Override protected void onStart() {
         super.onStart();
-        if (session != null) session.setActive(true);
+        if (!pictureInPictureActiveOrTransitioning() && session != null) session.setActive(true);
     }
     @Override protected void onResume() {
         super.onResume();

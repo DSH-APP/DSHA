@@ -102,12 +102,12 @@ public class ExtractActivity extends AppCompatActivity {
             main.post(this::confirmFormat);
     }
     private final Runnable refresh = new Runnable() {
-        @Override public void run() { render(); if (!isFinishing() && !isDestroyed()) main.postDelayed(this, 500); }
+        @Override public void run() { render(); if (!isFinishing() && !isDestroyed()) main.postDelayed(this, 1_000); }
     };
     private void render() {
         if (isFinishing() || isDestroyed()) return;
         BackupTaskState.Snapshot s = task.snapshot();
-        boolean busy = task.maintenanceBusy(), pending = task.pendingMaintenance(), executionBusy=task.busy();
+        boolean busy = task.maintenanceBusy(), pending = task.pendingMaintenanceForUi(), executionBusy=task.busy();
         boolean ready = environmentReady(s, busy, pending);
         boolean formatTask=task.isFactoryReset(taskId), formatComplete=task.isCompletedFactoryReset(taskId);
         String renderKey = s.id + ":" + s.status + ":" + s.detail + ":" + busy + ":" + executionBusy + ":" + pending + ":" + ready + ":" + taskId + ":" + formatComplete;
@@ -123,7 +123,7 @@ public class ExtractActivity extends AppCompatActivity {
                 busy ? com.deepseekharness.app.util.UiStateText.render(s.kind) : pending ? com.deepseekharness.app.util.UiText.text("上次维护未完成，请先恢复原环境") : com.deepseekharness.app.util.UiText.text("环境维护"));
         boolean mine = taskId != 0 && taskId == s.id;
         detail.setVisibility(View.VISIBLE);
-        detail.setText(mine ? com.deepseekharness.app.util.UiStateText.render(s.detail) : com.deepseekharness.app.util.UiText.text("相同基础环境只更新 dsh 与内置插件，个人数据保持原位；基础环境变更时先保护数据再重建。验证失败可恢复原环境。"));
+        detail.setText(mine ? com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail) : com.deepseekharness.app.util.UiText.text("相同基础环境只更新 dsh 与内置插件，个人数据保持原位；基础环境变更时先保护数据再重建。验证失败可恢复原环境。"));
         boolean failed = mine && (s.status == BackupTaskState.Status.FAILED || s.status == BackupTaskState.Status.INTERRUPTED);
         boolean incomplete=mine&&s.status==BackupTaskState.Status.SUCCEEDED&&!ready&&!formatTask;
         error.setVisibility(failed||incomplete||automaticDeclined ? View.VISIBLE : View.GONE);

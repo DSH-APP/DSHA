@@ -55,12 +55,12 @@ public final class NativeDataActivity extends AppCompatActivity {
     @Override protected void onCreate(Bundle saved){
         super.onCreate(saved);pending=new ViewModelProvider(this).get(Pending.class);projects=pending.projects;jobs=NativeBackupJobs.get(this);
         ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setBackgroundColor(getColor(R.color.surface));page=new LinearLayout(this);page.setOrientation(LinearLayout.VERTICAL);int pad=dp(20);page.setPadding(pad,dp(12),pad,pad);body=page;scroll.addView(page);setContentView(scroll);
-        String mode=getIntent().getStringExtra("data_mode");boolean exportOnly="export".equals(mode),restoreOnly="restore".equals(mode);
+        String mode=getIntent().getStringExtra("data_mode");boolean exportOnly="export".equals(mode),restoreOnly="restore".equals(mode),backupMode="backup".equals(mode);
         LinearLayout navigation=new LinearLayout(this);navigation.setGravity(android.view.Gravity.CENTER_VERTICAL);
         var back=UiNavigation.back(this,this::finish);navigation.addView(back,new LinearLayout.LayoutParams(dp(44),dp(48)));
         TextView brand=new TextView(this);brand.setText("DSHA");brand.setTextSize(18);brand.setTextColor(getColor(R.color.text));navigation.addView(brand);page.addView(navigation);
-        TextView title=text(exportOnly?t("加密导出","Encrypted export"):restoreOnly?t("从备份恢复","Restore a backup"):t("应用数据与救援","Application data and recovery"),24);title.setTypeface(null,android.graphics.Typeface.BOLD);
-        text(exportOnly?t("选择范围和项目后，设置密码保存加密副本。","Choose data and projects, then protect the export with a password."):restoreOnly?t("先验证备份密码与内容，再确认恢复范围。","Verify the password and contents before confirming what to restore."):t("运行环境不可用时，也能检查并保护可读取的数据。","Inspect and protect readable data even when the runtime is unavailable."),13);
+        TextView title=text(backupMode?t("备份与恢复","Backup and restore"):exportOnly?t("加密导出","Encrypted export"):restoreOnly?t("从备份恢复","Restore a backup"):t("应用数据与救援","Application data and recovery"),24);title.setTypeface(null,android.graphics.Typeface.BOLD);
+        text(backupMode?t("导出、导入和自动备份集中在这里。","Export, import and automatic backups in one place."):exportOnly?t("选择范围和项目后，设置密码保存加密副本。","Choose data and projects, then protect the export with a password."):restoreOnly?t("先验证备份密码与内容，再确认恢复范围。","Verify the password and contents before confirming what to restore."):t("运行环境不可用时，也能检查并保护可读取的数据。","Inspect and protect readable data even when the runtime is unavailable."),13);
         status=text("",14);status.setTextIsSelectable(true);status.setBackgroundResource(R.drawable.bg_card);status.setPadding(dp(16),dp(12),dp(16),dp(12));
         section(t("选择数据范围","Choose data scope"));
         if(restoreOnly)body.setVisibility(View.GONE);
@@ -73,12 +73,12 @@ public final class NativeDataActivity extends AppCompatActivity {
         button(t("查看数据范围与位置","Review data scope and locations"),this::locations);
         section(exportOnly?t("设置备份密码","Protect your backup"):restoreOnly?t("选择并验证","Select and verify"):t("导出与恢复","Export and restore"));
         if(!restoreOnly){Button export=button(t("导出应用数据","Export application data"),()->password(false));export.setBackgroundResource(R.drawable.bg_btn_primary);export.setTextColor(androidx.core.content.ContextCompat.getColorStateList(this,R.color.button_primary_text));}
-        if(!exportOnly&&!restoreOnly)button(t("只读救援导出","Read-only rescue export"),()->password(true));
-        if(!exportOnly){Button restore=button(t("选择备份并预检恢复","Select backup and inspect restore"),()->restorePicker.launch(new String[]{"application/octet-stream","application/gzip","*/*"}));if(restoreOnly){restore.setBackgroundResource(R.drawable.bg_btn_primary);restore.setTextColor(getColorStateList(R.color.button_primary_text));}}
-        if(!exportOnly&&!restoreOnly)button(t("重新导出已验证副本","Export a verified copy again"),this::verifiedCopies);
-        if(!exportOnly&&!restoreOnly)button(t("保留副本与旧树管理","Manage retained copies and old trees"),()->startActivity(new android.content.Intent(this,RetainedDataActivity.class)));
+        if(!exportOnly&&!restoreOnly&&!backupMode)button(t("只读救援导出","Read-only rescue export"),()->password(true));
+        if(!exportOnly){Button restore=button(t("导入备份","Import backup"),()->restorePicker.launch(new String[]{"application/octet-stream","application/gzip","*/*"}));if(restoreOnly){restore.setBackgroundResource(R.drawable.bg_btn_primary);restore.setTextColor(getColorStateList(R.color.button_primary_text));}}
+        if(!exportOnly&&!restoreOnly&&!backupMode)button(t("重新导出已验证副本","Export a verified copy again"),this::verifiedCopies);
+        if(backupMode)button(t("自动备份与记录","Automatic backups and history"),()->startActivity(new android.content.Intent(this,AutomaticBackupActivity.class)));
         cancelOperation=button(t("取消当前作业","Cancel current operation"),()->jobs.cancel());cancelOperation.setVisibility(View.GONE);
-        section(t("恢复与维护","Recovery and maintenance"));if(exportOnly||restoreOnly)body.setVisibility(View.GONE);
+        section(t("恢复与维护","Recovery and maintenance"));if(exportOnly||restoreOnly||backupMode)body.setVisibility(View.GONE);
         button(t("选择已有数据目录","Choose existing data directory"),this::chooseDataHome);
         button(t("恢复中断的数据提交","Recover interrupted data commit"),()->{
             new DshaDialogBuilder(this).setTitle(t("恢复中断的数据提交","Recover interrupted data commit"))

@@ -36,6 +36,26 @@ public final class ModelConfiguration {
         return ops;
     }
     public static void validateRoute(String route){if(!route.matches("[a-z][a-z0-9]*(?:-[a-z0-9]+)*"))throw new IllegalArgumentException("ROUTE");}
+    /** 请求头只接受合法名称和值，大小写不同的同名项也不能互相覆盖。 */
+    public static JsonObject headers(JsonArray rows) {
+        JsonObject result=new JsonObject();Set<String> names=new HashSet<>();int bytes=0;
+        if(rows==null||rows.size()>32)throw new IllegalArgumentException("HEADERS_LIMIT");
+        for(JsonElement row:rows){
+            JsonObject entry=object(row);String name=text(entry,"name").trim(),value=text(entry,"value");
+            if(name.isEmpty()&&value.isEmpty())continue;
+            if(name.length()>128||!name.matches("[!#$%&'*+.^_`|~0-9A-Za-z-]+"))throw new IllegalArgumentException("HEADERS_NAME");
+            String lower=name.toLowerCase(Locale.ROOT);
+            if(!names.add(lower))throw new IllegalArgumentException("HEADERS_DUPLICATE");
+            if(Set.of("host","content-length","connection","transfer-encoding","proxy-authorization","cookie").contains(lower))throw new IllegalArgumentException("HEADERS_TRANSPORT");
+            for(int i=0;i<value.length();i++){char c=value.charAt(i);if(c<32&&c!='\t'||c>255||c==127)throw new IllegalArgumentException("HEADERS_VALUE");}
+            bytes+=name.length()+value.length();if(bytes>16384)throw new IllegalArgumentException("HEADERS_LIMIT");
+            result.addProperty(name,value);
+        }
+        return result;
+    }
+    public static JsonArray headerRows(JsonObject headers){
+        JsonArray rows=new JsonArray();headers.entrySet().forEach(e->{JsonObject row=new JsonObject();row.addProperty("name",e.getKey());row.addProperty("value",e.getValue().getAsString());rows.add(row);});return rows;
+    }
     public static void validateUrl(String url,boolean required){
         if(url.isEmpty()&&!required)return;
         try{URI parsed=URI.create(url);if(!Set.of("https","http").contains(parsed.getScheme())||parsed.getHost()==null||parsed.getUserInfo()!=null||parsed.getFragment()!=null)throw new IllegalArgumentException();}

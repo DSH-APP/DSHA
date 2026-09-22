@@ -21,6 +21,15 @@ public final class BackupTask {
     private Boolean accepted;
     private volatile com.deepseekharness.app.backup.BackupControl activeCancellation;
     private volatile long persistedCompletion;
+    /*
+     * 维护页只是展示状态，不需要每一帧重新遍历所有事务目录。真正开始任务时
+     * 仍调用 pendingMaintenance() 做同步复核；这个缓存只供 UI 轮询使用。
+     */
+    private static final long UI_PENDING_CACHE_MILLIS = 2_000L;
+    private final Object pendingCacheLock = new Object();
+    private volatile long pendingCacheAt;
+    private volatile boolean pendingCacheValue;
+    private volatile boolean pendingCacheValid;
     private static final ThreadLocal<com.deepseekharness.app.backup.BackupControl> OWNER_CONTROL=new ThreadLocal<>();
     public static com.deepseekharness.app.backup.BackupControl currentControl(com.deepseekharness.app.backup.BackupControl.Progress progress){
         var current=OWNER_CONTROL.get();return current==null?new com.deepseekharness.app.backup.BackupControl(progress):current.withProgress(progress);
@@ -48,7 +57,36 @@ public final class BackupTask {
         }
     }
     public BackupTaskState.Snapshot snapshot() { return state.snapshot(); }
-    public boolean pendingMaintenance() { return BackupManager.hasPendingMaintenance(controller); }
+    /** 执行入口使用的同步、不可缓存维护门禁。 */
+    public boolean pendingMaintenance() {
+        boolean value = BackupManager.hasPendingMaintenance(controller);
+        synchronized (pendingCacheLock) {
+            pendingCacheValue = value;
+            pendingCacheAt = android.os.SystemClock.elapsedRealtime();
+            pendingCacheValid = true;
+        }
+        return value;
+    }
+    /**
+     * 仅供维护/安装页面的显示轮询。磁盘事务的真正门禁仍在执行入口重新核验，
+     * 因而短暂的 UI 缓存不会放行任何写操作。
+     */
+    public boolean pendingMaintenanceForUi() {
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (pendingCacheValid && now - pendingCacheAt < UI_PENDING_CACHE_MILLIS) return pendingCacheValue;
+        synchronized (pendingCacheLock) {
+            now = android.os.SystemClock.elapsedRealtime();
+            if (!pendingCacheValid || now - pendingCacheAt >= UI_PENDING_CACHE_MILLIS) {
+                pendingCacheValue = BackupManager.hasPendingMaintenance(controller);
+                pendingCacheAt = now;
+                pendingCacheValid = true;
+            }
+            return pendingCacheValue;
+        }
+    }
+    private void invalidatePendingCache() {
+        synchronized (pendingCacheLock) { pendingCacheValid = false; }
+    }
     public boolean busy() { return state.busy() || BackupManager.isEnvironmentTaskBusy(); }
     /** 顶部维护提示只反映数据任务；启动、终端和插件查询也使用执行锁，不能冒充维护。 */
     public boolean maintenanceBusy() { return state.busy() || BackupManager.isRestoring(); }
@@ -63,6 +101,7 @@ public final class BackupTask {
     }
     private interface Work { String run(long id) throws Exception; }
     private synchronized boolean start(String kind, boolean recovery, boolean stopWeb, Work work) {
+        invalidatePendingCache();
         if (busy() || (!recovery && pendingMaintenance())) return false;
         com.deepseekharness.app.util.EnvironmentTaskGate.Lease lease =
                 com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire(kind);
@@ -90,6 +129,7 @@ public final class BackupTask {
             catch (Exception e) { state.update(id, e instanceof java.io.InterruptedIOException&&!pendingMaintenance()?Status.CANCELLED:Status.FAILED, BackupManager.safeError(e)); }
             finally {
                 OWNER_CONTROL.remove();if(activeCancellation==cancellation)activeCancellation=null;
+                invalidatePendingCache();
                 try { persist(); persistedCompletion=id; } catch (IOException e) { state.update(id, Status.FAILED, e.getMessage()); }
             }
             }

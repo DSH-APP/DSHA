@@ -611,11 +611,13 @@ public class HarnessController {
     /** 立即禁用自动拉起，实际停止在共享队列执行，回调在后台线程。 */
     public void stopWeb(Consumer<String> onStatus) {
         com.deepseekharness.app.HttpShellService.revokeScreenGrant();
+        com.deepseekharness.app.vscreen.VirtualScreenManager.stop(context());
         enqueueStop(onStatus);
     }
 
     private Future<?> enqueueStop(Consumer<String> onStatus) {
         com.deepseekharness.app.HttpShellService.revokeScreenGrant();
+        com.deepseekharness.app.vscreen.VirtualScreenManager.stop(context());
         synchronized (lifecycle) {
             if (lifecycle.isStopping()) return stopTask;
             long previous = lifecycle.generation();
@@ -680,9 +682,24 @@ public class HarnessController {
     public void recoverWeb(boolean safe, String disabledPlugin, Consumer<String> onStatus) {
         if (disabledPlugin != null && (!startupDiagnostics.snapshot().issues.containsKey(disabledPlugin)
                 || com.deepseekharness.app.util.BuiltinPlugins.internal(disabledPlugin))) return;
-        enqueueStop(null);
+        // enqueueStop() 会立即把生命周期置为 stopping，并把真正的停止放入同一条 IO 队列。
+        // 旧实现随后马上检查 isStopping()，因此恢复入口总是在停止任务尚未完成时直接返回，
+        // 既没有第二次启动，也没有给主界面留下可解释的错误。必须等待这一次 Future 完成，
+        // 再在相同 generation 上排入启动；不复用旧进程，也不改变用户数据。
+        Future<?> stop = enqueueStop(null);
         final long stopped = lifecycle.generation();
         io.execute(() -> {
+            try {
+                if (stop != null) stop.get();
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                reportStatus(stopped, onStatus, com.deepseekharness.app.util.UiText.text("等待停止被中断，请重试"));
+                return;
+            } catch (Exception error) {
+                reportStatus(stopped, onStatus, com.deepseekharness.app.util.UiText.text("停止旧 Web 失败：")
+                        + com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(error.getMessage())));
+                return;
+            }
             if (!lifecycle.isCurrent(stopped) || lifecycle.isStopping()) return;
             if (disabledPlugin != null) {
                 com.deepseekharness.app.util.EnvironmentTaskGate.Lease lease =

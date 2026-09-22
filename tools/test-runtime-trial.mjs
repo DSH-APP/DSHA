@@ -31,7 +31,7 @@ function trialContext(backend){
   storage:{backend:{get(name){assert.equal(name,'json');return backend}}},
   sessionPersistence:{
    async create(value){header=value;return {async flush(){},async close(){}}},
-   async open(id){return {header:{...header,id,version:3},async read(){return {events:[]}},async close(){}}},
+   async open(id){return {header:{...header,id,version:4},async read(){return {events:[]}},async close(){}}},
   },
   webServer:{port:3080,register(){return ()=>{}}},connection:{requestRejection(){return undefined}},
   effect(install){return install()},on(){return ()=>{}},
@@ -40,6 +40,7 @@ function trialContext(backend){
 try{
  await test('android_health_gate_requires_fresh_process_reopen',async()=>{
   const host=await fs.readFile(path.join(repository,'app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java'),'utf8');
+  const bootstrap=await fs.readFile(path.join(repository,'app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java'),'utf8');
   const receipt=await fs.readFile(path.join(repository,'app/src/main/java/com/deepseekharness/app/backup/RuntimeDescriptor.java'),'utf8');
   const plugin=await fs.readFile(path.join(repository,'app/src/main/assets/runtime-trial-plugin.js'),'utf8');
   const builder=await fs.readFile(path.join(repository,'tools/build-dsh-runtime.py'),'utf8');
@@ -52,10 +53,12 @@ try{
   assert.match(plugin,/const trialNode\s*=\s*process\.platform===['"]win32['"]\?process\.execPath:['"]\/usr\/local\/bin\/node['"];[\s\S]*spawnSync\(trialNode/);
   assert.match(plugin,/DSHA_TRIAL_STORAGE_RECORD_KEYS/);
   assert.match(plugin,/hints\.reserve\(join\(process\.env\.DSHA_TRIAL_STORAGE_ROOT/);
-  assert.match(plugin,/Session\.create\(sessionId,\[\],\{version:3,id:sessionId,[\s\S]*cwd:process\.cwd\(\)/);
+  assert.match(plugin,/Session\.create\(sessionId,\[\],\{version:4,id:sessionId,[\s\S]*cwd:process\.cwd\(\)/);
   assert.match(builder,/SESSION_PERSISTENCE_JSONL_MODULE/);
   assert.match(builder,/DSHA_SESSION_DIRECT_HINTS_V1/);
   assert.match(builder,/resolveHintedGeneration/);
+  assert.match(bootstrap,/DSHA_SESSION_DIRECT_HINTS_V1[\s\S]*publishSessionExclusive as link/);
+  assert.match(bootstrap,/if\s*\(c\.contains\("DSHA_SESSION_DIRECT_HINTS_V1"\)[\s\S]*\) return;/);
 });
  await test('real_locked_json_backend_reopens_isolated_record',async()=>{
   const {JsonStorageBackend}=await import(pathToFileURL(path.join(modules,'@deepseek-ai/dsh-storage-json/lib/index.js')));

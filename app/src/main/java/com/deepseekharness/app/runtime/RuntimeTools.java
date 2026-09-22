@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /** 统一准备插件与终端的证书和命令入口，无需先手动运行安装第 2 步。 */
 final class RuntimeTools {
@@ -91,6 +93,12 @@ final class RuntimeTools {
         preparedStamp = null;
         preparedFiles.clear();
         installManagedAssets(context, rootfs);
+        // 覆盖升级保留同一运行时身份时，不能只更新消息兼容层。
+        // Web UI 的会话抽屉、预设标题和移动端插件都属于 APK 自有覆盖层，
+        // 旧版本在这里提前 return 会让 rootfs 继续使用旧 bundle。
+        // 两个补丁本身带有稳定 marker，重复启动时会安全跳过。
+        patchSessionNavigation(context, rootfs);
+        patchAgentPresets(context, rootfs);
         patchClientModule(context, rootfs, "deepseek-messages-compat-patch.json", "DeepSeek Messages 会话兼容");
         prepareBuiltinDependencies(rootfs);
         if (!markerCurrent || !marker.isFile() || Compat.isSymbolicLink(marker))
@@ -133,6 +141,8 @@ final class RuntimeTools {
             for (String file : new String[]{"package.json", "cordis.patch.yml", "lib/index.js"})
                 install(context, rootfs, "builtin-plugins/" + name + "/" + file, destination + file, false);
             if (name.equals("dsh-computer-use-android"))
+                install(context,rootfs,"builtin-plugins/"+name+"/lib/server.cjs",destination+"lib/server.cjs",false);
+            if (name.equals("dsh-tool-vscreen"))
                 install(context,rootfs,"builtin-plugins/"+name+"/lib/server.cjs",destination+"lib/server.cjs",false);
             if (name.equals("dsh-web-mobile")) for (String file : new String[]{"lib/client.js", "lib/compress.js", "lib/delete-session.js", "LICENSE"})
                 install(context, rootfs, "builtin-plugins/" + name + "/" + file, destination + file, false);
@@ -261,6 +271,9 @@ final class RuntimeTools {
                 throw new IOException(com.deepseekharness.app.util.UiText.text("会话交互适配的模块路径不安全"));
             preparedFiles.add(client);
             String source = Compat.readAll(client), updated = source;
+            // 受管运行时在上一次启动已经完成这组补丁时保持幂等；否则同一
+            // before 文本仍可能存在于已插入的代码前缀中，造成重复注入。
+            if (source.contains("DSHA_SESSION_INTERACTION_V1") && source.contains("dsha-session-open")) return;
             org.json.JSONArray patches = spec.getJSONArray("patches");
             for (int i = 0; i < patches.length(); i++) {
                 org.json.JSONObject patch = patches.getJSONObject(i);
@@ -293,17 +306,74 @@ final class RuntimeTools {
                 throw new IOException(description + com.deepseekharness.app.util.UiText.text("适配的模块路径不安全或缺失"));
             preparedFiles.add(client);
             String source = Compat.readAll(client), updated = source;
+            if ("agent-preset-patch.json".equals(asset)
+                    && source.contains("DSHA_AGENT_PRESET_SWITCH_V1")
+                    && source.contains("dsha-preset-header-anchor")) return;
             org.json.JSONArray patches = spec.getJSONArray("patches");
-            for (int i = 0; i < patches.length(); i++) {
-                org.json.JSONObject patch = patches.getJSONObject(i);
-                String after = patch.getString("after");
-                if (patch.has("prependAsset")) after = assetText(context, patch.getString("prependAsset")) + "\n" + after;
-                updated = com.deepseekharness.app.util.ExactTextPatch.apply(updated, patch.getString("before"), after);
+            try {
+                updated = applyClientPatches(context, patches, updated);
+            } catch (IllegalArgumentException mismatch) {
+                // 受管 dsh 模块不是用户插件。旧版本曾把另一版补丁留在环境中，
+                // 此时不能让整个环境重建永久卡在首个前端适配步骤；从当前 APK
+                // 的 dsh-runtime.bin 恢复同一模块，再按当前补丁链一次性重做。
+                String canonical = restoreBundledClientModule(context, rootfs, spec.getString("module"));
+                if (canonical == null) throw mismatch;
+                updated = applyClientPatches(context, patches, canonical);
             }
             if (!updated.equals(source)) writeIfChanged(client, updated.getBytes(java.nio.charset.StandardCharsets.UTF_8), false);
         } catch (org.json.JSONException | IllegalArgumentException error) {
             throw new IOException(description + com.deepseekharness.app.util.UiText.text("适配未应用，原文件保留：") + error.getMessage(), error);
         }
+    }
+
+    private static String applyClientPatches(Context context, org.json.JSONArray patches, String source)
+            throws org.json.JSONException, IOException {
+        String updated = source;
+        for (int i = 0; i < patches.length(); i++) {
+            org.json.JSONObject patch = patches.getJSONObject(i);
+            String after = patch.getString("after");
+            if (patch.has("prependAsset")) after = assetText(context, patch.getString("prependAsset")) + "\n" + after;
+            updated = com.deepseekharness.app.util.ExactTextPatch.apply(updated, patch.getString("before"), after);
+        }
+        return updated;
+    }
+
+    /** 从当前 APK 的分包 dsh 运行时恢复一个受管前端模块；找不到时交回原始补丁错误。 */
+    private static String restoreBundledClientModule(Context context, File rootfs, String module) throws IOException {
+        String relative = "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/" + module;
+        File target = new File(rootfs, relative);
+        String[] candidate = {relative, "./" + relative};
+        try (ZipFile apk = new ZipFile(context.getPackageCodePath())) {
+            ZipEntry entry = apk.getEntry("assets/dsh-runtime.bin");
+            if (entry == null) return null;
+            File staging = new File(rootfs, ".dsha-managed-module-" + Integer.toHexString(relative.hashCode()));
+            if (staging.exists()) deleteTemporary(staging);
+            staging.mkdirs();
+            final boolean[] found = {false};
+            try (InputStream input = apk.getInputStream(entry)) {
+                TarGzipExtractor.extractSelected(input, staging, 0, name -> {
+                    for (String value : candidate) if (value.equals(name)) { found[0] = true; return true; }
+                    return false;
+                });
+            }
+            if (!found[0]) { deleteTemporary(staging); return null; }
+            File extracted = new File(staging, relative);
+            if (!extracted.isFile() || Compat.isSymbolicLink(extracted)) { deleteTemporary(staging); return null; }
+            byte[] bytes = Compat.readAll(extracted).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            if (bytes.length == 0) { deleteTemporary(staging); return null; }
+            writeIfChanged(target, bytes, false);
+            deleteTemporary(staging);
+            return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+        }
+    }
+
+    private static void deleteTemporary(File file) {
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) for (File child : children) deleteTemporary(child);
+        }
+        //noinspection ResultOfMethodCallIgnored
+        file.delete();
     }
 
     /** 锁定的文件预览模块：网页与独立 PDF Worker 共用兼容实现，旧内核的文件协议只做窄适配。 */

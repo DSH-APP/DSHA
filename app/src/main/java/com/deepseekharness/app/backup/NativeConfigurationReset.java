@@ -41,7 +41,7 @@ public final class NativeConfigurationReset implements HostDataTransaction.Targe
         if(environment==null||environment.length>1024*1024)throw new IOException("RESET_CONFIG_SIZE");
         String workspace=normalizeWorkspace(workdir);
         File parent=new File(files,"host-backup-operations");if(fs.stat(parent).type.equals("MISSING"))fs.directory(parent);
-        if(fs.list(parent).size()>=32)throw new IOException("RETAINED_OPERATION_LIMIT");
+        if(fs.list(parent).size()>=BackupLimits.TRANSACTION_RECORDS)throw new IOException("RETAINED_OPERATION_LIMIT");
         File owned=new File(parent,UUID.randomUUID().toString());fs.directory(owned);
         var reset=new NativeConfigurationReset(fs,files,owned,new UserDataLayout(fs,files).selected(),"/"+workspace);
         List<String> roots=List.of("settings","environment");Map<String,String> before=new LinkedHashMap<>();

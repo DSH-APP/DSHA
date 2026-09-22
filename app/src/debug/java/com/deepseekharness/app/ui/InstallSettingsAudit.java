@@ -63,20 +63,16 @@ public final class InstallSettingsAudit extends Instrumentation {
             attach(new Fragment());InstallFragment next=new InstallFragment();attach(next);repo.set(next,isolated);render(next);
             ui(()->check(((ScrollView)page.findViewById(R.id.install_scroll)).getScrollY()==0,"重新进入安装页沿用了日志焦点位置"));
             ConfigFragment configPage=new ConfigFragment();attach(configPage);
-            check(page.findViewById(R.id.config_backup_key)==null,"配置页仍显示备份 Key 开关");
-            attach(new WorkspaceFragment());CheckBox backup=page.findViewById(R.id.config_backup_key);
-            check(backup!=null&&backup.isChecked()==original,"备份页没有保留原开关值");
-            ui(backup::performClick);check(config.isBackupKey()!=original,"备份开关没有即时保存");
-            try(EnvironmentTaskGate.Lease held=EnvironmentTaskGate.tryAcquire("备份开关互斥验收")) {
-                check(held!=null,"无法取得测试互斥");ui(backup::performClick);
-                check(config.isBackupKey()!=original&&backup.isChecked()!=original,"环境任务期间仍修改了备份开关");
-            }
-            attach(configPage);check(config.isBackupKey()!=original,"进入配置页覆盖了备份设置");
+            attach(new WorkspaceFragment());
+            check(page.findViewById(R.id.workspace_backup)!=null,"缺少合并后的备份与恢复入口");
+            check(page.findViewById(R.id.workspace_storage)!=null,"缺少存储与文件入口");
+            check(config.isBackupKey()==original,"进入数据页修改了历史备份偏好");
+            attach(configPage);check(config.isBackupKey()==original,"进入配置页覆盖了备份设置");
             // 校验真实保存按钮不会覆盖已移出的偏好；表单原值保持，测试不导出凭据。
             ui(()->page.findViewById(R.id.config_save).performClick());
-            check(config.isBackupKey()!=original,"保存配置覆盖了备份设置");
+            check(config.isBackupKey()==original,"保存配置覆盖了备份设置");
             attach(new WorkspaceFragment());
-            check(((CheckBox)page.findViewById(R.id.config_backup_key)).isChecked()!=original,"重建备份页丢失已保存设置");
+            check(config.isBackupKey()==original,"重建备份页修改了历史备份偏好");
             result.putString("result","PASS");result.putInt("checks",checks);
         } catch(Throwable error) {result.putString("failure",android.util.Log.getStackTraceString(error));}
         finally {

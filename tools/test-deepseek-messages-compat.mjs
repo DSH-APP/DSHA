@@ -8,7 +8,7 @@ import path from 'node:path';
 const root = path.resolve(import.meta.dirname, '..');
 const assets = path.join(root, 'app', 'src', 'main', 'assets');
 const runtimeRoot = path.resolve(process.env.DSHA_TEST_RUNTIME
-  || path.join(root, 'app', 'build', 'locked-dsh-runtime-138'));
+  || path.join(root, 'app', 'build', 'locked-dsh-runtime-017'));
 const runtime = path.join(runtimeRoot, 'node_modules');
 const moduleFile = path.join(runtime, '@deepseek-ai', 'dsh-llm-deepseek', 'lib', 'index.js');
 const archiveFile = path.resolve(process.env.DSHA_RUNTIME_ARCHIVE
@@ -115,7 +115,7 @@ assert.equal(archivePackage.version, recipe.dshVersion,
   'generated runtime must contain the locked DeepSeek Messages adapter');
 assert.equal(archiveDshPackage.name, '@deepseek-ai/dsh');
 assert.equal(archiveDshPackage.version, recipe.dshVersion,
-  'generated runtime must contain DSH 0.1.6-alpha.2');
+  'generated runtime must contain DSH 0.1.7-alpha.1');
 assert.equal(archiveSource, patchedSource,
   'generated runtime module must be the recipe-patched locked module, not a test fixture');
 assert.equal(archiveSource, buildScriptPatchedSource(),
@@ -159,12 +159,11 @@ const teamProjection = [{
   source: { kind: 'team-message', teamId: 'lead', messageId: 'team-message-4' }
 }];
 
-assert.throws(
-  () => unpatchedSerialize(base, connection, teamProjection, new Map(), () => undefined),
-  (error) => error?.code === 'UNSUPPORTED_CONTENT'
-    && error.message === 'DeepSeek Messages cannot represent user/tool-result content tool-call',
-  'the fixture must reproduce the Agent Team screenshot failure against locked alpha.2'
-);
+const unpatchedRequest = unpatchedSerialize(base, connection, teamProjection, new Map(), () => undefined);
+assert.deepEqual(unpatchedRequest.messages, [{
+  role: 'user',
+  content: [{ type: 'text', text: 'Team message team-message-4 from reviewer:' }]
+}], '0.1.7 base serializer silently drops display-only tool-call blocks; DSHA must project them');
 
 const originalTeamProjection = structuredClone(teamProjection);
 const teamRequest = serialize(base, connection, teamProjection, new Map(), () => undefined);
@@ -337,15 +336,13 @@ assert.equal(imageRequest.messages[1].content[0].content.at(-1).type, 'image');
 assert.deepEqual(imageRequest.messages[1].content[0].content.at(-1).source,
   { type: 'file', file_id: 'file-image-1' });
 
-assert.throws(
-  () => serialize(base, connection, [{
-    role: 'user',
-    content: [{ type: 'reasoning', text: 'invalid user reasoning' }],
-    source: { kind: 'user' }
-  }], new Map(), () => undefined),
-  (error) => error?.code === 'UNSUPPORTED_CONTENT',
-  'the compatibility projection must not swallow unrelated protocol errors'
-);
+const unsupportedRequest = serialize(base, connection, [{
+  role: 'user',
+  content: [{ type: 'reasoning', text: 'invalid user reasoning' }],
+  source: { kind: 'user' }
+}], new Map(), () => undefined);
+assert.deepEqual(unsupportedRequest.messages, [],
+  '0.1.7 keeps reasoning out of user content according to the new upstream contract');
 
 console.log(JSON.stringify({
   status: 'PASS',

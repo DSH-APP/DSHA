@@ -33,7 +33,7 @@ if (process.argv.includes('--composer')) {
   writeFileSync(client,content);
 }
 mkdirSync(resolve(home, 'profiles/web'), { recursive: true });
-const plugins = process.argv.includes('--builtins') ? ['dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile', 'dsh-computer-use-android', 'dsh-auto-review', 'dsh-app-integration'] : [];
+const plugins = process.argv.includes('--builtins') ? ['dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile', 'dsh-computer-use-android', 'dsh-auto-review', 'dsh-tool-vscreen', 'dsh-app-integration'] : [];
 const dependencies = {};
 for (const name of plugins) {
   const source = name === 'dsh-app-integration' ? resolve('app/src/main/assets/app-integration')
@@ -75,7 +75,7 @@ try {
     try { exchange = await fetch(authUrl, { redirect: 'manual', signal: AbortSignal.timeout(3000) }); break; }
     catch (error) { if (attempt === 14) throw error; await new Promise(done => setTimeout(done, 400)); }
   }
-  if (exchange.status !== 303 || exchange.headers.get('location') !== '/') throw new Error('启动凭据未获得 303 根路径跳转');
+  if (exchange.status !== 303 || !['/', './'].includes(exchange.headers.get('location'))) throw new Error('启动凭据未获得 303 根路径跳转');
   const cookie = exchange.headers.get('set-cookie')?.split(';')[0];
   if (!cookie?.startsWith('dsh-auth-')) throw new Error('官方 Cookie 缺失');
   const base = `http://127.0.0.1:${port}/`;

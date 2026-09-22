@@ -17,6 +17,9 @@ public final class InstallTask {
     private int selected, current, logSize;
     private long started, stageStarted, finished, revision;
     private String phase = com.deepseekharness.app.util.UiText.text("尚未检查"), failure = "";
+    // 页面每秒轮询一次；日志只有 append 时才变化，复用渲染结果避免反复拼接 48 KiB。
+    private long cachedLogRevision = -1;
+    private String cachedLog = "";
 
     public InstallTask() { Arrays.fill(steps, Step.PENDING); Arrays.fill(details, com.deepseekharness.app.util.UiText.text("尚未检查")); }
 
@@ -28,6 +31,7 @@ public final class InstallTask {
         current = 0; started = stageStarted = System.nanoTime(); finished = 0;
         phase = com.deepseekharness.app.util.UiText.text("准备检查"); failure = ""; privateKey = truncated = false;
         lines.clear(); logSize = 0; Arrays.fill(steps, Step.PENDING); Arrays.fill(details, com.deepseekharness.app.util.UiText.text("尚未检查")); revision++;
+        cachedLogRevision = -1; cachedLog = "";
         return true;
     }
 
@@ -109,10 +113,14 @@ public final class InstallTask {
 
     public synchronized Snapshot snapshot() {
         long now = outcome == Outcome.RUNNING ? System.nanoTime() : finished;
-        StringBuilder log = new StringBuilder(truncated ? com.deepseekharness.app.util.UiText.text("[较早输出已省略，仅保留最近 48 KiB]\n") : "");
-        for (String line : lines) log.append(line);
+        if (cachedLogRevision != revision) {
+            StringBuilder log = new StringBuilder(truncated ? com.deepseekharness.app.util.UiText.text("[较早输出已省略，仅保留最近 48 KiB]\n") : "");
+            for (String line : lines) log.append(line);
+            cachedLog = log.toString();
+            cachedLogRevision = revision;
+        }
         return new Snapshot(outcome, repair, selected, current, cancelRequested, cancellable,
-                safe(phase), failure, steps.clone(), details.clone(), log.toString(), elapsed(now, started),
+                safe(phase), failure, steps.clone(), details.clone(), cachedLog, elapsed(now, started),
                 elapsed(now, stageStarted), revision);
     }
 

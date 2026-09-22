@@ -84,6 +84,15 @@ public abstract class PictureInPictureActivity extends AppCompatActivity {
     public static boolean showing(Activity activity) {
         return Build.VERSION.SDK_INT >= 26 && activity.isInPictureInPictureMode();
     }
+
+    /**
+     * 系统进入/退出 PiP 时可能先回调 onPause/onStop，再通知
+     * onPictureInPictureModeChanged。网页在这段过渡期间仍由 SystemUI 绘制，不能
+     * 因为 Activity 暂停就清掉刷新率或停掉浏览器渲染。
+     */
+    protected final boolean pictureInPictureActiveOrTransitioning() {
+        return showing(this) || (pictureFrame != null && pictureFrame.isFrozen());
+    }
     protected abstract boolean pictureInPictureContentReady();
 
     @Override protected void onCreate(Bundle saved) {

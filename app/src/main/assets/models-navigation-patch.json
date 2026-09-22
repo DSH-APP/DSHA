@@ -1,5 +1,5 @@
 {
-  "dshVersion": "0.1.6-alpha.2",
+  "dshVersion": "0.1.7-alpha.1",
   "module": "@deepseek-ai/dsh-client-ui-settings-general/lib/client.js",
   "patches": [
     {
@@ -11,8 +11,8 @@
       "after": "const shellInjected = () => ({\n                // 设置面板挂载在侧栏内；窄屏抽屉收起时必须先通过真实布局服务展开。\n                dshaOpenSidebar: () => {\n                    if (document.querySelector(\"[data-sidebar-collapsed]\")) ctx.layout.toggleSidebar();\n                },"
     },
     {
-      "before": "\"remote.settings\",\n\t\t\t\"settingsScope\"",
-      "after": "\"remote.settings\",\n            \"layout\",\n\t\t\t\"settingsScope\""
+      "before": "\"remote.settings\",\n\t\t\t\"configForms\"",
+      "after": "\"remote.settings\",\n            \"layout\",\n\t\t\t\"configForms\""
     }
   ]
 }

@@ -30,6 +30,11 @@ public final class PictureInPicturePolicy {
         return previewGeneration > 0 && previewGeneration == currentGeneration && !stopping && !userStopped;
     }
 
+    /** 生命周期回调可能早于系统的 PiP mode callback；过渡期间继续绘制网页。 */
+    public static boolean keepContentActive(boolean inPictureInPicture, boolean transitioning) {
+        return inPictureInPicture || transitioning;
+    }
+
     /** 交换网页视口的宽高，让网页重新排版，不旋转文字或设备方向。 */
     public static int[] viewport(int width, int height, String layout) {
         if (width <= 0 || height <= 0) { width = 1080; height = 1920; }

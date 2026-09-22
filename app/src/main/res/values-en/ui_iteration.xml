@@ -43,7 +43,7 @@
     <string name="ui2_review_hint">Install first, review before enabling.</string>
     <string name="ui2_welcome_title0">Your AI workspace,\nright on your phone.</string>
     <string name="ui2_welcome_lead0">Write code, work with files and use tools.\nTake your workspace with you.</string>
-    <string name="ui2_offline_badge">Offline setup  ·  No root  ·  0.1.6-alpha2</string>
+    <string name="ui2_offline_badge">Offline setup  ·  No root  ·  0.1.7-alpha1</string>
     <string name="ui2_welcome_title1">From an idea\nto getting it done.</string>
     <string name="ui2_welcome_lead1">Conversations, files and tools, together.</string>
     <string name="ui2_w1_0">Conversations and tasks</string>
@@ -77,6 +77,11 @@
     <string name="ui2_retained">Retained copies</string>
     <string name="ui2_retained_sub">Inspect retained data and recovery options</string>
     <string name="ui2_data_options">Export options</string>
+    <string name="ui2_automation_storage">Automation and storage</string>
+    <string name="ui2_automatic_backups">Automatic backups</string>
+    <string name="ui2_automatic_backups_sub">Switch, schedule and recent copies</string>
+    <string name="ui2_storage_space">Storage</string>
+    <string name="ui2_storage_space_sub">Review usage and clean caches</string>
     <string name="ui2_rescue">Backup and read-only recovery</string>
     <string name="ui2_rescue_sub">Inspect operations and re-export verified copies</string>
     <string name="ui2_workspace_title">Workspace</string>
@@ -143,4 +148,9 @@
     <string name="ui2_connection">Connection state</string>
     <string name="ui2_pair_code">Pairing code</string>
     <string name="ui2_pair_tools">Connection tools</string>
+    <string name="ui2_backup_restore">Backup and restore</string>
+    <string name="ui2_backup_restore_sub">Export, import and automatic backups</string>
+    <string name="ui2_storage_files">Storage and files</string>
+    <string name="ui2_storage_files_sub">Storage usage, cache cleanup and file sharing</string>
+    <string name="ui2_recovery_tools">Environment and data recovery</string>
 </resources>

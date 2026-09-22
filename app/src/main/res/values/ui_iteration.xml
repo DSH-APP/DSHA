@@ -43,7 +43,7 @@
     <string name="ui2_review_hint">先安装，再审阅。启用前核对插件内容与权限。</string>
     <string name="ui2_welcome_title0">你的 AI 工作台，\n就在手机里。</string>
     <string name="ui2_welcome_lead0">写代码、处理文件、使用工具。\n把完整的工作环境，随身带走。</string>
-    <string name="ui2_offline_badge">离线部署  ·  无需 ROOT  ·  0.1.6-alpha2</string>
+    <string name="ui2_offline_badge">离线部署  ·  无需 ROOT  ·  0.1.7-alpha1</string>
     <string name="ui2_welcome_title1">从一个想法，\n到实际完成。</string>
     <string name="ui2_welcome_lead1">对话、文件与工具，在同一个工作空间。</string>
     <string name="ui2_w1_0">对话与任务</string>
@@ -77,6 +77,11 @@
     <string name="ui2_retained">保留副本</string>
     <string name="ui2_retained_sub">查看旧树、验证记录与恢复选项</string>
     <string name="ui2_data_options">导出选项</string>
+    <string name="ui2_automation_storage">自动化与存储</string>
+    <string name="ui2_automatic_backups">自动备份</string>
+    <string name="ui2_automatic_backups_sub">开关、备份时机与最近副本</string>
+    <string name="ui2_storage_space">存储空间</string>
+    <string name="ui2_storage_space_sub">查看占用与清理缓存</string>
     <string name="ui2_rescue">备份与只读救援</string>
     <string name="ui2_rescue_sub">查看作业、重新导出已验证副本</string>
     <string name="ui2_workspace_title">工作目录</string>
@@ -143,4 +148,9 @@
     <string name="ui2_connection">连接状态</string>
     <string name="ui2_pair_code">配对码</string>
     <string name="ui2_pair_tools">连接工具</string>
+    <string name="ui2_backup_restore">备份与恢复</string>
+    <string name="ui2_backup_restore_sub">导出、导入和自动备份</string>
+    <string name="ui2_storage_files">存储与文件</string>
+    <string name="ui2_storage_files_sub">空间占用、缓存清理和文件共享</string>
+    <string name="ui2_recovery_tools">环境修复与数据救援</string>
 </resources>

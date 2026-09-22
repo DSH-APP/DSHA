@@ -239,12 +239,13 @@ def plugin_package(root):
     if not isinstance(bundle, dict) or "patch" not in bundle:
         raise ValueError(pkg["name"] + " 未声明 dsh.bundle.patch（普通 npm 包不是 dsh 插件）")
     patch = bundle["patch"]
-    # 当前锁定的 dsh-app-boot 只接受单个包内文件路径；数组会在真实启动时
-    # 传入 path.join 并崩溃，因此预览阶段就拒绝。
-    if not isinstance(patch, str) or not patch:
+    # 0.1.7 接受按顺序合成的补丁数组；逐文件验证，保持原顺序。
+    patches = [patch] if isinstance(patch, str) else patch
+    if not isinstance(patches, list) or not patches or any(not isinstance(item, str) or not item for item in patches):
         raise ValueError(pkg["name"] + " 的 dsh.bundle.patch 格式无效")
-    if not os.path.isfile(safe_target(root, patch)):
-        raise ValueError(pkg["name"] + " 缺少 patch 文件，请下载构建后的发布包")
+    for item in patches:
+        if not os.path.isfile(safe_target(root, item)):
+            raise ValueError(pkg["name"] + " 缺少 patch 文件，请下载构建后的发布包")
     main = pkg.get("main")
     if isinstance(main, str) and not os.path.isfile(safe_target(root, main)):
         raise ValueError(pkg["name"] + " 缺少入口 " + main + "，请下载 Release 中的构建包")

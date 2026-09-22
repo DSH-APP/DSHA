@@ -50,4 +50,9 @@ public class PictureInPicturePolicyTest {
         assertFalse(PictureInPicturePolicy.sessionActive(7, 7, true, false));
         assertFalse(PictureInPicturePolicy.sessionActive(7, 7, false, true));
     }
+    @Test public void keepsWebContentActiveDuringSystemPiPTransition() {
+        assertTrue(PictureInPicturePolicy.keepContentActive(true, false));
+        assertTrue(PictureInPicturePolicy.keepContentActive(false, true));
+        assertFalse(PictureInPicturePolicy.keepContentActive(false, false));
+    }
 }

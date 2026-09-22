@@ -64,10 +64,16 @@ try {
       const info = { name, directory: root, url: pathToFileURL(root).href };
       plugins.push(info);
       const patch = pkg.dsh?.bundle?.patch;
-      if (typeof patch !== 'string' || !fs.existsSync(path.resolve(root, patch)))
-        emit('issue', name, '缺少 dsh.bundle.patch 声明或补丁文件');
+      // 0.1.7 支持有序补丁数组；每一个入口仍须存在于该包内部。
+      const patches = typeof patch === 'string' ? [patch] : Array.isArray(patch) ? patch : [];
+      if (!patches.length || patches.some(item => {
+        if (typeof item !== 'string' || !item || path.isAbsolute(item)) return true;
+        const target = path.resolve(root, item);
+        return !target.startsWith(root + path.sep) || !fs.existsSync(target)
+          || !fs.realpathSync(target).startsWith(root + path.sep) || !fs.statSync(target).isFile();
+      })) throw new Error('缺少 dsh.bundle.patch 声明或补丁文件');
       emit('plugin', name, '配置检查：' + name + ' @ ' + (pkg.version || uiText('未知版本')), { path: root });
-      if (typeof patch === 'string') {
+      for (const patch of patches) {
         // 只读取 id/module 的普通标量，不执行 YAML 的 !!js 用户表达式。
         const patchFile = path.resolve(root, patch);
         if (fs.existsSync(patchFile) && fs.statSync(patchFile).size <= 1024 * 1024) {

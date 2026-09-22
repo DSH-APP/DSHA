@@ -31,6 +31,21 @@ public class WebProcSelTest {
         assertFalse(WebProcSel.looksLikeWeb("libproroot-bridge.so dsh web"));
         assertFalse(WebProcSel.looksLikeWeb(command.replace("/usr/local/bin/dsh web", "/usr/local/bin/dsh\u0000web injected")));
     }
+
+    @Test public void recognizesRealProrootRecoveryCmdlineFromDevice() {
+        String command = "/data/app/pkg/lib/arm64/libproroot-bridge.so\u0000"
+                + "/data/app/pkg/lib/arm64/libproroot-linker.so\u0000--argv0\u0000/usr/local/bin/node\u0000"
+                + "--preload\u0000/data/app/pkg/lib/arm64/libproroot-runtime.so\u0000"
+                + "/data/data/com.dsh.client/files/linux/ubuntu/usr/local/bin/node\u0000"
+                + "/usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js\u0000"
+                + "--profile\u0000dsha-recovery-ce608c6a2f1b4e67\u0000--no-open\u0000"
+                + "--host\u0000127.0.0.1\u0000--port\u00000\u0000";
+        assertTrue(WebProcSel.looksLikeWeb(command));
+        assertTrue(WebProcSel.maySignalWeb(command));
+        assertEquals("dsha-recovery-ce608c6a2f1b4e67", WebProcSel.trialProfile(command));
+        assertFalse(WebProcSel.looksLikeWeb(command.replace("--argv0\u0000/usr/local/bin/node", "--argv0\u0000/bin/bash")));
+        assertEquals("", WebProcSel.trialProfile(command.replace("--profile\u0000dsha-recovery-ce608c6a2f1b4e67", "web\u0000--profile\u0000dsha-recovery-ce608c6a2f1b4e67")));
+    }
     @org.junit.Test public void pidFileContainsOnlyOneSafePid() {
         org.junit.Assert.assertEquals(1234, WebProcSel.parsePid("1234\n"));
         for (String value : new String[]{"", "0", "1", "-1234", "+1234", "1234;echo bad", "1234\n5678", "9999999999", "１２３４"})
@@ -87,6 +102,7 @@ public class WebProcSelTest {
         String command = "node /usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js --profile dsha-recovery-0123456789abcdef --no-open --host 127.0.0.1 --port 3080";
         assertTrue(WebProcSel.maySignalWeb(command));
         assertTrue(WebProcSel.looksLikeWeb(command));
+        assertEquals("dsha-recovery-0123456789abcdef", WebProcSel.trialProfile(command));
         assertFalse(WebProcSel.maySignalWeb("bash -c " + command));
         assertFalse(WebProcSel.maySignalWeb("libproot.so " + command));
         assertFalse(WebProcSel.maySignalWeb(command.replace("dsha-recovery-0123456789abcdef", "user-profile")));

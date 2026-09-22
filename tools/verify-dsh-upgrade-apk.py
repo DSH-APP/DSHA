@@ -31,7 +31,11 @@ def verify(path):
                 b'DSHA_SESSION_DIRECT_HINTS_V1',
                 b'import { publishSessionExclusive as link } from "dsha-runtime-fs";'
             ),
-            PREFIX + '/node_modules/@deepseek-ai/dsh-session-format-v2-to-v3/lib/index.js': b'DSHA_LEGACY_SESSION_V1',
+            # 0.1.7 stores current sessions as V4 and ships the guarded V3→V4
+            # migration. The previous V2→V3 module is no longer a root-level
+            # runtime package; requiring its old marker would reject a valid
+            # upgrade archive before any data check could run.
+            PREFIX + '/node_modules/@deepseek-ai/dsh-session-format-v3-to-v4/lib/index.js': b'sessionFormatV3ToV4',
             PREFIX + '/node_modules/@deepseek-ai/dsh-storage-json/lib/index.js': b'DSHA_PROROOT_DIRECT_RECORD_HINTS_V1',
             PREFIX + '/node_modules/dsha-runtime-fs/index.js': b'publishSessionExclusive',
             PREFIX + '/node_modules/dsha-session-compat/index.js': b'wrapDshaLegacyStage',
@@ -117,7 +121,7 @@ def verify(path):
         assert not packages, 'APK 缺少锁定的 Ubuntu 软件包'
         assert b'dpkg --configure' in apk.read('assets/install-ubuntu-tools.sh')
         plugins = {}
-        for name in ('dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile'):
+        for name in ('dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile', 'dsh-tool-vscreen'):
             package = json.loads(apk.read('assets/builtin-plugins/' + name + '/package.json'))
             plugins[name] = package['version']
         client = apk.read('assets/app-integration/client.js')
@@ -128,7 +132,11 @@ def verify(path):
         assert b'validate_graph' in apk.read('assets/backup-plugin-graph.py')
         assert b'REPLACED_TOOLS' in apk.read('assets/environment-data.py')
         mobile = apk.read('assets/builtin-plugins/dsh-web-mobile/lib/client.js')
-        assert b"'sidebarRight'" in mobile and b"ctx.sidebarRight.openTab('files')" in mobile
+        # v3.0.0 owns the right-panel opener through its host selector and
+        # files-panel helper instead of calling the old sidebarRight service
+        # directly. Keep checking the actual v3 contract and the built-in
+        # session menu/delete path.
+        assert b'data-sidebar-right-expand' in mobile and b'function openFilesPanel' in mobile
         assert b'installSessionMenuDelete' in mobile
         assert b'connection.requestRejection' in apk.read('assets/builtin-plugins/dsh-web-mobile/lib/index.js')
         assert 'assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js' in apk.namelist()

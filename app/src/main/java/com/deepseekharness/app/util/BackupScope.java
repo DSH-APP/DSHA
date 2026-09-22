@@ -104,7 +104,7 @@ public final class BackupScope {
             case PLUGINS:
                 return com.deepseekharness.app.util.UiText.text("只打包插件清单、配置和已安装插件数据");
             case SETTINGS:
-                return com.deepseekharness.app.util.UiText.text("打包 settings.yaml 和运行参数；原生 API Key 遵循备份密钥开关");
+                return com.deepseekharness.app.util.UiText.text("打包设置文件、0.1.7 profile 配置和运行参数；原生 API Key 遵循备份密钥开关");
             default:
                 return com.deepseekharness.app.util.UiText.text("配置、对话、附件、插件与工作区 .env/日志，换机或重装用这个");
         }
@@ -113,7 +113,7 @@ public final class BackupScope {
     public static String restoreImpact(int scope) {
         switch (scope) {
             case SESSIONS: return com.deepseekharness.app.util.UiText.text("覆盖聊天记录、会话索引与附件，不改设置和插件");
-            case SETTINGS: return com.deepseekharness.app.util.UiText.text("覆盖 settings.yaml 和原生运行设置，不改聊天记录和插件");
+            case SETTINGS: return com.deepseekharness.app.util.UiText.text("覆盖设置文件与 profile 配置，不改聊天记录和插件");
             case PLUGINS: return com.deepseekharness.app.util.UiText.text("覆盖插件 profile 和插件源码，不改聊天记录和设置");
             default: return com.deepseekharness.app.util.UiText.text("覆盖配置、聊天记录、附件、插件与工作区 .env/日志");
         }

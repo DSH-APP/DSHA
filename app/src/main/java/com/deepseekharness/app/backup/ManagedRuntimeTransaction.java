@@ -39,7 +39,7 @@ public final class ManagedRuntimeTransaction implements HostDataTransaction.Targ
     public static ManagedRuntimeTransaction create(BackupFileSystem fs,File files,HostDataTransaction.Fault fault)throws IOException{
         File home=fs.child(files,HOME);if(fs.stat(home).type.equals("MISSING"))fs.directory(home);
         if(!pending(fs,files).isEmpty())throw new IOException("RUNTIME_RECOVERY_REQUIRED");
-        if(fs.list(home).size()>=32)throw new IOException("RUNTIME_RETENTION_LIMIT");
+        if(fs.list(home).size()>=BackupLimits.TRANSACTION_RECORDS)throw new IOException("RUNTIME_RETENTION_LIMIT");
         File entry=fs.child(home,UUID.randomUUID().toString());fs.directory(entry);fs.directory(new File(entry,"candidate"));fs.directory(new File(entry,"stage"));
         return new ManagedRuntimeTransaction(fs,files,entry,fault);
     }
@@ -101,7 +101,7 @@ public final class ManagedRuntimeTransaction implements HostDataTransaction.Targ
     public static boolean blocked(File files){try{return !pending(new AndroidBackupFileSystem(),files.getCanonicalFile()).isEmpty();}catch(IOException error){return true;}}
     private static List<ManagedRuntimeTransaction> all(BackupFileSystem fs,File files)throws IOException{
         File home=fs.child(files,HOME);if(fs.stat(home).type.equals("MISSING"))return Collections.emptyList();
-        List<String> children=fs.list(home);if(children.size()>64)throw new IOException("RUNTIME_RETENTION_LIMIT");List<ManagedRuntimeTransaction> result=new ArrayList<>();
+        List<String> children=fs.list(home);if(children.size()>BackupLimits.TRANSACTION_RECORDS)throw new IOException("RUNTIME_RETENTION_LIMIT");List<ManagedRuntimeTransaction> result=new ArrayList<>();
         for(String id:children){if(!id.matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))throw new IOException("RUNTIME_OPERATION_ID");result.add(new ManagedRuntimeTransaction(fs,files,fs.child(home,id),null));}
         return result;
     }

@@ -137,7 +137,7 @@ public final class ConfigurationSnapshots {
     private HostDataTransaction transaction(File operation)throws IOException{return new HostDataTransaction(fs,operation,id->{
         if(!id.matches("config-[0-5]"))throw new IOException("RECOVERY_FORMAT");return document(FILES.get(Integer.parseInt(id.substring(7))));},NATIVE_UNCHANGED,fault);}
     private File operation()throws IOException{
-        ensureStore();if(fs.list(operations).size()>=32)throw new IOException("RECOVERY_RETENTION_LIMIT");File result=fs.child(operations,UUID.randomUUID().toString());fs.directory(result);fs.directory(new File(result,"candidate"));return result;
+        ensureStore();if(fs.list(operations).size()>=BackupLimits.TRANSACTION_RECORDS)throw new IOException("RECOVERY_RETENTION_LIMIT");File result=fs.child(operations,UUID.randomUUID().toString());fs.directory(result);fs.directory(new File(result,"candidate"));return result;
     }
     private void change(Map<String,byte[]> defaults,Map<String,Object> snapshot,boolean legacySource,String legacySlot,String expectedId,BackupControl control)throws IOException{
         if(!pendingNative().isEmpty())throw new IOException("RECOVERY_PENDING");
@@ -190,7 +190,7 @@ public final class ConfigurationSnapshots {
         if(!(directory.getName()+"\n"+name+"\n").equals(new String(fs.small(file,256),StandardCharsets.UTF_8)))throw new IOException("RECOVERY_FORMAT");return true;
     }
     public List<File> pendingNative()throws IOException{
-        if(fs.stat(operations).type.equals("MISSING"))return Collections.emptyList();List<String> entries=fs.list(operations);if(entries.size()>64)throw new IOException("RECOVERY_RETENTION_LIMIT");
+        if(fs.stat(operations).type.equals("MISSING"))return Collections.emptyList();List<String> entries=fs.list(operations);if(entries.size()>BackupLimits.TRANSACTION_RECORDS)throw new IOException("RECOVERY_RETENTION_LIMIT");
         List<File> pending=new ArrayList<>();for(String id:entries){File directory=fs.child(operations,uuid(id));if(mark(directory,"switching")&&!mark(directory,"finalized")&&!mark(directory,"rolled-back"))pending.add(directory);}
         if(pending.size()>1)throw new IOException("RECOVERY_MULTIPLE_TRANSACTIONS");return pending;
     }

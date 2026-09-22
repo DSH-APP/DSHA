@@ -1,0 +1,10 @@
+{
+  "name": "dsh-tool-vscreen",
+  "version": "0.1.0",
+  "description": "DSHA virtual display automation tools",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": { ".": "./lib/index.js", "./package.json": "./package.json" },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "peerDependencies": { "@deepseek-ai/dsh-mcp-client": "0.1.7-alpha.1" }
+}

@@ -106,7 +106,8 @@ public final class RuntimeTrial {
             if(browser!=null)try{browser.close();}catch(Exception ignored){}
             IOException stopping=null;
             if(process!=null){
-                try{manager.stop();Compat.destroy(process);if(!manager.confirmTrackedTrialStopped(process))throw new IOException("TRIAL_PROCESS_UNCONFIRMED");}
+                try{String stopped=manager.stop();Compat.destroy(process);if(!manager.confirmTrackedTrialStopped(process))
+                    throw new IOException(stopped.isEmpty()?"TRIAL_PROCESS_UNCONFIRMED":"TRIAL_PROCESS_UNCONFIRMED: "+SensitiveData.redact(stopped));}
                 catch(RuntimeException|IOException error){stopping=new IOException("TRIAL_PROCESS_UNCONFIRMED",error);}
             }
             if(stopping!=null){work.retainUntilExit(new CheckedExit(process,manager));throw stopping;}

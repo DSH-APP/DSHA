@@ -17,6 +17,9 @@ public class DshAuthSessionTest {
     private static String redirect(String cookie) {
         return "303 See Other\r\nLocation: /\r\nSet-Cookie: " + cookie + "; Path=/; HttpOnly\r\n";
     }
+    private static String relativeRedirect(String cookie) {
+        return "303 See Other\r\nLocation: ./\r\nSet-Cookie: " + cookie + "; Path=/; HttpOnly\r\n";
+    }
     private static final class Server implements AutoCloseable {
         final ServerSocket socket = new ServerSocket(0, 8, java.net.InetAddress.getByName("127.0.0.1"));
         final List<String> requests = java.util.Collections.synchronizedList(new ArrayList<>());
@@ -60,6 +63,12 @@ public class DshAuthSessionTest {
             assertEquals(DshAuthSession.Status.EXPIRED, result.status);
             assertTrue(result.message.contains("401")); assertFalse(result.message.contains(TOKEN));
             assertEquals(1, server.requests.size());
+        }
+    }
+    @Test public void acceptsDsh017DirectoryRelativeRedirect() throws Exception {
+        try (Server server = new Server(relativeRedirect(COOKIE), "200 OK\r\n")) {
+            DshAuthSession.Result result = server.exchange();
+            assertTrue(result.ready()); assertEquals(COOKIE, result.cookie);
         }
     }
     @Test public void neverFollowsRedirectWithCredentials() throws Exception {

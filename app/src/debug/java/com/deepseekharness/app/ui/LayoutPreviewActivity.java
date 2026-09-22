@@ -101,9 +101,6 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
             if(management) { visible(R.id.pluginEmpty,true);text(R.id.pluginEmpty,"布局检查样例：插件列表会显示在这里"); }
         } else if (scene.equals("fragment_workspace")) {
             text(R.id.workspace_backup_status,"最近成功备份：今天 14:26\n全量备份 · 2.1 MiB");
-            text(R.id.workspace_info,"当前工作区：/root/deepseek-harness");
-            text(R.id.workspace_share_status,"在 MT 管理器中添加本地存储，选择 DocumentsProvider → DSHA。\n\n容器目录：files/linux/ubuntu/root\n配置目录：容器中的 .dsh");
-            visible(R.id.workspace_clean_sessions,false);
         } else if (scene.equals("fragment_config")) {
             text(R.id.config_port,"3080");
         } else if (scene.equals("activity_diagnostics")) {

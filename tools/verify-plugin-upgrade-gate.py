@@ -35,7 +35,7 @@ def main() -> None:
     parser.add_argument(
         "--raw-runtime",
         type=Path,
-        default=ROOT / "app/build/locked-dsh-runtime-138",
+        default=ROOT / "app/build/locked-dsh-runtime-017",
         help="锁定的原始 DSH 运行时",
     )
     parser.add_argument(
@@ -43,8 +43,8 @@ def main() -> None:
         nargs="*",
         type=Path,
         default=[
-            ROOT / "release/dsha-0.1.6-alpha2.apk",
-            ROOT / "release/dsha-0.1.6-alpha2low.apk",
+            ROOT / "release/dsha-0.1.7-alpha1.apk",
+            ROOT / "release/dsha-0.1.7-alpha1low.apk",
         ],
     )
     args = parser.parse_args()

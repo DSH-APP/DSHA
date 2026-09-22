@@ -50,6 +50,13 @@ public final class NativeRestoreTargets implements NativeRestorePlan.Mapping,Hos
         String id=BackupLimits.root(BackupJson.string(root,"id")),scope=BackupJson.string(root,"scope");
         if(id.equals("native-settings")){if(!scope.equals("settings"))throw new IOException("ROOT_SCOPE");return new NativeRestorePlan.Target(known.get(id),null,false);}
         String kind=BackupJson.string(root,"logicalKind"),name=BackupJson.string(root,"name");
+        if(kind.equals("dsh-profile-config")){
+            if(!scope.equals("settings")||!Set.of("profiles/web/package.json","profiles/web/cordis.patch.yml").contains(name)
+                    ||!id.equals("profile-config-"+NativeDataLocations.hash(name)))throw new IOException("ROOT_MAPPING");
+            // profile patch 可携带 !!js 和插件入口；解密通过并不代表代码可信。
+            // 与既有插件恢复一致保存在隔离区，不能直接覆盖可执行配置。
+            return quarantine("settings/"+name);
+        }
         if(kind.equals("legacy-plugin-store")&&id.equals("legacy-plugins")&&scope.equals("plugins")){
             return quarantine("legacy-plugins");
         }

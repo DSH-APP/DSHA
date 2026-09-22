@@ -6,7 +6,7 @@
   <string name="ui134_candidate">View candidate release</string>
   <string name="ui134_candidate_sub">Release notes, size and installation</string>
   <string name="ui134_changelog">This release</string>
-  <string name="ui134_changelog_sub">0.1.6-alpha2 · Interaction and device capabilities</string>
+  <string name="ui134_changelog_sub">0.1.7-alpha1 · Interaction and device capabilities</string>
   <string name="ui134_check_ready">Ready to check</string>
   <string name="ui134_results">Results</string>
   <string name="ui134_start_records">Startup records</string>

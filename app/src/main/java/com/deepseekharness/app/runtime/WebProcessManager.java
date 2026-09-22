@@ -118,6 +118,60 @@ public class WebProcessManager {
         }
         return false;
     }
+
+    /**
+     * 回收旧版本可能遗留的隔离试运行。目标必须同时满足：本应用保存过 launched 记录、
+     * profile 可由该 UUID 唯一推导、命令行是直接 dsh 试运行，并且两次内核身份一致。
+     */
+    private String stopRecordedTrialProfiles(java.util.Set<String> profiles) {
+        if (profiles.isEmpty()) return "";
+        java.util.LinkedHashMap<Integer, ProcessState> targets = new java.util.LinkedHashMap<>();
+        try {
+            String[] entries = new File("/proc").list();
+            if (entries == null) throw new IOException(com.deepseekharness.app.util.UiText.text("无法读取本应用进程清单，原环境保留"));
+            for (String value : entries) {
+                int pid = WebProcSel.parsePid(value);
+                if (pid < 0 || pid == android.os.Process.myPid()) continue;
+                ProcessState state = inspect(pid);
+                String profile = state.kind == Kind.WEB ? WebProcSel.trialProfile(state.command) : "";
+                if (!profiles.contains(profile)) continue;
+                ProcessState again = inspect(pid);
+                if (state.identity == null || again.kind != Kind.WEB || !state.identity.sameProcess(again.identity)
+                        || !profile.equals(WebProcSel.trialProfile(again.command)))
+                    return "TRIAL_PROCESS_IDENTITY_CHANGED";
+                try { Os.kill(pid, OsConstants.SIGTERM); }
+                catch (ErrnoException gone) {
+                    if (gone.errno != OsConstants.ESRCH) throw gone;
+                    continue;
+                }
+                targets.put(pid, state);
+            }
+            long deadline = android.os.SystemClock.elapsedRealtime() + 3000;
+            while (!targets.isEmpty() && android.os.SystemClock.elapsedRealtime() < deadline) {
+                java.util.Iterator<java.util.Map.Entry<Integer, ProcessState>> iterator = targets.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    java.util.Map.Entry<Integer, ProcessState> target = iterator.next();
+                    ProcessState current = inspect(target.getKey());
+                    if (current.kind == Kind.GONE || current.identity == null
+                            || !target.getValue().identity.sameProcess(current.identity)) {
+                        iterator.remove();
+                        continue;
+                    }
+                    String profile = WebProcSel.trialProfile(current.command);
+                    if (current.kind != Kind.WEB || !profiles.contains(profile))
+                        return "TRIAL_PROCESS_IDENTITY_CHANGED";
+                }
+                if (!targets.isEmpty()) Thread.sleep(50);
+            }
+            return targets.isEmpty() ? "" : "TRIAL_PROCESS_UNCONFIRMED";
+        } catch (InterruptedException error) {
+            Thread.currentThread().interrupt();
+            return com.deepseekharness.app.util.UiText.text("停止等待被中断，请检查 Web 状态");
+        } catch (Exception error) {
+            return com.deepseekharness.app.util.UiText.text("停止隔离检查进程未完成：")
+                    + SensitiveData.redact(String.valueOf(error.getMessage()));
+        }
+    }
     /** 仅隔离仍与本次读取一致的旧记录；保留最后一份编号供诊断。 */
     private void retire(String record) throws IOException {
         if (record == null || !record.equals(pidRecord())) return;
@@ -166,13 +220,21 @@ public class WebProcessManager {
             var fs=new com.deepseekharness.app.backup.AndroidBackupFileSystem();File files=proot.getRootfsDir().getParentFile().getParentFile().getCanonicalFile();
             File home=fs.child(files,"runtime-trials");
             if(!fs.stat(home).type.equals("MISSING")){
-                java.util.List<String> entries=fs.list(home);if(entries.size()>64)throw new IOException("TRIAL_RETENTION_LIMIT");
+                java.util.List<String> entries=fs.list(home);if(entries.size()>com.deepseekharness.app.backup.BackupLimits.TRANSACTION_RECORDS)throw new IOException("TRIAL_RETENTION_LIMIT");
+                java.util.LinkedHashSet<String> profiles=new java.util.LinkedHashSet<>();
                 for(String id:entries){
                     if(!id.matches("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))throw new IOException("TRIAL_RECORD_DIRECTORY");
+                    File launched=fs.child(home,id+"/launched");
+                    String launchedType=fs.stat(launched).type;
+                    if(launchedType.equals("FILE")){
+                        if(!id.equals(new String(fs.small(launched,128),StandardCharsets.US_ASCII)))throw new IOException("TRIAL_MARKER");
+                        profiles.add("dsha-recovery-"+id.replace("-","").substring(0,16));
+                    }else if(!launchedType.equals("MISSING"))throw new IOException("TRIAL_MARKER");
                     File payload=fs.child(home,id+"/payload");if(fs.stat(payload).type.equals("MISSING"))continue;
                     if(!fs.stat(payload).type.equals("DIRECTORY"))throw new IOException("TRIAL_RECORD_DIRECTORY");
                     String stopped=new WebProcessManager(proot,payload).stopOne();if(error.isEmpty())error=stopped;
                 }
+                String stopped=stopRecordedTrialProfiles(profiles);if(error.isEmpty())error=stopped;
             }
         }catch(IOException failure){if(error.isEmpty())error="TRIAL_PROCESS_UNCONFIRMED";}
         if(!error.isEmpty())return error;

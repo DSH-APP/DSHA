@@ -79,6 +79,10 @@ public final class NativeDataLocations {
                 try{return new ConfigStore(context).exportPortableSettings(selection.includeApiKey).toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);}
                 catch(org.json.JSONException error){throw new IOException("SETTINGS_FORMAT",error);}
             }));
+            // dsh 0.1.7 imports the legacy settings.yaml into the active web
+            // profile. Keep that profile layer in a settings-only archive so
+            // an upgrade does not silently lose provider/model configuration.
+            addProfileSettings(result, selection, data);
         }
         for(String project:selection.guestProjects){String relative=project.startsWith("/")?project.substring(1):"root/"+project;BackupLimits.path(relative);
             control.check();
@@ -101,6 +105,26 @@ public final class NativeDataLocations {
         }
         if(!readable&&new ConfigStore(context).isWelcomed()){
             result.possibleExistingData=true;result.sources.add(new UnavailableBackupSource("legacy-data","application","OLD_DATA_LOCATION_UNCONFIRMED",false));
+        }
+    }
+
+    private void addProfileSettings(Located result, Selection selection, File data) throws IOException {
+        File profile = new File(data, "profiles/web");
+        for (String name : new String[]{"package.json", "cordis.patch.yml"}) {
+            File source = new File(profile, name);
+            if (!fs.stat(source).type.equals("FILE")) continue;
+            String relative = "profiles/web/" + name;
+            String id = "profile-config-" + hash(relative);
+            result.guestTargets.put(id, "root/.dsh/" + relative);
+            File resolved = resolver.resolve(source).file;
+            result.sources.add(new FileBackupSource(fs, id, "settings", resolved, false, (path, node) -> "") {
+                @Override public Map<String,Object> description() {
+                    Map<String,Object> value = super.description();
+                    value.put("logicalKind", "dsh-profile-config");
+                    value.put("name", relative);
+                    return value;
+                }
+            });
         }
     }
     private void add(Located result,String id,String scope,File origin,String guest,boolean machine){

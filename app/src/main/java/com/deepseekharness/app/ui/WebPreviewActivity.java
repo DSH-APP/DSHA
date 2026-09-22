@@ -173,6 +173,7 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
             ((android.content.MutableContextWrapper) webView.getContext()).setBaseContext(this);
             attachClients(webView);
             container.addView(webView,new FrameLayout.LayoutParams(-1,-1));
+            WebFrameRate.apply(this, webView);
             progress.setVisibility(View.GONE);
         } else {
             // 旋转保留同一进程的页面；服务已换代时清理旧页面，再用当前凭据加载。
@@ -228,6 +229,7 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
             }
             attachClients(view);
             container.addView(view, new FrameLayout.LayoutParams(-1, -1));
+            WebFrameRate.apply(this, view);
             CookieManager cookies = CookieManager.getInstance();
             cookies.setAcceptCookie(true);
             cookies.setAcceptThirdPartyCookies(view, false);
@@ -326,8 +328,13 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
             progress.setVisibility(View.GONE);
             if (!WebPreviewPolicy.sameService(baseUrl, url)) return;
             retained.ready = true; refreshPictureInPicture();
-            // 厂商内核可能不提供 DOCUMENT_START_SCRIPT；页面入口已提前补齐，这里再幂等核验。
-            view.evaluateJavascript(WebPageScripts.compatibility(WebPreviewActivity.this)+"\n"+CAPABILITY_CHECK, result -> {
+            // 新内核已经在文档起始执行兼容脚本；这里只做轻量能力核验，避免每次页面完成
+            // 又把数十 KB 的 polyfill 注入一次。旧内核没有 DOCUMENT_START_SCRIPT 时仍保留
+            // 原来的页面完成注入路径。
+            String compatibility = retained != null && retained.compatibilityScript != null
+                    ? CAPABILITY_CHECK
+                    : WebPageScripts.compatibility(WebPreviewActivity.this)+"\n"+CAPABILITY_CHECK;
+            view.evaluateJavascript(compatibility, result -> {
                 if (webView != view || pageFailed || isFinishing() || isDestroyed()) return;
                 try {
                     Object missing = new org.json.JSONTokener(result).nextValue();
@@ -483,6 +490,7 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
     private void destroyWebView() {
         cancelFileSelection();
         WebView previous = webView;
+        WebFrameRate.clear(this, previous);
         webView = null;
         if (retained != null) { retained.view = null; retained.ready = false; }
         refreshPictureInPicture();
@@ -496,11 +504,15 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
 
     @Override public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) WebFullscreenUi.applySystemBars(this);
+        if (hasFocus) {
+            WebFullscreenUi.applySystemBars(this);
+            if (webView != null) WebFrameRate.apply(this, webView);
+        }
     }
 
     @Override protected void onPause() {
         PluginFragment.invalidateInstalledState();
+        if (!pictureInPictureActiveOrTransitioning()) WebFrameRate.clear(this, webView);
         super.onPause();
     }
 
@@ -511,17 +523,18 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
 
     // 画中画仍可见但 Activity 已暂停；完全不可见时才暂停网页绘制。
     @Override protected void onStop() {
-        if (webView != null) webView.onPause();
+        if (!pictureInPictureActiveOrTransitioning() && webView != null) webView.onPause();
         super.onStop();
     }
 
     @Override protected void onStart() {
         super.onStart();
-        if (webView != null) webView.onResume();
+        if (!pictureInPictureActiveOrTransitioning() && webView != null) webView.onResume();
     }
 
     @Override protected void onResume() {
         super.onResume();
+        if (!pictureInPictureActiveOrTransitioning() && webView != null) WebFrameRate.apply(this, webView);
         if(webView!=null&&WebPreviewPolicy.sameService(baseUrl,webView.getUrl())) {
             updateDocumentLanguage(webView);webView.evaluateJavascript(WebPageScripts.language(this),null);
         }

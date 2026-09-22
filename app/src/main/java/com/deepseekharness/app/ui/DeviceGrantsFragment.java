@@ -55,12 +55,19 @@ public final class DeviceGrantsFragment extends Fragment {
         revoke.setTextSize(12);revoke.setAllCaps(false);revoke.setBackgroundResource(R.drawable.bg_btn);
         screenCard.addView(revoke,new android.widget.LinearLayout.LayoutParams(-1,-2));
         revoke.setOnClickListener(button->{com.deepseekharness.app.HttpShellService.revokeScreenGrant();toast(com.deepseekharness.app.util.UiText.choose("已撤销，后续屏幕操作需要重新确认", "Revoked. Future screen actions require confirmation"));});
+        android.widget.Button virtualScreen = new androidx.appcompat.widget.AppCompatButton(ctx);
+        virtualScreen.setText(com.deepseekharness.app.util.UiText.choose("打开虚拟屏", "Open virtual screen"));
+        virtualScreen.setAllCaps(false); virtualScreen.setTextSize(12);
+        virtualScreen.setBackgroundResource(R.drawable.bg_btn);
+        virtualScreen.setOnClickListener(button -> startActivity(new Intent(ctx, com.deepseekharness.app.vscreen.VirtualScreenActivity.class)));
+        if (android.os.Build.VERSION.SDK_INT >= 30) screenCard.addView(virtualScreen,new android.widget.LinearLayout.LayoutParams(-1,-2));
 
 
         CompoundButton root = view.findViewById(R.id.config_root_shell);
         root.setChecked(RootShell.enabled(ctx));
         root.setOnCheckedChangeListener((button, enabled) -> {
             new ConfigStore(ctx).setRootShellAllowed(enabled);
+            if(!enabled)com.deepseekharness.app.vscreen.VirtualScreenManager.revoke();
             syncSettings(); refreshChannelLabels();
         });
         view.findViewById(R.id.device_root_verify).setOnClickListener(button -> {
@@ -102,6 +109,7 @@ public final class DeviceGrantsFragment extends Fragment {
         adb.setChecked(DeviceBridgeService.isAdbEnabled(ctx));
         adb.setOnCheckedChangeListener((button, enabled) -> {
             savePreference("adb_enabled", enabled);
+            if(!enabled)com.deepseekharness.app.vscreen.VirtualScreenManager.revoke();
             if (enabled) {
                 DeviceBridgeService.apply(ctx);
                 if (getActivity() instanceof MainActivity) ((MainActivity) getActivity()).requestLocalNetwork();

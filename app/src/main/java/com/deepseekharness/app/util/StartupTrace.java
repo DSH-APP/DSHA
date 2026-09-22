@@ -24,6 +24,10 @@ public final class StartupTrace {
         }
     }
     private boolean safe, browserReady;
+    // 启动页会周期性刷新；同一 revision/language 下日志文本不变，避免重复遍历 300 行。
+    private long renderedRevision = -1;
+    private String renderedLanguage = "";
+    private String renderedLog = "";
 
     public static final class Snapshot {
         public final long generation, revision, elapsedMs, stageElapsedMs;
@@ -39,6 +43,7 @@ public final class StartupTrace {
     public synchronized void begin(long next, long now, boolean safeMode) {
         generation=next;began=stageBegan=now;stage=com.deepseekharness.app.util.UiText.text("排队启动");safe=safeMode;browserReady=false;
         lines.clear();issues.clear();length=0;revision++;
+        renderedRevision = -1; renderedLanguage = ""; renderedLog = "";
         owned(next,now,safeMode?com.deepseekharness.app.util.UiText.text("开始安全启动：使用独立基础配置，原插件和配置保留"):com.deepseekharness.app.util.UiText.text("开始启动 DSH"));
     }
     public synchronized void stage(long expected,long now,String next) {
@@ -80,15 +85,21 @@ public final class StartupTrace {
         add(expected,now,reason);
     }
     public synchronized void browserReady(long expected,long now) {
-        if(expected!=generation)return;
+        if(expected!=generation||browserReady)return;
         browserReady=true;stage(expected,now,com.deepseekharness.app.util.UiText.text("网页已就绪"));revision++;
     }
     public synchronized Snapshot snapshot(long now) {
         return snapshot(now,UiText.language());
     }
     public synchronized Snapshot snapshot(long now,String language) {
+        String keyLanguage = language == null ? "" : language;
+        if (renderedRevision != revision || !renderedLanguage.equals(keyLanguage)) {
+            renderedLog = renderLog(keyLanguage);
+            renderedRevision = revision;
+            renderedLanguage = keyLanguage;
+        }
         return new Snapshot(generation,revision,Math.max(0,now-began),Math.max(0,now-stageBegan),StartupText.render(stage,language),
-                renderLog(language),safe,browserReady,new LinkedHashMap<>(issues));
+                renderedLog,safe,browserReady,new LinkedHashMap<>(issues));
     }
     private String renderLog(String language) {
         StringBuilder result=new StringBuilder();

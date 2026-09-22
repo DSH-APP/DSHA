@@ -8,6 +8,12 @@ import java.util.Locale;
 public final class BackupLimits {
     public static final long BYTES = 16L * 1024 * 1024 * 1024;
     public static final int ENTRIES = 100_000, DEPTH = 64, LINKS = 40;
+    /**
+     * 事务目录的读取器以 64 条为有界上限。创建端也必须使用同一上限；
+     * 旧的 32 条创建门禁会在没有未完成事务时把正常更新永久挡住。
+     * 这里只放宽历史记录数量，不删除任何旧原件或失败候选。
+     */
+    public static final int TRANSACTION_RECORDS = 64;
     public static final int RECORD = 16 * 1024, MANIFEST = 2 * 1024 * 1024, METADATA = 32 * 1024 * 1024;
     private BackupLimits() { }
     public static String path(String name) throws IOException {

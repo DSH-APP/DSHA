@@ -103,7 +103,13 @@ public class SettingsFragment extends Fragment {
         View.OnClickListener openLanguageDialog = x -> new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
                 .setTitle(com.deepseekharness.app.util.UiText.choose("界面语言 / Interface language", "Interface language"))
                 .setSingleChoiceItems(optionLabels, checked,
-                        (dialog, which) -> { dialog.dismiss(); LanguageController.select(requireContext(), optionValues[which]); })
+                        (dialog, which) -> {
+                            String selected=optionValues[which];
+                            if (dialog instanceof android.app.Dialog)
+                                ((android.app.Dialog)dialog).setOnDismissListener(ignored -> new android.os.Handler(android.os.Looper.getMainLooper())
+                                        .post(() -> LanguageController.select(requireContext(), selected)));
+                            dialog.dismiss();
+                        })
                 .setNegativeButton(com.deepseekharness.app.util.UiText.choose("取消", "Cancel"), null).show();
         appearance.setOnClickListener(openLanguageDialog);
         languageSummary.setOnClickListener(openLanguageDialog);

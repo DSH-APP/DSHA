@@ -508,6 +508,8 @@ public final class HttpShellService {
             } else if (route.startsWith("/app/ui/")) {
                 // 唯一保留前缀的组：它是一个端点命名空间，真子路径在 appUi 内再精确分发
                 result = appUi(path);
+            } else if (route.startsWith("/app/vscreen/")) {
+                result = appVscreen(path);
             } else if (route.equals("/app/device")) {
                 result = appDevice();
             } else if (route.equals("/app/apps")) {
@@ -711,7 +713,7 @@ public final class HttpShellService {
     //
     // 本次 DSH 运行有效；停止、无障碍断开或用户撤销时失效。敏感界面仍逐次确认。
     private static final com.deepseekharness.app.util.ScreenSessionGrant uiGrant = new com.deepseekharness.app.util.ScreenSessionGrant();
-    public static void revokeScreenGrant() { uiGrant.revoke(); }
+    public static void revokeScreenGrant() { uiGrant.revoke(); com.deepseekharness.app.vscreen.VirtualScreenManager.revoke(); }
     public static boolean hasScreenGrant(Context context) {
         var controller = com.deepseekharness.app.core.HarnessController.get(context);
         return !controller.isStopping() && !controller.isUserStopped() && uiGrant.allowed(controller.getWebGeneration());
@@ -823,6 +825,19 @@ public final class HttpShellService {
         }
     }
 
+    /** 虚拟屏只接受已认证的固定端点；每个写入/启动动作仍复用当前屏幕授权确认。 */
+    private String appVscreen(String path) {
+        String route = path.split("\\?", 2)[0];
+        try {
+            boolean action = !route.endsWith("/status") && !route.endsWith("/preview") && !route.endsWith("/see");
+            if (!route.endsWith("/status") && !route.endsWith("/close") && !uiAuthorized(com.deepseekharness.app.util.UiText.text("操作独立虚拟屏：") + route))
+                return "{\"ok\":false,\"error\":\"USER_REJECTED\"}";
+            return com.deepseekharness.app.vscreen.VirtualScreenManager.bridge(ctx, route, queryOf(path));
+        } catch (Throwable error) {
+            return "[ERR] " + SensitiveData.redact(String.valueOf(error));
+        }
+    }
+
     private int intParam(String q, String k, int def) {
         try {
             return Integer.parseInt(getParam(q, k, String.valueOf(def)).trim());
@@ -910,6 +925,13 @@ public final class HttpShellService {
             + com.deepseekharness.app.util.UiText.text("滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n")
             + com.deepseekharness.app.util.UiText.choose("截屏  /app/ui/screenshot   → 存 PNG 到应用截图目录并返回路径（不回 base64）\n", "Screenshot  /app/ui/screenshot   → save a PNG in the app's screenshot folder and return its path (not base64)\n")
             + com.deepseekharness.app.util.UiText.text("节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n")
+            + "\n"
+            + com.deepseekharness.app.util.UiText.text("== 独立虚拟屏（Android 11+；每次输入必须带最新 frameSeq）==\n")
+            + com.deepseekharness.app.util.UiText.text("/app/vscreen/create?orientation=portrait|landscape  创建虚拟屏\n")
+            + com.deepseekharness.app.util.UiText.text("/app/vscreen/status  查询 displayId、尺寸和 frameSeq\n")
+            + com.deepseekharness.app.util.UiText.text("/app/vscreen/launch?package=com.example.app  启动已安装应用\n")
+            + com.deepseekharness.app.util.UiText.text("/app/vscreen/see  获取最新预览；tap/swipe/type/key 必须携带该 frameSeq\n")
+            + com.deepseekharness.app.util.UiText.text("/app/vscreen/close  关闭并回收虚拟屏\n")
             + "\n"
             + com.deepseekharness.app.util.UiText.text("== 设备与应用 ==\n")
             + com.deepseekharness.app.util.UiText.text("/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n")

@@ -41,24 +41,23 @@ public final class StorageMaintenance {
     }
     public static long clean(Context context)throws Exception{
         var controller=com.deepseekharness.app.core.HarnessController.get(context);
-        return com.deepseekharness.app.BackupManager.runSnapshotTask(controller,()->{
+        // 清理会删除可再生缓存并轮换已核验副本，必须使用数据维护入口：它会按出生身份
+        // 安全停止 Web/终端并取得 RuntimeTasks 屏障，避免用户因为忘记手动停止而反复报错。
+        return com.deepseekharness.app.BackupManager.runDataTask(controller,()->{
             if(NativeBackupJobs.get(context).state().busy||!AutomaticBackups.idleForOwner(context))throw new IOException("STOP_DSH_AND_TERMINALS_FIRST");
-            try(var barrier=com.deepseekharness.app.core.RuntimeTasks.tryEnterMaintenance()){
-                if(barrier==null)throw new IOException("STOP_DSH_AND_TERMINALS_FIRST");
-                var fs=new AndroidBackupFileSystem();File cache=context.getCacheDir().getCanonicalFile();long before=size(fs,cache).bytes;
-                for(String name:CACHE)fs.removeOwned(cache,name);
-                long regenerated=0;
-                File rootfs=controller.proot().getRootfsDir().getCanonicalFile();
-                for(String path:com.deepseekharness.app.util.RegenerableCachePaths.rootfs())regenerated+=removeCache(fs,rootfs,path);
-                // WebView 的 Cookie、Local Storage 和 IndexedDB 位于其它目录；这里只删可重建的渲染/HTTP 缓存。
-                File data=context.getFilesDir().getCanonicalFile().getParentFile();
-                for(String path:com.deepseekharness.app.util.RegenerableCachePaths.webViewData())regenerated+=removeCache(fs,data,path);
-                File files=context.getFilesDir().getCanonicalFile();long old=size(fs,new File(files,"host-runtime-operations")).bytes;
-                ManagedRuntimeTransaction.trimOlder(fs,files,controller.proot().installedRuntimeDescriptor(),controller.proot().runtimeHealth());
-                long environments=size(fs,new File(files,EnvironmentRebuildTransaction.HOME)).bytes;
-                EnvironmentRebuildTransaction.cleanupCompleted(fs,files,new BackupControl(null));
-                return before-size(fs,cache).bytes+regenerated+old-size(fs,new File(files,"host-runtime-operations")).bytes+environments-size(fs,new File(files,EnvironmentRebuildTransaction.HOME)).bytes;
-            }
+            var fs=new AndroidBackupFileSystem();File cache=context.getCacheDir().getCanonicalFile();long before=size(fs,cache).bytes;
+            for(String name:CACHE)fs.removeOwned(cache,name);
+            long regenerated=0;
+            File rootfs=controller.proot().getRootfsDir().getCanonicalFile();
+            for(String path:com.deepseekharness.app.util.RegenerableCachePaths.rootfs())regenerated+=removeCache(fs,rootfs,path);
+            // WebView 的 Cookie、Local Storage 和 IndexedDB 位于其它目录；这里只删可重建的渲染/HTTP 缓存。
+            File data=context.getFilesDir().getCanonicalFile().getParentFile();
+            for(String path:com.deepseekharness.app.util.RegenerableCachePaths.webViewData())regenerated+=removeCache(fs,data,path);
+            File files=context.getFilesDir().getCanonicalFile();long old=size(fs,new File(files,"host-runtime-operations")).bytes;
+            ManagedRuntimeTransaction.trimOlder(fs,files,controller.proot().installedRuntimeDescriptor(),controller.proot().runtimeHealth());
+            long environments=size(fs,new File(files,EnvironmentRebuildTransaction.HOME)).bytes;
+            EnvironmentRebuildTransaction.cleanupCompleted(fs,files,new BackupControl(null));
+            return before-size(fs,cache).bytes+regenerated+old-size(fs,new File(files,"host-runtime-operations")).bytes+environments-size(fs,new File(files,EnvironmentRebuildTransaction.HOME)).bytes;
         });
     }
 }

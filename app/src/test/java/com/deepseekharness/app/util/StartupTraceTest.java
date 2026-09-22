@@ -22,4 +22,9 @@ public class StartupTraceTest {
         for(int i=0;i<500;i++)trace.add(1,i,"x".repeat(1000));
         assertTrue(trace.snapshot(501).log.length()<=48*1024);assertTrue(trace.snapshot(501).log.split("\n").length<=300);
     }
+    @Test public void repeatedBrowserReadyDoesNotGrowHistory() {
+        StartupTrace trace=new StartupTrace();trace.begin(1,0,false);trace.browserReady(1,10);
+        StartupTrace.Snapshot first=trace.snapshot(11);trace.browserReady(1,20);StartupTrace.Snapshot second=trace.snapshot(21);
+        assertTrue(first.browserReady);assertEquals(first.revision,second.revision);assertEquals(first.log,second.log);
+    }
 }

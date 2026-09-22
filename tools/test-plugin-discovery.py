@@ -117,12 +117,15 @@ class DiscoveryTest(unittest.TestCase):
         self.put(str(root.relative_to(self.root)) + '/package.json', '{bad json')
         self.assertNotIn('test-plugin', self.items())
 
-    def test_array_patch_is_rejected_before_real_dsh_start(self):
+    def test_array_patch_is_validated_before_real_dsh_start(self):
         root = self.plugin('root/.dsh/node_modules')
         self.put(str(root.relative_to(self.root)) + '/package.json',
-                 {'name': 'test-plugin', 'dsh': {'bundle': {'patch': ['cordis.patch.yml']}}})
-        self.assertNotIn('test-plugin', self.items())
-        with self.assertRaisesRegex(ValueError, 'patch 格式无效'):
+                 {'name': 'test-plugin', 'dsh': {'bundle': {'patch': ['cordis.patch.yml', 'cordis.patch.yml']}}})
+        self.assertIn('test-plugin', self.items())
+        self.assertEqual('test-plugin', self.manager.plugin_package(str(root))['name'])
+        self.put(str(root.relative_to(self.root)) + '/package.json',
+                 {'name': 'test-plugin', 'dsh': {'bundle': {'patch': ['cordis.patch.yml', '../outside.yml']}}})
+        with self.assertRaisesRegex(ValueError, '越界路径'):
             self.manager.plugin_package(str(root))
 
     def test_old_builtin_file_cannot_shrink_signed_minimum_or_enable_name_spoof(self):
@@ -197,7 +200,7 @@ class DiscoveryTest(unittest.TestCase):
             self.assertTrue(items[name]['internal'])
         visible = [item for item in items.values() if not item['internal']]
         self.assertEqual({'dsh-device-shell-guide','dsh-task-notifier','dsh-status-overlay','dsh-web-mobile',
-                          'dsh-computer-use-android','dsh-auto-review'}, {item['name'] for item in visible})
+                          'dsh-computer-use-android','dsh-auto-review','dsh-tool-vscreen'}, {item['name'] for item in visible})
 
     def test_symlinked_shared_runtime_is_not_a_user_plugin(self):
         runtime = self.plugin('usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules')

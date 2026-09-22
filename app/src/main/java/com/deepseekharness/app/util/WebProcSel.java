@@ -104,9 +104,9 @@ public final class WebProcSel {
 
     private static boolean isProrootWebPayload(String[] argv) {
         if (argv.length < 9 || !basename(argv[1]).equals("libproroot-linker.so")
-                || !argv[2].equals("--argv0") || !argv[3].equals("node")
+                || !argv[2].equals("--argv0") || !isNode(argv[3])
                 || !argv[4].equals("--preload") || !basename(argv[5]).equals("libproroot-runtime.so")
-                || !argv[6].endsWith("/usr/local/bin/node")) return false;
+                || !isManagedNode(argv[6])) return false;
         int entry = 7;
         if (argv[entry].equals("--expose-internals")) entry++;
         if (entry + 1 >= argv.length) return false;
@@ -119,16 +119,47 @@ public final class WebProcSel {
         return path.substring(path.lastIndexOf('/') + 1);
     }
 
+    private static boolean isNode(String path) {
+        String name = basename(path);
+        return name.equals("node") || name.equals("nodejs");
+    }
+
+    private static boolean isManagedNode(String path) {
+        return path.endsWith("/usr/local/bin/node") || path.endsWith("/usr/local/bin/nodejs");
+    }
+
     /** 发信号须是直接运行 dsh web 的 Node，不能命中 shell 参数中的文本。 */
     public static boolean maySignalWeb(String cmdline) {
         if (cmdline == null || cmdline.isEmpty()) return false;
         String[] args = cmdline.indexOf('\0') >= 0 ? cmdline.split("\u0000") : cmdline.trim().split("\\s+");
         if (args.length > 0 && basename(args[0]).equals("libproroot-bridge.so")) return isProrootWebPayload(args);
-        if (args.length < 3 || !(basename(args[0]).equals("node") || basename(args[0]).equals("nodejs"))) return false;
+        if (args.length < 3 || !isNode(args[0])) return false;
         int entry = args[1].equals("--expose-internals") ? 2 : 1;
         if (entry + 1 >= args.length) return false;
         return (args[entry].equals("/usr/local/bin/dsh") || args[entry].endsWith("/node_modules/@deepseek-ai/dsh/lib/bin.js"))
                 && webArguments(args, entry + 1);
+    }
+
+    /** 返回严格直启命令绑定的隔离 profile；普通 Web、shell 包装和伪造参数均为空。 */
+    public static String trialProfile(String cmdline) {
+        if (cmdline == null || cmdline.isEmpty()) return "";
+        String[] args = cmdline.indexOf('\0') >= 0 ? cmdline.split("\u0000") : cmdline.trim().split("\\s+");
+        int argument;
+        if (args.length > 0 && basename(args[0]).equals("libproroot-bridge.so")) {
+            if (!isProrootWebPayload(args)) return "";
+            int entry = 7;
+            if (args[entry].equals("--expose-internals")) entry++;
+            argument = entry + 1;
+        } else {
+            if (args.length < 3 || !isNode(args[0])) return "";
+            int entry = args[1].equals("--expose-internals") ? 2 : 1;
+            if (entry + 1 >= args.length || !(args[entry].equals("/usr/local/bin/dsh")
+                    || args[entry].endsWith("/node_modules/@deepseek-ai/dsh/lib/bin.js"))) return "";
+            argument = entry + 1;
+        }
+        if (argument + 1 >= args.length || !args[argument].equals("--profile")) return "";
+        String profile = args[argument + 1];
+        return profile.matches("dsha-recovery-[0-9a-f]{16}") ? profile : "";
     }
 
     private static boolean webArguments(String[] args, int index) {

@@ -77,6 +77,7 @@
         <service android:name=".backup.AutomaticBackupService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />
         <activity android:name=".ui.AutomaticBackupActivity" android:exported="false" />
         <activity android:name=".ui.StorageActivity" android:exported="false" />
+        <activity android:name=".vscreen.VirtualScreenActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <service android:name=".backup.DataProtectionService" android:exported="false" android:foregroundServiceType="dataSync" />
         <activity android:name=".ui.PluginInstallActivity" android:exported="true">
             <intent-filter android:autoVerify="true">

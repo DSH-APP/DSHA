@@ -111,7 +111,14 @@ def main():
             report['pythonTests'][suite]={'tests':int(count[1]) if count else None,'skipped':int(skipped[1]) if skipped else 0}
         if not signed:raise RuntimeError('Software checks completed, but historical DSHA_KEYSTORE is unavailable. No substitute key or signed APK was generated')
         apks=[ROOT/f'app/build/outputs/apk/{v}/release/app-{v}-release.apk' for v in ('standard','low')]
-        run('apk-assets',[sys.executable,'-B','tools/verify-dsh-upgrade-apk.py',*apks],{'DSHA_TEST_RUNTIME':str(ROOT/'app/build/rc2-20260911/locked-runtime')})
+        # APK 里是 alpha.2 运行时；必须与同版本的原始锁定树比较。旧 rc2 树会把
+        # alpha.2 官方前端自身的变化误报成受管补丁越界。
+        locked_runtime=ROOT/'app/build/locked-dsh-runtime-017'
+        locked_package=locked_runtime/'node_modules/@deepseek-ai/dsh/package.json'
+        expected_dsh=json.loads((ROOT/'tools/dsh-runtime/package.json').read_text(encoding='utf8'))['dependencies']['@deepseek-ai/dsh']
+        if not locked_package.is_file() or json.loads(locked_package.read_text(encoding='utf8')).get('version')!=expected_dsh:
+            raise RuntimeError('Locked current DSH runtime is unavailable')
+        run('apk-assets',[sys.executable,'-B','tools/verify-dsh-upgrade-apk.py',*apks],{'DSHA_TEST_RUNTIME':str(locked_runtime)})
         build_tools=args.sdk/'build-tools/36.0.0';report['apks']=[]
         for flavor,apk,minimum in zip(('standard','low'),apks,(30,23)):
             run(flavor+'-elf',[sys.executable,'-B','tools/audit-standard-apk.py',apk,'--report',report_dir/(flavor+'-elf.json')])

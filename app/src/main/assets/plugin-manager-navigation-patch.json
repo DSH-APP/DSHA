@@ -1,5 +1,5 @@
 {
-  "dshVersion": "0.1.6-alpha.2",
+  "dshVersion": "0.1.7-alpha.1",
   "module": "@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js",
   "patches": [
     {
@@ -19,8 +19,8 @@
       "after": "name: bundle.name,\n                dshaNativeReviewRequired: !dshaManagedPackageName(bundle.name),\n\t\t\t\tinstalled:"
     },
     {
-      "before": "name: bundle.name,\n                dshaNativeReviewRequired: !dshaManagedPackageName(bundle.name),\n\t\t\t\tinstalled:",
-      "after": "dshaNativeReviewAction: dshaError !== bundle.error,\n                name: bundle.name,\n                dshaNativeReviewRequired: !dshaManagedPackageName(bundle.name),\n\t\t\t\tinstalled:"
+      "before": "...bundle.readOnlyReason === void 0 ? {} : { readOnlyReason: bundle.readOnlyReason },",
+      "after": "...bundle.readOnlyReason === void 0 ? {} : { readOnlyReason: bundle.readOnlyReason },\n                dshaNativeReviewAction: dshaError !== bundle.error,"
     },
     {
       "before": "moduleName: row.moduleName,\n\t\t\t\t\tenabled:",

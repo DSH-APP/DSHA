@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "dshVersion": "0.1.6-alpha.2",
+  "dshVersion": "0.1.7-alpha.1",
   "patches": [
     {
-      "before": "\t\tfunction SearchResultItem({ result, currentId, onOpen, t }) {",
-      "after": "\n        // DSHA_SESSION_INTERACTION_V1：选择与实际打开使用独立状态。\n        const dshaSessionSelection = createDshaSessionSelection();\n        function useDshaPickedSession(currentId) {\n            return (0, react.useSyncExternalStore)(dshaSessionSelection.subscribe,\n                () => dshaSessionSelection.selected(currentId), () => currentId);\n        }\n        function dshaSessionClick(event, id, currentId, onOpen) {\n            dshaSessionSelection.click(event, id, currentId, () => {\n                const focused = document.activeElement;\n                if (focused instanceof HTMLElement && focused.closest('[data-composer-input]')) focused.blur();\n                onOpen(id);\n                document.dispatchEvent(new CustomEvent('dsha-session-open', { detail: { id } }));\n            });\n        }\n\t\tfunction SearchResultItem({ result, currentId, onOpen, t }) {",
+      "before": "\t\tfunction SearchResultItem({ result, currentId, onOpen, onUnarchive, t }) {",
+      "after": "\n        // DSHA_SESSION_INTERACTION_V1：选择与实际打开使用独立状态。\n        const dshaSessionSelection = createDshaSessionSelection();\n        function useDshaPickedSession(currentId) {\n            return (0, react.useSyncExternalStore)(dshaSessionSelection.subscribe,\n                () => dshaSessionSelection.selected(currentId), () => currentId);\n        }\n        function dshaSessionClick(event, id, currentId, onOpen) {\n            dshaSessionSelection.click(event, id, currentId, () => {\n                const focused = document.activeElement;\n                if (focused instanceof HTMLElement && focused.closest('[data-composer-input]')) focused.blur();\n                onOpen(id);\n                document.dispatchEvent(new CustomEvent('dsha-session-open', { detail: { id } }));\n            });\n        }\n\t\tfunction SearchResultItem({ result, currentId, onOpen, onUnarchive, t }) {",
       "prependAsset": "web-integration/session-interaction.js"
     },
     {

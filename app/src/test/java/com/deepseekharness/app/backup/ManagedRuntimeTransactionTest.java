@@ -97,6 +97,12 @@ public class ManagedRuntimeTransactionTest {
         assertThrows(IOException.class,()->task.prepare(List.of("linux/ubuntu/root/.dsh/sessions"),descriptor('b'),null,null,new BackupControl(null)));
         assertFalse(new File(temp.getRoot(),"linux/ubuntu/root/.dsh/sessions").exists());
     }
+    @Test public void historyBeyondLegacyThirtyTwoStillAllowsNewTransaction()throws Exception{
+        File home=new File(temp.getRoot(),ManagedRuntimeTransaction.HOME);assertTrue(home.mkdirs());
+        for(int i=0;i<32;i++)assertTrue(new File(home,UUID.randomUUID().toString()).mkdirs());
+        var task=ManagedRuntimeTransaction.create(fs,temp.getRoot());
+        assertNotNull(task);assertEquals(33,fs.list(home).size());
+    }
     @Test public void processDeathAtHealthAndAgainDuringRollbackRetainsOriginal()throws Exception{
         var task=prepare('a','b');killAt(task,"validation-complete",false);
         assertTrue(new File(task.directory(),"health.json").isFile());assertFalse(new File(task.directory(),"finalized").exists());
