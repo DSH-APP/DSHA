@@ -27,7 +27,17 @@ test('3.0.0 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
     'data-mobile-nav="file-upload"',
     'data-sidebar-right-expand',
     'dsh-web-mobile-panel-clearance',
+    'IconPanelLeftOutlineRegular',
+    'IconFolderOpenOutlineRegular',
+    'IconDownloadOutlineRegular',
+    'IconPaperclipOutlineRegular',
   ]) assert.ok(source.includes(marker), marker);
+  for (const stale of [
+    'dsh_client_ui_primitives_1.IconPanelLeftOutline16',
+    'dsh_client_ui_primitives_1.IconFolderOpenOutline16',
+    'dsh_client_ui_primitives_1.IconDownloadOutline16',
+    'dsh_client_ui_primitives_1.IconPaperclipOutline16',
+  ]) assert.equal(source.includes(stale), false, stale);
   assert.equal(packageJson.peerDependencies['@deepseek-ai/dsh-client-ui-sidebar-right'], '0.1.7-alpha.1');
   assert.ok(source.includes('function openFilesPanel'));
 });

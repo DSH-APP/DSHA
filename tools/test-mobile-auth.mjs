@@ -32,11 +32,12 @@ for(const value of ['null','[]','true','"x"','{bad',JSON.stringify({sessionId:'x
     await f.handler(req,{writeHead:status=>code=status,end:text=>body=JSON.parse(text)});
     assert.equal(code,400);assert.equal(body.error.code,'invalid-body');assert.equal(f.consulted,0);
   });
-test('移动 UI 模块对文件面板声明完整服务依赖',()=>{
+test('移动 UI 模块对 0.1.7 Host 声明实际服务依赖',()=>{
   let plugin;
   vm.runInNewContext(readFileSync('app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/client.js','utf8'),
     {window:{__ModuleLoader__:{load:value=>plugin=value}}});
   const exported=plugin.factory(()=>({}));
-  assert.ok(exported.inject.includes('sidebarRight'));
-  assert.ok(exported.inject.includes('sessions')&&exported.inject.includes('sessionLogDownload'));
+  for (const name of ['slots','layout','locale','sessions','workspaces','sessionLogDownload'])
+    assert.ok(exported.inject.includes(name), name);
+  assert.equal(exported.inject.includes('sidebarRight'), false);
 });

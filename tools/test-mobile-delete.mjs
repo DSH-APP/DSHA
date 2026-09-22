@@ -17,7 +17,7 @@ async function fixture(run) {
   try {
     await ctx.plugin(Jsonl,{root,compression:'none'});
     for (const id of ['own/../测试','keep-neighbor']) {
-      const handle = await ctx.sessionPersistence.create({version:3,id,createdAt:1,isSeeded:false,cwd:'/root/临时项目'});
+      const handle = await ctx.sessionPersistence.create({version:4,id,createdAt:1,isSeeded:false,cwd:'/root/临时项目'});
       await handle.append([{type:'turn/start',seq:0,time:1,data:{turn:1}},
         {type:'turn/end',seq:1,time:2,data:{turn:1,reason:{kind:'completed'}}}]);
       await handle.close();
@@ -25,7 +25,7 @@ async function fixture(run) {
     await run(ctx.sessionPersistence,root);
   } finally { await ctx.fiber.dispose(); await rm(root,{recursive:true,force:true}); }
 }
-test('新版移动 UI 可删除真实 V3 会话，路径转义保留相邻会话',()=>fixture(async persistence=>{
+test('新版移动 UI 可删除真实 V4 会话，路径转义保留相邻会话',()=>fixture(async persistence=>{
   const result = await deleteSession({persistence},'own/../测试');
   assert.equal(result.ok,true);
   assert.deepEqual((await persistence.list()).map(row=>row.header.id),['keep-neighbor']);

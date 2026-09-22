@@ -96,7 +96,10 @@ try {
       page.setDefaultTimeout(15_000);
       page.on('pageerror', error => errors.push(String(error).replace(/(token=)[A-Za-z0-9_-]+/g, '$1***')));
       await page.goto(authUrl, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(6000);
+      const settleMs = Number(process.env.DSHA_BROWSER_SETTLE_MS || 6000);
+      if (!Number.isFinite(settleMs) || settleMs < 0 || settleMs > 300000)
+        throw new Error('DSHA_BROWSER_SETTLE_MS 必须在 0 到 300000 毫秒之间');
+      await page.waitForTimeout(settleMs);
       if (process.argv.includes('--workspace') || process.argv.includes('--composer') || process.argv.includes('--header-popover')) {
         const notice = page.getByRole('button', { name: '继续', exact: true });
         if (await notice.count() && await notice.isVisible()) await notice.click();

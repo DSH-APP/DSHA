@@ -3444,7 +3444,7 @@ function MobileNavToggle({ toggleSidebar, t }) {
     const toggleExplorer = () => {
         (0, open_files_panel_ts_1.openFilesPanel)();
     };
-    return ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "toggle", "aria-label": t('open'), title: t('open'), onClick: () => toggleSidebar(), children: (0, jsx_runtime_1.jsx)(dsh_client_ui_primitives_1.IconPanelLeftOutline16, { size: 16 }) }), (0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "files", "aria-label": t('files'), title: t('files'), onClick: toggleExplorer, children: (0, jsx_runtime_1.jsx)(dsh_client_ui_primitives_1.IconFolderOpenOutline16, { size: 16 }) })] }));
+    return ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "toggle", "aria-label": t('open'), title: t('open'), onClick: () => toggleSidebar(), children: (0, jsx_runtime_1.jsx)(dsh_client_ui_primitives_1.IconPanelLeftOutlineRegular, { size: 16 }) }), (0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "files", "aria-label": t('files'), title: t('files'), onClick: toggleExplorer, children: (0, jsx_runtime_1.jsx)(dsh_client_ui_primitives_1.IconFolderOpenOutlineRegular, { size: 16 }) })] }));
 }
 };
 __modules["components/MobileDrawerFooter.js"] = function (require, module, exports) {
@@ -3472,7 +3472,7 @@ function MobileDrawerFooter({ useSessions, downloadSessionLog, t }) {
     return ((0, jsx_runtime_1.jsx)("div", { "data-mobile-nav": "drawer-actions", children: (0, jsx_runtime_1.jsxs)("button", { type: "button", "data-mobile-nav": "session-log", "aria-label": t('sessionLog'), title: t('sessionLog'), disabled: sessionId === undefined, onClick: () => {
                 if (sessionId !== undefined)
                     downloadSessionLog(sessionId);
-            }, children: [(0, jsx_runtime_1.jsx)(dsh_client_ui_primitives_1.IconDownloadOutline16, { size: 14 }), (0, jsx_runtime_1.jsx)("span", { children: t('sessionLog') })] }) }));
+            }, children: [(0, jsx_runtime_1.jsx)(dsh_client_ui_primitives_1.IconDownloadOutlineRegular, { size: 14 }), (0, jsx_runtime_1.jsx)("span", { children: t('sessionLog') })] }) }));
 }
 };
 __modules["components/ComposerFileButton.js"] = function (require, module, exports) {
@@ -3517,7 +3517,7 @@ function ComposerFileButton({ useInput, useSession, t }) {
         if (input !== null)
             input.click();
     };
-    return ((0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "file-upload", "aria-label": t('fileUpload'), title: t('fileUpload'), disabled: disabled, onClick: openPicker, children: (0, jsx_runtime_1.jsx)(dsh_client_ui_primitives_1.IconPaperclipOutline16, { size: 14 }) }));
+    return ((0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "file-upload", "aria-label": t('fileUpload'), title: t('fileUpload'), disabled: disabled, onClick: openPicker, children: (0, jsx_runtime_1.jsx)(dsh_client_ui_primitives_1.IconPaperclipOutlineRegular, { size: 14 }) }));
 }
 };
 __modules["styles/base.css.js"] = function (require, module, exports) {
