@@ -8,7 +8,7 @@ import path from 'node:path';
 const root = path.resolve(import.meta.dirname, '..');
 const assets = path.join(root, 'app', 'src', 'main', 'assets');
 const runtimeRoot = path.resolve(process.env.DSHA_TEST_RUNTIME
-  || path.join(root, 'app', 'build', 'locked-dsh-runtime-017'));
+  || path.join(root, 'app', 'build', 'locked-dsh-runtime-0172'));
 const runtime = path.join(runtimeRoot, 'node_modules');
 const moduleFile = path.join(runtime, '@deepseek-ai', 'dsh-llm-deepseek', 'lib', 'index.js');
 const archiveFile = path.resolve(process.env.DSHA_RUNTIME_ARCHIVE
