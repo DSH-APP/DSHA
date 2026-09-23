@@ -1,6 +1,6 @@
 {
   "name": "dsh-web-mobile",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "尽可能的使dsh适配竖屏等移动端设备",
   "license": "MIT",
   "author": "mexiaosh",
@@ -63,24 +63,22 @@
         "@deepseek-ai/dsh-client-ui-layout",
         "@deepseek-ai/dsh-client-ui-settings",
         "@deepseek-ai/dsh-client-ui-sidebar",
-        "@deepseek-ai/dsh-session-log-export",
-        "@deepseek-ai/dsh-client-ui-sidebar-right",
-        "@deepseek-ai/dsh-client-ui-workspace"
+        "@deepseek-ai/dsh-session-log-export"
       ]
     }
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-client-locale": "0.1.7-alpha.1",
-    "@deepseek-ai/dsh-client-ui-conversation": "0.1.7-alpha.1",
-    "@deepseek-ai/dsh-client-ui-layout": "0.1.7-alpha.1",
-    "@deepseek-ai/dsh-client-ui-primitives": "0.1.7-alpha.1",
-    "@deepseek-ai/dsh-client-ui-settings": "0.1.7-alpha.1",
-    "@deepseek-ai/dsh-client-ui-sidebar": "0.1.7-alpha.1",
-    "@deepseek-ai/dsh-client-ui-slots": "0.1.7-alpha.1",
-    "@deepseek-ai/dsh-session-log-export": "0.1.7-alpha.1",
-    "react": "^18.2.0",
-    "@deepseek-ai/dsh-client-ui-sidebar-right": "0.1.7-alpha.1"
+    "@deepseek-ai/dsh-client-locale": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0",
+    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0",
+    "@deepseek-ai/dsh-client-ui-conversation": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0",
+    "@deepseek-ai/dsh-client-ui-layout": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0",
+    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0",
+    "@deepseek-ai/dsh-client-ui-settings": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0",
+    "@deepseek-ai/dsh-client-ui-sidebar": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0",
+    "@deepseek-ai/dsh-session-log-export": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0",
+    "react": "^18.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -101,10 +99,10 @@
     }
   },
   "dshaUpstream": {
-    "version": "3.0.0",
+    "version": "3.0.1",
     "source": "https://github.com/mexiaosqwq/dsh-web-mobile",
-    "commit": "af20948a7c0df250414266fe75a3419b6fc52ebd",
-    "clientSha256": "7298262ae1bf0a26dd6f363e4cc22c8120f9e68d20e62c8277305f480861fedc",
-    "sourceDate": "2026-09-21"
+    "commit": "b49e571cd01d029e60baa36d5cb50bde8eb98f89",
+    "clientSha256": "00e786f5d8493a260770a0a4cd5fd7ebdab415884edc4eb99418d32dbfc1c6f1",
+    "sourceDate": "2026-09-23"
   }
 }

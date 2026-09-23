@@ -17,9 +17,9 @@ function loadModules() {
   return {modules: window.__testModules};
 }
 
-test('3.0.0 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
-  assert.equal(packageJson.version, '3.0.0');
-  assert.equal(packageJson.dshaUpstream.commit, 'af20948a7c0df250414266fe75a3419b6fc52ebd');
+test('3.0.1 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
+  assert.equal(packageJson.version, '3.0.1');
+  assert.equal(packageJson.dshaUpstream.commit, 'b49e571cd01d029e60baa36d5cb50bde8eb98f89');
   for (const marker of [
     'DSHA_SESSION_INTERACTION_V1',
     '[data-dsha-session-select]',
@@ -31,6 +31,9 @@ test('3.0.0 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
     'IconFolderOpenOutlineRegular',
     'IconDownloadOutlineRegular',
     'IconPaperclipOutlineRegular',
+    'pickIcon',
+    'icon-compat',
+    'ComposerFileButton',
   ]) assert.ok(source.includes(marker), marker);
   for (const stale of [
     'dsh_client_ui_primitives_1.IconPanelLeftOutline16',
@@ -38,11 +41,12 @@ test('3.0.0 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
     'dsh_client_ui_primitives_1.IconDownloadOutline16',
     'dsh_client_ui_primitives_1.IconPaperclipOutline16',
   ]) assert.equal(source.includes(stale), false, stale);
-  assert.equal(packageJson.peerDependencies['@deepseek-ai/dsh-client-ui-sidebar-right'], '0.1.7-alpha.1');
+  assert.equal(packageJson.peerDependencies['@deepseek-ai/dsh-client-runtime'].includes('<0.2.0'), true);
+  assert.equal(packageJson.peerDependencies['@deepseek-ai/dsh-client-ui-sidebar-right'], undefined);
   assert.ok(source.includes('function openFilesPanel'));
 });
 
-test('3.0.0 侧栏与文件面板手势使用同一方向/速度门槛', () => {
+test('3.0.1 侧栏与文件面板手势使用同一方向/速度门槛', () => {
   const {modules} = loadModules();
   const swipe = {};
   modules['effects/sidebar-swipe.js'](() => ({}), {}, swipe);
@@ -56,7 +60,7 @@ test('3.0.0 侧栏与文件面板手势使用同一方向/速度门槛', () => {
   assert.equal(swipe.slidingVelocity([{x: 0, t: 900}, {x: 20, t: 940}, {x: 50, t: 1000}], 60, 1000), .5);
 });
 
-test('3.0.0 拖动让位与水平滚动容器判定仍由纯函数负责', () => {
+test('3.0.1 拖动让位与水平滚动容器判定仍由纯函数负责', () => {
   const {modules} = loadModules();
   const swipe = {};
   modules['effects/sidebar-swipe.js'](() => ({}), {}, swipe);
@@ -64,7 +68,7 @@ test('3.0.0 拖动让位与水平滚动容器判定仍由纯函数负责', () =>
   assert.equal(swipe.hitTestStart(200, 390, false, {startZonePx: 176}), false);
 });
 
-test('3.0.0 DOM reconciler 按 dirty scope 合并到一帧', () => {
+test('3.0.1 DOM reconciler 按 dirty scope 合并到一帧', () => {
   const {modules} = loadModules();
   const reconciler = {};
   modules['core/reconciler-core.js'](() => ({}), {}, reconciler);
