@@ -39,6 +39,12 @@ public final class DiagnosticActivity extends AppCompatActivity {
     @Override protected void onCreate(Bundle saved) {
         super.onCreate(saved); setContentView(R.layout.activity_diagnostics);
         repository = new ViewModelProvider(this).get(DiagnosticRepository.class);
+        repository.results.observe(this,items->{
+            android.widget.LinearLayout rows=findViewById(R.id.diagnostic_results);rows.removeAllViews();CardPage ui=new CardPage(this,"","");
+            for(var item:items)ui.entry(rows,item.title,item.status,R.drawable.ic_ui2_box,()->CardSheet.show(this,item.title,item.detail));
+        });
+        findViewById(R.id.diagnostic_history).setOnClickListener(v->showHistory());
+        findViewById(R.id.diagnostic_recovery).setOnClickListener(v->startActivity(new android.content.Intent(this,StartupRecoveryActivity.class)));
         logs = new ViewModelProvider(this).get(com.deepseekharness.app.core.ErrorLogRepository.class);
         findViewById(R.id.diagnostic_logs_download).setOnClickListener(v -> logs.download());
         findViewById(R.id.diagnostic_logs_save_as).setOnClickListener(v -> {
@@ -79,13 +85,21 @@ public final class DiagnosticActivity extends AppCompatActivity {
         });
         repository.report.observe(this, text -> ((TextView) findViewById(R.id.diagnostic_report)).setText(text));
         repository.busy.observe(this, busy -> {
+            ((TextView)findViewById(R.id.diagnostic_headline)).setText(busy?com.deepseekharness.app.util.UiText.choose("正在检查","Checking"):repository.results.getValue().isEmpty()?com.deepseekharness.app.util.UiText.choose("准备检查","Ready to check"):com.deepseekharness.app.util.UiText.choose("检查已完成","Checks completed"));
             ((TextView) findViewById(R.id.diagnostic_status)).setText(busy ? com.deepseekharness.app.util.UiText.text("正在检查环境…") : com.deepseekharness.app.util.UiText.text("报告保留在本机，复制或导出后可用于反馈"));
             for (int id : new int[]{R.id.diagnostic_refresh,R.id.diagnostic_repair,R.id.diagnostic_copy,R.id.diagnostic_export}) findViewById(id).setEnabled(!busy);
         });
         if (saved == null) {
             if (getIntent().getBooleanExtra("download_error_logs", false)) logs.download();
-            else repository.generate();
+            // 首页先展示检查范围，由用户发起耗时探针。
         }
+    }
+    private void showHistory(){
+        new Thread(()->{var entries=com.deepseekharness.app.core.HarnessController.get(this).startupDiagnostics().history();runOnUiThread(()->{
+            if(isFinishing()||isDestroyed())return;CardPage page=new CardPage(this,getString(R.string.ui134_recent_startups),"");var dialog=CardSheet.create(this,page);
+            for(var entry:entries){String date=java.text.DateFormat.getDateTimeInstance().format(new java.util.Date(entry.started));page.entry(page.content,date,entry.stage+" · "+entry.status,R.drawable.ic_recovery_document,()->CardSheet.show(this,date,entry.stage+"\n\n"+entry.reason+"\n\n"+entry.log));}
+            if(entries.isEmpty())page.content.addView(page.text(com.deepseekharness.app.util.UiText.choose("还没有启动记录。","No startup records yet."),13,R.color.text_secondary));page.button(page.footer,com.deepseekharness.app.util.UiText.choose("关闭","Close"),false,dialog::dismiss);CardSheet.show(dialog,this);
+        });},"diagnostic-history").start();
     }
     private String completeReport() {
         return SensitiveData.redact(String.valueOf(repository.report.getValue()) + com.deepseekharness.app.util.UiText.text("\n用户补充复现步骤：\n") + (steps == null ? "" : steps.getText().toString()));

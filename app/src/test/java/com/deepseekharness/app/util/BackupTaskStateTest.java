@@ -33,6 +33,10 @@ public class BackupTaskStateTest {
         newProcess.restore(s.id, s.kind, s.status, s.detail);
         assertEquals("saved", newProcess.snapshot().detail);
         assertEquals(BackupTaskState.Status.SUCCEEDED, newProcess.snapshot().status);
+        newProcess.reset();
+        assertEquals(0, newProcess.snapshot().id);
+        assertEquals(BackupTaskState.Status.IDLE, newProcess.snapshot().status);
+        assertEquals("", newProcess.snapshot().detail);
     }
     @Test public void simultaneousStartsHaveExactlyOneOwner() throws Exception {
         BackupTaskState state = new BackupTaskState();

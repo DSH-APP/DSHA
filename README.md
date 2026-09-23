@@ -23,6 +23,35 @@
 
 ---
 
+## DSHA v0.1.7-alpha2 · GitHub 预发布
+
+由贡献者 [@ym2025szz](https://github.com/ym2025szz) 发布。这是实验性预发布：DSH 最近升级到 **0.1.7-alpha.2** 并改动了 Session、Agent 预设、插件管理和部分 Web API，已有用户请先导出重要数据并保存备份密码，再谨慎覆盖更新。旧版自建目录型预设可能需要迁移，详见[预发布说明](docs/releases/v0.1.7-alpha2-pre-release.md)和[上游迁移说明](https://github.com/deepseek-ai/deepseek-harness/discussions/7545)。
+
+本版新增 **Standard 的 Android 11+ 实验性虚拟屏**：支持 ADB/Shizuku/Root、应用选择与启动、应用内/可选悬浮预览、触控、键盘输入、AI 操作和无障碍控件树。虚拟屏仍可能受厂商 ROM 和授权状态影响；**Low 版暂不支持虚拟屏**。同时修复 PiP 流式文字闪烁、整理数据与备份入口、优化 Language 弹窗首帧和插件面板标题避让，并同步内置移动端插件。
+
+- [预发布下载与完整对比](docs/releases/v0.1.7-alpha2-pre-release.md)
+- [GitHub Pre-release](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.7-alpha2)
+
+## DSHA v0.1.6-alpha2.1 · 本地交付构建（build 142）
+
+alpha2.1 在 build 141 基础上修复 PiP 中流式文字闪烁，统一数据与备份入口卡片，减少 Language 弹窗首帧布局工作，补齐插件列表标题避让，并加入 Android 11+ 独立虚拟屏：支持 ADB/Shizuku/Root、应用内预览、可选悬浮预览和带 frameSeq 校验的 AI 操作。DSH、Ubuntu、数据迁移和签名规则保持不变。
+
+内置 DSH 仍为 **0.1.6-alpha.2**，Ubuntu 基础环境仍为 **10**，受管运行时身份为 `bb7e40a18e2c38ca3c2aae7fd04a926acb3a7fb8bc0370e80e9a773ba6da0bf4`。DeepSeek Agent Team/压缩/普通工具/错误结果/图片结果、插件、备份、格式化、运行时轮换及维护进程退出回归已经通过；Standard/Low 各 618 项强制全量单测、Release Lint、E7E3 正式签名 APK/ELF 审计，以及 M367FC/API 37 平板和 Xiaomi 2410DPN6CC/API 36 手机的非破坏性覆盖均通过。平板滚动实测 120 Hz、733 帧 0 dropped / 0 jank、平均 114.1 FPS；`release` 中同名 APK 已替换。该结论不扩写到 Android 6/7、全部外部模型服务或所有厂商设备矩阵。
+
+- [alpha2.1 / build 142 修复与验收记录](docs/releases/v0.1.6-alpha2.1-build142.md)
+- [build 141 修复与验收记录](docs/releases/v0.1.6-alpha2-build141.md)
+- [build 140 proroot 存储兼容、插件修复与真机验收](docs/releases/v0.1.6-alpha2-build140.md)
+- [build 137 插件缓存与图标修复](docs/releases/v0.1.6-alpha2-build137.md)
+- [build 136 功能与真机验收记录](docs/releases/v0.1.6-alpha2-build136.md)
+- [本轮真机界面](ui-preview/native-ui-build135-review.html)
+- [build 134 历史记录](docs/releases/v0.1.6-alpha1-build134.md)
+
+网站两个社区插件条目与部署文件已在本地准备；公开网站尚未更新，GitHub Release 未发布。自动备份为本机副本，卸载前应导出并保存解密密码。
+
+## DSHA v0.1.5-rc2.1 · 本地验收交付
+
+版本码 **131**，标准版与兼容版位于工作区 `release`，沿用原发布签名。同版本 APK 验收后使用常规文件名替换，不再并列保存 `-buildNNN` 文件；以后直接用正式版覆盖安装检查。补齐网络桥有界解析与流式代理、插件冻结依赖及审阅/失败恢复、凭据错误状态、保留副本与旧树只读救援管理。#65 / #67、宿主加密备份和受管更新保护继续保留；未重新启用自动备份或新增自动删除。详见[更新与交付](docs/releases/v0.1.5-rc2.1-build131.md)和[逐项证据、设备范围与缺口](docs/stability-acceptance.md)。本轮未上传 GitHub，下方仍为线上正式版说明。
+
 ## DSHA v0.1.5-rc2 正式版 · Latest
 
 由贡献者 [@ym2025szz](https://github.com/ym2025szz) 维护并发布，感谢原作者 [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) 和其他贡献者。
@@ -348,4 +377,3 @@ QQ 群 **975836806** —— 测试版、问题反馈、插件交流。
 </a>
 
 <sub>由 [`tools/gen-star-history.py`](tools/gen-star-history.py) 按周读取 GitHub 星标时间并更新（[workflow](.github/workflows/star-history.yml)）。浅色、深色 SVG 保存在本仓库；曲线按当前仍保留的星标汇总。</sub>
-

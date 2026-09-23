@@ -26,7 +26,7 @@ public final class InstallRepository {
         });
         blocked = () -> BackupManager.isRestoring() || BackupManager.hasPendingMaintenance(app.getFilesDir());
         installation = (task, repair, selected) -> {
-            try (RuntimeTasks ignored = RuntimeTasks.begin()) { new InstallPipeline(app).run(task, repair, selected); }
+            try (RuntimeTasks ignored = RuntimeTasks.begin("安装与环境")) { new InstallPipeline(app).run(task, repair, selected); }
         };
     }
     /** 独立测试直接使用可控队列和操作，验证实际仓库的锁与异常路径。 */

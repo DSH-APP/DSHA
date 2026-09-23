@@ -32,6 +32,15 @@ public final class StartupRecoveryActivity extends AppCompatActivity {
         if(reason.isEmpty())reason=controller.startupDiagnostics().snapshot().stage;
         layout=new StartupRecoveryLayout(this,StartupText.render(reason),()->finish());setContentView(layout.root);
         content=layout.content;attempts=layout.attempts;snapshots=layout.snapshots;plugins=layout.plugins;progress=layout.progress;
+        action(layout.tools,t("宿主备份与只读救援","Host backup and read-only rescue"),R.drawable.ic_recovery_document,
+                ()->startActivity(new Intent(this,NativeDataActivity.class)),false);
+        action(layout.tools,t("回退兼容运行时","Roll back compatible runtime"),R.drawable.ic_recovery_refresh,()->RuntimeRecoveryUi.show(this),true);
+        if (!controller.proot().hasBash()) {
+            action(layout.recovery,t("保护数据并修复运行环境","Protect data and repair runtime"),R.drawable.ic_recovery_gear,
+                    ()->startActivity(new Intent(this,ExtractActivity.class).putExtra("review_only",true)),false);
+            status(t("运行环境的 Bash、启动链接或加载器缺失。请先修复运行环境；对话和配置会单独保护。",
+                    "Bash, its startup link or loader is missing. Repair the runtime first; conversations and configuration will be protected separately."));
+        }
         action(layout.recovery,t("重试启动","Retry startup"),R.drawable.ic_recovery_refresh,()->retry(false),true);
         action(layout.recovery,t("安全启动基础界面","Start the basic interface in safe mode"),R.drawable.ic_recovery_shield,()->retry(true),true);
         action(layout.recovery,t("新建配置文件","Create configuration file"),R.drawable.ic_recovery_new_file,this::newConfiguration,true);
@@ -74,6 +83,7 @@ public final class StartupRecoveryActivity extends AppCompatActivity {
         }).setNegativeButton(t("取消","Cancel"),null).show();
     }
     private void retry(boolean safe){
+        if(!controller.isEnvironmentReady()){status(t("运行环境尚未就绪，可先修复配置或导出数据，再进入安装与修复。", "The runtime is not ready. Repair configuration or export data, then open installation and repair."));return;}
         if(StartupRepairs.pending(this)){status(readable("RECOVERY_PENDING"));return;}
         controller.recoverWeb(safe,null,message->{});
         startActivity(new Intent(this,MainActivity.class).putExtra("open_launch",true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP));finish();
@@ -99,10 +109,11 @@ public final class StartupRecoveryActivity extends AppCompatActivity {
         if(records!=null)for(int i=0;i<records.length();i++){
             JSONObject record=records.optJSONObject(i);if(record==null)continue;
             if(record.optBoolean("invalid")){label(snapshots,t("快照损坏，已禁止恢复：","Snapshot is damaged and cannot be restored: ")+record.optString("slot"));continue;}
-            String label=(record.optString("slot").startsWith("healthy")?t("健康启动","Healthy start"):t("修复之前","Before repair"))+" · "+date(record.optLong("created"));
+            String label=(record.optBoolean("healthy",record.optString("slot").startsWith("healthy"))?t("健康启动","Healthy start"):t("修复之前","Before repair"))+" · "+date(record.optLong("created"));
             button(snapshots,label,()->{
                 JSONObject request=request("restore");try{request.put("slot",record.getString("slot")).put("id",record.getString("id"));}catch(JSONException ignored){}
-                confirm(t("恢复所选配置快照","Restore selected configuration snapshot"),label+"\n"+record.optJSONArray("files")+t("\n只恢复这些配置文件；已卸载的插件不会自动重新安装。","\nRestore only these configuration files. Removed plugins are not automatically reinstalled."),()->repair(request));
+                String missing=record.optJSONArray("missing")!=null&&record.optJSONArray("missing").length()>0?t("\n快照中原本不存在，将恢复为缺失：","\nAbsent in this snapshot; restore to absence: ")+record.optJSONArray("missing"):"";
+                confirm(t("恢复所选配置快照","Restore selected configuration snapshot"),label+"\n"+record.optJSONArray("files")+missing+t("\n只恢复这些配置文件；已卸载的插件不会自动重新安装。","\nRestore only these configuration files. Removed plugins are not automatically reinstalled."),()->repair(request));
             },true);
         }
 
@@ -134,7 +145,7 @@ public final class StartupRecoveryActivity extends AppCompatActivity {
         if(!key.equals(previousTask)){previousTask=key;if(state.id>0)status(readable(state.detail));}
         boolean maintenance=task.maintenanceBusy();
         if(wasBusy&&!maintenance)model.load();wasBusy=maintenance;
-        for(View action:actions)StartupRecoveryLayout.enabled(action,!busy&&controller.isEnvironmentReady());
+        for(View action:actions)StartupRecoveryLayout.enabled(action,!busy);
         ui.removeCallbacks(this);ui.postDelayed(this,700);
     }};
     @Override protected void onResume(){super.onResume();ui.post(refresh);}

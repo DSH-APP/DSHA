@@ -9,10 +9,22 @@ const runtime = resolve(process.argv[2]);
 const home = resolve(process.argv[3]);
 const build = resolve('app/build') + sep;
 if (!home.startsWith(build)) throw new Error('测试数据目录必须位于 app/build');
+if (process.argv.includes('--models-entry')) {
+  const patch=JSON.parse(readFileSync('app/src/main/assets/models-navigation-patch.json','utf8'));
+  const client=resolve(runtime,'node_modules',patch.module);
+  if (!client.startsWith(build)) throw new Error('模型入口检查只能修改隔离运行时');
+  let content=readFileSync(client,'utf8').replace(/\r\n/g,'\n');
+  for(const {before,after} of patch.patches){
+    if(content.includes(after))continue;
+    if(content.split(before).length!==2)throw new Error('模型入口的上游源码不匹配');
+    content=content.replace(before,after);
+  }
+  writeFileSync(client,content);
+}
 if (process.argv.includes('--composer')) {
   const client=resolve(runtime,'node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js');
   if (!client.startsWith(build)) throw new Error('输入检查只能修改隔离运行时');
-  let content=readFileSync(client,'utf8');
+  let content=readFileSync(client,'utf8').replace(/\r\n/g,'\n');
   for (const {before,after} of JSON.parse(readFileSync('app/src/main/assets/composer-enter-patch.json','utf8')).patches) {
     if (content.includes(after)) continue;
     if (content.split(before).length!==2) throw new Error('输入检查的上游源码不匹配');
@@ -21,7 +33,7 @@ if (process.argv.includes('--composer')) {
   writeFileSync(client,content);
 }
 mkdirSync(resolve(home, 'profiles/web'), { recursive: true });
-const plugins = process.argv.includes('--builtins') ? ['dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile', 'dsh-app-integration'] : [];
+const plugins = process.argv.includes('--builtins') ? ['dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile', 'dsh-computer-use-android', 'dsh-auto-review', 'dsh-tool-vscreen', 'dsh-app-integration'] : [];
 const dependencies = {};
 for (const name of plugins) {
   const source = name === 'dsh-app-integration' ? resolve('app/src/main/assets/app-integration')
@@ -63,7 +75,7 @@ try {
     try { exchange = await fetch(authUrl, { redirect: 'manual', signal: AbortSignal.timeout(3000) }); break; }
     catch (error) { if (attempt === 14) throw error; await new Promise(done => setTimeout(done, 400)); }
   }
-  if (exchange.status !== 303 || exchange.headers.get('location') !== '/') throw new Error('启动凭据未获得 303 根路径跳转');
+  if (exchange.status !== 303 || !['/', './'].includes(exchange.headers.get('location'))) throw new Error('启动凭据未获得 303 根路径跳转');
   const cookie = exchange.headers.get('set-cookie')?.split(';')[0];
   if (!cookie?.startsWith('dsh-auth-')) throw new Error('官方 Cookie 缺失');
   const base = `http://127.0.0.1:${port}/`;
@@ -84,8 +96,11 @@ try {
       page.setDefaultTimeout(15_000);
       page.on('pageerror', error => errors.push(String(error).replace(/(token=)[A-Za-z0-9_-]+/g, '$1***')));
       await page.goto(authUrl, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(6000);
-      if (process.argv.includes('--workspace') || process.argv.includes('--composer')) {
+      const settleMs = Number(process.env.DSHA_BROWSER_SETTLE_MS || 6000);
+      if (!Number.isFinite(settleMs) || settleMs < 0 || settleMs > 300000)
+        throw new Error('DSHA_BROWSER_SETTLE_MS 必须在 0 到 300000 毫秒之间');
+      await page.waitForTimeout(settleMs);
+      if (process.argv.includes('--workspace') || process.argv.includes('--composer') || process.argv.includes('--header-popover')) {
         const notice = page.getByRole('button', { name: '继续', exact: true });
         if (await notice.count() && await notice.isVisible()) await notice.click();
         const later = page.getByRole('button', { name: '稍后配置', exact: true });
@@ -106,6 +121,41 @@ try {
         await pathInput.press('Enter');
         await page.getByRole('button', { name: '打开', exact: true }).click();
         await page.waitForTimeout(3500);
+        if (process.argv.includes('--header-popover')) {
+          // 在真实 alpha.2 页面和移动插件上挂载同版 ConversationSessionHeader
+          // 结构，覆盖活动会话 + 预设 + 子代理 + 后台任务的最拥挤组合。
+          await page.evaluate(() => {
+            const phase=document.createElement('section');phase.dataset.phase='active';phase.dataset.dshaHeaderFixture='';
+            phase.className='wSkVaW_root';phase.style.cssText='position:fixed;inset:72px 0 auto 0;height:120px;overflow:hidden;background:var(--dsw-alias-bg-base);z-index:1000';
+            const header=document.createElement('header');header.className='wSkVaW_header';
+            const row=document.createElement('div');row.className='wSkVaW_titleRow';
+            const leading=document.createElement('div');leading.className='wSkVaW_headerLeading';
+            const cluster=document.createElement('div');cluster.className='wSkVaW_titleCluster';
+            const crumbs=document.createElement('nav');crumbs.className='wSkVaW_crumbs';crumbs.innerHTML='<button class="wSkVaW_crumb wSkVaW_crumbCurrent">很长的活动会话标题</button><span class="ZKlsPq_root "><button class="ZKlsPq_trigger" aria-haspopup="tree"><span class="ZKlsPq_count">3 个子代理</span></button></span>';
+            const actions=document.createElement('div');actions.className='wSkVaW_headerActions';
+            const preset=document.createElement('span');preset.className='dsha-preset-header-anchor';preset.innerHTML='<button data-dsha-agent-preset="header"><span>用户自建超长预设</span></button>';
+            const jobs=document.createElement('span');jobs.className='QsffPG_root';jobs.innerHTML='<button class="QsffPG_trigger" aria-expanded="false"><span class="QsffPG_count">2 个后台任务运行中</span></button>';
+            jobs.querySelector('button').addEventListener('click',()=>{const old=jobs.querySelector('.QsffPG_menu');if(old){old.remove();jobs.querySelector('button').setAttribute('aria-expanded','false');return;}jobs.querySelector('button').setAttribute('aria-expanded','true');const menu=document.createElement('ul');menu.className='QsffPG_menu';menu.setAttribute('aria-label','后台任务');for(let i=0;i<8;i++){const li=document.createElement('li');li.className='QsffPG_row';li.textContent=`bash task ${i+1}　运行中　${i+1}秒`;menu.appendChild(li);}jobs.appendChild(menu);});
+            const files=document.createElement('button');files.dataset.mobileNav='files';files.setAttribute('aria-label','文件浏览');
+            actions.append(preset,jobs,files);cluster.append(crumbs,actions);
+            const utilities=document.createElement('div');utilities.className='wSkVaW_headerUtilities';
+            const corner=document.createElement('div');corner.className='wSkVaW_headerCorner';
+            row.append(leading,cluster,utilities,corner);header.appendChild(row);phase.appendChild(header);
+            document.querySelector('[data-mobile-nav="frame"]').appendChild(phase);
+          });
+          await page.waitForTimeout(200);
+          const layout=await page.evaluate(()=>{const phase=document.querySelector('[data-dsha-header-fixture]');const leading=phase.querySelector('.wSkVaW_headerLeading');const cluster=phase.querySelector('.wSkVaW_titleCluster');const row=phase.querySelector('.wSkVaW_titleRow');return {leading:getComputedStyle(leading).flexGrow,leadingWidth:leading.getBoundingClientRect().width,cluster:cluster.getBoundingClientRect().toJSON(),row:row.getBoundingClientRect().toJSON(),overflow:getComputedStyle(phase).overflow};});
+          if(layout.leading!=='0'||layout.leadingWidth!==0||layout.cluster.width<280||Math.abs(layout.cluster.top-layout.row.top)>1)
+            throw new Error('拥挤顶栏没有保持 alpha.2 单行布局：'+JSON.stringify(layout));
+          const trigger=page.locator('[data-dsha-header-fixture] .QsffPG_trigger');await trigger.click();
+          const menu=page.getByRole('list',{name:'后台任务'});await menu.waitFor({state:'visible'});await page.waitForTimeout(100);
+          const popup=await page.evaluate(()=>{const phase=document.querySelector('[data-dsha-header-fixture]');const menu=phase.querySelector('.QsffPG_menu');return {menu:menu.getBoundingClientRect().toJSON(),viewport:{width:innerWidth,height:innerHeight},phaseOverflow:getComputedStyle(phase).overflow,frameOverflow:getComputedStyle(document.querySelector('[data-mobile-nav="frame"]')).overflow};});
+          if(popup.menu.left<0||popup.menu.top<0||popup.menu.right>popup.viewport.width||popup.menu.bottom>popup.viewport.height||popup.phaseOverflow!=='hidden')
+            throw new Error('后台任务弹窗越界或改坏会话滚动边界：'+JSON.stringify(popup));
+          await page.screenshot({path:resolve(home,'browser-header-jobs.png'),fullPage:true});
+          await trigger.click();await menu.waitFor({state:'hidden'});
+          await page.evaluate(()=>document.querySelector('[data-dsha-header-fixture]')?.remove());
+        }
         if (process.argv.includes('--composer')) {
           const viewport = await page.locator('meta[name="viewport"]').getAttribute('content');
           if (!viewport.includes('interactive-widget=resizes-content') || !viewport.includes('width=device-width'))
@@ -166,6 +216,16 @@ try {
         await page.evaluate(() => document.dispatchEvent(new Event('dsha-close-details')));
         await page.locator('[data-sidebar-right-panel][data-sidebar-right-open]').waitFor({ state: 'hidden' });
       }
+      if (process.argv.includes('--models-entry')) {
+        for(const label of ['继续','稍后配置']) {
+          const button=page.getByRole('button',{name:label,exact:true});
+          if(await button.count() && await button.isVisible())await button.click();
+        }
+        // 原生入口事件应当通过真实布局服务展开默认收起的窄屏侧栏。
+        await page.evaluate(()=>{window.__DSHA_OPEN_MODELS__=true;window.dispatchEvent(new Event('dsha-open-models'));});
+        await page.getByRole('button',{name:'添加自定义提供方',exact:true}).waitFor({state:'visible'});
+        await page.screenshot({path:resolve(home,'models-entry.png'),fullPage:true});
+      }
       const state = await page.evaluate(() => ({ text: document.body.innerText.slice(0, 9000),
         integration: document.documentElement.getAttribute('data-dsha-integration'),
         mobile: Boolean(document.querySelector('[data-mobile-nav="frame"]')),
@@ -187,11 +247,17 @@ try {
   }
   console.log(JSON.stringify({ status: 'PASS', auth: '303 + Cookie + HTTP 200', unauthenticated: 401,
     invalidToken: 401, htmlBytes: Buffer.byteLength(html), plugins, platform: process.platform, arch: process.arch }));
+  if (process.argv.includes('--hold')) {
+    writeFileSync(resolve(home,'connection.json'),JSON.stringify({authUrl,base,port}),{mode:0o600});
+    const until=Date.now()+300000;
+    while(!existsSync(resolve(home,'stop'))&&Date.now()<until)await new Promise(done=>setTimeout(done,250));
+  }
 } catch (error) {
   console.error(String(error));
   console.error(log.replace(/(token=)[A-Za-z0-9_-]+/g, '$1***'));
   process.exitCode = 1;
 } finally {
+  writeFileSync(resolve(home, "startup.log"),log.replace(/(token=)[A-Za-z0-9_-]+/g, "$1***"));
   if (!exited) {
     if (process.platform === 'win32') {
       try { execFileSync('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' }); }

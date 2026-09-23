@@ -10,7 +10,7 @@ import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.Fragment;
@@ -44,10 +44,30 @@ public final class DeviceGrantsFragment extends Fragment {
     @Override public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle saved) {
         View view = inflater.inflate(R.layout.fragment_device_grants, container, false);
         Context ctx = requireContext();
-        CheckBox root = view.findViewById(R.id.config_root_shell);
+        for(int id:new int[]{R.id.device_root_status,R.id.workspace_shizuku_status,R.id.config_adb_status}){
+            TextView detail=view.findViewById(id);detail.setOnClickListener(v->CardSheet.show(requireContext(),com.deepseekharness.app.util.UiText.choose("设备通道状态","Device channel status"),detail.getText().toString()));
+        }
+        ((TextView)view.findViewById(R.id.computer_use_hint)).setText(com.deepseekharness.app.util.UiText.choose("让助手读屏、点击和输入。先完成屏幕操作设置，再在对话中描述任务。", "Let the assistant observe, tap and type. Set up screen control, then describe the task in a conversation."));
+        view.findViewById(R.id.computer_use_accessibility).setOnClickListener(button->startActivity(new Intent(requireContext(),AccessibilitySetupActivity.class)));
+        android.widget.LinearLayout screenCard=(android.widget.LinearLayout)view.findViewById(R.id.computer_use_hint).getParent();
+        android.widget.Button revoke=new androidx.appcompat.widget.AppCompatButton(ctx);
+        revoke.setText(com.deepseekharness.app.util.UiText.choose("撤销本次读屏与操作授权", "Revoke screen access for this run"));
+        revoke.setTextSize(12);revoke.setAllCaps(false);revoke.setBackgroundResource(R.drawable.bg_btn);
+        screenCard.addView(revoke,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        revoke.setOnClickListener(button->{com.deepseekharness.app.HttpShellService.revokeScreenGrant();toast(com.deepseekharness.app.util.UiText.choose("已撤销，后续屏幕操作需要重新确认", "Revoked. Future screen actions require confirmation"));});
+        android.widget.Button virtualScreen = new androidx.appcompat.widget.AppCompatButton(ctx);
+        virtualScreen.setText(com.deepseekharness.app.util.UiText.choose("打开虚拟屏", "Open virtual screen"));
+        virtualScreen.setAllCaps(false); virtualScreen.setTextSize(12);
+        virtualScreen.setBackgroundResource(R.drawable.bg_btn);
+        virtualScreen.setOnClickListener(button -> startActivity(new Intent(ctx, com.deepseekharness.app.vscreen.VirtualScreenActivity.class)));
+        if (com.deepseekharness.app.vscreen.VirtualScreenManager.supported(ctx)) screenCard.addView(virtualScreen,new android.widget.LinearLayout.LayoutParams(-1,-2));
+
+
+        CompoundButton root = view.findViewById(R.id.config_root_shell);
         root.setChecked(RootShell.enabled(ctx));
         root.setOnCheckedChangeListener((button, enabled) -> {
             new ConfigStore(ctx).setRootShellAllowed(enabled);
+            if(!enabled)com.deepseekharness.app.vscreen.VirtualScreenManager.revoke();
             syncSettings(); refreshChannelLabels();
         });
         view.findViewById(R.id.device_root_verify).setOnClickListener(button -> {
@@ -74,10 +94,10 @@ public final class DeviceGrantsFragment extends Fragment {
                 verify(button, view.findViewById(R.id.workspace_shizuku_status), () -> ShizukuShell.exec("id"));
             } else ShizukuShell.requestPermission((code, result) -> { if (isAdded()) refreshChannelLabels(); });
         });
-        CheckBox sensors = view.findViewById(R.id.config_cap_sensors);
+        CompoundButton sensors = view.findViewById(R.id.config_cap_sensors);
         sensors.setChecked(pref(ctx, "cap_sensors", false));
         sensors.setOnCheckedChangeListener((button, enabled) -> savePreference("cap_sensors", enabled));
-        CheckBox location = view.findViewById(R.id.config_cap_location);
+        CompoundButton location = view.findViewById(R.id.config_cap_location);
         location.setChecked(pref(ctx, "cap_location", false));
         location.setOnCheckedChangeListener((button, enabled) -> {
             savePreference("cap_location", enabled);
@@ -85,10 +105,11 @@ public final class DeviceGrantsFragment extends Fragment {
                     != android.content.pm.PackageManager.PERMISSION_GRANTED)
                 requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, 104);
         });
-        CheckBox adb = view.findViewById(R.id.config_adb_enable);
+        CompoundButton adb = view.findViewById(R.id.config_adb_enable);
         adb.setChecked(DeviceBridgeService.isAdbEnabled(ctx));
         adb.setOnCheckedChangeListener((button, enabled) -> {
             savePreference("adb_enabled", enabled);
+            if(!enabled)com.deepseekharness.app.vscreen.VirtualScreenManager.revoke();
             if (enabled) {
                 DeviceBridgeService.apply(ctx);
                 if (getActivity() instanceof MainActivity) ((MainActivity) getActivity()).requestLocalNetwork();
@@ -104,15 +125,13 @@ public final class DeviceGrantsFragment extends Fragment {
         });
         view.findViewById(R.id.config_all_files).setOnClickListener(button -> openAllFilesAccess(ctx));
         view.findViewById(R.id.config_battery_opt).setOnClickListener(button -> openBatteryOpt(ctx));
-        view.findViewById(R.id.config_a11y).setOnClickListener(button -> openA11ySettings(ctx));
-        view.findViewById(R.id.config_runtime_update).setOnClickListener(button -> startActivity(new Intent(ctx, UpdateActivity.class)));
         sms = view.findViewById(R.id.device_sms); smsStatus = view.findViewById(R.id.device_sms_status);
         sms.setOnCheckedChangeListener((button, enabled) -> {
             if (updating) return;
             updateSms();
             if (!enabled) { saveSms(false); return; }
             new com.deepseekharness.app.ui.DshaDialogBuilder(ctx).setTitle(com.deepseekharness.app.util.UiText.text("持续允许读取短信？"))
-                    .setMessage(com.deepseekharness.app.util.UiText.text("当前 DSHA 环境内的助手和插件将能通过已授权的 root 或 ADB 查询短信，包括正文、号码和可能存在的验证码。\n\n后续短信查询不再逐条询问。可随时回到本页关闭，恢复逐次确认。"))
+                    .setMessage(com.deepseekharness.app.util.UiText.text("当前 DSHA 环境内的助手和插件将能通过已授权的 root 或 ADB 查询短信，包括正文、号码和可能存在的验证码。\n\n后续短信查询不再逐条询问。关闭后立即阻止新查询。"))
                     .setPositiveButton(com.deepseekharness.app.util.UiText.text("允许短信读取"), (dialog, which) -> saveSms(true)).setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null).show();
         });
         updateSms();
@@ -120,6 +139,7 @@ public final class DeviceGrantsFragment extends Fragment {
     }
     private void savePreference(String key, boolean enabled) {
         boolean success = requireContext().getSharedPreferences(Constants.PREFS, 0).edit().putBoolean(key, enabled).commit();
+        if(success&&!enabled)com.deepseekharness.app.DeviceSense.revoke(requireContext(),key);
         if (!success) toast(com.deepseekharness.app.util.UiText.text("设置保存失败，请重试"));
     }
     private void syncSettings() {
@@ -169,14 +189,26 @@ public final class DeviceGrantsFragment extends Fragment {
     private void saveSms(boolean enabled) {
         boolean saved = new DeviceGrants(requireContext()).setSmsReadAllowed(enabled);
         updateSms();
-        toast(!saved ? com.deepseekharness.app.util.UiText.text("授权保存失败，请重试") : enabled ? com.deepseekharness.app.util.UiText.text("短信查询已预授权") : com.deepseekharness.app.util.UiText.text("已撤销，后续查询需逐次确认"));
+        toast(!saved ? com.deepseekharness.app.util.UiText.text("授权保存失败，请重试") : enabled ? com.deepseekharness.app.util.UiText.text("短信查询已预授权") : com.deepseekharness.app.util.UiText.choose("已关闭短信读取", "SMS reading disabled"));
     }
     private void updateSms() {
         if (sms == null || !isAdded()) return;
         boolean allowed = new DeviceGrants(requireContext()).smsReadAllowed();
         updating = true; sms.setChecked(allowed); updating = false;
-        smsStatus.setText(allowed ? com.deepseekharness.app.util.UiText.text("已预授权 · 关闭可撤销") : com.deepseekharness.app.util.UiText.text("未预授权 · 每次查询需确认"));
+        smsStatus.setText(allowed ? com.deepseekharness.app.util.UiText.text("已预授权 · 关闭可撤销") : com.deepseekharness.app.util.UiText.choose("已关闭 · 查询会被阻止", "Off · queries are blocked"));
         smsStatus.setTextColor(requireContext().getColor(allowed ? R.color.primary : R.color.text_muted));
+    }
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){
+        super.onRequestPermissionsResult(request,permissions,results);
+        if(request!=104||!isAdded())return;
+        boolean granted=requireContext().checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)==android.content.pm.PackageManager.PERMISSION_GRANTED
+                ||requireContext().checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)==android.content.pm.PackageManager.PERMISSION_GRANTED;
+        if(!granted){savePreference("cap_location",false);if(getView()!=null)((CompoundButton)getView().findViewById(R.id.config_cap_location)).setChecked(false);new DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.choose("需要系统定位权限", "Location permission required"))
+                    .setMessage(com.deepseekharness.app.util.UiText.choose("位置读取保持关闭。请在系统应用权限中允许定位，再返回这里开启；如果系统定位服务关闭，也需要先开启系统定位。", "Location reading remains off. Allow location in system app permissions, then return and enable it here. System location services must also be enabled."))
+                    .setNegativeButton(com.deepseekharness.app.util.UiText.choose("暂不开启", "Not now"),null)
+                    .setPositiveButton(com.deepseekharness.app.util.UiText.choose("打开系统权限设置", "Open app permissions"),(dialog,which)->{
+                        try{startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:"+requireContext().getPackageName())));}catch(RuntimeException missing){toast(com.deepseekharness.app.util.UiText.choose("请在系统设置中打开 DSHA 应用权限", "Open DSHA permissions in system settings"));}
+                    }).show();}
     }
     @Override public void onResume() {
         super.onResume();
@@ -309,36 +341,17 @@ public final class DeviceGrantsFragment extends Fragment {
         }
     }
 
-    /** 跳到本应用无障碍服务的开关页；部分 ROM 不支持直达就退回系统无障碍列表。 */
-    private void openA11ySettings(Context ctx) {
-        try {
-            // Settings.ACTION_ACCESSIBILITY_DETAILS_SETTINGS 常量在 compileSdk 里缺失
-            // （各版本 SDK 不一致），直接用 action 字符串，运行时兼容
-            Intent i = new Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS");
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            i.putExtra(Intent.EXTRA_COMPONENT_NAME,
-                    new ComponentName(ctx, DshaAccessibilityService.class));
-            startActivity(i);
-        } catch (Throwable e) {
-            try {
-                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
-            } catch (Throwable e2) {
-                toast(com.deepseekharness.app.util.UiText.text("打不开无障碍设置：") + e2.getMessage());
-            }
-        }
-    }
-
     /** 刷新「屏幕操作权限」状态行：是否已开启无障碍服务（从系统设置返回后也会更新）。 */
     private void refreshA11yStatus(TextView status) {
         if (status == null) return;
         String st = DshaAccessibilityService.enabledState(requireContext());
         boolean ok = "YES".equals(st);
         if (ok) {
-            status.setText(com.deepseekharness.app.util.UiText.text("✅ 已开启：AI 可读屏 / 点按 / 输入 / 截屏（截屏需 Android 11+）"));
+            status.setText(com.deepseekharness.app.util.UiText.text("已开启 · 读屏、点按与输入可用"));
         } else if ("NO".equals(st)) {
-            status.setText(com.deepseekharness.app.util.UiText.text("❌ 未开启：点上方去系统设置开启「DSHA 配对助手」"));
+            status.setText(com.deepseekharness.app.util.UiText.text("未开启 · 点上方按两步完成设置"));
         } else {
-            status.setText(com.deepseekharness.app.util.UiText.text("⚠️ 状态未知：点上方到系统设置确认「DSHA 配对助手」已开启"));
+            status.setText(com.deepseekharness.app.util.UiText.text("尚未连接 · 点上方查看设置步骤"));
         }
         try {
             status.setTextColor(getResources().getColor(ok ? R.color.primary : R.color.err, null));

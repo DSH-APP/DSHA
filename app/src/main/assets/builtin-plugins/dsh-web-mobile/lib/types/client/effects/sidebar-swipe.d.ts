@@ -30,6 +30,44 @@ export declare function classifySwipe(t: SwipeThresholds & {
     dy: number;
     velX: number;
 }, rtl: boolean): 'open' | 'close' | 'none';
+/** Threshold shape for the files classifier (pure, node:testable). */
+export interface FilesThresholds {
+    distanceRatio: number;
+    velocity: number;
+    lockPx: number;
+    viewportWidthPx: number;
+    /** Files panel mounted at lock time. */
+    panelOpen: boolean;
+    /** Drawer open at lock time. */
+    drawerOpen: boolean;
+    /**
+     * Distance gate for the drawer-open rightward cell. That cell commits a
+     * DRAWER close, so it rides the drawer's own CLOSE_DISTANCE_RATIO (0.13),
+     * not the files panel's 0.16: one physical stroke must judge the same
+     * wherever it starts. Optional — defaults to `distanceRatio`.
+     */
+    drawerCloseDistanceRatio?: number;
+}
+/**
+ * Pure decision for the FILES gesture (right-edge zone), the mirror twin of
+ * classifySwipe. RTL mirrors the X axis exactly like classifySwipe. The
+ * verdict space extends the drawer's with `files` (the files-panel commit:
+ * open the panel on a leftward stroke when everything is closed, close it on
+ * a rightward stroke when it is open):
+ * - leftward-logical strokes only ever mean "open the panel" and fire ONLY
+ *   when panel and drawer are BOTH closed — the panel would mount under the
+ *   open drawer (z-1100) and be invisible, so the stroke is 'none' (the
+ *   2026-09-13 narrowing: a leftward stroke NEVER collapses anything);
+ * - rightward-logical strokes close the VISIBLE TOP: drawer open → 'close'
+ *   (the animated commitFollowClose path, gated on the drawer's own
+ *   distance/velocity thresholds so both families judge a stroke alike);
+ *   else panel open → 'files'; else 'none'.
+ */
+export declare function classifyFilesSwipe(t: FilesThresholds, m: {
+    dx: number;
+    dy: number;
+    velX: number;
+}, rtl: boolean): 'open' | 'close' | 'files' | 'none';
 /**
  * Recent-window instantaneous velocity (px/ms) from the tail of the last
  * `windowMs` milliseconds of samples, up to `now`. Sliding X per ms between
@@ -48,6 +86,20 @@ export declare function slidingVelocity(samples: Array<{
  * variant additionally checks the drawer geometry via the DOM.
  */
 export declare function hitTestStart(clientX: number, viewportWidthPx: number, rtl: boolean, t: Pick<SwipeThresholds, 'startZonePx'>): boolean;
+/**
+ * Geometric start-hit test for the FILES gesture: the pointer went down in
+ * the RIGHT edge zone (RTL: LEFT) — the exact mirror of hitTestStart. Pure
+ * and viewport-relative.
+ */
+export declare function filesZoneHit(clientX: number, viewportWidthPx: number, rtl: boolean, zonePx: number): boolean;
+/** Which gesture family owns a stroke that begins while the drawer is OPEN.
+ * Inside the drawer body the drawer family always wins (owner's rule
+ * 2026-09-17: the drawer's own surface must answer a leftward drag, whether or
+ * not the viewport-ratio files zone overlaps it — at 390px that zone starts at
+ * x=214, inside the 280px drawer); outside the body the right zone keeps its
+ * files routing and its deliberate leftward 'none' verdict (2026-09-13
+ * narrowing). */
+export declare function openStateStartMode(insideDrawer: boolean, inFilesZone: boolean): 'drawer' | 'files';
 /**
  * Pure follow mapping (B 档): the translateX (px) to paint for a stroke
  * sample, or null when THIS sample has no follow. `closedTx` is the signed
@@ -134,6 +186,19 @@ export declare function findHorizontalScroller(node: SwipeChainNode | null): Swi
  * points land outside the control's own box.
  */
 export declare function selectionOwnsStroke(): boolean;
+/** Animate an OPEN drawer into its closed slot and flip the host state once it
+ * has landed. Every non-gesture closer (backdrop tap, Escape, navigation taps)
+ * routes through this, so a click close animates exactly like a swipe close:
+ * the host swaps the pane's subtree AND drops its surface (transparent,
+ * borderless, content display:none) at the marker flip, so a plain CSS
+ * transition would slide out an invisible shell - the same reason the gesture
+ * close uses a late commit (eighth round, 2026-08-29). The OPEN direction needs
+ * none of this: the host keeps the pane's visuals until the marker flips, so
+ * its own transform transition plays (spec 2026-08-27, A 档).
+ * Returns false when the caller must fall back to a plain toggleSidebar(): the
+ * drawer is already closed (that call would OPEN it) or the user asked for
+ * reduced motion, where the spec degrades the animation instead of adding one. */
+export declare function closeDrawerAnimated(ctx: ClientContext): boolean;
 /** Install the gesture layer for the current mobile breakpoint. */
-export declare function installSidebarSwipe(ctx: ClientContext): void;
+export declare function installSidebarSwipe(ctx: ClientContext, filesToggle: () => boolean): void;
 //# sourceMappingURL=sidebar-swipe.d.ts.map

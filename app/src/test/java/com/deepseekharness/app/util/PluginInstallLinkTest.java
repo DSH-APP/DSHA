@@ -3,6 +3,11 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class PluginInstallLinkTest {
+    @Test public void managementEntryCannotCarryCommandsOrForeignOrigins(){
+        assertTrue(PluginInstallLink.management("https://dsha.cc/app/plugins"));
+        assertTrue(PluginInstallLink.management("https://dsha.cc/app/plugins/"));
+        for(String value:new String[]{null,"http://dsha.cc/app/plugins","https://dsha.cc.evil/app/plugins","https://dsha.cc/app/plugins?command=x","https://dsha.cc/app/plugins#x","https://dsha.cc/app/../plugins"})assertFalse(PluginInstallLink.management(value));
+    }
     @Test public void acceptsBothEntryPointsAndDecodesExactlyOnce() {
         String query = "url=https%3A%2F%2Fgithub.com%2FMinglink%2Fdsh-infinite-gen-3%2Farchive%2Frefs%2Fheads%2Fmaster.zip&name=dsh-infinite-gen-3&version=0.5.0";
         assertEquals("dsh-infinite-gen-3", PluginInstallLink.parse("https://dsha.cc/install/?" + query).name);

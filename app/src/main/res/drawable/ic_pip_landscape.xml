@@ -1,0 +1,8 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <!-- Keep equal optical margins on all four sides; this icon is rendered by
+         SystemUI at several densities and an asymmetric path looks shifted in
+         the PiP action strip. -->
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+        android:pathData="M3.5,5.5h17v13h-17zM5.5,7.5v9h13v-9zM10.25,10l4,2l-4,2z" />
+</vector>

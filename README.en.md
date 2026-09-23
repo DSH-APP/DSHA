@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Android-6%2B%20%2F%2011%2B-3DDC84?logo=android&logoColor=white" alt="android">
   <img src="https://img.shields.io/badge/arch-arm64--v8a-lightgrey" alt="arch">
   <a href="https://afdian.com/a/19cadac6b68f11f1990652540025c377"><img src="https://img.shields.io/badge/Afdian-Sponsor-946CE6?logo=afdian&logoColor=white" alt="Afdian"></a>
-  <a href="https://qm.qq.com/q/N5aZSlnmgM"><img src="https://img.shields.io/badge/QQ%20Group-975836806-1EBAFC?logo=qq&logoColor=white" alt="QQ Group"></a>
+  <a href="https://qm.qq.com/q/N5aZSlnmgM"><img src="https://img.shields.io/badge/QQ%20Group-975836806-1EBAFC?logo=qq&logoColor=white" alt="QQ group"></a>
 </p>
 
 <p align="center">
@@ -23,6 +23,27 @@
 > (structure, startup contracts, traps we already fell into). Don't scan the whole repo.
 
 ---
+
+## DSHA v0.1.7-alpha2 · GitHub pre-release
+
+Published by contributor [@ym2025szz](https://github.com/ym2025szz). This is an experimental pre-release: DSH recently moved to **0.1.7-alpha.2**, changing session, agent-preset, plugin-manager and parts of the Web API contracts. Export important data and keep the backup password before updating. Legacy directory-style custom presets may need migration; see the [pre-release notes](docs/releases/v0.1.7-alpha2-pre-release.md) and [upstream migration discussion](https://github.com/deepseek-ai/deepseek-harness/discussions/7545).
+
+Standard adds an **experimental Android 11+ virtual screen** with ADB/Shizuku/Root channels, app selection and launch, in-app/optional floating preview, touch, keyboard input, AI actions and the accessibility tree. It can be affected by vendor ROMs and revoked permissions; **the Low build does not support virtual screen yet**. This release also fixes PiP streaming flicker, aligns data and backup entries, reduces Language dialog first-frame work, clears plugin-panel title space and updates the bundled mobile plugin.
+
+- [Pre-release downloads and full comparison](docs/releases/v0.1.7-alpha2-pre-release.md)
+- [GitHub Pre-release](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.7-alpha2)
+
+## DSHA v0.1.6-alpha2.1 · Local delivery build 142
+
+Build 141 fixes `DeepSeek Messages cannot represent user/tool-result content tool-call` when Agent Team, subagent delivery, or compaction replays a nested display-only tool call. System and user plugins now have separate ownership: backups retain user plugins and their dependencies, while system plugins retain only the user's enabled/disabled choice and always come from the current APK. Stale system-plugin entities leave the load path and are retained in quarantine. The proroot JSON `per-record` compatibility path is now V2 and no longer depends on unavailable directory-entry types or `lstat`. This build also removes the permanent block after 32 runtime trials and prevents regenerable WebView/cache `ENOTEMPTY` races from failing a format after core data has already been erased.
+
+Bundled DSH remains **0.1.6-alpha.2**, Ubuntu base remains **10**, and the managed-runtime ID is `34a1cca8a112c4ec2695ba24e38a204c6266efca31dbd55017e1e66bc5fc1394`. DeepSeek Agent Team/compaction/direct tools/error and image results, plugins, backups, formatting, runtime rotation, and maintenance-process shutdown regressions passed. Both flavors passed 608 forced unit tests, Release Lint, E7E3-signed APK/ELF audits, and a non-destructive update on the user-selected M367FC/API 37 tablet; the same-name APKs in `release` have been replaced. This does not claim Android 6/7, every external model service, or every vendor device is covered.
+
+See the [alpha2.1/build 142 changes and acceptance record](docs/releases/v0.1.6-alpha2.1-build142.md), the [build 141 changes and acceptance record](docs/releases/v0.1.6-alpha2-build141.md), the [build 140 proroot/plugin/device record](docs/releases/v0.1.6-alpha2-build140.md), and the [device UI gallery](ui-preview/native-ui-build135-review.html). The website package is prepared locally; the public website and GitHub Release have not been published. Automatic copies are local: export a copy and save its password before uninstalling.
+
+## DSHA v0.1.5-rc2.1 — local delivery
+
+Version code **131**. Both APKs are in the workspace `release` directory and retain the historical publishing certificate. Accepted builds replace the same-version APK under its regular filename; separate `-buildNNN` APK copies are no longer kept. Device acceptance now uses an in-place installation of the release build. This revision adds bounded network bridges and streaming proxy handling, frozen plugin dependencies with review and failure recovery, explicit credential error states, and retained-copy/read-only old-tree rescue management. The #65 / #67 fixes, native encrypted backups and managed runtime protections remain. It does not restore automatic backups or add automatic deletion. See the [delivery notes](docs/releases/v0.1.5-rc2.1-build131.md) and [itemized evidence and device limitations](docs/stability-acceptance.md). This build has not been uploaded to GitHub; the online release is described below.
 
 ## DSHA v0.1.5-rc2 — official release · Latest
 
@@ -358,4 +379,3 @@ QQ group **975836806** — test builds, bug reports, plugin talk.
 </a>
 
 <sub>Updated weekly from GitHub stargazer timestamps by [`tools/gen-star-history.py`](tools/gen-star-history.py) ([workflow](.github/workflows/star-history.yml)). Light and dark SVG charts are stored in this repository; the curve reflects currently retained stars.</sub>
-

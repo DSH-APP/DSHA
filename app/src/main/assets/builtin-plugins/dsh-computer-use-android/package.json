@@ -1,0 +1,21 @@
+{
+  "name": "dsh-computer-use-android",
+  "version": "0.1.1",
+  "description": "Android Computer Use through the authenticated DSHA device bridge",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-computer-use": "0.1.7-alpha.1",
+    "@deepseek-ai/dsh-mcp-client": "0.1.7-alpha.1"
+  }
+}

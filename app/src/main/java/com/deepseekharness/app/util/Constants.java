@@ -31,7 +31,7 @@ public final class Constants {
      * 当前 APK 内置 dsh 版本（不是远端 latest 标签）。
      * 对应上游 deepseek-ai/deepseek-harness 仓库。
      */
-    public static final String DSH_VERSION = "0.1.5-rc.2";
+    public static final String DSH_VERSION = "0.1.7-alpha.2";
     public static final String DSH_RUNTIME_ID = "dsh-v" + DSH_VERSION;
     /** 全局安装路径下的 dsh 入口（容器内路径，见 WebProcSel 的 cmdline 判据）。 */
     public static final String DSH_BIN_JS =
@@ -54,6 +54,9 @@ public final class Constants {
     public static final String KEY_CHECK_UPDATE = "check_update";
     /** 电脑模式（预览用桌面浏览器 UA）。 */
     public static final String KEY_DESKTOP_MODE = "desktop_mode";
+    /** 仅内置 DSH 网页支持画中画，默认关闭。 */
+    public static final String KEY_PICTURE_IN_PICTURE = "picture_in_picture";
+    public static final String KEY_PICTURE_IN_PICTURE_LAYOUT = "picture_in_picture_layout";
     /** 备份是否包含 API key。 */
     public static final String KEY_BACKUP_KEY = "backup_key";
     /** 局域网访问开关。 */

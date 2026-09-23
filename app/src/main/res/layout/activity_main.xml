@@ -1,106 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/surface"
-    android:orientation="vertical">
-
-    <LinearLayout
-        android:id="@+id/app_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="64dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/page_pad"
-        android:paddingEnd="@dimen/gap_control">
-
-        <FrameLayout
-            android:id="@+id/app_logo"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@drawable/bg_logo">
-
-            <ImageView
-                android:layout_width="17dp"
-                android:layout_height="17dp"
-                android:layout_gravity="center"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_terminal"
-                app:tint="@color/primary" />
-        </FrameLayout>
-
-        <TextView android:id="@+id/sub_back" style="@style/Widget.DSHA.ToolbarAction"
-            android:layout_width="44dp" android:layout_height="wrap_content" android:background="@drawable/bg_logo" android:text="‹"
-            android:textSize="24sp" android:contentDescription="@string/ui_m0201" android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/app_title"
-            style="@style/DshaText.PageTitle"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/gap_control"
-            android:text="@string/ui_m0005" />
-
-
-        <TextView
-            android:id="@+id/btn_theme"
-            style="@style/Widget.DSHA.ToolbarAction"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="@string/ui_m0020" />
-
-        <FrameLayout
-            android:id="@+id/btn_about"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_chip_clickable"
-            android:clickable="true"
-            android:contentDescription="@string/ui_m0067"
-            android:focusable="true">
-
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_about"
-                app:tint="@color/text_secondary" />
-        </FrameLayout>
-    </LinearLayout>
-
-    <TextView android:id="@+id/environment_recovery_banner" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:minHeight="48dp" android:padding="12dp"
-        android:textColor="@color/primary" android:background="@drawable/bg_chip_clickable"
-        android:textSize="14sp" android:clickable="true" android:focusable="true" android:visibility="gone" android:gravity="center" android:includeFontPadding="false" />
-
-    <FrameLayout
-        android:id="@+id/fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <!-- 底栏与内容区之间的分界线：没有它底栏会和页面糊在一起 -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/stroke"
-        android:background="@color/line" />
-
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_nav"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/card"
-        android:minHeight="64dp"
-        app:itemIconSize="24dp"
-        app:itemPaddingTop="8dp"
-        app:itemPaddingBottom="6dp"
-        app:elevation="0dp"
-        app:itemIconTint="@color/nav_item_tint"
-        app:itemTextColor="@color/nav_item_tint"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav_menu" />
+<?xml version='1.0' encoding='utf-8'?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/surface" android:orientation="vertical">
+  <LinearLayout android:id="@+id/app_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="60dp" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="18dp" android:paddingEnd="16dp">
+    <FrameLayout android:id="@+id/app_logo" android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_logo">
+      <ImageView android:layout_width="17dp" android:layout_height="17dp" android:layout_gravity="center" android:contentDescription="@null" android:src="@drawable/ic_terminal" app:tint="@color/primary" />
+    </FrameLayout>
+    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/sub_back" android:visibility="gone" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_ui_back" android:contentDescription="@string/ui_m0201" app:tint="@color/text" />
+    <TextView android:id="@+id/app_title" style="@style/DshaText.PageTitle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_control" android:text="DSHA" android:textSize="18sp" />
+    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/btn_tasks" android:layout_width="44dp" android:layout_height="44dp" android:padding="11dp" android:src="@drawable/ic_ui_tasks" app:tint="@color/text_secondary" android:background="?attr/selectableItemBackgroundBorderless" />
+    <TextView android:id="@+id/btn_theme" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="44dp" android:layout_height="44dp" android:layout_marginEnd="8dp" android:text="@string/ui_m0020" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" />
+    <FrameLayout android:id="@+id/btn_about" android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_chip_clickable" android:clickable="true" android:contentDescription="@string/ui_m0067" android:focusable="true" android:visibility="gone">
+      <ImageView android:layout_width="16dp" android:layout_height="16dp" android:layout_gravity="center" android:contentDescription="@null" android:src="@drawable/ic_about" app:tint="@color/text_secondary" />
+    </FrameLayout>
+  </LinearLayout>
+  <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+  <TextView android:id="@+id/environment_recovery_banner" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:padding="12dp" android:textColor="@color/primary" android:background="@drawable/bg_chip_clickable" android:textSize="14sp" android:clickable="true" android:focusable="true" android:visibility="gone" android:gravity="center" android:includeFontPadding="false" />
+  <FrameLayout android:id="@+id/fragment_container" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+  <View android:layout_width="match_parent" android:layout_height="@dimen/stroke" android:background="@color/line" />
+  <com.google.android.material.bottomnavigation.BottomNavigationView android:id="@+id/bottom_nav" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/surface" android:minHeight="64dp" app:itemIconSize="20dp" app:itemPaddingTop="8dp" app:itemPaddingBottom="6dp" app:elevation="0dp" app:itemIconTint="@color/nav_item_tint" app:itemTextColor="@color/nav_item_tint" app:labelVisibilityMode="labeled" app:menu="@menu/bottom_nav_menu" app:itemTextAppearanceActive="@style/Ui2.Nav" app:itemTextAppearanceInactive="@style/Ui2.Nav" />
 </LinearLayout>

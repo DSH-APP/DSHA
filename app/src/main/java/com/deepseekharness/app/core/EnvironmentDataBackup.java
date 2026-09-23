@@ -49,7 +49,6 @@ final class EnvironmentDataBackup {
         } finally { temporary.delete(); }
     }
     private static JSONObject run(HarnessController controller, String arguments, Consumer<String> progress) throws Exception {
-        if (!controller.proot().ensureBundledPython()) throw new IOException(com.deepseekharness.app.util.UiText.text("迁移所需的 Python 未就绪，原环境已保留"));
         String asset = controller.readAsset("environment-data.py");
         if (asset.isEmpty()) throw new IOException(com.deepseekharness.app.util.UiText.text("缺少个人文件迁移脚本"));
         Compat.write(new File(controller.proot().getRootfsDir(), "root/.dsha-environment-data.py"), asset.getBytes(StandardCharsets.UTF_8));
@@ -59,7 +58,7 @@ final class EnvironmentDataBackup {
             else if (line.startsWith("DSHA_ENV_PROGRESS=")) {
                 try {
                     JSONObject value = new JSONObject(line.substring(18));
-                    progress.accept(value.getString("stage") + com.deepseekharness.app.util.UiText.text("：") + value.getLong("files") + com.deepseekharness.app.util.UiText.text(" 项，")
+                    progress.accept(com.deepseekharness.app.util.UiText.text(value.getString("stage")) + com.deepseekharness.app.util.UiText.text("：") + value.getLong("files") + com.deepseekharness.app.util.UiText.text(" 项，")
                             + com.deepseekharness.app.util.Fmt.bytes(value.getLong("bytes"))
                             + com.deepseekharness.app.util.UiText.text("，已用 ") + value.getLong("seconds") + com.deepseekharness.app.util.UiText.text(" 秒"));
                 } catch (org.json.JSONException ignored) { }

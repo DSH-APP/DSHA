@@ -79,7 +79,7 @@ public final class LogPanelAudit extends Instrumentation {
                 String prefix=lang+(compact?"-compact":"-normal");
                 Bundle phase=new Bundle();phase.putString("phase",prefix);sendStatus(1,phase);
                 logs("fragment_install",R.id.install_scroll,R.id.install_log_scroll,R.id.install_log,prefix);
-                logs("activity_diagnostics",R.id.diagnostic_page_scroll,R.id.diagnostic_report_scroll,R.id.diagnostic_report,prefix);about(prefix);ui(page::finish);page=null;
+                /* 诊断报告现在由原生卡片面板承载，不再审计旧的嵌套日志框。 */about(prefix);ui(page::finish);page=null;
             }
             result.putString("result","PASS");result.putInt("checks",checks);
         }catch(Throwable error){result.putString("failure",android.util.Log.getStackTraceString(error));}

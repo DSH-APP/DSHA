@@ -1,0 +1,54 @@
+{
+  "dshVersion": "0.1.7-alpha.2",
+  "module": "@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js",
+  "patches": [
+    {
+      "before": "function packageView(bundle, plugins) {",
+      "after": "// 这里只决定界面导航；真正的目录归属仍由 Host 在启用前核验。\n        function dshaManagedPackageName(name) {\n            return typeof name === \"string\" && (name.startsWith(\"@deepseek-ai/\") || [\"dsh-app-integration\",\"dsh-web-mobile\",\"dsh-status-overlay\",\"dsh-task-notifier\",\"dsh-device-shell-guide\",\"dsh-computer-use-android\",\"dsh-auto-review\"].includes(name));\n        }\n        function packageView(bundle, plugins) {"
+    },
+    {
+      "before": "// 这里只决定界面导航；真正的目录归属仍由 Host 在启用前核验。\n        function dshaManagedPackageName(name) {\n            return typeof name === \"string\" && (name.startsWith(\"@deepseek-ai/\") || [\"dsh-app-integration\",\"dsh-web-mobile\",\"dsh-status-overlay\",\"dsh-task-notifier\",\"dsh-device-shell-guide\",\"dsh-computer-use-android\",\"dsh-auto-review\"].includes(name));\n        }\n        function packageView(bundle, plugins) {",
+      "after": "function dshaNativeReviewRoute(value) {\n            return window.__DSHA_NATIVE_PLUGINS__ === true && value != null && value.dshaNativeReviewRequired === true && value.dshaNativeReviewAction === true;\n        }\n        function dshaReviewError(bundle) {\n            const error = bundle.error;\n            if (window.__DSHA_NATIVE_PLUGINS__ !== true || bundle.enabled || bundle.installed !== true || dshaManagedPackageName(bundle.name) || error === void 0) return error;\n            const diagnostic = typeof error === \"string\" ? error : typeof error.diagnostic === \"string\" ? error.diagnostic : \"\";\n            if (!/(?:DSHA_NATIVE_REVIEW_REQUIRED|cannot resolve profile bundle)/i.test(diagnostic)) return error;\n            return { ...(typeof error === \"object\" && error !== null ? error : { code: \"operation-error\" }), diagnostic: \"等待 DSHA 原生审阅：请打开应用底部‘插件’→‘插件管理’，查看详情并确认启用。 / DSHA review required: open Plugins → Plugin management in the app, inspect the plugin, then confirm Enable.\" };\n        }\n        // 这里只决定界面导航；真正的目录归属仍由 Host 在启用前核验。\n        function dshaManagedPackageName(name) {\n            return typeof name === \"string\" && (name.startsWith(\"@deepseek-ai/\") || [\"dsh-app-integration\",\"dsh-web-mobile\",\"dsh-status-overlay\",\"dsh-task-notifier\",\"dsh-device-shell-guide\",\"dsh-computer-use-android\",\"dsh-auto-review\"].includes(name));\n        }\n        function packageView(bundle, plugins) {"
+    },
+    {
+      "before": "\t\t\treturn {\n\t\t\t\tname: bundle.name,",
+      "after": "\t\t\tconst dshaError = dshaReviewError(bundle);\n\t\t\treturn {\n\t\t\t\tname: bundle.name,"
+    },
+    {
+      "before": "name: bundle.name,\n\t\t\t\tinstalled:",
+      "after": "name: bundle.name,\n                dshaNativeReviewRequired: !dshaManagedPackageName(bundle.name),\n\t\t\t\tinstalled:"
+    },
+    {
+      "before": "...bundle.readOnlyReason === void 0 ? {} : { readOnlyReason: bundle.readOnlyReason },",
+      "after": "...bundle.readOnlyReason === void 0 ? {} : { readOnlyReason: bundle.readOnlyReason },\n                dshaNativeReviewAction: dshaError !== bundle.error,"
+    },
+    {
+      "before": "moduleName: row.moduleName,\n\t\t\t\t\tenabled:",
+      "after": "moduleName: row.moduleName,\n                    dshaNativeReviewRequired: !dshaManagedPackageName(row.moduleName),\n\t\t\t\t\tenabled:"
+    },
+    {
+      "before": "const spec = install.spec.trim();",
+      "after": "const spec = install.spec.trim();\n                if(window.__DSHA_NATIVE_PLUGINS__ && spec!==\"\"){window.location.href=\"https://dsha.cc/install?url=\"+encodeURIComponent(spec);return;}"
+    },
+    {
+      "before": "setEnabled: (packageName, enabled) => {",
+      "after": "setEnabled: (packageName, enabled) => {\n                        if(window.__DSHA_NATIVE_PLUGINS__ && enabled && this.getSnapshot().packages.find(p=>p.name===packageName)?.dshaNativeReviewRequired){window.location.href=\"https://dsha.cc/app/plugins\"; return;}"
+    },
+    {
+      "before": "uninstall: (packageName) => {",
+      "after": "uninstall: (packageName) => {\n                        if(window.__DSHA_NATIVE_PLUGINS__){window.location.href=\"https://dsha.cc/app/plugins\"; return;}"
+    },
+    {
+      "before": "setRowEnabled: (entryId, enabled) => {",
+      "after": "setRowEnabled: (entryId, enabled) => {\n                        if(window.__DSHA_NATIVE_PLUGINS__ && enabled && this.getSnapshot().packages.flatMap(p=>p.rows).find(r=>r.entryId===entryId)?.dshaNativeReviewRequired){window.location.href=\"https://dsha.cc/app/plugins\"; return;}"
+    },
+    {
+      "before": "...bundle.error === void 0 ? {} : { error: bundle.error }",
+      "after": "...dshaError === void 0 ? {} : { error: dshaError }"
+    },
+    {
+      "before": "disabled: busy || pkg.readOnlyReason !== void 0 || !pkg.enabled && pkg.error !== void 0,",
+      "after": "disabled: busy || pkg.readOnlyReason !== void 0 || !pkg.enabled && pkg.error !== void 0 && !dshaNativeReviewRoute(pkg),"
+    }
+  ]
+}

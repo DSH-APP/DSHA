@@ -1,5 +1,5 @@
 {
-  "dshVersion": "0.1.5-rc.2",
+  "dshVersion": "0.1.7-alpha.2",
   "patches": [
     {
       "before": "import { createRequire } from \"node:module\";",
@@ -10,24 +10,24 @@
       "after": "function newlineCount(value) {\n\treturn countNewlines(value);\n}"
     },
     {
-      "before": "function buildBatch(phase, records) {\n\tconst artifact = buildCombo(records);",
-      "after": "function buildBatch(phase, records, builder = buildCombo) {\n\tconst artifact = builder(records);"
+      "before": "function buildBatch(phase, records, sourceMapOf) {\n\tconst artifact = buildCombo(records, sourceMapOf);",
+      "after": "function buildBatch(phase, records, sourceMapOf, builder = buildCombo) {\n\tconst artifact = builder(records, sourceMapOf);"
     },
     {
       "before": "\tcompose() {\n\t\tconst entries =",
       "after": "\tcompose() {\n\t\tconst cachedCombo = createComboCache(buildCombo, this.dshaComboArtifacts);\n\t\tconst entries ="
     },
     {
-      "before": "artifacts.push(buildBatch(\"bootstrap\", records));",
-      "after": "artifacts.push(buildBatch(\"bootstrap\", records, cachedCombo));"
+      "before": "artifacts.push(buildBatch(\"bootstrap\", records, this.readSourceMap));",
+      "after": "artifacts.push(buildBatch(\"bootstrap\", records, this.readSourceMap, cachedCombo));"
     },
     {
-      "before": "artifacts.push(buildBatch(\"application\", records));",
-      "after": "artifacts.push(buildBatch(\"application\", records, cachedCombo));"
+      "before": "artifacts.push(buildBatch(\"application\", records, this.readSourceMap));",
+      "after": "artifacts.push(buildBatch(\"application\", records, this.readSourceMap, cachedCombo));"
     },
     {
-      "before": "const artifact = buildCombo([record], record.entry.rev);",
-      "after": "const artifact = cachedCombo([record], record.entry.rev);"
+      "before": "const artifact = buildCombo([record], this.readSourceMap, record.entry.rev);",
+      "after": "const artifact = cachedCombo([record], this.readSourceMap, record.entry.rev);"
     },
     {
       "before": "\t\tthis.previousBatchResponses = this.batchResponses;",

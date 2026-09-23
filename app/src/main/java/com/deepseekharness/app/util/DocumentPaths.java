@@ -9,10 +9,19 @@ import java.util.List;
 /** SAF 稳定文档编号及容器软链接解析；不依赖 Android 或宿主对 guest 链接的识别。 */
 public final class DocumentPaths {
     public interface Links { String read(File path) throws IOException; }
+    public interface Alias {
+        String rewrite(String relative)throws IOException;
+        default boolean child(String parent,String child,File actual)throws IOException{return false;}
+    }
     private final File base, guest;
     private final Links links;
+    private final Alias alias;
     public DocumentPaths(File base, Links links) throws IOException {
+        this(base,links,relative->relative);
+    }
+    public DocumentPaths(File base,Links links,Alias alias)throws IOException{
         this.base = base.getCanonicalFile(); this.guest = new File(this.base, "linux/ubuntu"); this.links = links;
+        this.alias=alias;
     }
     public File base() { return base; }
     public String relative(String id) throws IOException {
@@ -44,17 +53,17 @@ public final class DocumentPaths {
     public boolean anchor(String id) throws IOException {
         String relative = relative(id);
         return relative.isEmpty() || relative.equals("linux") || relative.equals("linux/ubuntu")
-                || relative.equals("linux/ubuntu/root");
+                || relative.equals("linux/ubuntu/root")||relative.equals("linux/ubuntu/root/.dsh")||relative.equals("user-data-v5/dsh");
     }
     public boolean childOf(String parent, String child) throws IOException {
         String p = relative(parent), c = relative(child);
         if (p.equals(c) || (!p.isEmpty() && !c.startsWith(p + "/"))) return false;
         // 同时检查逻辑层级和实际目标，子目录授权不能借链接读取其他目录。
         File parentFile = resolve(parent, true), target = resolve(child, true);
-        return within(parentFile, target) && !parentFile.equals(target);
+        return (within(parentFile, target)||alias.child(p,c,target)) && !parentFile.equals(target);
     }
     public File resolve(String id, boolean followLast) throws IOException {
-        ArrayDeque<String> pending = parts(relative(id)); File current = base; int followed = 0;
+        ArrayDeque<String> pending = parts(relative(alias.rewrite(relative(id)))); File current = base; int followed = 0;
         while (!pending.isEmpty()) {
             File next = new File(current, pending.removeFirst());
             String target = !pending.isEmpty() || followLast ? links.read(next) : null;
@@ -75,7 +84,7 @@ public final class DocumentPaths {
             }
             if (!within(base, linked)) throw new IOException(com.deepseekharness.app.util.UiText.text("软链接路径越界"));
             String rel = linked.equals(base) ? "" : linked.getPath().substring(base.getPath().length() + 1);
-            ArrayDeque<String> replacement = parts(rel.replace(File.separatorChar, '/'));
+            ArrayDeque<String> replacement = parts(relative(alias.rewrite(rel.replace(File.separatorChar, '/'))));
             replacement.addAll(pending); pending = replacement; current = base;
         }
         if (!within(base, current)) throw new IOException(com.deepseekharness.app.util.UiText.text("文档路径越界"));

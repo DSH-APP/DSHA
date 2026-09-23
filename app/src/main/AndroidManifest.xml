@@ -44,13 +44,19 @@
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_v137"
+        android:roundIcon="@mipmap/ic_launcher_round_v137"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.DeepseekHarness">
 
+        <activity android:name=".ui.ModelSetupActivity" android:exported="false" />
+        <activity android:name=".ui.CommunityActivity" android:exported="false" />
+        <activity android:name=".ui.OnboardingPrepareActivity" android:exported="false" />
+        <activity android:name=".ui.OnboardingReadyActivity" android:exported="false" />
+        <activity android:name=".ui.AccessibilitySetupActivity" android:exported="false" />
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
@@ -64,6 +70,15 @@
         <activity android:name=".ui.UpdateActivity" android:exported="false" />
         <activity android:name=".ui.DiagnosticActivity" android:exported="false" />
         <activity android:name=".ui.StartupRecoveryActivity" android:exported="false" />
+        <activity android:name=".ui.BackgroundTasksActivity" android:exported="false" />
+        <activity android:name=".ui.NativeDataActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.RetainedDataActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <service android:name=".backup.PostUpgradeCleanupService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />
+        <service android:name=".backup.AutomaticBackupService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />
+        <activity android:name=".ui.AutomaticBackupActivity" android:exported="false" />
+        <activity android:name=".ui.StorageActivity" android:exported="false" />
+        <activity android:name=".vscreen.VirtualScreenActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <service android:name=".backup.DataProtectionService" android:exported="false" android:foregroundServiceType="dataSync" />
         <activity android:name=".ui.PluginInstallActivity" android:exported="true">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
@@ -112,6 +127,9 @@
         <activity
             android:name=".ui.WebPreviewActivity"
             android:exported="false"
+            android:launchMode="singleTask"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.DeepseekHarness" />
 

@@ -239,20 +239,21 @@ def plugin_package(root):
     if not isinstance(bundle, dict) or "patch" not in bundle:
         raise ValueError(pkg["name"] + " 未声明 dsh.bundle.patch（普通 npm 包不是 dsh 插件）")
     patch = bundle["patch"]
-    # 上游允许内联 patch 数组或包内 YAML 文件。
-    if isinstance(patch, str):
-        if not os.path.isfile(safe_target(root, patch)):
-            raise ValueError(pkg["name"] + " 缺少 patch 文件，请下载构建后的发布包")
-    elif not isinstance(patch, list):
+    # 0.1.7 接受按顺序合成的补丁数组；逐文件验证，保持原顺序。
+    patches = [patch] if isinstance(patch, str) else patch
+    if not isinstance(patches, list) or not patches or any(not isinstance(item, str) or not item for item in patches):
         raise ValueError(pkg["name"] + " 的 dsh.bundle.patch 格式无效")
+    for item in patches:
+        if not os.path.isfile(safe_target(root, item)):
+            raise ValueError(pkg["name"] + " 缺少 patch 文件，请下载构建后的发布包")
     main = pkg.get("main")
     if isinstance(main, str) and not os.path.isfile(safe_target(root, main)):
         raise ValueError(pkg["name"] + " 缺少入口 " + main + "，请下载 Release 中的构建包")
     entry = (pkg.get("cordis") or {}).get("entry")
     if isinstance(entry, str) and not os.path.isfile(safe_target(root, entry)):
         raise ValueError(pkg["name"] + " 缺少 Cordis 入口，请下载构建后的发布包")
-    if pkg["name"] in builtin.OFFICIAL_BUNDLES:
-        raise ValueError("官方核心请通过 dsh 环境更新，不支持用第三方归档覆盖")
+    if pkg["name"] in builtin.OFFICIAL_BUNDLES or pkg["name"] in builtin.builtin_names():
+        raise ValueError("系统插件只随签名 APK 更新，不支持用第三方归档覆盖")
     return pkg
 
 
@@ -285,62 +286,62 @@ def find_plugin_roots(staging, subdir=""):
     return found
 
 
-def prepare_dependencies(root, pkg):
+_dependencies = None
+
+
+def dependencies():
+    global _dependencies
+    if _dependencies is None:
+        descriptor = importlib.util.spec_from_file_location("plugin_dependencies", os.path.join(os.path.dirname(__file__), "plugin-dependencies.py"))
+        module = importlib.util.module_from_spec(descriptor)
+        descriptor.loader.exec_module(module)
+        _dependencies = module.Dependencies(globals())
+    return _dependencies
+
+
+def prepare_dependencies(root, pkg, archive_sha='', offline=False, restoring=False):
     progress('dependencies', '正在准备插件依赖：' + str(pkg.get('name', '')))
-    deps = pkg.get("dependencies") or {}
-    if not isinstance(deps, dict) or any(not builtin.valid_name(n) for n in deps):
-        raise ValueError("插件 dependencies 格式无效")
-    missing = [n for n in deps if not os.path.isfile(os.path.join(root, "node_modules", n, "package.json"))]
-    if not missing:
-        return
-    if any(str(v).startswith(("workspace:", "link:", "file:")) for v in deps.values()):
-        raise ValueError("插件仍引用本地工作区依赖，请使用包含依赖的发布包")
-    if not shutil.which("pnpm"):
-        raise ValueError("缺少 pnpm，无法安装插件依赖")
-    # 在隔离依赖目录安装，避免源码里的 workspace/.npmrc 或 devDependencies 改变安装范围。
-    with tempfile.TemporaryDirectory(prefix="plugin-deps-", dir=local(DSH_HOME)) as work:
-        write_json(os.path.join(work, "package.json"), {
-            "name": "dsha-plugin-deps", "private": True, "dependencies": deps,
-            "optionalDependencies": pkg.get("optionalDependencies") or {}})
-        process = run_package_command(["pnpm", "install", "--prod", "--ignore-scripts",
-                                  "--no-frozen-lockfile", "--config.node-linker=hoisted",
-                                  "--config.package-import-method=copy",
-                                  "--config.auto-install-peers=false", "--reporter=append-only"],
-                                 cwd=work)
-        if process.returncode:
-            detail = (process.stderr or process.stdout or "")[-1200:].strip()
-            raise ValueError("插件依赖安装失败：" + detail)
-        modules = os.path.join(root, "node_modules")
-        # root 是本次独立解包目录，绝不移除正在使用的插件依赖。
-        if os.path.islink(modules):
-            os.unlink(modules)
-        elif os.path.isdir(modules):
-            shutil.rmtree(modules)
-        shutil.move(os.path.join(work, "node_modules"), modules)
+    return dependencies().prepare(root, pkg, archive_sha, offline, restoring)
 
 
-def register_plugin(root, source, expected_version=None):
+_transactions = None
+
+
+def transactions():
+    global _transactions
+    if _transactions is None:
+        descriptor = importlib.util.spec_from_file_location("plugin_transactions", os.path.join(os.path.dirname(__file__), "plugin-transactions.py"))
+        module = importlib.util.module_from_spec(descriptor)
+        descriptor.loader.exec_module(module)
+        _transactions = module.Transactions(globals())
+    return _transactions
+
+
+def register_plugin(root, source, expected_version=None, *, reviewed=False, restoring=False):
     pkg = plugin_package(root)
     name = pkg["name"]
-    prepare_dependencies(root, pkg)
+    if not reviewed:
+        raise ValueError('插件必须先完成静态预览并确认，不能直接安装')
+    prepare_dependencies(root, pkg, restoring=restoring)
+    source = dependencies().source_label(source)
     dest = local(os.path.join(PLUGIN_SRC, name))
     managed_root = os.path.realpath(local(PLUGIN_SRC))
     if os.path.commonpath([os.path.realpath(local(DSH_HOME)), managed_root]) != os.path.realpath(local(DSH_HOME)) \
             or os.path.commonpath([managed_root, os.path.realpath(os.path.dirname(dest))]) != managed_root:
         raise ValueError("插件目标目录越界，已停止安装")
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    # 新目录先准备完整再切换；第三方插件只保留唯一上一版，供显式回退。
-    with tempfile.TemporaryDirectory(prefix=".install-", dir=os.path.dirname(dest)) as work:
+    transaction = transactions()
+    with transaction.workspace() as work:
         prepared = os.path.join(work, "new")
         shutil.copytree(root, prepared, symlinks=True)
-        # 复制后再检查软链接：插件不能依赖源仓库中没有被带走的相邻目录。
+        if not restoring:
+            dependencies().inspect(prepared)
         for base, dirs, files in os.walk(prepared, followlinks=False):
             for item in dirs + files:
                 candidate = os.path.join(base, item)
                 if os.path.islink(candidate):
                     safe_target(prepared, os.path.relpath(candidate, prepared))
         old = os.path.join(work, "old")
-        history_change = None
         with builtin.operation_lock(check_cancel), committing('正在登记插件：' + name):
             builtin.ensure_runtime_modules()
             if expected_version is not None:
@@ -354,59 +355,57 @@ def register_plugin(root, source, expected_version=None):
                 doc = builtin.new_manifest({})
             sources = read_json(local(SOURCES), {})
             if not isinstance(sources, dict):
-                sources = {}
+                raise ValueError('插件来源记录异常，原件已保留')
             previous_sources = dict(sources)
-            source_written = False
             link = os.path.join(local(builtin.NODE_MODULES), name)
             if os.path.lexists(link) and not os.path.islink(link):
                 raise ValueError(name + " 已由 pnpm 安装为实体目录，请先在终端移除该依赖再导入")
-            old_link = os.readlink(link) if os.path.islink(link) else None
             marker = builtin.marker_path(name)
             previous_bundles = doc.get("dsh", {}).get("profile", {}).get("bundles", [])
             known = name in doc.get("dependencies", {}) or name in previous_bundles
-            enabled = not os.path.isfile(marker) and (not known or name in previous_bundles)
+            enabled = restoring and not os.path.isfile(marker) and (not known or name in previous_bundles)
+            if os.path.lexists(marker) and (os.path.islink(marker) or not os.path.isfile(marker)):
+                raise ValueError('插件停用标记类型异常，原件已保留')
             existed = os.path.lexists(dest)
-            if existed:
-                if os.path.islink(dest) or not os.path.isdir(dest):
-                    raise ValueError("插件目标目录类型异常：" + name)
-                os.replace(dest, old)
+            if existed and (os.path.islink(dest) or not os.path.isdir(dest)):
+                raise ValueError("插件目标目录类型异常：" + name)
+            bundles = doc.setdefault("dsh", {}).setdefault("profile", {}).setdefault("bundles", [])
+            if enabled and name not in bundles:
+                bundles.append(name)
+            if not enabled and name in bundles:
+                bundles.remove(name)
+            doc["dsh"]["profile"]["patchReload"] = "startup"
+            doc.setdefault("dependencies", {})[name] = "link:" + os.path.join(PLUGIN_SRC, name).replace("\\", "/")
+            sources[name] = source or dependencies().source_label(repository_url(pkg)) or sources.get(name, "")
+            marker_bytes = b'DSHA_REVIEW_REQUIRED\n' if not enabled and not os.path.lexists(marker) else None
+            plan = transaction.prepare(work, name, prepared, doc, sources, marker_bytes)
+            transaction.boundary('prepared')
             try:
+                transaction.apply_file(work, 'marker', plan)
+                if existed:
+                    os.replace(dest, old)
+                transaction.boundary('old-moved')
                 os.replace(prepared, dest)
+                transaction.boundary('new-moved')
                 if os.path.islink(link):
                     os.unlink(link)
                 if enabled:
                     os.makedirs(os.path.dirname(link), exist_ok=True)
                     os.symlink(dest, link, target_is_directory=True)
-                bundles = doc.setdefault("dsh", {}).setdefault("profile", {}).setdefault("bundles", [])
-                if enabled and name not in bundles:
-                    bundles.append(name)
-                if not enabled and name in bundles:
-                    bundles.remove(name)
-                doc["dsh"]["profile"]["patchReload"] = "startup"
-                doc.setdefault("dependencies", {})[name] = "link:" + os.path.join(PLUGIN_SRC, name).replace("\\", "/")
-                # 来源属于辅助信息，先写入；注册清单是最后的提交点。
-                sources[name] = source or repository_url(pkg) or sources.get(name, "")
-                write_json(local(SOURCES), sources)
-                source_written = True
+                lifecycle().queue_activation(name, dependencies().current(dest)['sha256'], str(pkg.get('version', '')),
+                                             transaction=(transaction, work, plan), status='queued' if enabled else 'disabled')
+                transaction.boundary('activation-replaced')
+                transaction.apply_file(work, 'sources', plan)
+                transaction.boundary('sources-replaced')
                 if existed and name not in builtin.builtin_names():
-                    history_change = lifecycle().retain(name, old, work, previous_sources.get(name, ""))
-                builtin.write_manifest(doc)
+                    lifecycle().retain(name, old, work, previous_sources.get(name, ""))
+                transaction.boundary('history-retained')
+                transaction.apply_file(work, 'manifest', plan)
+                transaction.boundary('manifest-replaced')
+                transaction.mark(work, 'committed')
+                transaction.boundary('committed')
             except Exception:
-                if history_change is not None:
-                    history_change.undo()
-                if source_written:
-                    try:
-                        write_json(local(SOURCES), previous_sources)
-                    except OSError:
-                        pass
-                if os.path.islink(link):
-                    os.unlink(link)
-                if old_link is not None:
-                    os.symlink(old_link, link, target_is_directory=True)
-                if os.path.isdir(dest):
-                    shutil.rmtree(dest)
-                if existed:
-                    os.replace(old, dest)
+                transaction.recover(work)
                 raise
     return name
 
@@ -448,8 +447,13 @@ def cmd_import(archive, subdir="", source="", expected_versions=None):
 def resolve_plugin_dir(name, discovered=None):
     if not builtin.valid_name(name):
         raise ValueError("无效的插件名称")
+    if name in builtin.builtin_names():
+        # 系统插件永远从当前 APK 刷新的 /root/dsha-* 读取，旧 profile 的
+        # 同名实体或旧备份副本不能改变列表、导出或回退所看到的版本。
+        directory = builtin.entity_dir(name)
+        return local(directory) if directory else None
     path = os.path.join(local(builtin.NODE_MODULES), name)
-    if name not in builtin.builtin_names() and os.path.isfile(os.path.join(path, "package.json")):
+    if os.path.isfile(os.path.join(path, "package.json")):
         return os.path.realpath(path)
     if discovered is not None and name in discovered:
         return discovered[name]['directory']
@@ -470,11 +474,18 @@ def cmd_export(names, out):
     out = local(out)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     total, count = 0, 0
+    excluded = []
 
     def add_tree(archive, path, arc, ancestors):
         nonlocal total, count
         progress('export', '正在打包：' + arc, count)
         real = os.path.realpath(path)
+        basename = os.path.basename(path)
+        if basename in ('.npmrc', '.yarnrc.yml', '.env', '.dsha-dependencies.json') or basename.startswith('.env.'):
+            excluded.append(arc)
+            return
+        if basename == 'pnpm-lock.yaml':
+            dependencies().validate_lock(real)
         if real in ancestors:
             raise ValueError("插件依赖含循环链接，无法导出：" + arc)
         if not os.path.exists(real):
@@ -498,8 +509,8 @@ def cmd_export(names, out):
     try:
         with tarfile.open(out, "w:gz", dereference=True) as archive:
             for name in dict.fromkeys(names):
-                if name in builtin.OFFICIAL_BUNDLES:
-                    raise ValueError("官方核心不提供独立导出")
+                if name in builtin.OFFICIAL_BUNDLES or name in builtin.builtin_names():
+                    raise ValueError("系统插件由当前签名 APK 重建，不提供独立导出")
                 directory = resolve_plugin_dir(name)
                 if not directory:
                     raise ValueError("找不到插件实体：" + str(name))
@@ -510,7 +521,7 @@ def cmd_export(names, out):
         if os.path.isfile(out):
             os.remove(out)
         raise
-    result("ok", "插件包已生成", path=out)
+    result("ok", "插件包已生成；凭据配置未导出，原生锁文件保留，导入时重新核对内容" if excluded else "插件包已生成", path=out, excluded=excluded)
     return 0
 
 
@@ -684,7 +695,7 @@ def cmd_release(owner, repo, tag, *, consume=None):
     return cmd_download(archives[0]["browser_download_url"], **({"consume": consume} if consume else {}))
 
 
-def cmd_list():
+def cmd_list(message="插件状态已同步"):
     doc = builtin.read_manifest() or {}
     bundles = doc.get("dsh", {}).get("profile", {}).get("bundles", [])
     deps = doc.get("dependencies", {})
@@ -723,7 +734,17 @@ def cmd_list():
                          if update.get('installedVersion') == str(pkg.get('version', '')) else '',
                          rollbackVersion=previous.get('version', ''), compatibility=update.get('compatibility', ''))
     mode = lifecycle().read(lifecycle().path('plugin-safe-mode.json'), {})
-    result("ok", "插件状态已同步", items=items, safeMode=bool(mode.get('active')))
+    activations = lifecycle().activation_state()['entries']
+    for item in items:
+        activation = activations.get(item['name'], {})
+        item['loadState'] = activation.get('status', '') if activation.get('version') == item.get('version') else ''
+        marker = builtin.marker_path(item['name'])
+        if not item.get('enabled') and os.path.isfile(marker) and os.path.getsize(marker) <= 128:
+            with open(marker, encoding='utf8') as stream:
+                if stream.read() == 'DSHA_REVIEW_REQUIRED\n':
+                    item['loadState'] = 'review-required'
+    pending, unreadable = lifecycle().pending_previews()
+    result("ok", message, items=items, safeMode=bool(mode.get('active')), pendingReviews=pending, unreadableReviews=unreadable)
     return 0
 
 
@@ -755,12 +776,55 @@ def main():
     args = sys.argv[1:]
     try:
         check_cancel()
+        # 一次容器启动内完成变更与状态读取；仍沿用原锁、审阅及提交边界。
+        if args == ["refresh"]:
+            with builtin.operation_lock(check_cancel):
+                progress('refresh', '正在检测已安装插件…', cancellable=False)
+                if builtin.register() != 0:
+                    raise ValueError('部分内置插件待修复，请检查环境')
+                return cmd_list('插件检测完成；变更后重启 Web 生效')
+        if len(args) == 2 and args[0] in ('enable-list', 'disable-list'):
+            name = args[1]
+            if not builtin.valid_name(name):
+                raise ValueError('无效的插件名称')
+            with builtin.operation_lock(check_cancel):
+                enable = args[0] == 'enable-list'
+                progress('configure', '正在更新插件状态…', cancellable=False)
+                if (builtin.enable_plugin(name) if enable else builtin.disable_plugin(name)) != 0:
+                    raise ValueError('插件状态更新失败，请检查配置或审阅状态')
+                return cmd_list('已' + ('启用 ' if enable else '禁用 ') + name + '；重启 Web 后生效')
+        if len(args) == 2 and args[0] == 'delete-list':
+            if cmd_delete(args[1]) != 0:
+                return 1
+            with builtin.operation_lock():
+                progress('refresh', '插件已删除，正在同步列表…', cancellable=False)
+                return cmd_list('已删除 ' + args[1] + '；重启 Web 后停止加载。对话和其他插件保留。')
         if args[0] == "inspect" and len(args) == 2:
             return lifecycle().inspect(args[1])
-        if args[0] == "install-preview" and len(args) == 2:
-            return lifecycle().install_preview(args[1])
+        if args[0] == "install-preview" and len(args) == 3:
+            return lifecycle().install_preview(args[1], args[2])
         if args[0] == "show-preview" and len(args) == 2:
             return lifecycle().show_preview(args[1])
+        if args[0] == "review-enable" and len(args) == 2:
+            return lifecycle().review_existing(args[1])
+        if args[0] == 'review-restored' and len(args) == 3:
+            return lifecycle().review_restored(args[1],args[2])
+        if args[0] in ('begin-load', 'complete-load', 'failed-load') and len(args) == 2:
+            return lifecycle().loading(args[0].split('-')[0], args[1])
+        if args[0] == 'recover-installs' and len(args) == 2:
+            import uuid
+            if str(uuid.UUID(args[1])) != args[1]:
+                raise ValueError('插件恢复授权标识无效')
+            proof = local('/root/.dsha-plugin-recovery-' + args[1])
+            if os.path.islink(proof) or not os.path.isfile(proof) or os.path.getsize(proof) != 25:
+                raise ValueError('插件恢复必须从原生维护入口进行')
+            with open(proof, encoding='ascii') as stream:
+                if stream.read() != 'RECOVER_PLUGIN_OPERATIONS':
+                    raise ValueError('插件恢复授权标识无效')
+            os.unlink(proof)
+            transactions().recover_all()
+            result('ok', '中断的插件操作已恢复，原件已保留')
+            return 0
         if args[0] == "discard-preview" and len(args) == 2:
             return lifecycle().discard_preview(args[1])
         if args[0] == "check-updates" and len(args) in (1, 2):
@@ -772,20 +836,20 @@ def main():
         if args[0] == "safe-mode" and len(args) == 2:
             return lifecycle().safe_mode(args[1])
         if args[0] == "import" and len(args) == 2:
-            return cmd_import(args[1])
+            return lifecycle().inspect({"command": "file " + __import__("shlex").quote(args[1])})
         if args[0] == "export" and len(args) == 3:
             with builtin.operation_lock(check_cancel):
                 return cmd_export(args[1], args[2])
         if args[0] == "delete" and len(args) == 2:
             return cmd_delete(args[1])
         if args[0] == "download" and len(args) == 2:
-            return cmd_download(args[1])
+            return lifecycle().inspect({"command": " ".join(__import__("shlex").quote(arg) for arg in args)})
         if args[0] == "npm" and len(args) == 2:
-            return cmd_npm(args[1])
+            return lifecycle().inspect({"command": " ".join(__import__("shlex").quote(arg) for arg in args)})
         if args[0] == "github" and len(args) in (3, 4):
-            return cmd_github(*args[1:])
+            return lifecycle().inspect({"command": " ".join(__import__("shlex").quote(arg) for arg in args)})
         if args[0] == "release" and len(args) == 4:
-            return cmd_release(*args[1:])
+            return lifecycle().inspect({"command": " ".join(__import__("shlex").quote(arg) for arg in args)})
         if args[0] == "list":
             with builtin.operation_lock(check_cancel):
                 return cmd_list()

@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <style name="Ui2.Nav" parent="">
+        <item name="android:textSize">11sp</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <color name="ui2_log_text">#BBCBDD</color>
+</resources>

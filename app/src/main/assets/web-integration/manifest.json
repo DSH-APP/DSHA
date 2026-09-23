@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "DSHA 页面返回",
-  "version": "1.5",
+  "version": "1.6",
   "browser_specific_settings": {
     "gecko": {
       "id": "dsha-page@dsh.client"

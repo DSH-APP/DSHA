@@ -68,4 +68,11 @@ public class DeviceShellPolicyTest {
         assertEquals("/sdcard/Download/c d", plan.argv.get(2));
         try { plan.argv.set(0, "dd"); fail(); } catch (UnsupportedOperationException expected) { }
     }
+    @Test public void virtualScreenLauncherIsNarrowlyAllowlisted() {
+        String command="app_process -Djava.class.path=/data/app/com.dsh.client/base.apk /system/bin "
+                + "com.deepseekharness.app.vscreen.VirtualScreenCore --launch --port 8998 --token "
+                + "0123456789abcdef0123456789abcdef";
+        assertEquals(DeviceShellPolicy.Kind.VIRTUAL_SCREEN,DeviceShellPolicy.inspect(command).kind);
+        denied("app_process /system/bin com.example.Main", "app_process -Djava.class.path=/data/app/x.apk /system/bin com.example.Main --launch --port 8998 --token 0123456789abcdef0123456789abcdef");
+    }
 }

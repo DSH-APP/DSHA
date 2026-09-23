@@ -42,5 +42,12 @@ export interface ScopedContext extends HostContext {
         }): unknown;
     };
 }
+/**
+ * Plugin name, per the official minimal plugin shape (name + apply). The patch
+ * row in cordis.patch.yml carries the same id, so nothing resolves through this
+ * value in this repo; it labels the runtime record and is what the documented
+ * form declares. Kept in sync with package.json name.
+ */
+export declare const name = "dsh-web-mobile";
 export declare function apply(ctx: HostContext): void;
 //# sourceMappingURL=index.d.ts.map

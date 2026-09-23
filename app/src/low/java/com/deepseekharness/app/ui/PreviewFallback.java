@@ -21,8 +21,12 @@ final class PreviewFallback {
 
     static boolean open(Activity activity, String url, String cookie) {
         try {
+            // WebView 会刷新鉴权 URL，fragment 导航意图必须独立保留到 Gecko。
+            String requested=activity.getIntent().getStringExtra("url");
+            boolean models=activity.getIntent().getBooleanExtra("dsha_open_models",false)
+                    || requested!=null&&requested.endsWith("#dsha-models");
             activity.startActivity(new Intent(activity, GeckoPreviewActivity.class)
-                    .putExtra("url", url).putExtra("cookie", cookie));
+                    .putExtra("url", url).putExtra("cookie", cookie).putExtra("dsha_open_models",models));
             activity.finish();
             return true;
         } catch (RuntimeException error) { return false; }

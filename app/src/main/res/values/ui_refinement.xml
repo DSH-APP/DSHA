@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="ui134_current">当前应用</string>
+  <string name="ui134_code">版本码</string>
+  <string name="ui134_edition">当前版本类型</string>
+  <string name="ui134_candidate">查看候选版本</string>
+  <string name="ui134_candidate_sub">更新记录、大小与安装方式</string>
+  <string name="ui134_changelog">本版本更新记录</string>
+  <string name="ui134_changelog_sub">0.1.7-alpha1 · 交互与设备能力</string>
+  <string name="ui134_check_ready">准备检查</string>
+  <string name="ui134_results">检查结果</string>
+  <string name="ui134_start_records">启动记录</string>
+  <string name="ui134_recent_startups">最近五次启动</string>
+  <string name="ui134_recent_startups_sub">阶段、实际错误与退出码</string>
+  <string name="ui134_startup_recovery">启动故障处理</string>
+  <string name="ui134_startup_recovery_sub">查看问题与恢复方式</string>
+  <string name="ui134_host">配对地址</string>
+  <string name="ui134_auto_host">留空自动发现本机地址</string>
+  <string name="ui134_pair_port">配对端口</string>
+  <string name="ui134_auto_port">六位码弹窗的端口，可自动发现</string>
+  <string name="ui134_disconnect">断开 ADB 连接</string>
+  <string name="ui134_root_hint">已 Root 的手机：开启开关，在 Magisk / KernelSU 等管理器允许 DSHA，再点验证。未 Root 可用下方通道。</string>
+  <string name="ui134_shizuku_hint">先在 Shizuku 管理器启动服务，再返回授权。手机重启后通常需要重新启动服务。</string>
+  <string name="ui134_adb_hint">Android 11+：在同一 Wi-Fi 下配对无线调试。无需 Root；网络变化后可验证或重新配对。</string>
+  <string name="ui134_screen_setup">设置屏幕操作 · 两步完成</string>
+</resources>

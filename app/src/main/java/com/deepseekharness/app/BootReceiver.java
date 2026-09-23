@@ -26,6 +26,9 @@ public class BootReceiver extends BroadcastReceiver {
                     && !Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(action)) {
                 return;
             }
+            if(!Intent.ACTION_LOCKED_BOOT_COMPLETED.equals(action))com.deepseekharness.app.backup.AutomaticBackups.schedule(context);
+            if(Intent.ACTION_MY_PACKAGE_REPLACED.equals(action))
+                com.deepseekharness.app.backup.PostUpgradeCleanupService.schedule(context);
             // 用户没开 ADB 就不拉起（尊重开关）
             if (!DeviceBridgeService.isAdbEnabled(context)) return;
             android.util.Log.i("DSHA-ADB", com.deepseekharness.app.util.UiText.text("开机/升级自启：尝试自动开启无线调试 + 拉起设备桥"));

@@ -45,8 +45,13 @@ public class PluginFragment extends Fragment {
     private TextView linkHint;
     private CheckBox hideBuiltin;
     private boolean market = true;
+    private final java.util.Set<String> expandedPlugins=new java.util.HashSet<>();
     private PluginSort.Mode sortOrder=PluginSort.Mode.NAME_ASC;
     private final List<PluginRepository.Item> visibleItems = new ArrayList<>();
+    private List<PluginRepository.Item> renderedItems;
+    private String renderedQuery;
+    private PluginSort.Mode renderedSort;
+    private boolean renderedHideBuiltin, renderedBusy;
     private final Adapter adapter = new Adapter();
     private ArrayList<String> pendingExports = new ArrayList<>();
     private android.net.Uri pendingImport;
@@ -63,7 +68,7 @@ public class PluginFragment extends Fragment {
     /** 只在首次读取或安全启动失效后同步一次；等待中的轮询只读内存状态。 */
     private void refreshInstalledIfNeeded() {
         refreshHandler.removeCallbacks(refreshInvalidated);
-        if (root == null || !isResumed()) return;
+        if (root == null || !isResumed() || market) return;
         if (pluginRefreshBlocked()) {
             refreshHandler.postDelayed(refreshInvalidated, 500);
             return;
@@ -106,7 +111,7 @@ public class PluginFragment extends Fragment {
                 if (uri == null && data != null && data.getClipData() != null && data.getClipData().getItemCount() > 0)
                     uri = data.getClipData().getItemAt(0).getUri();
                 if (result.getResultCode() != android.app.Activity.RESULT_OK || uri == null) {
-                    repository.selectionMessage(com.deepseekharness.app.util.UiText.text("未选择文件或文件管理器未返回文件。可点「其他文件选择器」重试，选择 ZIP / TAR.GZ 插件包。"));
+                    repository.selectionMessage(com.deepseekharness.app.util.UiText.text("未选择文件。可再次点击导入插件包。"));
                     return;
                 }
                 if (!"content".equals(uri.getScheme()) && !"file".equals(uri.getScheme())) {
@@ -144,6 +149,8 @@ public class PluginFragment extends Fragment {
 
     @Override public void onViewCreated(@NonNull View view, @Nullable Bundle saved) {
         root = view;
+        renderedItems=null;
+        view.findViewById(R.id.statusText).setOnClickListener(v->BackgroundTasksActivity.open(requireContext()));
         sortOrder=new com.deepseekharness.app.core.ConfigStore(requireContext()).getPluginSort();
         repository = new ViewModelProvider(requireActivity()).get(PluginRepository.class);
         if (getArguments() != null && getArguments().getBoolean("show_installed", false)) market = false;
@@ -162,6 +169,7 @@ public class PluginFragment extends Fragment {
         hideBuiltin = view.findViewById(R.id.chkHideBuiltin);
         RecyclerView list = view.findViewById(R.id.pluginList);
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
+        // 插件卡片随整页移动，只有外层页面处理纵向滚动。
         list.setNestedScrollingEnabled(false);
         list.setItemAnimator(null);
         list.setAdapter(adapter);
@@ -177,7 +185,6 @@ public class PluginFragment extends Fragment {
         view.findViewById(R.id.btnPluginInstall).setOnClickListener(v -> installLink());
         view.findViewById(R.id.btnPluginPaste).setOnClickListener(v -> pasteLink());
         view.findViewById(R.id.btnImport).setOnClickListener(v -> chooseImport(false));
-        view.findViewById(R.id.btnImportFallback).setOnClickListener(v -> chooseImport(true));
         view.findViewById(R.id.btnExport).setOnClickListener(v -> chooseExport());
         view.findViewById(R.id.btnSort).setOnClickListener(v -> showSortOptions());
         hideBuiltin.setOnCheckedChangeListener((v, checked) -> render());
@@ -245,13 +252,14 @@ public class PluginFragment extends Fragment {
         if (root == null || repository.isBusy() || previewDialog != null) return;
         PluginRepository.Preview preview = repository.preview().getValue();
         if (preview == null) return;
-        previewDialog = new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.text("确认安装插件"))
+        previewDialog = new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.text(preview.action.equals("install")?"确认安装插件":"审阅插件启用或回退"))
                 .setMessage(preview.description())
                 .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), (d, w) -> repository.discardPreview())
-                .setPositiveButton(com.deepseekharness.app.util.UiText.text("确认安装"), (d, w) -> repository.confirmPreview())
+                .setPositiveButton(com.deepseekharness.app.util.UiText.text(preview.action.equals("install")?"确认安装":preview.action.equals("rollback")?"确认回退":"确认启用"), (d, w) -> repository.confirmPreview())
                 .setOnCancelListener(d -> repository.discardPreview()).create();
         previewDialog.setOnDismissListener(d -> previewDialog = null);
         previewDialog.show();
+        if(preview.blocked())previewDialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setEnabled(false);
     }
 
     private void recognizeLink() {
@@ -271,6 +279,7 @@ public class PluginFragment extends Fragment {
 
     private void selectTab(boolean showMarket) {
         market = showMarket;
+        if (!market) refreshInstalledIfNeeded();
         linkInput.clearFocus();
         search.clearFocus();
         android.view.inputmethod.InputMethodManager keyboard = (android.view.inputmethod.InputMethodManager)
@@ -283,9 +292,7 @@ public class PluginFragment extends Fragment {
 
     private void openPluginWebsite() {
         try {
-            startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse("https://dsha.cc/"))
-                    .addCategory(android.content.Intent.CATEGORY_BROWSABLE));
+            startActivity(new android.content.Intent(requireContext(),CommunityActivity.class));
         } catch (RuntimeException error) {
             toast(com.deepseekharness.app.util.UiText.text("无法打开浏览器，请在浏览器中访问 https://dsha.cc/"));
         }
@@ -313,14 +320,14 @@ public class PluginFragment extends Fragment {
             if (keyboard != null) keyboard.hideSoftInputFromWindow(focus.getWindowToken(), 0);
             focus.clearFocus();
         }
-        repository.selectionMessage(com.deepseekharness.app.util.UiText.text("请选择插件压缩包；文件选择器无法返回时，可使用「其他文件选择器」。"));
+        repository.selectionMessage(com.deepseekharness.app.util.UiText.text("请选择 ZIP / TAR.GZ 插件包。"));
         try { importPicker.launch(PluginFilePicker.intent(requireContext(), alternative)); }
         catch (android.content.ActivityNotFoundException error) {
             if (!alternative) { chooseImport(true); return; }
             repository.selectionMessage(com.deepseekharness.app.util.UiText.text("未找到可用的文件选择器，请启用系统「文件」应用后重试。"));
             toast(com.deepseekharness.app.util.UiText.text("没有可用的文件选择器"));
         } catch (RuntimeException error) {
-            repository.selectionMessage(com.deepseekharness.app.util.UiText.text("无法打开文件选择器，请使用备用入口：") + error.getClass().getSimpleName());
+            repository.selectionMessage(com.deepseekharness.app.util.UiText.text("无法打开文件选择器，请检查系统文件应用：") + error.getClass().getSimpleName());
         }
     }
 
@@ -335,7 +342,8 @@ public class PluginFragment extends Fragment {
     private void render() {
         if (root == null || current == null) return;
         root.findViewById(R.id.pluginMarketCard).setVisibility(market ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.marketHelp).setVisibility(market ? View.VISIBLE : View.GONE);
+        root.findViewById(R.id.pluginLocalTitle).setVisibility(market ? View.VISIBLE : View.GONE);
+        root.findViewById(R.id.pluginLocalCard).setVisibility(market ? View.VISIBLE : View.GONE);
         root.findViewById(R.id.pluginWebsiteSection).setVisibility(market ? View.VISIBLE : View.GONE);
         root.findViewById(R.id.pluginLinkSection).setVisibility(market ? View.VISIBLE : View.GONE);
         root.findViewById(R.id.btnPluginRestore).setVisibility(repository.isSafeMode() ? View.VISIBLE : View.GONE);
@@ -348,30 +356,41 @@ public class PluginFragment extends Fragment {
         ((TextView) root.findViewById(R.id.btnInstalled)).setTextColor(requireContext().getColor(
                 market ? R.color.text_secondary : R.color.primary));
         root.findViewById(R.id.pluginBusy).setVisibility(current.busy ? View.VISIBLE : View.GONE);
+        root.findViewById(R.id.statusText).setVisibility(current.message.isEmpty()?View.GONE:View.VISIBLE);
         android.widget.ProgressBar progress = root.findViewById(R.id.pluginBusy);
         progress.setIndeterminate(current.percent < 0);
         if (current.percent >= 0) progress.setProgress(current.percent);
         root.findViewById(R.id.btnCancelPluginTask).setVisibility(current.busy ? View.VISIBLE : View.GONE);
         root.findViewById(R.id.btnCancelPluginTask).setEnabled(current.cancellable);
         ((TextView) root.findViewById(R.id.statusText)).setText(com.deepseekharness.app.util.UiStateText.render(current.message));
-        for (int id : new int[]{R.id.btnImport, R.id.btnImportFallback, R.id.btnExport, R.id.btnRefresh, R.id.btnPluginUpdates, R.id.btnPluginRestore})
+        for (int id : new int[]{R.id.btnImport, R.id.btnExport, R.id.btnRefresh, R.id.btnPluginUpdates, R.id.btnPluginRestore})
             root.findViewById(id).setEnabled(!current.busy);
         TextView sort=root.findViewById(R.id.btnSort);
         sort.setText(sortLabels()[sortOrder.ordinal()]);
         sort.setContentDescription(getString(R.string.plugin_sort_title)+" · "+sort.getText());
-        visibleItems.clear();
         String query = search.getText().toString().trim().toLowerCase(Locale.ROOT);
-        for (PluginRepository.Item item : current.items) {
-            if (hideBuiltin.isChecked() && (item.builtin || item.official)) continue;
-            if (!(item.name + " " + item.description).toLowerCase(Locale.ROOT).contains(query)) continue;
-            visibleItems.add(item);
+        boolean changed=renderedItems!=current.items || !query.equals(renderedQuery)
+                || renderedSort!=sortOrder || renderedHideBuiltin!=hideBuiltin.isChecked();
+        boolean rebind=changed || renderedBusy!=current.busy;
+        // 阶段进度每 400 ms 更新；列表内容未变时只更新状态，保留滚动和展开控件。
+        if(changed) {
+            visibleItems.clear();
+            for (PluginRepository.Item item : current.items) {
+                if (hideBuiltin.isChecked() && (item.builtin || item.official)) continue;
+                if (!(item.name + " " + item.description).toLowerCase(Locale.ROOT).contains(query)) continue;
+                visibleItems.add(item);
+            }
+            visibleItems.sort(PluginSort.comparator(sortOrder,it->it.name,it->it.enabled,it->it.updateAvailable));
+            renderedItems=current.items;renderedQuery=query;renderedSort=sortOrder;
+            renderedHideBuiltin=hideBuiltin.isChecked();
         }
-        visibleItems.sort(PluginSort.comparator(sortOrder,it->it.name,it->it.enabled,it->it.updateAvailable));
+        renderedBusy=current.busy;
         ((TextView) root.findViewById(R.id.pluginCount)).setText(com.deepseekharness.app.util.UiText.text("共 ") + visibleItems.size() + com.deepseekharness.app.util.UiText.text(" 个插件"));
         TextView empty = root.findViewById(R.id.pluginEmpty);
         empty.setVisibility(!market && visibleItems.isEmpty() ? View.VISIBLE : View.GONE);
+        root.findViewById(R.id.pluginList).setVisibility(!market&&!visibleItems.isEmpty()?View.VISIBLE:View.GONE);
         empty.setText(current.busy ? com.deepseekharness.app.util.UiText.text("正在读取插件…") : com.deepseekharness.app.util.UiText.text("没有符合条件的插件"));
-        adapter.notifyDataSetChanged();
+        if(rebind)adapter.notifyDataSetChanged();
         recognizeLink();
         showInstallPreview();
     }
@@ -514,12 +533,39 @@ public class PluginFragment extends Fragment {
                     : item.available ? (item.enabled ? com.deepseekharness.app.util.UiText.text("已启用") : item.detected ? com.deepseekharness.app.util.UiText.text("已检测，可开启以加入 Web") : com.deepseekharness.app.util.UiText.text("已禁用")) : com.deepseekharness.app.util.UiText.text("实体缺失，请重新导入"))
                     + (item.version.isEmpty() ? "" : " · " + item.version)
                     + (item.updateAvailable ? com.deepseekharness.app.util.UiText.text("\n可更新：") + item.latestVersion : ""));
+            if(!item.dynamic&&!item.loadState.isEmpty()){
+                String state=switch(item.loadState){
+                    case "review-required" -> "待审阅启用";
+                    case "queued" -> "已批准，等待加载";
+                    case "attempted" -> "正在确认加载";
+                    case "loaded" -> item.enabled?"已确认加载":"已禁用";
+                    case "failed", "unconfirmed" -> "加载未确认，保持停用";
+                    case "changed" -> "内容已变化，需要重新审阅";
+                    default -> item.enabled?"已启用":"已禁用";
+                };
+                holder.state.setText(com.deepseekharness.app.util.UiText.text(state)+(item.version.isEmpty()?"":" · "+item.version)
+                        +(item.updateAvailable?com.deepseekharness.app.util.UiText.text("\n可更新：")+item.latestVersion:""));
+            }
             holder.state.setTextColor(requireContext().getColor(
                     !item.available ? R.color.warn : item.enabled ? R.color.primary : R.color.text_muted));
             holder.description.setText(item.description.isEmpty()
                     ? (item.official ? com.deepseekharness.app.util.UiText.text("官方核心") : item.builtin ? com.deepseekharness.app.util.UiText.text("DSHA 内置插件") : com.deepseekharness.app.util.UiText.text("第三方插件")) : item.builtin || item.official || item.dynamic ? com.deepseekharness.app.util.UiStateText.render(item.description) : item.description);
             holder.itemView.findViewById(R.id.pluginActions).setOnClickListener(v -> itemActions(item));
             holder.itemView.findViewById(R.id.pluginActions).setContentDescription(com.deepseekharness.app.util.UiText.text("更多操作：") + item.name);
+            android.widget.Button expand=holder.itemView.findViewById(R.id.pluginExpand),delete=holder.itemView.findViewById(R.id.pluginDelete);
+            TextView details=holder.itemView.findViewById(R.id.pluginDetails);
+            String location=item.location.isEmpty()?com.deepseekharness.app.util.UiText.choose("未提供路径", "Path not provided"):item.location;
+            String source=item.source.isEmpty()?(item.builtin?com.deepseekharness.app.util.UiText.choose("随包内置", "Bundled"):item.official?com.deepseekharness.app.util.UiText.choose("DSH 官方组件", "Official DSH component"):com.deepseekharness.app.util.UiText.choose("来源未记录", "Source not recorded")):item.source;
+            details.setText(item.description+"\n\n"+com.deepseekharness.app.util.UiText.choose("版本：", "Version: ")+item.version+"\n"+com.deepseekharness.app.util.UiText.choose("位置：", "Location: ")+location+"\n"+com.deepseekharness.app.util.UiText.choose("来源：", "Source: ")+source);
+            details.setVisibility(expandedPlugins.contains(item.name)?View.VISIBLE:View.GONE);
+            expand.setText(expandedPlugins.contains(item.name)?com.deepseekharness.app.util.UiText.choose("收起详情", "Collapse details"):com.deepseekharness.app.util.UiText.choose("展开插件详情", "Plugin details"));
+            expand.setOnClickListener(v->{if(!expandedPlugins.add(item.name))expandedPlugins.remove(item.name);int at=holder.getAdapterPosition();if(at!=RecyclerView.NO_POSITION)notifyItemChanged(at);});
+            delete.setVisibility(item.deletable?View.VISIBLE:View.GONE);delete.setEnabled(!repository.isBusy());
+            delete.setText(com.deepseekharness.app.util.UiText.choose("删除插件", "Delete plugin"));
+            delete.setOnClickListener(v->{if(repository.isBusy())return;new DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.choose("删除插件？", "Delete plugin?"))
+                    .setMessage(item.name+com.deepseekharness.app.util.UiText.choose(" 的安装文件与启用记录将删除；对话、其他插件和外部源码目录保留。", " installation and enabled state will be removed. Conversations, other plugins and external source folders remain."))
+                    .setNegativeButton(com.deepseekharness.app.util.UiText.choose("取消", "Cancel"),null)
+                    .setPositiveButton(com.deepseekharness.app.util.UiText.choose("删除", "Delete"),(dialog,which)->repository.delete(item)).show();});
             holder.toggle.setVisibility(item.dynamic ? View.GONE : View.VISIBLE);
             holder.toggle.setOnCheckedChangeListener(null);
             holder.toggle.setChecked(item.enabled);

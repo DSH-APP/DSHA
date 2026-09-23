@@ -1,34 +1,83 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_pad">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:gravity="center_vertical" android:orientation="horizontal">
-            <Button android:id="@+id/update_back" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="44dp" android:layout_height="wrap_content" android:text="‹" android:textSize="24sp" android:contentDescription="@string/ui_m0200" />
-            <TextView style="@style/DshaText.PageTitle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="@string/ui_m0115" />
+<?xml version='1.0' encoding='utf-8'?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/surface">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingLeft="12dp" android:paddingRight="18dp" android:gravity="center_vertical">
+    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/update_back" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_ui_back" android:contentDescription="@string/ui_m0201" app:tint="@color/text" />
+    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui2_updates" android:textSize="18sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" android:layout_weight="1" android:layout_marginStart="10dp" />
+  </LinearLayout>
+  <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_updates" android:textSize="24sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_updates_intro" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="6dp" android:layout_marginBottom="18dp" />
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp" android:layout_marginBottom="12dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="38dp">
+          <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui134_current" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />
+          <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="12sp" android:textColor="@color/text" android:includeFontPadding="false" android:id="@+id/update_current" android:gravity="end" android:maxWidth="230dp" />
         </LinearLayout>
-        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
-            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0119" />
-            <TextView android:id="@+id/update_current" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" />
-            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="@string/ui_m0148" android:textStyle="bold" />
-            <RadioGroup android:id="@+id/update_channels" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-                <RadioButton android:id="@+id/update_stable" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp" android:text="@string/ui_m0173" android:textSize="15sp" />
-                <RadioButton android:id="@+id/update_preview" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp" android:text="@string/ui_m0215" android:textSize="15sp" />
-            </RadioGroup>
-            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0174" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="38dp">
+          <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui134_code" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />
+          <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="12sp" android:textColor="@color/text" android:includeFontPadding="false" android:id="@+id/update_code" android:gravity="end" android:maxWidth="230dp" />
         </LinearLayout>
-        <LinearLayout style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp">
-            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0156" android:textStyle="bold" />
-            <TextView android:id="@+id/update_status" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textIsSelectable="true" />
-            <ProgressBar android:id="@+id/update_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="6dp" android:max="100" android:layout_marginTop="12dp" android:visibility="gone" />
-            <TextView android:id="@+id/update_bytes" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" />
-            <Button android:id="@+id/update_download" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0001" android:visibility="gone" />
-            <Button android:id="@+id/update_install" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0107" android:visibility="gone" />
-            <Button android:id="@+id/update_check" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0018" />
-            <Button android:id="@+id/update_cancel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0078" android:visibility="gone" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="38dp">
+          <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui134_edition" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />
+          <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="12sp" android:textColor="@color/text" android:includeFontPadding="false" android:id="@+id/update_edition" android:gravity="end" android:maxWidth="230dp" />
         </LinearLayout>
-        <Button android:id="@+id/update_browser" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/ui_m0094" />
-        <LinearLayout android:id="@+id/update_release_panel" style="@style/DshaCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone">
-            <TextView style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0168" />
-            <TextView android:id="@+id/update_notes" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textIsSelectable="true" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="38dp">
+          <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="DSH" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />
+          <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="12sp" android:textColor="@color/text" android:includeFontPadding="false" android:id="@+id/update_dsh" android:gravity="end" android:maxWidth="230dp" />
         </LinearLayout>
+      </LinearLayout>
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_update_channel" android:textSize="11sp" android:textColor="@color/text" android:includeFontPadding="false" android:layout_marginTop="10dp" android:layout_marginBottom="8dp" />
+      <com.deepseekharness.app.ui.DshaSelectView android:id="@+id/update_channel_choice" android:layout_width="match_parent" android:layout_height="52dp" android:background="@drawable/bg_input" android:padding="8dp" />
+      <RadioGroup android:id="@+id/update_channels" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:visibility="gone">
+        <RadioButton android:id="@+id/update_stable" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp" android:text="@string/ui_m0173" android:textSize="15sp" />
+        <RadioButton android:id="@+id/update_preview" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp" android:text="@string/ui_m0215" android:textSize="15sp" />
+      </RadioGroup>
+      <TextView android:id="@+id/update_status" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textIsSelectable="true" android:textSize="12sp" />
+      <ProgressBar android:id="@+id/update_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="6dp" android:max="100" android:layout_marginTop="12dp" android:visibility="gone" />
+      <TextView android:id="@+id/update_bytes" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" />
+      <Button android:id="@+id/update_check" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0018" />
+      <Button android:id="@+id/update_download" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0001" android:visibility="gone" />
+      <Button android:id="@+id/update_install" style="@style/Widget.DSHA.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0107" android:visibility="gone" />
+      <Button android:id="@+id/update_cancel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0078" android:visibility="gone" />
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/update_release_panel" android:visibility="gone">
+        <LinearLayout android:id="@+id/update_release_detail" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp" android:minHeight="64dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+          <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_box" android:padding="7dp" android:background="@drawable/bg_logo" android:contentDescription="@null" app:tint="@color/primary" />
+          <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_candidate" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_candidate_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+          </LinearLayout>
+          <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
+        </LinearLayout>
+        <TextView android:id="@+id/update_notes" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textIsSelectable="true" android:visibility="gone" />
+      </LinearLayout>
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_management" android:textSize="11sp" android:textColor="@color/text" android:includeFontPadding="false" android:layout_marginTop="10dp" android:layout_marginBottom="8dp" />
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="0dp" android:layout_marginBottom="12dp">
+        <LinearLayout android:id="@+id/update_runtime" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp" android:minHeight="64dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+          <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_box" android:padding="7dp" android:background="@drawable/bg_logo" android:contentDescription="@null" app:tint="@color/primary" />
+          <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_managed_update" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_managed_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+          </LinearLayout>
+          <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/update_runtime_rollback" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp" android:minHeight="64dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+          <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_recovery_document" android:padding="7dp" android:background="@drawable/bg_logo" android:contentDescription="@null" app:tint="@color/primary" />
+          <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_rollback" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_rollback_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+          </LinearLayout>
+          <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/update_changelog" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp" android:minHeight="64dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+          <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_recovery_document" android:padding="7dp" android:background="@drawable/bg_logo" android:contentDescription="@null" app:tint="@color/primary" />
+          <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_changelog" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_changelog_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+          </LinearLayout>
+          <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
+        </LinearLayout>
+      </LinearLayout>
+      <Button android:id="@+id/update_browser" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/ui_m0094" />
     </LinearLayout>
-</ScrollView>
+  </ScrollView>
+</LinearLayout>

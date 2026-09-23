@@ -24,12 +24,22 @@ public final class UpdateActivity extends AppCompatActivity {
         repository = new ViewModelProvider(this).get(UpdateRepository.class);
         resumeInstall = saved != null && saved.getBoolean("resumeInstall");
         repository.restoreInterruptedInstall(saved != null && saved.getBoolean("installPending"));
-        ((TextView) findViewById(R.id.update_current)).setText(BuildConfig.VERSION_NAME + com.deepseekharness.app.util.UiText.text(" · 版本码 ") + BuildConfig.VERSION_CODE
-                + (BuildConfig.LOW_ANDROID ? com.deepseekharness.app.util.UiText.text(" · 兼容版") : com.deepseekharness.app.util.UiText.text(" · 标准版")));
+        ((TextView)findViewById(R.id.update_current)).setText(BuildConfig.VERSION_NAME);
+        ((TextView)findViewById(R.id.update_code)).setText(String.valueOf(BuildConfig.VERSION_CODE));
+        ((TextView)findViewById(R.id.update_edition)).setText(BuildConfig.LOW_ANDROID?com.deepseekharness.app.util.UiText.choose("兼容版","Compatibility"):com.deepseekharness.app.util.UiText.choose("标准版","Standard"));
         RadioGroup channels = findViewById(R.id.update_channels);
         channels.check(UpdatePolicy.PREVIEW.equals(repository.channel()) ? R.id.update_preview : R.id.update_stable);
         channels.setOnCheckedChangeListener((g, id) -> repository.setChannel(id == R.id.update_preview ? UpdatePolicy.PREVIEW : UpdatePolicy.STABLE));
+        DshaSelectView channel=findViewById(R.id.update_channel_choice);channel.setPrompt(getString(R.string.ui2_update_channel));
+        channel.setAdapter(new android.widget.ArrayAdapter<>(this,R.layout.item_data_choice,new String[]{getString(R.string.ui_m0173),getString(R.string.ui_m0215)}));channel.setSelection(UpdatePolicy.PREVIEW.equals(repository.channel())?1:0);
+        channel.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> parent){}public void onItemSelected(android.widget.AdapterView<?> parent,android.view.View view,int position,long id){channels.check(position==1?R.id.update_preview:R.id.update_stable);}});
         findViewById(R.id.update_back).setOnClickListener(v -> finish());
+        ((TextView)findViewById(R.id.update_dsh)).setText(com.deepseekharness.app.util.Constants.DSH_VERSION);
+        findViewById(R.id.update_runtime).setOnClickListener(v->showRuntimePlan());
+        findViewById(R.id.update_runtime_rollback).setOnClickListener(v->RuntimeRecoveryUi.show(this));
+
+        findViewById(R.id.update_changelog).setOnClickListener(v->CardSheet.show(this,getString(R.string.ui134_changelog),com.deepseekharness.app.util.UiText.choose("DSHA 0.1.7-alpha2\n\n• 修复画中画流式文字闪烁，统一数据与备份入口布局。\n• 优化 Language 弹窗首帧布局，补齐插件面板标题避让。\n• 标准版新增 Android 11+ 实验性虚拟屏；兼容版暂不支持。\n• 保留 DSH 0.1.7-alpha.2、个人数据、插件和配置迁移路径。", "DSHA 0.1.7-alpha2\n\n• Fixed streaming text flicker in PiP and aligned data/backup entries.\n• Reduced first-frame work in the Language dialog and added plugin-panel clearance.\n• Added an experimental Android 11+ virtual screen to Standard; Low does not support it yet.\n• Kept DSH 0.1.7-alpha.2, personal data, plugins and configuration migration intact.")));
+        findViewById(R.id.update_release_detail).setOnClickListener(v->{UpdateRepository.State state=repository.state().getValue();if(state!=null&&state.release!=null)CardSheet.show(this,getString(R.string.ui134_candidate),((TextView)findViewById(R.id.update_notes)).getText().toString());});
         findViewById(R.id.update_check).setOnClickListener(v -> repository.check());
         findViewById(R.id.update_download).setOnClickListener(v -> {
             if (android.os.Build.VERSION.SDK_INT >= 33 && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -42,7 +52,7 @@ public final class UpdateActivity extends AppCompatActivity {
         findViewById(R.id.update_browser).setOnClickListener(v -> {
             UpdateRepository.State state = repository.state().getValue();
             AboutDialog.openBrowser(this, state != null && state.release != null ? state.release.pageUrl
-                    : "https://github.com/qiannianhuanxiang/DSHA/releases");
+                    : "https://github.com/DSH-APP/DSHA/releases");
         });
         repository.state().observe(this, this::renderState);
         repository.installation().observe(this, state -> {
@@ -51,8 +61,17 @@ public final class UpdateActivity extends AppCompatActivity {
         });
         if (saved == null && !repository.hasTask()) repository.check();
     }
+    private void showRuntimePlan(){
+        CardPage page=new CardPage(this,getString(R.string.ui2_managed_update),com.deepseekharness.app.util.UiText.choose("查看当前环境与包内运行组件。","Review the current environment and bundled components."));
+        android.widget.LinearLayout metadata=page.card();page.kv(metadata,"Ubuntu",bundledBase());
+        page.kv(metadata,"DSH",com.deepseekharness.app.util.Constants.DSH_VERSION);page.kv(metadata,com.deepseekharness.app.util.UiText.choose("个人数据","Personal data"),com.deepseekharness.app.util.UiText.choose("保持原位","Kept in place"));
+        metadata.addView(page.text(com.deepseekharness.app.util.UiText.choose("检查后展示实际差异；确认更新时停止 Web 与终端，准备候选并完成隔离试运行。","Review actual differences first. Updating stops Web and terminals, prepares a candidate and verifies it in an isolated trial."),12,R.color.text_secondary));
+        var dialog=CardSheet.create(this,page);page.button(page.footer,com.deepseekharness.app.util.UiText.choose("检查更新计划","Review update plan"),true,()->{dialog.dismiss();startActivity(new Intent(this,ExtractActivity.class).putExtra("review_only",true));});page.button(page.footer,com.deepseekharness.app.util.UiText.choose("取消","Cancel"),false,dialog::dismiss);CardSheet.show(dialog,this);
+    }
+    private String bundledBase(){try(java.io.InputStream input=getAssets().open("offline-rootfs.version")){byte[] bytes=new byte[64];int count=input.read(bytes);return count>0?new String(bytes,0,count,java.nio.charset.StandardCharsets.UTF_8).trim():"—";}catch(java.io.IOException unavailable){return "—";}}
     private void renderState(UpdateRepository.State state) {
         if (state == null) return;
+        findViewById(R.id.update_channel_choice).setEnabled(!state.busy&&!repository.installationPending());
         UpdateRepository.InstallState install = repository.installation().getValue();
         UpdateUi.render(findViewById(android.R.id.content), state, install.pending(), install.verifying);
         if (install.pending()) {

@@ -33,4 +33,22 @@ public class EnvironmentIdentityTest {
         assertFalse(EnvironmentIdentity.shouldAutoStart(true, false, false, patched, previous));
         assertEquals("", EnvironmentIdentity.attemptKey("", 200));
     }
+    @Test public void successMessageWithoutReadinessCannotNavigateBackIntoMaintenance() {
+        assertFalse(EnvironmentIdentity.mayAdvanceAfterMaintenance(true,true,true,false,false,false));
+        assertFalse(EnvironmentIdentity.mayAdvanceAfterMaintenance(true,true,true,false,true,true));
+        assertFalse(EnvironmentIdentity.mayAdvanceAfterMaintenance(true,true,true,true,false,true));
+        assertFalse(EnvironmentIdentity.mayAdvanceAfterMaintenance(true,true,false,false,false,true));
+        assertTrue(EnvironmentIdentity.mayAdvanceAfterMaintenance(true,true,true,false,false,true));
+        assertFalse(EnvironmentIdentity.mayAdvanceAfterMaintenance(false,true,true,false,false,true));
+        String candidate="runtime:"+"a".repeat(64);
+        for(int reopened=0;reopened<30;reopened++)assertFalse(EnvironmentIdentity.shouldAutoStart(false,false,false,candidate,candidate));
+    }
+    @Test public void stickyServiceCannotBypassManagedRuntimeUpdate() {
+        String candidate="runtime:"+"b".repeat(64);
+        assertTrue(EnvironmentIdentity.shouldBlockRuntimeStart(false,true,false,false,candidate,""));
+        assertFalse(EnvironmentIdentity.shouldBlockRuntimeStart(false,true,false,false,candidate,candidate));
+        assertFalse(EnvironmentIdentity.shouldBlockRuntimeStart(true,true,false,false,candidate,""));
+        assertTrue(EnvironmentIdentity.shouldBlockRuntimeStart(false,false,false,false,"",""));
+        assertTrue(EnvironmentIdentity.shouldBlockRuntimeStart(false,false,true,true,"",""));
+    }
 }

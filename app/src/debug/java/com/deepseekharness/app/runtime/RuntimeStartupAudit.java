@@ -233,7 +233,7 @@ public final class RuntimeStartupAudit extends Instrumentation {
         try {
             for (int code : new int[]{0, 7}) {
                 try (IsolatedInstallProcess process = IsolatedInstallProcess.start(new ProcessBuilder(
-                        "/system/bin/sh", "-c", "printf 'OWNED_GROUP_OK'; exit " + code).redirectErrorStream(true), temporary)) {
+                        "/system/bin/sh", "-c", "printf 'OWNED_GROUP_OK'; exit " + code).redirectErrorStream(true), temporary,getTargetContext())) {
                     BoundedProcessRunner.Result result = BoundedProcessRunner.collect(process, 3000, 8192, Compat::destroy);
                     if (result.timedOut || result.exitCode != code || !result.output.contains("OWNED_GROUP_OK"))
                         throw new AssertionError("进程组退出码或输出错误");
@@ -241,7 +241,7 @@ public final class RuntimeStartupAudit extends Instrumentation {
                 report("GROUP_EXIT " + code);
             }
             try (IsolatedInstallProcess process = IsolatedInstallProcess.start(new ProcessBuilder(
-                    "/system/bin/sh", "-c", "sleep 30 & printf 'CHILD=%s\\n' $!; wait").redirectErrorStream(true), temporary)) {
+                    "/system/bin/sh", "-c", "sleep 30 & printf 'CHILD=%s\\n' $!; wait").redirectErrorStream(true), temporary,getTargetContext())) {
                 BoundedProcessRunner.Result result = BoundedProcessRunner.collect(process, 300, 8192, Compat::destroy);
                 if (!result.timedOut || !result.output.contains("CHILD=")) throw new AssertionError("没有触发真实子进程超时");
                 report("GROUP_TIMEOUT_CLEANED " + result.output);
@@ -257,7 +257,7 @@ public final class RuntimeStartupAudit extends Instrumentation {
             java.util.concurrent.CountDownLatch ready = new java.util.concurrent.CountDownLatch(1);
             Thread worker = new Thread(() -> {
                 try (IsolatedInstallProcess process = IsolatedInstallProcess.start(new ProcessBuilder(
-                        "/system/bin/sh", "-c", "sleep 30 & wait").redirectErrorStream(true), temporary)) {
+                        "/system/bin/sh", "-c", "sleep 30 & wait").redirectErrorStream(true), temporary,getTargetContext())) {
                     ready.countDown();
                     try {
                         BoundedProcessRunner.collect(process, 30000, 8192, Compat::destroy);

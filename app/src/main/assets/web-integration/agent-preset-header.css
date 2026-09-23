@@ -48,3 +48,31 @@
     margin-inline-start: auto;
   }
 }
+
+/* DSHA 宿主补丁：会话头部的预设 seat 由宿主渲染，手机端布局也由宿主负责。
+   不依赖 dsh-web-mobile 的 fork，避免插件升级后再次把标题挤没。预设名过长
+   时由内部 span 省略；给标题至少留下可用的窗口。 */
+@media (max-width: 1023px) and (pointer: coarse) {
+  [data-phase] header .dsha-preset-header-anchor,
+  header .dsha-preset-header-anchor,
+  .dsha-preset-header-anchor {
+    order: 1 !important;
+    width: max-content !important;
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    max-width: min(40vw, 130px) !important;
+    margin-inline-start: auto !important;
+  }
+  [data-phase] header .dsha-preset-header-anchor [data-dsha-agent-preset="header"],
+  header .dsha-preset-header-anchor [data-dsha-agent-preset="header"],
+  .dsha-preset-header-anchor [data-dsha-agent-preset="header"] {
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 6px !important;
+  }
+  [data-phase] header .dsha-preset-header-anchor [data-dsha-agent-preset="header"] > svg,
+  header .dsha-preset-header-anchor [data-dsha-agent-preset="header"] > svg,
+  .dsha-preset-header-anchor [data-dsha-agent-preset="header"] > svg {
+    flex: 0 0 auto;
+  }
+}

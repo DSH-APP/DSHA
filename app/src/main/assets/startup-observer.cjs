@@ -34,10 +34,14 @@ function readJson(file) {
   if (fs.statSync(file).size > 1024 * 1024) throw new Error('配置文件超过 1 MiB');
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
-function locate(name, roots) {
-  for (const root of roots) {
-    const candidate = path.join(root, name);
-    if (fs.existsSync(path.join(candidate, 'package.json'))) return fs.realpathSync(candidate);
+function locate(name) {
+  // 与锁定 dsh-app-boot.resolveBundleDir 的两个 anchor 及 Node 查找顺序一致。
+  // 不能只列几个固定目录：全局安装、hoisted 依赖和 pnpm 链接都可能合法存在。
+  for (const anchor of [path.join(installation, 'package.json'), path.join(directory, 'package.json')]) {
+    for (const root of Module.createRequire(anchor).resolve.paths(name) || []) {
+      const candidate = path.join(root, name);
+      if (fs.existsSync(path.join(candidate, 'package.json'))) return fs.realpathSync(candidate);
+    }
   }
   throw new Error('找不到插件目录，请到插件管理检查安装：' + name);
 }
@@ -55,16 +59,21 @@ try {
   for (const name of bundles.slice(0, 500)) {
     if (!validName(name)) { emit('issue', '', '插件清单含无效名称'); continue; }
     try {
-      const root = locate(name, [path.join(installation, 'node_modules'), path.join(directory, 'node_modules'),
-        path.join(home, 'profiles/node_modules'), path.join(home, 'node_modules')]);
+      const root = locate(name);
       const pkg = readJson(path.join(root, 'package.json'));
       const info = { name, directory: root, url: pathToFileURL(root).href };
       plugins.push(info);
       const patch = pkg.dsh?.bundle?.patch;
-      if (typeof patch !== 'string' || !fs.existsSync(path.resolve(root, patch)))
-        emit('issue', name, '缺少 dsh.bundle.patch 声明或补丁文件');
+      // 0.1.7 支持有序补丁数组；每一个入口仍须存在于该包内部。
+      const patches = typeof patch === 'string' ? [patch] : Array.isArray(patch) ? patch : [];
+      if (!patches.length || patches.some(item => {
+        if (typeof item !== 'string' || !item || path.isAbsolute(item)) return true;
+        const target = path.resolve(root, item);
+        return !target.startsWith(root + path.sep) || !fs.existsSync(target)
+          || !fs.realpathSync(target).startsWith(root + path.sep) || !fs.statSync(target).isFile();
+      })) throw new Error('缺少 dsh.bundle.patch 声明或补丁文件');
       emit('plugin', name, '配置检查：' + name + ' @ ' + (pkg.version || uiText('未知版本')), { path: root });
-      if (typeof patch === 'string') {
+      for (const patch of patches) {
         // 只读取 id/module 的普通标量，不执行 YAML 的 !!js 用户表达式。
         const patchFile = path.resolve(root, patch);
         if (fs.existsSync(patchFile) && fs.statSync(patchFile).size <= 1024 * 1024) {
@@ -95,7 +104,10 @@ try {
     const show = name && !['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'].includes(name)
       || ['web-startup', 'webserver', 'modules'].includes(this.options?.id);
     if (show) emit('loading', name, '正在加载插件：' + (name || id));
-    const failed = error => { emit('issue', name || owner(errorDetail(error)), id + '\n' + errorDetail(error)); throw error; };
+    // alpha.1 允许可选插件失败；只有上游声明的关键入口可提前触发原生恢复。
+    const required = new Set(['agent-loop','webserver','modules','connection','headless-runner','acp','sdk-jsonrpc-server']);
+    const failed = error => { emit('issue', name || owner(errorDetail(error)), id + '\n' + errorDetail(error),
+      { fatal: required.has(this.options?.id) }); throw error; };
     try {
       return original.apply(this, arguments).then(value => {
         if (show) {

@@ -79,5 +79,6 @@ public class RuntimeUpdateTransactionTest {
         for (String path : new String[]{"root/.dsh", "root/project", "root/.dsh/settings.yaml", "usr/local/lib/node_modules/npm", "usr/local/lib/node_modules/../private"})
             assertFalse(path, ManagedRuntimeLayout.allowed(ManagedRuntimeLayout.ROOT + path));
         for (String path : ManagedRuntimeLayout.paths()) assertTrue(path, ManagedRuntimeLayout.allowed(ManagedRuntimeLayout.ROOT + path));
+        assertTrue(ManagedRuntimeLayout.paths().contains("root/dsha-builtin.txt"));
     }
 }

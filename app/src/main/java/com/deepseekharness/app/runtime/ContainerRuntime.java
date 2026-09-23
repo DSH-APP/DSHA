@@ -80,7 +80,7 @@ public interface ContainerRuntime {
                 argv.add("-b");
                 argv.add(b.length == 1 ? b[0] : b[0] + ":" + b[1]);
             }
-            return argv;
+            UserDataBindings.append(argv,rootfsDir);return argv;
         }
 
         @Override public void applyEnv(ProcessBuilder pb, File baseDir, File libDir, File tmpDir) {
@@ -105,10 +105,12 @@ public interface ContainerRuntime {
 
         private final Context ctx;
         private final File dir;
+        private final boolean staticLoader;
 
         public Proroot(Context ctx, File dir) {
             this.ctx = ctx;
             this.dir = dir;
+            this.staticLoader = new com.deepseekharness.app.core.ConfigStore(ctx).isProrootStaticLoader();
         }
 
         /**
@@ -144,6 +146,8 @@ public interface ContainerRuntime {
         @Override public List<String> baseArgv(File rootfsDir, boolean hardlinkSupported) {
             List<String> argv = new ArrayList<>();
             argv.add(new File(dir, "libproroot.so").getAbsolutePath());
+            argv.add(staticLoader
+                    ? "--static-loader" : "--no-static-loader");
             argv.add("-r");
             argv.add(rootfsDir.getAbsolutePath());
             argv.add("-0");
@@ -160,7 +164,7 @@ public interface ContainerRuntime {
             argv.add("-b");
             argv.add(shm.getAbsolutePath() + ":/dev/shm");
             argv.add("--link2symlink");
-            return argv;
+            UserDataBindings.append(argv,rootfsDir);return argv;
         }
 
         File shmDir() {
@@ -173,8 +177,9 @@ public interface ContainerRuntime {
                     new File(dir, "libproroot-runtime.so").getAbsolutePath());
             pb.environment().put("PROROOT_LINKER_PATH",
                     new File(dir, "libproroot-linker.so").getAbsolutePath());
-            pb.environment().put("PROROOT_STUB_LOADER",
-                    new File(dir, "libproroot-stub-loader.so").getAbsolutePath());
+            if(staticLoader)
+                pb.environment().put("PROROOT_STUB_LOADER",new File(dir,"libproroot-stub-loader.so").getAbsolutePath());
+            else pb.environment().remove("PROROOT_STUB_LOADER");
         }
 
         @Override public void prepare() throws Exception {

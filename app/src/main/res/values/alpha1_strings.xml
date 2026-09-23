@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="alpha_models">模型配置</string>
+    <string name="alpha_models_hint">DeepSeek · 自定义服务商 · 模型目录</string>
+    <string name="alpha_community">社区插件生态</string>
+    <string name="alpha_runtime_options">运行时兼容选项</string>
+    <string name="alpha_static_loader">使用 proroot 静态加载器</string>
+    <string name="alpha_no_seccomp">禁用 proot seccomp 加速</string>
+    <string name="alpha_runtime_options_hint">仅在运行环境不兼容时调整；实际运行方式与失败记录可在诊断中查看。</string>
+</resources>

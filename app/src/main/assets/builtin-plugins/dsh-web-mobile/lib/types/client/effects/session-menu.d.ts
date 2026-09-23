@@ -7,7 +7,11 @@
  * The host menu is React-owned (ui-workspace) with no extension slot, so the
  * item is injected into the portaled `[role="menu"]` list by cloning the
  * host's own item markup (reusing the hashed classes keeps the styling
- * identical), and re-injected whenever React recreates the menu.
+ * identical), and re-injected whenever React recreates the menu. Two menu
+ * shapes are supported: rc.2 nests icon/label spans in the item, while 0.1.5
+ * renders the label directly in the item button (shared `_item_1nxmc_92`
+ * menu component, no child elements) — label reads and the injected text
+ * fall back across both.
  *
  * Row → session id: session rows carry no id in the DOM, so the session is
  * resolved from the client list by display title (the row's rendered title IS

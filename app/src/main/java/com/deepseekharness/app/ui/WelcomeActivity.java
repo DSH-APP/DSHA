@@ -39,16 +39,17 @@ public class WelcomeActivity extends AppCompatActivity {
         Button btn = findViewById(R.id.welcome_btn);
         LinearLayout dotsBox = findViewById(R.id.welcome_dots);
 
+        findViewById(R.id.welcome_skip).setOnClickListener(v->startActivity(new Intent(this,OnboardingPrepareActivity.class)));
         pager.setAdapter(new PageAdapter());
         pager.setUserInputEnabled(true);
 
         for (int i = 0; i < 3; i++) {
             TextView d = new TextView(this);
-            d.setText(com.deepseekharness.app.util.UiText.text("●"));
+            d.setText("");d.setBackgroundResource(R.drawable.bg_ui2_dot);
             d.setTextColor(getColor(R.color.text_muted));
             d.setTextSize(10);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    Math.round((i==0?24:6)*getResources().getDisplayMetrics().density),Math.round(4*getResources().getDisplayMetrics().density));
             lp.setMargins(6, 0, 6, 0);
             d.setLayoutParams(lp);
             dotsBox.addView(d);
@@ -60,9 +61,11 @@ public class WelcomeActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int position) {
                 for (int i = 0; i < 3; i++) {
-                    dots[i].setTextColor(getColor(i == position ? R.color.primary : R.color.text_muted));
+                    dots[i].setBackgroundTintList(android.content.res.ColorStateList.valueOf(getColor(i==position?R.color.primary:R.color.line)));
+                    dots[i].getLayoutParams().width=Math.round((i==position?24:6)*getResources().getDisplayMetrics().density);dots[i].requestLayout();
                 }
-                btn.setText(position == 2 ? com.deepseekharness.app.util.UiText.text("开始") : com.deepseekharness.app.util.UiText.text("下一步"));
+                btn.setText(position==0?getString(R.string.ui2_meet):position==1?com.deepseekharness.app.util.UiText.choose("了解数据与权限","Data and permissions"):com.deepseekharness.app.util.UiText.choose("开始准备环境","Prepare the environment"));
+                ((TextView)findViewById(R.id.welcome_counter)).setText((position+1)+" / 7");
             }
         });
 
@@ -71,11 +74,8 @@ public class WelcomeActivity extends AppCompatActivity {
             if (cur < 2) {
                 pager.setCurrentItem(cur + 1);
             } else {
-                new ConfigStore(this).setWelcomed(true);
-                HarnessController c = new HarnessController(this);
-                startActivity(new Intent(this,
-                        c.isEnvironmentReady() ? MainActivity.class : ExtractActivity.class));
-                finish();
+                startActivity(new Intent(this,OnboardingPrepareActivity.class));
+
             }
         });
     }

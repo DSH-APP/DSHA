@@ -20,13 +20,20 @@ final class IsolatedInstallProcess extends Process implements AutoCloseable {
     private final File status;
     private volatile boolean closing, closed;
 
-    static boolean supported() {
-        return android.os.Build.VERSION.SDK_INT >= 26 && new File("/system/bin/setsid").canExecute();
+    static boolean supported(android.content.Context context) {
+        return sessionLauncher(context) != null;
     }
 
-    @android.annotation.SuppressLint("NewApi") // 入口先检查 API 26 与 setsid，再访问 ProcessBuilder.Redirect。
-    static IsolatedInstallProcess start(ProcessBuilder target, File temporary) throws IOException {
-        if (!supported()) throw new IOException(com.deepseekharness.app.util.UiText.text("此系统不支持独立安装进程组"));
+    static String sessionLauncher(android.content.Context context) {
+        File bundled = new File(context.getApplicationInfo().nativeLibraryDir, "libdsha-session.so");
+        if (bundled.isFile() && bundled.length() > 0) return bundled.getAbsolutePath();
+        File system = new File("/system/bin/setsid");
+        return system.canExecute() ? system.getAbsolutePath() : null;
+    }
+
+    static IsolatedInstallProcess start(ProcessBuilder target, File temporary, android.content.Context context) throws IOException {
+        String launcher = sessionLauncher(context);
+        if (launcher == null) throw new IOException(com.deepseekharness.app.util.UiText.text("此系统不支持独立安装进程组"));
         File status = new File(temporary, "cold-install-" + java.util.UUID.randomUUID() + ".status");
         StringBuilder shell = new StringBuilder("IFS= read -r DSHA_START || exit 125\n"
                 + "[ \"$DSHA_START\" = DSHA_START ] || exit 125\n");
@@ -34,8 +41,8 @@ final class IsolatedInstallProcess extends Process implements AutoCloseable {
         // 完成后仍保留组长，直到宿主核验身份并回收，避免 PID/进程组号复用的歧义。
         shell.append("\nresult=$?\nprintf '%s' \"$result\" > ").append(ShellQuote.arg(status.getAbsolutePath()))
                 .append("\nkill -STOP $$\nexit 125\n");
-        target.command(Arrays.asList("/system/bin/setsid", "/system/bin/sh", "-c", shell.toString()));
-        target.redirectInput(ProcessBuilder.Redirect.PIPE);
+        target.command(Arrays.asList(launcher, "/system/bin/sh", "-c", shell.toString()));
+        // 调用方保留 ProcessBuilder 默认 PIPE，避免依赖 API 26 的 Redirect。
         Process supervisor = target.start();
         int pid = ProcessIdentity.androidPid(supervisor.getClass().getName(), supervisor.toString());
         long deadline = SystemClock.elapsedRealtime() + 2000;

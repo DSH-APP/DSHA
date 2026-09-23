@@ -15,6 +15,7 @@ class Records(list):
     def __init__(self):
         super().__init__()
         self.graph = {}
+        self.system_plugins = []
 
 
 def resolve_module(source, name, global_nm):
@@ -30,13 +31,16 @@ def resolve_module(source, name, global_nm):
     return None
 
 
-def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm, discovered):
+def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm, discovered,
+                    signed_builtins=()):
     records = Records()
+    signed_builtins = frozenset(signed_builtins)
+    system_plugins = CORE | signed_builtins
     source_ids, roots = {}, set()
     shared_pools = {base.resolve() for base in global_nm if base.is_dir()}
     pool = stage / '.dsha-plugin-src/.deps'
     def provided(name):
-        return name in SHARED or (name.startswith('@deepseek-ai/dsh-')
+        return name in SHARED or name in system_plugins or (name.startswith('@deepseek-ai/dsh-')
                                   and any((base / name / 'package.json').is_file() for base in global_nm))
 
     def node(source):
@@ -113,13 +117,20 @@ def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm,
         original = root / '.dsh/profiles' / pkg_path.parent.name
         dependencies = pkg.get('dependencies') or {}
         bundles = ((pkg.get('dsh') or {}).get('profile') or {}).get('bundles') or []
+        # 官方 dsh 核心始终由当前运行时提供；这里只保存 APK 功能插件的用户启停意图。
+        for name in sorted(signed_builtins):
+            marker = original / 'node_modules' / (name + '.disabled')
+            if name in dependencies or name in bundles or marker.is_file():
+                records.system_plugins.append({'profile': pkg_path.parent.name, 'name': name,
+                                               'enabled': name in bundles,
+                                               'disabled': marker.is_file()})
         for name in dict.fromkeys(list(dependencies) + list(bundles)):
             if not valid_name(name):
                 raise ValueError('插件包名无效')
             specification = dependencies.get(name, '')
             if not isinstance(specification, str):
                 raise ValueError('插件依赖声明无效：' + name)
-            if name in CORE:
+            if name in system_plugins:
                 continue
             active = original / 'node_modules' / name
             source = active.resolve() if (active / 'package.json').is_file() else None
@@ -145,6 +156,8 @@ def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm,
                 if marker.is_file() and not marker.is_symlink():
                     copy_data(marker, pkg_path.parent / 'node_modules' / marker.relative_to(nm), checks=checks)
     for name, row in discovered.items():
+        if name in system_plugins:
+            continue
         source = Path(row['directory']).resolve()
         if (name, source) in roots:
             continue
@@ -165,6 +178,13 @@ def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm,
         except (ValueError, KeyError, TypeError):
             pass
     def unmanaged(source, destination):
+        if source.is_dir():
+            package = source / 'package.json'
+            try:
+                if package.is_file() and json.loads(package.read_text(encoding='utf-8')).get('name') in system_plugins:
+                    return
+            except (OSError, ValueError, TypeError, AttributeError):
+                pass
         if source.resolve() in source_ids or (source.parent == source_home / '.deps' and source.name in owned):
             return
         if source == marker and owned:
@@ -200,16 +220,20 @@ def validate_graph(graph, stage, valid_name):
             raise ValueError('插件依赖图与包名不符')
 
 
-def restore_graph(graph, stage, plugin_stage, generation, copy_data, valid_name):
+def restore_graph(graph, stage, plugin_stage, generation, copy_data, valid_name, signed_builtins=()):
     validate_graph(graph, stage, valid_name)
-    for key in graph:
+    system_plugins = CORE | frozenset(signed_builtins)
+    retained = {key: row for key, row in graph.items() if row.get('name') not in system_plugins}
+    for key in retained:
         source = stage / '.dsha-plugin-src/.deps' / key
         destination = plugin_stage / '.deps' / key
         if destination.exists():
             raise ValueError('插件依赖目标已存在，已停止覆盖')
         copy_data(source, destination)
-    for key, row in graph.items():
+    for key, row in retained.items():
         for name, target in row['links'].items():
+            if name in system_plugins or target not in retained:
+                continue
             owner = plugin_stage / '.deps' / key
             link = owner / 'node_modules' / name
             link.parent.mkdir(parents=True, exist_ok=True)
@@ -234,5 +258,5 @@ def restore_graph(graph, stage, plugin_stage, generation, copy_data, valid_name)
                     command_path.parent.mkdir(parents=True, exist_ok=True)
                     if not os.path.lexists(command_path):
                         command_path.symlink_to(os.path.relpath(plugin_stage / '.deps' / target / entry, command_path.parent))
-    if graph:
-        (plugin_stage / POOL_MARKER).write_text(json.dumps({'version': 1, 'nodes': list(graph)}), encoding='utf-8')
+    if retained:
+        (plugin_stage / POOL_MARKER).write_text(json.dumps({'version': 1, 'nodes': list(retained)}), encoding='utf-8')

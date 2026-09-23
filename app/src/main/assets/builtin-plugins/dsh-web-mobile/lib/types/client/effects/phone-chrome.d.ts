@@ -1,5 +1,6 @@
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
 import type { ReconcilerTask } from '../core/reconciler-core.ts';
+import type { PanelExit } from './panel-exit.ts';
 /** Same width bound as the shell's SIDEBAR_AUTO_COLLAPSE (viewport < 1024),
  *  ANDed with a touch-primary pointer guard. Width alone cannot tell a phone
  *  from a desktop window: split views and OS display scaling push a PC's CSS
@@ -32,12 +33,17 @@ export declare function installMobileEffect(ctx: ClientContext, label: string, i
 export declare function findFrame(): HTMLElement | null;
 /** Resolve the plugin-owned frame marker, falling back to the raw shell frame. */
 export declare function getFrame(): HTMLElement | null;
+export declare function ensureDismissShadow(): void;
 /**
  * Frame marker controller: owns `data-mobile-nav="frame"` and every plugin
  * marker that can survive on the shell-owned frame. Installed once at apply
  * time so effects no longer each need to find/set/clear the frame. Returns a
  * disposer that unregisters the task and resets the installed flag, so a
  * same-environment plugin reload can rebuild the reconciler from scratch.
+ * (The host-generation probe this controller used to call was dead code —
+ * nothing ever read `data-mobile-nav-gen`, and the plugin deliberately does
+ * not yield the drawer to the host's one: see docs/maintenance/pitfalls.md
+ * §0.1.5 抽屉 z 与遮罩.)
  */
 export declare function installFrameController(): () => void;
 /**
@@ -105,16 +111,27 @@ export declare function installPhoneChrome(ctx: ClientContext): void;
  * reconciliation:
  * - Escape closes the drawer (yielding to any open modal dialog, which owns
  *   its own Escape handling).
- * - Tapping a navigation target inside the drawer (session row, task board /
- *   ssh takeover entries, search results) closes the drawer so the content
- *   it opened gets the whole screen. Session-row action buttons (kebab) are
- *   excluded — they open a menu that must survive the tap.
+ * - Tapping a navigation target inside the drawer (session row, sidebar panel
+ *   row, task board / ssh takeover entries, search results) closes the drawer
+ *   so the content it opened gets the whole screen. Session-row action buttons
+ *   (kebab) are excluded — they open a menu that must survive the tap.
+ *
+ * The touch close always rides the synthesized click. Closing a non-row
+ * target from pointerup collapsed the drawer before that click existed, and
+ * a collapsed drawer no longer owns the touch point, so the browser
+ * dispatched no click at all and the target's own onClick never ran (「新会话」
+ * did nothing but retract the drawer, 2026-09-13).
  */
+export declare const TAP_CLOSE_NAV_SELECTOR = "button[data-dsh-taskboard-entry], button[data-dsh-ssh-entry], [class*=\"newSession\"], [class*=\"sessionRow\"], [class*=\"searchResultRow\"], [class*=\"searchResultWorkspace\"], [class*=\"panelRow\"]";
 export declare function installOverlayInteractions(ctx: ClientContext): void;
 /**
  * Register the shared DOM reconciler tasks. Returns a disposer that
  * unregisters every task and resets the flag, so a same-environment plugin
  * reload can rebuild the reconciler from scratch.
+ *
+ * @param panelExit - the sidebar-panel exit face (panel-exit.ts): its system-back
+ *   route is registered here so it shares this reconciler, and the FAB reads it
+ *   to switch its meaning while a panel owns the main area.
  */
-export declare function registerReconcileTasks(ctx: ClientContext): () => void;
+export declare function registerReconcileTasks(ctx: ClientContext, panelExit: PanelExit): () => void;
 //# sourceMappingURL=phone-chrome.d.ts.map

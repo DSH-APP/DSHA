@@ -40,14 +40,15 @@ public final class BackupScope {
         }
     }
 
-    /** 从清单里的标识反解。认不出来一律当全量 —— 老备份没有这个字段，而它们就是全量。 */
+    /** 清单中的未知范围必须拒绝；无范围旧包由历史格式预检识别，不能默认覆盖全部数据。 */
     public static int fromId(String id) {
-        if (id == null) return FULL;
+        if (id == null) throw new IllegalArgumentException("UNKNOWN_BACKUP_SCOPE");
         String s = id.trim();
         if (s.equals("sessions")) return SESSIONS;
         if (s.equals("plugins")) return PLUGINS;
         if (s.equals("settings")) return SETTINGS;
-        return FULL;
+        if (s.equals("full")) return FULL;
+        throw new IllegalArgumentException("UNKNOWN_BACKUP_SCOPE");
     }
 
     /** 文件名前缀。部分备份刻意不叫 DSHA-backup-（见类注释）。 */
@@ -103,7 +104,7 @@ public final class BackupScope {
             case PLUGINS:
                 return com.deepseekharness.app.util.UiText.text("只打包插件清单、配置和已安装插件数据");
             case SETTINGS:
-                return com.deepseekharness.app.util.UiText.text("打包 settings.yaml 和运行参数；原生 API Key 遵循备份密钥开关");
+                return com.deepseekharness.app.util.UiText.text("打包设置文件、0.1.7 profile 配置和运行参数；原生 API Key 遵循备份密钥开关");
             default:
                 return com.deepseekharness.app.util.UiText.text("配置、对话、附件、插件与工作区 .env/日志，换机或重装用这个");
         }
@@ -112,7 +113,7 @@ public final class BackupScope {
     public static String restoreImpact(int scope) {
         switch (scope) {
             case SESSIONS: return com.deepseekharness.app.util.UiText.text("覆盖聊天记录、会话索引与附件，不改设置和插件");
-            case SETTINGS: return com.deepseekharness.app.util.UiText.text("覆盖 settings.yaml 和原生运行设置，不改聊天记录和插件");
+            case SETTINGS: return com.deepseekharness.app.util.UiText.text("覆盖设置文件与 profile 配置，不改聊天记录和插件");
             case PLUGINS: return com.deepseekharness.app.util.UiText.text("覆盖插件 profile 和插件源码，不改聊天记录和设置");
             default: return com.deepseekharness.app.util.UiText.text("覆盖配置、聊天记录、附件、插件与工作区 .env/日志");
         }

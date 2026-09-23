@@ -46,7 +46,7 @@ public final class BackupManager {
             try (lease) { return lease.run(() -> runSnapshotTask(controller, operation)); }
         }
         synchronized (LOCK) {
-            try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
+            try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin("数据维护")) {
                 return operation.run();
             }
         }
@@ -61,9 +61,10 @@ public final class BackupManager {
         }
         if (!restoring.compareAndSet(false, true)) throw new IOException(com.deepseekharness.app.util.UiText.text("已有备份、恢复或维护任务，请等待完成"));
         try {
-            stopWebForMaintenance(controller);
+            // 终端也可能运行 dsh web；先按各自出生身份关闭，不能让全局 Web 判据等待尚未关闭的终端。
             com.deepseekharness.app.ui.PtyTerminalFragment.shutdownAndWait(5000);
             com.deepseekharness.app.ui.TerminalFragment.shutdownShellAndWait(5000);
+            stopWebForMaintenance(controller);
             com.deepseekharness.app.util.RuntimeTaskRegistry.Maintenance maintenance =
                     com.deepseekharness.app.core.RuntimeTasks.tryEnterMaintenance();
             long drainDeadline = android.os.SystemClock.elapsedRealtime() + 3000;
@@ -76,9 +77,9 @@ public final class BackupManager {
             try (com.deepseekharness.app.util.RuntimeTaskRegistry.Maintenance held = maintenance) {
             synchronized (LOCK) {
                 dataOwner.set(true);
-                try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
+                try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin("数据维护")) {
                     return operation.run();
-                } finally { dataOwner.remove(); }
+                } finally { controller.proot().releaseRecoveryTools(); dataOwner.remove(); }
             }
             }
         } finally { restoring.set(false); }
@@ -110,7 +111,12 @@ public final class BackupManager {
     }
     public static boolean hasPendingMaintenance(File filesDir) {
         try { return com.deepseekharness.app.util.MaintenanceTransaction.pending(filesDir) != null
-                || com.deepseekharness.app.util.RuntimeUpdateTransaction.pending(filesDir) != null; }
+                || com.deepseekharness.app.util.RuntimeUpdateTransaction.pending(filesDir) != null
+                || com.deepseekharness.app.backup.ManagedRuntimeTransaction.blocked(filesDir)
+                || com.deepseekharness.app.backup.ConfigurationSnapshots.blocked(filesDir)
+                || com.deepseekharness.app.backup.PluginInstallJournals.blocked(filesDir)
+                || com.deepseekharness.app.backup.EnvironmentRebuildTransaction.blocked(filesDir)
+                || com.deepseekharness.app.backup.HostPendingTransactions.blocked(filesDir); }
         catch (IOException e) { return true; }
     }
 
@@ -126,6 +132,7 @@ public final class BackupManager {
     public static String createMaintenanceBackup(HarnessController controller, File destination) throws Exception {
         if (!Boolean.TRUE.equals(dataOwner.get())) throw new IOException(com.deepseekharness.app.util.UiText.text("维护备份必须持有全局任务锁"));
         if (destination.exists()) throw new IOException(com.deepseekharness.app.util.UiText.text("安全备份目标已存在"));
+        controller.proot().prepareDataMaintenance();
         File rootfs = controller.proot().getRootfsDir();
         if (destination.getCanonicalPath().startsWith(rootfs.getParentFile().getCanonicalPath() + File.separator))
             throw new IOException(com.deepseekharness.app.util.UiText.text("安全备份不能位于待替换环境内"));
@@ -134,7 +141,7 @@ public final class BackupManager {
         File config = new File(rootfs, "root/.dsha-maintenance-" + token + ".json");
         try {
             Compat.write(config, controller.config().exportBackupSettings().toString().getBytes(StandardCharsets.UTF_8));
-            JSONObject result = run(controller, "backup --scope full --archive " + ShellQuote.arg("/root/" + archive.getName())
+            JSONObject result = run(controller, "backup --scope full --allow-empty-data --archive " + ShellQuote.arg("/root/" + archive.getName())
                     + " --native-config " + ShellQuote.arg("/root/" + config.getName())
                     + " --app-version " + ShellQuote.arg(BuildConfig.VERSION_NAME) + " --app-code " + BuildConfig.VERSION_CODE);
             FileIntegrity.Result copied;
@@ -160,9 +167,14 @@ public final class BackupManager {
             if (!result.optBoolean("committed")) throw new IOException(com.deepseekharness.app.util.UiText.text("恢复尚未提交"));
             JSONObject settings = result.optJSONObject("nativeConfig");
             if (settings != null) controller.config().importBackupSettings(settings);
+            // 离线包没有工作目录 .env；新备份引擎会把用户明确允许导出的
+            // key 写入 .dsh/.dsha-apikey，旧归档也可能只有这个文件。
+            // 恢复提交后回读一次，避免界面显示完成但下一次启动没有凭据。
+            syncApiKeyFromRootfs(controller);
             run(controller, "finalize");
             controller.config().finishRestoreSettings(false);
-            return com.deepseekharness.app.util.UiText.text("恢复完成：") + BackupScope.label(prepared.scope) + com.deepseekharness.app.util.UiText.text("；原数据已保留，完成后可手动启动 Web。");
+            return restoreMessage(controller.config(), BackupScope.label(prepared.scope),
+                    com.deepseekharness.app.util.UiText.text("；原数据已保留，完成后可手动启动 Web。"));
         } catch (Exception e) {
             try { recoverInterrupted(controller); } catch (Exception rollback) { e.addSuppressed(rollback); }
             throw e;
@@ -197,7 +209,7 @@ public final class BackupManager {
             String token = UUID.randomUUID().toString();
             File archive = new File(controller.proot().getRootfsDir(), "root/.dsha-backup-" + token + ".tar.gz");
             File config = new File(controller.proot().getRootfsDir(), "root/.dsha-config-" + token + ".json");
-            try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
+            try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin("数据维护")) {
                 Compat.write(config, controller.config().exportBackupSettings().toString().getBytes(StandardCharsets.UTF_8));
                 JSONObject result = run(controller, "backup --archive " + ShellQuote.arg("/root/" + archive.getName())
                         + " --scope " + BackupScope.id(scope) + " --app-version " + ShellQuote.arg(BuildConfig.VERSION_NAME)
@@ -218,9 +230,11 @@ public final class BackupManager {
 
     private static JSONObject run(HarnessController controller, String arguments) throws Exception {
         // 升级门禁不能挡住旧环境的迁移备份；只有持有停止屏障的数据任务能使用旧版本。
-        if (!controller.isEnvironmentReady() && !(isDataTaskOwner() && controller.proot().hasBash()))
+        if (!controller.isEnvironmentReady() && !isDataTaskOwner())
             throw new IOException(com.deepseekharness.app.util.UiText.text("环境未就绪，请先完成安装"));
-        if (!controller.proot().ensureBundledPython()) throw new IOException(com.deepseekharness.app.util.UiText.text("内置 Python 无法使用，请从诊断页修复工具"));
+        boolean rescue = isDataTaskOwner();
+        if (isDataTaskOwner()) controller.proot().prepareDataMaintenance();
+        if (!rescue && !controller.proot().ensureBundledPython()) throw new IOException(com.deepseekharness.app.util.UiText.text("内置 Python 无法使用，请从诊断页修复工具"));
         File script = new File(controller.proot().getRootfsDir(), "root/.dsha-backup-engine.py");
         String asset = controller.readAsset("backup-engine.py");
         if (asset.isEmpty()) throw new IOException(com.deepseekharness.app.util.UiText.text("缺少备份核心脚本"));
@@ -230,8 +244,14 @@ public final class BackupManager {
             if (body.isEmpty()) throw new IOException(com.deepseekharness.app.util.UiText.text("缺少备份支持脚本：") + helper);
             Compat.write(new File(controller.proot().getRootfsDir(), "root/.dsha-" + helper), body.getBytes(StandardCharsets.UTF_8));
         }
-        String out = controller.proot().execAndReadWithProot("python3 -B /root/.dsha-backup-engine.py " + arguments
-                + " --workdir " + ShellQuote.arg(controller.config().getWorkdir()) + " 2>&1", 600_000);
+        String command = "/usr/bin/python3 -B /root/.dsha-backup-engine.py " + arguments
+                + " --workdir " + ShellQuote.arg(controller.config().getWorkdir()) + " 2>&1";
+        String out;
+        if (rescue) {
+            com.deepseekharness.app.util.BoundedProcessRunner.Result execution = controller.proot().runRecoveryMaintenance(command, null, 600_000);
+            if (execution.timedOut || execution.exitCode != 0) throw new IOException(com.deepseekharness.app.util.UiText.text("数据保护失败：") + execution.output);
+            out = execution.output;
+        } else out = controller.proot().execAndReadWithProot(command, 600_000);
         String marker = "DSHA_BACKUP_RESULT=";
         int start = out == null ? -1 : out.lastIndexOf(marker);
         if (start < 0) throw new IOException(out == null ? com.deepseekharness.app.util.UiText.text("备份核心没有返回结果") : out);
@@ -279,7 +299,7 @@ public final class BackupManager {
             if (name == null || name.isEmpty()) name = uri.getLastPathSegment();
             File target = new File(controller.proot().getRootfsDir(), "root/.dsha-restore-input-" + UUID.randomUUID() + ".tar.gz");
             boolean ready = false;
-            try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
+            try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin("数据维护")) {
                 FileIntegrity.Result copied;
                 try (InputStream in = ctx.getContentResolver().openInputStream(uri); FileOutputStream out = new FileOutputStream(target)) {
                     copied = FileIntegrity.copy(in, out, Math.min(MAX_ARCHIVE, Math.max(0, target.getParentFile().getUsableSpace() - 32L * 1024 * 1024)));
@@ -304,7 +324,7 @@ public final class BackupManager {
 
     public static String restorePrepared(HarnessController controller, PreparedRestore prepared) throws Exception {
         if (!restoring.compareAndSet(false, true)) throw new IOException(com.deepseekharness.app.util.UiText.text("已有恢复任务正在进行"));
-        try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
+        try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin("数据维护")) {
             // 等待 Web 停止时不持有归档锁，避免与运行队列形成互等。
             controller.stopWeb();
             synchronized (LOCK) {
@@ -317,12 +337,20 @@ public final class BackupManager {
                 JSONObject result = run(controller, "restore --archive " + ShellQuote.arg("/root/" + prepared.archive.getName())
                         + " --scope " + BackupScope.id(prepared.scope) + " --defer-commit");
                 if (!result.optBoolean("committed")) throw new IOException(com.deepseekharness.app.util.UiText.text("恢复尚未提交"));
+                // 恢复出来的 .dsh 可能带着【备份那台机器】的本机凭据：
+                //   · .bridge_token —— 3090 桥的共享凭据（新版备份已排除，但老备份仍带）
+                //   · browser-session —— 登录 cookie 的签名密钥（新版按字段剔除）
+                // 与本机内存里的值不一致时桥会拒绝所有请求，用户看到「需要 token，
+                // 请在 DSHA 应用内打开」。这里在提交之后立即让本机凭据重新对齐。
+                com.deepseekharness.app.HttpShellService.resetTokenAfterRestore();
                 JSONObject nativeConfig = result.optJSONObject("nativeConfig");
                 if (nativeConfig != null) controller.config().importBackupSettings(nativeConfig);
+                syncApiKeyFromRootfs(controller);
                 run(controller, "finalize");
                 controller.config().finishRestoreSettings(false);
-                return com.deepseekharness.app.util.UiText.text("恢复完成：") + BackupScope.label(prepared.scope) + com.deepseekharness.app.util.UiText.text("\n文件数：") + result.getInt("files")
-                        + com.deepseekharness.app.util.UiText.text("\n原数据已保留，重新启动 Web 后可查看恢复内容。");
+                return restoreMessage(controller.config(), BackupScope.label(prepared.scope)
+                        + com.deepseekharness.app.util.UiText.text("\n文件数：") + result.getInt("files"),
+                        com.deepseekharness.app.util.UiText.text("\n原数据已保留，重新启动 Web 后可查看恢复内容。"));
             } catch (Exception failure) {
                 try { recoverInterrupted(controller); }
                 catch (Exception rollback) { failure.addSuppressed(rollback); }
@@ -338,8 +366,40 @@ public final class BackupManager {
     public static String restoreFromBackup(Context ctx, HarnessController controller, File file) throws Exception {
         return restoreFromBackup(ctx, controller, Uri.fromFile(file));
     }
+
+    /**
+     * issue #22：离线包的 key 不在 .env，而是在备份引擎注入的
+     * {@code .dsh/.dsha-apikey} 中。只接受单行、无空白的候选，避免把脚本
+     * 输出或损坏文件写进 Keystore；保存后再由 ConfigStore 读回校验。
+     */
+    private static boolean syncApiKeyFromRootfs(HarnessController controller) {
+        try {
+            File file = new File(controller.proot().getRootfsDir(), "root/.dsh/.dsha-apikey");
+            if (!file.isFile() || file.length() <= 0 || file.length() > 16 * 1024) return false;
+            String value = new String(Compat.readAllBytes(file), StandardCharsets.UTF_8).trim();
+            if (value.length() < 8 || value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0
+                    || value.indexOf(' ') >= 0 || value.indexOf('\t') >= 0) return false;
+            if (!controller.config().saveApiKey(value)) return false;
+            android.util.Log.i("DSHA", "恢复后已从 .dsha-apikey 回填 API key（issue #22）");
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static boolean hasReadableApiKey(com.deepseekharness.app.core.ConfigStore config) {
+        try { return config.readApiKey().state == com.deepseekharness.app.util.CredentialRead.State.AVAILABLE; }
+        catch (Throwable ignored) { return false; }
+    }
+
+    private static String restoreMessage(com.deepseekharness.app.core.ConfigStore config, String scope, String suffix) {
+        String key = hasReadableApiKey(config)
+                ? com.deepseekharness.app.util.UiText.choose("\nAPI Key 已同步。", "\nAPI key was restored.")
+                : com.deepseekharness.app.util.UiText.choose("\n备份中没有可用的 API Key，请在配置页手动填写。", "\nThe backup did not contain a usable API key. Enter it in Configuration.");
+        return com.deepseekharness.app.util.UiText.text("恢复完成：") + scope + key + suffix;
+    }
     public static String exportToDownloads(Context ctx, File source, String name) {
-        try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin()) {
+        try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin("数据维护")) {
             return DownloadsExport.write(ctx, source, name).uri.toString();
         }
         catch (Exception e) { error = safeError(e); return null; }

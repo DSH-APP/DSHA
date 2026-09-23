@@ -1,171 +1,130 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/install_scroll"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:fillViewport="true" android:background="@color/surface">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="vertical" android:padding="@dimen/page_pad">
-        <TextView style="@style/DshaText.Display" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0008" />
-        <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="6dp" android:text="@string/ui_m0153" />
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="18dp">
-            <Button android:id="@+id/install_btn" android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:layout_marginEnd="5dp" android:minHeight="52dp" android:background="@drawable/bg_btn_primary"
-                android:textColor="@color/button_primary_text" android:text="@string/ui_m0155" />
-            <Button android:id="@+id/install_repair" android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:layout_marginStart="5dp" android:minHeight="52dp" android:background="@drawable/bg_polished_action" android:text="@string/ui_m0014" />
-        </LinearLayout>
-        <TextView android:id="@+id/install_status" style="@style/DshaText.Label" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="12dp" android:accessibilityLiveRegion="polite" />
-        <TextView android:id="@+id/install_progress" style="@style/DshaText.Caption" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="5dp" android:visibility="gone" />
-        <ProgressBar android:id="@+id/install_progressbar" style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="8dp" android:visibility="gone" />
-        <Button android:id="@+id/install_cancel" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="8dp" android:text="@string/ui_m0003" android:visibility="gone" />
-        <LinearLayout android:id="@+id/install_steps" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical" android:background="@drawable/bg_device_card" android:padding="16dp" android:layout_marginTop="16dp">
-            <LinearLayout android:id="@+id/install_step1" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
-                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
-                android:clickable="true" android:focusable="true">
-                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
-                    android:background="@drawable/bg_device_number" android:text="1" android:textStyle="bold"
-                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
-                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="@string/ui_m0038" android:textStyle="bold" />
-                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp" android:text="@string/ubuntu_rootfs" />
-                </LinearLayout>
-                <TextView android:id="@+id/install_state1" style="@style/DshaText.Caption" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
-                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
-                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+<?xml version='1.0' encoding='utf-8'?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface" android:id="@+id/install_scroll">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingLeft="18dp" android:paddingRight="18dp" android:paddingTop="14dp" android:paddingBottom="22dp">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_environment_page" android:textSize="24sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_environment_sub" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="7dp" android:layout_marginBottom="18dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:minHeight="38dp" android:gravity="center_vertical">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui2_environment_state" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/install_environment" android:text="" android:textSize="12sp" android:textColor="@color/text" android:includeFontPadding="false" android:maxWidth="220dp" android:gravity="end" />
             </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
-            <LinearLayout android:id="@+id/install_step2" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
-                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
-                android:clickable="true" android:focusable="true">
-                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
-                    android:background="@drawable/bg_device_number" android:text="2" android:textStyle="bold"
-                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
-                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="@string/ui_m0096" android:textStyle="bold" />
-                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp" android:text="curl · git · Python" />
-                </LinearLayout>
-                <TextView android:id="@+id/install_state2" style="@style/DshaText.Caption" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
-                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
-                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:minHeight="38dp" android:gravity="center_vertical">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui2_base" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/install_base" android:text="" android:textSize="12sp" android:textColor="@color/text" android:includeFontPadding="false" android:maxWidth="220dp" android:gravity="end" />
             </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
-            <LinearLayout android:id="@+id/install_step3" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
-                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
-                android:clickable="true" android:focusable="true">
-                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
-                    android:background="@drawable/bg_device_number" android:text="3" android:textStyle="bold"
-                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
-                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="Node.js" android:textStyle="bold" />
-                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp" android:text="@string/ui_m0037" />
-                </LinearLayout>
-                <TextView android:id="@+id/install_state3" style="@style/DshaText.Caption" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
-                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
-                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:minHeight="38dp" android:gravity="center_vertical">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui2_managed" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/install_runtime" android:text="" android:textSize="12sp" android:textColor="@color/text" android:includeFontPadding="false" android:maxWidth="220dp" android:gravity="end" />
             </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
-            <LinearLayout android:id="@+id/install_step4" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
-                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
-                android:clickable="true" android:focusable="true">
-                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
-                    android:background="@drawable/bg_device_number" android:text="4" android:textStyle="bold"
-                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
-                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="pnpm" android:textStyle="bold" />
-                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp" android:text="@string/ui_m0076" />
-                </LinearLayout>
-                <TextView android:id="@+id/install_state4" style="@style/DshaText.Caption" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
-                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
-                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
-            </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
-            <LinearLayout android:id="@+id/install_step5" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
-                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
-                android:clickable="true" android:focusable="true">
-                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
-                    android:background="@drawable/bg_device_number" android:text="5" android:textStyle="bold"
-                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
-                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="deepseek-harness" android:textStyle="bold" />
-                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp" android:text="@string/ui_m0042" />
-                </LinearLayout>
-                <TextView android:id="@+id/install_state5" style="@style/DshaText.Caption" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
-                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
-                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
-            </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="44dp" android:background="@color/line" />
-            <LinearLayout android:id="@+id/install_step6" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="76dp"
-                android:paddingTop="12dp" android:paddingBottom="12dp" android:background="?attr/selectableItemBackground"
-                android:clickable="true" android:focusable="true">
-                <TextView android:layout_width="32dp" android:layout_height="32dp" android:gravity="center"
-                    android:background="@drawable/bg_device_number" android:text="6" android:textStyle="bold"
-                    android:textSize="14sp" android:textColor="@color/primary" android:importantForAccessibility="no" />
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                    android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
-                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="@string/ui_m0199" android:textStyle="bold" />
-                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp" android:text="@string/ui_m0033" />
-                </LinearLayout>
-                <TextView android:id="@+id/install_state6" style="@style/DshaText.Caption" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" />
-                <TextView android:layout_width="20dp" android:layout_height="wrap_content" android:text="›" android:gravity="end"
-                    android:textSize="23sp" android:textColor="@color/text_muted" android:importantForAccessibility="no" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:minHeight="38dp" android:gravity="center_vertical">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui2_app_version" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/install_app_version" android:text="" android:textSize="12sp" android:textColor="@color/text" android:includeFontPadding="false" android:maxWidth="220dp" android:gravity="end" />
             </LinearLayout>
         </LinearLayout>
-        <TextView android:id="@+id/install_error" style="@style/DshaText.Label" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="12dp" android:padding="16dp"
-            android:background="@drawable/bg_device_card" android:textColor="@color/err" android:textIsSelectable="true" android:visibility="gone" />
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
-            android:layout_marginTop="16dp" android:padding="16dp" android:background="@drawable/bg_preview">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-                <TextView style="@style/DshaText.Title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/ui_m0154" />
-                <Button android:id="@+id/install_copy" style="@style/Widget.DSHA.TextButton" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="@string/ui_m0102" android:visibility="gone" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_six_steps" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_steps" android:orientation="vertical" android:background="@drawable/bg_card">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_step1" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_box" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component1" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component_hint" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state1" style="@style/DshaText.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" android:textSize="11sp" />
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
             </LinearLayout>
-            <com.deepseekharness.app.ui.LogScrollView android:id="@+id/install_log_scroll" android:layout_width="match_parent" android:layout_height="220dp"
-                android:layout_marginTop="8dp" android:fillViewport="true" android:scrollbars="vertical" android:fadeScrollbars="false">
-                <TextView android:id="@+id/install_log" style="@style/DshaText.Caption" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:fontFamily="monospace" android:textIsSelectable="true" />
-            </com.deepseekharness.app.ui.LogScrollView>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_step2" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_box" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component2" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component_hint" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state2" style="@style/DshaText.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" android:textSize="11sp" />
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_step3" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_box" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component3" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component_hint" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state3" style="@style/DshaText.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" android:textSize="11sp" />
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_step4" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_box" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component4" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component_hint" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state4" style="@style/DshaText.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" android:textSize="11sp" />
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_step5" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_box" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component5" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component_hint" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state5" style="@style/DshaText.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" android:textSize="11sp" />
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_step6" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_box" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component6" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_component_hint" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+                </LinearLayout>
+                <TextView android:id="@+id/install_state6" style="@style/DshaText.Caption" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0017" android:gravity="end" android:maxWidth="80dp" android:textSize="11sp" />
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
+            </LinearLayout>
         </LinearLayout>
-        <Button android:id="@+id/install_crash" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="@string/ui_m0152" android:visibility="gone" />
-        <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="14dp" android:text="@string/ui_m0072" />
-        <Button android:id="@+id/install_uninstall" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="20dp" android:background="@drawable/bg_btn_danger"
-            android:text="@string/ui_m0006" android:textColor="@color/button_danger_text" />
+        <androidx.appcompat.widget.AppCompatButton android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_btn" android:text="@string/ui2_check_all" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn_primary" android:textColor="@color/button_primary_text" android:layout_marginTop="16dp" />
+        <TextView android:id="@+id/install_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:accessibilityLiveRegion="polite" />
+        <TextView android:id="@+id/install_progress" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:visibility="gone" />
+        <ProgressBar android:id="@+id/install_progressbar" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="8dp" android:visibility="gone" />
+        <Button android:id="@+id/install_cancel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0003" android:visibility="gone" />
+        <TextView android:id="@+id/install_error" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:padding="16dp" android:background="@drawable/bg_device_card" android:textColor="@color/err" android:textIsSelectable="true" android:visibility="gone" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_maintenance" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_managed_update" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_recovery_refresh" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_managed_update" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_managed_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+                </LinearLayout>
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_repair" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_recovery_wrench" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_repair_parts" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_repair_parts_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+                </LinearLayout>
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/install_environment_recovery" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_shield" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_environment_recovery" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_environment_recovery_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+                </LinearLayout>
+                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
+            </LinearLayout>
+        </LinearLayout>
+        <Button android:id="@+id/install_uninstall" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:background="@drawable/bg_btn_danger" android:text="@string/ui_m0006" android:textColor="@color/button_danger_text" />
+        <androidx.appcompat.widget.AppCompatButton android:id="@+id/install_factory_reset" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:minHeight="48dp" android:background="@drawable/bg_action_plain" android:text="@string/ui2_factory_reset" android:textColor="@color/err" android:textAllCaps="false" android:textSize="13sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_installation_log" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
+        <Button android:id="@+id/install_copy" style="@style/Widget.DSHA.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0102" android:visibility="gone" />
+        <com.deepseekharness.app.ui.LogScrollView android:id="@+id/install_log_scroll" android:background="@drawable/bg_input" android:padding="12dp" android:clipToPadding="true" android:layout_width="match_parent" android:layout_height="220dp" android:layout_marginTop="8dp" android:fillViewport="true" android:scrollbars="vertical" android:fadeScrollbars="false">
+            <TextView android:id="@+id/install_log" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:textIsSelectable="true" />
+        </com.deepseekharness.app.ui.LogScrollView>
+        <Button android:id="@+id/install_crash" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0152" android:visibility="gone" />
     </LinearLayout>
 </ScrollView>

@@ -35,7 +35,7 @@ public final class LanguageSettingsAudit extends Instrumentation {
         long now=android.os.SystemClock.uptimeMillis();sendPointerSync(MotionEvent.obtain(now,now,MotionEvent.ACTION_DOWN,rect.centerX(),rect.centerY(),0));sendPointerSync(MotionEvent.obtain(now,now+60,MotionEvent.ACTION_UP,rect.centerX(),rect.centerY(),0));
         FragmentSessionTestActivity next=(FragmentSessionTestActivity)waitForMonitorWithTimeout(monitor,20000);removeMonitor(monitor);check(next!=null,"语言选择后未重建界面");page=next;Thread.sleep(350);
     }
-    private boolean historical(int id){return id==R.id.launch_log||id==R.id.install_log||id==R.id.workspace_info||id==R.id.workspace_backup_status||id==R.id.workspace_share_status||id==R.id.pluginName||id==R.id.pluginDesc;}
+    private boolean historical(int id){return id==R.id.launch_log||id==R.id.install_log||id==R.id.workspace_backup_status||id==R.id.pluginName||id==R.id.pluginDesc;}
     private void scan(View view,String scene){
         if(view.getVisibility()!=View.VISIBLE)return;
         if(view instanceof TextView && !(view instanceof EditText)&&!historical(view.getId())){

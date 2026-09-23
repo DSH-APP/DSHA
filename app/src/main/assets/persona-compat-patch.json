@@ -1,0 +1,10 @@
+{
+  "dshVersion": "0.1.7-alpha.2",
+  "module": "@deepseek-ai/dsh-persona/lib/index.js",
+  "patches": [
+    {
+      "before": "const Config = z.object({\n\tprefix: z.string().required(),\n\tsuffix: z.string().default(\"\"),\n\tcomplete: z.boolean().default(false),\n\tincludeRuntimeContext: z.boolean().default(true)\n});",
+      "after": "/* DSHA_PERSONA_TEXT_COMPAT_V1: legacy user presets keep their original text. */\nconst CurrentConfig = z.object({\n\tprefix: z.string().required(),\n\tsuffix: z.string().default(\"\"),\n\tcomplete: z.boolean().default(false),\n\tincludeRuntimeContext: z.boolean().default(true)\n});\nconst Config = z.transform(z.object({\n\tprefix: z.string(),\n\ttext: z.any().hidden(),\n\tsuffix: z.string().default(\"\"),\n\tcomplete: z.boolean().default(false),\n\tincludeRuntimeContext: z.boolean().default(true)\n}), value => CurrentConfig(!Object.hasOwn(value, \"prefix\") && typeof value.text === \"string\" ? { ...value, prefix: value.text } : value), true);"
+    }
+  ]
+}

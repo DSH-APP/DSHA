@@ -86,8 +86,11 @@ public final class ErrorLogRepository extends AndroidViewModel {
         text.append(com.deepseekharness.app.util.UiText.text("设备：")).append(android.os.Build.MANUFACTURER).append(' ').append(android.os.Build.MODEL)
                 .append(" / Android ").append(android.os.Build.VERSION.RELEASE).append('\n');
         ConfigStore config = new ConfigStore(context);
-        text.append(com.deepseekharness.app.util.UiText.text("最近失败阶段：")).append(config.getWebFailureStage()).append('\n')
-                .append(com.deepseekharness.app.util.UiText.text("最近失败原因：")).append(config.getWebFailureReason()).append('\n');
+        text.append(com.deepseekharness.app.util.UiText.text("最近失败阶段：")).append(com.deepseekharness.app.util.UiStateText.render(config.getDiagnosticFailureStage())).append('\n')
+                .append(com.deepseekharness.app.util.UiText.text("最近失败原因：")).append(config.getDiagnosticFailureReason()).append('\n');
+        text.append(com.deepseekharness.app.util.UiText.choose("\n=== 冷安装与环境准备（含首次尝试与回退）===\n", "\n=== Cold installation and fallback attempts ===\n")).append(ColdInstallDiagnostics.read(context));
+        String trialFailure=com.deepseekharness.app.runtime.RuntimeTrial.latestFailure(context);
+        if(!trialFailure.isEmpty())text.append(com.deepseekharness.app.util.UiText.choose("\n=== 最近隔离运行试验失败 ===\n","\n=== Latest isolated runtime trial failure ===\n")).append(trialFailure).append('\n');
         text.append(com.deepseekharness.app.util.UiText.text("\n=== 应用操作、崩溃与页面错误 ===\n")).append(DiagnosticLog.read(context));
         text.append(com.deepseekharness.app.util.UiText.text("\n=== 本轮启动时间线 ===\n")).append(HarnessController.get(context).startupDiagnostics().snapshot().log);
         text.append(com.deepseekharness.app.util.UiText.choose("\n=== 最近五次启动 ===\n","\n=== Last five starts ===\n"));

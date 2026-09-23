@@ -77,6 +77,24 @@ public final class UpdateEngine {
         check();
     }
     public void cancel() { stop(com.deepseekharness.app.util.UiText.text("已取消下载，进度已保留"), "cancelled"); }
+    /** 格式化前终止并收敛更新线程，避免它在偏好和私有目录清空后又写回旧候选。 */
+    public void stopForFactoryReset() throws IOException {
+        String reason=com.deepseekharness.app.util.UiText.choose("格式化已停止更新任务","Formatting stopped the update task");
+        if(android.os.Looper.myLooper()==android.os.Looper.getMainLooper())stop(reason,"cancelled");
+        else {
+            java.util.concurrent.CountDownLatch requested=new java.util.concurrent.CountDownLatch(1);
+            main.post(()->{try{stop(reason,"cancelled");}finally{requested.countDown();}});
+            try{if(!requested.await(5,java.util.concurrent.TimeUnit.SECONDS))throw new IOException("FORMAT_UPDATE_STOP_TIMEOUT");}
+            catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new java.io.InterruptedIOException("FORMAT_UPDATE_INTERRUPTED");}
+        }
+        long deadline=android.os.SystemClock.elapsedRealtime()+10_000;
+        while((busy.get()||checking||runningDownload)&&android.os.SystemClock.elapsedRealtime()<deadline){
+            try{Thread.sleep(25);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new java.io.InterruptedIOException("FORMAT_UPDATE_INTERRUPTED");}
+        }
+        if(busy.get()||checking||runningDownload)throw new IOException("FORMAT_UPDATE_STILL_RUNNING");
+        candidate=null;candidateChannel=null;verifiedApk=null;phase="";stopReason="";startupChecked=false;startupNotice=false;
+        state.postValue(new State(com.deepseekharness.app.util.UiText.choose("等待重新检查更新","Waiting for a fresh update check"),false,0,0,null,null));
+    }
     private interface Task { String run() throws Exception; }
     private void submit(String message, Task task) {
         if (!busy.compareAndSet(false, true)) return;

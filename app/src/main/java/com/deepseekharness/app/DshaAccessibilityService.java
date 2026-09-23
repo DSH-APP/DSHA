@@ -37,11 +37,12 @@ public class DshaAccessibilityService extends AccessibilityService {
 
     /** 读到配对信息后的回调（在无障碍服务线程上调用，实现方自己切主线程） */
     public interface PairInfoListener {
-        void onPairInfo(String code, String ip, String port);
+        void onPairInfo(String code, String ip, String port, String connectPort);
     }
 
     private static volatile long watchUntil = 0L;
     private static volatile PairInfoListener listener;
+    private static volatile String observedConnectHost="",observedConnectPort="";
 
     /** 三态：YES 确认已开 / NO 确认未开 / UNKNOWN 读不到设置（别当成未开）。
      *
@@ -95,6 +96,7 @@ public class DshaAccessibilityService extends AccessibilityService {
 
     /** 打开监听窗口（120 秒，一次性）。只有这段时间内才会去读设置页的内容。 */
     public static void startWatch(PairInfoListener l) {
+        observedConnectHost="";observedConnectPort="";
         listener = l;
         watchUntil = System.currentTimeMillis() + WATCH_MS;
     }
@@ -123,23 +125,16 @@ public class DshaAccessibilityService extends AccessibilityService {
             StringBuilder sb = new StringBuilder();
             collectText(root, sb, 0);
             String all = sb.toString();
-            // 必须出现「配对码」字样才继续 —— 否则设置页里任何 6 位数字
-            // （流量、时长、序列号片段）都可能被误当成配对码
-            if (!all.contains("配对码") && !all.toLowerCase().contains("pairing code")) return;
-            Matcher mc = CODE.matcher(all);
-            if (!mc.find()) return;
-            String code = mc.group(1);
-            String ip = "";
-            String port = "";
-            Matcher ma = ADDR.matcher(all);
-            if (ma.find()) {
-                ip = ma.group(1);
-                port = ma.group(2);
-            }
+            var connection=com.deepseekharness.app.util.AdbPairingInfo.connection(all);
+            if(connection!=null){observedConnectHost=connection.host;observedConnectPort=connection.port;}
+            var pair=com.deepseekharness.app.util.AdbPairingInfo.pairing(all);
+            if(pair==null)return;
+            String code=pair.code,ip=pair.host,port=pair.port;
+            String connectPort=ip.equals(observedConnectHost)?observedConnectPort:"";
             PairInfoListener l = listener;
             stopWatch(); // 一次性：读到就收工，不再继续读屏
             Log.i(TAG, "已从配对弹窗读到配对码（端口 " + (port.isEmpty() ? "未识别" : port) + "）");
-            if (l != null) l.onPairInfo(code, ip, port);
+            if (l != null) l.onPairInfo(code, ip, port, connectPort);
         } catch (Throwable t) {
             Log.w(TAG, "读配对码失败：" + SensitiveData.redact(String.valueOf(t)));
         } finally {
@@ -183,6 +178,18 @@ public class DshaAccessibilityService extends AccessibilityService {
     // 服务自身不做任何持续记录（onAccessibilityEvent 里除了配对窗口一律直接返回）。
 
     private static volatile DshaAccessibilityService instance;
+    public static boolean connected() { return instance != null; }
+
+    /** 授权弹窗关闭的短暂窗口切换期间只重试读取窗口，不重放点击或输入。 */
+    private static AccessibilityNodeInfo activeWindow(DshaAccessibilityService service) {
+        for(int attempt=0;attempt<13;attempt++) {
+            AccessibilityNodeInfo root=service.getRootInActiveWindow();
+            if(root!=null)return root;
+            if(android.os.Looper.myLooper()==android.os.Looper.getMainLooper()||attempt==12)return null;
+            try{Thread.sleep(60);}catch(InterruptedException cancelled){Thread.currentThread().interrupt();return null;}
+        }
+        return null;
+    }
 
     @Override
     protected void onServiceConnected() {
@@ -193,7 +200,7 @@ public class DshaAccessibilityService extends AccessibilityService {
 
     /** 服务没开时统一的提示语：告诉 agent 该让用户做什么，而不是只丢一个错误码 */
     private static final String NOT_READY =
-            "[ERR] 无障碍服务未开启。请让用户在 DSHA「配置」页点「屏幕操作权限」，"
+            "[ERR] 无障碍服务未开启。请让用户在 DSHA「设置 → 设备能力授权」点「设置屏幕操作」，"
                     + "或到系统设置 → 无障碍 → DSHA 配对助手 打开。";
 
     /** 当前前台窗口的应用包名；取不到返回空串。授权闸门用它识别支付/银行类应用。 */
@@ -202,7 +209,7 @@ public class DshaAccessibilityService extends AccessibilityService {
         if (s == null) return "";
         AccessibilityNodeInfo root = null;
         try {
-            root = s.getRootInActiveWindow();
+            root = activeWindow(s);
             if (root == null) return "";
             CharSequence p = root.getPackageName();
             return p == null ? "" : p.toString();
@@ -218,12 +225,51 @@ public class DshaAccessibilityService extends AccessibilityService {
         }
     }
 
+    public static boolean isConnected() { return instance != null; }
+    public static org.json.JSONObject virtualControl(int displayId,String operation,org.json.JSONObject args){return com.deepseekharness.app.vscreen.VirtualScreenAccessibility.run(instance,displayId,operation,args);}
+
+    /** 只读取指定虚拟显示的窗口，绝不回退到手机主屏。 */
+    private static AccessibilityNodeInfo virtualRoot(int displayId) {
+        DshaAccessibilityService service=instance;
+        if(service==null||android.os.Build.VERSION.SDK_INT<30||displayId<=0)return null;
+        var windows=service.getWindowsOnAllDisplays().get(displayId);
+        if(windows==null)return null;
+        AccessibilityNodeInfo result=null;
+        try {
+            for(var window:windows){
+                if(window.getType()!=android.view.accessibility.AccessibilityWindowInfo.TYPE_APPLICATION)continue;
+                AccessibilityNodeInfo root=window.getRoot();
+                if(root==null)continue;
+                if(result==null||window.isActive()){if(result!=null)result.recycle();result=root;}else root.recycle();
+                if(window.isActive())break;
+            }
+            return result;
+        } finally { for(var window:windows)window.recycle(); }
+    }
+    public static String virtualDump(int displayId) {
+        if(instance==null)return "ACCESSIBILITY_UNAVAILABLE";
+        AccessibilityNodeInfo root=null;
+        try{root=virtualRoot(displayId);if(root==null)return "VIRTUAL_WINDOW_UNAVAILABLE";
+            StringBuilder out=new StringBuilder();dumpNode(root,out,0,new int[]{0});return out.toString();
+        }catch(Throwable e){return "VIRTUAL_TREE_UNAVAILABLE";}finally{if(root!=null)root.recycle();}
+    }
+    public static String virtualInput(int displayId,String text) {
+        if(instance==null)return "ACCESSIBILITY_REQUIRED_FOR_UNICODE";
+        AccessibilityNodeInfo root=null,target=null;
+        try{root=virtualRoot(displayId);if(root==null)return "VIRTUAL_WINDOW_UNAVAILABLE";
+            target=root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+            if(target==null||!target.isEditable())return "VIRTUAL_INPUT_NOT_FOCUSED";
+            android.os.Bundle args=new android.os.Bundle();args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,text);
+            return target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,args)?"OK":"VIRTUAL_INPUT_REJECTED";
+        }catch(Throwable e){return "VIRTUAL_INPUT_RESULT_UNKNOWN";}finally{if(target!=null)target.recycle();if(root!=null)root.recycle();}
+    }
+
     /** 读当前屏幕：输出带序号、文本、可点击性与坐标的清单，供 agent 决定下一步点哪个。 */
     public static String uiDump() {
         DshaAccessibilityService s = instance;
         if (s == null) return NOT_READY;
         try {
-            AccessibilityNodeInfo root = s.getRootInActiveWindow();
+            AccessibilityNodeInfo root = activeWindow(s);
             if (root == null) return com.deepseekharness.app.util.UiText.text("[ERR] 取不到当前窗口（可能停在锁屏或系统弹窗上）");
             StringBuilder sb = new StringBuilder();
             CharSequence pkg = root.getPackageName();
@@ -300,7 +346,7 @@ public class DshaAccessibilityService extends AccessibilityService {
         if (text == null || text.isEmpty()) return com.deepseekharness.app.util.UiText.text("[ERR] 要点的文字不能为空");
         AccessibilityNodeInfo root = null;
         try {
-            root = s.getRootInActiveWindow();
+            root = activeWindow(s);
             if (root == null) return com.deepseekharness.app.util.UiText.text("[ERR] 取不到当前窗口");
             AccessibilityNodeInfo hit = findClickableByText(root, text, 0);
             if (hit == null) return com.deepseekharness.app.util.UiText.text("[ERR] 屏幕上找不到可点击的「") + text + "」（先用 dump 看看实际文字）";
@@ -364,7 +410,7 @@ public class DshaAccessibilityService extends AccessibilityService {
         if (text == null) return com.deepseekharness.app.util.UiText.text("[ERR] 文本不能为空");
         AccessibilityNodeInfo root = null;
         try {
-            root = s.getRootInActiveWindow();
+            root = activeWindow(s);
             if (root == null) return com.deepseekharness.app.util.UiText.text("[ERR] 取不到当前窗口");
             AccessibilityNodeInfo target = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
             if (target == null) target = findEditable(root, 0);
@@ -549,20 +595,22 @@ public class DshaAccessibilityService extends AccessibilityService {
         }
     }
 
-    /** 存到 Download/DSHA —— 这个目录 rootfs 里也看得到，agent 能直接拿文件 */
+    /** 保存到本应用的外部私有目录，截屏无需再申请“所有文件访问”。guest 可读取相同挂载。 */
     private static String saveShot(android.graphics.Bitmap bmp) {
         try {
-            java.io.File dir = new java.io.File(
-                    android.os.Environment.getExternalStoragePublicDirectory(
-                            android.os.Environment.DIRECTORY_DOWNLOADS), "DSHA");
+            DshaAccessibilityService service=instance;
+            if(service==null)return NOT_READY;
+            java.io.File base=service.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES);
+            if(base==null)return com.deepseekharness.app.util.UiText.choose("[ERR] 截屏存储暂不可用，请检查设备存储。","[ERR] Screenshot storage is unavailable. Check device storage.");
+            java.io.File dir = new java.io.File(base,"DSHA");
             if (!dir.isDirectory() && !dir.mkdirs()) {
                 return com.deepseekharness.app.util.UiText.text("[ERR] 建不了目录 ") + dir;
             }
             java.io.File f = new java.io.File(dir, "screen-"
                     + new java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.ROOT)
-                    .format(new java.util.Date()) + ".png");
+                    .format(new java.util.Date()) + "-" + java.util.UUID.randomUUID().toString().substring(0,8) + ".png");
             try (java.io.FileOutputStream fo = new java.io.FileOutputStream(f)) {
-                bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, fo);
+                if(!bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, fo))throw new java.io.IOException("PNG_ENCODING_FAILED");
             }
             return com.deepseekharness.app.util.UiText.text("OK 截屏已保存：") + f.getAbsolutePath()
                     + "（" + bmp.getWidth() + "x" + bmp.getHeight() + "）";
@@ -578,6 +626,7 @@ public class DshaAccessibilityService extends AccessibilityService {
 
     @Override
     public void onDestroy() {
+        HttpShellService.revokeScreenGrant();
         instance = null;
         stopWatch();
         super.onDestroy();

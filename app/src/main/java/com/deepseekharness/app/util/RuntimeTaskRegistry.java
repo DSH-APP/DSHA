@@ -7,12 +7,32 @@ import java.util.Map;
 public final class RuntimeTaskRegistry {
     private final Map<Token, Thread> active = new IdentityHashMap<>();
     private Maintenance maintenance;
+    private long nextId;
+
+    public static final class Snapshot {
+        public final long id, elapsedMillis;
+        public final String kind, detail;
+        private Snapshot(Token token,long now) {
+            id=token.id;kind=token.kind;detail=token.detail;
+            elapsedMillis=Math.max(0,(now-token.started)/1_000_000);
+        }
+    }
 
     public synchronized Token begin(boolean detached) {
+        return begin(detached,"执行任务");
+    }
+    public synchronized Token begin(boolean detached,String kind) {
         Thread owner = Thread.currentThread();
         if (maintenance != null && (detached || maintenance.owner != owner))
             throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("正在维护环境，请完成后再启动终端或后台任务"));
-        Token token = new Token(); active.put(token, detached ? null : owner); return token;
+        Token token = new Token(++nextId,kind); active.put(token, detached ? null : owner); return token;
+    }
+    /** 只读快照不释放工作锁，也不读取进程命令或用户输入。 */
+    public synchronized java.util.List<Snapshot> snapshot() {
+        long now=System.nanoTime();java.util.List<Snapshot> rows=new java.util.ArrayList<>();
+        for(Token token:active.keySet())rows.add(new Snapshot(token,now));
+        rows.sort(java.util.Comparator.comparingLong(row->row.id));
+        return java.util.Collections.unmodifiableList(rows);
     }
     public synchronized int count() { return active.size(); }
     public synchronized boolean hasOtherTasks() {
@@ -25,7 +45,13 @@ public final class RuntimeTaskRegistry {
         maintenance = new Maintenance(Thread.currentThread()); return maintenance;
     }
     public final class Token implements AutoCloseable {
-        private Token() { }
+        private final long id,started=System.nanoTime();
+        private final String kind;
+        private String detail="";
+        private Token(long id,String kind) { this.id=id;this.kind=kind==null||kind.isEmpty()?"执行任务":kind; }
+        public void describe(String value) {
+            synchronized(RuntimeTaskRegistry.this){if(active.containsKey(this))detail=value==null?"":value;}
+        }
         /** 原 token 转为异步寿命；不增减计数、不释放维护围栏，已关闭 token 不会复活。 */
         public void detach() {
             synchronized (RuntimeTaskRegistry.this) {

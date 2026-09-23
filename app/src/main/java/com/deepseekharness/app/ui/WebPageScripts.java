@@ -5,7 +5,10 @@ import java.nio.charset.StandardCharsets;
 public final class WebPageScripts {
     private WebPageScripts() { }
     public static String compatibility(Context context) {
-        return language(context) + "\n" + read(context, "web-integration/es-compat.js") + "\n"
+        String section="";
+        if(context instanceof android.app.Activity){String url=((android.app.Activity)context).getIntent().getStringExtra("url");
+            if(((android.app.Activity)context).getIntent().getBooleanExtra("dsha_open_models",false)||(url!=null&&url.endsWith("#dsha-models")))section="window.__DSHA_OPEN_MODELS__=true;window.dispatchEvent(new Event('dsha-open-models'));\n";}
+        return "window.__DSHA_NATIVE_PLUGINS__=true;\n"+section + language(context) + "\n" + read(context, "web-integration/es-compat.js") + "\n"
                 + read(context, "web-integration/compat.js") + "\n" + read(context, "web-integration/startup.js");
     }
     public static String language(Context context) {

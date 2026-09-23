@@ -1,6 +1,6 @@
 {
-  "dshVersion": "0.1.5-rc.2",
-  "module": "@deepseek-ai/dsh-client-ui-sidebar-documentpreview/lib/client.js",
+  "dshVersion": "0.1.7-alpha.2",
+  "module": "@deepseek-ai/dsh-client-ui-sidebar-documentpreview/lib/client.pdf.js",
   "mainBefore": "window.__ModuleLoader__.load({\n\tid: \"@deepseek-ai/dsh-client-ui-sidebar-documentpreview\",",
   "workerBefore": "new Blob([_dsh_pdf_worker_default,",
   "asset": "web-integration/es-compat.js",

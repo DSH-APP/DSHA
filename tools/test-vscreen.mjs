@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {definitions, validate} from '../app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs';
+const names=definitions.map(row=>row[0]);
+assert.deepEqual(names,['android_vscreen_create','android_vscreen_status','android_vscreen_launch','android_vscreen_see','android_vscreen_tap','android_vscreen_swipe','android_vscreen_touch','android_vscreen_type','android_vscreen_key','android_vscreen_tree','android_vscreen_node','android_vscreen_editor','android_vscreen_close']);
+const tap=definitions.find(row=>row[0]==='android_vscreen_tap');
+validate(tap,{generation:'test-generation',frameSeq:1,x:3,y:4});
+assert.throws(()=>validate(tap,{generation:'test-generation',frameSeq:0,x:3,y:4}),/INVALID_frameSeq/);
+assert.throws(()=>validate(tap,{generation:'test-generation',frameSeq:1,x:3,y:4,extra:true}),/UNKNOWN_ARGUMENT/);
+const touch=definitions.find(row=>row[0]==='android_vscreen_touch');
+validate(touch,{generation:'test-generation',frameSeq:1,stroke:'0123456789abcdef',action:0,x:3,y:4});
+assert.throws(()=>validate(touch,{generation:'test-generation',frameSeq:1,stroke:'bad',action:0,x:3,y:4}),/INVALID_stroke/);
+const editor=definitions.find(row=>row[0]==='android_vscreen_editor');
+validate(editor,{generation:'test-generation',op:'get',editorId:'',text:'',start:0,end:0});
+console.log('PASS virtual screen tool schema, frameSeq validation and fixed tool surface');

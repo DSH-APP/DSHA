@@ -43,6 +43,7 @@ public class InstallProbeTest {
     @Test public void newExclusivePublishAliasIsRecognizedAndNeverRewrittenAsRename() {
         InstallProbe.Check session = InstallProbe.checks(6).stream().filter(c -> c.key.equals("session")).findFirst().orElseThrow();
         assertTrue(session.command.contains("&& ! grep -Fq " + ShellQuote.arg(InstallProbe.SESSION_PUBLISH_IMPORT)));
+        assertTrue(session.command.contains("&& ! grep -Fq " + ShellQuote.arg(InstallProbe.SESSION_DIRECT_HINT_MARKER)));
         assertTrue(InstallProbe.patchScript().contains("publishSessionExclusive as link"));
         assertTrue(InstallProbe.patchScript().contains("not in s"));
     }

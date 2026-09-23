@@ -17,8 +17,8 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.deepseekharness.app.util.HttpProtocol;
+import com.deepseekharness.app.util.SocketDispatch;
 
 /**
  * Optional LAN bridge for the dsh Web UI.
@@ -76,20 +76,17 @@ public final class LanProxyService {
         final long epoch;
         final long generation;
         final int backendPort;
-        final ExecutorService pool;
-        final ConcurrentHashMap<Socket, Boolean> clients = new ConcurrentHashMap<>();
-        final ConcurrentHashMap<Socket, Boolean> backends = new ConcurrentHashMap<>();
+        final SocketDispatch dispatch = new SocketDispatch("dsha-lan",32,8,16,8);
         volatile boolean active = true;
         /** Set only after the ServerSocket bind has completed successfully. */
         volatile boolean bound;
         volatile ServerSocket server;
         volatile Thread acceptThread;
 
-        ProxyRun(long epoch, long generation, int backendPort, ExecutorService pool) {
+        ProxyRun(long epoch, long generation, int backendPort) {
             this.epoch = epoch;
             this.generation = generation;
             this.backendPort = backendPort;
-            this.pool = pool;
         }
     }
 
@@ -274,12 +271,7 @@ public final class LanProxyService {
         getLanToken(ctx);
         if (!isValidLanToken(lanToken)) return;
         logPath = rootfsDir == null ? "" : rootfsDir + "/root/dsh-lan.log";
-        ExecutorService executor = Executors.newFixedThreadPool(8, r -> {
-            Thread t = new Thread(r, "dsha-lan-proxy");
-            t.setDaemon(true);
-            return t;
-        });
-        ProxyRun run = new ProxyRun(++nextRunEpoch, generation, resolvedBackend, executor);
+        ProxyRun run = new ProxyRun(++nextRunEpoch, generation, resolvedBackend);
         // Keep the old compatibility field for rewriteResponse(String), but request
         // handling always uses the immutable port captured by ProxyRun.
         backendPort = resolvedBackend;
@@ -308,17 +300,17 @@ public final class LanProxyService {
             while (isActiveRun(run)) {
                 try {
                     Socket client = ss.accept();
-                    client.setSoTimeout(120000);
+                    client.setSoTimeout(HttpProtocol.LAN.timeoutMs);
                     if (!isActiveRun(run)) {
                         closeQuietly(client);
                         continue;
                     }
-                    run.clients.put(client, Boolean.TRUE);
+                    SocketDispatch.Ticket ticket=run.dispatch.accept(client);
+                    if(ticket==null)continue;
                     try {
-                        run.pool.execute(() -> handle(client, run));
+                        new LanConnection(ticket,run).next(true);
                     } catch (Throwable rejected) {
-                        run.clients.remove(client);
-                        closeQuietly(client);
+                        ticket.close();
                     }
                 } catch (IOException e) {
                     if (isActiveRun(run)) log(com.deepseekharness.app.util.UiText.text("接收连接失败：") + e.getClass().getSimpleName());
@@ -337,7 +329,7 @@ public final class LanProxyService {
                 }
             }
             closeRunSockets(run);
-            run.pool.shutdownNow();
+            run.dispatch.close();
         }
     }
 
@@ -416,109 +408,111 @@ public final class LanProxyService {
         closeQuietly(run.server);
         run.server = null;
         if (run.acceptThread != null) run.acceptThread.interrupt();
-        run.pool.shutdownNow();
+        run.dispatch.close();
     }
 
     private static void closeRunSockets(ProxyRun run) {
         if (run == null) return;
-        for (Socket client : run.clients.keySet()) closeQuietly(client);
-        for (Socket back : run.backends.keySet()) closeQuietly(back);
+        run.dispatch.close();
     }
 
-    private static void handle(Socket client, ProxyRun run) {
-        String ip = client.getInetAddress() == null ? "" : client.getInetAddress().getHostAddress();
-        if (shouldLogConn(ip)) log(com.deepseekharness.app.util.UiText.text("连接来自 ") + ip);
-        try (Socket c = client) {
-            InputStream in = c.getInputStream();
-            OutputStream out = c.getOutputStream();
-            byte[] requestBuffer = new byte[65536];
-            while (isActiveRun(run)) {
-                int n = readHeader(in, requestBuffer);
-                if (n <= 0) return;
-                String head = new String(requestBuffer, 0, n, StandardCharsets.ISO_8859_1);
-                int nl = head.indexOf('\n');
-                if (nl < 0) return;
-                String line = head.substring(0, nl).trim();
-                if (line.isEmpty()) return;
-
-                // Use one LAN token snapshot for validation and the 303 cookie so a
-                // token refresh can never validate with one value and set another.
-                String currentLanToken = lanToken;
-                int auth = LanAuth.tokenOk(head, currentLanToken);
-                if (auth == LanAuth.AUTH_DENY) {
-                    writePlain(out, "HTTP/1.1 401 Unauthorized", "LAN token required");
-                    return;
-                }
-                if (auth == LanAuth.AUTH_OK_SET_COOKIE) {
-                    writeLanRedirect(out, currentLanToken);
-                    return;
-                }
-                AuthSnapshot authSnapshot = snapshotDshAuth(run);
-                if (authSnapshot == null) {
-                    writePlain(out, "HTTP/1.1 503 Service Unavailable",
-                            "dsh authentication is not ready");
-                    return;
-                }
-
-                boolean websocket = containsIgnoreCase(head, "Upgrade: websocket")
-                        || (line.contains("HTTP/1.1") && containsIgnoreCase(head, "Connection: Upgrade"));
-                Socket back = new Socket();
-                run.backends.put(back, Boolean.TRUE);
-                try {
-                    back.setSoTimeout(120000);
-                    back.connect(new InetSocketAddress("127.0.0.1", run.backendPort), 5000);
-                    InputStream bin = back.getInputStream();
-                    OutputStream bout = back.getOutputStream();
-                    /*
-                     * The final generation check and request-header write are
-                     * one critical section.  stop()/restart takes this same
-                     * lock before invalidating state, so a stale worker either
-                     * writes before stop linearizes or returns 503 without
-                     * sending an unauthenticated backend request.
-                     */
-                    String forwarded = writeCurrentRequest(run, authSnapshot, head, bout);
-                    if (forwarded == null) {
-                        writePlain(out, "HTTP/1.1 503 Service Unavailable",
-                                "dsh authentication is not ready");
-                        return;
-                    }
-                    long requestLength = contentLength(forwarded);
-                    if (requestLength > 0) pipeBytes(in, bout, requestLength);
-                    else if (containsIgnoreCase(forwarded, "Transfer-Encoding: chunked")) pipeChunked(in, bout);
-
-                    byte[] responseBuffer = new byte[65536];
-                    int rn = readHeader(bin, responseBuffer);
-                    if (rn <= 0) return;
-                    String response = new String(responseBuffer, 0, rn, StandardCharsets.ISO_8859_1);
-                    if (response.startsWith("HTTP/1.1 401") || response.startsWith("HTTP/1.1 403")) {
-                        // A restarted dsh invalidates the old BrowserAuth cookie. Do not
-                        // continue proxying as an unauthenticated raw forwarder.
-                        invalidateDshAuth(run, authSnapshot);
-                    }
-                    String cleanResponse = rewriteResponse(response, run.backendPort);
-                    out.write(cleanResponse.getBytes(StandardCharsets.ISO_8859_1));
-                    out.flush();
-                    boolean upgraded = websocket || response.startsWith("HTTP/1.1 101")
-                            || containsIgnoreCase(response, "Upgrade: websocket");
-                    if (upgraded) {
-                        pumpBidirectional(c, back, in, out, bin, bout);
-                        return;
-                    }
-                    long length = contentLength(response);
-                    if (length > 0) pipeBytes(bin, out, length);
-                    else if (containsIgnoreCase(response, "Transfer-Encoding: chunked")) pipeChunked(bin, out);
-                    else pumpStream(bin, out);
-                    if (containsIgnoreCase(response, "Connection: close")) return;
-                } finally {
-                    run.backends.remove(back);
-                    closeQuietly(back);
-                }
-            }
-        } catch (Throwable ignored) {
-        } finally {
-            run.clients.remove(client);
+    /** 有限连接的各阶段转交所有权；流式正文不会占满短请求线程。 */
+    private static final class LanConnection {
+        final SocketDispatch.Ticket owner;final ProxyRun run;final InputStream in;final OutputStream out;
+        LanConnection(SocketDispatch.Ticket owner,ProxyRun run)throws IOException{
+            this.owner=owner;this.run=run;in=new java.io.BufferedInputStream(owner.socket.getInputStream(),8192);out=owner.socket.getOutputStream();
+        }
+        void next(boolean first){
+            if(!isActiveRun(run)||owner.ended()){owner.close();return;}
+            long until=first?owner.acceptedAt+HttpProtocol.LAN.timeoutMs*1000000L:HttpProtocol.deadline(HttpProtocol.LAN.timeoutMs);
+            if(!run.dispatch.request(owner,()->read(until)))owner.close();
+        }
+        void fail(int status){
+            try{writePlain(out,"HTTP/1.1 "+status+" Request Failed","Request could not be processed");}catch(IOException ignored){}finally{owner.close();}
+        }
+        void read(long until){
+            try{
+                if(!isActiveRun(run)){owner.close();return;}
+                HttpProtocol.Head request=HttpProtocol.readHead(in,owner.socket,HttpProtocol.LAN,until,true);
+                if(request==null){owner.close();return;}
+                String ip=owner.socket.getInetAddress()==null?"":owner.socket.getInetAddress().getHostAddress();
+                if(shouldLogConn(ip))log(com.deepseekharness.app.util.UiText.text("连接来自 ")+ip);
+                String token=lanToken;int authorized=LanAuth.tokenOk(request.raw(),token);
+                if(authorized==LanAuth.AUTH_DENY){fail(401);return;}
+                if(authorized==LanAuth.AUTH_OK_SET_COOKIE){try{writeLanRedirect(out,token);}finally{owner.close();}return;}
+                AuthSnapshot auth=snapshotDshAuth(run);if(auth==null){fail(503);return;}
+                boolean websocket=request.websocketRequest();
+                Exchange exchange=new Exchange(this,request,auth,websocket);
+                boolean stream=request.requestBody().streaming()||websocket||request.value("Accept").toLowerCase(Locale.ROOT).contains("text/event-stream");
+                if(stream){if(!run.dispatch.stream(owner,()->exchange.serve(true)))fail(503);}
+                else exchange.serve(false);
+            }catch(java.net.SocketTimeoutException timeout){fail(408);}
+            catch(HttpProtocol.Failure invalid){fail(invalid.status);}
+            catch(IOException error){owner.close();}
         }
     }
+    private static final class Exchange {
+        final LanConnection client;final HttpProtocol.Head request;final AuthSnapshot auth;final boolean websocket;
+        Socket back;InputStream bin;OutputStream bout;boolean responseStarted;
+        Exchange(LanConnection client,HttpProtocol.Head request,AuthSnapshot auth,boolean websocket){this.client=client;this.request=request;this.auth=auth;this.websocket=websocket;}
+        void serve(boolean longLane){
+            try{
+                if(!isActiveRun(client.run)||client.owner.ended()){client.owner.close();return;}
+                back=new Socket();client.owner.attach(back);back.setSoTimeout(HttpProtocol.BODY_IDLE_MS);
+                client.owner.socket.setSoTimeout(HttpProtocol.BODY_IDLE_MS);
+                back.connect(new InetSocketAddress("127.0.0.1",client.run.backendPort),5000);
+                bin=new java.io.BufferedInputStream(back.getInputStream(),8192);bout=back.getOutputStream();
+                // 保留已有代次/鉴权写入临界区；逐跳头在注入本轮内部 Cookie 之前处理。
+                String forwarded=writeCurrentRequest(client.run,auth,request.forwarded(websocket,!websocket),bout);
+                if(forwarded==null){client.fail(503);return;}
+                if(request.value("Expect").equalsIgnoreCase("100-continue")){client.out.write("HTTP/1.1 100 Continue\r\n\r\n".getBytes(StandardCharsets.US_ASCII));client.out.flush();}
+                HttpProtocol.copyBody(request.requestBody(),client.in,bout);
+                long until=HttpProtocol.deadline(HttpProtocol.BODY_IDLE_MS);HttpProtocol.Head response;int interim=0;
+                while(true){
+                    response=HttpProtocol.readHead(bin,back,HttpProtocol.LAN,until,false);if(response==null)throw new IOException("HTTP_BACKEND_EOF");
+                    if(response.status>=200||response.status==101)break;
+                    if(++interim>8)throw new IOException("HTTP_TOO_MANY_INFORMATIONAL");
+                    response.responseBody(request);
+                    client.out.write(rewriteResponse(response.forwarded(false,false),client.run.backendPort).getBytes(StandardCharsets.ISO_8859_1));client.out.flush();
+                }
+                HttpProtocol.Body body=response.responseBody(request);
+                if(response.status==401||response.status==403)invalidateDshAuth(client.run,auth);
+                boolean persistent=!request.close()&&body.kind!=HttpProtocol.Kind.CLOSE&&body.kind!=HttpProtocol.Kind.UPGRADE;
+                String head=rewriteResponse(response.forwarded(body.kind==HttpProtocol.Kind.UPGRADE,!persistent),client.run.backendPort);
+                boolean eventStream=response.value("Content-Type").toLowerCase(Locale.ROOT).startsWith("text/event-stream");
+                if(!longLane&&(body.streaming()||eventStream)){
+                    if(!client.run.dispatch.stream(client.owner,()->transfer(body,head,persistent,eventStream)))client.fail(503);
+                    return;
+                }
+                transfer(body,head,persistent,eventStream);
+            }catch(HttpProtocol.Failure invalid){if(!responseStarted)client.fail(invalid.status==400?400:502);else client.owner.close();}
+            catch(IOException error){if(!responseStarted)client.fail(502);else client.owner.close();}
+        }
+        void transfer(HttpProtocol.Body body,String head,boolean persistent,boolean eventStream){
+            try{
+                if(!isActiveRun(client.run)||client.owner.ended()){client.owner.close();return;}
+                back.setSoTimeout(eventStream?0:HttpProtocol.BODY_IDLE_MS);
+                responseStarted=true;client.out.write(head.getBytes(StandardCharsets.ISO_8859_1));client.out.flush();
+                if(body.kind==HttpProtocol.Kind.UPGRADE){tunnel();return;}
+                HttpProtocol.copyBody(body,bin,client.out);client.owner.detach(back);
+                if(persistent)client.next(false);else client.owner.close();
+            }catch(IOException failure){client.owner.close();}
+        }
+        void tunnel()throws IOException{
+            client.owner.socket.setSoTimeout(0);back.setSoTimeout(0);client.owner.socket.setKeepAlive(true);back.setKeepAlive(true);
+            java.util.concurrent.Future<?> up=client.run.dispatch.pump(client.owner,()->{
+                try{HttpProtocol.copyToEnd(client.in,bout);back.shutdownOutput();}catch(IOException failure){client.owner.close();}
+            });
+            try{
+                HttpProtocol.copyToEnd(bin,client.out);client.owner.socket.shutdownOutput();
+                try{up.get(3000,java.util.concurrent.TimeUnit.MILLISECONDS);}catch(java.util.concurrent.TimeoutException ignored){}
+                catch(java.util.concurrent.ExecutionException failure){client.owner.close();}
+                catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
+            }finally{client.owner.close();up.cancel(true);}
+        }
+    }
+    /** 仅返回计数，不包含请求、地址或鉴权资料。 */
+    public static java.util.Map<String,Long> resourceMetrics(){ProxyRun run=activeRun;return run==null?java.util.Collections.emptyMap():run.dispatch.metrics();}
 
     /**
      * Write an authenticated request only if this handler still owns the
@@ -716,140 +710,6 @@ public final class LanProxyService {
                 out.write((message + "\n").getBytes(StandardCharsets.UTF_8));
             } catch (Throwable ignored) {
             }
-        }
-    }
-
-    private static int readHeader(InputStream in, byte[] buffer) throws IOException {
-        int position = 0;
-        int matched = 0;
-        while (position < buffer.length) {
-            int b = in.read();
-            if (b < 0) return position == 0 ? -1 : position;
-            buffer[position++] = (byte) b;
-            if (matched == 0 && b == '\r') matched = 1;
-            else if (matched == 1 && b == '\n') matched = 2;
-            else if (matched == 2 && b == '\r') matched = 3;
-            else if (matched == 3 && b == '\n') return position;
-            else if (matched == 2 && b == '\n') return position;
-            else matched = 0;
-        }
-        // A full buffer without a terminator is not a header. Forwarding that
-        // truncated prefix would turn an oversized request into a different
-        // request, so callers must close it fail-closed.
-        return -2;
-    }
-
-    private static long contentLength(String head) {
-        for (String line : head.split("\\r?\\n")) {
-            int colon = line.indexOf(':');
-            if (colon > 0 && line.substring(0, colon).trim().equalsIgnoreCase("Content-Length")) {
-                try {
-                    return Math.max(0, Long.parseLong(line.substring(colon + 1).trim()));
-                } catch (NumberFormatException ignored) {
-                    return 0;
-                }
-            }
-        }
-        return 0;
-    }
-
-    private static boolean containsIgnoreCase(String value, String needle) {
-        return value.toLowerCase(Locale.ROOT).contains(needle.toLowerCase(Locale.ROOT));
-    }
-
-    private static void pipeBytes(InputStream in, OutputStream out, long length) throws IOException {
-        byte[] buffer = new byte[8192];
-        long left = length;
-        while (left > 0) {
-            int n = in.read(buffer, 0, (int) Math.min(buffer.length, left));
-            if (n < 0) return;
-            out.write(buffer, 0, n);
-            left -= n;
-        }
-        out.flush();
-    }
-
-    private static void pipeChunked(InputStream in, OutputStream out) throws IOException {
-        final int maxChunk = 1024 * 1024;
-        while (true) {
-            java.io.ByteArrayOutputStream line = new java.io.ByteArrayOutputStream();
-            int b;
-            while ((b = in.read()) >= 0) {
-                line.write(b);
-                if (line.size() >= 2) {
-                    byte[] bytes = line.toByteArray();
-                    int n = bytes.length;
-                    if (bytes[n - 2] == '\r' && bytes[n - 1] == '\n') break;
-                }
-                if (line.size() > 1024) return;
-            }
-            if (b < 0) return;
-            String text = line.toString(StandardCharsets.ISO_8859_1.name()).trim();
-            int size;
-            try {
-                size = Integer.parseInt(text.split(";", 2)[0].trim(), 16);
-            } catch (NumberFormatException e) {
-                return;
-            }
-            if (size < 0 || size > maxChunk) return;
-            out.write(line.toByteArray());
-            if (size == 0) {
-                // 终结块是 0\r\n\r\n：补上第二个 \r\n，否则 chunked 流不完整，
-                // 客户端（浏览器/curl）会判「chunk hex-length 非法」而断开
-                out.write('\r');
-                out.write('\n');
-                out.flush();
-                return;
-            }
-            pipeBytes(in, out, size);
-            int c1 = in.read();
-            int c2 = in.read();
-            if (c1 != '\r' || c2 != '\n') return;
-            out.write(c1);
-            out.write(c2);
-        }
-    }
-
-    private static void pumpStream(InputStream in, OutputStream out) throws IOException {
-        byte[] buffer = new byte[8192];
-        int n;
-        while ((n = in.read(buffer)) >= 0) {
-            out.write(buffer, 0, n);
-            out.flush();
-        }
-    }
-
-    private static void pumpBidirectional(Socket client, Socket back, InputStream cin,
-                                          OutputStream cout, InputStream bin, OutputStream bout) {
-        try {
-            client.setSoTimeout(0);
-            back.setSoTimeout(0);
-            client.setKeepAlive(true);
-            back.setKeepAlive(true);
-        } catch (Throwable ignored) {
-        }
-        Runnable close = () -> {
-            closeQuietly(client);
-            closeQuietly(back);
-        };
-        Thread up = new Thread(() -> {
-            try {
-                pumpStream(cin, bout);
-            } catch (Throwable ignored) {
-            }
-            close.run();
-        }, "dsha-lan-ws-up");
-        up.setDaemon(true);
-        up.start();
-        try {
-            pumpStream(bin, cout);
-        } catch (Throwable ignored) {
-        }
-        close.run();
-        try {
-            up.join(3000);
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
         }
     }
 

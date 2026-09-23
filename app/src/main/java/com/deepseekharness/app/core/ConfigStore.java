@@ -42,8 +42,26 @@ public class ConfigStore {
     public String getUiTheme() {
         return com.deepseekharness.app.util.UiThemePreference.normalize(text("ui_theme", "system"));
     }
+    /**
+     * 语言偏好：{@code system}（默认）/ {@code zh} / {@code en}。
+     *
+     * <p>从未设置过的用户走 {@code system}，由系统语言决定中文还是英文；
+     * 老版本写过 {@code zh}/{@code en} 的用户保持原选择，升级不改变语言。
+     */
+    public String getUiLanguagePreference() {
+        return com.deepseekharness.app.util.UiLanguagePreference.normalize(text("ui_language", null));
+    }
+    /** 用户是否从未显式选择过语言（界面据此显示「跟随系统」）。 */
+    public boolean hasChosenUiLanguage() {
+        return com.deepseekharness.app.util.UiLanguagePreference.supported(text("ui_language", null));
+    }
+    /** 实际生效语言（zh/en）：显式选择优先，否则解析系统语言。 */
     public String getUiLanguage() {
-        return com.deepseekharness.app.util.UiLanguagePreference.normalize(text("ui_language", "zh"));
+        return com.deepseekharness.app.util.UiLanguagePreference.resolve(
+                getUiLanguagePreference(), com.deepseekharness.app.util.SystemLanguage.tag());
+    }
+    public String getUiLanguageForBackup() {
+        return getUiLanguagePreference();
     }
     public void setUiLanguage(String value) {
         prefs.edit().putString("ui_language", com.deepseekharness.app.util.UiLanguagePreference.normalize(value)).apply();
@@ -64,7 +82,20 @@ public class ConfigStore {
     public void setDnsMode(String value) { prefs.edit().putString("dns_mode",com.deepseekharness.app.util.ResolverConfig.mode(value)).apply(); }
 
     public String getApiKey() {
-        return vault.decrypt(text(Constants.KEY_API_KEY, ""));
+        return readApiKey().requireValue();
+    }
+    public com.deepseekharness.app.util.CredentialRead readApiKey(){
+        Object stored=prefs.getAll().get(Constants.KEY_API_KEY);
+        if(stored==null)return com.deepseekharness.app.util.CredentialRead.missing();
+        if(!(stored instanceof String))return com.deepseekharness.app.util.CredentialRead.failed(com.deepseekharness.app.util.CredentialRead.Reason.UNREADABLE);
+        return vault.read((String)stored);
+    }
+    public static String credentialMessage(com.deepseekharness.app.util.CredentialRead read){
+        if(read.state==com.deepseekharness.app.util.CredentialRead.State.TEMPORARILY_UNAVAILABLE)
+            return com.deepseekharness.app.util.UiText.text("API Key 暂时无法读取，请解锁设备后重试。原凭据已保留。");
+        if(read.reason==com.deepseekharness.app.util.CredentialRead.Reason.KEY_INVALIDATED)
+            return com.deepseekharness.app.util.UiText.text("保存 API Key 的设备密钥已失效，请重新输入。原记录未自动删除。");
+        return com.deepseekharness.app.util.UiText.text("当前设备无法读取已保存的 API Key，请重试或重新输入。原记录已保留。");
     }
 
     public void setApiKey(String v) {
@@ -76,6 +107,10 @@ public class ConfigStore {
         String plain = value == null ? "" : value;
         String encrypted = vault.encrypt(plain);
         if (!plain.isEmpty() && encrypted.isEmpty()) return false;
+        if(!plain.isEmpty()){
+            var verified=vault.read(encrypted);
+            if(verified.state!=com.deepseekharness.app.util.CredentialRead.State.AVAILABLE||!plain.equals(verified.requireValue()))return false;
+        }
         return prefs.edit().putString(Constants.KEY_API_KEY, encrypted).commit();
     }
 
@@ -136,6 +171,18 @@ public class ConfigStore {
         prefs.edit().putBoolean(Constants.KEY_DESKTOP_MODE, v).apply();
     }
 
+    public boolean isPictureInPictureEnabled() { return flag(Constants.KEY_PICTURE_IN_PICTURE, true); }
+    public void setPictureInPictureEnabled(boolean value) {
+        prefs.edit().putBoolean(Constants.KEY_PICTURE_IN_PICTURE, value).apply();
+    }
+    public String getPictureInPictureLayout() {
+        return com.deepseekharness.app.util.PictureInPicturePolicy.layout(text(Constants.KEY_PICTURE_IN_PICTURE_LAYOUT, "auto"));
+    }
+    public void setPictureInPictureLayout(String value) {
+        prefs.edit().putString(Constants.KEY_PICTURE_IN_PICTURE_LAYOUT,
+                com.deepseekharness.app.util.PictureInPicturePolicy.layout(value)).apply();
+    }
+
     public boolean isBackupKey() {
         return flag(Constants.KEY_BACKUP_KEY, true);
     }
@@ -152,7 +199,7 @@ public class ConfigStore {
         prefs.edit().putBoolean(Constants.KEY_GECKO_CORE, v).apply();
     }
 
-    /** 默认 proroot；关掉用传统 proot。 */
+    /** 默认稳定的 proot；用户可选择 proroot。 */
     public boolean isProroot() {
         return "proroot".equals(text(Constants.KEY_CONTAINER_RUNTIME, "proot"));
     }
@@ -160,6 +207,10 @@ public class ConfigStore {
     public void setProroot(boolean v) {
         prefs.edit().putString(Constants.KEY_CONTAINER_RUNTIME, v ? "proroot" : "proot").apply();
     }
+    public boolean isProrootStaticLoader() { return flag("proroot_static_loader",true); }
+    public void setProrootStaticLoader(boolean value) { prefs.edit().putBoolean("proroot_static_loader",value).apply(); }
+    public boolean isProotSeccompDisabled() { return flag("proot_disable_seccomp",false); }
+    public void setProotSeccompDisabled(boolean value) { prefs.edit().putBoolean("proot_disable_seccomp",value).apply(); }
 
     public boolean isLanMode() {
         return flag(Constants.KEY_LAN_MODE, false);
@@ -199,7 +250,16 @@ public class ConfigStore {
     public void setEcoMode(boolean value) { prefs.edit().putBoolean("runtime_eco_mode", value).apply(); }
     public String getWebFailureStage() { return text("web_failure_stage", ""); }
     public String getWebFailureReason() { return text("web_failure_reason", ""); }
+    public String getDiagnosticFailureStage() { return text("diagnostic_failure_stage",getWebFailureStage()); }
+    public String getDiagnosticFailureReason() { return text("diagnostic_failure_reason",getWebFailureReason()); }
+    public void recordEnvironmentFailure(String stage,String reason) {
+        String safe=com.deepseekharness.app.util.SensitiveData.redact(reason);
+        prefs.edit().putString("diagnostic_failure_stage",stage)
+                .putString("diagnostic_failure_reason",safe.length()>6000?safe.substring(0,6000):safe)
+                .putLong("diagnostic_failure_time",System.currentTimeMillis()).commit();
+    }
     public void recordWebRecovery(int count, String stage, String reason) {
+        if(!stage.isEmpty()&&!reason.isEmpty())recordEnvironmentFailure(stage,reason);
         prefs.edit().putInt("web_consecutive_failures", count).putString("web_failure_stage", stage)
                 .putString("web_failure_reason", reason.length() > 500 ? reason.substring(0, 500) : reason).commit();
     }
@@ -210,8 +270,22 @@ public class ConfigStore {
         out.put("formatVersion", 1).put("port", getPort()).put("workdir", getWorkdir())
                 .put("permissionMode", getPermissionMode()).put("confirmShell", isConfirmShell())
                 .put("desktopMode", isDesktopMode()).put("checkUpdate", isCheckUpdate())
-                .put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme()).put("uiLanguage", getUiLanguage());
+                .put("pictureInPicture", isPictureInPictureEnabled())
+                .put("pictureInPictureLayout", getPictureInPictureLayout())
+                .put("ecoMode", isEcoMode()).put("uiTheme", getUiTheme()).put("uiLanguage", getUiLanguageForBackup());
         if (isBackupKey() && !getApiKey().isEmpty()) out.put("apiKey", getApiKey());
+        return out;
+    }
+
+    /** 新宿主导出策略与历史手动开关分离，凭据不可用时明确失败而不是导出空凭据。 */
+    public org.json.JSONObject exportPortableSettings(boolean includeKey) throws org.json.JSONException, java.io.IOException {
+        org.json.JSONObject out=new org.json.JSONObject();
+        out.put("formatVersion",1).put("port",getPort()).put("workdir",getWorkdir())
+                .put("permissionMode",getPermissionMode()).put("confirmShell",isConfirmShell())
+                .put("desktopMode",isDesktopMode()).put("checkUpdate",isCheckUpdate()).put("ecoMode",isEcoMode())
+                .put("pictureInPicture",isPictureInPictureEnabled()).put("pictureInPictureLayout",getPictureInPictureLayout())
+                .put("uiTheme",getUiTheme()).put("uiLanguage",getUiLanguageForBackup());
+        if(includeKey){String key;try{key=readApiKey().requireValue();}catch(com.deepseekharness.app.util.CredentialRead.Unavailable unavailable){throw new java.io.IOException(unavailable.getMessage());}if(!key.isEmpty())out.put("apiKey",key);}
         return out;
     }
 
@@ -222,6 +296,9 @@ public class ConfigStore {
         if (data.has("permissionMode")) edit.putString(Constants.KEY_PERMISSION_MODE, data.optString("permissionMode", "danger-full-access"));
         if (data.has("confirmShell")) edit.putBoolean(Constants.KEY_CONFIRM_SHELL, data.optBoolean("confirmShell", true));
         if (data.has("desktopMode")) edit.putBoolean(Constants.KEY_DESKTOP_MODE, data.optBoolean("desktopMode"));
+        if (data.has("pictureInPicture")) edit.putBoolean(Constants.KEY_PICTURE_IN_PICTURE, data.optBoolean("pictureInPicture", false));
+        if (data.has("pictureInPictureLayout")) edit.putString(Constants.KEY_PICTURE_IN_PICTURE_LAYOUT,
+                com.deepseekharness.app.util.PictureInPicturePolicy.layout(data.optString("pictureInPictureLayout")));
         if (data.has("checkUpdate")) edit.putBoolean(Constants.KEY_CHECK_UPDATE, data.optBoolean("checkUpdate", true));
         if (data.has("apiKey")) {
             String plain = data.optString("apiKey");
@@ -231,15 +308,51 @@ public class ConfigStore {
         }
         if (data.has("ecoMode")) edit.putBoolean("runtime_eco_mode", data.optBoolean("ecoMode"));
         if (data.has("uiTheme")) edit.putString("ui_theme", com.deepseekharness.app.util.UiThemePreference.normalize(data.optString("uiTheme")));
-        if (data.has("uiLanguage")) edit.putString("ui_language", com.deepseekharness.app.util.UiLanguagePreference.normalize(data.optString("uiLanguage")));
+        if (data.has("uiLanguage")) {
+            // 老备份里的 zh/en 保持原样；新备份可能带 system（跟随系统）。
+            String preference = com.deepseekharness.app.util.UiLanguagePreference.normalize(data.optString("uiLanguage"));
+            edit.putString("ui_language", preference);
+        }
         if (!edit.commit()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("原生设置写入失败"));
     }
 
     private static final String[] BACKUP_SETTING_KEYS = {
             Constants.KEY_PORT, Constants.KEY_WORKDIR, Constants.KEY_PERMISSION_MODE,
             Constants.KEY_CONFIRM_SHELL, Constants.KEY_DESKTOP_MODE, Constants.KEY_CHECK_UPDATE,
-            Constants.KEY_API_KEY, "runtime_eco_mode", "ui_theme", "ui_language"
+            Constants.KEY_API_KEY, Constants.KEY_PICTURE_IN_PICTURE, Constants.KEY_PICTURE_IN_PICTURE_LAYOUT,
+            "runtime_eco_mode", "ui_theme", "ui_language"
     };
+    public java.util.Map<String,Object> hostSettingsState() {
+        java.util.Map<String,Object> values=new java.util.LinkedHashMap<>();java.util.Map<String,?> all=prefs.getAll();
+        for(String key:BACKUP_SETTING_KEYS)if(all.containsKey(key))values.put(key,all.get(key));return values;
+    }
+    public java.util.Map<String,Object> prepareHostSettings(org.json.JSONObject data,boolean includeKey)throws java.io.IOException {
+        java.util.Map<String,Object> next=hostSettingsState();
+        if(data.has("port"))next.put(Constants.KEY_PORT,String.valueOf(parsePort(data.optString("port"))));
+        if(data.has("workdir")){String path=data.optString("workdir");if(path.length()>2048||path.indexOf('\0')>=0)throw new java.io.IOException("SETTINGS_PATH");next.put(Constants.KEY_WORKDIR,path);}
+        if(data.has("permissionMode"))next.put(Constants.KEY_PERMISSION_MODE,data.optString("permissionMode","default"));
+        for(String[] pair:new String[][]{{"confirmShell",Constants.KEY_CONFIRM_SHELL},{"desktopMode",Constants.KEY_DESKTOP_MODE},{"checkUpdate",Constants.KEY_CHECK_UPDATE},{"ecoMode","runtime_eco_mode"}})
+            if(data.has(pair[0]))next.put(pair[1],data.optBoolean(pair[0]));
+        if(data.has("pictureInPicture"))next.put(Constants.KEY_PICTURE_IN_PICTURE,data.optBoolean("pictureInPicture",false));
+        if(data.has("pictureInPictureLayout"))next.put(Constants.KEY_PICTURE_IN_PICTURE_LAYOUT,com.deepseekharness.app.util.PictureInPicturePolicy.layout(data.optString("pictureInPictureLayout")));
+        if(data.has("uiTheme"))next.put("ui_theme",com.deepseekharness.app.util.UiThemePreference.normalize(data.optString("uiTheme")));
+        if(data.has("uiLanguage"))next.put("ui_language",com.deepseekharness.app.util.UiLanguagePreference.normalize(data.optString("uiLanguage")));
+        if(includeKey&&data.has("apiKey")&&!data.optString("apiKey").isEmpty()){
+            String plain=data.optString("apiKey");if(plain.length()>16384)throw new java.io.IOException("CREDENTIAL_LIMIT");String cipher=vault.encrypt(plain);
+            if(cipher.isEmpty())throw new java.io.IOException("CREDENTIAL_ENCRYPTION_FAILED");next.put(Constants.KEY_API_KEY,cipher);
+        }return next;
+    }
+    /** 事务只提交事先校验/加密的白名单状态，不能从归档键名写设备授权。 */
+    public void applyHostSettings(java.util.Map<String,Object> values)throws java.io.IOException {
+        java.util.Set<String> allowed=new java.util.HashSet<>(java.util.Arrays.asList(BACKUP_SETTING_KEYS));
+        if(!allowed.containsAll(values.keySet()))throw new java.io.IOException("SETTINGS_KEYS");
+        SharedPreferences.Editor edit=prefs.edit();for(String key:BACKUP_SETTING_KEYS){Object value=values.get(key);
+            if(value==null)edit.remove(key);else if(value instanceof String)edit.putString(key,(String)value);
+            else if(value instanceof Boolean)edit.putBoolean(key,(Boolean)value);else if(value instanceof Number)edit.putLong(key,((Number)value).longValue());
+            else throw new java.io.IOException("SETTINGS_TYPE");
+        }
+        if(!edit.commit())throw new java.io.IOException("SETTINGS_COMMIT_FAILED");
+    }
 
     /** 保存的是 Keystore 密文和原始偏好值，供跨进程中断恢复使用。 */
     public void beginRestoreSettings() throws Exception {
@@ -279,6 +392,11 @@ public class ConfigStore {
     }
 
     public String getLastBackupUri() { return text("backup_last_uri", ""); }
+    public void recordVerifiedNativeBackup(String uri,String name,String scope){
+        if(!java.util.Set.of("application","sessions","settings","plugins","projects").contains(scope))throw new IllegalArgumentException("BACKUP_SCOPE");
+        prefs.edit().putString("backup_last_uri",uri).putString("backup_last_name",name).putLong("backup_last_success",System.currentTimeMillis())
+                .putLong("backup_last_attempt",System.currentTimeMillis()).putString("backup_last_error","").putString("backup_last_native_scope",scope).apply();
+    }
     public String getLastBackupName() { return text("backup_last_name", ""); }
     public String getLastBackupError() { return text("backup_last_error", ""); }
     public long getLastBackupSuccess() { return longValue("backup_last_success", 0); }

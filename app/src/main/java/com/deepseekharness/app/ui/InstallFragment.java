@@ -32,10 +32,11 @@ public class InstallFragment extends Fragment {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private InstallRepository repository;
     private long shownRevision = -1;
+    private String lastRenderKey = "";
     private final Runnable refresh = new Runnable() {
         @Override public void run() {
             if (getView() == null || !isResumed()) return;
-            render(); handler.postDelayed(this, 500);
+            render(); handler.postDelayed(this, 1_000);
         }
     };
 
@@ -44,12 +45,27 @@ public class InstallFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_install, container, false);
     }
     @Override public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
-        repository = InstallRepository.get(requireContext()); shownRevision = -1;
+        repository = InstallRepository.get(requireContext()); shownRevision = -1; lastRenderKey = "";
+        view.findViewById(R.id.install_status).setOnClickListener(v->BackgroundTasksActivity.open(requireContext()));
+        var controller=com.deepseekharness.app.core.HarnessController.get(requireContext());
+        ((TextView)view.findViewById(R.id.install_environment)).setText(controller.isEnvironmentReady()?com.deepseekharness.app.util.UiText.choose("可用","Available"):com.deepseekharness.app.util.UiText.choose("等待检查","Needs checking"));
+        ((TextView)view.findViewById(R.id.install_app_version)).setText(com.deepseekharness.app.BuildConfig.VERSION_NAME);
+        try{var descriptor=controller.proot().installedRuntimeDescriptor();var identity=descriptor==null?java.util.Map.of():descriptor.json();
+            ((TextView)view.findViewById(R.id.install_base)).setText(String.valueOf(identity.getOrDefault("baseVersion","—")));
+            ((TextView)view.findViewById(R.id.install_runtime)).setText(String.valueOf(identity.getOrDefault("dshVersion","—")));
+        }catch(java.io.IOException unknown){((TextView)view.findViewById(R.id.install_base)).setText("—");((TextView)view.findViewById(R.id.install_runtime)).setText("—");}
+        view.findViewById(R.id.install_managed_update).setOnClickListener(v->startActivity(new Intent(requireContext(),ExtractActivity.class).putExtra("review_only",true)));
+        view.findViewById(R.id.install_environment_recovery).setOnClickListener(v->startActivity(new Intent(requireContext(),StartupRecoveryActivity.class)));
+
         view.findViewById(R.id.install_btn).setOnClickListener(v -> start(false, 0));
         view.findViewById(R.id.install_repair).setOnClickListener(v -> start(true, 0));
         view.findViewById(R.id.install_cancel).setOnClickListener(v -> { repository.cancel(); render(); });
         view.findViewById(R.id.install_copy).setOnClickListener(v -> copyLog());
         view.findViewById(R.id.install_uninstall).setOnClickListener(v -> confirmMaintenance());
+        view.findViewById(R.id.install_factory_reset).setOnClickListener(v -> startActivity(
+                new Intent(requireContext(), ExtractActivity.class)
+                        .putExtra("review_only", true)
+                        .putExtra("request_factory_reset", true)));
         for (int i = 0; i < STEP_IDS.length; i++) {
             final int step = i + 1;
             view.findViewById(STEP_IDS[i]).setOnClickListener(v -> showStep(step));
@@ -66,7 +82,7 @@ public class InstallFragment extends Fragment {
     @Override public void onResume() { super.onResume(); handler.removeCallbacks(refresh); handler.post(refresh); }
     @Override public void onPause() { handler.removeCallbacks(refresh); super.onPause(); }
     @Override public void onDestroyView() {
-        handler.removeCallbacks(refresh); shownRevision = -1; super.onDestroyView();
+        handler.removeCallbacks(refresh); shownRevision = -1; lastRenderKey = ""; super.onDestroyView();
     }
     private void start(boolean repair, int step) {
         if (!repository.start(repair, step)) Toast.makeText(requireContext(),
@@ -77,7 +93,7 @@ public class InstallFragment extends Fragment {
     private void showStep(int step) {
         InstallTask.Snapshot state = repository.snapshot();
         androidx.appcompat.app.AlertDialog.Builder dialog = new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
-                .setTitle(com.deepseekharness.app.util.UiText.text(InstallTask.NAMES[step - 1])).setMessage(com.deepseekharness.app.util.UiText.text(state.details[step - 1]))
+                .setTitle(com.deepseekharness.app.util.UiText.text(InstallTask.NAMES[step - 1])).setMessage(com.deepseekharness.app.util.MaintenanceErrorText.render(state.details[step - 1]))
                 .setNeutralButton(com.deepseekharness.app.util.UiText.text("关闭"), null);
         if (!state.busy() && !BackupManager.isEnvironmentTaskBusy() && !BackupTask.get(requireContext()).pendingMaintenance()) {
             dialog.setPositiveButton(com.deepseekharness.app.util.UiText.text("按需修复"), (d, which) -> start(true, step))
@@ -90,7 +106,12 @@ public class InstallFragment extends Fragment {
         View view = getView(); if (view == null || repository == null) return;
         InstallTask.Snapshot state = repository.snapshot();
         boolean environmentBusy = BackupManager.isEnvironmentTaskBusy();
-        boolean pending = BackupTask.get(requireContext()).pendingMaintenance();
+        BackupTask maintenanceTask = BackupTask.get(requireContext());
+        boolean pending = maintenanceTask.pendingMaintenanceForUi();
+        String renderKey = state.revision + ":" + state.elapsedSeconds + ":" + state.stageSeconds + ":"
+                + state.outcome + ":" + state.cancelRequested + ":" + environmentBusy + ":" + pending;
+        if (renderKey.equals(lastRenderKey)) return;
+        lastRenderKey = renderKey;
         ((TextView) view.findViewById(R.id.install_status)).setText(state.busy() ? state.phase
                 : environmentBusy ? "环境任务进行中：" + EnvironmentTaskGate.activeKind()
                 : pending ? com.deepseekharness.app.util.UiText.text("上次环境维护尚未完成，请先恢复原环境")
@@ -126,11 +147,12 @@ public class InstallFragment extends Fragment {
         Button maintenance = view.findViewById(R.id.install_uninstall);
         maintenance.setText(pending ? com.deepseekharness.app.util.UiText.text("恢复中断维护") : com.deepseekharness.app.util.UiText.text("备份并重建环境"));
         maintenance.setEnabled(!state.busy() && !environmentBusy);
+        view.findViewById(R.id.install_factory_reset).setEnabled(!state.busy() && !environmentBusy);
         Button cancel = view.findViewById(R.id.install_cancel);
         cancel.setVisibility(state.busy() ? View.VISIBLE : View.GONE); cancel.setEnabled(!state.cancelRequested);
         cancel.setText(state.cancelRequested ? com.deepseekharness.app.util.UiText.text("等待停止…") : state.cancellable ? com.deepseekharness.app.util.UiText.text("取消检查") : com.deepseekharness.app.util.UiText.text("安全停止后续修复"));
         TextView error = view.findViewById(R.id.install_error);
-        error.setVisibility(state.failure.isEmpty() ? View.GONE : View.VISIBLE); error.setText(com.deepseekharness.app.util.UiText.text(state.failure));
+        error.setVisibility(state.failure.isEmpty() ? View.GONE : View.VISIBLE); error.setText(com.deepseekharness.app.util.MaintenanceErrorText.render(state.failure));
         view.findViewById(R.id.install_copy).setVisibility(state.log.isEmpty() ? View.GONE : View.VISIBLE);
         if (shownRevision != state.revision) {
             shownRevision = state.revision;

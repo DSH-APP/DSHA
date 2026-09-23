@@ -1,0 +1,10 @@
+{
+  "dshVersion": "0.1.7-alpha.2",
+  "module": "@deepseek-ai/libreoffice-kit/lib/index.js",
+  "patches": [
+    {
+      "before": "...shared.map((path) => posix.join(path, \"fonts\")),",
+      "after": "...shared.map((path) => posix.join(path, \"fonts\")),\n        // DSHA_ANDROID_FONTS_V1: 使用已有的只读 Android 字体，不复制一份字体库。\n        ...(env.DSHA_ANDROID_RUNTIME === \"1\" ? [\"/system/fonts\"] : []),"
+    }
+  ]
+}

@@ -35,7 +35,27 @@ public final class BuiltinPlugins {
                     "dsh-device-shell-guide",
                     "dsh-task-notifier",
                     "dsh-status-overlay",
-                    "dsh-web-mobile"));
+                    "dsh-web-mobile",
+                    "dsh-computer-use-android",
+                    "dsh-auto-review",
+                    "dsh-tool-vscreen"));
+
+    /** 当前签名 APK 独占的系统插件；旧 profile/归档不得提供同名源码。 */
+    public static final List<String> SIGNED_BUILTINS;
+    public static final List<String> SYSTEM_PLUGINS;
+    static {
+        List<String> names = new ArrayList<>(DEFAULT_BUILTINS);
+        names.add("dsh-app-integration");
+        SIGNED_BUILTINS = Collections.unmodifiableList(names);
+        List<String> system = new ArrayList<>(names);
+        system.add("@deepseek-ai/dsh-base");
+        system.add("@deepseek-ai/dsh-web-app");
+        SYSTEM_PLUGINS = Collections.unmodifiableList(system);
+    }
+
+    public static boolean system(String name) {
+        return SYSTEM_PLUGINS.contains(name);
+    }
 
     /** 解析 dsha-builtin.txt 内容：每行一个插件名，跳过空行与 # 注释。 */
     public static List<String> parseBuiltinNames(String content) {

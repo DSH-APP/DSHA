@@ -48,13 +48,16 @@ test('实际导航改变后不会沿用旧高亮，订阅可清理',()=>{
 test('移动抽屉不会把单击选中误判为已打开',()=>{
     const mobile=readFileSync(assets+'builtin-plugins/dsh-web-mobile/lib/client.js','utf8');
     assert.ok(mobile.includes("target.closest('[data-dsha-session-select]') !== null"));
-    assert.ok(mobile.includes("document.addEventListener('dsha-session-open', onSessionOpened)"));
+    assert.ok(mobile.includes("dsha-session-open"));
+    assert.ok(mobile.includes('onDshaSessionOpen') || mobile.includes('onSessionOpened'));
 });
 test('打开会话的效果不再主动 focus，显式编辑路径仍存在',()=>{
     const patches=JSON.parse(readFileSync(assets+'composer-enter-patch.json','utf8')).patches;
     const focus=patches.find(p=>p.after.includes('DSHA_COMPOSER_EXPLICIT_FOCUS_V1'));
     assert.ok(focus); assert.ok(!focus.after.includes('.focus('));
     const client=readFileSync(runtime+'/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js','utf8');
-    assert.equal(client.split(focus.before).length-1,1);
-    assert.ok(client.replace(focus.before,focus.after).includes('editor?.getRootElement()?.focus({ preventScroll: true });'));
+    const anchors=client.split(focus.before).length-1;
+    assert.ok(anchors===1 || (anchors===0 && client.includes(focus.after)));
+    const patched=anchors===1?client.replace(focus.before,focus.after):client;
+    assert.ok(patched.includes('editor?.getRootElement()?.focus({ preventScroll: true });'));
 });

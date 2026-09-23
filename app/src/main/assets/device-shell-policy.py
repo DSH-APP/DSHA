@@ -171,8 +171,20 @@ def stop_targets(plan, shell):
 
 
 def execute(plan, shell, result_class):
-    if not isinstance(plan, dict) or plan.get('version') != 1 or plan.get('kind') not in ('READ', 'FILE', 'STOP'):
+    if not isinstance(plan, dict) or plan.get('version') != 1 or plan.get('kind') not in ('READ', 'FILE', 'STOP', 'VIRTUAL_SCREEN'):
         raise Blocked('原生设备策略没有授权此操作')
+    if plan['kind'] == 'VIRTUAL_SCREEN':
+        argv = plan.get('argv')
+        if (not isinstance(argv, list) or len(argv) != 9 or argv[0] != 'app_process'
+                or not re.fullmatch(r'-Djava\.class\.path=/data/app/.+\.apk', argv[1])
+                or argv[2] != '/system/bin'
+                or argv[3] != 'com.deepseekharness.app.vscreen.VirtualScreenCore'
+                or argv[4:6] != ['--launch', '--port']
+                or not re.fullmatch(r'8[0-9]{3,4}', argv[6])
+                or argv[7] != '--token'
+                or not re.fullmatch(r'[a-f0-9]{32,128}', argv[8])):
+            raise Blocked('虚拟屏启动参数无法核验')
+        return shell(argv_command(argv))
     if plan['kind'] == 'STOP':
         # 在当前连接再次刷新清单，先验证全部目标，再按包名停止。
         targets = stop_targets(plan, shell)

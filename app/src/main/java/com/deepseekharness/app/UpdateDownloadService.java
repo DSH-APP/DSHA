@@ -60,7 +60,9 @@ public final class UpdateDownloadService extends Service {
         }
     }
     private Notification notification(UpdateRepository.State state) {
-        PendingIntent open = PendingIntent.getActivity(this, ID, new Intent(this, UpdateActivity.class),
+        Intent openPage = new Intent(this, UpdateActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent open = PendingIntent.getActivity(this, ID, openPage,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL)
                 .setSmallIcon(android.R.drawable.stat_sys_download).setContentTitle(state != null && state.apk != null ? com.deepseekharness.app.util.UiText.text("DSHA 更新已就绪") : com.deepseekharness.app.util.UiText.text("DSHA 应用更新"))

@@ -67,7 +67,10 @@ public final class DshAuthSession {
             int code = connection.getResponseCode();
             if (code == 401 || code == 403) return failed(Status.EXPIRED, com.deepseekharness.app.util.UiText.text("Web 鉴权链接已失效（HTTP ") + code + com.deepseekharness.app.util.UiText.text("），请重新启动服务后进入"));
             if (code >= 500) return failed(Status.NOT_READY, com.deepseekharness.app.util.UiText.text("Web 服务尚未就绪（HTTP ") + code + com.deepseekharness.app.util.UiText.text("），请稍后重试"));
-            if (code != 303 || !"/".equals(connection.getHeaderField("Location")))
+            // dsh 0.1.7 switched the clean redirect to the directory-relative
+            // `./`; retain `/` for older installed runtimes during coverage.
+            String location = connection.getHeaderField("Location");
+            if (code != 303 || !("/".equals(location) || "./".equals(location)))
                 return failed(Status.INVALID_RESPONSE, com.deepseekharness.app.util.UiText.text("Web 鉴权响应异常（HTTP ") + code + com.deepseekharness.app.util.UiText.text("），请查看启动日志"));
             cookie = DshAuthUrl.extractCookie(connection.getHeaderFields());
             if (cookie == null || !cookie.matches("dsh-auth-[A-Za-z0-9_-]{43}=v1\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]{43}"))

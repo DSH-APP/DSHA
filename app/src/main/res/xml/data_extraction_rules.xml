@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
-    <cloud-backup><exclude domain="sharedpref" path="dsha_device_grants.xml" /></cloud-backup>
-    <device-transfer><exclude domain="sharedpref" path="dsha_device_grants.xml" /></device-transfer>
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
+        <include domain="sharedpref" path="dsha-portable-settings.xml" />
+        <include domain="file" path="user-data-v5/" />
+        <include domain="file" path="data-locations-v5.json" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/sessions/" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/storages/" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/attachments/" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/settings.yaml" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/profiles/" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/plugin-src/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="dsha-portable-settings.xml" />
+        <include domain="file" path="user-data-v5/" />
+        <include domain="file" path="data-locations-v5.json" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/sessions/" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/storages/" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/attachments/" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/settings.yaml" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/profiles/" />
+        <include domain="file" path="linux/ubuntu/root/.dsh/plugin-src/" />
+    </device-transfer>
 </data-extraction-rules>

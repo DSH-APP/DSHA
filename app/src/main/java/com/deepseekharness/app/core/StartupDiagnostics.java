@@ -18,6 +18,7 @@ public final class StartupDiagnostics {
     private boolean explicitStartupFailure;
     private final com.deepseekharness.app.util.StartupHistoryStore history;
     private final java.util.concurrent.ScheduledExecutorService historyIo = java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
+    private final com.deepseekharness.app.util.ExecutorQuiescence historyGate = new com.deepseekharness.app.util.ExecutorQuiescence();
     private String recordId="", result="starting", failure="";
     private long started, lastSaved;
     private volatile String historyError="";
@@ -57,7 +58,7 @@ public final class StartupDiagnostics {
                         if (!id.isEmpty()) owners.put(key, owners.containsKey(key) && !name.equals(owners.get(key)) ? "" : name);
                     }
                     if ("stage".equals(type)) stage(generation, message);
-                    else if ("issue".equals(type)) { issue(generation, name, message);explicitStartupFailure=true; }
+                    else if ("issue".equals(type)) { issue(generation, name, message);explicitStartupFailure|=event.optBoolean("fatal",true); }
                     else if (!message.isEmpty()) trace.owned(generation, SystemClock.elapsedRealtime(), message);
                     continue;
                 } catch (Exception ignored) { }
@@ -88,7 +89,10 @@ public final class StartupDiagnostics {
         if (!trace.isCurrent(generation)) return false;
         String type = event.optString("type"), detail = event.optString("message");
         String id = event.optString("id");
-        if ("ready".equals(type)) { browserReady(generation); return false; }
+        boolean alreadyReady = snapshot().browserReady;
+        // WebPreview 关闭后会销毁页面；再次进入时同一批已成功插件会重新发 loading/active/ready。
+        // 首次 ready 后这些成功事件不再增加诊断日志或触发磁盘历史写入，真实错误仍继续记录。
+        if ("ready".equals(type)) { if (!alreadyReady) browserReady(generation); return false; }
         if ("issue".equals(type)) {
             String name = owner("\"" + id + "\" " + detail);
             issue(generation, name, (id.isEmpty() ? "" : id + com.deepseekharness.app.util.UiText.text("：")) + detail);
@@ -96,9 +100,9 @@ public final class StartupDiagnostics {
                 String candidate = owner(line);
                 if (!candidate.isEmpty()) issue(generation, candidate, line);
             }
-            return event.optBoolean("fatal") && !snapshot().browserReady;
+            return event.optBoolean("fatal") && !alreadyReady;
         }
-        trace.owned(generation, SystemClock.elapsedRealtime(), detail);
+        if (!alreadyReady) trace.owned(generation, SystemClock.elapsedRealtime(), detail);
         return false;
     }
     public void issue(long generation, String name, String detail) {
@@ -109,7 +113,7 @@ public final class StartupDiagnostics {
         if(!trace.isCurrent(generation))return;
         boolean capture=!trace.snapshot(SystemClock.elapsedRealtime()).browserReady;
         trace.browserReady(generation, SystemClock.elapsedRealtime());result="ready";persistHistory(true);
-        if(capture && !snapshot().safe && snapshot().issues.isEmpty())historyIo.execute(()->onHealthy.accept(generation));
+        if(capture && !snapshot().safe && snapshot().issues.isEmpty())historyGate.execute(historyIo,()->onHealthy.accept(generation));
     }
     public synchronized void completed(long generation,String status,String reason) {
         if(!trace.isCurrent(generation))return;
@@ -133,8 +137,20 @@ public final class StartupDiagnostics {
         long now=SystemClock.elapsedRealtime();if(!force && now-lastSaved<1000)return;lastSaved=now;
         String id=recordId,status=result,reason=failure;long date=started;
         StartupTrace.Snapshot zh=trace.snapshot(now,"zh"),en=trace.snapshot(now,"en");
-        historyIo.execute(()->{try { history.save(id,date,status,reason,zh,en);historyError=""; }
+        historyGate.execute(historyIo,()->{try { history.save(id,date,status,reason,zh,en);historyError=""; }
             catch(Exception error) { historyError=SensitiveData.redact(String.valueOf(error.getMessage()));DiagnosticLog.record(context,"STARTUP_HISTORY",historyError); }});
+    }
+
+    /** 格式化删 filesDir 前阻止新历史写入，并等待此前已接受的保存/健康快照全部返回。 */
+    public void drainForFactoryReset(long timeoutMillis)throws java.io.IOException {
+        historyGate.closeAndAwait(historyIo,timeoutMillis);
+    }
+
+    /** 清除磁盘后不能让下一次 begin 把格式化前的内存记录重新写回。 */
+    public synchronized void completeFactoryResetDrain() {
+        owners.clear();recentError="";errorLines=0;explicitStartupFailure=false;
+        recordId="";result="starting";failure="";started=0;lastSaved=0;historyError="";
+        historyGate.reopen();
     }
 
     /** 成功重试不得覆盖上次失败证据，供旧设备无输出退出时排查。 */

@@ -32,7 +32,7 @@ public final class RootShell {
         if (!enabled(ctx)) return com.deepseekharness.app.util.UiText.text("[POLICY_BLOCKED] 未允许 root shell\n[EXIT=126]");
         DeviceShellPolicy.Plan plan = DeviceShellPolicy.inspect(command);
         if (!plan.allowed()) return plan.reason + "\n[EXIT=126]";
-        if (plan.kind == DeviceShellPolicy.Kind.SENSITIVE_READ && authorizedSmsUser < 0)
+        if (plan.kind == DeviceShellPolicy.Kind.SENSITIVE_READ && (authorizedSmsUser < 0 || !new com.deepseekharness.app.core.DeviceGrants(ctx).smsReadAllowed()))
             return com.deepseekharness.app.util.UiText.text("[POLICY_BLOCKED] 短信读取尚未经过原生授权\n[EXIT=126]");
         String su = executable();
         if (su == null) return com.deepseekharness.app.util.UiText.text("[ROOT_UNAVAILABLE] 未找到 su\n[EXIT=124]");

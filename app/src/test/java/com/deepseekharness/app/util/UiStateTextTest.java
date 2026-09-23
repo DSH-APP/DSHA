@@ -26,4 +26,18 @@ public class UiStateTextTest {
         for(String[] pair:UiMessages.FORMATS)
             assertEquals(pair[0],pair[0].split("%s",-1).length,pair[1].split("%s",-1).length);
     }
+    @Test public void cachedNativeResetResultChangesLanguageWithoutTranslatingItsPath() {
+        String path="/data/user/0/com.dsh.client/files/原件 English";
+        String zh="配置已重置，对话及原生凭据保留。重置前配置原件：\n"+path;
+        String en="Configuration reset; conversations and native credentials retained. Original configuration:\n"+path;
+        UiText.setLanguage("en");assertEquals(en,UiStateText.render(zh));
+        UiText.setLanguage("zh");assertEquals(zh,UiStateText.render(en));
+        assertEquals("proroot 已确认退出，正在使用 proot 进行一次兼容验证…",UiStateText.render("proroot has stopped; verifying once with proot compatibility mode…"));
+    }
+    @Test public void retainedInspectionLinesTranslateWithoutChangingSourceIdentity() {
+        String key="ENVIRONMENT:abc:previous-linux-data";
+        UiText.setLanguage("en");assertEquals(key+" · Checksum matches the verification record",UiStateText.render(key+" · 摘要与验证记录一致"));
+        assertEquals("Inspection passed: 2; failed or incomplete: 1",UiStateText.render("检查通过：2；未通过或未完整读取：1"));
+        UiText.setLanguage("zh");assertEquals("检查通过：2；未通过或未完整读取：1",UiStateText.render("Inspection passed: 2; failed or incomplete: 1"));
+    }
 }

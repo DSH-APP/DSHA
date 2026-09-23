@@ -8,6 +8,7 @@ if (window.top === window) {
       if (!host) return false;
       const script = document.createElement('script');
       script.textContent = "window.__DSHA_LANGUAGE__=" + JSON.stringify(message.language) + ";window.dispatchEvent(new CustomEvent('dsha-language'));";
+      if(message.openModels===true)script.textContent += "window.__DSHA_OPEN_MODELS__=true;window.dispatchEvent(new Event('dsha-open-models'));";
       host.appendChild(script);script.remove();return true;
     };
     if (!inject()) {

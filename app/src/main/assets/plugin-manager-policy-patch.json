@@ -1,0 +1,35 @@
+{
+  "dshVersion": "0.1.7-alpha.2",
+  "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
+  "patches": [
+    {
+      "before": "import { existsSync, readFileSync } from \"node:fs\";",
+      "after": "import { realpathSync as dshaRealpath } from \"node:fs\";\nimport { dirname as dshaDirname, sep as dshaPathSeparator } from \"node:path\";\nimport { existsSync, readFileSync } from \"node:fs\";"
+    },
+    {
+      "before": "//#region lib/types/operations.js",
+      "after": "//#region lib/types/operations.js",
+      "prependAsset": "web-integration/native-plugin-policy.js"
+    },
+    {
+      "before": "\t\tinstallBundle(spec, options) {",
+      "after": "\t\tinstallBundle(spec, options) {\n            if (dshaNativeManager()) return Promise.resolve(dshaNativePluginResult(\"install\", spec));"
+    },
+    {
+      "before": "\t\tremoveBundle(name) {",
+      "after": "\t\tremoveBundle(name) {\n            if (dshaNativeManager()) return Promise.resolve(dshaNativePluginResult(\"remove\", name));"
+    },
+    {
+      "before": "\t\tsetBundleEnabled(name, enabled) {",
+      "after": "\t\tsetBundleEnabled(name, enabled) {\n            if (dshaNativeManager() && enabled && !dshaManagedPlugin(this,name)) return Promise.resolve(dshaNativePluginResult(\"enable\", name));"
+    },
+    {
+      "before": "if (row === void 0) throw new ManagementFailure(\"unknown-plugin\");",
+      "after": "if (row === void 0) throw new ManagementFailure(\"unknown-plugin\");\n                if (dshaNativeManager() && enabled && !dshaManagedPlugin(this,row.moduleName)) throw new Error(dshaNativePluginResult(\"enable\",id).error.diagnostic);"
+    },
+    {
+      "before": "\t\tasync runPnpm(args, signal, requestId) {",
+      "after": "\t\tasync runPnpm(args, signal, requestId) {\n            if (dshaNativeManager()) args=[...args,\"--ignore-scripts\",\"--ignore-pnpmfile\"];"
+    }
+  ]
+}

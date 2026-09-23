@@ -4,7 +4,14 @@ package com.deepseekharness.app.util;
 public final class UiText {
     private static volatile String language = "zh";
     private UiText() { }
-    public static void setLanguage(String value) { language=UiLanguagePreference.normalize(value); }
+    /**
+     * 设置渲染语言。只接受<strong>生效语言</strong> zh/en：{@code system} 等偏好值会被
+     * 解析成当前系统语言，避免把"跟随系统"当成第三种语言塞进渲染层（那会让 choose()
+     * 永远走中文分支）。
+     */
+    public static void setLanguage(String value) {
+        language=UiLanguagePreference.resolve(value,SystemLanguage.tag());
+    }
     public static String language() { return language; }
     public static String choose(String chinese,String english) { return "en".equals(language)?english:chinese; }
     public static String text(String value) {

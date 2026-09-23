@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!-- 高敏感能力必须由当前设备用户明确授权，系统备份不能静默带回。 -->
-    <exclude domain="sharedpref" path="dsha_device_grants.xml" />
+    <!-- API 23–27 没有可核验的客户端加密能力标志，只迁移无凭据的偏好投影。 -->
+    <include domain="sharedpref" path="dsha-portable-settings.xml" />
 </full-backup-content>

@@ -5,8 +5,10 @@ export declare const zh: {
     readonly open: "打开目录";
     readonly close: "收起目录";
     readonly backdrop: "点击关闭目录";
+    readonly backToConversation: "返回会话";
     readonly sessionLog: "导出会话日志";
     readonly files: "文件浏览";
+    readonly fileUpload: "添加文件";
     readonly previewFullscreen: "全屏预览";
     readonly previewExitFullscreen: "退出全屏";
     readonly deleteSession: "删除会话";

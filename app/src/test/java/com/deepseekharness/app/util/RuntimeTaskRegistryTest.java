@@ -8,6 +8,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.Assert.*;
 
 public class RuntimeTaskRegistryTest {
+    @Test public void snapshotsPreserveTaskIdentityAndCannotReleaseProtection() {
+        RuntimeTaskRegistry registry=new RuntimeTaskRegistry();
+        RuntimeTaskRegistry.Token token=registry.begin(true,"插件管理");token.describe("同步列表");
+        var rows=registry.snapshot();assertEquals(1,rows.size());assertEquals("插件管理",rows.get(0).kind);
+        assertEquals("同步列表",rows.get(0).detail);assertTrue(rows.get(0).elapsedMillis>=0);
+        assertThrows(UnsupportedOperationException.class,rows::clear);assertNull(registry.tryEnterMaintenance());
+        long id=rows.get(0).id;token.detach();assertEquals(id,registry.snapshot().get(0).id);
+        token.close();token.describe("不能复活");assertTrue(registry.snapshot().isEmpty());
+        try(var next=registry.begin(true,"终端")){assertTrue(registry.snapshot().get(0).id>id);}
+        assertEquals("同步列表",rows.get(0).detail);
+    }
     @Test public void detachConvertsOriginalTokenWithoutChangingCount() {
         RuntimeTaskRegistry registry = new RuntimeTaskRegistry();
         try (RuntimeTaskRegistry.Token caller = registry.begin(false); RuntimeTaskRegistry.Token process = registry.begin(false)) {

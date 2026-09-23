@@ -3,10 +3,47 @@ import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 let api;
-vm.runInNewContext(await readFile(new URL('../app/src/main/assets/app-integration/client.js',import.meta.url),'utf8'),
-  {window:{__ModuleLoader__:{load:d=>{api=d.factory()}}},Blob,File,Promise,Date,Math,Map,Array,JSON,Error});
+const sandbox={window:{__ModuleLoader__:{load:d=>{api=d.factory()}}},Blob,File,Promise,Date,Math,Map,Set,Array,JSON,Error};
+vm.createContext(sandbox);
+vm.runInContext(await readFile(new URL('../app/src/main/assets/app-integration/client.js',import.meta.url),'utf8'),sandbox);
 const file = new File(['original-image'],'a.png',{type:'image/png'});
 const record = {id:'session',revision:'saved',files:[{blob:file,name:file.name,type:file.type,lastModified:0}],bytes:file.size};
+test('alpha.2 使用驻留 Session binding，不能遍历 WeakMap 或激活冷会话',()=>{
+ const a={},b={},shellA={},shellB={},calls=[];
+ const ctx={sessions:{list:{getSnapshot:()=>({byId:{a:{id:'a'},b:{id:'b'},cold:{id:'cold'}}})},binding:id=>id==='a'?{ctx:a}:id==='b'?{ctx:b}:undefined},
+ conversation:{input:{shells:new WeakMap(),for(context){calls.push(context);return context===a?shellA:shellB;}}}};
+ const inputs=api.residentInputs(ctx);assert.equal(inputs.size,2);assert.equal(inputs.get('a'),shellA);assert.equal(inputs.get('b'),shellB);assert.deepEqual(calls,[a,b]);
+});
+test('阅读位置把一帧内的滚动合并，并延迟一次写入',()=>{
+  class TestElement {
+    constructor(slot,parent=null){this.slot=slot;this.parentElement=parent;this.children=[];this.scrollTop=12;this.scrollLeft=0;if(parent)parent.children.push(this)}
+    hasAttribute(name){return name==='data-slot'&&this.slot!==null}
+    getAttribute(name){return name==='data-slot'?this.slot:null}
+  }
+  const body=new TestElement(null),scroller=new TestElement('messages',body),listeners=new Map(),windowListeners=new Map();
+  let writes=0,next=1;const rafs=new Map(),timeouts=new Map(),intervals=new Map();
+  const document={body,scrollingElement:body,hidden:false,readyState:'complete',querySelectorAll:()=>[],
+    addEventListener(type,fn,options){listeners.set(type,{fn,options})},removeEventListener(){}};
+  const pageWindow=sandbox.window;
+  pageWindow.addEventListener=(type,fn)=>windowListeners.set(type,fn);pageWindow.removeEventListener=()=>{};
+  Object.assign(sandbox,{document,Element:TestElement,location:{pathname:'/chat',search:''},
+    localStorage:{getItem:()=>null,setItem(){writes++}},
+    requestAnimationFrame:fn=>{const id=next++;rafs.set(id,fn);return id},cancelAnimationFrame:id=>rafs.delete(id),
+    setTimeout:fn=>{const id=next++;timeouts.set(id,fn);return id},clearTimeout:id=>timeouts.delete(id),
+    setInterval:fn=>{const id=next++;intervals.set(id,fn);return id},clearInterval:id=>intervals.delete(id)});
+  const ctx={sessions:{list:{getSnapshot:()=>({phase:'ready',byId:{session:{id:'session',retainedBy:{mainView:1}}}})}},uiWorkspace:{openSession(){}}};
+  const stop=api.installReadingPosition(ctx);
+  listeners.get('pointerdown').fn({});
+  for(let i=0;i<24;i++)listeners.get('scroll').fn({target:scroller});
+  assert.equal(writes,0);assert.equal(rafs.size,1);
+  assert.equal(listeners.get('scroll').options.capture,true);
+  assert.equal(listeners.get('scroll').options.passive,true);
+  [...rafs.values()][0]();
+  assert.equal(writes,0);assert.equal(timeouts.size,1);
+  [...timeouts.values()][0]();
+  assert.equal(writes,1);
+  stop();
+});
 function fixture(saved = record) {
   let release, writes=[], listeners=new Set(), notices=[];
   const storage = new Map([['dsha.images.revision:session','saved']]);

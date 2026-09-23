@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="ui134_current">Current app</string>
+  <string name="ui134_code">Version code</string>
+  <string name="ui134_edition">Edition</string>
+  <string name="ui134_candidate">View candidate release</string>
+  <string name="ui134_candidate_sub">Release notes, size and installation</string>
+  <string name="ui134_changelog">This release</string>
+  <string name="ui134_changelog_sub">0.1.7-alpha1 · Interaction and device capabilities</string>
+  <string name="ui134_check_ready">Ready to check</string>
+  <string name="ui134_results">Results</string>
+  <string name="ui134_start_records">Startup records</string>
+  <string name="ui134_recent_startups">Recent five startups</string>
+  <string name="ui134_recent_startups_sub">Stages, actual errors and exit codes</string>
+  <string name="ui134_startup_recovery">Startup recovery</string>
+  <string name="ui134_startup_recovery_sub">Review issues and recovery options</string>
+  <string name="ui134_host">Pairing address</string>
+  <string name="ui134_auto_host">Leave blank to discover this device</string>
+  <string name="ui134_pair_port">Pairing port</string>
+  <string name="ui134_auto_port">Port in pairing-code dialog; auto discovery supported</string>
+  <string name="ui134_disconnect">Disconnect ADB</string>
+  <string name="ui134_root_hint">Rooted device: enable, authorize DSHA in Magisk / KernelSU, then verify. Other devices can use the channels below.</string>
+  <string name="ui134_shizuku_hint">Start Shizuku in its manager, then authorize DSHA here. Usually restart the service after reboot.</string>
+  <string name="ui134_adb_hint">Android 11+: pair wireless debugging on the same Wi-Fi. No root needed. Verify or re-pair after network changes.</string>
+  <string name="ui134_screen_setup">Set up screen control · Two steps</string>
+</resources>

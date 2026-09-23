@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <instrumentation android:name="com.deepseekharness.app.core.AttachmentDeviceAudit" android:targetPackage="${applicationId}" />
+    <application android:label="DSHA 稳定性验收" tools:replace="android:label">
+        <activity android:name="com.deepseekharness.app.DeviceAuditActivity" android:exported="true" />
+        <activity android:name="com.deepseekharness.app.ui.LayoutPreviewActivity" android:exported="false" />
+        <provider android:name="com.deepseekharness.app.backup.AuditDocumentProvider" android:authorities="${applicationId}.deviceaudit" android:exported="false" />
+        <service android:name="com.deepseekharness.app.backup.BackupCrashService$Old" android:exported="false" android:process=":backupCrashOld" />
+        <service android:name="com.deepseekharness.app.backup.BackupCrashService$New" android:exported="false" android:process=":backupCrashNew" />
+        <service android:name="com.deepseekharness.app.backup.BackupCrashService$Rollback" android:exported="false" android:process=":backupCrashRollback" />
+        <service android:name="com.deepseekharness.app.backup.BackupCrashService$SettingsWrite" android:exported="false" android:process=":backupCrashSettingsWrite" />
+        <service android:name="com.deepseekharness.app.backup.BackupCrashService$SettingsCommitted" android:exported="false" android:process=":backupCrashSettingsCommitted" />
+    </application>
+    <instrumentation android:name="com.deepseekharness.app.backup.BackupDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.RuntimeDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.backup.BackupWorkflowDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.NativeDataUiAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.LayoutAuditInstrumentation" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.ConfigurationResetDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.backup.ReexportDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.backup.DocumentIoDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.Issue67DeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.NetworkDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.LocalBridgeDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.data.CredentialDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.PluginScriptsDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.backup.PluginWorkflowDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.backup.RetainedWorkflowDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.backup.PluginRecoveryDeviceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+</manifest>
