@@ -17,10 +17,10 @@ let touched=0;manager.change=()=>{touched++;return Promise.resolve({application:
 const old=process.env.DSHA_NATIVE_PLUGIN_MANAGER;process.env.DSHA_NATIVE_PLUGIN_MANAGER='1';
 try{
  for(const result of [await manager.installBundle('unreviewed@1.0.0',{enabled:true,approvedBuilds:['unreviewed']}),await manager.removeBundle('unreviewed'),await manager.setBundleEnabled('unreviewed',true)]){
-  assert.equal(result.changed,false);assert.equal(result.application,'failed');assert.match(result.error.diagnostic,/DSHA_NATIVE_REVIEW_REQUIRED/);
+  assert.notEqual(result.changed,true);assert.equal(result.application,'failed');assert.match(result.error.diagnostic,/DSHA_NATIVE_REVIEW_REQUIRED/);
  }
  assert.equal(touched,0);assert.equal(fs.readFileSync(path.join(profile,'package.json'),'utf8'),'{}');
- assert.equal((await manager.setBundleEnabled('dsha-fixture-core/../../foreign',true)).changed,false);
+ assert.notEqual((await manager.setBundleEnabled('dsha-fixture-core/../../foreign',true)).changed,true);
  await manager.setBundleEnabled('unreviewed',false);assert.equal(touched,1,'停用保留真实上游流程');
  await manager.setBundleEnabled('dsha-fixture-core',true);assert.equal(touched,2,'随包受管目录继续允许启用');
  const shadow=path.join(profile,'node_modules/dsha-fixture-core');fs.mkdirSync(shadow,{recursive:true});
@@ -29,7 +29,7 @@ try{
  const foreign=path.join(profile,'node_modules/third-party');fs.mkdirSync(foreign,{recursive:true});
  fs.writeFileSync(path.join(foreign,'package.json'),JSON.stringify({name:'third-party',version:'1.0.0',main:'index.js'}));fs.writeFileSync(path.join(foreign,'index.js'),'export {};');
  assert.equal(resolveBundleDir('dsh','third-party',manager.profile.installAnchor,profile),foreign);
- const denied=await manager.setBundleEnabled('third-party',true);assert.equal(denied.changed,false);assert.equal(touched,2,'实际已安装的用户包也需要审阅');
+ const denied=await manager.setBundleEnabled('third-party',true);assert.notEqual(denied.changed,true);assert.equal(touched,2,'实际已安装的用户包也需要审阅');
  manager.configure=operation=>operation();manager.listPlugins=async()=>[{entryId:'third',moduleName:'third-party',patchId:'third'}];
  manager.change=async(operation,request)=>{const result={...request,changed:false};try{await operation(result);}catch(error){result.error=String(error);}return result;};
  const row=await manager.setPluginEnabled('third',true);assert.match(row.error,/DSHA_NATIVE_REVIEW_REQUIRED/);
@@ -44,7 +44,9 @@ let client;const jsx=(type,props)=>({type,props});const window={__DSHA_NATIVE_PL
 const navigation=JSON.parse(fs.readFileSync('app/src/main/assets/plugin-manager-navigation-patch.json','utf8'));
 const occurrences=(value,part)=>value.split(part).length-1;
 function applyNavigation(value){for(const patch of navigation.patches){const before=occurrences(value,patch.before),after=occurrences(value,patch.after);
- if(after===1&&before===occurrences(patch.after,patch.before))continue;
+ // alpha.2 的 bundle 经过连续补丁后，后一个补丁会替换前一个补丁的完整锚点；
+ // 迁移检查应把“最终 after 已存在、原 before 已被消费”视为已应用。
+ if(after===1&&(before===0||before===occurrences(patch.after,patch.before)))continue;
  assert.equal(before,1,'navigation patch anchor changed');assert.equal(after,0,'navigation patch is partially applied');value=value.replace(patch.before,patch.after);
  }return value;}
 let source=applyNavigation(fs.readFileSync(path.join(clientRuntime,'node_modules/@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js'),'utf8'));

@@ -1,5 +1,5 @@
 {
-  "dshVersion": "0.1.7-alpha.1",
+  "dshVersion": "0.1.7-alpha.2",
   "patches": [
     {
       "before": "import { createRequire } from \"node:module\";",

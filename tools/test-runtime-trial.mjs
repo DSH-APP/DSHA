@@ -118,7 +118,7 @@ try{
  });
  await test('locked_session_header_contract',async()=>{
   const {Session,SESSION_FORMAT_VERSION}=await import(pathToFileURL(path.join(modules,'@deepseek-ai/dsh-session/lib/index.js')));
-  const id=randomUUID(),session=Session.create(id);assert.equal(session.header.id,id);assert.equal(session.header.version,3);assert.equal(SESSION_FORMAT_VERSION,3);
+  const id=randomUUID(),session=Session.create(id);assert.equal(session.header.id,id);assert.equal(session.header.version,4);assert.equal(SESSION_FORMAT_VERSION,4);
  });
  const home='/root/.dsha-runtime-trial-'+ 'a'.repeat(32)+'/isolated-user-home';
  const readyFrame={type:'item',streamId:'test-stream',value:{type:'ready',clientId:'test-client',host:{home}}};

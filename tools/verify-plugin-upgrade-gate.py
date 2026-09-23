@@ -43,8 +43,8 @@ def main() -> None:
         nargs="*",
         type=Path,
         default=[
-            ROOT / "release/dsha-0.1.7-alpha1.apk",
-            ROOT / "release/dsha-0.1.7-alpha1low.apk",
+            ROOT / "release/dsha-0.1.7-alpha2.apk",
+            ROOT / "release/dsha-0.1.7-alpha2low.apk",
         ],
     )
     args = parser.parse_args()

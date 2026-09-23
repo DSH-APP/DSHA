@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dshVersion": "0.1.7-alpha.1",
+  "dshVersion": "0.1.7-alpha.2",
   "patches": [
     {
       "before": "\t\tfunction Gn(t) {\n\t\t\tconst e = _i(), n = e._inputState, o = Kr(), r = t.data, l = Hn(t);\n\t\t\tlet c = !1;",

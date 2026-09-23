@@ -115,7 +115,7 @@ assert.equal(archivePackage.version, recipe.dshVersion,
   'generated runtime must contain the locked DeepSeek Messages adapter');
 assert.equal(archiveDshPackage.name, '@deepseek-ai/dsh');
 assert.equal(archiveDshPackage.version, recipe.dshVersion,
-  'generated runtime must contain DSH 0.1.7-alpha.1');
+  'generated runtime must contain DSH 0.1.7-alpha.2');
 assert.equal(archiveSource, patchedSource,
   'generated runtime module must be the recipe-patched locked module, not a test fixture');
 assert.equal(archiveSource, buildScriptPatchedSource(),
