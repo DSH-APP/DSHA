@@ -101,8 +101,8 @@
   "dshaUpstream": {
     "version": "3.0.1",
     "source": "https://github.com/mexiaosqwq/dsh-web-mobile",
-    "commit": "1c6c89059145a2d3e0c9e0a43ede67aedc379e40",
-    "clientSha256": "3b45b41af25954693799e213727b25d14c1670af800e2c069e7b376e7013148e",
+    "commit": "f9ec37ef94b01851b211481ba337e7a1e122744c",
+    "clientSha256": "78c82874c4ec9382a4df57548d36c5b09b6e20f14edb88980eed25584222aa53",
     "sourceDate": "2026-09-23"
   }
 }

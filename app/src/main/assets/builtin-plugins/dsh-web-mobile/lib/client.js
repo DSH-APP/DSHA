@@ -4786,12 +4786,19 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   [data-mobile-nav="frame"] [data-phase] header [role="tab"]:active {
     filter: brightness(.92);
   }
-  /* 头部那些 v **刻意不做开合翻转**（店主 2026-09-23："点一下就转圈圈，看着真的很像
-     转圈圈"——180° 翻转被读成加载中）。开合状态本来就由宿主自己的
-     [aria-expanded=true] 底色变化指示，不需要再动那个箭头。
-     顺带留下取证结论，免得以后有人再试：本 WebView 里该 svg 的 CSS transform 完全失效
-     （内联 rotate(45deg) 盒子都不变，svg 根上的 SVG transform 属性也无效），
-     只有里层 path 的属性有效；真要做也只能走 JS 设属性。现已决定不做。 */
+  /* 头部那些 v 的翻转：**标准模式那个现在会翻** —— 规则在本文件「DSHA 集成层：预设 chip」
+     那一块（搜 data-dsha-agent-preset="header" 的 svg:last-of-type 两条）。这里留一段纠正记录，
+     免得后人被已经作废的旧结论误导：
+
+     · 旧结论（同日早先写的）称"本 WebView 里该 svg 的 CSS transform 完全失效"——**错的**。
+       真因是预设 chip 的 > svg 上有一条我们自己写的
+       [data-dsha-agent-preset="header"] > svg { transform: none !important }（DSHA 集成层拿它把
+       图标拉回静态流）。**内联 transform: rotate(45deg) 没带 !important，被那条压掉**，
+       于是量出"盒子不变、computed 仍是 none"，被我误判成 WebView 不吃 CSS transform。
+     · 子代理 chip 的 v 一直是宿主自带：dsh-client-ui-subagent 的
+       .ZKlsPq_trigger svg{transition:transform .12s} + 类 .ZKlsPq_triggerOpen{transform:rotate(180deg)}。
+     · 禁止对头部 svg 写通配规则（header svg{...} / [class*=chevron]{...}）：那会覆盖子代理 chip
+       自己的 triggerOpen 状态，出现"修一个压掉另一个"（这正是当时反复翻车的原因）。 */
   /* 输入区**宿主渲染**的功能键**不再自加胶囊**（店主 2026-09-23："点击功能键怎么有两个
      灰色的叠加？"）。
      原因：宿主本来就有自己的 hover 底色（conversation 包 13 条 :hover、model-selection 3 条、
@@ -6161,6 +6168,26 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  /* 预设 chip 的 ⌄ 翻转（上游/DSHA 都没给这个 v 做开合指示；子代理 chip 有宿主自带的）。
+     两件事必须同时成立才修得好：
+     ① 上面那条 > svg 写过 transform: none !important，任何旋转都会被它压死 —— 这里用
+        svg:last-of-type 提高特异性 + !important 接管，**不去删那条通用规则**（它还管着图标 svg）。
+     ② 钩子各走各的：预设 chip 只有 aria-expanded 属性，子代理 chip 是宿主自己的
+        .ZKlsPq_triggerOpen 类。所以这里只锚 [data-dsha-agent-preset="header"]，
+        **完全不碰子代理芯片**，改这边不会把那边压掉。
+     svg:last-of-type 取 chip 里最后一个 svg（下拉箭头）；只有一个 svg 时同样命中。
+     时长 .12s 与子代理 chip 自带的 transition 一致，两个 v 观感统一。 */
+  [data-mobile-nav="frame"] [data-phase] header .dsha-preset-header-anchor [data-dsha-agent-preset="header"] > svg:last-of-type {
+    transition: transform .12s;
+  }
+  [data-mobile-nav="frame"] [data-phase] header .dsha-preset-header-anchor [data-dsha-agent-preset="header"][aria-expanded="true"] > svg:last-of-type {
+    transform: rotate(180deg) !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-mobile-nav="frame"] [data-phase] header .dsha-preset-header-anchor [data-dsha-agent-preset="header"] > svg:last-of-type {
+      transition: none !important;
+    }
   }
   /* ② 真·手机档（CSS 宽 ≤ 767px）才生效的调优值。 */
   @media (max-width: 767px) and (pointer: coarse) {

@@ -19,7 +19,8 @@ function loadModules() {
 
 test('3.0.1 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
   assert.equal(packageJson.version, '3.0.1');
-  assert.equal(packageJson.dshaUpstream.commit, '1c6c89059145a2d3e0c9e0a43ede67aedc379e40');
+  assert.equal(packageJson.dshaUpstream.commit, 'f9ec37ef94b01851b211481ba337e7a1e122744c');
+  assert.equal(packageJson.dshaUpstream.clientSha256, '78c82874c4ec9382a4df57548d36c5b09b6e20f14edb88980eed25584222aa53');
   for (const marker of [
     'DSHA_SESSION_INTERACTION_V1',
     '[data-dsha-session-select]',
@@ -37,6 +38,7 @@ test('3.0.1 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
     '-webkit-tap-highlight-color: transparent',
     'filter: brightness(.92)',
     'top: 42px !important',
+    'transform: rotate(180deg) !important',
   ]) assert.ok(source.includes(marker), marker);
   for (const stale of [
     'dsh_client_ui_primitives_1.IconPanelLeftOutline16',
