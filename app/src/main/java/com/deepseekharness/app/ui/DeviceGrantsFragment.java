@@ -60,7 +60,7 @@ public final class DeviceGrantsFragment extends Fragment {
         virtualScreen.setAllCaps(false); virtualScreen.setTextSize(12);
         virtualScreen.setBackgroundResource(R.drawable.bg_btn);
         virtualScreen.setOnClickListener(button -> startActivity(new Intent(ctx, com.deepseekharness.app.vscreen.VirtualScreenActivity.class)));
-        if (android.os.Build.VERSION.SDK_INT >= 30) screenCard.addView(virtualScreen,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        if (com.deepseekharness.app.vscreen.VirtualScreenManager.supported(ctx)) screenCard.addView(virtualScreen,new android.widget.LinearLayout.LayoutParams(-1,-2));
 
 
         CompoundButton root = view.findViewById(R.id.config_root_shell);

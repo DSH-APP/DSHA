@@ -3,6 +3,7 @@ package com.deepseekharness.app.vscreen;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import com.deepseekharness.app.BuildConfig;
 import org.json.JSONObject;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
@@ -21,13 +22,14 @@ public final class VirtualScreenManager {
     private static volatile int port;
     private static ScheduledFuture<?> heartbeat;
     private VirtualScreenManager() {}
-    public static boolean supported(Context c){return android.os.Build.VERSION.SDK_INT>=30;}
+    public static boolean supported(Context c){return !BuildConfig.LOW_ANDROID && android.os.Build.VERSION.SDK_INT>=30;}
     public static String channel(){return channel;}
     public static String generation(){return generation;}
     public static String error(){return lastError;}
 
     public static JSONObject start(Context ctx,String orientation){ return start(ctx,orientation,false); }
     public static JSONObject start(Context ctx,String orientation,boolean foreground){
+        if(BuildConfig.LOW_ANDROID)return failure("VSCREEN_UNSUPPORTED_LOW");
         if(!supported(ctx))return failure("VSCREEN_API_30_REQUIRED");
         if(!"portrait".equals(orientation)&&!"landscape".equals(orientation))return failure("INVALID_ORIENTATION");
         synchronized(LOCK){
