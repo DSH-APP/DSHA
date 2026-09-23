@@ -3693,7 +3693,9 @@ exports.BASE_CSS = `
   -webkit-tap-highlight-color: transparent;
 }
 [data-mobile-nav="toggle"]:hover,
-[data-mobile-nav="files"]:hover {
+[data-mobile-nav="files"]:hover,
+[data-mobile-nav="toggle"]:active,
+[data-mobile-nav="files"]:active {
   background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
 }
 [data-mobile-nav="toggle"]:focus-visible,
@@ -4755,6 +4757,49 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   [data-composer-card] [data-mobile-nav="file-upload"]:active::before {
     background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
   }
+  /* 压掉浏览器默认的淡蓝 tap 高亮（店主 2026-09-23："单纯点击图标，出现一个淡蓝色
+     的原始的点击画面"）。读源码取证：宿主头部那几个包（dsh-client-ui-subagent /
+     agent-preset / dsh-experimental-client-ui-agent-team / jobs）**都没有 :active、
+     也没有任何 tap-highlight 处理**，触摸设备上点"标准模式 / Agent Team / 1 个子代理 /
+     对话·轨迹"就会叠一层原始高亮；我们输入区的控件早已处理（见上面 file-upload 那组）。
+     做法与输入区同源：高亮透明，按下反馈交给宿主自己的 :hover/:active token
+     （那几个包各有 2~9 条 :hover 规则，触摸时 Chromium 会套用）。 */
+  /* 覆盖范围放宽：宿主有些控件不是 button（实测输入区里就有 [role=button]、带
+     tabindex 的 div 形态），所以三类一起收。 */
+  [data-mobile-nav="frame"] [data-phase] header button,
+  [data-mobile-nav="frame"] [data-phase] header [role="tab"],
+  [data-mobile-nav="frame"] [data-phase] header [role="menuitem"],
+  [data-mobile-nav="frame"] [data-phase] header [role="button"],
+  [data-mobile-nav="frame"] [data-phase] header [tabindex],
+  [data-composer-card] button,
+  [data-composer-card] [role="button"],
+  [data-composer-card] [tabindex] {
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* 头部 UI 的按下反馈（店主 2026-09-23："是头部 UI，没有触发反馈"）。
+     取证：头部四个宿主包 :active 全为 0，反馈只挂 :hover。
+     ⚠ 第一版我给整颗 button 上 background-color，店主实测"胶囊过宽、跑到子代理下面"
+     —— 因为 button 盒比可见胶囊大（芯片文字只占盒的一部分）。所以改成**不改几何**的
+     按下效果：整体压暗（.92 ≈ 宿主 token 的观感强度；太淡店主会觉得"没变"）。胶囊类的视觉仍由宿主自己的 chip 背景负责。
+     不用 position/伪元素：头部芯片里挂着宿主的弹层，改 position 会挪动包含块。 */
+  [data-mobile-nav="frame"] [data-phase] header button:active,
+  [data-mobile-nav="frame"] [data-phase] header [role="tab"]:active {
+    filter: brightness(.92);
+  }
+  /* 头部那些 v **刻意不做开合翻转**（店主 2026-09-23："点一下就转圈圈，看着真的很像
+     转圈圈"——180° 翻转被读成加载中）。开合状态本来就由宿主自己的
+     [aria-expanded=true] 底色变化指示，不需要再动那个箭头。
+     顺带留下取证结论，免得以后有人再试：本 WebView 里该 svg 的 CSS transform 完全失效
+     （内联 rotate(45deg) 盒子都不变，svg 根上的 SVG transform 属性也无效），
+     只有里层 path 的属性有效；真要做也只能走 JS 设属性。现已决定不做。 */
+  /* 输入区**宿主渲染**的功能键**不再自加胶囊**（店主 2026-09-23："点击功能键怎么有两个
+     灰色的叠加？"）。
+     原因：宿主本来就有自己的 hover 底色（conversation 包 13 条 :hover、model-selection 3 条、
+     permission-presets 2 条、input-trigger 3 条），我们再加一层 ::before 就是**两层灰叠在一起**。
+     教训：上一轮店主说"这几个功能没有触击反馈"，我据此加了胶囊 —— 实际是那次刚把浏览器默认
+     淡蓝 tap 高亮压掉、观感反差的错觉；**宿主已有的反馈不要再叠一层**。
+     我们自己注入的 📎（[data-mobile-nav="file-upload"]）例外：宿主没有对应控件、也就没有底色，
+     它的胶囊留在上面那组规则里。 */
   /* 命中区外扩：::after 属于按钮本身，一起参与命中测试，视觉完全不变。 */
   [data-composer-card] [data-mobile-nav="file-upload"]::after {
     content: '';
@@ -5761,6 +5806,24 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     left: auto !important;
     right: 8px !important;
     top: 48px !important;
+  }
+  /* 手机档（≤767 + coarse）：上面两条的 top:48 是按"标题行 40 + 页签行 36"的老几何
+     推的（25 高中心 60.5 ≈ tab 中心 60）。本插件的手机档把页签行压到 26px 之后，
+     真机页签文字落在 43..58（tab 盒 40..66），芯片还停在 48 ⇒ 文字 49..63、比
+     "对话/轨迹"低 6px（店主 2026-09-23 截图报障："调了间距但忘记把这个调了"）。
+     同特异性 + 同 !important 时后到先得，所以本条必须写在那两条之后：42 让芯片
+     文字落到 43..57，与页签文字 43..58 对齐。平板档不压页签行，仍用 48。 */
+  @media (max-width: 767px) and (pointer: coarse) {
+    /* ⚠ 两个选择器都必须写成与上面两条**同特异性**：
+       聚合变体的 48px 规则是 …[class*=ZKlsPq_root]:not([class*=_switcherRoot])，
+       :not() 会把参数的特异性算进去 ⇒ (0,5,1)。我第一版第一个选择器写成通用的
+       …[class*=ZKlsPq_root]（只有 (0,4,1)）⇒ 特异性输给那条 48px，
+       店主实测"又没对齐了"（聚合芯片文字回到 49..63）。带上 :not(...) 才并列、
+       再靠"后到先得"取胜。 */
+    [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="ZKlsPq_root"]:not([class*="_switcherRoot"]),
+    [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="ZKlsPq_root"][class*="_switcherRoot"] {
+      top: 42px !important;
+    }
   }
   /* 谱系 chip 里的文字（子代理标题 /「N 个子代理」）给一个规矩的省略号窗口：
      不要裁成半个字，也不要靠滚动去够剩下的字。 */
