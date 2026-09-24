@@ -171,6 +171,12 @@ public final class PluginRepository extends AndroidViewModel {
             return receivePreview(result(runManager(proot,"review-restored "+ShellQuote.arg(group)+" "+ShellQuote.arg(node))));
         });
     }
+    public void reviewLegacyPreset(String retainedKey){
+        submit("正在检查旧预设候选与当前依赖…",proot->{
+            String[] candidate=com.deepseekharness.app.backup.QuarantinedPluginReview.preparePreset(getApplication(),retainedKey,new com.deepseekharness.app.backup.BackupControl(null));
+            return receivePreview(result(runManager(proot,"review-restored "+ShellQuote.arg(candidate[0])+" "+ShellQuote.arg(candidate[1]))));
+        });
+    }
 
     public void selectionMessage(String message) {
         DiagnosticLog.record(getApplication(), "FILE_SELECTION", message);

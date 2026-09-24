@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "dshVersion": "0.1.7-rc.2",
+  "module": "@deepseek-ai/dsh-settings/lib/index.js",
+  "patches": [
+    {
+      "before": "\tasync importLegacyDocument() {\n\t\tconst profile = this.ownerContext.profileContext;\n\t\tconst path = join(profile.home, \"settings.yaml\");\n\t\tif (!existsSync(path)) return;\n\t\tconst imported = `${path}.imported`;\n\t\tawait rename(path, imported);\n\t\tconst sections = parse(await readFile(imported, \"utf8\"));\n\t\tfor (const [section, values] of Object.entries(sections ?? {})) {\n\t\t\tconst ns = LEGACY_SECTION_ENTRIES[section] ?? section;\n\t\t\ttry {\n\t\t\t\tawait this.update(ns, values);\n\t\t\t} catch (error) {\n\t\t\t\tthis.ownerContext.logger.warn(\"settings: section %s of %s was not imported into entry %s\", section, imported, ns);\n\t\t\t\tthis.ownerContext.logger.warn(error);\n\t\t\t}\n\t\t}\n\t\tthis.ownerContext.logger.info(\"settings: imported %s into profile %s\", imported, profile.name);\n\t}",
+      "after": "\tasync importLegacyDocument() {\n\t\t/* DSHA_RC1_SETTINGS_TRANSACTION_V2 */\n\t\tconst { default: migration } = await import(\"file:///root/.dsh/rc1-settings-migration.cjs\");\n\t\tawait migration.migrate(this, parse, LEGACY_SECTION_ENTRIES);\n\t}"
+    }
+  ]
+}

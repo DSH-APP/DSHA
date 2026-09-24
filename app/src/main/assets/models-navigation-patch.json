@@ -1,5 +1,6 @@
 {
-  "dshVersion": "0.1.7-alpha.2",
+  "dshVersion": "0.1.7-rc.1",
+  "retiredFor": "0.1.7-rc.2",
   "module": "@deepseek-ai/dsh-client-ui-settings-general/lib/client.js",
   "patches": [
     {

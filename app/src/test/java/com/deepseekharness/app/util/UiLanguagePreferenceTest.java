@@ -31,7 +31,7 @@ public class UiLanguagePreferenceTest {
             assertEquals("中文应识别：" + tag, "zh", UiLanguagePreference.resolveLanguage(tag));
         }
         for (String tag : new String[]{"en", "en-US", "fr", "de-DE", "ja", "ko", "ar", "ru",
-                null, "", "  ", "zho", "en-zh"}) {
+                "zho", "en-zh"}) {
             assertEquals("非中文应落英文：" + tag, "en", UiLanguagePreference.resolveLanguage(tag));
         }
     }
@@ -48,6 +48,13 @@ public class UiLanguagePreferenceTest {
         // 法语等非中文系统落英文：英语是唯一可用的国际通用语言
         assertEquals("en", UiLanguagePreference.resolve(null, "fr"));
         assertEquals("en", UiLanguagePreference.resolve("system", "fr-FR"));
+    }
+
+    @Test public void unidentifiedSystemDefaultsToChineseButExplicitChoiceWins() {
+        for (String tag : new String[]{null, "", "  ", "und", "?", "123", "x-private"}) {
+            assertEquals("zh", UiLanguagePreference.resolveLanguage(tag));
+            assertEquals("en", UiLanguagePreference.resolve("en", tag));
+        }
     }
 
     @Test public void isChineseHandlesSeparatorsAndCase() {

@@ -35,7 +35,9 @@ APK 装完、什么权限都不给的情况下：
 | 共享存储（`/sdcard`） | 取决于 Android 授权 | 挂载指向手机共享存储；设备命令禁止写相册等目录，直接代码访问仍由 Android 权限决定 |
 | 其它应用的数据 | ❌ 不能 | Android 应用沙箱隔离，`/data/data/<其它包名>` 读不到 |
 | 系统分区 | ❌ 不能写 | 没有 root 就写不了 `/system` |
-| 拨号、短信、通讯录、位置、摄像头、麦克风 | ❌ 不能 | DSHA 根本没申请这些权限，可以在系统设置里自己核对 |
+| 位置 | 默认不可用 | Manifest 声明粗略/精确位置；还需开启 DSHA 位置能力并通过 Android 运行时授权。声明不等于已经授权 |
+| 拨号、通讯录、摄像头、麦克风 | 默认不可直接读取 | 实际能力仍由 Android 声明、运行时授权及所选通道决定，不能由容器 root 身份推断 |
+| 短信 | 默认不可通过设备桥读取 | 需独立的短信能力确认和实际通道权限，见下文 |
 
 > `/sdcard` 是容器挂载入口，挂载本身不会授予 Android 文件访问权限。撤销系统存储授权可收紧直接代码的访问范围。
 > 容器挂载点在 `ContainerRuntime.BINDS` 里，自行构建时可以去掉。
@@ -46,7 +48,7 @@ APK 装完、什么权限都不给的情况下：
 
 每一项都是**默认关闭**的，开关都在 App 里，随时可以撤。
 
-### ADB 无线调试（「工作区」页）
+### ADB 无线调试（设备能力授权）
 
 设备连接具有 `shell` 用户权限（uid 2000）。随包入口只执行白名单查询、普通文件操作和经过完整分组检查的用户应用停止。
 系统设置写入、安装/卸载、清应用数据被拒绝。ADB 凭据仍存在容器中，因此这层保护不能阻止任意代码自写 ADB 客户端。
@@ -65,7 +67,7 @@ APK 装完、什么权限都不给的情况下：
 
 随包设备命令使用 Root 时仍受同一白名单保护，不能放行高危目录或系统修改；容器的 root 不等于手机 Root。
 
-- 需要设备本身已 root（KernelSU / Magisk），DSHA 不提供也不申请 root
+- 需要设备本身已 root（KernelSU / Magisk）；启用后由现有 Root 管理器决定是否授予 DSHA `su` 权限。DSHA 不获取或安装 Root
 - 开关是 `allow_root_shell`，默认 false
 - 除非你清楚自己在做什么，别开
 
@@ -92,6 +94,10 @@ APK 装完、什么权限都不给的情况下：
 - token 首次命中后写成 `SameSite=Strict` Cookie，之后不再出现在 URL 里 —— 防止它随外链泄漏
 - 公共 Wi-Fi 下别开。token 强度够，但你的手机会在网络上暴露一个端口
 
+本地设备桥监听 loopback `:3090`，同机其他应用也可能连接，因此仍须 token；LAN 代理监听 `0.0.0.0:3081`，仅在用户开启且取得相应本地网络权限后运行。LAN 当前是 HTTP，不提供 TLS，token 不能抵御不可信网络上的流量窃听。代理不提供 CONNECT 或任意目的地转发。
+
+稳定性修订为头部解析、连接登记和排队设置独立上限；SSE/WebSocket 使用独立配额，消息体流式转发。关闭 LAN 或进入维护会关闭本轮连接。资源上限不等于对所有拒绝服务情形的可用性保证；实际测试范围见[稳定性验收](stability-acceptance.md)。
+
 ---
 
 ## agent 想干危险的事时会发生什么
@@ -115,17 +121,16 @@ APK 装完、什么权限都不给的情况下：
 
 | 东西 | 放在哪 | 怎么保护 |
 |---|---|---|
-| DeepSeek API key | App 的 SharedPreferences | Android Keystore 加密（AES/CBC），**密钥不出 Keystore**，别的应用拿不到 |
-| 备份里的 API key | 备份包内 `.dsh/.dsha-apikey` | 同一把 Keystore 密钥加密。**换设备后解不开**（这是设计如此，不是 bug），可以在「配置」页关掉「备份包含 key」 |
+| 原生 API Key | App 的 SharedPreferences | Android Keystore + AES/GCM，12 字节 IV 前置、128 位认证标签、Base64；保持现有读取格式。未配置、暂时不可用和无法读取分别处理，失败不自动清空或生成替代解密密钥 |
+| 手动导出的原生 API Key | 默认排除；明确选择时进入密码保护的 v5 包 | 由当前设备成功解密后进入整个加密归档。历史仅含旧 Keystore 密文的记录可能无法跨设备使用，不据此清空原记录 |
 | 对话记录 | `Documents/dshdata`（公开）或私有目录 | ⚠️ 放在公开目录时，**任何拿到存储权限的应用都能读**。这是「卸载不丢数据」的代价 |
-| 备份文件 | `Download/DSHA/` | ⚠️ 同上，公共目录。里面有你的**全部对话记录**。分享这个文件前请想清楚 |
-| dsh 自己的凭据 | `.dsh/.credentials.yaml` | 刻意留在私有目录，不迁到公开区。但它**会进备份** |
-| 3090 桥 token | `.dsh/.bridge_token` | 私有目录，权限 600。**已从备份里排除** —— 它属于这台机器 |
+| 新 v5 备份 | 用户通过系统文件选择器指定的位置，另有私有验证副本 | `.dshbak` 使用密码派生密钥与 AES-GCM；必须先完整认证再恢复。无法读回目标时不宣称已验证成功，原件和私有副本保留 |
+| dsh 自己的凭据 / 项目配置 | 实际数据目录中的 `.credentials.yaml`、`.env` 等 | 这些文件可能含明文凭据，并可能随所选范围进入加密备份；“排除原生 API Key”不等于扫描并移除所有文件中的秘密 |
+| 3090 / LAN 授权及维护记录 | 本机私有记录与内存 | 不能由用户备份直接恢复为当前设备授权；脚本、插件声明和未知内容先隔离。应用 UID 下运行的已授权代码并不是相互隔离的权限域 |
 
-**我们不收集任何数据。** DSHA 没有遥测、没有统计上报、没有崩溃收集。
-唯一的对外网络请求是：你点检查更新时访问 GitHub API、热更新脚本时访问
-raw.githubusercontent.com、以及安装环境时访问你自己选的那个镜像源。
-API 请求由 dsh 直接发给 DeepSeek，不经过我们任何地方。
+本轮没有新增遥测或日志上传。更新、插件下载和依赖解析会访问所选仓库、registry 或镜像；dsh 会访问用户配置的模型服务，已启用插件也可能发起网络请求。不能把应用自身的更新请求列表当作插件/容器全部网络行为的限制。
+
+插件安装前进行静态结构、内容摘要与实际依赖核对，依赖安装禁用生命周期脚本和 pnpmfile 钩子；启用需要审阅确认。隔离目录与独立 profile 不是恶意代码沙箱，加载成功也不是安全认证。插件与终端仍在应用权限范围内运行。
 
 ---
 
@@ -134,18 +139,54 @@ API 请求由 dsh 直接发给 DeepSeek，不经过我们任何地方。
 从 GitHub 手动侧载 APK 的分发方式，来源验证是最该做的一环：
 
 ```bash
-# 1. 哈希（证明文件没被改过）
-sha256sum -c deepseekharness-arm64-vX.Y.Z.apk.sha256
-
-# 2. 构建证明（证明它来自本仓库这个 tag 的 CI，不是别人重打的包）
-gh attestation verify deepseekharness-arm64-vX.Y.Z.apk --repo qiannianhuanxiang/DSHA
+# 对照交付记录中的实际文件名执行
+sha256sum -c dsha-0.1.5-rc2.1.apk.sha256
+apksigner verify --verbose --print-certs dsha-0.1.5-rc2.1.apk
 ```
 
-签名证书指纹在发布流水线里逐次核对，**不匹配直接中止发布** ——
-一个签名不对的包用户根本装不上（Android 只允许同签名覆盖安装），
-发出去比发布失败糟得多。
+本地交付核对历史证书指纹 `e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5`。哈希验证文件一致性，不单独证明发布者身份；同签名才可直接覆盖原安装。本地包没有因此自动获得 GitHub 构建证明，是否存在 attestation 要以对应实际产物为准。
 
 ---
+
+### 桥的凭据护栏（v0.1.5 起）
+
+`/app/export` 与 `/app/readfile` 原先接受任意绝对路径。已确认的攻击链是：
+
+```
+容器内一行 curl → /app/export?path=/root/.dsh/.bridge_token
+  → 文件落到 /sdcard/Download/DSHA/（任何有存储权限的应用可读）
+  → 另一应用拿到桥 token → 读屏 / 点按 / 输入 / 执行设备命令
+```
+
+同样可被带走的是 `.dsh/.credentials.yaml`（API key 与会话密钥）与 `.dsh/adbkeys/adbkey`（ADB 私钥）。
+
+现在的判据在 `util/BridgePathPolicy`（纯逻辑，有单测）：
+
+- 拒绝 `.dsh`、`.ssh`、`.android`、`.aws`、`.kube`、`.dsha-*` 等凭据区；空值与相对路径一律拒绝；
+- 目录穿越、重复斜杠、反斜杠等混淆写法先规范化再判；
+- 字符串判据之后再用 `getCanonicalPath()` 复核，挡住「先建软链接指向凭据」的绕法；
+- 列出上层目录时跳过凭据区条目（名字本身也是情报）。
+
+桥的正当用途（`/app/export?path=/root/report.md`）不受影响。
+
+### 备份里的本机凭据（v0.1.5 起）
+
+备份包会落到 `Download/DSHA/`，任何有存储权限的应用都能读。此前打进包里的
+本机设备凭据因此等价于「公开」：
+
+| 文件 | 处理 |
+|---|---|
+| `.dsh/.bridge_token` | 整文件排除（本机 loopback 桥的共享凭据）|
+| `.dsh/.anonymous-user-id` | 整文件排除（本机标识）|
+| `.dsh/.credentials.yaml` | **字段级剔除**：删 `records.client-connection/browser-session`，保留 `refs`（用户 API key）|
+
+字段级而不是整文件的原因：`refs` 里是用户换机后仍要用的 API key，
+`records` 里那条是本机登录 cookie 的 HMAC 签名密钥 —— 恢复后旧 cookie 早已失效，
+dsh 会在记录缺失时自动重新生成（`dsh-client-connection` 的 `initializeSecret()`）。
+
+恢复流程在提交成功后会调用 `HttpShellService.resetTokenAfterRestore()` 让本机
+凭据重新对齐 —— 老备份（仍带别的机器的 token）恢复后不会再出现
+「需要 token，请在 DSHA 应用内打开」。
 
 ## 已知的弱点
 
@@ -155,9 +196,9 @@ gh attestation verify deepseekharness-arm64-vX.Y.Z.apk --repo qiannianhuanxiang/
 |---|---|
 | `danger-full-access` | Android sepolicy 挡住 bubblewrap，dsh 没有沙箱。容器内的 agent 对容器有完全控制权 |
 | 设备入口保护不是 OS 沙箱 | 随包入口采用原生白名单；任意容器代码、可读 ADB 凭据及直接共享存储仍由 Android 沙箱限定 |
-| 备份在公共目录 | 全部对话记录明文躺在 `Download/DSHA/`，任何有存储权限的应用可读 |
-| `.credentials.yaml` 进备份 | dsh 的凭据文件随备份进公共目录；是否给它一个排除开关还没定 |
-| `/sdcard` 默认可达 | agent 默认就能读相册和下载目录，目前没有开关 |
+| 历史明文备份 | 旧 tar.gz 与用户自行复制的明文数据仍可能存在公开目录；新加密导出不会自动加密或删除旧文件 |
+| 运行时凭据可见范围 | Keystore 保护保存的原生记录；使用时传入环境或配置的凭据仍可能被同 UID 的已启用代码读取 |
+| `/sdcard` 挂载 | 挂载不等于 Android 授权；授予共享存储访问后，同 UID 容器代码可能读取授权范围内的数据 |
 | 签名密钥待轮换 | 线上包用的是一把 debug keystore（历史原因，换掉会让所有人无法覆盖升级）。密钥轮换按 APK Signature Scheme v3 rotation 单独排期 |
 
 发现别的问题请开 issue，或者到 QQ 群 975836806 说。安全相关的问题优先处理。

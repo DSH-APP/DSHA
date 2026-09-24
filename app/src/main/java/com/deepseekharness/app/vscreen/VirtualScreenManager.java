@@ -108,7 +108,8 @@ public final class VirtualScreenManager {
         new android.os.Handler(android.os.Looper.getMainLooper()).post(VirtualScreenOverlayController::hide);
     }
     public static String bridge(Context c,String route,String query){
-        String name=route.substring(route.lastIndexOf('/')+1);
+        String name=com.deepseekharness.app.util.VirtualScreenRoutes.operation(route);
+        if(name.isEmpty())return failure("UNKNOWN_ROUTE").toString();
         String gen=value(query,"generation","");long seq;
         try{seq=Long.parseLong(value(query,"frameSeq","-1"));}catch(NumberFormatException e){return failure("INVALID_FRAME").toString();}
         JSONObject result;

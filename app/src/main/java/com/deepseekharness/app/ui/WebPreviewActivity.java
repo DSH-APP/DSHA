@@ -71,6 +71,9 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
         WebView view;
         boolean ready;
         String authUrl;
+        final com.deepseekharness.app.util.PreviewNavigation navigation = new com.deepseekharness.app.util.PreviewNavigation();
+        java.lang.ref.WeakReference<WebPreviewActivity> owner = new java.lang.ref.WeakReference<>(null);
+        Bundle pendingHistory;
         androidx.webkit.ScriptHandler compatibilityScript;
         String scriptLanguage;
         WebBlobDownload blobDownload;
@@ -137,6 +140,7 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
         super.onCreate(savedInstanceState);
         startupGeneration = com.deepseekharness.app.core.HarnessController.get(this).getWebGeneration();
         retained = new androidx.lifecycle.ViewModelProvider(this).get(Retained.class);
+        retained.owner = new java.lang.ref.WeakReference<>(this);
         previewAuth = new PreviewAuth(this);
         downloads = new WebDownloads(this,savedInstanceState);
         restoreState = savedInstanceState == null ? null : savedInstanceState.getBundle("browser-state");
@@ -174,7 +178,8 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
             attachClients(webView);
             container.addView(webView,new FrameLayout.LayoutParams(-1,-1));
             WebFrameRate.apply(this, webView);
-            progress.setVisibility(View.GONE);
+            progress.setVisibility(retained.ready ? View.GONE : View.VISIBLE);
+            continueInitialNavigation();
         } else {
             // 旋转保留同一进程的页面；服务已换代时清理旧页面，再用当前凭据加载。
             if (retained.view != null) { webView = retained.view; destroyWebView(); }
@@ -208,6 +213,11 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
             webView = view;
             retained.view = view;
             retained.authUrl = authUrl;
+            retained.pendingHistory = restoreState;
+            restoreState = null;
+            final Retained page = retained;
+            final boolean hasCookie = authCookie != null && !authCookie.isEmpty();
+            final long navigationTicket = page.navigation.begin(hasCookie);
             PackageInfo provider = android.os.Build.VERSION.SDK_INT >= 26 ? WebView.getCurrentWebViewPackage() : null;
             browserInfo = provider == null ? com.deepseekharness.app.util.UiText.text("系统 WebView 版本未知")
                     : provider.packageName + " " + provider.versionName;
@@ -233,18 +243,15 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
             CookieManager cookies = CookieManager.getInstance();
             cookies.setAcceptCookie(true);
             cookies.setAcceptThirdPartyCookies(view, false);
-            if (authCookie != null && !authCookie.isEmpty()) {
+            if (hasCookie) {
                 // setCookie 是异步的：完成后才加载，避免首次进入偶发未认证。
                 cookies.setCookie(baseUrl, authCookie + "; Path=/; HttpOnly; SameSite=Strict", ok -> {
-                    if (webView != view || isFinishing() || isDestroyed()) return;
-                    if (Boolean.TRUE.equals(ok) && restoreState != null) {
-                        Bundle history = restoreState; restoreState = null;
-                        if (view.restoreState(history) != null) return;
-                    }
-                    view.loadUrl(Boolean.TRUE.equals(ok) ? baseUrl : authUrl);
+                    if (page.view != view || !page.navigation.cookieCompleted(navigationTicket, Boolean.TRUE.equals(ok))) return;
+                    WebPreviewActivity owner = page.owner.get();
+                    if (owner != null) owner.continueInitialNavigation();
                 });
             } else {
-                view.loadUrl(authUrl);
+                continueInitialNavigation();
             }
         } catch (RuntimeException | LinkageError e) {
             destroyWebView();
@@ -253,6 +260,15 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
             showError(com.deepseekharness.app.util.UiText.text("系统 WebView 无法启动"), com.deepseekharness.app.util.UiText.text("请更新或启用 Android System WebView / Chrome，")
                     + com.deepseekharness.app.util.UiText.text("也可以使用系统浏览器进入对话。"));
         }
+    }
+
+    private void continueInitialNavigation() {
+        if (isFinishing() || isDestroyed() || retained.owner.get() != this
+                || webView == null || retained.view != webView || !retained.navigation.claim()) return;
+        Bundle history = retained.pendingHistory;
+        retained.pendingHistory = null;
+        if (retained.navigation.cookieAccepted() && history != null && webView.restoreState(history) != null) return;
+        webView.loadUrl(retained.navigation.cookieAccepted() ? baseUrl : authUrl);
     }
 
     private void attachClients(WebView view) {
@@ -492,7 +508,7 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
         WebView previous = webView;
         WebFrameRate.clear(this, previous);
         webView = null;
-        if (retained != null) { retained.view = null; retained.ready = false; }
+        if (retained != null) { retained.view = null; retained.ready = false; retained.navigation.cancel(); retained.pendingHistory = null; }
         refreshPictureInPicture();
         if(retained!=null){retained.compatibilityScript=null;retained.scriptLanguage=null;}
         if (retained != null && retained.blobDownload != null) { retained.blobDownload.close(); retained.blobDownload = null; }
@@ -543,6 +559,7 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
     }
 
     @Override protected void onDestroy() {
+        if (retained != null && retained.owner.get() == this) retained.owner.clear();
         if (previewAuth != null) previewAuth.cancel();
         if (downloads != null) downloads.dismiss();
         if (isChangingConfigurations() && webView != null) {

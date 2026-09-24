@@ -42,7 +42,7 @@ public final class NativeRestorePlan {
         for(Map<String,Object> root:roots){String scope=BackupJson.string(root,"scope");if(!selected.contains("application")&&!selected.contains(scope))continue;
             if(!materializable.contains(BackupJson.string(root,"id"))){plan.warnings.add("UNAVAILABLE_MEMBERS_NOT_DELETED");continue;}
             Target target=mapping.target(root);if(target==null){plan.warnings.add(mapping.skippedReason(root));continue;}
-            if("dsh-profile-config".equals(root.get("logicalKind")))plan.warnings.add("PROFILE_CONFIGURATION_REQUIRES_REVIEW");
+            if("dsh-profile-config".equals(root.get("logicalKind"))||"profiles".equals(root.get("name")))plan.warnings.add("PROFILE_CONFIGURATION_REQUIRES_REVIEW");
             String id=BackupLimits.root(BackupJson.string(root,"id")),group=target.group==null?id:BackupLimits.root(target.group);BackupLimits.path(target.prefix);
             plan.targets.put(id,target);plan.rootGroups.put(id,group);
             Target existing=plan.groups.putIfAbsent(group,target);if(existing!=null&&!existing.write.equals(target.write))throw new IOException("TARGET_GROUP_CONFLICT");

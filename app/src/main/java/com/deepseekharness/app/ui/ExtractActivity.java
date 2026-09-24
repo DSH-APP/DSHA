@@ -55,6 +55,10 @@ public class ExtractActivity extends AppCompatActivity {
         format.setBackgroundResource(R.drawable.bg_action_plain);format.setTextColor(getColor(R.color.err));format.setTextSize(13);format.setAllCaps(false);
         content.addView(retry, new LinearLayout.LayoutParams(-1, -2));
         content.addView(enter, new LinearLayout.LayoutParams(-1, -2));
+        Button logs = new androidx.appcompat.widget.AppCompatButton(this);
+        logs.setText(com.deepseekharness.app.util.UiText.choose("查看本次维护记录", "View maintenance record"));
+        logs.setOnClickListener(v -> startActivity(DiagnosticActivity.downloadLogs(this)));
+        content.addView(logs, new LinearLayout.LayoutParams(-1, -2));
         content.addView(format, new LinearLayout.LayoutParams(-1, -2));
         retry.setOnClickListener(v -> {
             boolean recovery = task.pendingMaintenance();
@@ -125,6 +129,12 @@ public class ExtractActivity extends AppCompatActivity {
         detail.setVisibility(View.VISIBLE);
         detail.setText(mine ? com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail) : com.deepseekharness.app.util.UiText.text("相同基础环境只更新 dsh 与内置插件，个人数据保持原位；基础环境变更时先保护数据再重建。验证失败可恢复原环境。"));
         boolean failed = mine && (s.status == BackupTaskState.Status.FAILED || s.status == BackupTaskState.Status.INTERRUPTED);
+        if (failed) detail.setText(com.deepseekharness.app.util.UiText.choose("未完成的操作：", "Incomplete operation: ")
+                + com.deepseekharness.app.util.UiStateText.render(s.kind)
+                + "\n" + com.deepseekharness.app.util.UiText.choose("最后记录阶段：", "Last recorded stage: ")
+                + (s.lastStage.isEmpty() ? com.deepseekharness.app.util.UiText.choose("旧记录未提供；请查看维护日志", "Not available in the old record; inspect maintenance logs") : com.deepseekharness.app.util.UiStateText.render(s.lastStage))
+                + "\n\n" + com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail)
+                + "\n\n" + com.deepseekharness.app.util.UiText.choose("原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。", "Original state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or enter the limited interface to export readable copies."));
         boolean incomplete=mine&&s.status==BackupTaskState.Status.SUCCEEDED&&!ready&&!formatTask;
         error.setVisibility(failed||incomplete||automaticDeclined ? View.VISIBLE : View.GONE);
         error.setText(incomplete?com.deepseekharness.app.util.UiText.choose("维护步骤已结束，但环境就绪检查未通过。已停止自动跳转，请查看原因或进入受限主界面。", "Maintenance ended, but readiness checks did not pass. Automatic navigation stopped. Review the reason or enter the limited interface."):

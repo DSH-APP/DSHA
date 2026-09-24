@@ -1,3 +1,4 @@
+import { testRuntime } from './test-runtime-fixture.mjs';
 // 0.1.7 renamed several preset packages. The durable compatibility promise
 // that still applies is the old workflow-worker-thread package name.
 import assert from 'node:assert/strict';
@@ -5,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
-const runtime = path.resolve(process.env.DSHA_TEST_RUNTIME || path.join(root, 'app/build/locked-dsh-runtime-017'));
+const runtime = testRuntime('raw');
 const modules = path.join(runtime, 'node_modules');
 const current = path.join(modules, '@deepseek-ai/dsh-workflow-ptc', 'package.json');
 assert.ok(fs.existsSync(current), '0.1.7 workflow package is present');

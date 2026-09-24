@@ -40,7 +40,8 @@ import java.util.Locale;
 public class PluginFragment extends Fragment {
     private PluginRepository repository;
     private PluginRepository.State current;
-    private View root;
+    private View root, header, footer;
+    private boolean renderedMarket;
     private EditText linkInput, search;
     private TextView linkHint;
     private CheckBox hideBuiltin;
@@ -149,8 +150,15 @@ public class PluginFragment extends Fragment {
 
     @Override public void onViewCreated(@NonNull View view, @Nullable Bundle saved) {
         root = view;
+        RecyclerView list = view.findViewById(R.id.pluginList);
+        list.setLayoutManager(new LinearLayoutManager(requireContext()));
+        // Header/footer 是 RecyclerView 条目，必须在设置 LayoutManager 后 inflate。
+        // RecyclerView.generateLayoutParams() 在父级尚未有 LayoutManager 时会直接抛出
+        // InflateException，导致点击“插件”导航后整个 Activity 崩溃。
+        header = getLayoutInflater().inflate(R.layout.plugin_list_header, list, false);
+        footer = getLayoutInflater().inflate(R.layout.plugin_list_footer, list, false);
         renderedItems=null;
-        view.findViewById(R.id.statusText).setOnClickListener(v->BackgroundTasksActivity.open(requireContext()));
+        find(R.id.statusText).setOnClickListener(v->BackgroundTasksActivity.open(requireContext()));
         sortOrder=new com.deepseekharness.app.core.ConfigStore(requireContext()).getPluginSort();
         repository = new ViewModelProvider(requireActivity()).get(PluginRepository.class);
         if (getArguments() != null && getArguments().getBoolean("show_installed", false)) market = false;
@@ -163,30 +171,27 @@ public class PluginFragment extends Fragment {
             String imported = saved.getString("pendingImport");
             if (imported != null) pendingImport = android.net.Uri.parse(imported);
         }
-        linkInput = view.findViewById(R.id.appbar_github_input);
-        linkHint = view.findViewById(R.id.pluginLinkHint);
-        search = view.findViewById(R.id.pluginSearch);
-        hideBuiltin = view.findViewById(R.id.chkHideBuiltin);
-        RecyclerView list = view.findViewById(R.id.pluginList);
-        list.setLayoutManager(new LinearLayoutManager(requireContext()));
-        // 插件卡片随整页移动，只有外层页面处理纵向滚动。
-        list.setNestedScrollingEnabled(false);
+        linkInput = find(R.id.appbar_github_input);
+        linkHint = find(R.id.pluginLinkHint);
+        search = find(R.id.pluginSearch);
+        hideBuiltin = find(R.id.chkHideBuiltin);
+        // 单一回收列表负责整页滚动，标题和操作区也是列表条目。
         list.setItemAnimator(null);
         list.setAdapter(adapter);
-        view.findViewById(R.id.btnMarket).setOnClickListener(v -> selectTab(true));
-        view.findViewById(R.id.btnPluginWebsite).setOnClickListener(v -> openPluginWebsite());
-        view.findViewById(R.id.btnInstalled).setOnClickListener(v -> selectTab(false));
-        view.findViewById(R.id.btnRefresh).setOnClickListener(v -> repository.refresh());
-        view.findViewById(R.id.btnPluginUpdates).setOnClickListener(v -> repository.checkUpdates(null));
-        view.findViewById(R.id.btnCancelPluginTask).setOnClickListener(v -> repository.cancelTask());
-        view.findViewById(R.id.btnPluginRestore).setOnClickListener(v -> new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
+        find(R.id.btnMarket).setOnClickListener(v -> selectTab(true));
+        find(R.id.btnPluginWebsite).setOnClickListener(v -> openPluginWebsite());
+        find(R.id.btnInstalled).setOnClickListener(v -> selectTab(false));
+        find(R.id.btnRefresh).setOnClickListener(v -> repository.refresh());
+        find(R.id.btnPluginUpdates).setOnClickListener(v -> repository.checkUpdates(null));
+        find(R.id.btnCancelPluginTask).setOnClickListener(v -> repository.cancelTask());
+        find(R.id.btnPluginRestore).setOnClickListener(v -> new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
                 .setTitle(com.deepseekharness.app.util.UiText.text("恢复第三方插件？")).setMessage(com.deepseekharness.app.util.UiText.text("恢复安全启动前已启用的插件；之后手动禁用的插件保持禁用。恢复后重启 Web 生效。"))
                 .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null).setPositiveButton(com.deepseekharness.app.util.UiText.text("恢复"), (d, which) -> repository.safeMode(false, null)).show());
-        view.findViewById(R.id.btnPluginInstall).setOnClickListener(v -> installLink());
-        view.findViewById(R.id.btnPluginPaste).setOnClickListener(v -> pasteLink());
-        view.findViewById(R.id.btnImport).setOnClickListener(v -> chooseImport(false));
-        view.findViewById(R.id.btnExport).setOnClickListener(v -> chooseExport());
-        view.findViewById(R.id.btnSort).setOnClickListener(v -> showSortOptions());
+        find(R.id.btnPluginInstall).setOnClickListener(v -> installLink());
+        find(R.id.btnPluginPaste).setOnClickListener(v -> pasteLink());
+        find(R.id.btnImport).setOnClickListener(v -> chooseImport(false));
+        find(R.id.btnExport).setOnClickListener(v -> chooseExport());
+        find(R.id.btnSort).setOnClickListener(v -> showSortOptions());
         hideBuiltin.setOnCheckedChangeListener((v, checked) -> render());
         search.addTextChangedListener(watcher(this::render));
         linkInput.addTextChangedListener(watcher(this::recognizeLink));
@@ -199,7 +204,7 @@ public class PluginFragment extends Fragment {
             }
             return false;
         });
-        TextView status = view.findViewById(R.id.statusText);
+        TextView status = find(R.id.statusText);
         status.setOnClickListener(v -> {
             if (current != null && !current.message.isEmpty())
                 new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.text("插件操作结果"))
@@ -231,13 +236,20 @@ public class PluginFragment extends Fragment {
     @Override public void onDestroyView() {
         refreshHandler.removeCallbacks(refreshInvalidated);
         if (previewDialog != null) { previewDialog.dismiss(); previewDialog = null; }
-        ((RecyclerView) root.findViewById(R.id.pluginList)).setAdapter(null);
-        root = null;
+        ((RecyclerView) find(R.id.pluginList)).setAdapter(null);
+        root = null; header = null; footer = null;
         linkInput = null;
         search = null;
         linkHint = null;
         hideBuiltin = null;
         super.onDestroyView();
+    }
+
+    private <T extends View> T find(int id) {
+        T result = root.findViewById(id);
+        if (result == null && header != null) result = header.findViewById(id);
+        if (result == null && footer != null) result = footer.findViewById(id);
+        return result;
     }
 
     private static TextWatcher watcher(Runnable callback) {
@@ -274,7 +286,7 @@ public class PluginFragment extends Fragment {
             linkHint.setText(input.trim().isEmpty() ? com.deepseekharness.app.util.UiText.text("支持仓库、分支/子目录、Release 下载和压缩包直链")
                     : error.getMessage());
         }
-        root.findViewById(R.id.btnPluginInstall).setEnabled(valid && !repository.isBusy());
+        find(R.id.btnPluginInstall).setEnabled(valid && !repository.isBusy());
     }
 
     private void selectTab(boolean showMarket) {
@@ -286,8 +298,8 @@ public class PluginFragment extends Fragment {
                 requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (keyboard != null) keyboard.hideSoftInputFromWindow(root.getWindowToken(), 0);
         render();
-        androidx.core.widget.NestedScrollView scroll = root.findViewById(R.id.pluginScroll);
-        scroll.post(() -> scroll.scrollTo(0, 0));
+        RecyclerView scroll = find(R.id.pluginList);
+        scroll.scrollToPosition(0);
     }
 
     private void openPluginWebsite() {
@@ -341,37 +353,37 @@ public class PluginFragment extends Fragment {
 
     private void render() {
         if (root == null || current == null) return;
-        root.findViewById(R.id.pluginMarketCard).setVisibility(market ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.pluginLocalTitle).setVisibility(market ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.pluginLocalCard).setVisibility(market ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.pluginWebsiteSection).setVisibility(market ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.pluginLinkSection).setVisibility(market ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.btnPluginRestore).setVisibility(repository.isSafeMode() ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.installedControls).setVisibility(market ? View.GONE : View.VISIBLE);
-        root.findViewById(R.id.pluginList).setVisibility(market ? View.GONE : View.VISIBLE);
-        root.findViewById(R.id.btnMarket).setSelected(market);
-        root.findViewById(R.id.btnInstalled).setSelected(!market);
-        ((TextView) root.findViewById(R.id.btnMarket)).setTextColor(requireContext().getColor(
+        find(R.id.pluginMarketCard).setVisibility(market ? View.VISIBLE : View.GONE);
+        find(R.id.pluginLocalTitle).setVisibility(market ? View.VISIBLE : View.GONE);
+        find(R.id.pluginLocalCard).setVisibility(market ? View.VISIBLE : View.GONE);
+        find(R.id.pluginWebsiteSection).setVisibility(market ? View.VISIBLE : View.GONE);
+        find(R.id.pluginLinkSection).setVisibility(market ? View.VISIBLE : View.GONE);
+        find(R.id.btnPluginRestore).setVisibility(repository.isSafeMode() ? View.VISIBLE : View.GONE);
+        find(R.id.installedControls).setVisibility(market ? View.GONE : View.VISIBLE);
+        find(R.id.btnMarket).setSelected(market);
+        find(R.id.btnInstalled).setSelected(!market);
+        ((TextView) find(R.id.btnMarket)).setTextColor(requireContext().getColor(
                 market ? R.color.primary : R.color.text_secondary));
-        ((TextView) root.findViewById(R.id.btnInstalled)).setTextColor(requireContext().getColor(
+        ((TextView) find(R.id.btnInstalled)).setTextColor(requireContext().getColor(
                 market ? R.color.text_secondary : R.color.primary));
-        root.findViewById(R.id.pluginBusy).setVisibility(current.busy ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.statusText).setVisibility(current.message.isEmpty()?View.GONE:View.VISIBLE);
-        android.widget.ProgressBar progress = root.findViewById(R.id.pluginBusy);
+        find(R.id.pluginBusy).setVisibility(current.busy ? View.VISIBLE : View.GONE);
+        find(R.id.statusText).setVisibility(current.message.isEmpty()?View.GONE:View.VISIBLE);
+        android.widget.ProgressBar progress = find(R.id.pluginBusy);
         progress.setIndeterminate(current.percent < 0);
         if (current.percent >= 0) progress.setProgress(current.percent);
-        root.findViewById(R.id.btnCancelPluginTask).setVisibility(current.busy ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.btnCancelPluginTask).setEnabled(current.cancellable);
-        ((TextView) root.findViewById(R.id.statusText)).setText(com.deepseekharness.app.util.UiStateText.render(current.message));
+        find(R.id.btnCancelPluginTask).setVisibility(current.busy ? View.VISIBLE : View.GONE);
+        find(R.id.btnCancelPluginTask).setEnabled(current.cancellable);
+        ((TextView) find(R.id.statusText)).setText(com.deepseekharness.app.util.UiStateText.render(current.message));
         for (int id : new int[]{R.id.btnImport, R.id.btnExport, R.id.btnRefresh, R.id.btnPluginUpdates, R.id.btnPluginRestore})
-            root.findViewById(id).setEnabled(!current.busy);
-        TextView sort=root.findViewById(R.id.btnSort);
+            find(id).setEnabled(!current.busy);
+        TextView sort=find(R.id.btnSort);
         sort.setText(sortLabels()[sortOrder.ordinal()]);
         sort.setContentDescription(getString(R.string.plugin_sort_title)+" · "+sort.getText());
         String query = search.getText().toString().trim().toLowerCase(Locale.ROOT);
         boolean changed=renderedItems!=current.items || !query.equals(renderedQuery)
                 || renderedSort!=sortOrder || renderedHideBuiltin!=hideBuiltin.isChecked();
-        boolean rebind=changed || renderedBusy!=current.busy;
+        boolean rebind=changed || renderedBusy!=current.busy || renderedMarket!=market;
+        renderedMarket=market;
         // 阶段进度每 400 ms 更新；列表内容未变时只更新状态，保留滚动和展开控件。
         if(changed) {
             visibleItems.clear();
@@ -385,10 +397,9 @@ public class PluginFragment extends Fragment {
             renderedHideBuiltin=hideBuiltin.isChecked();
         }
         renderedBusy=current.busy;
-        ((TextView) root.findViewById(R.id.pluginCount)).setText(com.deepseekharness.app.util.UiText.text("共 ") + visibleItems.size() + com.deepseekharness.app.util.UiText.text(" 个插件"));
-        TextView empty = root.findViewById(R.id.pluginEmpty);
+        ((TextView) find(R.id.pluginCount)).setText(com.deepseekharness.app.util.UiText.text("共 ") + visibleItems.size() + com.deepseekharness.app.util.UiText.text(" 个插件"));
+        TextView empty = find(R.id.pluginEmpty);
         empty.setVisibility(!market && visibleItems.isEmpty() ? View.VISIBLE : View.GONE);
-        root.findViewById(R.id.pluginList).setVisibility(!market&&!visibleItems.isEmpty()?View.VISIBLE:View.GONE);
         empty.setText(current.busy ? com.deepseekharness.app.util.UiText.text("正在读取插件…") : com.deepseekharness.app.util.UiText.text("没有符合条件的插件"));
         if(rebind)adapter.notifyDataSetChanged();
         recognizeLink();
@@ -524,10 +535,16 @@ public class PluginFragment extends Fragment {
             }
         }
         @NonNull @Override public Holder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
+            if (type != 1) {
+                View content = type == 0 ? header : footer;
+                if (content.getParent() instanceof ViewGroup) ((ViewGroup) content.getParent()).removeView(content);
+                return new Holder(content);
+            }
             return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_plugin, parent, false));
         }
         @Override public void onBindViewHolder(@NonNull Holder holder, int position) {
-            PluginRepository.Item item = visibleItems.get(position);
+            if (getItemViewType(position) != 1) return;
+            PluginRepository.Item item = visibleItems.get(position - 1);
             holder.name.setText(item.name);
             holder.state.setText((item.dynamic ? (item.enabled ? com.deepseekharness.app.util.UiText.text("临时插件 · 已运行") : com.deepseekharness.app.util.UiText.text("临时插件 · 未运行"))
                     : item.available ? (item.enabled ? com.deepseekharness.app.util.UiText.text("已启用") : item.detected ? com.deepseekharness.app.util.UiText.text("已检测，可开启以加入 Web") : com.deepseekharness.app.util.UiText.text("已禁用")) : com.deepseekharness.app.util.UiText.text("实体缺失，请重新导入"))
@@ -577,6 +594,7 @@ public class PluginFragment extends Fragment {
             });
             holder.itemView.setOnLongClickListener(v -> { itemActions(item); return true; });
         }
-        @Override public int getItemCount() { return visibleItems.size(); }
+        @Override public int getItemViewType(int position) { return position == 0 ? 0 : position == getItemCount()-1 ? 2 : 1; }
+        @Override public int getItemCount() { return 2 + (market ? 0 : visibleItems.size()); }
     }
 }

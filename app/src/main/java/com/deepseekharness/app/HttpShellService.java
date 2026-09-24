@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLDecoder;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -63,6 +62,17 @@ public final class HttpShellService {
     private static volatile HttpShellService instance;
     /** 启动占位与已绑定状态分开；资源清理结束后才允许下一次重试。 */
     private static final BridgeLifecycle LIFECYCLE = new BridgeLifecycle();
+    private static final com.deepseekharness.app.util.SharedServiceLeases<HttpShellService> DEMANDS =
+            new com.deepseekharness.app.util.SharedServiceLeases<>(HttpShellService::startListener, HttpShellService::stopListener);
+    public static final class Lease implements AutoCloseable {
+        private final com.deepseekharness.app.util.SharedServiceLeases<HttpShellService>.Lease demand;
+        private Lease(com.deepseekharness.app.util.SharedServiceLeases<HttpShellService>.Lease demand) { this.demand = demand; }
+        public void ensureStarted() { demand.ensureStarted(); }
+        @Override public void close() { demand.close(); }
+    }
+    /** 调用入口持有自己的需求；关闭入口不能停止仍被其它入口使用的监听。 */
+    public static Lease acquire(Context context) { return new Lease(DEMANDS.acquire(() -> new HttpShellService(context))); }
+    private Lease legacyLease;
 
     private final Context ctx;
     private final java.io.File fixtureTokenFile;
@@ -70,32 +80,18 @@ public final class HttpShellService {
     /** 绑定前也必须知道本轮 token 的文件归属；instance 仍仅发布已经就绪的监听。 */
     private static volatile HttpShellService tokenOwner;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private volatile CountDownLatch pendingLatch;
-    private volatile boolean pendingAllow;
-    /** 本轮确认是否已被认领：三条渠道（通知 / 弹窗 / 悬浮条）谁先点谁生效。
-     *
-     *  <p>没有它的时候，「检查 latch 未决 → 写 pendingAllow → countDown」这三步不是原子的：
-     *  两条渠道几乎同时被点（悬浮条点了没反应又去点通知，或纯误触），两个线程都能通过
-     *  {@code getCount() == 0} 的检查，于是后到的那个会把 pendingAllow 覆盖掉 ——
-     *  等待线程读到的是后写入的值。表现是<b>授权语义反转</b>：点「允许」却被拒绝，
-     *  更糟的是点「拒绝」而另一条渠道的「允许」后到，命令照样执行。 */
-    private final java.util.concurrent.atomic.AtomicBoolean confirmResolved =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
-    /** 确认进行中标志：并发确认请求直接拒绝（避免 latch 覆盖导致"点了允许却拒绝"）。
-     *  用 AtomicBoolean 而非 volatile boolean —— "检查后置位"必须原子，
-     *  否则两个请求线程可能同时通过检查、互相覆盖 pendingLatch。（吸收上游 PR#24） */
-    private final java.util.concurrent.atomic.AtomicBoolean confirmBusy =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
-    /** 每次确认的序号：判定一次「允许/拒绝」点击属于哪个请求。
-     *  没有它的话，残留通知（锁屏/通知历史/手表转发）上的旧按钮会把授权决定
-     *  打到下一个请求上——等于一次点击授权了另一条命令。（吸收上游 PR#24） */
-    private final java.util.concurrent.atomic.AtomicLong confirmEpoch =
-            new java.util.concurrent.atomic.AtomicLong();
-    /** 当前挂起的弹窗：setCancelable(false) 后它自己关不掉，确认完必须主动 dismiss */
-    private volatile androidx.appcompat.app.AlertDialog pendingDialog;
+    private final com.deepseekharness.app.util.BridgeConfirmations confirmations = new com.deepseekharness.app.util.BridgeConfirmations();
+    private volatile PendingConfirmation pendingConfirm; // 与 LIFECYCLE 共用锁，旧 run 不能清理新请求。
+    private static final class PendingConfirmation {
+        final com.deepseekharness.app.util.BridgeConfirmations.Request request;
+        volatile PendingIntent allow, deny;
+        androidx.appcompat.app.AlertDialog dialog;
+        PendingConfirmation(com.deepseekharness.app.util.BridgeConfirmations.Request request) { this.request = request; }
+    }
     private final BridgeQuestions questions = new BridgeQuestions();
     private volatile boolean running;
     private volatile BridgeRun activeRun;
+    private final ThreadLocal<BridgeRun> requestRun = new ThreadLocal<>();
 
     /** 每一轮监听独立持有 socket/线程池，迟到的旧线程只能清理自己的资源。 */
     private static final class BridgeRun {
@@ -268,7 +264,13 @@ public final class HttpShellService {
         }
     }
 
-    public void start() {
+    /** 兼容隔离夹具；正式入口使用 acquire 并显式持有 lease。 */
+    public synchronized void start() {
+        if (legacyLease == null) legacyLease = new Lease(DEMANDS.acquire(() -> this));
+        else legacyLease.ensureStarted();
+    }
+
+    private void startListener() {
         synchronized (LIFECYCLE) {
             long generation = LIFECYCLE.beginStart();
             if (generation < 0) return;
@@ -344,8 +346,9 @@ public final class HttpShellService {
                     long headerDeadline=com.deepseekharness.app.util.HttpProtocol.deadline(com.deepseekharness.app.util.HttpProtocol.BRIDGE.timeoutMs);
                     run.clients.add(client);
                     run.pool.execute(() -> {
+                        requestRun.set(run);
                         try { handle(client,headerDeadline); }
-                        finally { run.clients.remove(client); }
+                        finally { requestRun.remove(); run.clients.remove(client); }
                     });
                 }
             } catch (java.util.concurrent.RejectedExecutionException busy) {
@@ -359,8 +362,11 @@ public final class HttpShellService {
         }
     }
 
-    public void stop() {
-        revokeScreenGrant();
+    public synchronized void stop() {
+        if (legacyLease != null) { legacyLease.close(); legacyLease = null; }
+    }
+
+    private void stopListener() {
         BridgeRun run = activeRun;
         if (run != null) finishRun(run, null);
     }
@@ -370,6 +376,7 @@ public final class HttpShellService {
             // 旧 accept 线程的 finally 可以迟到，但不能清空新实例的就绪状态。
             if (activeRun != run || !LIFECYCLE.isCurrent(run.generation)) return;
             running = false;
+            try { revokeScreenGrant(); } catch (RuntimeException error) { android.util.Log.w("DSHA", "BRIDGE_GRANT_REVOKE", error); }
             if (instance == this) instance = null;
             closeSocket(run.server);
             closeSocket(run.server6);
@@ -377,11 +384,7 @@ public final class HttpShellService {
             run.clients.clear();
             run.pool.shutdownNow();
             questions.stop();
-            pendingAllow = false;
-            CountDownLatch latch = pendingLatch;
-            if (latch != null) latch.countDown();
-            dismissConfirmDialog();
-            cancelConfirmNotification();
+            if (pendingConfirm != null) finishConfirmation(pendingConfirm);
             if (failure == null) writeBridgeStatus("stopped");
             else noteBindError(failure);
             activeRun = null;
@@ -451,6 +454,9 @@ public final class HttpShellService {
             var request=com.deepseekharness.app.util.HttpProtocol.readHead(new java.io.BufferedInputStream(c.getInputStream(),8192),c,
                     com.deepseekharness.app.util.HttpProtocol.BRIDGE,headerDeadline,true);
             if(request==null)return;
+            synchronized (LIFECYCLE) {
+                if (!running || requestRun.get() != activeRun) return;
+            }
             // 当前设备桥全部为查询串 GET 路由；正文与其它方法不能被静默忽略。
             if(!request.method.equals("GET")||request.requestBody().kind!=com.deepseekharness.app.util.HttpProtocol.Kind.NONE){
                 c.getOutputStream().write("HTTP/1.1 405 Method Not Allowed\r\nAllow: GET\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(java.nio.charset.StandardCharsets.US_ASCII));return;
@@ -828,9 +834,10 @@ public final class HttpShellService {
     /** 虚拟屏只接受已认证的固定端点；每个写入/启动动作仍复用当前屏幕授权确认。 */
     private String appVscreen(String path) {
         String route = path.split("\\?", 2)[0];
+        String operation = com.deepseekharness.app.util.VirtualScreenRoutes.operation(route);
+        if (operation.isEmpty()) return "{\"ok\":false,\"error\":\"UNKNOWN_ROUTE\"}";
         try {
-            boolean action = !route.endsWith("/status") && !route.endsWith("/preview") && !route.endsWith("/see");
-            if (!route.endsWith("/status") && !route.endsWith("/close") && !uiAuthorized(com.deepseekharness.app.util.UiText.text("操作独立虚拟屏：") + route))
+            if (!operation.equals("status") && !operation.equals("close") && !uiAuthorized(com.deepseekharness.app.util.UiText.text("操作独立虚拟屏：") + route))
                 return "{\"ok\":false,\"error\":\"USER_REJECTED\"}";
             return com.deepseekharness.app.vscreen.VirtualScreenManager.bridge(ctx, route, queryOf(path));
         } catch (Throwable error) {
@@ -1498,71 +1505,65 @@ public final class HttpShellService {
      *  通知与弹窗同时发：只走弹窗的话，Activity 一被 pause 用户就再也看不见，
      *  只能干等 60s 超时——这正是「弹窗有时不出现」的由来。（吸收上游 PR#24） */
     private boolean requestUserConfirm(String cmd) {
-        if (!confirmBusy.compareAndSet(false, true)) {
-            return false; // 已有确认在进行：拒绝新的（避免 pendingLatch 互相覆盖）
+        final PendingConfirmation pending;
+        synchronized (LIFECYCLE) {
+            BridgeRun run = activeRun;
+            if (!running || run == null || !LIFECYCLE.isCurrent(run.generation)
+                    || requestRun.get() != null && requestRun.get() != run) return false;
+            var request = confirmations.begin(run.generation);
+            if (request == null) return false;
+            pending = new PendingConfirmation(request);
+            pendingConfirm = pending;
         }
         try {
-            CountDownLatch latch = new CountDownLatch(1);
-            // epoch 先递增：上一轮残留的弹窗/通知按钮带的是旧 epoch，会被丢弃
-            final long myEpoch = confirmEpoch.incrementAndGet();
-            pendingAllow = false;   // 先写标志，再发布 latch
-            confirmResolved.set(false);  // 必须早于发布 latch：latch 一露面就可能有点击进来
-            pendingLatch = latch;
-
-            // 通知是权威渠道（前后台都在），前台再叠一个弹窗当快捷方式
-            showConfirmNotification(cmd, myEpoch);
-            // 第三条渠道：悬浮条上就地批准。agent 干活时用户往往并不在 App 里 ——
-            // 拉下通知栏找那条通知、或者切回 App，都比点一下已经浮在最上层的按钮慢。
-            // 三条渠道共用同一个 epoch + latch，谁先点谁生效。
-            OverlayController.askConfirm(ctx, safeDisplay(cmd),
-                    () -> resolveConfirm(true, myEpoch),
-                    () -> resolveConfirm(false, myEpoch));
+            synchronized (LIFECYCLE) {
+                if (!currentConfirmation(pending)) return false;
+                showConfirmNotification(cmd, pending);
+                OverlayController.askConfirm(ctx, pending, safeDisplay(cmd),
+                        () -> resolveConfirm(true, pending.request.identity),
+                        () -> resolveConfirm(false, pending.request.identity));
+            }
             final androidx.fragment.app.FragmentActivity act = ForegroundActivity.current();
             if (act != null) {
-                final String prompt = com.deepseekharness.app.util.UiText.text("模型试图在设备上执行：\n") + safeDisplay(cmd) + com.deepseekharness.app.util.UiText.text("\n\n是否允许？");
+                final String prompt = com.deepseekharness.app.util.UiText.text("模型试图在设备上执行：\n") + safeDisplay(cmd)
+                        + com.deepseekharness.app.util.UiText.text("\n\n是否允许？");
                 act.runOnUiThread(() -> {
-                    // 正在 finishing 的 Activity 上 show() 会抛 BadTokenException，
-                    // 而这里是主线程，异常不在 handle() 的 catch 范围内 → 会崩 App
-                    try {
-                        if (!ForegroundActivity.isResumed(act) || confirmEpoch.get() != myEpoch
-                                || pendingLatch != latch || latch.getCount() == 0) return;
-                        pendingDialog = new com.deepseekharness.app.ui.DshaDialogBuilder(act)
-                                .setTitle(com.deepseekharness.app.util.UiText.text("DSHA 安全确认"))
-                                .setMessage(prompt)
-                                // 必须明确选一个：误触关闭不再被当作拒绝。也不要在
-                                // OnDismiss/OnCancel 里 countDown —— Activity 被 pause
-                                // 导致的 dismiss 会误判成「用户拒绝」，而用户还能从通知里点。
-                                .setCancelable(false)
-                                .setPositiveButton(com.deepseekharness.app.util.UiText.text("允许"), (d, w) -> resolveConfirm(true, myEpoch))
-                                .setNegativeButton(com.deepseekharness.app.util.UiText.text("拒绝"), (d, w) -> resolveConfirm(false, myEpoch))
-                                .show();
-                    } catch (Throwable t) {
-                        android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("确认弹窗弹出失败，仍可从通知确认：") + safeError(t));
+                    synchronized (LIFECYCLE) {
+                        try {
+                            if (!ForegroundActivity.isResumed(act) || !currentConfirmation(pending)) return;
+                            pending.dialog = new com.deepseekharness.app.ui.DshaDialogBuilder(act)
+                                    .setTitle(com.deepseekharness.app.util.UiText.text("DSHA 安全确认"))
+                                    .setMessage(prompt).setCancelable(false)
+                                    .setPositiveButton(com.deepseekharness.app.util.UiText.text("允许"),
+                                            (d, w) -> resolveConfirm(true, pending.request.identity))
+                                    .setNegativeButton(com.deepseekharness.app.util.UiText.text("拒绝"),
+                                            (d, w) -> resolveConfirm(false, pending.request.identity)).show();
+                        } catch (Throwable t) {
+                            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("确认弹窗弹出失败，仍可从通知确认：") + safeError(t));
+                        }
                     }
                 });
             } else if (!notificationsEnabled()) {
-                // 后台 + 通知被拒 = 用户看不到任何提示，只能干等 60s 超时被拒。
-                // 至少留下日志，别让这变成无从排查的「命令莫名被拒」。
-                android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("无前台界面且通知权限被拒，确认必然超时拒绝：")
-                        + safeDisplay(cmd));
+                android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("无前台界面且通知权限被拒，确认必然超时拒绝：") + safeDisplay(cmd));
             }
-
-            try {
-                boolean finished = latch.await(CONFIRM_TIMEOUT_S, TimeUnit.SECONDS);
-                return finished && pendingAllow;
-            } catch (InterruptedException e) {
-                return false;
+            boolean allowed = pending.request.await(CONFIRM_TIMEOUT_S, TimeUnit.SECONDS);
+            synchronized (LIFECYCLE) {
+                BridgeRun run = activeRun;
+                return allowed && running && run != null && run.generation == pending.request.generation
+                        && LIFECYCLE.isCurrent(run.generation);
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } finally {
-            // 顺序要紧：清理全部做完，最后才放开 confirmBusy。反过来的话，
-            // 下一个请求会抢在清理前发出新通知，而 cancelConfirmNotification()
-            // 用的是固定通知 ID，会把它刚发的那条取消掉。
-            pendingLatch = null;
-            dismissConfirmDialog();
-            cancelConfirmNotification();
-            OverlayController.dismissConfirm(ctx);
-            confirmBusy.set(false);
+            synchronized (LIFECYCLE) { finishConfirmation(pending); }
         }
+    }
+
+    private boolean currentConfirmation(PendingConfirmation pending) {
+        BridgeRun run = activeRun;
+        return running && run != null && pendingConfirm == pending && run.generation == pending.request.generation
+                && LIFECYCLE.isCurrent(run.generation) && confirmations.pending(pending.request);
     }
 
     private boolean notificationsEnabled() {
@@ -1575,73 +1576,65 @@ public final class HttpShellService {
         }
     }
 
-    /** 通知按钮（ConfirmReceiver）、前台弹窗按钮与悬浮条按钮共用的回调。
-     *  epoch 校验 + 原子认领：丢弃迟到的（属于上一个请求的）点击，以及同一轮里后到的那次。 */
-    public void resolveConfirm(boolean allow, long epoch) {
-        if (epoch != confirmEpoch.get()) {
-            android.util.Log.i("DSHA", com.deepseekharness.app.util.UiText.text("忽略过期的确认点击（epoch ") + epoch + com.deepseekharness.app.util.UiText.text("）"));
-            return;
+    /** 通知、弹窗和悬浮条必须携带本次不可复用的身份。 */
+    public void resolveConfirm(boolean allow, String identity) {
+        synchronized (LIFECYCLE) {
+            PendingConfirmation pending = pendingConfirm;
+            if (pending == null || !currentConfirmation(pending)) return;
+            if (!confirmations.resolve(pending.request.generation, identity, allow)) return;
+            clearConfirmationUi(pending);
         }
-        CountDownLatch l = pendingLatch;
-        if (l == null || l.getCount() == 0) return; // 已决或无挂起（快速路径）
-        // 真正的认领在这里，且必须原子 —— 上面那个 getCount 检查挡不住两条渠道同时点。
-        if (!confirmResolved.compareAndSet(false, true)) return;
-        pendingAllow = allow;
-        l.countDown();
-        dismissConfirmDialog();
-        cancelConfirmNotification();
     }
 
-    /** 关掉挂起的弹窗：setCancelable(false) 让它自己关不掉，确认完成后必须主动 dismiss，
-     *  否则它会滞留在屏幕上，用户后来点它就把授权打到下一个请求上了。
-     *  先把引用摘到局部变量再置 null，这样即使下一个请求已设好新弹窗也不会误关它。 */
-    private void dismissConfirmDialog() {
-        final androidx.appcompat.app.AlertDialog d = pendingDialog;
-        if (d == null) return;
-        pendingDialog = null;
+    /** 在释放待决槽位前取消本次 PendingIntent；不触碰后来请求的 UI。 */
+    private void finishConfirmation(PendingConfirmation pending) {
+        if (pendingConfirm != pending) return;
+        clearConfirmationUi(pending);
+        confirmations.finish(pending.request);
+        pendingConfirm = null;
+    }
+
+    private void clearConfirmationUi(PendingConfirmation pending) {
+        if (pendingConfirm != pending) return;
+        if (pending.allow != null) { try { pending.allow.cancel(); } catch (RuntimeException ignored) { } pending.allow = null; }
+        if (pending.deny != null) { try { pending.deny.cancel(); } catch (RuntimeException ignored) { } pending.deny = null; }
         try {
-            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                try {
-                    if (d.isShowing()) d.dismiss();
-                } catch (Throwable ignored) {
-                }
-            });
-        } catch (Throwable ignored) {
-        }
+            NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) nm.cancel(CONFIRM_NOTIF_ID);
+        } catch (RuntimeException ignored) { }
+        final androidx.appcompat.app.AlertDialog dialog = pending.dialog;
+        pending.dialog = null;
+        try {
+            if (dialog != null) mainHandler.post(() -> { try { if (dialog.isShowing()) dialog.dismiss(); } catch (Throwable ignored) { } });
+            OverlayController.dismissConfirm(ctx, pending);
+        } catch (RuntimeException ignored) { }
     }
 
-    private void showConfirmNotification(String cmd, long epoch) {
+    private void showConfirmNotification(String cmd, PendingConfirmation pending) {
         createConfirmChannel();
         String displayCmd = safeDisplay(cmd);
         String shortCmd = displayCmd.length() > 100 ? displayCmd.substring(0, 100) + "…" : displayCmd;
-        // epoch 随 Intent 带回：残留通知上的旧按钮会因 epoch 过期被丢弃
-        Intent allowI = new Intent(ctx, ConfirmReceiver.class).setAction(ConfirmReceiver.ACTION_ALLOW)
-                .putExtra(ConfirmReceiver.EXTRA_EPOCH, epoch);
-        Intent denyI = new Intent(ctx, ConfirmReceiver.class).setAction(ConfirmReceiver.ACTION_DENY)
-                .putExtra(ConfirmReceiver.EXTRA_EPOCH, epoch);
-        PendingIntent allowPi = PendingIntent.getBroadcast(ctx, 31, allowI,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        PendingIntent denyPi = PendingIntent.getBroadcast(ctx, 32, denyI,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        // data 参与 PendingIntent 身份比较，旧通知持有者不会被 UPDATE_CURRENT 更新为新请求。
+        android.net.Uri identity = android.net.Uri.parse(pending.request.identity);
+        Intent allowI = new Intent(ctx, ConfirmReceiver.class).setAction(ConfirmReceiver.ACTION_ALLOW).setData(identity);
+        Intent denyI = new Intent(ctx, ConfirmReceiver.class).setAction(ConfirmReceiver.ACTION_DENY).setData(identity);
+        pending.allow = PendingIntent.getBroadcast(ctx, 31, allowI,
+                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+        pending.deny = PendingIntent.getBroadcast(ctx, 32, denyI,
+                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
         Notification n = new NotificationCompat.Builder(ctx, CONFIRM_CHANNEL)
                 .setSmallIcon(R.drawable.ic_launch)
                 .setContentTitle(com.deepseekharness.app.util.UiText.text("⚠️ DSHA 安全确认"))
                 .setContentText(com.deepseekharness.app.util.UiText.text("模型试图执行：") + shortCmd)
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(com.deepseekharness.app.util.UiText.text("模型试图在设备上执行：\n") + displayCmd + com.deepseekharness.app.util.UiText.text("\n\n是否允许？")))
-                .addAction(0, com.deepseekharness.app.util.UiText.text("允许"), allowPi)
-                .addAction(0, com.deepseekharness.app.util.UiText.text("拒绝"), denyPi)
+                        .bigText(com.deepseekharness.app.util.UiText.text("模型试图在设备上执行：\n") + displayCmd
+                                + com.deepseekharness.app.util.UiText.text("\n\n是否允许？")))
+                .addAction(0, com.deepseekharness.app.util.UiText.text("允许"), pending.allow)
+                .addAction(0, com.deepseekharness.app.util.UiText.text("拒绝"), pending.deny)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(agentNotificationIntent())
-                .setOngoing(true)
-                .build();
+                .setContentIntent(agentNotificationIntent()).setOngoing(true).build();
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm != null) nm.notify(CONFIRM_NOTIF_ID, n);
-    }
-
-    private void cancelConfirmNotification() {
-        NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (nm != null) nm.cancel(CONFIRM_NOTIF_ID);
     }
 
     private void createConfirmChannel() {

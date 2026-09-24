@@ -226,6 +226,10 @@ public final class EnvironmentMaintenance {
         if (!host.isEmpty()) {
             if (host.size() != 1 || RuntimeTasks.hasOtherTasks()) throw new IOException("HOST_RECOVERY_REQUIRES_REVIEW");
             var filesystem=new com.deepseekharness.app.backup.AndroidBackupFileSystem();
+            if(com.deepseekharness.app.backup.ProfileSettingsTransaction.owns(filesystem,host.get(0))){
+                com.deepseekharness.app.backup.ProfileSettingsTransaction.recover(controller.context(),host.get(0));
+                return com.deepseekharness.app.util.UiText.choose("中断的 profile 设置事务已恢复，原件保留。", "Interrupted profile settings transaction recovered; originals retained.");
+            }
             if(com.deepseekharness.app.backup.NativeConfigurationReset.owns(filesystem,host.get(0))){
                 com.deepseekharness.app.backup.NativeConfigurationReset.recover(filesystem,files,host.get(0),controller.nativeSettingsTransaction(),null);
                 return com.deepseekharness.app.util.UiText.choose("中断的配置重置已在宿主侧恢复，原件保留。", "Interrupted configuration reset recovered on the host; originals retained.");

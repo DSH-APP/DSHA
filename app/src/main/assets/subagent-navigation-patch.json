@@ -1,10 +1,10 @@
 {
-  "dshVersion": "0.1.7-alpha.2",
+  "dshVersion": "0.1.7-rc.2",
   "module": "@deepseek-ai/dsh-client-ui-subagent/lib/client.js",
   "patches": [
     {
-      "before": "onClick: openTitle === void 0 ? void 0 : () => {",
-      "after": "\"data-dsha-lineage-trigger\": true,\n                        onClick: openTitle === void 0 ? () => changeOpen(!open) : () => {"
+      "before": "onClick: openTitle === void 0 ? () => {",
+      "after": "\"data-dsha-lineage-trigger\": true,\n                        onClick: openTitle === void 0 ? () => {"
     },
     {
       "before": "const scheduleHoverOpen = () => {",

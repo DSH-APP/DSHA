@@ -34,7 +34,7 @@ public class HarnessService extends Service {
     private static final int NOTIF_ID = 1001;
 
     private HarnessController c;
-    private HttpShellService shellHttp;
+    private volatile HttpShellService.Lease shellHttp;
 
     // ================= WebUI 监听保活 =================
     private Thread keepAliveThread;
@@ -80,8 +80,7 @@ public class HarnessService extends Service {
         }
         // 3090 桥（agent 调设备能力）随前台服务拉起；跨实例互斥，重复启动安全
         try {
-            shellHttp = new HttpShellService(this);
-            shellHttp.start();
+            shellHttp = HttpShellService.acquire(this);
         } catch (Throwable ignored) {
         }
     }
@@ -113,13 +112,10 @@ public class HarnessService extends Service {
         } catch (Throwable ignored) {
         }
         try {
-            if (shellHttp != null) shellHttp.stop();
+            if (shellHttp != null) { shellHttp.close(); shellHttp = null; }
         } catch (Throwable ignored) {
         }
-        try {
-            stopService(new Intent(this, DeviceBridgeService.class));
-        } catch (Throwable ignored) {
-        }
+        // ADB 保活属于用户单独启用的需求；停止 Web 不撤销设备服务的 lease。
         stopForeground(true);
         stopSelf();
     }
@@ -216,6 +212,8 @@ public class HarnessService extends Service {
                     break;
                 }
                 if (!keepAliveRunning) break;
+                HttpShellService.Lease bridge = shellHttp;
+                if (bridge != null) bridge.ensureStarted();
                 refreshLocks();
                 if (!c.canAutoRestart()) {
                     fail = 0;
@@ -290,7 +288,7 @@ public class HarnessService extends Service {
         stopKeepAlive();
         if (shellHttp != null) {
             try {
-                shellHttp.stop();
+                shellHttp.close(); shellHttp = null;
             } catch (Throwable ignored) {
             }
         }

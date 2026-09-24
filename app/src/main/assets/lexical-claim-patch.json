@@ -1,0 +1,10 @@
+{
+  "dshVersion": "0.1.7-rc.2",
+  "module": "@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
+  "patches": [
+    {
+      "before": "\t\t\t\t\tconst [tokenNode] = node.splitText(token.length);\n\t\t\t\t\tif (tokenNode !== void 0 && tokenNode.getStyle() !== TOKEN_STYLE) tokenNode.setStyle(TOKEN_STYLE);",
+      "after": "\t\t\t\t\tconst [tokenNode, overflowNode] = node.splitText(token.length);\n\t\t\t\t\t/* DSHA_CLAIM_DECOR_OVERFLOW_STYLE_V1: Lexical #14 guard. splitText copies TOKEN_STYLE to the newly typed suffix; clear it before normalization can merge the two leaves and re-run this transform. */\n\t\t\t\t\tif (overflowNode !== void 0 && overflowNode.getStyle() === TOKEN_STYLE) overflowNode.setStyle(\"\");\n\t\t\t\t\tif (tokenNode !== void 0 && tokenNode.getStyle() !== TOKEN_STYLE) tokenNode.setStyle(TOKEN_STYLE);"
+    }
+  ]
+}

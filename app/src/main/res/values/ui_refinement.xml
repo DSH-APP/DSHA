@@ -6,7 +6,7 @@
   <string name="ui134_candidate">查看候选版本</string>
   <string name="ui134_candidate_sub">更新记录、大小与安装方式</string>
   <string name="ui134_changelog">本版本更新记录</string>
-  <string name="ui134_changelog_sub">0.1.7-alpha1 · 交互与设备能力</string>
+  <string name="ui134_changelog_sub">0.1.7-rc2 · 定时任务、插件与长对话修复</string>
   <string name="ui134_check_ready">准备检查</string>
   <string name="ui134_results">检查结果</string>
   <string name="ui134_start_records">启动记录</string>

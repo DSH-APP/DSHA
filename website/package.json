@@ -1,6 +1,6 @@
 {
   "name": "dsha-marketplace",
-  "version": "0.1.5-rc1",
+  "version": "0.1.6-alpha2",
   "private": true,
   "type": "module",
   "scripts": {

@@ -343,7 +343,8 @@ public final class NativeBackupJobs {
                 // 明确区分「用户选择不带 key」与「勾选后仍未恢复」，避免再次出现
                 // 只显示“数据已恢复”却让用户下一次对话才发现凭据为空的假成功。
                 String result;
-                if(includeKey&&!keyAvailable) result="DATA_RESTORED_API_KEY_MISSING";
+                if(plan.warnings.contains("PROFILE_CONFIGURATION_REQUIRES_REVIEW")) result="DATA_RESTORED_SETTINGS_REVIEW"+(!keyAvailable?(includeKey?"_API_KEY_MISSING":"_API_KEY_OMITTED"):"");
+                else if(includeKey&&!keyAvailable) result="DATA_RESTORED_API_KEY_MISSING";
                 else if(!includeKey&&!keyAvailable) result="DATA_RESTORED_API_KEY_OMITTED";
                 else result=plugins?"DATA_RESTORED_PLUGINS_QUARANTINED":plan.warnings.isEmpty()?"DATA_RESTORED":"DATA_RESTORED_WITH_WARNINGS";
                 update("FINISHED",result,"","",BackupJson.number(plan.manifest,"entries"),BackupJson.number(plan.manifest,"bytes"),false);

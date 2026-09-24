@@ -140,12 +140,13 @@ public final class AdbBridge {
     }
 
     public static String ensureReady(Context ctx, ProotBootstrap proot, java.util.function.Consumer<String> progress) {
-        return environmentResult(proot, com.deepseekharness.app.util.UiText.text("准备 ADB 环境"), () -> ensureReadyOwned(ctx, proot, progress));
+        try (var bridge = com.deepseekharness.app.HttpShellService.acquire(ctx)) {
+            return environmentResult(proot, com.deepseekharness.app.util.UiText.text("准备 ADB 环境"), () -> ensureReadyOwned(ctx, proot, progress));
+        }
     }
 
     private static String ensureReadyOwned(Context ctx, ProotBootstrap proot, java.util.function.Consumer<String> progress) {
         if (Thread.currentThread().isInterrupted()) return com.deepseekharness.app.util.UiText.text("ADB_CANCELLED: 环境准备已取消");
-        new com.deepseekharness.app.HttpShellService(ctx).start();
         StringBuilder sb = new StringBuilder();
         progress.accept(com.deepseekharness.app.util.UiText.text("正在同步 ADB 授权设置…"));
         String settings = applySettings(ctx, proot);

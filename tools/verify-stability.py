@@ -113,7 +113,7 @@ def main():
         apks=[ROOT/f'app/build/outputs/apk/{v}/release/app-{v}-release.apk' for v in ('standard','low')]
         # APK 里是 alpha.2 运行时；必须与同版本的原始锁定树比较。旧 rc2 树会把
         # alpha.2 官方前端自身的变化误报成受管补丁越界。
-        locked_runtime=ROOT/'app/build/locked-dsh-runtime-017'
+        locked_runtime=ROOT/'app/build/locked-dsh-runtime-rc1'
         locked_package=locked_runtime/'node_modules/@deepseek-ai/dsh/package.json'
         expected_dsh=json.loads((ROOT/'tools/dsh-runtime/package.json').read_text(encoding='utf8'))['dependencies']['@deepseek-ai/dsh']
         if not locked_package.is_file() or json.loads(locked_package.read_text(encoding='utf8')).get('version')!=expected_dsh:

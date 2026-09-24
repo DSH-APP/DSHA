@@ -19,10 +19,12 @@
 轮换本机凭据；校验/rename 失败时绝不输出该标记。
 """
 import json
+import hashlib
 import os
 import shutil
 import sys
 import time
+import re
 
 TS = time.strftime("%Y%m%d-%H%M%S")
 GLOBAL_NM = (
@@ -31,6 +33,9 @@ GLOBAL_NM = (
 )
 PLUGIN_SRC_DIRNAME = "plugin-src"
 INLINE_DIRNAME = ".dsha-plugin-src"
+# 隔离候选属于用户迁移资料，放在 .dsh 隐藏子目录才能随环境重建一起保留；
+# dsh 不会读取该名称，插件管理器也不会把它当作 profile/依赖目录。
+PLUGIN_MIGRATION_DIRNAME = os.path.join(".dsh", ".dsha-plugin-migration")
 report = []
 partial = False
 # 全量恢复失败时，stage 是唯一可供排查/重试的副本，绝不能在 main() 末尾清掉。
@@ -40,6 +45,133 @@ restore_committed = False
 
 def say(msg):
     report.append(msg)
+
+
+def _tree_digest(path):
+    """返回源码树摘要，不跟随链接；用于冲突去重和迁移候选身份。"""
+    value = hashlib.sha256()
+
+    def visit(current, relative):
+        info = os.lstat(current)
+        if os.path.islink(current):
+            row = {"type": "link", "target": os.readlink(current)}
+        elif os.path.isdir(current):
+            row = {"type": "directory"}
+        elif os.path.isfile(current):
+            row = {"type": "file", "sha256": _file_digest(current), "mode": info.st_mode & 0o777}
+        else:
+            raise ValueError("插件源码含不支持的特殊文件：%s" % relative)
+        value.update(json.dumps([relative, row], sort_keys=True, ensure_ascii=True).encode("utf-8"))
+        if row["type"] == "directory":
+            for name in sorted(os.listdir(current)):
+                child = os.path.join(current, name)
+                visit(child, relative + "/" + name if relative else name)
+
+    def _file_digest(file):
+        digest = hashlib.sha256()
+        with open(file, "rb") as stream:
+            for chunk in iter(lambda: stream.read(65536), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    visit(path, "")
+    return value.hexdigest()
+
+
+def _copy_tree_atomic(source, destination):
+    """复制候选后再落位；目标已存在时绝不覆盖。"""
+    parent = os.path.dirname(destination)
+    os.makedirs(parent, exist_ok=True)
+    temporary = destination + ".dsha-stage-%s-%s" % (TS, os.getpid())
+    suffix = 0
+    while os.path.lexists(temporary):
+        suffix += 1
+        temporary = destination + ".dsha-stage-%s-%s-%d" % (TS, os.getpid(), suffix)
+    try:
+        shutil.copytree(source, temporary, symlinks=True)
+        if os.path.lexists(destination):
+            raise FileExistsError(destination)
+        os.rename(temporary, destination)
+    except BaseException:
+        try:
+            if os.path.lexists(temporary):
+                if os.path.isdir(temporary) and not os.path.islink(temporary):
+                    shutil.rmtree(temporary)
+                else:
+                    os.unlink(temporary)
+        except Exception:
+            pass
+        raise
+
+
+def _legacy_preset_bundle(source, destination, preset_id):
+    """Generate a disabled rc1 bundle candidate; never install or select it."""
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", preset_id):
+        return None
+    agent = os.path.join(source, "agent.cordis.yml")
+    if not os.path.isfile(agent) or os.path.getsize(agent) > 512 * 1024:
+        return None
+    try:
+        with open(agent, encoding="utf-8") as stream:
+            plugin_yaml = stream.read()
+    except OSError:
+        return None
+    if not plugin_yaml.strip():
+        return None
+    meta = {}
+    preset = os.path.join(source, "preset.yml")
+    if os.path.isfile(preset) and os.path.getsize(preset) <= 64 * 1024:
+        with open(preset, encoding="utf-8") as stream:
+            for line in stream:
+                match = re.match(r"^\s*(name|description|order)\s*:\s*(.*?)\s*$", line)
+                if match:
+                    value = match.group(2).strip()
+                    if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"": value = value[1:-1]
+                    meta[match.group(1)] = value.replace("''", "'")
+    rows = ["        id: " + preset_id]
+    for key in ("name", "description"):
+        if meta.get(key): rows.append("        %s: '%s'" % (key, meta[key].replace("'", "''")))
+    if meta.get("order", "").lstrip("-").isdigit(): rows.append("        order: " + meta["order"])
+    rows.append("        plugins:")
+    rows.extend("          " + line if line else "" for line in plugin_yaml.splitlines())
+    bundle = os.path.join(destination, "bundle")
+    os.makedirs(bundle, exist_ok=True)
+    with open(os.path.join(bundle, "package.json"), "w", encoding="utf-8") as out:
+        json.dump({"name": "dsha-legacy-preset-" + preset_id,
+                   "version": "0.0.0-dsha-migration", "private": True, "type": "module",
+                   "dsh": {"bundle": {"patch": "./cordis.patch.yml"}},
+                   "dependencies": {"@deepseek-ai/dsh-agent-preset": "0.1.7-rc.2"}},
+                  out, ensure_ascii=False, indent=2); out.write("\n")
+    with open(os.path.join(bundle, "cordis.patch.yml"), "w", encoding="utf-8") as out:
+        out.write("- insert:\n    - id: preset-%s\n      name: '@deepseek-ai/dsh-agent-preset'\n      config:\n%s\n" % (preset_id, "\n".join(rows)))
+    return os.path.relpath(bundle, destination).replace(os.sep, "/")
+
+
+def _write_migration_record(root, kind, payload):
+    """把待审阅迁移对象写在 .dsh 隐藏子目录；不让 dsh 把报告当插件加载。"""
+    directory = os.path.join(root, PLUGIN_MIGRATION_DIRNAME)
+    os.makedirs(directory, exist_ok=True)
+    record = {"version": 1, "kind": kind, "createdAt": TS, "payload": payload}
+    path = os.path.join(directory, "%s-%s-%s.json" % (kind, TS, os.getpid()))
+    suffix = 0
+    while os.path.lexists(path):
+        suffix += 1
+        path = os.path.join(directory, "%s-%s-%s-%d.json" % (kind, TS, os.getpid(), suffix))
+    temporary = path + ".tmp"
+    try:
+        with open(temporary, "w", encoding="utf-8") as stream:
+            json.dump(record, stream, ensure_ascii=False, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.rename(temporary, path)
+    finally:
+        if os.path.lexists(temporary):
+            try:
+                os.unlink(temporary)
+            except OSError:
+                pass
+    return path
 
 
 def arg(name, default=""):
@@ -396,6 +528,74 @@ def restore_dsh(stage, root, alpha=False):
     return True
 
 
+def collect_legacy_agent_presets(dsh, root):
+    """保留旧目录型 Agent preset，生成供新版插件组合包审阅的迁移候选。
+
+    dsh 0.1.7 不再扫描 ``$DSH_HOME/.agent-presets``。这里不猜测 YAML
+    如何转换，也不自动启用第三方代码；只把原始目录复制到 dsh 外的隔离区，
+    并写机器可读待处理记录。重复启动按源码摘要去重，原目录始终留在原位。
+    """
+    global partial, retain_stage
+    source_root = os.path.join(dsh, ".agent-presets")
+    if not os.path.isdir(source_root) or os.path.islink(source_root):
+        return []
+    candidates = []
+    records = []
+    try:
+        names = sorted(os.listdir(source_root))
+    except OSError as error:
+        partial = True
+        retain_stage = True
+        say("· 旧 Agent preset 目录无法读取：%s" % error)
+        return []
+    for name in names:
+        source = os.path.join(source_root, name)
+        if not os.path.isdir(source) or os.path.islink(source):
+            continue
+        agent = os.path.join(source, "agent.cordis.yml")
+        if not os.path.isfile(agent):
+            continue
+        try:
+            digest = _tree_digest(source)
+            destination = os.path.join(root, PLUGIN_MIGRATION_DIRNAME,
+                                       "legacy-agent-presets", name, digest[:16])
+            if not os.path.lexists(destination):
+                _copy_tree_atomic(source, destination)
+            bundle = _legacy_preset_bundle(source, destination, name)
+            records.append({
+                "id": name,
+                "source": os.path.join(".dsh", ".agent-presets", name),
+                "candidate": os.path.relpath(destination, root).replace(os.sep, "/"),
+                "bundle": (os.path.relpath(os.path.join(destination, bundle), root).replace(os.sep, "/")
+                           if bundle else ""),
+                "sha256": digest,
+                "target": "@deepseek-ai/dsh-agent-preset",
+                "requiresReview": True,
+                "activated": False,
+            })
+            candidates.append(destination)
+        except Exception as error:
+            partial = True
+            retain_stage = True
+            say("· 旧 Agent preset「%s」迁移候选生成失败：%s（原目录保留）" % (name, error))
+    if records:
+        try:
+            _write_migration_record(root, "legacy-agent-presets", {
+                "sourceRoot": os.path.join(".dsh", ".agent-presets"),
+                "target": "@deepseek-ai/dsh-agent-preset",
+                "activated": False,
+                "requiresReview": True,
+                "presets": records,
+            })
+            say("· 已隔离 %d 个旧 Agent preset 迁移候选；未自动启用" % len(records))
+            partial = True
+        except Exception as error:
+            partial = True
+            retain_stage = True
+            say("· 旧 Agent preset 待处理记录写入失败：%s（原目录与候选保留）" % error)
+    return candidates
+
+
 def _link_target_or_self(path):
     """目标是有效软链时给出它指向的真实路径。
 
@@ -598,8 +798,16 @@ def restore_env(stage, root, workdir):
 
 
 def restore_inlined_plugins(stage, root):
-    """把备份内联的插件源码落地到 /root/plugin-src/<name>，返回 {name: 目标路径}"""
+    """把备份内联源码落地到 /root/plugin-src。
+
+    同名源码是覆盖更新中最容易误伤用户数据的场景：当前版本可能已经被
+    用户修改，或是新包中的版本。现有目录永远不删除；备份候选复制到
+    ``.dsha-plugin-migration/conflicts``，并由 ``fix_profiles`` 保留原声明
+    等待审阅。只有目标不存在时才返回 landed 供路径重映射。
+    """
+    global partial, retain_stage
     landed = {}
+    conflicts = []
     src_root = None
     for root_dir, dirs, _f in os.walk(stage):
         if os.path.basename(root_dir) == INLINE_DIRNAME:
@@ -616,12 +824,47 @@ def restore_inlined_plugins(stage, root):
         d = os.path.join(dst_root, name)
         try:
             os.makedirs(dst_root, exist_ok=True)
-            if os.path.isdir(d):
-                shutil.rmtree(d, ignore_errors=True)
-            shutil.copytree(s, d, symlinks=True)
+            if os.path.lexists(d):
+                # 当前源码保持在原路径，候选单独隔离。相同字节的重复候选
+                # 也不覆盖当前目录，按摘要路径去重。
+                incoming_sha = _tree_digest(s)
+                quarantine = os.path.join(root, PLUGIN_MIGRATION_DIRNAME,
+                                          "conflicts", name, incoming_sha[:16])
+                if not os.path.lexists(quarantine):
+                    _copy_tree_atomic(s, quarantine)
+                try:
+                    current_sha = _tree_digest(d)
+                except Exception:
+                    current_sha = "unreadable"
+                conflicts.append({
+                    "name": name,
+                    "current": os.path.join(PLUGIN_SRC_DIRNAME, name),
+                    "candidate": os.path.relpath(quarantine, root).replace(os.sep, "/"),
+                    "currentSha256": current_sha,
+                    "candidateSha256": incoming_sha,
+                    "activated": False,
+                })
+                partial = True
+                say("· 插件源码「%s」存在同名当前版本，已保留当前目录；备份候选隔离到 %s"
+                    % (name, os.path.relpath(quarantine, root).replace(os.sep, "/")))
+                continue
+            _copy_tree_atomic(s, d)
             landed[name] = d
         except Exception as e:
             say("· 插件源码 %s 落地失败：%s" % (name, e))
+            partial = True
+            retain_stage = True
+    if conflicts:
+        try:
+            _write_migration_record(root, "plugin-conflicts", {
+                "activated": False,
+                "requiresReview": True,
+                "conflicts": conflicts,
+            })
+        except Exception as error:
+            partial = True
+            retain_stage = True
+            say("· 插件冲突待处理记录写入失败：%s（候选与当前版本均保留）" % error)
     if landed:
         say("· 已从备份还原 %d 个本机插件源码：%s" % (len(landed), "、".join(sorted(landed))))
     return landed
@@ -677,12 +920,18 @@ def bundle_resolvable(name, prof_dir, deps):
 
 
 def fix_profiles(root, landed):
-    """link 依赖重映射 + bundle 预检：不可解析的 bundle 摘掉，保证 dsh web 能起。"""
+    """重映射可确认的 link；缺失声明保留并写入待处理清单。
+
+    旧实现为保证 web 启动直接删掉缺失依赖和 bundle，结果是插件源码与
+    用户启停意图一起丢失。新版 dsh 会在启动/插件页给出兼容性错误，恢复
+    层应保留原声明和源码，让用户或原生审阅流程决定是否启用。
+    """
     global partial
     profiles = os.path.join(root, ".dsh", "profiles")
     if not os.path.isdir(profiles):
         return
-    remapped, dropped, kept_missing, auto_installable = [], [], [], []
+    remapped, kept_missing, auto_installable = [], [], []
+    pending = []
     for prof in sorted(os.listdir(profiles)):
         prof_dir = os.path.join(profiles, prof)
         pkg_path = os.path.join(prof_dir, "package.json")
@@ -696,6 +945,11 @@ def fix_profiles(root, landed):
             partial = True
             continue
         deps = pkg.get("dependencies") or {}
+        if not isinstance(deps, dict):
+            pending.append({"profile": prof, "reason": "DEPENDENCIES_DECLARATION_INVALID"})
+            partial = True
+            say("· profile「%s」的 dependencies 不是对象，原声明保留待审阅" % prof)
+            continue
         changed = False
         # 1. 本机路径依赖：不存在就换成本机能找到的路径；存在的顺手补 node_modules 链接
         for name in list(deps):
@@ -703,21 +957,23 @@ def fix_profiles(root, landed):
             if p is None:
                 continue
             if pkg_dir_ok(p):
-                ensure_nm_link(prof_dir, name, p)
+                if not ensure_nm_link(prof_dir, name, p):
+                    pending.append({"profile": prof, "dependency": name, "reason": "NODE_MODULE_LINK_FAILED"})
                 continue
             cand = landed.get(name) or os.path.join(root, PLUGIN_SRC_DIRNAME, name)
             if pkg_dir_ok(cand):
                 deps[name] = "link:" + cand
-                ensure_nm_link(prof_dir, name, cand)
+                if not ensure_nm_link(prof_dir, name, cand):
+                    pending.append({"profile": prof, "dependency": name, "reason": "NODE_MODULE_LINK_FAILED"})
                 remapped.append("%s→%s" % (name, cand))
                 changed = True
             else:
-                del deps[name]
-                dropped.append(name)
-                # 源码没了，但 npm 上可能有同名包 —— 交给 App 后台静默试装（失败无感）
-                auto_installable.append(name)
-                changed = True
-        # 2. bundles 预检：解析不了的摘掉（内置插件由 App 启动时自动补回）
+                # 保留 link: 原声明；删除会让用户无法知道旧插件仍可从
+                # 隔离候选恢复。新版插件管理器会据此显示待审阅/待补装状态。
+                pending.append({"profile": prof, "dependency": name, "reason": "LOCAL_SOURCE_MISSING"})
+                if isinstance(deps[name], str):
+                    auto_installable.append(name)
+        # 2. bundles 预检：解析不了的保留，交给新版插件管理器审阅。
         dsh = pkg.get("dsh")
         prof_node = (dsh or {}).get("profile") if isinstance(dsh, dict) else None
         bundles = prof_node.get("bundles") if isinstance(prof_node, dict) else None
@@ -725,7 +981,10 @@ def fix_profiles(root, landed):
             keep = []
             for b in bundles:
                 if not isinstance(b, str) or not b:
-                    changed = True
+                    kept_missing.append(str(b))
+                    pending.append({"profile": prof, "bundle": b,
+                                    "reason": "BUNDLE_DECLARATION_INVALID"})
+                    keep.append(b)
                     continue
                 if bundle_resolvable(b, prof_dir, deps):
                     keep.append(b)
@@ -735,9 +994,8 @@ def fix_profiles(root, landed):
                     spec = deps.get(b)
                     if isinstance(spec, str) and spec and local_path_dep(spec) is None:
                         auto_installable.append(b)
-                    changed = True
-            if keep != bundles:
-                prof_node["bundles"] = keep
+                    pending.append({"profile": prof, "bundle": b, "reason": "BUNDLE_SOURCE_MISSING"})
+            # 旧 bundle 即使当前不可解析也保留；dsh/插件管理器负责后续审阅。
         if changed:
             try:
                 # 原子写 + fsync：这是 profile 的核心文件，
@@ -754,11 +1012,24 @@ def fix_profiles(root, landed):
                 partial = True
     if remapped:
         say("· 插件路径已按本机重映射：%s" % "、".join(remapped))
-    if dropped:
-        say("· 找不到源码、已从依赖里摘除：%s" % "、".join(dropped))
     if kept_missing:
         partial = True
-        say("· 以下插件本机缺失，已暂时从启用列表摘掉：%s" % "、".join(sorted(set(kept_missing))))
+        say("· 以下插件本机缺失，原依赖和启用声明已保留，等待迁移审阅：%s"
+            % "、".join(sorted(set(kept_missing))))
+    if pending:
+        partial = True
+        try:
+            record = _write_migration_record(root, "plugin-pending", {
+                "activated": False,
+                "requiresReview": True,
+                "items": pending,
+                "autoInstallable": sorted(set(auto_installable)),
+            })
+            say("· 已保留 %d 条缺失插件声明，待处理清单：%s" %
+                (len(pending), os.path.relpath(record, root).replace(os.sep, "/")))
+        except Exception as error:
+            partial = True
+            say("· 缺失插件待处理清单写入失败：%s（原声明仍保留）" % error)
     # 机器可读：仍有 registry 版本号（^1.2.3 / npm: 之类）的缺失插件可以自动补装，
     # App 侧据此在后台静默 dsh plugin add 装回；源码彻底丢失的只能人工重装。
     if auto_installable:
@@ -896,6 +1167,9 @@ def main():
     # 界面里消失）。备份只带 .dsh、不带工作目录，这一步必须在 dsh 启动前做。
     if os.path.isdir(os.path.join(root, ".dsh")):
         ensure_workspace_dirs(root)
+        # dsh 0.1.7 仅从插件组合包发现 Agent preset。旧目录型 preset
+        # 不能直接删除或未经审阅启用，先生成隔离候选和待处理记录。
+        collect_legacy_agent_presets(os.path.join(root, ".dsh"), root)
     if not retain_stage:
         try:
             shutil.rmtree(stage, ignore_errors=True)

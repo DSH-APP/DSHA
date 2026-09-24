@@ -326,7 +326,9 @@ public final class BackupManager {
         if (!restoring.compareAndSet(false, true)) throw new IOException(com.deepseekharness.app.util.UiText.text("已有恢复任务正在进行"));
         try (com.deepseekharness.app.core.RuntimeTasks work = com.deepseekharness.app.core.RuntimeTasks.begin("数据维护")) {
             // 等待 Web 停止时不持有归档锁，避免与运行队列形成互等。
-            controller.stopWeb();
+            // 维护恢复必须经过三态停止屏障；DENIED/归属未知不能被 isRunning 的
+            // IOException→false 降级吞掉，否则会在进程仍存活时覆盖用户数据。
+            stopWebForMaintenance(controller);
             synchronized (LOCK) {
             try {
                 try (InputStream in = new FileInputStream(prepared.archive)) {

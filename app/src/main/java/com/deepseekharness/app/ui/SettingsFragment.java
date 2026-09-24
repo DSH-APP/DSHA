@@ -98,8 +98,8 @@ public class SettingsFragment extends Fragment {
                 ? com.deepseekharness.app.util.UiText.choose("跟随系统 · ", "Follow system · ") + currentLabel
                 : currentLabel;
         LinearLayout appearance=v.findViewById(R.id.settings_appearance);
-        TextView languageSummary=(TextView)((LinearLayout)appearance.getChildAt(1)).getChildAt(1);
-        languageSummary.setId(R.id.settings_language);languageSummary.setText(summary);
+        TextView languageSummary=v.findViewById(R.id.settings_language);
+        languageSummary.setText(summary);
         View.OnClickListener openLanguageDialog = x -> new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
                 .setTitle(com.deepseekharness.app.util.UiText.choose("界面语言 / Interface language", "Interface language"))
                 .setSingleChoiceItems(optionLabels, checked,

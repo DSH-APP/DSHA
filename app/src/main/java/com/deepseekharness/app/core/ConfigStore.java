@@ -104,14 +104,14 @@ public class ConfigStore {
 
     /** 加密失败时保留旧凭据，让界面能明确报告保存失败。 */
     public boolean saveApiKey(String value) {
-        String plain = value == null ? "" : value;
-        String encrypted = vault.encrypt(plain);
-        if (!plain.isEmpty() && encrypted.isEmpty()) return false;
-        if(!plain.isEmpty()){
-            var verified=vault.read(encrypted);
-            if(verified.state!=com.deepseekharness.app.util.CredentialRead.State.AVAILABLE||!plain.equals(verified.requireValue()))return false;
-        }
-        return prefs.edit().putString(Constants.KEY_API_KEY, encrypted).commit();
+        try {
+            String encrypted = prepareCredential(value);
+            return prefs.edit().putString(Constants.KEY_API_KEY, encrypted).commit();
+        } catch (java.io.IOException failed) { return false; }
+    }
+
+    private String prepareCredential(String value) throws java.io.IOException {
+        return com.deepseekharness.app.util.CredentialWrite.prepare(value, vault::encrypt, vault::read);
     }
 
     public String getPort() {
@@ -302,8 +302,7 @@ public class ConfigStore {
         if (data.has("checkUpdate")) edit.putBoolean(Constants.KEY_CHECK_UPDATE, data.optBoolean("checkUpdate", true));
         if (data.has("apiKey")) {
             String plain = data.optString("apiKey");
-            String encrypted = vault.encrypt(plain);
-            if (!plain.isEmpty() && encrypted.isEmpty()) throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("API Key 加密失败，未写入恢复配置"));
+            String encrypted = prepareCredential(plain);
             edit.putString(Constants.KEY_API_KEY, encrypted);
         }
         if (data.has("ecoMode")) edit.putBoolean("runtime_eco_mode", data.optBoolean("ecoMode"));
@@ -338,8 +337,7 @@ public class ConfigStore {
         if(data.has("uiTheme"))next.put("ui_theme",com.deepseekharness.app.util.UiThemePreference.normalize(data.optString("uiTheme")));
         if(data.has("uiLanguage"))next.put("ui_language",com.deepseekharness.app.util.UiLanguagePreference.normalize(data.optString("uiLanguage")));
         if(includeKey&&data.has("apiKey")&&!data.optString("apiKey").isEmpty()){
-            String plain=data.optString("apiKey");if(plain.length()>16384)throw new java.io.IOException("CREDENTIAL_LIMIT");String cipher=vault.encrypt(plain);
-            if(cipher.isEmpty())throw new java.io.IOException("CREDENTIAL_ENCRYPTION_FAILED");next.put(Constants.KEY_API_KEY,cipher);
+            String cipher=prepareCredential(data.optString("apiKey"));next.put(Constants.KEY_API_KEY,cipher);
         }return next;
     }
     /** 事务只提交事先校验/加密的白名单状态，不能从归档键名写设备授权。 */

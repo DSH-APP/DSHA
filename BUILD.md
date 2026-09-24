@@ -1,5 +1,7 @@
 # DSHA 构建说明
 
+**2026-09-14 用户最新要求**：不再生成/安装额外测试、调试或审计 APK。真机使用原包名、同签名的非调试正式包覆盖安装，只做不破坏个人数据的实际操作检查；确认正常后替换 `release` 中同版本同 flavor 的常规文件名 APK 和 SHA-256，不再创建 `-buildNNN` 并列副本。其他历史版本保留。后文中曾使用独立审计包的内容仅为历史记录；历史入口已默认停用。覆盖签名必须以设备实际证书和发布证书分别核对，不能把证书文件名里的 debug 当作 APK 是否可调试的依据。
+
 **发布文件统一存放：`F:\DSHA_RESTART\release`（源码工作区的 release 目录）。** 标准版和兼容版都交付 APK 与对应 `.apk.sha256`，保留原发布签名；Gradle 中间产物仍在 `app/build`。
 
 **DSHA 标准版（开发中）** —— Android 11+ / arm64-v8a，目标 Android 17，系统 WebView，内置完整离线环境。
@@ -7,7 +9,15 @@
 当前默认构建标准版，另有面向 Android 6—12 / arm64 的 low flavor。调试包使用本机调试证书，
 不能假设它能覆盖历史发布包；正式覆盖包仍需配置已有的 `DSHA_KEYSTORE`。
 
-本轮最小检查：编译 APK 与新增纯逻辑测试，不需要额外备份或完整设备矩阵。
+rc2.1 收尾执行两个 flavor 的完整单测、Release Lint、离线 APK 资产与签名核验；真机使用独立非调试验收包，记录见 `docs/releases/v0.1.5-rc2.1-build130.md`。最低 API 与真实 16 KB 页设备未在本轮覆盖。
+
+本地软件验收入口为 `python tools/verify-stability.py`。配置已有 JDK/SDK、`GRADLE_USER_HOME` 和历史 `DSHA_KEYSTORE` 后运行。真机另用 E7E3 同签名正式包覆盖安装并做非破坏性检查，确认正常后才使用 `--deliver` 替换同版本常规文件名的 APK/摘要。旧 `--device` 审计流程已停用，不会再生成独立测试包。工具不提交、上传或发布；缺历史密钥仍明确报告未完成，不生成替代发布签名。
+
+alpha2 及后续版本在替换发布目录前还必须运行 `python tools/verify-plugin-upgrade-gate.py`。该门禁统一检查旧链接缓存失效、插件发现/启停、原生审阅、依赖冻结、安装事务强杀恢复、Web 原生管理入口、旧工作流包名兼容，以及最终 Standard/Low APK 内的受管插件和共享依赖链接；任一子检查失败时退出非零。
+
+alpha2.1 / build 142 已运行虚拟屏/移动端回归、两个 flavor 完整单测与 Release Lint，并核对 E7E3 签名、`debuggable=false`、版本码 142、arm64-only、运行时身份和 APK 内受管补丁；Standard 已在指定 E7E3 手机从 alpha2/141 非破坏性覆盖升级验收。正式文件已写入 `release`，后续正式包继续复用 E7E3 keystore，不得改用 A3。
+
+历史审计源码、模式和报告保留供查阅，但入口默认停用，不再安装审计 APK。既有测试安装和测试 APK 已按用户要求清理；后续实际操作验收不得对正式数据运行历史故障注入脚本。
 
 标准版的 Termux JNI 已在 `app/src/main/jniLibs/arm64-v8a/libtermux.so` 提供，
 与终端 Java 依赖同为 0.118.0，重编为 16 KB ELF 对齐。Windows 上可用已有 NDK 复现：
@@ -101,8 +111,8 @@ $env:DSHA_PYTHON = 'C:\Python312\python.exe'
 ## 7. 版本号修改
 
 - 版本名/版本号在 `app/build.gradle` 的 `defaultConfig`：
-  - `versionName "1.2.0-rc1.2"` （标准版显示版本；low flavor 为 `1.2.0-rc1.2low`）
-  - `versionCode 111` （正式发布时自增）
+  - `versionName "0.1.6-alpha2.1"` （标准版；low flavor 追加 `low`）
+  - `versionCode 142`（沿用原发布签名覆盖安装；通过全部门禁后才替换 `release` 同名文件）
 
 ## 8. 内置 proot 说明（改前必读）
 

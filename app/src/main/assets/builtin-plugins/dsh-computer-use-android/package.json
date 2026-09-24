@@ -15,7 +15,7 @@
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-computer-use": "0.1.7-alpha.1",
-    "@deepseek-ai/dsh-mcp-client": "0.1.7-alpha.1"
+    "@deepseek-ai/dsh-computer-use": "0.1.7-rc.2",
+    "@deepseek-ai/dsh-mcp-client": "0.1.7-rc.2"
   }
 }

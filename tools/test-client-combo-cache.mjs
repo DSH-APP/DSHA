@@ -1,3 +1,4 @@
+import { testRuntime } from './test-runtime-fixture.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,7 +9,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {countNewlines, createComboCache} from '../app/src/main/assets/client-combo-cache/index.js';
 
 const root = path.resolve(import.meta.dirname, '..');
-const runtime = path.resolve(process.env.DSHA_TEST_RUNTIME || path.join(root, 'app/build/locked-dsh-runtime'));
+const runtime = testRuntime('raw');
 const original = fs.readFileSync(path.join(runtime, 'node_modules/@deepseek-ai/dsh-client-modules/lib/index.js'), 'utf8');
 const recipe = JSON.parse(fs.readFileSync(path.join(root, 'app/src/main/assets/client-combo-patch.json'), 'utf8'));
 let patched = original;

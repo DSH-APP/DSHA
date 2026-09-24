@@ -43,11 +43,14 @@ public final class UiLanguagePreference {
      * 把系统首选语言映射到应用实际语言（只有 {@code zh} 与 {@code en}）。
      *
      * <p>规则：首选语言是中文（{@code zh}、{@code zh-CN}、{@code zh-Hant}…）→ 中文；
-     * 其他任何语言（含 {@code en}、{@code fr}、无法识别）→ 英文。
+     * 无法识别 → 中文；其他语言（含 {@code en}、{@code fr}）→ 英文。
      *
      * @param languageTag 系统 Locale 的 BCP-47 标签，可以为 null
      */
     public static String resolveLanguage(String languageTag) {
+        if (languageTag == null || languageTag.trim().isEmpty()
+                || "und".equalsIgnoreCase(languageTag.trim())
+                || !languageTag.trim().matches("(?i)[a-z]{2,8}([_-][a-z0-9]{1,8})*")) return ZH;
         return isChinese(languageTag) ? ZH : EN;
     }
 

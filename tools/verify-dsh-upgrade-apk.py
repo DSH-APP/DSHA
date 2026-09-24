@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import tarfile
 import zipfile
+from test_runtime_fixture import runtime as verified_runtime
 
 PREFIX = 'usr/local/lib/node_modules/@deepseek-ai/dsh'
 
@@ -48,11 +49,12 @@ def verify(path):
                 b'DSHA_DEEPSEEK_MESSAGES_PROJECTED_TOOL_CALL_V1',
                 b'if (block.type === "tool-call") return [dshaMessagesProjectedToolCall(block)];',
             ),
+            PREFIX + '/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js': b'DSHA_CLAIM_DECOR_OVERFLOW_STYLE_V1',
             PREFIX + '/node_modules/dsha-client-combo-cache/index.js': b'createComboCache',
         }
         # 新增预览、文件交付和反馈模块必须与锁定官方包逐字节一致，不能被旧适配覆盖。
         untouched = {}
-        runtime = Path(os.environ.get('DSHA_TEST_RUNTIME', str(root / 'app/build/locked-dsh-runtime'))) / 'node_modules'
+        runtime = verified_runtime('raw',os.environ.get('DSHA_TEST_RUNTIME')) / 'node_modules'
         frontend = runtime / '@deepseek-ai/dsh-web-frontend/dist'
         entry_match = re.search(r'src="\./(assets/index-[^"?]+\.js)',
                                 (frontend / 'index.html').read_text(encoding='utf-8'))
@@ -141,6 +143,9 @@ def verify(path):
         assert b'connection.requestRejection' in apk.read('assets/builtin-plugins/dsh-web-mobile/lib/index.js')
         assert 'assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js' in apk.namelist()
         assert b'NARB_DISABLE_NATIVE_CACHE' in apk.read('assets/dsha-runtime-env.sh')
+        migration = apk.read('assets/rc1-migration.py')
+        assert b'RESTORED_SETTINGS_IMPORTED_FOR_RETRY' in migration
+        assert b'legacy-agent-presets' in migration
         return dict(apk=str(path), dsh=dsh_version, environment=version, plugins=plugins,
                     preservedOfficialFeatures=preserved_features,
                     sharedModuleAliases=aliases, expandedBytes=expanded, ubuntuToolPackages=len(tools_lock['packages']),

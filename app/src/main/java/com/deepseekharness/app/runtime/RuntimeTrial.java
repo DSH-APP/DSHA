@@ -106,7 +106,9 @@ public final class RuntimeTrial {
             if(browser!=null)try{browser.close();}catch(Exception ignored){}
             IOException stopping=null;
             if(process!=null){
-                try{String stopped=manager.stop();Compat.destroy(process);if(!manager.confirmTrackedTrialStopped(process))
+                try{String stopped=manager.stop();
+                    if(stopped.isEmpty())ProcessTermination.awaitExit(process,3000);
+                    if(!stopped.isEmpty()||!manager.confirmTrackedTrialStopped(process))
                     throw new IOException(stopped.isEmpty()?"TRIAL_PROCESS_UNCONFIRMED":"TRIAL_PROCESS_UNCONFIRMED: "+SensitiveData.redact(stopped));}
                 catch(RuntimeException|IOException error){stopping=new IOException("TRIAL_PROCESS_UNCONFIRMED",error);}
             }
@@ -149,7 +151,7 @@ public final class RuntimeTrial {
             catch(IOException error){throw new IllegalThreadStateException("TRIAL_PROCESS_UNCONFIRMED");}return code;}
         public int waitFor()throws InterruptedException{for(;;){try{return exitValue();}catch(IllegalThreadStateException waiting){Thread.sleep(100);}}}
         public InputStream getInputStream(){return process.getInputStream();}public InputStream getErrorStream(){return process.getErrorStream();}public OutputStream getOutputStream(){return process.getOutputStream();}
-        public void destroy(){Compat.destroy(process);}
+        public void destroy(){manager.stop();}
     }
     /** 诊断页和错误日志只读取最近一条已关闭试运行的小型脱敏记录。 */
     public static String latestFailure(Context context){

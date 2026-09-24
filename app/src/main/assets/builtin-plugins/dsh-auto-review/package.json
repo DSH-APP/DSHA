@@ -15,6 +15,6 @@
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-experimental-auto-review": "0.1.7-alpha.1"
+    "@deepseek-ai/dsh-experimental-auto-review": "0.1.7-rc.2"
   }
 }

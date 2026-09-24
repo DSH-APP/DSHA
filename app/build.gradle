@@ -15,8 +15,8 @@ android {
         applicationId "com.dsh.client"
         minSdk 30
         targetSdk 37
-        versionCode 145
-        versionName "0.1.7-alpha2"
+        versionCode 147
+        versionName "0.1.7-rc2"
         testInstrumentationRunner project.findProperty('dsha.testRunner') ?: "com.deepseekharness.app.Rc13Instrumentation"
         ndk {
             abiFilters 'arm64-v8a'
@@ -44,7 +44,7 @@ android {
         // v1.1.7 起线上包都是这把 debug keystore 签的（历史原因，勿换），
         // Android 只允许同签名覆盖安装，换钥 = 逼用户卸载重装丢数据。
         // 另一把 DSHA-release.keystore 只签增量更新清单，绝不混用。
-        // 用法：DSHA_KEYSTORE=/path/to/keystore（缺省时退回 AGP debug keystore，仅供本地调试）。
+        // 正式任务必须明确提供历史发布证书；单测/debug 不依赖发布密钥。
         publish {
             def ksPath = System.getenv("DSHA_KEYSTORE") ?: project.findProperty("dsha.keystore")
             if (ksPath != null && !ksPath.toString().isEmpty() && file(ksPath).exists()) {
@@ -57,7 +57,7 @@ android {
                         ?: project.findProperty("dsha.key.password") ?: "android"
                 println "签名：发布 keystore ${ksPath}（alias=${keyAlias}）"
             } else {
-                println "⚠️ 签名：未配置 DSHA_KEYSTORE，退回 AGP debug keystore —— 仅供本地调试，不可覆盖正式版"
+                println "签名：未配置历史发布证书；正式 APK 打包将被阻止"
             }
             enableV1Signing true
             enableV2Signing true
@@ -107,6 +107,24 @@ android {
         main.assets.setSrcDirs([layout.buildDirectory.dir("generated/standardAssets")])
         main.java.srcDir(layout.buildDirectory.dir("generated/uiLanguage").get().asFile)
     }
+}
+
+def verifyPublishCertificate = tasks.register("verifyPublishCertificate") {
+    doLast {
+        def signing = android.signingConfigs.publish
+        if (signing.storeFile == null || !signing.storeFile.isFile())
+            throw new GradleException("正式 APK 缺少历史 E7E3 发布密钥，停止打包")
+        def store = java.security.KeyStore.getInstance(java.security.KeyStore.getDefaultType())
+        signing.storeFile.withInputStream { store.load(it, signing.storePassword.toCharArray()) }
+        def certificate = store.getCertificate(signing.keyAlias)
+        def expected = "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+        if (certificate == null || java.security.MessageDigest.getInstance("SHA-256")
+                .digest(certificate.encoded).encodeHex().toString() != expected)
+            throw new GradleException("发布证书不是历史 E7E3，停止打包")
+    }
+}
+tasks.configureEach {
+    if (name.matches("(package|validateSigning|assemble)(Standard|Low)Release")) dependsOn(verifyPublishCertificate)
 }
 
 def prepareStandardAssets = tasks.register("prepareStandardAssets", Exec) {

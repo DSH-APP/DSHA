@@ -40,4 +40,29 @@ public class RetainedCatalogueTest {
         var catalog=new RetainedCatalogue(fs,temp.getRoot(),new File(temp.getRoot(),"home"));var source=catalog.sources(catalog.resolve("RUNTIME:"+id+":previous")).get(0);
         assertEquals("projects",source.scope());assertEquals("project",source.description().get("logicalKind"));assertTrue(source.id().startsWith("project-"));
     }
+    @Test public void settingsOnlyRestoreHasInspectableExportableEntriesForEveryProfile()throws Exception{
+        String id=UUID.randomUUID().toString();
+        put("plugin-imports/"+id+"/settings/profiles/web/cordis.patch.yml","- id: llm\n  config: {model: saved}\n");
+        put("plugin-imports/"+id+"/settings/profiles/team/package.json","{\"dsh\":{\"profile\":{}}}");
+        var catalog=new RetainedCatalogue(fs,temp.getRoot(),new File(temp.getRoot(),"home"));
+        var entries=catalog.list();assertEquals(2,entries.size());
+        for(var entry:entries){assertEquals(RetainedCatalogue.Kind.SETTINGS,entry.kind);assertNotNull(entry.source);
+            var sources=catalog.sources(entry);assertEquals(1,sources.size());assertEquals("settings",sources.get(0).scope());
+            assertEquals("dsh-profile-config",sources.get(0).description().get("logicalKind"));
+            assertTrue(com.deepseekharness.app.util.ProfileConfigPath.accepts((String)sources.get(0).description().get("name")));
+        }
+    }
+    @Test public void migratedAndRestoredLegacyPresetsRemainAccessibleWithoutActivation()throws Exception{
+        put("home/.dsha-rc1-migration/legacy-agent-presets/crew/0123456789abcdef/bundle/package.json","{\"name\":\"dsha-legacy-preset-crew\"}");
+        String id=UUID.randomUUID().toString();put("plugin-imports/"+id+"/declarations/.agent-presets/old/agent.cordis.yml","- id: test\n");
+        var catalog=new RetainedCatalogue(fs,temp.getRoot(),new File(temp.getRoot(),"home"));var entries=catalog.list().stream().filter(e->e.kind==RetainedCatalogue.Kind.PRESET).toList();assertEquals(2,entries.size());
+        for(var entry:entries){assertEquals(RetainedCatalogue.Kind.PRESET,entry.kind);assertNotNull(catalog.resolve(entry.key()).source);assertEquals("projects",catalog.sources(entry).get(0).scope());}
+        assertTrue(entries.stream().anyMatch(e->e.status.equals("CONVERSION_REQUIRED")));
+        assertTrue(entries.stream().anyMatch(e->e.status.equals("QUARANTINED")));
+    }
+    @Test public void rc1MigrationRecordsAreVisibleAndExportable()throws Exception{
+        put("rc1-migration-state/current.json","{\"version\":2,\"generation\":\"01234567-89ab-cdef-0123-456789abcdef\",\"status\":\"pending\"}");
+        var catalog=new RetainedCatalogue(fs,temp.getRoot(),new File(temp.getRoot(),"home"));var entry=catalog.list().stream().filter(e->e.kind==RetainedCatalogue.Kind.MIGRATION).findFirst().orElseThrow();
+        assertEquals("PENDING_RETRY",entry.status);assertNotNull(entry.source);assertEquals("settings",catalog.sources(entry).get(0).scope());
+    }
 }

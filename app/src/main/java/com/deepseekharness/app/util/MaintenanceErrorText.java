@@ -9,6 +9,9 @@ public final class MaintenanceErrorText {
 
     public static String render(String value) {
         if (value == null || value.isEmpty()) return value == null ? "" : value;
+        if (value.trim().equalsIgnoreCase("Permission denied")) return UiText.choose(
+                "当前步骤被系统拒绝访问，尚不能判断是文件权限还是进程核验失败。请查看本次维护记录；已暂停后续切换，不表示原环境已恢复。\nPermission denied",
+                "The system denied access during this step. Inspect the maintenance record to distinguish file access from process verification. Further switching is paused; recovery is not confirmed.\nPermission denied");
         String code = value.matches("[A-Z_0-9]{2,100}") ? value : "";
         if (code.isEmpty()) return UiStateText.render(value);
         String message = switch (code) {

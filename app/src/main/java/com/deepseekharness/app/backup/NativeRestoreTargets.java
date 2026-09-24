@@ -51,7 +51,7 @@ public final class NativeRestoreTargets implements NativeRestorePlan.Mapping,Hos
         if(id.equals("native-settings")){if(!scope.equals("settings"))throw new IOException("ROOT_SCOPE");return new NativeRestorePlan.Target(known.get(id),null,false);}
         String kind=BackupJson.string(root,"logicalKind"),name=BackupJson.string(root,"name");
         if(kind.equals("dsh-profile-config")){
-            if(!scope.equals("settings")||!Set.of("profiles/web/package.json","profiles/web/cordis.patch.yml").contains(name)
+            if(!scope.equals("settings")||!com.deepseekharness.app.util.ProfileConfigPath.accepts(name)
                     ||!id.equals("profile-config-"+NativeDataLocations.hash(name)))throw new IOException("ROOT_MAPPING");
             // profile patch 可携带 !!js 和插件入口；解密通过并不代表代码可信。
             // 与既有插件恢复一致保存在隔离区，不能直接覆盖可执行配置。
@@ -142,6 +142,9 @@ public final class NativeRestoreTargets implements NativeRestorePlan.Mapping,Hos
     }
     public void prepareLayout(List<String> roots,Map<String,String> expected,File candidates)throws IOException{
         if(!roots.contains("dsh-home"))return;
+        // 与数据原子提交恢复代次；新恢复输入不能复用前一次 rc1 迁移回执。
+        File candidateHome=fs.child(candidates,"dsh-home");
+        fs.atomic(candidateHome,".dsha-rc1-restore-generation",task.getName().getBytes(java.nio.charset.StandardCharsets.US_ASCII));
         try(OutputStream out=fs.create(fs.child(candidates,"data-layout"))){out.write(UserDataLayout.record(UserDataLayout.Home.valueOf(homeMode)));}
         roots.add("data-layout");expected.put("data-layout",layoutBefore);
     }

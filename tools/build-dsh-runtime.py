@@ -22,6 +22,12 @@ COMBO_PATCH = HOOKS.parent / 'client-combo-patch.json'
 COMBO_MODULE = '@deepseek-ai/dsh-client-modules/lib/index.js'
 DEEPSEEK_MESSAGES_PATCH = HOOKS.parent / 'deepseek-messages-compat-patch.json'
 DEEPSEEK_MESSAGES_MODULE = '@deepseek-ai/dsh-llm-deepseek/lib/index.js'
+LEXICAL_CLAIM_PATCH = HOOKS.parent / 'lexical-claim-patch.json'
+LEXICAL_CLAIM_MODULE = '@deepseek-ai/dsh-client-ui-conversation/lib/client.js'
+CONVERSATION_MATERIALIZED_PATCH = HOOKS.parent / 'conversation-materialized-patch.json'
+CONVERSATION_MATERIALIZED_MODULE = '@deepseek-ai/dsh-client-ui-conversation/lib/client.js'
+RC1_SETTINGS_PATCH = HOOKS.parent / 'rc1-settings-migration-patch.json'
+RC1_SETTINGS_MODULE = '@deepseek-ai/dsh-settings/lib/index.js'
 STORAGE_JSON_MODULE = '@deepseek-ai/dsh-storage-json/lib/index.js'
 SESSION_PERSISTENCE_JSONL_MODULE = '@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js'
 LOCK_ROOT = HOOKS.parents[4] / 'tools/dsh-runtime'
@@ -35,6 +41,9 @@ def recipe_inputs():
     paths += [directory / name for directory in (HOOKS, SESSION_HOOKS, COMBO_HOOKS) for name in ('index.js', 'package.json')]
     paths.append(COMBO_PATCH)
     paths.append(DEEPSEEK_MESSAGES_PATCH)
+    paths.append(LEXICAL_CLAIM_PATCH)
+    paths.append(CONVERSATION_MATERIALIZED_PATCH)
+    paths.append(RC1_SETTINGS_PATCH)
     recipe = json.loads(DEEPSEEK_MESSAGES_PATCH.read_text(encoding='utf-8'))
     paths += [HOOKS.parent / patch['prependAsset'] for patch in recipe['patches'] if 'prependAsset' in patch]
     root = Path(__file__).resolve().parents[1]
@@ -63,6 +72,30 @@ def patched_content(relative, data):
             if 'prependAsset' in patch:
                 after = (HOOKS.parent / patch['prependAsset']).read_text(encoding='utf-8') + '\n' + after
             text = text.replace(before, after)
+        return text.encode('utf-8')
+    if name == LEXICAL_CLAIM_MODULE:
+        text = data.decode('utf-8')
+        expected = json.loads((LOCK_ROOT / 'package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
+        for recipe_path, label in ((LEXICAL_CLAIM_PATCH, 'Lexical claim'),
+                                   (CONVERSATION_MATERIALIZED_PATCH, 'conversation materialized')):
+            recipe = json.loads(recipe_path.read_text(encoding='utf-8'))
+            if recipe.get('module') != name or recipe.get('dshVersion') != expected:
+                raise ValueError(f'{label} 补丁目标或 DSH 版本未锁定')
+            for patch in recipe['patches']:
+                if text.count(patch['before']) != 1:
+                    raise ValueError(f'上游 {label} 结构变化，必须重新检查')
+                text = text.replace(patch['before'], patch['after'])
+        return text.encode('utf-8')
+    if name == RC1_SETTINGS_MODULE:
+        text = data.decode('utf-8')
+        recipe = json.loads(RC1_SETTINGS_PATCH.read_text(encoding='utf-8'))
+        expected = json.loads((LOCK_ROOT / 'package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
+        if recipe.get('module') != name or recipe.get('dshVersion') != expected:
+            raise ValueError('rc1 settings 迁移版本未锁定')
+        for patch in recipe['patches']:
+            if text.count(patch['before']) != 1:
+                raise ValueError('上游 settings 迁移结构变化，必须重新检查')
+            text = text.replace(patch['before'], patch['after'])
         return text.encode('utf-8')
     if name == STORAGE_JSON_MODULE:
         text = data.decode('utf-8')
@@ -556,7 +589,9 @@ def build(source, output, version):
                                 raise ValueError('离线包混入非 arm64 ELF：' + str(relative))
                             binaries.append(relative.as_posix())
                         content = patched_content(relative, stream.read()) if relative.as_posix() in PATCHES \
-                            or relative.as_posix() in (COMBO_MODULE, DEEPSEEK_MESSAGES_MODULE, STORAGE_JSON_MODULE,
+                            or relative.as_posix() in (COMBO_MODULE, DEEPSEEK_MESSAGES_MODULE,
+                                                       LEXICAL_CLAIM_MODULE, CONVERSATION_MATERIALIZED_MODULE,
+                                                       STORAGE_JSON_MODULE,
                                                        SESSION_PERSISTENCE_JSONL_MODULE,
                                                        '@deepseek-ai/dsh-session-format-v2-to-v3/lib/index.js') else None
                         if content is not None:

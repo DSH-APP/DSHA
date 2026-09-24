@@ -1,0 +1,10 @@
+{
+  "dshVersion": "0.1.7-rc.2",
+  "module": "@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
+  "patches": [
+    {
+      "before": "\t\t\t\t\tconst node = this.buildNode(context, target);\n\t\t\t\t\tif (node === null && previous !== null) throw new Error(`conversation Definition \"${context.kind}\" withdrew materialized target \"${target}\"; return the same key with hidden visibility instead`);\n\t\t\t\t\tcontext.current.set(target, node);\n\t\t\t\t\tif (node !== null) upserts.push(node);",
+      "after": "\t\t\t\t\tconst node = this.buildNode(context, target);\n\t\t\t\t\t/* DSHA_CONVERSATION_MATERIALIZED_WITHDRAWAL_V1: A definition may temporarily lose its source while a paged window or projection settles. Keep the stable node key with hidden visibility so one transient withdrawal cannot abort the event-feed subscriber. */\n\t\t\t\t\tconst retained = node === null && previous !== null\n\t\t\t\t\t\t? (previous.visibility === \"hidden\" ? previous : { ...previous, visibility: \"hidden\" })\n\t\t\t\t\t\t: node;\n\t\t\t\t\tcontext.current.set(target, retained);\n\t\t\t\t\tif (retained !== null) upserts.push(retained);"
+    }
+  ]
+}

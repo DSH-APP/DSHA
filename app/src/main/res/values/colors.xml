@@ -3,7 +3,7 @@
     <color name="panel_top">#F6F7F9</color>
     <color name="panel_bottom">#F6F7F9</color>
     <color name="panel_outline">#DFE4ED</color>
-    <color name="primary">#245EE8</color>
+    <color name="primary">#1E50D0</color>
     <color name="primary_dark">#1D4EC7</color>
     <color name="accent_on">#FFFFFF</color>
     <color name="surface">#FFFFFF</color>
@@ -12,7 +12,7 @@
     <color name="line">#DFE4ED</color>
     <color name="text">#152033</color>
     <color name="text_secondary">#5C6A80</color>
-    <color name="text_muted">#667085</color>
+    <color name="text_muted">#5B6578</color>
     <color name="ok">#207348</color>
     <color name="warn">#825900</color>
     <color name="err">#AD3D45</color>

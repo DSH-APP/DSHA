@@ -43,7 +43,7 @@
     <string name="ui2_review_hint">Install first, review before enabling.</string>
     <string name="ui2_welcome_title0">Your AI workspace,\nright on your phone.</string>
     <string name="ui2_welcome_lead0">Write code, work with files and use tools.\nTake your workspace with you.</string>
-    <string name="ui2_offline_badge">Offline setup  ·  No root  ·  0.1.7-alpha1</string>
+    <string name="ui2_offline_badge">Offline setup  ·  No root  ·  0.1.7-rc2</string>
     <string name="ui2_welcome_title1">From an idea\nto getting it done.</string>
     <string name="ui2_welcome_lead1">Conversations, files and tools, together.</string>
     <string name="ui2_w1_0">Conversations and tasks</string>

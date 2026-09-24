@@ -46,6 +46,12 @@ public class HarnessController {
     private static Future<?> stopTask;
     private static final java.util.concurrent.ConcurrentHashMap<Process, Boolean> webLaunches =
             new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.concurrent.ConcurrentHashMap<Long, com.deepseekharness.app.HttpShellService.Lease> webBridgeLeases =
+            new java.util.concurrent.ConcurrentHashMap<>();
+    private static void releaseWebBridge(long generation) {
+        var lease = webBridgeLeases.remove(generation);
+        if (lease != null) lease.close();
+    }
     private static WebRecovery recovery;
     private static StartupDiagnostics startupDiagnostics;
     private static volatile boolean webCompatibilityFallback;
@@ -295,6 +301,7 @@ public class HarnessController {
             setWebStage(generation, com.deepseekharness.app.util.UiText.text("停止旧 Web 进程"));
             String stopError = webProc.stop();
             if (!stopError.isEmpty()) throw new java.io.IOException(stopError);
+            for (long old : webBridgeLeases.keySet()) if (old != generation) releaseWebBridge(old);
             if (!lifecycle.isCurrent(generation)) return;
             setWebStage(generation, com.deepseekharness.app.util.UiText.text("检查随包运行工具"));
             boot.ensureRuntimeFiles();
@@ -316,6 +323,18 @@ public class HarnessController {
             try { EnvironmentMaintenance.cleanupCompleted(this); }
             catch (IOException cleanup) { reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.text("部分旧环境待清理：") + cleanup.getMessage()); }
             if (!lifecycle.isCurrent(generation)) return;
+            // rc1 会在第一次真实启动时迁移 Session/settings/profile。先在 .dsh
+            // 隔离区留住旧源和摘要；迁移保护失败时不继续启动，避免上游先 rename
+            // settings.yaml 后因插件 pending 造成不可重试的导入。
+            String migration = boot.prepareRc1Migration(startupDiagnostics.recordId());
+            startupDiagnostics.message(generation, migration);
+            Map<String,Object> migrationState = com.deepseekharness.app.util.Rc1MigrationResult.parse(migration);
+            if (!com.deepseekharness.app.util.Rc1MigrationResult.allowsStart(migrationState)) {
+                throw new java.io.IOException(com.deepseekharness.app.util.UiText.choose(
+                        "rc1 迁移快照未完成，已阻止导入；原件保留。请检查存储权限和空间后重试：",
+                        "rc1 snapshots are incomplete; import is blocked and originals are retained. Check storage access and space, then retry: ")
+                        + com.deepseekharness.app.util.SensitiveData.redact(migration));
+            }
             if (!safeMode) {
             setWebStage(generation, com.deepseekharness.app.util.UiText.text("注册插件"));
             // 内置插件注册：rootfs 烘焙的实体要登记进 web profile 才会被 dsh 加载。
@@ -372,10 +391,14 @@ public class HarnessController {
             webLaunches.put(p, Boolean.TRUE);
             setWebStage(generation, com.deepseekharness.app.util.UiText.text("等待鉴权链接"));
             // 3090 桥就绪：agent 在容器里调设备能力（/exec /confirm /status）走这条通道。
-            // 跨实例互斥，DeviceBridgeService 已起过则是幂等 no-op。
+            // 本代 Web 持有自己的需求；其它服务退出不能关闭仍在使用的桥。
             try {
-                if (com.deepseekharness.app.HttpShellService.instance() == null) {
-                    new com.deepseekharness.app.HttpShellService(ctx).start();
+                synchronized (lifecycle) {
+                    if (lifecycle.isCurrent(generation)) {
+                        var lease = webBridgeLeases.computeIfAbsent(generation,
+                                ignored -> com.deepseekharness.app.HttpShellService.acquire(ctx));
+                        lease.ensureStarted();
+                    }
                 }
             } catch (Throwable e) {
                 Log.w("DSHA", com.deepseekharness.app.util.UiText.text("3090 桥启动失败: ")
@@ -441,6 +464,26 @@ public class HarnessController {
                     }
                 }
                 if (url != null) {
+                    if (!safeMode) {
+                        String startupId = startupDiagnostics.recordId();
+                        Thread migrationCheck = new Thread(() -> {
+                            try {
+                                // settings 在 loader await 后运行。独立核验不阻塞 Web stdout 或停止队列。
+                                Thread.sleep(3000);
+                                if (!lifecycle.isCurrent(generation)) return;
+                                String result = proot.finalizeRc1Migration(startupId);
+                                if (!lifecycle.isCurrent(generation)) return;
+                                startupDiagnostics.message(generation, result);
+                                Map<String,Object> state = com.deepseekharness.app.util.Rc1MigrationResult.parse(result);
+                                if (!"committed".equals(state.get("status")))
+                                    reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.choose(
+                                            "网页已就绪；部分旧数据仍待处理，请在保留数据中检查迁移记录。",
+                                            "The web service is ready; some legacy data needs attention in Retained data."));
+                            } catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+                            catch (Exception error) { startupDiagnostics.message(generation, "RC1_MIGRATION_VERIFICATION_UNAVAILABLE"); }
+                        }, "dsha-rc1-verification");
+                        migrationCheck.setDaemon(true); migrationCheck.start();
+                    }
                     // LAN 模式：拿到鉴权链接后自动交换 cookie 并启动 3081 代理。
                     // 否则代理要等用户手动点「进入」才绑定 —— 其它设备在手机上没点过
                     // 「进入」时就连不上（连接被拒），正是「局域网连不上」的头号原因。
@@ -488,6 +531,7 @@ public class HarnessController {
         try { exitCode = p.waitFor(); }
         catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); return; }
         webLaunches.remove(p);
+        releaseWebBridge(generation);
         synchronized (lifecycle) {
             if (!lifecycle.isCurrent(generation)) return;
             boolean hadAuth = !webAuthUrl.isEmpty();
@@ -635,6 +679,7 @@ public class HarnessController {
                 String stopError = "";
                 try {
                     stopError = webProc.stop();
+                    if (stopError.isEmpty()) releaseWebBridge(previous);
                     if(stopError.isEmpty()&&!com.deepseekharness.app.BackupManager.isEnvironmentTaskBusy()){com.deepseekharness.app.backup.AutomaticBackups.stopped(context());com.deepseekharness.app.backup.PostUpgradeCleanupService.schedule(context());} // 仍用原 PID 判据，绝不直接 destroy proot。
                     com.deepseekharness.app.LanProxyService.stop(previous);
                 } finally {
@@ -783,8 +828,8 @@ public class HarnessController {
         String keyLine = apiKey.isEmpty()
                 ? "# DEEPSEEK_API_KEY=\n"
                 : "DEEPSEEK_API_KEY=" + com.deepseekharness.app.util.ShellQuote.arg(apiKey) + "\n";
-        java.io.File saved=com.deepseekharness.app.backup.NativeConfigurationReset.reset(new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
-                ctx.getFilesDir().getCanonicalFile(),config.getWorkdir(),keyLine.getBytes(StandardCharsets.UTF_8),nativeSettingsTransaction(),null,BackupTask.currentControl(null));
+        java.io.File saved=com.deepseekharness.app.backup.ProfileSettingsTransaction.reset(ctx,
+                config.getWorkdir(),keyLine.getBytes(StandardCharsets.UTF_8),BackupTask.currentControl(null));
         return com.deepseekharness.app.util.UiText.choose("配置已重置，对话及原生凭据保留。重置前配置原件：\n", "Configuration reset; conversations and native credentials retained. Original configuration:\n")+saved;
     }
     com.deepseekharness.app.backup.HostDataTransaction.Settings nativeSettingsTransaction(){

@@ -1,3 +1,4 @@
+import { testRuntime } from './test-runtime-fixture.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, readFile, lstat, readdir, symlink, rm } from 'node:fs/promises';
@@ -5,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const runtime = resolve(process.env.DSHA_TEST_RUNTIME || 'app/build/dsh-alpha15/linux-runtime');
+const runtime = testRuntime('raw');
 const { publishExclusive, createPublisher } = await import(pathToFileURL(join(runtime, 'node_modules/dsha-runtime-fs/index.js')));
 async function fixture(run) {
   const root = await mkdtemp(join(tmpdir(), 'dsha-publish-'));

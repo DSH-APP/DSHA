@@ -498,6 +498,8 @@ public class ProotBootstrap {
 
     /** 内置插件注册脚本（rootfs 烘焙的四个内置插件 → web profile），资产名。 */
     public static final String BUILTIN_REGISTER_SCRIPT = "register-builtin-plugins.py";
+    /** rc1 首次启动迁移保护脚本；只保存原件摘要，不重写会话或启用旧插件。 */
+    public static final String RC1_MIGRATION_SCRIPT = "rc1-migration.py";
     private static final Object PLUGIN_SCRIPT_LOCK = new Object();
 
     /**
@@ -514,6 +516,29 @@ public class ProotBootstrap {
      */
     public String registerBuiltinPlugins() {
         return runBuiltinScript("");
+    }
+
+    /** 迁移保护绑定真实启动身份，状态存于 rootfs 外的宿主私有目录。 */
+    public String prepareRc1Migration(String startupId) { return runRc1Migration("prepare", startupId); }
+
+    /** 鉴权只触发核验；实际设置完成状态由受管 helper 的 schema 写入和读回决定。 */
+    public String finalizeRc1Migration(String startupId) { return runRc1Migration("finalize", startupId); }
+
+    private String runRc1Migration(String command, String startupId) {
+        if (!rootfsDir.isDirectory()) return "ENV_NOT_READY";
+        try {
+            // 与受管候选/冷安装共用安装器；STABLE 对可信脚本逐项覆盖绑定。
+            RuntimeTools.prepare(ctx, rootfsDir);
+            String result = execAndReadWithProot("python3 -B /root/.dsh/" + RC1_MIGRATION_SCRIPT
+                    + " " + command + " --root /root --state-root /run/dsha-rc1-state --startup-id "
+                    + com.deepseekharness.app.util.ShellQuote.arg(startupId)
+                    + " --approved-root /sdcard/Documents/dshdata --approved-root /storage/emulated/0/Documents/dshdata 2>&1", 600_000);
+            return result == null ? "RC1_MIGRATION_NO_OUTPUT" : result;
+        } catch (Throwable error) {
+            Log.w("DSHA", com.deepseekharness.app.util.UiText.text("rc1 数据迁移保护失败：")
+                    + SensitiveData.redact(String.valueOf(error)));
+            return "RC1_MIGRATION_ERROR: " + SensitiveData.redact(String.valueOf(error));
+        }
     }
 
     /**

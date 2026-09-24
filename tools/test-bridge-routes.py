@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """3090 桥的路由分发：剥掉查询串后精确匹配。
 
-为什么用源码断言而不是单测：路由落在 handle(Socket) 里，要跑起来需要 Activity、
-SharedPreferences、DshaAccessibilityService 一整串。这里钉住的是「判据的形状」，
-防止后来的重构把它悄悄改回 startsWith。
+HTTP 外层做源码接线检查；虚拟屏的纯路由判据由临时 JVM 夹具执行真实行为矩阵，
+不需要启动 Android 服务或设备能力。完整 Java 单测另覆盖同一纯逻辑入口。
 
 历史教训（1.1.x 支线 c2b58bc 记下来的）：`/app/overlay` 用 startsWith 就意味着
 `/app/overlayXXX` 也命中它，而 `/app/overlay/reply` 只是靠「写在前面」才没被吃掉
@@ -14,13 +13,16 @@ SharedPreferences、DshaAccessibilityService 一整串。这里钉住的是「�
 """
 from pathlib import Path
 import re
+import shutil
+import subprocess
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 JAVA = ROOT / 'app/src/main/java/com/deepseekharness/app/HttpShellService.java'
 
-# 唯一允许保留前缀的组：它是一个端点命名空间，真子路径在 appUi 内再精确分发。
-ALLOWED_PREFIXES = ('/app/ui/',)
+# 这两组是命名空间；内部必须精确分发，未知子路径不得触发授权或动作。
+ALLOWED_PREFIXES = ('/app/ui/', '/app/vscreen/')
 # 凭据敏感端点：必须精确匹配。
 SENSITIVE = ('/app/readfile', '/app/export', '/app/share')
 
@@ -72,6 +74,54 @@ class RouteDispatch(unittest.TestCase):
         self.assertIn('r.equals("/app/ui/screenshot") || r.equals("/app/ui/shot")', self.src)
         for m in re.finditer(r'path\.startsWith\("/app/ui', self.src):
             self.fail('appUi 内部仍在用 path.startsWith 分发')
+
+    def test_vscreen_rejects_unknown_route_before_authorization(self):
+        handler = self.src.split('private String appVscreen(String path)', 1)[1].split('private int intParam', 1)[0]
+        self.assertIn('VirtualScreenRoutes.operation(route)', handler)
+        self.assertLess(handler.index('if (operation.isEmpty())'), handler.index('uiAuthorized('))
+        self.assertNotIn('endsWith(', handler)
+        manager = (ROOT / 'app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java').read_text(encoding='utf-8')
+        bridge = manager.split('public static String bridge(', 1)[1].split('private static JSONObject remember', 1)[0]
+        self.assertIn('VirtualScreenRoutes.operation(route)', bridge)
+        self.assertLess(bridge.index('if(name.isEmpty())'), bridge.index('switch(name)'))
+
+
+class VirtualRouteBehavior(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.temp = tempfile.TemporaryDirectory(prefix='dsha-vscreen-routes-')
+        cls.addClassCleanup(cls.temp.cleanup)
+        cls.java = shutil.which('java')
+        javac = shutil.which('javac')
+        if not cls.java or not javac:
+            raise RuntimeError('路由行为测试需要 JDK 17+ 的 java/javac')
+        probe = Path(cls.temp.name) / 'RouteProbe.java'
+        probe.write_text('''import com.deepseekharness.app.util.VirtualScreenRoutes;
+public class RouteProbe { public static void main(String[] args) {
+    for (String route : args) { String result = VirtualScreenRoutes.operation(route);
+        System.out.println(result.isEmpty() ? "UNKNOWN_ROUTE" : result); }
+} }''', encoding='utf-8')
+        subprocess.run([javac, '--release', '17', '-encoding', 'UTF-8', '-d', cls.temp.name,
+                        str(ROOT / 'app/src/main/java/com/deepseekharness/app/util/VirtualScreenRoutes.java'),
+                        str(probe)], check=True, capture_output=True, text=True)
+
+    def test_actual_java_dispatch_rejects_nested_suffixed_and_unknown_paths(self):
+        operations = ('create', 'status', 'launch', 'tree', 'node', 'editor', 'edit', 'submit',
+                      'touch', 'preview', 'see', 'tap', 'swipe', 'key', 'type', 'close')
+        routes, expected = [], []
+        for operation in operations:
+            routes.append('/app/vscreen/' + operation)
+            expected.append(operation)
+            for invalid in ('/app/vscreen/unknown/' + operation, '/app/vscreen/' + operation + 'XXX',
+                            '/app/vscreen//' + operation, '/app/vscreen/../' + operation,
+                            '/app/vscreen/' + operation + '/', '/app/vscreen%2f' + operation):
+                routes.append(invalid)
+                expected.append('UNKNOWN_ROUTE')
+        routes.extend(('/app/vscreen/unknown', '/app/vscreen/', '/app/vscreen/status?fake=1'))
+        expected.extend(('UNKNOWN_ROUTE',) * 3)
+        result = subprocess.run([self.java, '-cp', self.temp.name, 'RouteProbe', *routes],
+                                check=True, capture_output=True, text=True)
+        self.assertEqual(expected, result.stdout.splitlines())
 
 
 if __name__ == '__main__':

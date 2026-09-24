@@ -5,7 +5,7 @@ import java.util.*;
 
 /** 保留区只读清单：固定类别和 UUID，不接受界面传入任意物理路径，不提供删除。 */
 public final class RetainedCatalogue {
-    public enum Kind { BACKUP, ENVIRONMENT, RUNTIME, RESTORE, PLUGIN, QUARANTINE }
+    public enum Kind { BACKUP, ENVIRONMENT, RUNTIME, RESTORE, PLUGIN, QUARANTINE, SETTINGS, PRESET, MIGRATION }
     public static final class Entry {
         public final Kind kind;public final String id,part,scope,status,protection,displayName;public final File directory,source;public final long modified;
         Entry(Kind kind,String id,String part,String scope,String status,String protection,File directory,File source,long modified){this(kind,id,part,scope,status,protection,directory,source,modified,part);}
@@ -22,6 +22,8 @@ public final class RetainedCatalogue {
         scan(entries,Kind.RUNTIME,new File(files,ManagedRuntimeTransaction.HOME));
         scan(entries,Kind.PLUGIN,new File(home,PluginInstallJournals.DIRECTORY));
         scan(entries,Kind.QUARANTINE,new File(files,"plugin-imports"));
+        presets(entries);
+        migrationRecords(entries);
         entries.sort((a,b)->Long.compare(b.modified,a.modified));return Collections.unmodifiableList(entries);
     }
     private void scan(List<Entry> entries,Kind kind,File parent)throws IOException{
@@ -42,6 +44,26 @@ public final class RetainedCatalogue {
                     entries.add(new Entry(kind,id,"encrypted",copy.scope,"RECORDED_VERIFIED_COPY","VERIFY_BEFORE_EXPORT_OR_RESTORE",directory,copy.artifact,fs.stat(directory).modified));
                 }
                 boolean found=false;
+                Set<String> seenProfiles=new HashSet<>();
+                if(kind==Kind.QUARANTINE){
+                    File presets=new File(directory,"declarations/.agent-presets");
+                    if(fs.stat(presets).type.equals("DIRECTORY"))for(String preset:fs.list(presets)){
+                        if(!com.deepseekharness.app.util.ProfileConfigPath.profile(preset))continue;File source=fs.child(presets,preset);
+                        if(!fs.stat(source).type.equals("DIRECTORY"))continue;
+                        entries.add(new Entry(Kind.PRESET,id,"legacy-preset-"+NativeDataLocations.hash(preset),"projects","CONVERSION_REQUIRED","REVIEW_REQUIRED",directory,source,fs.stat(directory).modified,preset));found=true;
+                    }
+                }
+                if(kind==Kind.QUARANTINE)for(String prefix:List.of("settings/profiles","profiles")){
+                    File profiles=new File(directory,prefix);if(!fs.stat(profiles).type.equals("DIRECTORY"))continue;
+                    List<String> profileNames=fs.list(profiles);if(profileNames.size()>512)throw new IOException("PROFILE_LIMIT");
+                    for(String profile:profileNames){
+                        if(!com.deepseekharness.app.util.ProfileConfigPath.profile(profile))continue;
+                        File source=fs.child(profiles,profile);if(!fs.stat(source).type.equals("DIRECTORY"))continue;
+                        if(!fs.stat(new File(source,"cordis.patch.yml")).type.equals("FILE")&&!fs.stat(new File(source,"package.json")).type.equals("FILE"))continue;
+                        if(!seenProfiles.add(profile))continue;
+                        entries.add(new Entry(Kind.SETTINGS,id,"profile-"+NativeDataLocations.hash(prefix+"/"+profile),"settings","QUARANTINED","REVIEW_REQUIRED",directory,source,fs.stat(directory).modified,profile));found=true;
+                    }
+                }
                 if(kind==Kind.QUARANTINE){File packages=new File(directory,"packages");if(fs.stat(packages).type.equals("DIRECTORY")){
                     List<String> nodes=fs.list(packages);if(nodes.size()>4096)throw new IOException("PLUGIN_GRAPH_LIMIT");
                     for(String node:nodes)if(node.matches("package-[a-f0-9]{20}")){
@@ -73,6 +95,29 @@ public final class RetainedCatalogue {
             }catch(IOException error){entries.add(new Entry(kind,id,"record","unknown","UNREADABLE","UNKNOWN_ORIGINAL_RETAINED",directory,null,0));}
         }
     }
+    private void presets(List<Entry> entries)throws IOException{
+        File parent=new File(home,".dsha-rc1-migration/legacy-agent-presets");if(fs.stat(parent).type.equals("MISSING"))return;
+        if(!fs.stat(parent).type.equals("DIRECTORY"))throw new IOException("PRESET_CANDIDATES_UNREADABLE");
+        List<String> names=fs.list(parent);if(names.size()>512)throw new IOException("PRESET_LIMIT");
+        for(String name:names){if(!com.deepseekharness.app.util.ProfileConfigPath.profile(name))continue;File versions=fs.child(parent,name);
+            if(!fs.stat(versions).type.equals("DIRECTORY"))continue;List<String> revisions=fs.list(versions);if(revisions.size()>256)throw new IOException("PRESET_LIMIT");
+            for(String revision:revisions){if(!revision.matches("[a-f0-9]{16,64}"))continue;File candidate=fs.child(versions,revision);if(!fs.stat(candidate).type.equals("DIRECTORY"))continue;
+                String id=UUID.nameUUIDFromBytes((name+"/"+revision).getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+                File bundle=new File(candidate,"bundle");boolean converted=fs.stat(new File(bundle,"package.json")).type.equals("FILE");
+                entries.add(new Entry(Kind.PRESET,id,"legacy-preset","projects",converted?"QUARANTINED":"CONVERSION_REQUIRED","REVIEW_REQUIRED",candidate,converted?bundle:candidate,fs.stat(candidate).modified,name));
+            }
+        }
+    }
+    private void migrationRecords(List<Entry> entries)throws IOException{
+        List<File> roots=List.of(new File(files,"rc1-migration-state"),new File(home,".dsha-rc1-migration"));
+        for(File root:roots){if(fs.stat(root).type.equals("MISSING"))continue;if(!fs.stat(root).type.equals("DIRECTORY"))throw new IOException("MIGRATION_RECORDS_UNREADABLE");
+            String id=UUID.nameUUIDFromBytes(("DSHA-MIGRATION:"+root.getAbsolutePath()).getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+            String status="RETAINED";File receipt=new File(root,"receipt.json");File current=new File(root,"current.json");
+            File marker=fs.stat(current).type.equals("FILE")?current:receipt;
+            if(fs.stat(marker).type.equals("FILE"))try{Map<String,Object> value=BackupJson.read(fs.small(marker,BackupLimits.MANIFEST),BackupLimits.MANIFEST);String state=BackupJson.string(value,"status");if(state.equals("pending"))status="PENDING_RETRY";else if(state.equals("committed")||state.equals("verified"))status="COMMITTED";}catch(IOException ignored){status="UNREADABLE";}
+            entries.add(new Entry(Kind.MIGRATION,id,"records","settings",status,"READ_ONLY_RESCUE_NO_AUTOMATIC_DELETION",root,root,fs.stat(root).modified,"rc1 migration records"));
+        }
+    }
     private void add(List<Entry> out,Kind kind,String id,String part,String scope,String status,File directory,File source)throws IOException{
         out.add(new Entry(kind,id,part,scope,status,"READ_ONLY_RESCUE_NO_AUTOMATIC_DELETION",directory,source,fs.stat(directory).modified));
     }
@@ -90,6 +135,21 @@ public final class RetainedCatalogue {
         File rootfs=entry.kind==Kind.ENVIRONMENT?new File(entry.directory,entry.part.startsWith("previous")?"previous-linux/ubuntu":"failed-linux/ubuntu"):entry.source;
         GuestDataResolver resolver=new GuestDataResolver(fs,rootfs,null,Collections.emptyList());
         List<BackupSource> roots=new ArrayList<>();
+        if(entry.kind==Kind.MIGRATION){
+            roots.add(new FileBackupSource(fs,"migration-records","settings",entry.source,false,null){
+                @Override public Map<String,Object> description(){var value=super.description();value.put("logicalKind","migration-record");value.put("name","rc1-migration-records");return value;}
+            });return roots;
+        }
+        if(entry.kind==Kind.SETTINGS){
+            for(String name:List.of("package.json","cordis.patch.yml")){
+                File source=new File(entry.source,name);if(!fs.stat(source).type.equals("FILE"))continue;
+                String logical="profiles/"+entry.displayName+"/"+name;
+                roots.add(new FileBackupSource(fs,"profile-config-"+NativeDataLocations.hash(logical),"settings",source,false,null){
+                    @Override public Map<String,Object> description(){var value=super.description();value.put("logicalKind","dsh-profile-config");value.put("name",logical);return value;}
+                });
+            }
+            return roots;
+        }
         if(entry.scope.equals("application")){
             File home;
             try{home=resolver.resolve(entry.source).file;}

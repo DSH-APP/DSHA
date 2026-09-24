@@ -97,7 +97,7 @@ test('搜索空结果、重置、类别和历史回退保持页面与地址一�
     assert.equal(visible().length,1);
     p.$('[data-search]').value='没有这个插件 987654';p.event(p.$('[data-search]'),'input');await new Promise(r=>setTimeout(r,160));
     assert.equal(visible().length,0);assert.equal(p.$('[data-empty]').hidden,false);
-    p.$('[data-reset]').click();assert.equal(visible().length,8);assert.equal(p.w.location.search,'');
+    p.$('[data-reset]').click();assert.equal(visible().length,JSON.parse(read('api/catalog.json')).entries.length);assert.equal(p.w.location.search,'');
     p.$('[data-kind]').value='builtin';p.event(p.$('[data-kind]'),'change');assert.ok(visible().every(e=>e.getAttribute('data-kind')==='builtin'));
     p.w.history.replaceState(null,'','/?kind=plugin&q='+details.id);p.w.dispatchEvent(new p.w.PopStateEvent('popstate'));
     assert.equal(visible().length,1);assert.equal(p.$('[data-kind]').value,'plugin');

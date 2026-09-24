@@ -109,11 +109,19 @@ public final class NativeDataLocations {
     }
 
     private void addProfileSettings(Located result, Selection selection, File data) throws IOException {
-        File profile = new File(data, "profiles/web");
+        File profiles = new File(data, "profiles");
+        if (fs.stat(profiles).type.equals("MISSING")) return;
+        List<String> names = fs.list(resolver.resolve(profiles).file);
+        if (names.size() > 512) throw new IOException("PROFILE_LIMIT");
+        for (String profileName : names) {
+        if (!com.deepseekharness.app.util.ProfileConfigPath.profile(profileName)) {
+            result.notices.add("PROFILE_NAME_REQUIRES_REVIEW"); continue;
+        }
+        File profile = new File(profiles, profileName);
         for (String name : new String[]{"package.json", "cordis.patch.yml"}) {
             File source = new File(profile, name);
             if (!fs.stat(source).type.equals("FILE")) continue;
-            String relative = "profiles/web/" + name;
+            String relative = "profiles/" + profileName + "/" + name;
             String id = "profile-config-" + hash(relative);
             result.guestTargets.put(id, "root/.dsh/" + relative);
             File resolved = resolver.resolve(source).file;
@@ -125,6 +133,7 @@ public final class NativeDataLocations {
                     return value;
                 }
             });
+        }
         }
     }
     private void add(Located result,String id,String scope,File origin,String guest,boolean machine){

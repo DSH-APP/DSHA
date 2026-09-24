@@ -1,27 +1,35 @@
 {
   "version": 1,
-  "dshVersion": "0.1.7-alpha.2",
+  "dshVersion": "0.1.7-rc.2",
   "patches": [
     {
       "before": "\t\tfunction SearchResultItem({ result, currentId, onOpen, onUnarchive, t }) {",
-      "after": "\n        // DSHA_SESSION_INTERACTION_V1：选择与实际打开使用独立状态。\n        const dshaSessionSelection = createDshaSessionSelection();\n        function useDshaPickedSession(currentId) {\n            return (0, react.useSyncExternalStore)(dshaSessionSelection.subscribe,\n                () => dshaSessionSelection.selected(currentId), () => currentId);\n        }\n        function dshaSessionClick(event, id, currentId, onOpen) {\n            dshaSessionSelection.click(event, id, currentId, () => {\n                const focused = document.activeElement;\n                if (focused instanceof HTMLElement && focused.closest('[data-composer-input]')) focused.blur();\n                onOpen(id);\n                document.dispatchEvent(new CustomEvent('dsha-session-open', { detail: { id } }));\n            });\n        }\n\t\tfunction SearchResultItem({ result, currentId, onOpen, onUnarchive, t }) {",
+      "after": "\n        // DSHA_SESSION_INTERACTION_V2：选择与实际打开使用独立状态。\n        const dshaSessionSelection = createDshaSessionSelection();\n        function useDshaPickedSession(currentId, rowId) {\n            return (0, react.useSyncExternalStore)((listener) => dshaSessionSelection.subscribe(listener, currentId, rowId),\n                () => dshaSessionSelection.selected(currentId, rowId), () => dshaSessionSelection.selected(currentId, rowId));\n        }\n        function dshaSessionClick(event, id, currentId, onOpen) {\n            dshaSessionSelection.click(event, id, currentId, () => {\n                const focused = document.activeElement;\n                if (focused instanceof HTMLElement && focused.closest('[data-composer-input]')) focused.blur();\n                onOpen(id);\n                document.dispatchEvent(new CustomEvent('dsha-session-open', { detail: { id } }));\n            });\n        }\n\t\tfunction SearchResultItem({ result, currentId, onOpen, onUnarchive, t }) {",
       "prependAsset": "web-integration/session-interaction.js"
     },
     {
       "before": "\t\t\tconst selected = result.id === currentId;",
-      "after": "\t\t\tconst selected = result.id === useDshaPickedSession(currentId);"
+      "after": "\t\t\tconst selected = useDshaPickedSession(currentId, result.id);"
     },
     {
       "before": "\t\t\tconst selected = node.id === currentId;",
-      "after": "\t\t\tconst selected = node.id === useDshaPickedSession(currentId);"
+      "after": "\t\t\tconst selected = useDshaPickedSession(currentId, node.id);"
     },
     {
       "before": "\t\t\t\tonClick: () => {\n\t\t\t\t\tonOpen(result.id);\n\t\t\t\t},",
-      "after": "\t\t\t\t\"data-dsha-session-select\": result.id,\n\t\t\t\t\"aria-description\": \"单击选中，双击打开；键盘 Enter 打开\",\n\t\t\t\tstyle: { touchAction: \"manipulation\" },\n\t\t\t\tonClick: (event) => dshaSessionClick(event, result.id, currentId, onOpen),"
+      "after": "\t\t\t\t\"data-dsha-session-select\": result.id,\n\t\t\t\t\"aria-description\": [t(\"row.selectHint\"), result.archived ? t(\"toast.archivedNotOpenable\") : \"\"].filter(Boolean).join(\". \"),\n                tabIndex: 0,\n                onKeyDown: (event) => { if (event.target === event.currentTarget && (event.key === \"Enter\" || event.key === \" \")) { event.preventDefault(); if (event.key === \"Enter\") dshaSessionClick({detail:0}, result.id, currentId, onOpen); else dshaSessionSelection.select(result.id,currentId); } },\n\t\t\t\tstyle: { touchAction: \"manipulation\" },\n\t\t\t\tonClick: (event) => dshaSessionClick(event, result.id, currentId, onOpen),"
     },
     {
       "before": "\t\t\t\t\tonClick: () => {\n\t\t\t\t\t\tonOpen(node.id);\n\t\t\t\t\t},",
-      "after": "\t\t\t\t\t\"data-dsha-session-select\": node.id,\n\t\t\t\t\t\"aria-description\": \"单击选中，双击打开；键盘 Enter 打开\",\n\t\t\t\t\tstyle: { touchAction: \"manipulation\" },\n\t\t\t\t\tonClick: (event) => dshaSessionClick(event, node.id, currentId, onOpen),\n\t\t\t\t\ttabIndex: 0,\n\t\t\t\t\tonKeyDown: (event) => {\n                        if (event.target !== event.currentTarget) return;\n                        if (event.key === 'Enter') {\n                            event.preventDefault();\n                            dshaSessionClick({ detail: 0 }, node.id, currentId, onOpen);\n                        } else if (event.key === ' ') {\n                            event.preventDefault();\n                            dshaSessionSelection.select(node.id, currentId);\n                        }\n                    },"
+      "after": "\t\t\t\t\t\"data-dsha-session-select\": node.id,\n\t\t\t\t\t\"aria-description\": [t(\"row.selectHint\"), node.archived ? t(\"toast.archivedNotOpenable\") : \"\"].filter(Boolean).join(\". \"),\n\t\t\t\t\tstyle: { touchAction: \"manipulation\" },\n\t\t\t\t\tonClick: (event) => dshaSessionClick(event, node.id, currentId, onOpen),\n\t\t\t\t\ttabIndex: 0,\n\t\t\t\t\tonKeyDown: (event) => {\n                        if (event.target !== event.currentTarget) return;\n                        if (event.key === 'Enter') {\n                            event.preventDefault();\n                            dshaSessionClick({ detail: 0 }, node.id, currentId, onOpen);\n                        } else if (event.key === ' ') {\n                            event.preventDefault();\n                            dshaSessionSelection.select(node.id, currentId);\n                        }\n                    },"
+    },
+    {
+      "before": "\"row.archived\": \"已归档\",",
+      "after": "\"row.archived\": \"已归档\",\n            \"row.selectHint\": \"单击选中，双击打开；按 Enter 打开\","
+    },
+    {
+      "before": "\"row.archived\": \"Archived\",",
+      "after": "\"row.archived\": \"Archived\",\n            \"row.selectHint\": \"Click to select, double-click to open; press Enter to open\","
     }
   ]
 }

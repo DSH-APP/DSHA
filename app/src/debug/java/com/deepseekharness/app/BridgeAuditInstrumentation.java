@@ -43,7 +43,7 @@ import java.util.function.BooleanSupplier;
 /**
  * debug 主 APK 自插桩：真实 sh/回环 socket/AlertDialog，全部使用测试数据。
  * 主线程注册本类 instrumentation 与下方 AskActivity 即可；本类不调用 adb、不启动 Web。
- * 参数 case=all|shell|binding|ask，shell_ms=750，ask_ms=1500；输出仅断言结果与假数据目录。
+ * 参数 case=all|shell|binding|confirmation|ask，shell_ms=750，ask_ms=1500；输出仅断言结果与假数据目录。
  */
 public final class BridgeAuditInstrumentation extends Instrumentation {
     private Bundle args;
@@ -71,7 +71,7 @@ public final class BridgeAuditInstrumentation extends Instrumentation {
         try {
             check(BuildConfig.DEBUG, "只允许 debug 自插桩");
             String selected = args.getString("case", "all");
-            check(Arrays.asList("all", "shell", "binding", "ask").contains(selected), "未知 case");
+            check(Arrays.asList("all", "shell", "binding", "confirmation", "ask").contains(selected), "未知 case");
             shellMillis = duration("shell_ms", 750, 100, 30_000);
             askMillis = duration("ask_ms", 1500, 250, 15_000);
             if (selected.equals("all") || selected.equals("shell")) shellCases();
@@ -85,6 +85,7 @@ public final class BridgeAuditInstrumentation extends Instrumentation {
                 bridge = new HttpShellService(fixture, token, productionAskUi::set);
                 if (selected.equals("all") || selected.equals("binding")) bindingCases();
                 else { bridge.start(); awaitReady(); }
+                if (selected.equals("all") || selected.equals("confirmation")) confirmationCases();
                 if (selected.equals("all") || selected.equals("ask")) askCases();
             }
         } catch (Throwable error) { failure = error; }
@@ -171,6 +172,12 @@ public final class BridgeAuditInstrumentation extends Instrumentation {
         HttpShellService duplicate = new HttpShellService(fixture, new File(fixture.base, "unused-token"));
         duplicate.start(); duplicate.stop();
         check(HttpShellService.instance() == bridge && "OK".equals(health(fixtureToken)), "非持有者不能停止真实监听");
+        duplicate.start();
+        bridge.stop();
+        check(HttpShellService.instance() == bridge && "OK".equals(health(fixtureToken)), "首个入口退出后其它需求仍持有真实监听");
+        duplicate.stop();
+        check(!HttpShellService.isReady() && !HttpShellService.isStarting(), "最后一份需求释放才关闭监听");
+        bridge.start(); awaitReady();
         try (Socket idle = new Socket()) {
             idle.connect(new InetSocketAddress("127.0.0.1", HttpShellService.PORT), 2000);
             idle.setSoTimeout(2000);
@@ -190,6 +197,55 @@ public final class BridgeAuditInstrumentation extends Instrumentation {
             Object run = field(bridge, "activeRun");
             return run == null ? 0 : ((java.util.Set<?>) field(run, "clients")).size();
         } catch (Exception e) { throw new AssertionError(e); }
+    }
+
+    /** 只确认虚构文本，不执行命令；使用生产创建的真实 PendingIntent 验证取消与身份。 */
+    private void confirmationCases() throws Exception {
+        Future<Boolean> first = beginConfirmation();
+        Object old = awaitConfirmation();
+        var oldRequest = (com.deepseekharness.app.util.BridgeConfirmations.Request) field(old,"request");
+        android.app.PendingIntent oldAllow = (android.app.PendingIntent) field(old,"allow");
+        bridge.resolveConfirm(false,oldRequest.identity);
+        check(!first.get(5,TimeUnit.SECONDS),"明确拒绝没有变成允许");
+        checkCancelled(oldAllow,"完成后旧允许 PendingIntent 已取消");
+
+        Future<Boolean> second = beginConfirmation();
+        Object current = awaitConfirmation();
+        var request = (com.deepseekharness.app.util.BridgeConfirmations.Request) field(current,"request");
+        var gate = (com.deepseekharness.app.util.BridgeConfirmations) field(bridge,"confirmations");
+        check(!oldRequest.identity.equals(request.identity),"本轮与上一轮身份不可复用");
+        new ConfirmReceiver().onReceive(fixture,new Intent("unknown-confirm-action").setData(android.net.Uri.parse(request.identity)));
+        new ConfirmReceiver().onReceive(fixture,new Intent(ConfirmReceiver.ACTION_ALLOW).setData(android.net.Uri.parse(oldRequest.identity)));
+        check(gate.pending(request),"未知动作和旧身份都不能决议当前请求");
+        android.app.PendingIntent allow = (android.app.PendingIntent) field(current,"allow");
+        allow.send();
+        check(second.get(5,TimeUnit.SECONDS),"当前允许通知实际通过 Receiver 决议");
+        checkCancelled(allow,"当前允许完成后 PendingIntent 已取消");
+
+        Future<Boolean> stopped = beginConfirmation();
+        Object stopping = awaitConfirmation();
+        android.app.PendingIntent abandoned = (android.app.PendingIntent) field(stopping,"allow");
+        bridge.stop();
+        check(!stopped.get(5,TimeUnit.SECONDS),"停止桥取消待决确认");
+        checkCancelled(abandoned,"停止桥取消旧 PendingIntent");
+        bridge.start(); awaitReady();
+        passed.add("confirmation: nonce identity, receiver action, actual PendingIntent cancellation, generation stop");
+    }
+    private Future<Boolean> beginConfirmation() throws Exception {
+        var method=HttpShellService.class.getDeclaredMethod("requestUserConfirm",String.class);method.setAccessible(true);
+        return workers.submit(()->(Boolean)method.invoke(bridge,"DSHA 隔离确认夹具（不执行命令）"));
+    }
+    private Object awaitConfirmation() throws Exception {
+        AtomicReference<Object> result=new AtomicReference<>();
+        until(()->{try{Object pending=field(bridge,"pendingConfirm");
+            if(pending==null||field(pending,"allow")==null||field(pending,"deny")==null)return false;
+            result.set(pending);return true;
+        }catch(Exception error){throw new AssertionError(error);}},5000,"确认通知没有准备完成");
+        return result.get();
+    }
+    private void checkCancelled(android.app.PendingIntent intent,String message)throws Exception {
+        boolean cancelled=false;try{intent.send();}catch(android.app.PendingIntent.CanceledException expected){cancelled=true;}
+        check(cancelled,message);
     }
 
     private void awaitReady() throws Exception {

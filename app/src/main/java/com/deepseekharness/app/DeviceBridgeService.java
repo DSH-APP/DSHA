@@ -34,6 +34,16 @@ public class DeviceBridgeService extends Service {
 
     private static volatile DeviceBridgeService current;
     private volatile boolean running = false;
+    private HttpShellService.Lease bridgeLease;
+
+    private synchronized void retainBridge() {
+        if (!running) return;
+        if (bridgeLease == null) bridgeLease = HttpShellService.acquire(this);
+        else bridgeLease.ensureStarted();
+    }
+    private synchronized void releaseBridge() {
+        if (bridgeLease != null) { bridgeLease.close(); bridgeLease = null; }
+    }
 
     public static final String CHANNEL_ADB = "dsh_adb_watch_channel";
     private static final int WATCH_NOTIF_ID = 3005;
@@ -134,9 +144,9 @@ public class DeviceBridgeService extends Service {
             return;
         }
         // 3090 桥（agent 调设备能力的通道）与 Shizuku 备用通道一并拉起。
-        // 桥有跨实例互斥（STARTED），dsh 启动路径若已起过这里就是幂等 no-op。
+        // 设备服务持有独立需求，不依赖与 Web 服务的启动顺序。
         try {
-            new HttpShellService(this).start();
+            retainBridge();
         } catch (Throwable e) {
             Log.w("DSHA", com.deepseekharness.app.util.UiText.text("3090 桥启动失败: ") + SensitiveData.redact(String.valueOf(e)));
         }
@@ -156,6 +166,7 @@ public class DeviceBridgeService extends Service {
     @Override
     public void onDestroy() {
         running = false;
+        releaseBridge();
         if (probeThread != null) probeThread.interrupt();
         current = null;
         adbState = "disabled";
@@ -315,10 +326,10 @@ public class DeviceBridgeService extends Service {
     private void runProbe(String reason) {
         if (!running || !isAdbEnabled(this)) return;
         // 3090 桥自愈：桥被系统回收/异常退出后自动补拉起。
-        // start() 内部有跨实例互斥（STARTED），重复调用安全；谁抢到端口谁持有。
+        // 重试仍使用本服务的需求；不会创建没有释放方的匿名监听实例。
         try {
             if (!HttpShellService.isReady()) {
-                new HttpShellService(this).start();
+                retainBridge();
                 if (!HttpShellService.isStarting() && !HttpShellService.bindError().isEmpty())
                     Log.w("DSHA-ADB", com.deepseekharness.app.util.UiText.text("设备确认桥未就绪：") + HttpShellService.bindError());
             }

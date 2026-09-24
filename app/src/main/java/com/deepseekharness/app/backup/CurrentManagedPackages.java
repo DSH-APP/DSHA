@@ -23,4 +23,7 @@ public final class CurrentManagedPackages {
             return proof.equals(ManagedPackageProof.digest(fs,packageRoot,new BackupControl(null)))?packageRoot:null;
         }catch(IOException unavailable){return null;}
     }
+    public File verifiedCurrent(String name)throws IOException{
+        Object proof=expected.get(name);return proof instanceof String?verified(name,(String)proof):null;
+    }
 }

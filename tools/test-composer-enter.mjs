@@ -1,9 +1,10 @@
+import { testRuntime } from './test-runtime-fixture.mjs';
 // 在实际上游 keymap 上施加 APK 的同一份补丁，检查输入法、候选菜单和快捷提交。
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const path = process.env.DSHA_COMPOSER_CLIENT || (process.env.DSHA_TEST_RUNTIME || 'app/build/locked-dsh-runtime') + '/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js';
+const path = process.env.DSHA_COMPOSER_CLIENT || testRuntime('raw') + '/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js';
 let source = readFileSync(path,'utf8');
 const policy = JSON.parse(readFileSync('app/src/main/assets/composer-enter-patch.json','utf8'));
 for (const {before,after} of policy.patches) {

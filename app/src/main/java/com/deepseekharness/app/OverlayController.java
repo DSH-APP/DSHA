@@ -108,6 +108,7 @@ public final class OverlayController {
     private static String activeKey = "";
     /** 确认进行中：这期间不自动淡出、也不让流式内容盖掉命令。 */
     private static volatile boolean confirming;
+    private static volatile Object confirmOwner;
 
     private OverlayController() {
     }
@@ -269,14 +270,15 @@ public final class OverlayController {
      *
      * <p>确认期间不自动淡出，也不让流式内容覆盖：用户正要点的东西不能被顶掉。
      */
-    static void askConfirm(Context ctx, String cmd, Runnable onAllow, Runnable onDeny) {
+    static void askConfirm(Context ctx, Object owner, String cmd, Runnable onAllow, Runnable onDeny) {
         if (ctx == null || !enabled(ctx) || !permitted(ctx) || !confirmOnOverlay(ctx)) return;
-        confirming = true;
+        synchronized (OverlayController.class) { confirming = true; confirmOwner = owner; }
         previewing = false;
         frames.clear();
         final String text = com.deepseekharness.app.util.UiText.text("⚠ 请求执行：") + collapse(cmd);
         mainHandler().post(() -> {
             try {
+                if (confirmOwner != owner || !confirming) return;
                 ensureView(ctx);
                 if (label == null || confirmRow == null) return;
                 // 命令可能很长，确认时多给几行看清楚（比配置的行数多，但不超过 8）
@@ -293,31 +295,40 @@ public final class OverlayController {
                 if (hideTask != null) mainHandler().removeCallbacks(hideTask);   // 等用户，不淡出
 
                 confirmRow.findViewById(R.id.overlay_confirm_allow).setOnClickListener(v -> {
-                    finishConfirm(ctx);
+                    if (confirmOwner != owner) return;
+                    finishConfirm(ctx, owner);
                     if (onAllow != null) onAllow.run();
                 });
                 confirmRow.findViewById(R.id.overlay_confirm_deny).setOnClickListener(v -> {
-                    finishConfirm(ctx);
+                    if (confirmOwner != owner) return;
+                    finishConfirm(ctx, owner);
                     if (onDeny != null) onDeny.run();
                 });
             } catch (Throwable e) {
                 android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("悬浮条确认显示失败: ")
                         + SensitiveData.redact(String.valueOf(e)));
-                confirming = false;
+                synchronized (OverlayController.class) {
+                    if (confirmOwner == owner) { confirming = false; confirmOwner = null; }
+                }
             }
         });
     }
 
     /** 别的渠道（通知/弹窗）已经决定了，或者请求超时 → 收掉按钮。 */
-    static void dismissConfirm(Context ctx) {
-        if (!confirming) return;
-        finishConfirm(ctx);
+    static void dismissConfirm(Context ctx, Object owner) {
+        if (!confirming || confirmOwner != owner) return;
+        finishConfirm(ctx, owner);
     }
 
-    private static void finishConfirm(Context ctx) {
-        confirming = false;
+    private static void finishConfirm(Context ctx, Object owner) {
+        synchronized (OverlayController.class) {
+            if (confirmOwner != owner) return;
+            confirmOwner = null;
+            confirming = false;
+        }
         mainHandler().post(() -> {
             try {
+                if (confirmOwner != null) return;
                 if (confirmRow != null) confirmRow.setVisibility(View.GONE);
                 if (confirmHint != null) confirmHint.setVisibility(View.GONE);
                 applyStyle(ctx);

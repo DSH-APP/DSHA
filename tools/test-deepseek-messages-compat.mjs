@@ -1,3 +1,4 @@
+import { testRuntime } from './test-runtime-fixture.mjs';
 import assert from 'node:assert/strict';
 import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
@@ -7,8 +8,7 @@ import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
 const assets = path.join(root, 'app', 'src', 'main', 'assets');
-const runtimeRoot = path.resolve(process.env.DSHA_TEST_RUNTIME
-  || path.join(root, 'app', 'build', 'locked-dsh-runtime-0172'));
+const runtimeRoot = testRuntime('raw');
 const runtime = path.join(runtimeRoot, 'node_modules');
 const moduleFile = path.join(runtime, '@deepseek-ai', 'dsh-llm-deepseek', 'lib', 'index.js');
 const archiveFile = path.resolve(process.env.DSHA_RUNTIME_ARCHIVE
@@ -115,7 +115,7 @@ assert.equal(archivePackage.version, recipe.dshVersion,
   'generated runtime must contain the locked DeepSeek Messages adapter');
 assert.equal(archiveDshPackage.name, '@deepseek-ai/dsh');
 assert.equal(archiveDshPackage.version, recipe.dshVersion,
-  'generated runtime must contain DSH 0.1.7-alpha.2');
+  'generated runtime must contain the current DSH version');
 assert.equal(archiveSource, patchedSource,
   'generated runtime module must be the recipe-patched locked module, not a test fixture');
 assert.equal(archiveSource, buildScriptPatchedSource(),

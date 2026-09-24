@@ -17,7 +17,11 @@ public class WebProcessManager {
     enum Kind { GONE, WEB, OTHER, DENIED }
     static final class ProcessState {
         final Kind kind; final WebPidIdentity identity; final String command;
-        ProcessState(Kind kind, WebPidIdentity identity, String command) { this.kind = kind; this.identity = identity; this.command = command; }
+        final boolean differentUid;
+        ProcessState(Kind kind, WebPidIdentity identity, String command) { this(kind, identity, command, false); }
+        ProcessState(Kind kind, WebPidIdentity identity, String command, boolean differentUid) {
+            this.kind = kind; this.identity = identity; this.command = command; this.differentUid = differentUid;
+        }
     }
     private static final class ProcessInspectionException extends IOException {
         ProcessInspectionException(IOException cause) { super(cause.getMessage(), cause); }
@@ -55,6 +59,16 @@ public class WebProcessManager {
             return count <= 0 ? "" : new String(bytes, 0, count, StandardCharsets.UTF_8);
         }
     }
+    /**
+     * Android 16/厂商 ROM 可能对已复用的旧 PID 隐藏 stat/cmdline。先读 proc
+     * 目录本身的 uid：如果编号已经属于别的 UID，它不是本应用 Web，安全地
+     * 隔离 stale pid；同 UID 但内容不可读仍按未知进程阻塞，避免把权限错误当作
+     * 已停止而继续切换运行时。
+     */
+    private static Integer processOwner(int pid) {
+        try { return Os.stat("/proc/" + pid).st_uid; }
+        catch (ErrnoException ignored) { return null; }
+    }
     /** 包内测试可模拟 stat/cmdline 之间发生退出；生产仍直接读取内核。 */
     String readProcessFile(int pid, String name) throws IOException { return readProc(pid, name); }
     /** 包内缝供测试注入系统读取失败；生产始终从内核取证。 */
@@ -77,7 +91,16 @@ public class WebProcessManager {
         try { Os.kill(pid, 0); }
         catch (ErrnoException error) {
             if (error.errno == OsConstants.ESRCH) return new ProcessState(Kind.GONE, null, "");
-            if (error.errno == OsConstants.EPERM || error.errno == OsConstants.EACCES) return new ProcessState(Kind.DENIED, null, "");
+            if (error.errno == OsConstants.EPERM || error.errno == OsConstants.EACCES) {
+                // A stale PID can be reused by another app between the previous
+                // stop and this inspection. Android 16/vendor hidepid policies
+                // report EPERM for that case; the proc directory owner lets us
+                // quarantine the old record without signalling an unrelated UID.
+                Integer owner = processOwner(pid);
+                if (owner != null && owner != android.os.Process.myUid())
+                    return new ProcessState(Kind.OTHER, null, "", true);
+                return new ProcessState(Kind.DENIED, null, "");
+            }
             throw new IOException(com.deepseekharness.app.util.UiText.text("检查 Web 进程失败（PID ") + pid + "，errno=" + error.errno + com.deepseekharness.app.util.UiText.text("）"), error);
         }
         try {
@@ -88,6 +111,9 @@ public class WebProcessManager {
             if (command.isEmpty()) throw new IOException(com.deepseekharness.app.util.UiText.text("进程命令行暂不可读"));
             return new ProcessState(WebProcSel.looksLikeWeb(command) ? Kind.WEB : Kind.OTHER, identity, command);
         } catch (IOException error) {
+            Integer owner = processOwner(pid);
+            if (owner != null && owner != android.os.Process.myUid())
+                return new ProcessState(Kind.OTHER, null, "", true);
             try { Os.kill(pid, 0); }
             catch (ErrnoException gone) { if (gone.errno == OsConstants.ESRCH) return new ProcessState(Kind.GONE, null, ""); }
             // /proc/stat 为活态之后，退出可能先清空 cmdline，再进入僵尸态；kill(pid,0) 仍成功。
@@ -99,13 +125,23 @@ public class WebProcessManager {
             throw new IOException(com.deepseekharness.app.util.UiText.text("无法核验本应用进程（PID ") + pid + "）：" + error.getMessage(), error);
         }
     }
-    private boolean changedIdentity(int pid, ProcessState state) throws IOException {
+    private String savedIdentity(int pid) throws IOException {
         File file = identityFile();
         if (Compat.isSymbolicLink(file)) throw new IOException(com.deepseekharness.app.util.UiText.text("Web 身份记录异常，原环境保留"));
-        if (!file.exists()) return false;
+        if (!file.exists()) return null;
         if (!file.isFile() || file.length() > 80) throw new IOException(com.deepseekharness.app.util.UiText.text("Web 身份记录无效"));
         String saved = Compat.readAll(file).trim();
-        return saved.startsWith(pid + " ") && (state.identity == null || !state.identity.matches(saved));
+        if (!saved.matches(pid + " [1-9][0-9]*")) throw new IOException("WEB_IDENTITY_INVALID");
+        return saved;
+    }
+    private static boolean mayRetire(ProcessState state, String saved) {
+        return com.deepseekharness.app.util.WebStopEvidence.mayRetire(
+                com.deepseekharness.app.util.WebStopEvidence.Kind.valueOf(state.kind.name()),
+                state.differentUid, saved, state.identity);
+    }
+    private static boolean scanUnconfirmed(ProcessState state) {
+        return com.deepseekharness.app.util.WebStopEvidence.scanUnconfirmed(
+                com.deepseekharness.app.util.WebStopEvidence.Kind.valueOf(state.kind.name()), state.differentUid);
     }
     /** 只读确认同 UID 可控进程；绝不按名称批量停止，也不依赖端口反查。 */
     boolean hasOwnedWeb() throws IOException {
@@ -114,7 +150,8 @@ public class WebProcessManager {
         for (String value : entries) {
             int pid = WebProcSel.parsePid(value);
             if (pid < 0 || pid == android.os.Process.myPid()) continue;
-            if (inspect(pid).kind == Kind.WEB) return true;
+            ProcessState state = inspect(pid);
+            if (scanUnconfirmed(state)) return true;
         }
         return false;
     }
@@ -133,6 +170,7 @@ public class WebProcessManager {
                 int pid = WebProcSel.parsePid(value);
                 if (pid < 0 || pid == android.os.Process.myPid()) continue;
                 ProcessState state = inspect(pid);
+                if (state.kind == Kind.DENIED && !state.differentUid) return "TRIAL_PROCESS_INSPECTION_DENIED";
                 String profile = state.kind == Kind.WEB ? WebProcSel.trialProfile(state.command) : "";
                 if (!profiles.contains(profile)) continue;
                 ProcessState again = inspect(pid);
@@ -152,8 +190,7 @@ public class WebProcessManager {
                 while (iterator.hasNext()) {
                     java.util.Map.Entry<Integer, ProcessState> target = iterator.next();
                     ProcessState current = inspect(target.getKey());
-                    if (current.kind == Kind.GONE || current.identity == null
-                            || !target.getValue().identity.sameProcess(current.identity)) {
+                    if (mayRetire(current, target.getValue().identity.record())) {
                         iterator.remove();
                         continue;
                     }
@@ -194,7 +231,10 @@ public class WebProcessManager {
         sentinel();
         String record = pidRecord();
         try {
-            if (record != null && inspect(WebProcSel.parsePid(record)).kind == Kind.WEB) return false;
+            if (record != null) {
+                int pid = WebProcSel.parsePid(record);
+                if (!mayRetire(inspect(pid), savedIdentity(pid))) return false;
+            }
             if (hasOwnedWeb()) return false;
         } catch (ProcessInspectionException transientState) { return false; }
         retire(record);
@@ -244,7 +284,7 @@ public class WebProcessManager {
     /** 仅供本次持有真实 proot Process 对象的试运行使用，不能凭旧 PID 调用。 */
     boolean confirmTrackedTrialStopped(Process tracked)throws IOException{
         if(records==null)throw new IOException("TRIAL_RECORD_DIRECTORY");
-        return com.deepseekharness.app.util.ProcessTermination.exited(tracked)&&!hasOwnedWeb();
+        return confirmStopped(!com.deepseekharness.app.util.ProcessTermination.exited(tracked));
     }
     private String stopOne() {
         if (!root().isDirectory()) return "";
@@ -255,21 +295,39 @@ public class WebProcessManager {
             String record = pidRecord();
             if (record == null) return "";
             int pid = WebProcSel.parsePid(record); ProcessState state = inspect(pid);
-            if (state.kind != Kind.WEB || changedIdentity(pid, state)) {
+            if (mayRetire(state, savedIdentity(pid))) {
                 retire(record); return "";
             }
+            if (state.kind != Kind.WEB || state.identity == null)
+                return "WEB_PROCESS_INSPECTION_UNCONFIRMED:" + state.kind;
             if(records!=null&&!state.command.contains("dsha-recovery-"+records.getParentFile().getName().replace("-","").substring(0,16)))return "TRIAL_PROCESS_IDENTITY_CHANGED";
             if (!WebProcSel.maySignalWeb(state.command)) return com.deepseekharness.app.util.UiText.text("Web 启动脚本仍在退出，已保留容器启动器");
             ProcessState again = inspect(pid);
             if (!state.identity.sameProcess(again.identity) || !WebProcSel.maySignalWeb(again.command) || !record.equals(pidRecord()))
                 return com.deepseekharness.app.util.UiText.text("Web 进程身份已变化，未终止其他进程，请重试");
-            Os.kill(pid, OsConstants.SIGTERM);
+            try {
+                Os.kill(pid, OsConstants.SIGTERM);
+            } catch (ErrnoException denied) {
+                if (denied.errno == OsConstants.ESRCH) { retire(record); return ""; }
+                // The PID may have been reused after the identity check. If it
+                // now belongs to another UID, retire only our stale record and
+                // never turn a vendor EPERM into a cross-UID kill attempt.
+                Integer owner = processOwner(pid);
+                if ((denied.errno == OsConstants.EPERM || denied.errno == OsConstants.EACCES)
+                        && owner != null && owner != android.os.Process.myUid()) {
+                    retire(record);
+                    return "";
+                }
+                throw denied;
+            }
             long deadline = android.os.SystemClock.elapsedRealtime() + 3000;
             do {
                 ProcessState current = inspect(pid);
-                if (current.kind != Kind.WEB || !state.identity.sameProcess(current.identity)) {
+                if (mayRetire(current, state.identity.record())) {
                     retire(record); return "";
                 }
+                if (current.kind != Kind.WEB || current.identity == null)
+                    return "WEB_PROCESS_EXIT_UNCONFIRMED:" + current.kind;
                 Thread.sleep(50);
             } while (android.os.SystemClock.elapsedRealtime() < deadline);
             return com.deepseekharness.app.util.UiText.text("已请求停止，Web 尚未退出；稍后可重试，未强杀容器启动器");

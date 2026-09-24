@@ -27,18 +27,17 @@ class LanguageDiscoverability(unittest.TestCase):
 
     def test_language_entry_shows_english_on_chinese_ui(self):
         # 中文界面下标题仍含 Latin 的 "Language"（原来只有「语言 · 简体中文」）
-        m = re.search(r'buildLanguageRow\(\s*(.+)', self.settings)
-        self.assertIsNotNone(m, "找不到语言入口标题")
-        self.assertIn('Language', m.group(1),
-                      "语言入口标题必须含英文 Language，否则非中文用户找不到")
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(read('app/src/main/res/layout/fragment_settings.xml'))
+        a = '{http://schemas.android.com/apk/res/android}'
+        row = next(node for node in root.iter() if node.get(a+'id') == '@+id/settings_appearance')
+        self.assertEqual(row.get(a+'focusable'), 'true')
+        self.assertTrue(any('Language' in node.get(a+'text', '') for node in row.iter()))
 
-    def test_language_entry_keeps_its_child_index(self):
-        # 位置必须留在 4 个模块行之后（index 4）：LayoutAuditInstrumentation 按
-        # getChildAt(1) 找「配置」，UiMotionAudit 遍历 getChildAt(0..3) 点四个模块。
-        # 把语言行插到最前面会让这两个验收全部错位。
-        self.assertNotIn('tabs.addView(languageRow, 0', self.settings,
-                         "语言行不能插到 settings_tabs 最前面：会破坏按下标访问的验收脚本")
-        self.assertIn('tabs.addView(languageRow, languageLayout)', self.settings)
+    def test_language_entry_uses_stable_resource_id(self):
+        self.assertIn('v.findViewById(R.id.settings_language)', self.settings)
+        self.assertNotIn('appearance.getChildAt', self.settings)
+        self.assertIn('@+id/settings_language', read('app/src/main/res/layout/fragment_settings.xml'))
 
     def test_language_dialog_offers_follow_system(self):
         self.assertIn('UiLanguagePreference.SYSTEM', self.settings,
@@ -50,6 +49,19 @@ class LanguageDiscoverability(unittest.TestCase):
         # 不能改历史 SharedPreferences 键名，否则老用户语言丢失
         config = read('app/src/main/java/com/deepseekharness/app/core/ConfigStore.java')
         self.assertIn('"ui_language"', config)
+
+class PluginRecyclerSetup(unittest.TestCase):
+    """插件页的头尾条目必须在 RecyclerView 有 LayoutManager 后创建。"""
+
+    def test_header_footer_are_inflated_after_layout_manager(self):
+        src = read('app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java')
+        layout = src.index('list.setLayoutManager(')
+        header = src.index('R.layout.plugin_list_header')
+        footer = src.index('R.layout.plugin_list_footer')
+        self.assertLess(layout, header)
+        self.assertLess(layout, footer)
+        self.assertIn('inflate(R.layout.plugin_list_header, list, false)', src)
+        self.assertIn('inflate(R.layout.plugin_list_footer, list, false)', src)
 
 class SystemLanguage(unittest.TestCase):
     """默认跟随系统：非中文系统落英文；显式选择优先。"""

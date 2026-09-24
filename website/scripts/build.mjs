@@ -14,7 +14,7 @@ if (manifest.schemaVersion !== 1 || manifest.packageName !== 'com.dsh.client' ||
 const current = manifest.releases[0];
 site.version = current.version; site.versionCode = current.versionCode;
 const channelLabel = current.channel === 'stable' ? '正式版' : '预览版';
-const releasePage = `${site.repository}/releases/tag/v${site.version}`;
+const releasePage = `${site.repository}/releases`;
 if (current.artifacts.length !== 2 || new Set(current.artifacts.map(a=>a.flavor)).size !== 2) throw new Error('发布清单必须包含高低两版');
 const read = p => fs.readFileSync(path.join(project, p), 'utf8');
 const sha = value => createHash('sha256').update(value).digest('hex');

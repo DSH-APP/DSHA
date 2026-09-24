@@ -43,8 +43,8 @@ public final class RetainedDataActivity extends AppCompatActivity {
     private void button(LinearLayout parent,String label,Runnable action){Button button=new Button(this);button.setText(label);button.setAllCaps(false);button.setIncludeFontPadding(false);button.setGravity(android.view.Gravity.CENTER);button.setMinHeight((int)(48*getResources().getDisplayMetrics().density));button.setBackgroundResource(R.drawable.bg_btn);button.setTextColor(getColor(R.color.text));LinearLayout.LayoutParams layout=new LinearLayout.LayoutParams(-1,-2);layout.topMargin=(int)(8*getResources().getDisplayMetrics().density);parent.addView(button,layout);button.setOnClickListener(v->action.run());}
     private void refresh(){if(!model.working.compareAndSet(false,true))return;new Thread(()->{try{model.entries.postValue(catalogue().list());}catch(Exception error){model.report.postValue(UiText.text("保留记录无法读取，原件未改动。")+"\n"+BackupErrorCode.from(error));}finally{model.working.set(false);}},"retained-list").start();}
     private String label(RetainedCatalogue.Entry entry){
-        String kind=switch(entry.kind){case BACKUP->t("加密副本","Encrypted copy");case ENVIRONMENT->t("旧环境数据","Old environment data");case RUNTIME->t("运行时原件","Runtime original");case RESTORE->t("恢复原件","Restore original");case PLUGIN->t("插件原件","Plugin original");case QUARANTINE->t("隔离插件","Quarantined plugin");};
-        String state=switch(entry.status){case "COMMITTED"->t("原操作已提交","Original operation committed");case "ROLLED_BACK"->t("原操作已回切","Original operation rolled back");case "RECOVERY_REQUIRED"->t("需要恢复中断操作","Interrupted operation needs recovery");case "RECORDED_VERIFIED_COPY"->t("已记录验证，操作前复核","Previously verified; recheck before use");case "UNREADABLE", "UNRECOGNIZED"->t("来源或记录未确认","Source or record unconfirmed");default->t("原件保留","Original retained");};
+        String kind=switch(entry.kind){case BACKUP->t("加密副本","Encrypted copy");case ENVIRONMENT->t("旧环境数据","Old environment data");case RUNTIME->t("运行时原件","Runtime original");case RESTORE->t("恢复原件","Restore original");case PLUGIN->t("插件原件","Plugin original");case QUARANTINE->t("隔离插件","Quarantined plugin");case SETTINGS->t("待恢复 profile 设置","Profile settings to restore");case PRESET->t("旧 Agent 预设候选","Legacy Agent preset candidate");case MIGRATION->t("rc1 迁移记录","rc1 migration records");};
+        String state=switch(entry.status){case "COMMITTED"->t("原操作已提交","Original operation committed");case "PENDING_RETRY"->t("迁移待重试或待处理","Migration pending retry or review");case "ROLLED_BACK"->t("原操作已回切","Original operation rolled back");case "RECOVERY_REQUIRED"->t("需要恢复中断操作","Interrupted operation needs recovery");case "RECORDED_VERIFIED_COPY"->t("已记录验证，操作前复核","Previously verified; recheck before use");case "UNREADABLE", "UNRECOGNIZED"->t("来源或记录未确认","Source or record unconfirmed");default->t("原件保留","Original retained");};
         return kind+" · "+entry.id.substring(0,Math.min(8,entry.id.length()))+" · "+entry.displayName+"\n"+state+" · "+t("不自动删除","No automatic deletion");
     }
     private void render(List<RetainedCatalogue.Entry> entries){rows.removeAllViews();if(entries.isEmpty()){TextView empty=new TextView(this);empty.setText(t("暂无保留副本。","No retained copies."));rows.addView(empty);return;}
@@ -59,10 +59,41 @@ public final class RetainedDataActivity extends AppCompatActivity {
         String detail=label(entry)+"\n\n"+t("范围：","Scope: ")+scope+"\n"+protection+"\n\n"+entry.directory.getAbsolutePath()+"\n\n"+t("不会执行保留目录中的程序，也不会自动删除原件。","Programs in the retained directory will not run, and originals will not be deleted automatically.");
         var dialog=new DshaDialogBuilder(this).setTitle(t("保留记录","Retained record")).setMessage(detail).setNegativeButton(t("关闭","Close"),null);
         if(entry.source!=null){dialog.setNeutralButton(t("导出","Export"),(d,w)->open(entry,entry.part.equals("encrypted")?"reexport":"export-tree"));
-            if(entry.kind==RetainedCatalogue.Kind.QUARANTINE)dialog.setPositiveButton(t("审阅启用","Review activation"),(d,w)->{model.pluginAction=true;plugins.reviewRestored(entry.id,entry.part);});
+            if(entry.kind==RetainedCatalogue.Kind.SETTINGS)dialog.setPositiveButton(t("检查设置差异","Review settings differences"),(d,w)->reviewSettings(entry));
+            else if(entry.kind==RetainedCatalogue.Kind.PRESET)dialog.setPositiveButton(t("检查并审阅预设","Inspect and review preset"),(d,w)->{model.pluginAction=true;plugins.reviewLegacyPreset(entry.key());});
+            else if(entry.kind==RetainedCatalogue.Kind.MIGRATION) { /* migration records are read-only/export-only */ }
+            else if(entry.kind==RetainedCatalogue.Kind.QUARANTINE)dialog.setPositiveButton(t("审阅启用","Review activation"),(d,w)->{model.pluginAction=true;plugins.reviewRestored(entry.id,entry.part);});
             else dialog.setPositiveButton(t("预检恢复","Inspect restore"),(d,w)->open(entry,entry.part.equals("encrypted")?"restore-copy":"restore-tree"));}dialog.show();
     }
     private void open(RetainedCatalogue.Entry entry,String action){startActivity(new Intent(this,NativeDataActivity.class).putExtra("retained_key",entry.key()).putExtra("retained_action",action));}
+    private void reviewSettings(RetainedCatalogue.Entry entry){
+        new DshaDialogBuilder(this).setTitle(t("检查 profile 设置","Inspect profile settings"))
+                .setMessage(t("将停止 Web、终端和写任务，在独立服务中读取当前 schema 并验证候选；活动设置在确认差异前保持原位。可执行配置和插件构成继续隔离。", "Web, terminals and writers will stop. An isolated service will validate the candidate against the current schema. Active settings remain unchanged until you confirm the differences; executable configuration and plugin composition stay quarantined."))
+                .setPositiveButton(t("开始检查","Inspect"),(d,w)->settingsWork(()->ProfileSettingsTransaction.preview(this,entry.key(),model.control),true))
+                .setNegativeButton(t("取消","Cancel"),null).show();
+    }
+    private interface SettingsWork {Map<String,Object> run()throws Exception;}
+    private void settingsWork(SettingsWork work,boolean preview){
+        if(!model.working.compareAndSet(false,true))return;model.control=new BackupControl(null);
+        model.report.setValue(t("正在隔离验证设置；可使用取消检查。","Validating settings in isolation; Cancel inspection is available."));
+        new Thread(()->{try{Map<String,Object> result=work.run();runOnUiThread(()->{
+            if(isFinishing()||isDestroyed())return;
+            if(preview)settingsDifferences(result);else model.report.setValue(t("所选设置已事务提交并由实际设置服务读回确认。其它配置和原件保留；可重新进入 Web。","Selected settings were committed and read back by the actual settings service. Other configuration and originals remain; you can reopen Web."));
+        });}catch(Exception error){model.report.postValue(t("设置操作未完成，原件保留。可重新检查后继续。\n","Settings operation incomplete; originals retained. Inspect again to continue.\n")+BackupErrorCode.from(error));}finally{model.working.set(false);}},"profile-settings-review").start();
+    }
+    @SuppressWarnings("unchecked") private void settingsDifferences(Map<String,Object> result){
+        List<Map<String,Object>> items=(List<Map<String,Object>>)result.get("items");
+        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);List<CheckBox> selected=new ArrayList<>();
+        TextView note=new TextView(this);note.setText(t("Profile：","Profile: ")+result.get("profile")+"\n"+t("请选择需要恢复的字段；未选字段保持当前值。","Select fields to restore. Unselected fields retain their current values.")+"\n"+String.valueOf(result.get("warnings")));content.addView(note);
+        for(var item:items){CheckBox box=new CheckBox(this);box.setChecked(false);box.setText(item.get("id")+"\n"+item.get("before")+"\n→ "+item.get("after"));content.addView(box);selected.add(box);}
+        ScrollView scroll=new ScrollView(this);scroll.addView(content);
+        var dialog=new DshaDialogBuilder(this).setTitle(t("已验证的设置差异","Validated settings differences")).setView(scroll).setNegativeButton(t("保留待处理","Keep pending"),null)
+                .setPositiveButton(t("应用所选并读回","Apply selection and read back"),null).create();
+        dialog.setOnShowListener(d->dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener(v->{
+            Set<String> keys=new LinkedHashSet<>();for(int i=0;i<items.size();i++)if(selected.get(i).isChecked())keys.add((String)items.get(i).get("id"));
+            if(keys.isEmpty())return;dialog.dismiss();settingsWork(()->ProfileSettingsTransaction.apply(this,(String)result.get("operation"),keys,model.control),false);
+        }));dialog.show();
+    }
     private void inspect(){
         Set<String> selected=new LinkedHashSet<>(model.selected);if(selected.isEmpty()||!model.working.compareAndSet(false,true))return;model.control=new BackupControl(null);BackupControl control=model.control;model.report.setValue(t("正在检查所选原件…","Inspecting selected originals…"));
         new Thread(()->{StringBuilder results=new StringBuilder();int passed=0,failed=0;try(com.deepseekharness.app.core.RuntimeTasks lease=com.deepseekharness.app.core.RuntimeTasks.begin()){

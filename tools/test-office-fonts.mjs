@@ -1,5 +1,6 @@
+import { testRuntime } from './test-runtime-fixture.mjs';
 import fs from 'node:fs';import path from 'node:path';import vm from 'node:vm';import assert from 'node:assert/strict';
-const runtime=process.env.DSHA_TEST_RUNTIME||'app/build/release136/host-runtime';
+const runtime=testRuntime('managed');
 const source=fs.readFileSync(path.join(runtime,'node_modules/@deepseek-ai/libreoffice-kit/lib/index.js'),'utf8');
 const start=source.indexOf('function systemFontDirectories('),end=source.indexOf('function mobileAssetFontDirectories(',start);
 assert.ok(start>=0&&end>start);

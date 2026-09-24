@@ -10,7 +10,6 @@ import com.deepseekharness.app.core.DeviceGrants;
 import org.json.JSONObject;
 import java.lang.reflect.Method;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /** 隔离授权偏好，只检查执行计划；不启动桥、不读取或发送真实短信。 */
 public final class SmsGrantAudit extends Instrumentation {
@@ -32,8 +31,7 @@ public final class SmsGrantAudit extends Instrumentation {
             DeviceGrants grants = new DeviceGrants(context);
             check(!grants.smsReadAllowed(), "新环境必须默认未授权");
             HttpShellService bridge = new HttpShellService(context);
-            var busy = HttpShellService.class.getDeclaredField("confirmBusy"); busy.setAccessible(true);
-            ((AtomicBoolean) busy.get(bridge)).set(true); // 模拟确认不可用，不能默认放行。
+            // 没有实际监听代次时确认不可用，不能默认放行。
             Method plan = HttpShellService.class.getDeclaredMethod("devicePlan", String.class, boolean.class);
             plan.setAccessible(true);
             String query = "content query --uri content://sms --projection _id:date --where '1=0'";

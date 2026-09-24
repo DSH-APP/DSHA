@@ -69,6 +69,7 @@ final class RuntimeTools {
             patchClientModule(context, rootfs, "plugin-manager-navigation-patch.json", "插件原生入口");
             patchClientModule(context, rootfs, "office-fonts-patch.json", "Office 字体");
             patchClientModule(context, rootfs, "deepseek-messages-compat-patch.json", "DeepSeek Messages 会话兼容");
+            patchClientModule(context, rootfs, "rc1-settings-migration-patch.json", "rc1 设置迁移");
             patchClientLanguage(context, rootfs);
             patchTooltips(context, rootfs);
             patchBrowserBootstrap(context, rootfs);
@@ -100,6 +101,7 @@ final class RuntimeTools {
         patchSessionNavigation(context, rootfs);
         patchAgentPresets(context, rootfs);
         patchClientModule(context, rootfs, "deepseek-messages-compat-patch.json", "DeepSeek Messages 会话兼容");
+            patchClientModule(context, rootfs, "rc1-settings-migration-patch.json", "rc1 设置迁移");
         prepareBuiltinDependencies(rootfs);
         if (!markerCurrent || !marker.isFile() || Compat.isSymbolicLink(marker))
             writeIfChanged(marker, com.deepseekharness.app.util.ManagedAssetVersion.bytes(identity), false);
@@ -129,7 +131,7 @@ final class RuntimeTools {
         install(context, rootfs, "dns-compat.cjs", "usr/local/share/dsha/dns-compat.cjs", false);
         install(context, rootfs, "dsha-builtin.txt", "root/dsha-builtin.txt", false);
         for (String name : new String[]{"plugin-manager.py", "plugin-lifecycle.py", "plugin-dependencies.py",
-                "plugin-transactions.py", "backup-plugin-graph.py", "plugin-semver.cjs",
+                "plugin-transactions.py", "backup-plugin-graph.py", "rc1-migration.py", "rc1-settings-migration.cjs", "plugin-semver.cjs",
                 "register-builtin-plugins.py", "startup-observer.cjs", "startup-recovery.py",
                 "startup-checkpoints.py", "device-shell-policy.py", "adb-shell.py"})
             install(context, rootfs, name, "root/.dsh/" + name, false);
@@ -273,7 +275,12 @@ final class RuntimeTools {
             String source = Compat.readAll(client), updated = source;
             // 受管运行时在上一次启动已经完成这组补丁时保持幂等；否则同一
             // before 文本仍可能存在于已插入的代码前缀中，造成重复注入。
-            if (source.contains("DSHA_SESSION_INTERACTION_V1") && source.contains("dsha-session-open")) return;
+            if (source.contains("DSHA_SESSION_INTERACTION_V2") && source.contains("dsha-session-open")) return;
+            if (source.contains("DSHA_SESSION_INTERACTION_V1")) {
+                String canonical = restoreBundledClientModule(context, rootfs, "@deepseek-ai/dsh-client-ui-workspace/lib/client.js");
+                if (canonical == null) throw new IOException("SESSION_PATCH_SOURCE_UNAVAILABLE");
+                updated = canonical;
+            }
             org.json.JSONArray patches = spec.getJSONArray("patches");
             for (int i = 0; i < patches.length(); i++) {
                 org.json.JSONObject patch = patches.getJSONObject(i);

@@ -30,7 +30,9 @@ Fresh install, no permissions granted:
 | Shared storage (`/sdcard`) | ✅ Read/write | `/sdcard` inside the container maps to shared storage. **This is on by default** — photos, downloads, documents are all readable |
 | Other apps' data | ❌ No | Android app sandbox isolation; `/data/data/<other.package>` is unreachable |
 | System partition | ❌ Not writable | Without root, `/system` cannot be modified |
-| Dialer, SMS, contacts, location, camera, microphone | ❌ No | DSHA never requests these permissions — verify it yourself in system settings |
+| Location | Off by default | Coarse/fine location is declared, but the DSHA capability switch and Android runtime permission must both allow access. Declaration is not authorization |
+| Dialer, contacts, camera and microphone | No automatic access | Access depends on actual Android declarations, grants and the selected channel, not on container root identity |
+| SMS | Off by default in the device bridge | Requires separate capability confirmation and actual channel permission |
 
 > ⚠️ **`/sdcard` is reachable by default** and this is the easiest one to overlook. If you don't
 > want the agent seeing your gallery and downloads, right now your options are convention
@@ -55,7 +57,7 @@ The ADB connection has `shell` privileges (uid 2000). Bundled device command ent
 
 Bundled device commands still apply the same policy when Root is enabled. The Ubuntu guest's root identity does not grant Android Root.
 
-- Requires a rooted device (KernelSU / Magisk). DSHA neither provides nor requests root
+- Requires an already rooted device (KernelSU / Magisk). After enabling the channel, the existing Root manager decides whether to grant DSHA `su` access. DSHA does not obtain or install Root
 - The flag is `allow_root_shell`, default false
 - Don't enable it unless you know exactly why you are
 
@@ -114,17 +116,20 @@ and 60 seconds of silence counts as a refusal.
 
 | Item | Location | Protection |
 |---|---|---|
-| DeepSeek API key | App SharedPreferences | Android Keystore encryption (AES/CBC). **The key never leaves the Keystore**; other apps cannot read it |
-| API key inside backups | `.dsh/.dsha-apikey` in the archive | Same Keystore key. **Undecryptable after a device change** — by design, not a bug. You can turn off "include key in backup" in Config |
+| Native API key | App SharedPreferences | Android Keystore + AES/GCM, a prefixed 12-byte IV, 128-bit authentication tag and Base64 encoding. The existing format is retained. Missing, temporarily unavailable and unreadable credentials have distinct states; reading never creates a replacement decryption key |
+| Native API key in manual exports | Excluded by default; optionally included in the password-protected v5 archive | The current device must decrypt it successfully before export. Historical records containing only another device's Keystore ciphertext may remain unreadable |
 | Conversations | `Documents/dshdata` (public) or private dir | ⚠️ In the public location, **any app with storage permission can read them**. That's the price of surviving uninstall |
-| Backup archives | `Download/DSHA/` | ⚠️ Public directory, and they contain **all** your conversations. Think before sharing one |
-| dsh's own credentials | `.dsh/.credentials.yaml` | Deliberately kept private, never migrated to the public area — but it **does go into backups** |
-| Bridge token (:3090) | `.dsh/.bridge_token` | Private directory, mode 600. **Excluded from backups** — it belongs to this machine |
+| New v5 archives | Destination chosen through the Android document picker, plus a private verified copy | Password-derived encryption with AES-GCM; authentication must finish before restore. A destination that cannot be read back is not reported as verified |
+| Runtime/project credentials | Files such as `.credentials.yaml` and `.env` in the selected data locations | May contain plaintext and may be included in the encrypted export scope. Excluding the native API key does not scan all files for secrets |
+| Bridge/LAN grants and maintenance state | Device-private records and memory | A user archive cannot grant current-device authorization. Executable declarations and unknown plugin data are quarantined; authorized code sharing the app UID is not isolated from other app data |
 
-**We collect nothing.** No telemetry, no analytics, no crash reporting. The only outbound
-requests are: GitHub API when you tap check-for-updates, raw.githubusercontent.com when
-scripts hot-update, and whichever mirror you picked during installation. API calls go from
-dsh straight to DeepSeek and never pass through anything of ours.
+This change adds no telemetry or log uploads. Updates and dependency installation contact the selected repository, registry or mirror. dsh contacts the configured model provider, and enabled plugins can make their own network requests. The updater's destinations are not a network sandbox for container code.
+
+The device bridge listens on loopback `:3090` and still requires a token because other local apps can connect. Optional LAN sharing listens on `0.0.0.0:3081` with its own authentication and applicable local-network permission. It uses HTTP, not TLS; a token does not prevent traffic capture on an untrusted network. It does not provide CONNECT or arbitrary-destination proxying.
+
+Request headers and connection admission have separate finite budgets. SSE/WebSocket resources are separated from short requests, and payloads remain streaming. Stopping LAN or entering maintenance closes the current connections. See the [stability acceptance record](stability-acceptance.md) for measured limits and remaining device gaps.
+
+Plugin review checks metadata, content and actual dependencies without importing the plugin. Dependency lifecycle scripts and pnpmfile hooks are disabled. Explicit review is required before activation. A quarantine directory or separate profile is not a malicious-code sandbox, and successful loading is not a security certification.
 
 ---
 
@@ -133,18 +138,12 @@ dsh straight to DeepSeek and never pass through anything of ours.
 Sideloading an APK from GitHub makes provenance the thing most worth checking:
 
 ```bash
-# 1. Hash — proves the file wasn't altered
-sha256sum -c deepseekharness-arm64-vX.Y.Z.apk.sha256
-
-# 2. Build provenance — proves it came from this repo's CI at that tag,
-#    not from someone else's repackage
-gh attestation verify deepseekharness-arm64-vX.Y.Z.apk --repo qiannianhuanxiang/DSHA
+# Use the actual filename in the corresponding delivery record
+sha256sum -c dsha-0.1.5-rc2.1.apk.sha256
+apksigner verify --verbose --print-certs dsha-0.1.5-rc2.1.apk
 ```
 
-The signing certificate fingerprint is verified on every release run, and a mismatch
-**aborts the release** — a wrongly signed package can't even be installed over an existing
-one (Android only allows same-signature upgrades), so shipping it would be worse than
-failing the build.
+Local delivery checks the historical certificate fingerprint `e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5`. A checksum establishes byte identity, not publisher identity by itself. Local builds do not automatically have a GitHub attestation; check the actual artifact rather than assuming one exists.
 
 ---
 
@@ -155,10 +154,10 @@ Not hidden:
 | Weakness | Status |
 |---|---|
 | `danger-full-access` | Android sepolicy blocks bubblewrap, so dsh has no sandbox. The agent has full control inside the container |
-| The gate is bypassable | A denylist over command text: guards against slips, not deliberate evasion |
-| Backups sit in a public directory | Every conversation, in plaintext, under `Download/DSHA/`, readable by any app with storage permission |
-| `.credentials.yaml` goes into backups | dsh's credential file rides along into the public directory; whether to add an exclusion toggle is undecided |
-| `/sdcard` reachable by default | The agent can read your gallery and downloads out of the box; there's no toggle yet |
+| The device gate is not an OS sandbox | The supplied bridge uses an allowlist; arbitrary container code and custom clients remain governed by Android's actual permissions |
+| Historical plaintext archives | Old tar.gz archives and manually copied data may remain public. New encrypted exports do not modify or delete those files |
+| Credentials in use | Keystore protects the stored native record; credentials passed into runtime environments or configuration may be readable by authorized code sharing the app UID |
+| `/sdcard` mount | A mount does not grant storage access. After a grant, container code can access the permitted shared-storage scope |
 | Signing key needs rotation | Releases are signed with a debug keystore for historical reasons — replacing it would break upgrades for every existing user. Rotation via APK Signature Scheme v3 is scheduled separately |
 
 Found something else? Open an issue, or bring it to QQ group 975836806. Security reports go first.

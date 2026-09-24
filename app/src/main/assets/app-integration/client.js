@@ -12,7 +12,7 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     });
   }
   function attachmentIds(shell) { return Array.from(shell.state.getSnapshot().attachmentIds || []); }
-  // alpha.2 输入框按 Session binding 管理，内部 WeakMap 不可枚举；只读取已驻留会话。
+  // rc1 输入框按 Session binding 管理；缓存由列表/绑定变化失效，普通滚动不扫描目录。
   function residentInputs(ctx) {
     const shells=new Map();
     for(const row of Object.values(ctx.sessions.list.getSnapshot().byId)) {
@@ -20,6 +20,24 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
       try{shells.set(row.id,ctx.conversation.input.for(binding.ctx));}catch{}
     }
     return shells;
+  }
+  function createSessionIndex(ctx) {
+    let source, inputSource, current = null, shells = new Map();
+    return {
+      invalidate() { source = undefined; inputSource = undefined; },
+      refresh() {
+        const byId = ctx.sessions.list.getSnapshot().byId;
+        if (byId === source) return;
+        source = byId;
+        current = Object.values(byId).find(row => (row.retainedBy?.mainView ?? 0) > 0)?.id ?? null;
+      },
+      current() { this.refresh(); return current; },
+      inputs() {
+        this.refresh();
+        if (inputSource !== source) { shells = residentInputs(ctx); inputSource = source; }
+        return shells;
+      }
+    };
   }
   function usable(record, revision) {
     return record && record.revision === revision && Array.isArray(record.files) && record.files.length <= 20
@@ -78,9 +96,8 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     else { off(); disposed = true; }
     return () => { if (!disposed) { disposed = true; off(); } };
   }
-  function installReadingPosition(ctx) {
-    const currentId = () => Object.values(ctx.sessions.list.getSnapshot().byId)
-      .find(row => (row.retainedBy?.mainView ?? 0) > 0)?.id ?? null;
+  function installReadingPosition(ctx, index = createSessionIndex(ctx)) {
+    const currentId = () => index.current();
     let restoring = true, touched = false, lastSession = currentId(),
       positions = [], deadline = Date.now()+10000, lastSaved = '', leaving = false,
       dirty = false, scrollFrame = 0, storeTimer = 0;
@@ -166,6 +183,7 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     window.addEventListener('pagehide',pageHide);
     const timer = setInterval(() => {
       if (document.hidden || leaving) return;
+      if (!restoring) { clearInterval(timer); return; }
       const snapshot = ctx.sessions.list.getSnapshot();
       if (restoring && !touched && !requestedRestore && snapshot.phase === 'ready'
           && previous?.id && snapshot.byId?.[previous.id] && currentId() !== previous.id) {
@@ -185,7 +203,12 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
         if (ready && document.readyState === 'complete') { positions = pending; restoring = false; }
       } else store();
     },750);
+    const offSessions = ctx.sessions.list.subscribe?.(() => {
+      index.invalidate();
+      if (!document.hidden && !leaving) { syncSession(); scheduleStore(); }
+    });
     return () => { pageHide(); clearInterval(timer); document.removeEventListener('scroll',scrolled,true);
+      offSessions?.();
       window.removeEventListener('pagehide',pageHide);
       document.removeEventListener('pointerdown',interact,true); document.removeEventListener('keydown',interact,true); };
   }
@@ -201,32 +224,43 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
       document.documentElement.setAttribute('data-dsha-integration','ready');
       let alive = true, db, warned = false;
       const entries = new Map();
+      const index = createSessionIndex(ctx);
       const closeDetails = () => { try {
         if (!ctx.sidebarRight.isExpanded()) return;
         ctx.sidebarRight.toggleExpanded();
         document.documentElement.setAttribute('data-dsha-back-handled','true');
       } catch {} };
       document.addEventListener('dsha-close-details',closeDetails);
-      const stopReading = installReadingPosition(ctx);
+      const stopReading = installReadingPosition(ctx, index);
       const scan = () => {
-        if (!db || !alive) return;
-        const shells = residentInputs(ctx);
+        if (!db || !alive || document.hidden) return;
+        const shells = index.inputs();
+        for (const [id,entry] of entries) if (shells.get(id) !== entry.shell) { entry.active = false; entry.off?.(); entries.delete(id); }
         for (const [id,shell] of shells) {
           if (entries.has(id)) continue;
           const entry = {shell,off:null,active:true}; entries.set(id,entry);
           watchDraft(db,ctx.conversation,id,shell,() => alive && entry.active).then(off => { if (!entry.active) off(); else entry.off = off; });
         }
-        for (const [id,entry] of entries) if (shells.get(id) !== entry.shell) { entry.active = false; entry.off?.(); entries.delete(id); }
       };
       openDatabase().then(database => { if (!alive) database.close(); else { db = database; scan(); } }).catch(() => {
         if (!warned) { warned = true; residentInputs(ctx).values().next().value?.notify?.('error','图片草稿存储不可用，退出前请保留原图。'); }
       });
-      // Session shell 没有可枚举订阅；低频扫描只负责发现驻留输入框，不参与每帧渲染。
-      const timer = setInterval(scan,750);
-      return () => { alive = false; clearInterval(timer); for (const entry of entries.values()) { entry.active = false; entry.off?.(); }
+      let scanFrame = 0;
+      const changed = () => {
+        index.invalidate();
+        if (!alive || document.hidden || scanFrame) return;
+        scanFrame = requestAnimationFrame(() => { scanFrame = 0; scan(); });
+      };
+      const offSessions = ctx.sessions.list.subscribe?.(changed);
+      document.addEventListener('visibilitychange', changed);
+      // 防御尚未发布的绑定变化；后台不枚举，前台至多十秒兜底一次。
+      const timer = setInterval(() => { if (!document.hidden) changed(); },10000);
+      return () => { alive = false; clearInterval(timer); if (scanFrame) cancelAnimationFrame(scanFrame);
+        offSessions?.(); document.removeEventListener('visibilitychange',changed);
+        for (const entry of entries.values()) { entry.active = false; entry.off?.(); }
         document.documentElement.removeAttribute('data-dsha-integration');
         db?.close(); stopReading(); document.removeEventListener('dsha-close-details',closeDetails); };
     },'dsha-browser-state');
   }
-  return {inject:['conversation','sessions','layout','sidebarRight','uiWorkspace'],apply,watchDraft,usable,writeDraft,residentInputs,installReadingPosition};
+  return {inject:['conversation','sessions','layout','sidebarRight','uiWorkspace'],apply,watchDraft,usable,writeDraft,residentInputs,createSessionIndex,installReadingPosition};
 }});

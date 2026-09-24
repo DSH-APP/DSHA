@@ -32,6 +32,7 @@ public class FactoryResetTest {
         File privateRoot = temporary.newFolder("private-root");
         put(new File(privateRoot, "linux/ubuntu/root/session.json"), "session");
         put(new File(privateRoot, "host-backup-operations/copy.dshbak"), "backup");
+        put(new File(privateRoot, "rc1-migration-state/generations/id/snapshots/0"), "protected settings");
         java.util.concurrent.atomic.AtomicLong reported = new java.util.concurrent.atomic.AtomicLong();
         FactoryReset.eraseContents(new JvmBackupFileSystem(), privateRoot,
                 new BackupControl((stage, entries, bytes) -> reported.set(entries)),

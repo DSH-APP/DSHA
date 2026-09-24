@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+    <TextView android:id="@+id/pluginEmpty" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="@dimen/card_pad" android:gravity="center" android:visibility="gone" android:textColor="@color/text_muted" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_local_plugins" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" android:id="@+id/pluginLocalTitle" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:id="@+id/pluginLocalCard">
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/btnImport" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_import" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_import" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_import_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+        </LinearLayout>
+        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
+      </LinearLayout>
+      <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/btnExport" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_export" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_export" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_export_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+        </LinearLayout>
+        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
+      </LinearLayout>
+    </LinearLayout>
+    <Button android:id="@+id/btnPluginRestore" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/gap_control" android:visibility="gone" android:text="@string/ui_m0104" />
+  
+</LinearLayout>

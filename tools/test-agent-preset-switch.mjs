@@ -1,9 +1,10 @@
+import { testRuntime } from './test-runtime-fixture.mjs';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const assets='app/src/main/assets/',spec=JSON.parse(readFileSync(assets+'agent-preset-patch.json','utf8'));
-const runtime=process.env.DSHA_TEST_RUNTIME||'app/build/locked-dsh-runtime';
+const runtime = testRuntime('raw');
 let source=readFileSync(runtime+'/node_modules/'+spec.module,'utf8');
 for(const patch of spec.patches){const after=(patch.prependAsset?readFileSync(assets+patch.prependAsset,'utf8')+'\n':'')+patch.after;
  if(source.includes(after)&&!source.includes(patch.before))continue;

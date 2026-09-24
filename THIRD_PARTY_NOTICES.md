@@ -2,6 +2,17 @@
 
 DSHA 的 APK 内包含以下第三方二进制组件。
 
+## DSH 0.1.6-alpha.2 Office 预览
+
+- 随锁定的 DSH 包包含 `@deepseek-ai/libreoffice-kit@0.0.1` 与 Linux 使用的 `@deepseek-ai/libreoffice-kit-wasm@0.0.1`，入口包声明 MPL-2.0；上游引擎、集成代码及第三方组件的声明分别保留在包内 `NOTICE`、`licenses`、`sources` 与 `prebuilds.json` 中。
+- DSHA 仅补充 Android `/system/fonts` 到默认字体查找路径；使用已有系统字体，不额外复制系统字体。修改由 `assets/office-fonts-patch.json` 记录，用户明确配置的字体目录仍按上游规则优先使用。
+
+## rc2.1 宿主数据保护依赖
+
+- Gson **2.13.1**：仅使用受限 JSON 流式读写，不使用任意类型反序列化。许可为 Apache-2.0，随包全文位于 `assets/licenses/gson-LICENSE.txt`。[上游版本与许可](https://github.com/google/gson/tree/gson-parent-2.13.1)。
+- Bouncy Castle **bcprov-jdk15to18 1.85.2**：使用轻量 PBKDF2-HMAC-SHA256 和 AES-GCM API，不注册或替换系统全局 Provider，也没有明文降级路径。许可全文从该 JAR 的 `org.bouncycastle.LICENSE` 导出，位于 `assets/licenses/bouncycastle-LICENSE.txt`。[上游许可](https://www.bouncycastle.org/licence.html)。
+- 两个 flavor 均由 `tools/backup-dependencies.lock.json` 固定版本与 JAR SHA-256；Java 编译前执行 `verifyBackupDependencies`，不匹配即停止构建。JVM 测试覆盖 Node/OpenSSL 固定向量及 JCE 互操作；API 23 上的实际运行尚待用户安排的设备验证。
+
 ## Termux 终端 JNI（标准版）
 
 - 来源：`termux/termux-app` 的 `v0.118.0`，`terminal-emulator/src/main/jni/termux.c`。
@@ -124,3 +135,15 @@ DOM 元素，同时激活会互相打架（抽屉/浮层出两份、事件绑定
 ## npm node-semver 7.8.1
 
 插件版本兼容性使用 [npm/node-semver](https://github.com/npm/node-semver) 7.8.1，遵循 ISC 许可。完整许可随 `app/src/main/assets/plugin-semver.cjs` 一并分发；生成方式见 `tools/vendor-plugin-semver.cjs`。
+
+## 0.1.6-alpha1 运行时扩展
+
+完整依赖和摘要锁定在 `tools/dsh-runtime/package-lock.json`，原 npm 包的许可文件保留在离线运行时中。新增主要组件按发布包声明：
+
+- DSH 0.1.6-alpha.1 及其 Browser Use、Computer Use、Auto review、Team、SSH 等官方组件：见各包随附许可。
+- `@trycua/cua-driver` 0.28.0：MIT；Linux arm64 原生可选依赖一并保留。
+- `@browserbasehq/stagehand` 4.1.0：MIT。
+- `@playwright/mcp` 0.0.80：Apache-2.0。
+- `chrome-devtools-mcp` 1.9.0：Apache-2.0。
+
+DSHA 的 Android Computer Use 适配层和独立会话启动器为本仓库实现，沿用本仓库 MIT 许可；未替换上游 Cua Driver 的实现或将其标为 Android 原生驱动。

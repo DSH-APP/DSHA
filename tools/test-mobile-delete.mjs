@@ -1,3 +1,4 @@
+import { testRuntime } from './test-runtime-fixture.mjs';
 // 用锁定的持久化后端验证 UI 删除入口；所有数据位于随机测试目录。
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -6,7 +7,7 @@ import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
-const runtime = resolve(process.env.DSHA_TEST_RUNTIME || 'app/build/locked-dsh-runtime');
+const runtime = testRuntime('raw');
 const require = createRequire(join(runtime,'package.json'));
 const {Context} = await import(pathToFileURL(require.resolve('@deepseek-ai/cordis')));
 const {default:Jsonl} = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-session-persistence-jsonl')));

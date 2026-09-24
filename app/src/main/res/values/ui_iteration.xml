@@ -43,7 +43,7 @@
     <string name="ui2_review_hint">先安装，再审阅。启用前核对插件内容与权限。</string>
     <string name="ui2_welcome_title0">你的 AI 工作台，\n就在手机里。</string>
     <string name="ui2_welcome_lead0">写代码、处理文件、使用工具。\n把完整的工作环境，随身带走。</string>
-    <string name="ui2_offline_badge">离线部署  ·  无需 ROOT  ·  0.1.7-alpha1</string>
+    <string name="ui2_offline_badge">离线部署  ·  无需 ROOT  ·  0.1.7-rc2</string>
     <string name="ui2_welcome_title1">从一个想法，\n到实际完成。</string>
     <string name="ui2_welcome_lead1">对话、文件与工具，在同一个工作空间。</string>
     <string name="ui2_w1_0">对话与任务</string>

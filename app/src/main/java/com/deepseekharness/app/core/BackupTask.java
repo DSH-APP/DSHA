@@ -51,6 +51,7 @@ public final class BackupTask {
         try {
             state.restore(saved.getLong("id", 0), saved.getString("kind", ""),
                     Status.valueOf(saved.getString("status", "IDLE")), saved.getString("detail", ""));
+            state.restoreStage(saved.getString("last_stage", ""));
             if (!state.busy()) persistedCompletion = state.snapshot().id;
         } catch (RuntimeException e) {
             state.restore(0, com.deepseekharness.app.util.UiText.text("任务记录"), Status.INTERRUPTED, com.deepseekharness.app.util.UiText.text("上次任务记录无法读取，请检查数据状态。"));
@@ -93,7 +94,7 @@ public final class BackupTask {
     private synchronized void persist() throws IOException {
         BackupTaskState.Snapshot s = state.snapshot();
         if (!saved.edit().putLong("id", s.id).putString("kind", s.kind).putString("status", s.status.name())
-                .putString("detail", s.detail).commit()) throw new IOException(com.deepseekharness.app.util.UiText.text("无法保存任务状态，已停止操作"));
+                .putString("detail", s.detail).putString("last_stage", s.lastStage).commit()) throw new IOException(com.deepseekharness.app.util.UiText.text("无法保存任务状态，已停止操作"));
     }
     private void progress(long id, String detail) {
         state.update(id, Status.RUNNING, detail);

@@ -48,7 +48,7 @@ public class WorkspaceFragment extends Fragment {
         v.findViewById(R.id.workspace_reset).setOnClickListener(x -> {
             if (task.busy() || task.pendingMaintenance()) { taskRejected(); return; }
             new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.text("重置配置？"))
-                    .setMessage(com.deepseekharness.app.util.UiText.choose("先停止 Web、终端和写任务，再由 Android 保存原配置并重置 settings.yaml 与工作目录的 .env。对话和原生凭据保留；无需旧 Python。外部目录或链接需先单独确认，不会强行覆盖。", "Stop Web, terminals and writers, then let Android retain the original configuration and reset settings.yaml and the workspace .env. Conversations and native credentials stay intact. The old Python is not required. External folders and links require separate review and will not be overwritten."))
+                    .setMessage(com.deepseekharness.app.util.UiText.choose("先停止 Web、终端和写任务，在隔离服务中重置当前 web profile 的普通设置并读回，再事务提交与工作目录 .env。插件构成、对话和凭据保留；原配置可恢复。无法确认时保留原件并显示原因。", "Stop Web, terminals and writers. Reset ordinary settings of the web profile in an isolated service, read them back, then commit together with the workspace .env. Plugin composition, conversations and credentials are retained. Failures preserve originals and report the reason."))
                     .setPositiveButton(com.deepseekharness.app.util.UiText.choose("保留原件并重置", "Retain originals and reset"), (d, w) -> { if (!task.resetConfig()) taskRejected(); })
                     .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null).show();
         });

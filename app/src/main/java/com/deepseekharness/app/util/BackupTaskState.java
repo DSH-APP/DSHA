@@ -5,24 +5,28 @@ public final class BackupTaskState {
     public enum Status { IDLE, RUNNING, PREVIEW, SUCCEEDED, FAILED, CANCELLED, INTERRUPTED }
     private long id;
     private String kind = "", detail = "";
+    private String lastStage = "";
     private Status status = Status.IDLE;
 
     public synchronized long start(String kind) {
         if (busy()) return -1;
         id = Math.max(System.currentTimeMillis(), id + 1);
         this.kind = kind; status = Status.RUNNING; detail = com.deepseekharness.app.util.UiText.text("正在准备…");
+        lastStage = detail;
         return id;
     }
     public synchronized boolean busy() { return status == Status.RUNNING || status == Status.PREVIEW; }
     public synchronized void update(long expected, Status next, String message) {
         if (expected != id || !busy()) return;
         status = next; detail = SensitiveData.redact(message == null ? "" : message);
+        if (next == Status.RUNNING) lastStage = detail;
     }
     public synchronized boolean confirm(long expected) {
         if (id != expected || status != Status.PREVIEW) return false;
         status = Status.RUNNING; detail = com.deepseekharness.app.util.UiText.text("正在恢复…"); return true;
     }
-    public synchronized Snapshot snapshot() { return new Snapshot(id, kind, status, detail); }
+    public synchronized Snapshot snapshot() { return new Snapshot(id, kind, status, detail, lastStage); }
+    public synchronized void restoreStage(String stage) { lastStage = SensitiveData.redact(stage == null ? "" : stage); }
     public synchronized void restore(long id, String kind, Status status, String detail) {
         this.id = id; this.kind = kind; this.status = status;
         this.detail = SensitiveData.redact(detail);
@@ -32,13 +36,14 @@ public final class BackupTaskState {
         }
     }
     /** 已完成的应用内格式化被欢迎页接管后，移除旧任务结果。 */
-    public synchronized void reset() { id = 0; kind = ""; detail = ""; status = Status.IDLE; }
+    public synchronized void reset() { id = 0; kind = ""; detail = ""; lastStage = ""; status = Status.IDLE; }
     public static final class Snapshot {
         public final long id;
-        public final String kind, detail;
+        public final String kind, detail, lastStage;
         public final Status status;
-        Snapshot(long id, String kind, Status status, String detail) {
+        Snapshot(long id, String kind, Status status, String detail, String lastStage) {
             this.id = id; this.kind = kind; this.status = status; this.detail = detail;
+            this.lastStage = lastStage;
         }
         public boolean busy() { return status == Status.RUNNING || status == Status.PREVIEW; }
     }

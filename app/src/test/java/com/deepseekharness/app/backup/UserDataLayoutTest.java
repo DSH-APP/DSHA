@@ -29,4 +29,15 @@ public class UserDataLayoutTest {
         var binds=layout.binds(new File(root,"linux/ubuntu"));assertTrue(binds.stream().anyMatch(row->row[1].equals("/root/.dsh")));assertTrue(binds.stream().anyMatch(row->row[1].equals("/root/.dsh/plugin-manager.py")));
         Files.delete(new File(root,UserDataLayout.STABLE+"/settings.yaml").toPath());Files.delete(new File(root,UserDataLayout.STABLE).toPath());assertThrows(IOException.class,()->layout.binds(new File(root,"linux/ubuntu")));
     }
+    @Test public void rc1MigrationAlwaysBindsSignedScriptOverRestoredUserFile()throws Exception{
+        File root=temp.newFolder();
+        for(String script:List.of("rc1-migration.py","rc1-settings-migration.cjs")){
+            put(root,UserDataLayout.STABLE+"/"+script,"untrusted restored file");
+            put(root,UserDataLayout.LEGACY+"/"+script,"signed asset");
+        }
+        var layout=new UserDataLayout(fs,root);layout.choose(UserDataLayout.Home.STABLE);
+        var binds=layout.binds(new File(root,"linux/ubuntu"));
+        for(String script:List.of("rc1-migration.py","rc1-settings-migration.cjs"))assertTrue(binds.stream().anyMatch(row->row[1].equals("/root/.dsh/"+script)&&row[0].equals(new File(root,UserDataLayout.LEGACY+"/"+script).getAbsolutePath())));
+        assertTrue(layout.privateDocument(new File(root,"rc1-migration-state/generations/id/snapshots/0")));
+    }
 }

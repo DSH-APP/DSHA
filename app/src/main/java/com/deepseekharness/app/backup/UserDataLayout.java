@@ -57,7 +57,7 @@ public final class UserDataLayout {
         }
     };}
     private static final Set<String> PRIVATE=Set.of("host-backup-operations","host-backup-catalogue","host-native-settings-state.json","host-runtime-operations",
-            "runtime-updates","maintenance","runtime-trials","runtime-health","host-environment-operations","startup-config-operations","startup-config-snapshots",RECORD,RECORD+".previous");
+            "runtime-updates","maintenance","runtime-trials","runtime-health","rc1-migration-state","host-environment-operations","startup-config-operations","startup-config-snapshots",RECORD,RECORD+".previous");
     public boolean privateDocument(File path){String relative=path.getAbsolutePath().substring(files.getAbsolutePath().length()).replace(File.separatorChar,'/');
         while(relative.startsWith("/"))relative=relative.substring(1);String first=relative.split("/",2)[0];if(PRIVATE.contains(first))return true;
         if(path.getName().startsWith(".dsha-plugin-task-")||path.getName().startsWith(".dsha-plugin-recovery-"))return true;

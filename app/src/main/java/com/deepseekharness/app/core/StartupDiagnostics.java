@@ -83,7 +83,11 @@ public final class StartupDiagnostics {
     }
     public synchronized void browser(long generation, String detail) {
         if (!trace.isCurrent(generation)) return;
-        issue(generation, owner(detail), detail);
+        // 控制台 ERROR 不是启动故障证据；浏览器干预和运行错误仍完整保留在时间线。
+        String category = com.deepseekharness.app.util.BrowserDiagnostic.category(detail, snapshot().browserReady, false);
+        trace.add(generation, SystemClock.elapsedRealtime(), category + ": " + detail);
+        DiagnosticLog.record(context, category, SensitiveData.redact(detail));
+        persistHistory(false);
     }
     public synchronized boolean pageEvent(long generation, JSONObject event) {
         if (!trace.isCurrent(generation)) return false;
@@ -95,7 +99,9 @@ public final class StartupDiagnostics {
         if ("ready".equals(type)) { if (!alreadyReady) browserReady(generation); return false; }
         if ("issue".equals(type)) {
             String name = owner("\"" + id + "\" " + detail);
-            issue(generation, name, (id.isEmpty() ? "" : id + com.deepseekharness.app.util.UiText.text("：")) + detail);
+            String message = (id.isEmpty() ? "" : id + com.deepseekharness.app.util.UiText.text("：")) + detail;
+            if (alreadyReady || !event.optBoolean("fatal")) { browser(generation, message); return false; }
+            issue(generation, name, message);
             if (name.isEmpty()) for (String line : detail.split("\n")) {
                 String candidate = owner(line);
                 if (!candidate.isEmpty()) issue(generation, candidate, line);
@@ -107,7 +113,7 @@ public final class StartupDiagnostics {
     }
     public void issue(long generation, String name, String detail) {
         trace.issue(generation, SystemClock.elapsedRealtime(), name, detail);
-        DiagnosticLog.record(context, "STARTUP_ERROR", name + ": " + SensitiveData.redact(detail));
+        DiagnosticLog.record(context, snapshot().browserReady ? "RUNTIME_ERROR" : "STARTUP_ERROR", name + ": " + SensitiveData.redact(detail));
     }
     public synchronized void browserReady(long generation) {
         if(!trace.isCurrent(generation))return;

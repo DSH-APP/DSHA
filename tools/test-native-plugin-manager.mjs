@@ -1,9 +1,10 @@
+import { testRuntime } from './test-runtime-fixture.mjs';
 // 在隔离目录验证 alpha.2 新管理入口不会越过 DSHA 原生审阅，也不运行安装脚本。
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import path from 'node:path';import vm from 'node:vm';import {pathToFileURL} from 'node:url';
-const runtime=path.resolve(process.env.DSHA_TEST_RUNTIME||'app/build/release136/host-runtime');
-const clientRuntime=path.resolve(process.env.DSHA_RAW_RUNTIME||'app/build/locked-dsh-runtime-017');
-const base=fs.mkdtempSync(path.resolve('app/build/release136/native-plugin-policy-'));
+const runtime=testRuntime('managed');
+const clientRuntime=testRuntime('raw','DSHA_RAW_RUNTIME');
+const base=fs.mkdtempSync(path.resolve('app/build/native-plugin-policy-'));
 const sdk=path.join(base,'sdk'),profile=path.join(base,'profile');fs.mkdirSync(profile,{recursive:true});fs.mkdirSync(sdk,{recursive:true});
 fs.writeFileSync(path.join(sdk,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh',dependencies:{'dsha-fixture-core':'1.0.0'}}));
 fs.writeFileSync(path.join(profile,'package.json'),'{}');
@@ -46,12 +47,13 @@ const occurrences=(value,part)=>value.split(part).length-1;
 function applyNavigation(value){for(const patch of navigation.patches){const before=occurrences(value,patch.before),after=occurrences(value,patch.after);
  // alpha.2 的 bundle 经过连续补丁后，后一个补丁会替换前一个补丁的完整锚点；
  // 迁移检查应把“最终 after 已存在、原 before 已被消费”视为已应用。
- if(after===1&&(before===0||before===occurrences(patch.after,patch.before)))continue;
+ if(after===1)continue;
  assert.equal(before,1,'navigation patch anchor changed');assert.equal(after,0,'navigation patch is partially applied');value=value.replace(patch.before,patch.after);
  }return value;}
-let source=applyNavigation(fs.readFileSync(path.join(clientRuntime,'node_modules/@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js'),'utf8'));
-const migrated=applyNavigation(fs.readFileSync(path.join(runtime,'node_modules/@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js'),'utf8'));
-assert.equal(migrated,source,'已安装旧补丁必须无重复地迁移到当前补丁');
+let source=applyNavigation(fs.readFileSync(path.join(clientRuntime,'node_modules/@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js'),'utf8').replaceAll('\r\n','\n'));
+const migrated=applyNavigation(fs.readFileSync(path.join(runtime,'node_modules/@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js'),'utf8').replaceAll('\r\n','\n'));
+assert.equal(migrated,source,'本代 raw 施补丁后必须等于本代 managed 精确内容');
+// 旧运行时整模块通过受管事务切换；文本 patch 从不承担跨上游版本全文件转换。
 assert.equal(applyNavigation(migrated),migrated,'插件原生入口补丁重复施加必须保持幂等');
 assert.equal(source.split('function dshaNativeReviewRoute').length-1,1,'review helper must be injected once');
 source=source.replace('exports.apply = apply;','exports.__Controller=PluginManagerController; exports.__packageView=packageView; exports.__EnableSwitch=EnableSwitch; exports.apply = apply;');

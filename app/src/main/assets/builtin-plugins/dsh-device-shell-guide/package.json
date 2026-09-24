@@ -17,8 +17,8 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-system-prompt": "0.1.7-alpha.1",
-    "@deepseek-ai/dsh-llm": "0.1.7-alpha.1"
+    "@deepseek-ai/dsh-system-prompt": "0.1.7-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.7-rc.2"
   },
   "license": "MIT"
 }

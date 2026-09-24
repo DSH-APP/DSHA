@@ -2613,7 +2613,7 @@ function installSidebarSwipe(ctx, filesToggle) {
         const onTouchMove = (event) => {
             if (trackingPointer === 0)
                 return;
-            if (event.touches.length > 1) {
+            if (event.touches.length !== 1 || !event.cancelable || document.hidden) {
                 abortStroke(ctx);
                 return;
             }
@@ -2867,9 +2867,13 @@ function installReconciler(ctx) {
         const observer = new MutationObserver((records) => {
             const keys = new Set();
             for (const record of records) {
+                // 历史消息/工具输出不改变 shell、composer 或侧栏结构；不唤醒整组移动布局任务。
+                // flow 的插入/移除由外层 childList 仍可见，预览 portal 在 flow 外也继续观察。
+                const target = record.target instanceof Element ? record.target : record.target.parentElement;
+                if (target?.closest('[data-chat-flow]')) continue;
                 keys.add(record.type === 'attributes' && record.attributeName !== null ? record.attributeName : '*');
             }
-            core.note(keys);
+            if (keys.size) core.note(keys);
         });
         observer.observe(document.documentElement, {
             childList: true,

@@ -23,6 +23,26 @@
 
 ---
 
+## DSHA v0.1.7-rc2 · 本地 Release 构建（build 147）
+
+本版内置 DSH **0.1.7-rc.2**，版本码 147。rc2 带来定时任务、快捷键、进行中会话启用新工具、
+自动审阅后续处理、插件源切换、插件详情/设置修复，以及部分长对话发送失败修复。
+
+覆盖更新前仍会在 `.dsh/.dsha-rc1-migration` 保存 settings、Profile 插件声明、旧
+`.agent-presets` 和会话源摘要。settings 导入失败可在下一次启动重试；旧插件源码、
+缺失依赖和 preset 候选保留在隔离区，恢复层不会删除或自动启用它们。Session 源文件
+保留原字节，rc1 的 V0→V1→V2→V3→V4 链在 rc2 中继续读取并在验证后发布相邻 successor。
+
+- [rc2 build 147 适配与迁移记录](docs/releases/v0.1.7-rc2-build147.md)
+- [Standard APK](release/dsha-0.1.7-rc2.apk) · [SHA-256](release/dsha-0.1.7-rc2.apk.sha256)
+- [Low APK](release/dsha-0.1.7-rc2low.apk) · [SHA-256](release/dsha-0.1.7-rc2low.apk.sha256)
+
+当前交付仍是本地构建，未宣称所有厂商设备、外部模型服务和完整历史升级矩阵均已验证。
+
+## 上游 rc2 变更
+
+官方说明见 [dsh-v0.1.7-rc.2](https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.1.7-rc.2)。
+
 ## DSHA v0.1.7-alpha2 · GitHub 预发布
 
 由贡献者 [@ym2025szz](https://github.com/ym2025szz) 发布。这是实验性预发布：DSH 最近升级到 **0.1.7-alpha.2** 并改动了 Session、Agent 预设、插件管理和部分 Web API，已有用户请先导出重要数据并保存备份密码，再谨慎覆盖更新。旧版自建目录型预设可能需要迁移，详见[预发布说明](docs/releases/v0.1.7-alpha2-pre-release.md)和[上游迁移说明](https://github.com/deepseek-ai/deepseek-harness/discussions/7545)。
