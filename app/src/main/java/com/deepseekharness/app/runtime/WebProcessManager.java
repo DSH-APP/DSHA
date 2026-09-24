@@ -38,16 +38,47 @@ public class WebProcessManager {
     private File root() { return records==null?new File(proot.getRootfsDir(), "root"):records; }
     private File pidFile() { return new File(root(), ".dsha-web.pid"); }
     private File identityFile() { return new File(root(), ".dsha-web.identity"); }
+    /**
+     * 旧 guest 命令可能把 /root 的宿主权限改成不可写。仅在 lstat 确认
+     * 目录归本应用所有时恢复 owner 权限；链接、其它 UID 或无法核验都保留
+     * 原状并阻止维护，不借 chmod 越过数据边界。
+     */
+    private void ensureRootWritable() throws IOException {
+        File directory = root();
+        if (Compat.isSymbolicLink(directory)) throw new IOException(com.deepseekharness.app.util.UiText.text("Web 根目录是链接，未终止任何进程"));
+        try {
+            android.system.StructStat stat = android.system.Os.stat(directory.getAbsolutePath());
+            if (stat.st_uid != android.os.Process.myUid())
+                throw new IOException(com.deepseekharness.app.util.UiText.text("Web 根目录不属于本应用，未终止任何进程"));
+            int mode = stat.st_mode & 0777;
+            if ((mode & 0700) != 0700) android.system.Os.chmod(directory.getAbsolutePath(), mode | 0700);
+        } catch (android.system.ErrnoException error) {
+            throw new IOException(com.deepseekharness.app.util.UiText.text("Web 根目录权限无法确认"), error);
+        }
+    }
     private String pidRecord() throws IOException {
         File file = pidFile();
         if (Compat.isSymbolicLink(file)) throw new IOException(com.deepseekharness.app.util.UiText.text("Web PID 文件异常，未终止任何进程"));
         if (!file.exists()) return null;
         if (!file.isFile() || file.length() > 32) throw new IOException(com.deepseekharness.app.util.UiText.text("Web PID 文件异常，未终止任何进程"));
+        ensureOwnerReadable(file);
         String value = Compat.readAll(file);
         if (WebProcSel.parsePid(value) < 0) throw new IOException(com.deepseekharness.app.util.UiText.text("Web PID 无效，未终止任何进程"));
         return value;
     }
+    private void ensureOwnerReadable(File file) throws IOException {
+        try {
+            android.system.StructStat stat = android.system.Os.lstat(file.getAbsolutePath());
+            if (stat.st_uid != android.os.Process.myUid())
+                throw new IOException(com.deepseekharness.app.util.UiText.text("Web 记录不属于本应用，未终止任何进程"));
+            int mode = stat.st_mode & 0777;
+            if ((mode & 0400) == 0) android.system.Os.chmod(file.getAbsolutePath(), mode | 0400);
+        } catch (android.system.ErrnoException error) {
+            throw new IOException(com.deepseekharness.app.util.UiText.text("Web 记录权限无法确认"), error);
+        }
+    }
     private void sentinel() throws IOException {
+        ensureRootWritable();
         File file = new File(root(), ".dsha-stopped");
         if (Compat.isSymbolicLink(file) || !file.exists() && !file.createNewFile())
             throw new IOException(com.deepseekharness.app.util.UiText.text("无法写入停止标记，尚未停止 Web"));
@@ -130,6 +161,7 @@ public class WebProcessManager {
         if (Compat.isSymbolicLink(file)) throw new IOException(com.deepseekharness.app.util.UiText.text("Web 身份记录异常，原环境保留"));
         if (!file.exists()) return null;
         if (!file.isFile() || file.length() > 80) throw new IOException(com.deepseekharness.app.util.UiText.text("Web 身份记录无效"));
+        ensureOwnerReadable(file);
         String saved = Compat.readAll(file).trim();
         if (!saved.matches(pid + " [1-9][0-9]*")) throw new IOException("WEB_IDENTITY_INVALID");
         return saved;
@@ -150,7 +182,15 @@ public class WebProcessManager {
         for (String value : entries) {
             int pid = WebProcSel.parsePid(value);
             if (pid < 0 || pid == android.os.Process.myPid()) continue;
+            // hidepid 可列出其它应用的数字目录，却禁止读取其 uid/cmdline，
+            // 这不能当作“本应用还有 Web”的证据。已记录 PID 另由 stopOne/
+            // confirmStopped 单独严格核验；全局扫描只检查证实同 UID 的项。
+            Integer owner = processOwner(pid);
+            if (owner != null && !com.deepseekharness.app.util.WebStopEvidence.scanCandidate(owner, android.os.Process.myUid())) continue;
             ProcessState state = inspect(pid);
+            // uid 不可读时，只有已经完整读到 dsh Web 身份的条目才进入屏障；
+            // 单纯的 DENIED/未知系统进程不能把维护永久锁死。
+            if (owner == null && state.kind != Kind.WEB) continue;
             if (scanUnconfirmed(state)) return true;
         }
         return false;
@@ -169,7 +209,10 @@ public class WebProcessManager {
             for (String value : entries) {
                 int pid = WebProcSel.parsePid(value);
                 if (pid < 0 || pid == android.os.Process.myPid()) continue;
+                Integer owner = processOwner(pid);
+                if (owner != null && !com.deepseekharness.app.util.WebStopEvidence.scanCandidate(owner, android.os.Process.myUid())) continue;
                 ProcessState state = inspect(pid);
+                if (owner == null && state.kind != Kind.WEB) continue;
                 if (state.kind == Kind.DENIED && !state.differentUid) return "TRIAL_PROCESS_INSPECTION_DENIED";
                 String profile = state.kind == Kind.WEB ? WebProcSel.trialProfile(state.command) : "";
                 if (!profiles.contains(profile)) continue;
@@ -318,6 +361,8 @@ public class WebProcessManager {
                     retire(record);
                     return "";
                 }
+                if (denied.errno == OsConstants.EPERM || denied.errno == OsConstants.EACCES)
+                    return "WEB_PROCESS_SIGNAL_DENIED";
                 throw denied;
             }
             long deadline = android.os.SystemClock.elapsedRealtime() + 3000;

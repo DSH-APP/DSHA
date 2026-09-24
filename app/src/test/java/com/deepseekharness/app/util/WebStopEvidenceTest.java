@@ -5,6 +5,13 @@ import static org.junit.Assert.*;
 import static com.deepseekharness.app.util.WebStopEvidence.Kind.*;
 
 public class WebStopEvidenceTest {
+    @Test public void globalScanRequiresEvidenceOfThisUid() {
+        assertTrue(WebStopEvidence.scanCandidate(10042, 10042));
+        assertFalse(WebStopEvidence.scanCandidate(10043, 10042));
+        assertFalse(WebStopEvidence.scanCandidate(null, 10042));
+        // 记录中的 PID 仍由 mayRetire 单独严格核验，不依赖此扫描过滤器。
+        assertFalse(WebStopEvidence.mayRetire(DENIED, false, "42 100", null));
+    }
     private WebPidIdentity identity(long started) {
         return WebPidIdentity.parse("42 (node) S 1 1 1 " + "0 ".repeat(15) + started + " 0 0", 42);
     }

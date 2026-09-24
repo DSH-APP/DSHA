@@ -65,7 +65,13 @@ public final class AutomaticBackups {
         try{
             PostUpgradeCleanupService.suspendForFactoryReset(control);
             JobScheduler scheduler=context.getSystemService(JobScheduler.class);
-            if(scheduler!=null){scheduler.cancel(JOB);scheduler.cancel(NOW);}
+            if(scheduler!=null){
+                // 某些 ROM 在后台/通知策略变更后会拒绝 JobScheduler.cancel。
+                // factoryResetPending 已先持久化，两个 Job 的 onStartJob 都会
+                // 看到该门禁并立即返回；取消失败不能阻断私有数据格式化。
+                try { scheduler.cancel(JOB); } catch (SecurityException ignored) { }
+                try { scheduler.cancel(NOW); } catch (SecurityException ignored) { }
+            }
             NativeBackupJobs jobs=NativeBackupJobs.get(context);
             jobs.beginFactoryResetQuiescence(control,30_000);nativeClosed=true;
             PRODUCERS.awaitIdle(control,15_000);

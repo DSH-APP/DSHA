@@ -62,6 +62,7 @@ public class HarnessController {
      */
     private static volatile String webAuthUrl = "";
     private static volatile int activeWebPort;
+    private static volatile String lastStopError = "";
 
     public HarnessController(Context ctx) {
         this(ctx, new ProotBootstrap(ctx));
@@ -101,6 +102,9 @@ public class HarnessController {
         return webProc.confirmStopped(hasLiveWebProcesses());
     }
 
+    /** 最近一次停止任务的结构化结果；仅供同一维护屏障读取，不含用户内容。 */
+    public String lastStopError() { return lastStopError; }
+
     /** 维护前确认所有本进程启动的 Web 启动器及其管道已退出；不按名称误杀容器。 */
     public boolean hasLiveWebProcesses() {
         boolean alive = false;
@@ -109,6 +113,24 @@ public class HarnessController {
             else webLaunches.remove(process);
         }
         return alive;
+    }
+
+    /**
+     * Android 某些 ROM 会允许读取子进程身份，却拒绝对已经脱离当前启动
+     * 调用栈的 PID 直接发 SIGTERM。只对本次 Controller 仍持有的 Process
+     * 句柄走一次身份复核后的优雅停止；未知 PID 永远不走这条兜底路径。
+     */
+    private static String stopKnownWebLaunchers() {
+        StringBuilder failure = new StringBuilder();
+        for (Process process : webLaunches.keySet()) {
+            if (!Compat.isAlive(process)) { webLaunches.remove(process); continue; }
+            if (Compat.requestGracefulStop(process, 4_000)) {
+                webLaunches.remove(process);
+            } else if (failure.length() == 0) {
+                failure.append(com.deepseekharness.app.util.UiText.text("已知 Web 启动器未能确认退出"));
+            }
+        }
+        return failure.toString();
     }
 
     /** 进程级单例（3090 桥、保活服务等共享同一实例）。 */
@@ -667,6 +689,7 @@ public class HarnessController {
             long previous = lifecycle.generation();
             startupDiagnostics.completed(previous,"stopped","");
             long generation = lifecycle.beginStop();
+            lastStopError = "";
             webAuthUrl = "";
             // 宿主直接写小标记，不等可能仍在解压/注册插件的串行任务。
             try {
@@ -679,11 +702,27 @@ public class HarnessController {
                 String stopError = "";
                 try {
                     stopError = webProc.stop();
+                    // webProc.stop() 负责持久 PID/出生身份核验。若 ROM 在信号
+                    // 阶段返回 Permission denied，再使用当前应用仍持有的启动
+                    // 器句柄走受控优雅退出，然后重新执行同一停止屏障；不按裸
+                    // PID、端口或进程名强杀未知对象。
+                    String known = stopKnownWebLaunchers();
+                    if (!known.isEmpty()) {
+                        if (stopError.isEmpty()) stopError = known;
+                        else stopError = stopError + "\n" + known;
+                    } else if (!stopError.isEmpty()) {
+                        try {
+                            if (webProc.confirmStopped(false)) stopError = "";
+                        } catch (IOException ignored) {
+                            // 未能重新确认时保留原错误，维护事务继续阻断。
+                        }
+                    }
                     if (stopError.isEmpty()) releaseWebBridge(previous);
                     if(stopError.isEmpty()&&!com.deepseekharness.app.BackupManager.isEnvironmentTaskBusy()){com.deepseekharness.app.backup.AutomaticBackups.stopped(context());com.deepseekharness.app.backup.PostUpgradeCleanupService.schedule(context());} // 仍用原 PID 判据，绝不直接 destroy proot。
                     com.deepseekharness.app.LanProxyService.stop(previous);
                 } finally {
                     synchronized (lifecycle) {
+                        lastStopError = stopError == null ? "" : stopError;
                         lifecycle.finishStop(generation);
                         reportStatus(generation, onStatus, stopError.isEmpty() ? com.deepseekharness.app.util.UiText.text("停止操作已完成") : stopError);
                     }

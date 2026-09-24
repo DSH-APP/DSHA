@@ -10,8 +10,8 @@ public final class MaintenanceErrorText {
     public static String render(String value) {
         if (value == null || value.isEmpty()) return value == null ? "" : value;
         if (value.trim().equalsIgnoreCase("Permission denied")) return UiText.choose(
-                "当前步骤被系统拒绝访问，尚不能判断是文件权限还是进程核验失败。请查看本次维护记录；已暂停后续切换，不表示原环境已恢复。\nPermission denied",
-                "The system denied access during this step. Inspect the maintenance record to distinguish file access from process verification. Further switching is paused; recovery is not confirmed.\nPermission denied");
+                "当前步骤被系统拒绝访问，尚不能判断是文件权限还是进程核验失败。请保持 DSHA 在前台，先点“恢复中断维护”重试；应用会保留原件，不会把失败显示成已恢复。\nPermission denied",
+                "The system denied access during this step. Keep DSHA in the foreground and retry Recover interrupted maintenance; originals stay protected and a failed recovery is never shown as complete.\nPermission denied");
         String code = value.matches("[A-Z_0-9]{2,100}") ? value : "";
         if (code.isEmpty()) return UiStateText.render(value);
         String message = switch (code) {
@@ -24,6 +24,9 @@ public final class MaintenanceErrorText {
             case "STOP_DSH_AND_TERMINALS_FIRST" ->
                     UiText.choose("请先停止 DSH、终端和正在运行的数据作业；原件未改动，稍后可重试。",
                             "Stop DSH, terminals, and active data jobs first. Originals were not changed; retry shortly.");
+            case "WEB_PROCESS_SIGNAL_DENIED" ->
+                    UiText.choose("系统拒绝了旧 Web 进程信号。应用会保留原环境；请保持 DSHA 前台并再次点“恢复中断维护”，系统将只对本次已登记的 Web 启动器执行优雅退出。",
+                            "The system denied the signal to the old Web process. The original environment is retained. Keep DSHA in the foreground and retry Recover interrupted maintenance; only this run's registered Web launcher will be asked to exit gracefully.");
             case "RUNTIME_HEALTH_INCOMPLETE", "TRIAL_PROCESS_UNCONFIRMED", "TRIAL_RENDERER_FAILED", "TRIAL_PLUGIN_FAILED" ->
                     UiText.choose("新运行时试运行未通过；原运行环境和个人数据已保留。请查看日志后重试或回退。",
                             "The new runtime did not pass its trial. The original runtime and personal data were retained. Review the log, then retry or roll back.");

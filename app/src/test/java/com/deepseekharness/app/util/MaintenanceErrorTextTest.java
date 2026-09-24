@@ -13,4 +13,10 @@ public class MaintenanceErrorTextTest {
     @Test public void unknownTextIsNotRewritten() {
         assertEquals("plugin supplied detail", MaintenanceErrorText.render("plugin supplied detail"));
     }
+
+    @Test public void webSignalDeniedExplainsSafeRetry() {
+        String text = MaintenanceErrorText.render("WEB_PROCESS_SIGNAL_DENIED");
+        assertTrue(text.contains("优雅退出") || text.contains("gracefully"));
+        assertTrue(text.contains("原环境") || text.contains("original environment"));
+    }
 }

@@ -19,6 +19,7 @@ public final class BackupErrorCode {
                 String code=errno(at.getClass().getField("errno").getInt(at));if(!code.equals("IO_FAILURE"))return code;
             }catch(ReflectiveOperationException ignored){}
             if(message!=null){
+                if(message.trim().equalsIgnoreCase("Permission denied"))return "PERMISSION_DENIED";
                 if(message.matches("(?s).*\\bENOSPC\\b.*"))return "NO_SPACE";
                 if(message.matches("(?s).*\\b(?:EACCES|EPERM)\\b.*"))return "PERMISSION_DENIED";
                 if(message.startsWith("MANIFEST_FIELD_"))return "MANIFEST_FORMAT";

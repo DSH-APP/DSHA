@@ -12,4 +12,7 @@ public class BackupErrorCodeTest {
     @Test public void recognizedErrnoAndInterruptedWorkHaveDistinctCodes(){
         assertEquals("NO_SPACE",BackupErrorCode.errno(28));assertEquals("PERMISSION_DENIED",BackupErrorCode.errno(13));assertEquals("CANCELLED",BackupErrorCode.from(new InterruptedIOException()));
     }
+    @Test public void plainAndroidPermissionMessageGetsStableCode(){
+        assertEquals("PERMISSION_DENIED",BackupErrorCode.from(new IOException("Permission denied")));
+    }
 }

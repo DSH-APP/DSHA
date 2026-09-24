@@ -180,6 +180,32 @@ public final class Compat {
         }, 0, 2000);
     }
 
+    /**
+     * 请求停止一个仍由本次应用实例持有的容器启动器，并等待它退出。
+     * 未能核验句柄或启动器没有在窗口内退出时返回 false；不使用 SIGKILL，
+     * 让维护调用方继续保留数据切换屏障。
+     */
+    public static boolean requestGracefulStop(Process process, long timeoutMs) {
+        if (process == null || !isAlive(process)) return true;
+        ProcessIdentity target = ownedProcess(process);
+        if (target == null) return false;
+        boolean proot;
+        try {
+            proot = ProcessIdentity.isProot(android.system.Os.readlink("/proc/" + target.pid + "/exe"));
+        } catch (android.system.ErrnoException ignored) {
+            return false;
+        }
+        try {
+            // proroot 的 SIGTERM 可能只到启动器，SIGQUIT 会让它回收自己登记的
+            // tracee；普通 proot/其它已知子进程使用正常 SIGTERM。
+            signalOwned(process, target, proot ? android.system.OsConstants.SIGQUIT
+                    : android.system.OsConstants.SIGTERM);
+        } catch (RuntimeException denied) {
+            return false;
+        }
+        return waitFor(process, timeoutMs);
+    }
+
     private static ProcessIdentity ownedProcess(Process process) {
         synchronized (process) {
             if (ProcessTermination.exited(process)) return null;

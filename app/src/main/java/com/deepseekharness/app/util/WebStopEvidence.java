@@ -5,6 +5,11 @@ public final class WebStopEvidence {
     private WebStopEvidence() { }
     public enum Kind { GONE, WEB, OTHER, DENIED }
 
+    /** 无记录的全局候选只有 uid 已证实属于本应用时才进入严格进程核验。 */
+    public static boolean scanCandidate(Integer owner, int appUid) {
+        return owner != null && owner == appUid;
+    }
+
     public static boolean mayRetire(Kind kind, boolean differentUid, String saved, WebPidIdentity current) {
         if (kind == Kind.GONE || differentUid) return true;
         return current != null && saved != null && saved.matches(current.pid + " [1-9][0-9]*")

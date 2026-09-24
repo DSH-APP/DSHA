@@ -99,7 +99,11 @@ public final class BackupManager {
         long deadline = android.os.SystemClock.elapsedRealtime() + 45_000;
         do {
             if (Thread.currentThread().isInterrupted()) throw new InterruptedException(com.deepseekharness.app.util.UiText.text("等待停止被中断"));
-            if (!controller.isStarting() && !controller.isStopping() && controller.isWebStoppedForMaintenance()) return;
+            if (!controller.isStarting() && !controller.isStopping()) {
+                String stopError = controller.lastStopError();
+                if (stopError != null && !stopError.isEmpty()) throw new IOException(stopError);
+                if (controller.isWebStoppedForMaintenance()) return;
+            }
             Thread.sleep(100);
         } while (android.os.SystemClock.elapsedRealtime() < deadline);
         throw new IOException(com.deepseekharness.app.util.UiText.text("等待 Web 或它启动的后台进程退出超时；原环境未移动，请结束运行任务后重试"));
@@ -408,6 +412,9 @@ public final class BackupManager {
     }
     public static String safeError(Exception e) {
         String message = SensitiveData.redact(e.getMessage() == null ? e.toString() : e.getMessage()).trim();
+        // Android/ROM 的 SecurityException 通常只有这句无上下文正文；收敛为
+        // 稳定错误码后，维护页才能给出可执行入口，也不会把权限失败误显示成完成。
+        if (message.equalsIgnoreCase("Permission denied")) message = "PERMISSION_DENIED";
         return message.length() < 800 ? message : message.substring(message.length() - 800);
     }
 }
