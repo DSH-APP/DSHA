@@ -22,6 +22,21 @@
 > 🤖 If you are an AI agent or a new contributor, read **[AGENTS.md](AGENTS.md)** first
 > (structure, startup contracts, traps we already fell into). Don't scan the whole repo.
 
+
+## ❤️ Sponsor
+
+<details open>
+<summary>Click to collapse</summary>
+
+<table>
+<tr>
+<td width="180"><a href="https://ai.onyxaxis.org/"><img src="docs/sponsors/axis-ai.jpg" alt="Axis AI" width="150"></a></td>
+<td>Thanks to <a href="https://ai.onyxaxis.org/">Axis AI</a> for sponsoring this project! Axis AI is a free public-interest AI platform where multiple mainstream models are ready to use. Chat, write code, and generate images from one unified platform.</td>
+</tr>
+</table>
+
+</details>
+
 ---
 
 ## DSHA v0.1.7-alpha2 · GitHub pre-release

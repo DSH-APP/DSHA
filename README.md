@@ -21,6 +21,21 @@
 
 > 🤖 下一个 AI / 开发者请先读 **[AGENTS.md](AGENTS.md)**（项目结构、启动契约、踩过的坑），不要先全库扫描。
 
+
+## ❤️ 赞助商
+
+<details open>
+<summary>点击折叠</summary>
+
+<table>
+<tr>
+<td width="180"><a href="https://ai.onyxaxis.org/"><img src="docs/sponsors/axis-ai.jpg" alt="Axis AI" width="150"></a></td>
+<td>感谢 <a href="https://ai.onyxaxis.org/">Axis AI</a> 赞助本项目！Axis AI 是一个免费的公益 AI 平台，多款主流大模型随开随用，聊天、写代码、生成图片都能在同一平台内实现。</td>
+</tr>
+</table>
+
+</details>
+
 ---
 
 ## DSHA v0.1.7-alpha2 · GitHub 预发布
