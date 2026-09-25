@@ -17,10 +17,10 @@ function loadModules() {
   return {modules: window.__testModules};
 }
 
-test('3.0.1 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
-  assert.equal(packageJson.version, '3.0.1');
-  assert.equal(packageJson.dshaUpstream.commit, 'f9ec37ef94b01851b211481ba337e7a1e122744c');
-  assert.equal(packageJson.dshaUpstream.clientSha256, '78c82874c4ec9382a4df57548d36c5b09b6e20f14edb88980eed25584222aa53');
+test('3.0.3 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
+  assert.equal(packageJson.version, '3.0.3');
+  assert.equal(packageJson.dshaUpstream.commit, '881415ffe4daeab1723230e8940f87caeec09348');
+  assert.equal(packageJson.dshaUpstream.clientSha256, '967241b6c7447eff4f2c85454c88730a5a361adc6502cb9d1f4807735b13fba4');
   for (const marker of [
     'DSHA_SESSION_INTERACTION_V1',
     '[data-dsha-session-select]',
@@ -51,7 +51,7 @@ test('3.0.1 上游 bundle 保留 DSHA 移动端入口与头部让位', () => {
   assert.ok(source.includes('function openFilesPanel'));
 });
 
-test('3.0.1 侧栏与文件面板手势使用同一方向/速度门槛', () => {
+test('3.0.3 侧栏与文件面板手势使用同一方向/速度门槛', () => {
   const {modules} = loadModules();
   const swipe = {};
   modules['effects/sidebar-swipe.js'](() => ({}), {}, swipe);
@@ -65,7 +65,7 @@ test('3.0.1 侧栏与文件面板手势使用同一方向/速度门槛', () => {
   assert.equal(swipe.slidingVelocity([{x: 0, t: 900}, {x: 20, t: 940}, {x: 50, t: 1000}], 60, 1000), .5);
 });
 
-test('3.0.1 拖动让位与水平滚动容器判定仍由纯函数负责', () => {
+test('3.0.3 拖动让位与水平滚动容器判定仍由纯函数负责', () => {
   const {modules} = loadModules();
   const swipe = {};
   modules['effects/sidebar-swipe.js'](() => ({}), {}, swipe);
@@ -73,7 +73,7 @@ test('3.0.1 拖动让位与水平滚动容器判定仍由纯函数负责', () =>
   assert.equal(swipe.hitTestStart(200, 390, false, {startZonePx: 176}), false);
 });
 
-test('3.0.1 DOM reconciler 按 dirty scope 合并到一帧', () => {
+test('3.0.3 DOM reconciler 按 dirty scope 合并到一帧', () => {
   const {modules} = loadModules();
   const reconciler = {};
   modules['core/reconciler-core.js'](() => ({}), {}, reconciler);

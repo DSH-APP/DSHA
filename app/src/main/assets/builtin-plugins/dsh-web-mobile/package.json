@@ -1,6 +1,6 @@
 {
   "name": "dsh-web-mobile",
-  "version": "3.0.1",
+  "version": "3.0.3",
   "description": "尽可能的使dsh适配竖屏等移动端设备",
   "license": "MIT",
   "author": "mexiaosh",
@@ -99,10 +99,10 @@
     }
   },
   "dshaUpstream": {
-    "version": "3.0.1",
+    "version": "3.0.3",
     "source": "https://github.com/mexiaosqwq/dsh-web-mobile",
-    "commit": "f9ec37ef94b01851b211481ba337e7a1e122744c",
-    "clientSha256": "78c82874c4ec9382a4df57548d36c5b09b6e20f14edb88980eed25584222aa53",
-    "sourceDate": "2026-09-23"
+    "commit": "881415ffe4daeab1723230e8940f87caeec09348",
+    "clientSha256": "967241b6c7447eff4f2c85454c88730a5a361adc6502cb9d1f4807735b13fba4",
+    "sourceDate": "2026-09-25"
   }
 }

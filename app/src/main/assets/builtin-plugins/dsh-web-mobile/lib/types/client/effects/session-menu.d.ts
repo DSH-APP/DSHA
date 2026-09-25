@@ -1,8 +1,10 @@
 /**
  * Session-row action-menu injection: on touch-primary devices, adds a
- * "delete session" item to the host's per-row ⋯ menu (beside rename / fork /
- * archive) and drives the whole delete flow: row → session id resolution, a
- * confirm dialog, the host delete endpoint, and the list refresh.
+ * "delete session" item to the host's per-row ⋯ menu (beside the host's own
+ * items — rename / fork / archive, plus the 0.1.7 pin item; blank rows stay
+ * host-native) and drives the whole delete flow: row → session id
+ * resolution, a confirm dialog, the host delete endpoint, and the list
+ * refresh.
  *
  * The host menu is React-owned (ui-workspace) with no extension slot, so the
  * item is injected into the portaled `[role="menu"]` list by cloning the

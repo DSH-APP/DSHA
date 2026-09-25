@@ -658,43 +658,92 @@ function statsAnchorAlive(el) {
     return el.closest('[class*="_composerStack"]') !== null;
 }
 function createStatsLineTask() {
-    // The composer root renders the TPS readout ("TPS 89.4 tok/s") as its
-    // own row BELOW the status strip; fold it into the strip so every
-    // metric scrolls together. The suite re-renders its own tree, so this
-    // must be idempotent and re-run on every mutation. Where the readout
-    // came from is recorded so disposal can put it back — on a
-    // narrow→wide transition the desktop layout must be the official one
-    // again, and `[data-mobile-nav="stats"]` is not covered by the
-    // desktop hide rules.
-    let tpsOrigin = null;
-    const moveTps = (stats) => {
-        if ([...stats.children].some((c) => /^TPS\s+\d/.test((c.textContent ?? '').trim())))
+    // React-owned nodes must never be relocated (issue #104): on unmount React
+    // calls parent.removeChild(child) against the parent it rendered the node
+    // into, so a node this task moved makes that throw NotFoundError and the
+    // SlotErrorBoundary blanks the whole composer slot until a reload. The
+    // offline-reconnect rebuild hits exactly this path. Both folded readouts
+    // (context ring, TPS text) therefore STAY where React rendered them; the
+    // visible slot is held by a plugin-owned placeholder element React does not
+    // track, and the host node is absolutely positioned on top of it.
+    // Coordinates refresh on every flush and on viewport resizes — the keyboard
+    // changes layout without any DOM mutation to wake the reconciler.
+    // The overlay must resolve against a positioned ancestor. The host rarely
+    // positions these containers, so mark the expected one (CSS sets
+    // position: relative for the marker, without !important so host styles stay
+    // in charge) and let placeOverlay walk to whichever ancestor actually ends
+    // up positioned — the math is self-consistent with any container.
+    const ensurePositioned = (el, marker) => {
+        if (getComputedStyle(el).position === 'static')
+            el.setAttribute('data-mobile-nav', marker);
+    };
+    const positionedAncestor = (el) => {
+        for (let node = el.parentElement; node !== null; node = node.parentElement) {
+            if (getComputedStyle(node).position !== 'static')
+                return node;
+        }
+        return null;
+    };
+    const placeOverlay = (host, reserve) => {
+        const container = positionedAncestor(host);
+        if (container === null)
             return;
+        const box = reserve.getBoundingClientRect();
+        const base = container.getBoundingClientRect();
+        const left = box.left - base.left - container.clientLeft;
+        const top = box.top - base.top - container.clientTop;
+        const styled = host;
+        if (styled.style.left !== `${left}px`)
+            styled.style.left = `${left}px`;
+        if (styled.style.top !== `${top}px`)
+            styled.style.top = `${top}px`;
+    };
+    // The composer root renders the TPS readout ("TPS 89.4 tok/s") as its own
+    // row BELOW the status strip; fold it into the strip so every metric sits
+    // on one line. Idempotent: the placeholder's text mirrors the readout and
+    // the readout itself is overlaid on the placeholder's box.
+    const moveTps = (stats) => {
         const stack = stats.closest('[class*="_composerStack"]');
         if (stack === null)
             return;
+        let reserve = stats.querySelector(':scope > [data-mobile-nav="stats-tps-reserve"]');
         for (const el of stack.querySelectorAll('div')) {
             const text = (el.textContent ?? '').trim();
             if (!/^TPS\s+\d/.test(text))
                 continue;
             if (el.children.length > 0)
                 continue;
-            // The composer stack can be rebuilt by React between mutations:
-            // refresh the origin every time we actually move the TPS readout, so
-            // disposal returns it where it currently belongs.
-            if (el.parentElement !== null) {
-                tpsOrigin = { parent: el.parentElement, next: el.nextSibling };
+            if (el.getAttribute('data-mobile-nav') === 'stats-tps')
+                continue;
+            if (reserve === null) {
+                reserve = document.createElement('span');
+                reserve.setAttribute('data-mobile-nav', 'stats-tps-reserve');
+                reserve.setAttribute('aria-hidden', 'true');
+                stats.appendChild(reserve);
             }
-            stats.appendChild(el);
+            const live = el.textContent ?? '';
+            if (reserve.textContent !== live)
+                reserve.textContent = live;
+            el.setAttribute('data-mobile-nav', 'stats-tps');
+            const tpsRow = el.parentElement;
+            if (tpsRow === null)
+                continue;
+            ensurePositioned(tpsRow, 'stats-tps-row');
+            placeOverlay(el, reserve);
+            // The strip's last child is the flex shrink group: mirror whatever
+            // width the placeholder settled on so the overlay clips with the same
+            // ellipsis instead of overlapping the neighbouring group.
+            const width = reserve.getBoundingClientRect().width;
+            const styled = el;
+            if (styled.style.maxWidth !== `${width}px`)
+                styled.style.maxWidth = `${width}px`;
             return;
         }
     };
-    // 2026-09-23（店主最终确认）：**环要、百分比数字不要** —— 把这块挪进输入框行
-    // 的右簇（模型/麦克风旁），再由 CSS 用 font-size:0 只留环、隐掉 "45%" 文本。
-    // 它原本独占统计行右侧 63px + 12px 间距；挪走后统计条拿满整宽 326px，
-    // 「轮次·步数·tok/s」+「tok 总量·缓存命中」约 316px 完整放下，不滚动也不省略。
-    // 与 moveTps 同款：幂等 + 记录原位，dispose（宽屏档）时放回官方布局。
-    let ringOrigin = null;
+    // 2026-09-23（店主最终确认）：**环要、百分比数字不要** —— 环显示在输入框行
+    // 的右簇（模型/麦克风旁），CSS 用 font-size:0 只留环、隐掉 "45%" 文本；统计条
+    // 拿满整宽。与 moveTps 同款 overlay：环留在 React 渲染的 dock 原位，插件自建
+    // 占位 span 顶住右簇槽位（16px 环 + 2px 边距，行 gap 补足余量）。
     const moveRing = (stats) => {
         const holder = stats.parentElement;
         const dock = holder === null ? null : holder.parentElement;
@@ -706,15 +755,40 @@ function createStatsLineTask() {
         const row = document.querySelector('[data-composer-card] [class*="_row"] [class*="_trailing"]');
         if (row === null)
             return;
-        if (ring.parentElement === row)
-            return;
-        if (ring.parentElement !== null) {
-            ringOrigin = { parent: ring.parentElement, next: ring.nextSibling };
+        let reserve = row.querySelector(':scope > [data-mobile-nav="stats-ring-reserve"]');
+        const primary = row.querySelector(':scope > [class*="_primary"]');
+        if (reserve === null) {
+            reserve = document.createElement('span');
+            reserve.setAttribute('data-mobile-nav', 'stats-ring-reserve');
+            row.insertBefore(reserve, primary);
         }
-        ring.setAttribute('data-mobile-nav', 'stats-ring');
-        row.insertBefore(ring, row.querySelector(':scope > [class*="_primary"]'));
+        else if (primary === null ? row.lastElementChild !== reserve : reserve.nextElementSibling !== primary) {
+            // React rebuilt the row and shuffled its children around our
+            // placeholder: put the reserved slot back at the anchor position.
+            row.insertBefore(reserve, primary);
+        }
+        if (ring.getAttribute('data-mobile-nav') !== 'stats-ring') {
+            ring.setAttribute('data-mobile-nav', 'stats-ring');
+        }
+        ensurePositioned(dock, 'stats-ring-dock');
+        placeOverlay(ring, reserve);
+    };
+    let viewportHandler = null;
+    const relayout = () => {
+        const anchor = document.querySelector('[data-mobile-nav="stats"]');
+        if (anchor === null)
+            return;
+        moveTps(anchor);
+        moveRing(anchor);
     };
     const mark = () => {
+        // Keyboard open/close and viewport rotations relayout the composer without
+        // any DOM mutation, so the overlays need their own re-layout channel.
+        if (viewportHandler === null) {
+            viewportHandler = relayout;
+            window.addEventListener('resize', relayout);
+            window.visualViewport?.addEventListener('resize', relayout);
+        }
         // Fast path: the marked strip usually survives React rebuilds between
         // tokens; re-verifying the anchor is O(1) while the full-tree hunt below
         // grows with the conversation. moveTps still re-runs so a rebuilt TPS
@@ -788,31 +862,28 @@ function createStatsLineTask() {
         scopes: ['*'],
         ensure: mark,
         dispose: () => {
-            // Hand the official layout back: return the TPS readout to its own
-            // row, then drop the marker that drives the one-line strip.
-            if (tpsOrigin !== null && tpsOrigin.parent.isConnected) {
-                // Find the TPS readout only inside the marked stats strip we moved
-                // it into — a global text search could pick up a different element.
-                for (const stats of document.querySelectorAll('[data-mobile-nav="stats"]')) {
-                    const tps = [...stats.querySelectorAll('div')].find((el) => el.children.length === 0 && /^TPS\s+\d/.test((el.textContent ?? '').trim()));
-                    if (tps !== undefined) {
-                        tpsOrigin.parent.insertBefore(tps, tpsOrigin.next);
-                        break;
-                    }
+            // Hand the official layout back: drop every marker (the strip loses its
+            // one-line layout, ring/TPS overlays return to static flow) and remove
+            // the plugin-owned placeholders.
+            if (viewportHandler !== null) {
+                window.removeEventListener('resize', viewportHandler);
+                window.visualViewport?.removeEventListener('resize', viewportHandler);
+                viewportHandler = null;
+            }
+            for (const el of document.querySelectorAll('[data-mobile-nav="stats-ring"], [data-mobile-nav="stats-tps"]')) {
+                const styled = el;
+                styled.style.left = '';
+                styled.style.top = '';
+                styled.style.maxWidth = '';
+            }
+            for (const key of ['stats', 'stats-ring', 'stats-ring-dock', 'stats-tps', 'stats-tps-row']) {
+                for (const el of document.querySelectorAll(`[data-mobile-nav="${key}"]`)) {
+                    el.removeAttribute('data-mobile-nav');
                 }
             }
-            for (const el of document.querySelectorAll('[data-mobile-nav="stats"]')) {
-                el.removeAttribute('data-mobile-nav');
+            for (const el of document.querySelectorAll('[data-mobile-nav="stats-ring-reserve"], [data-mobile-nav="stats-tps-reserve"]')) {
+                el.remove();
             }
-            // 上下文环放回统计行旁边，宽屏档恢复官方布局。
-            if (ringOrigin !== null && ringOrigin.parent.isConnected) {
-                for (const ring of document.querySelectorAll('[data-mobile-nav="stats-ring"]')) {
-                    ringOrigin.parent.insertBefore(ring, ringOrigin.next);
-                    ring.removeAttribute('data-mobile-nav');
-                }
-            }
-            ringOrigin = null;
-            tpsOrigin = null;
         },
     };
 }
@@ -865,72 +936,6 @@ function createPreviewFullscreenTask(t) {
         dispose: () => {
             button?.remove();
             button = null;
-        },
-    };
-}
-};
-__modules["effects/git-chip-reparent.js"] = function (require, module, exports) {
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createGitChipTask = createGitChipTask;
-function createGitChipTask() {
-    return {
-        name: 'git-chip-reparent',
-        scopes: ['*'],
-        ensure: () => {
-            const chip = document.querySelector('[data-slot="conversation.input.dock"] [data-gitgraph-chip-anchor]');
-            if (chip === null)
-                return;
-            const card = document.querySelector('[data-composer-input], textarea')?.closest('[class*="_card"]');
-            if (card == null)
-                return;
-            if (chip.parentElement !== card)
-                card.insertBefore(chip, card.firstChild);
-        },
-        dispose: () => {
-            const chip = document.querySelector('[data-slot="conversation.input.dock"] [data-gitgraph-chip-anchor]');
-            const dock = document.querySelector('[data-slot="conversation.input.dock"]');
-            if (chip !== null && dock !== null && chip.parentElement !== dock)
-                dock.appendChild(chip);
-        },
-    };
-}
-};
-__modules["effects/settings-toolbar-reparent.js"] = function (require, module, exports) {
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createSettingsToolbarTask = createSettingsToolbarTask;
-function createSettingsToolbarTask() {
-    let origin = null;
-    return {
-        name: 'settings-toolbar-reparent',
-        scopes: ['*'],
-        ensure: () => {
-            const dialog = document.querySelector('[aria-modal="true"]');
-            if (dialog === null)
-                return;
-            const nav = dialog.querySelector(':scope > [class*="_nav"]');
-            const header = dialog.querySelector('[class*="_header"]:not([class*="_headerActions"])');
-            if (nav === null || header === null)
-                return;
-            if (header.parentElement === nav)
-                return;
-            // The dialog DOM can be rebuilt by React between mutations: refresh
-            // the origin every time we actually move the header, so disposal
-            // restores it where it currently belongs, not where it was first seen.
-            if (header.parentElement !== null) {
-                origin = { parent: header.parentElement, next: header.nextSibling };
-            }
-            nav.appendChild(header);
-        },
-        dispose: () => {
-            if (origin === null)
-                return;
-            const header = document.querySelector('[aria-modal="true"] [class*="_header"]:not([class*="_headerActions"])');
-            if (header !== null && origin.parent.isConnected) {
-                origin.parent.insertBefore(header, origin.next);
-            }
-            origin = null;
         },
     };
 }
@@ -2664,8 +2669,6 @@ const sessions_compat_ts_1 = require("./core/sessions-compat.js");
 const aionui_compat_ts_1 = require("./effects/aionui-compat.js");
 const stats_line_ts_1 = require("./effects/stats-line.js");
 const preview_fullscreen_ts_1 = require("./effects/preview-fullscreen.js");
-const git_chip_reparent_ts_1 = require("./effects/git-chip-reparent.js");
-const settings_toolbar_reparent_ts_1 = require("./effects/settings-toolbar-reparent.js");
 const overlay_backdrop_fab_ts_1 = require("./effects/overlay-backdrop-fab.js");
 const file_viewer_compat_ts_1 = require("./effects/file-viewer-compat.js");
 const sidebar_swipe_ts_1 = require("./effects/sidebar-swipe.js");
@@ -3505,8 +3508,6 @@ function registerReconcileTasks(ctx, panelExit) {
     const t = ctx.locale.bind(NS);
     const removeTasks = [
         addReconcilerTask((0, preview_fullscreen_ts_1.createPreviewFullscreenTask)(t)),
-        addReconcilerTask((0, git_chip_reparent_ts_1.createGitChipTask)()),
-        addReconcilerTask((0, settings_toolbar_reparent_ts_1.createSettingsToolbarTask)()),
         addReconcilerTask((0, aionui_compat_ts_1.createPreviewCloseTask)()),
         addReconcilerTask((0, aionui_compat_ts_1.createSheetRiseTask)()),
         addReconcilerTask((0, stats_line_ts_1.createStatsLineTask)()),
@@ -3742,10 +3743,10 @@ exports.BASE_CSS = `
 }
 
 [data-mobile-nav="delete-confirm-title"] {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-  color: var(--dsw-alias-state-error-primary, #b91c1c);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--dsw-alias-text-primary, rgb(15, 17, 21));
 }
 [data-mobile-nav="delete-confirm-desc"] {
   font-size: 12px;
@@ -3759,21 +3760,21 @@ exports.BASE_CSS = `
   margin-top: 2px;
 }
 [data-mobile-nav="delete-confirm-actions"] > button {
-  height: 30px;
-  padding: 0 12px;
+  height: 36px;
+  padding: 0 14px;
   border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, .12));
-  border-radius: 10px;
+  border-radius: 18px;
   background: transparent;
   color: var(--dsw-alias-label-primary, inherit);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 20px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 [data-mobile-nav="delete-confirm-yes"] {
-  border-color: var(--dsw-alias-state-error-secondary, rgba(220, 38, 38, .5)) !important;
-  background: var(--dsw-alias-state-error-primary, #dc2626) !important;
+  border-color: transparent !important;
+  background: var(--dsw-alias-state-error-primary, #b91c1c) !important;
   color: #ffffff !important;
 }
 [data-mobile-nav="delete-confirm-actions"] > button:disabled {
@@ -3782,47 +3783,45 @@ exports.BASE_CSS = `
 }
 [data-mobile-nav="delete-error"] {
   width: 100%;
-  font-size: 12px;
-  line-height: 17px;
+  font-size: 14px;
+  line-height: 20px;
   color: var(--dsw-alias-state-error-primary, #b91c1c);
 }
 
-/* Bottom overlay for the delete confirm / error card: dimmed backdrop plus a
-   viewport-anchored card above the drawer. [hidden] keeps the error line out
-   of layout until a failure lands. */
+/* Centered frosted-glass modal for the delete confirm / error card: the
+   backdrop is a flex positioning container (centering + 16px inset padding)
+   and the card rides inside it as a static child (session-menu.ts appends
+   the card INTO the backdrop for exactly this reason). Look baseline = the
+   host ⋯ menu's portal root, measured 2026-09-24: translucent
+   rgba(248,249,250,.58) fill with blur(40px) saturate(1.5) frosted glass,
+   16px radius, hairline + soft shadow. Geometry baseline = the host Dialog,
+   measured the same day: centered modal, 16px/500 title, 36px pill buttons,
+   solid-fill primary. [hidden] keeps the error line out of layout until a
+   failure lands. */
 [data-mobile-nav="delete-dialog-backdrop"] {
   position: fixed;
   inset: 0;
   z-index: 55;
-  background: rgba(0, 0, 0, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .4);
   animation: dsh-web-mobile-fade .2s var(--ds-ease-in-out, ease-in-out);
 }
 [data-mobile-nav="delete-dialog"] {
-  position: fixed;
-  left: 8px;
-  right: 8px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 56;
+  position: static;
+  width: min(420px, calc(100vw - 32px));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 14px;
-  background: var(--dsw-alias-bg-base, #ffffff);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, .22);
-  animation: dsh-web-mobile-sheet-in .22s var(--ds-ease-out, ease-in-out);
-}
-/* Wide touch (tablet landscape ≥1024px, pointer coarse): the card would
-   otherwise span the full desktop viewport. Cap and center it with margins
-   (not transform, which the entry animation would override mid-play). */
-@media (min-width: 1024px) and (pointer: coarse) {
-  [data-mobile-nav="delete-dialog"] {
-    left: 0;
-    right: 0;
-    width: 420px;
-    margin-inline: auto;
-  }
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(248, 249, 250, .58);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5);
+  backdrop-filter: blur(40px) saturate(1.5);
+  box-shadow: rgba(0, 0, 0, .04) 0 0 0 .5px, rgba(0, 0, 0, .04) 0 3px 8px 0, rgba(0, 0, 0, .05) 0 0 20px 0;
 }
 @media (prefers-reduced-motion: reduce) {
   [data-mobile-nav="delete-dialog-backdrop"],
@@ -3865,9 +3864,10 @@ exports.BASE_CSS = `
      Measured 2026-09-19: with the drawer open (column z 1300) the workspace
      Rename dialog sat entirely under it and needed the drawer closed first.
      Raise the portal root, not the dialog, and only while the drawer is open —
-     the closed-drawer and desktop stacks keep the host's own ordering. Our own
-     delete card is untouched: its role sits on the body child itself, so
-     :has(>) never matches it. */
+     the closed-drawer and desktop stacks keep the host's own ordering. Our
+     own delete backdrop matches this rule too since the 2026-09-24 centered
+     rework (its direct child card carries role=dialog) — harmlessly: it sets
+     the same 1400 the dedicated rule below sets. */
   body:has([data-mobile-nav="frame"]:not([data-sidebar-collapsed]))
     > div:has(> [role="dialog"][aria-modal="true"]) {
     z-index: 1400 !important;
@@ -3907,6 +3907,27 @@ exports.BASE_CSS = `
      portal OUTSIDE this layer. Closed-drawer and desktop stacks keep the
      host's own ordering. */
   body:has([data-mobile-nav="frame"]:not([data-sidebar-collapsed]))
+    [class*="_overlayLayer"] {
+    z-index: 1400 !important;
+  }
+  /* 0.1.7 fullscreen sidebar panels (the sidebar terminal / files / preview /
+     browser tabs) state the dockkit cell at z 40 — the host sets
+     --dsh-dockkit-dock-layer: 40 on .panel[data-sidebar-right-panel=fullscreen]
+     — which outranks the
+     host's own overlay layer (20) and our FAB (21). Measured 2026-09-23 at
+     390px with the terminal panel open: elementFromPoint at the FAB's centre
+     returned a panel child, and a real tap on it left the drawer closed — the
+     phone lost its only way back to navigation (the FAB is the screen's only
+     control once a panel owns the main area, see overlay-backdrop-fab.ts).
+     Raise OUR two surfaces for that state, the same "raise the root, not the
+     children" shape as above; the FAB stays in the below-the-drawer band (55)
+     so an open drawer keeps covering it. Gate on the open attribute: the
+     presentation attribute alone survives a closed panel. Closed-panel,
+     docked-panel (dock layer 10) and desktop stacks keep the host's order. */
+  body:has([data-sidebar-right-open][data-sidebar-right-panel="fullscreen"]) [data-mobile-nav="fab"] {
+    z-index: 55 !important;
+  }
+  body:has([data-sidebar-right-open][data-sidebar-right-panel="fullscreen"])
     [class*="_overlayLayer"] {
     z-index: 1400 !important;
   }
@@ -4704,6 +4725,42 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     margin-left: 0;
   }
 
+  /* --- Third-party model seats (issue #60: @hytime/dsh-thinking-effort) ---
+     A seat registered on conversation.input.model replaces the official pill,
+     so the trailing lane no longer contains an aria-haspopup="menu" trigger:
+     the pill absorber rule above never matches, and the meter fallback below
+     would split the slack with the seat (two auto margins share it), leaving
+     the seat stranded mid-lane. Worse, in the seat's open state the root's
+     only child is the absolutely positioned panel, so the root collapses to
+     zero width and the panel's right:0 anchor (width min(336px, 100vw - 32px))
+     sweeps 336px leftward from wherever the stranded root sits — 230px off
+     screen at 393px (reporter-measured: root x=106, panel left=-230; with our
+     stylesheet disabled the root sat at x=339 and the panel at +3, which pins
+     the blame on our injection). Both repairs anchor on the plugin's own
+     stable data-seat-* markers (identical across v0.2.3-v0.3.1) and leave the
+     official pill untouched:
+     1. the seat root stretches across the trailing lane with its content
+        pushed to the right edge, so the closed chip welds onto the
+        [meter][send] cluster AND the grown root consumes all free space,
+        which zeroes the meter fallback's margin-left:auto (flexible lengths
+        resolve before auto margins — no double void);
+     2. while the panel is open its anchor is re-centered on the stretched
+        root (the same left:50% + translateX recipe as the official menu
+        rule), so the panel hugs the composer's right side and the plugin's
+        own min(336px, 100vw - 32px) width keeps it inside the viewport at
+        every width. The reporter's rejected translateX attempt centered on
+        the UNFIXED zero-width root; centering only works once the root is
+        stretched. */
+  [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] [data-seat-root] {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+  }
+  [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] [data-seat-root] > [data-seat-panel] {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+
   /* --- Composer file entry (0.1.6 host) ---
      The 0.1.6-alpha.2 host deleted the composer's paperclip attach button, so
      the only file entry left is the 文件 row inside the "+" listbox. The
@@ -5415,7 +5472,11 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     max-width: none !important;
     min-width: 0 !important;
     min-height: 40px !important;
-    gap: 0 6px !important;
+    /* 三级间隙 6 → 4（2026-09-23 用户拍板）：团队 chip 在手机档被宿主
+       @container(width<=480px) 藏掉标签、只剩 14px 图标（对账见 §6），
+       这一行不再需要 6px 的呼吸量；收成 4px 让「模式 / 团队 / 文件夹」
+       看起来是一组。 */
+    gap: 0 4px !important;
     justify-content: flex-start !important;
     align-items: center !important;
     /* 簇溢出守卫，随断点 A 无条件化并入本显示规则（原为独立条）：极端
@@ -5512,7 +5573,9 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     padding: 0 !important;
     border-top: 0 !important;
     justify-content: flex-end !important;
-    gap: 6px !important;
+    /* 与 titleCluster 同步收到 4px（2026-09-23）：动作行里的 chip（任务 /
+       谱系 / 团队）之间也只留 4px。 */
+    gap: 4px !important;
     overflow-x: auto !important;
     scrollbar-width: none;
   }
@@ -5602,12 +5665,17 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
       手机端唯一的模式切换入口（pitfalls ⑤：必须保字），团队 chip 的完整
       文字在自己的面板里有承载（点开即达），所以让它先让：保持 order:2
       不变（创造在前、团队在后的次序不能翻），只把不可缩改成可缩，并加
-      44px 收缩下限（数值可调）保住图标点击区；内部省略号窗口由 rc 代的
+      收缩下限保住图标点击区；内部省略号窗口由 rc 代的
       > button / > button > * 规则继续供给。特异性 (0,5,1) 高于 pin 规则
-      (0,4,1)，且 !important，不依赖书写顺序；:has 门控保证 rc 宿主不命中。 */
+      (0,4,1)，且 !important，不依赖书写顺序；:has 门控保证 rc 宿主不命中。
+      2026-09-23 下限 44 → 28（用户拍板）：宿主自己那条 @container(width<=480px)
+      把标签藏了，手机档这颗 chip 实际只剩 14px 图标，44px 的盒子成了那一行
+      最宽的空占位（真机 dpr 4：图标右缘 291 → 文件按钮图标左缘 326，观感 35px
+      留白）。28 = 图标 14 + 宿主自带左右内边距 7（.VoX2oq_trigger padding），
+      与本插件 toggle/files 同尺寸，不再额外扩拍击区。 */
   [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [data-team-action][class*="_root"] {
     flex: 0 1 auto !important;
-    min-width: 44px !important;
+    min-width: 28px !important;
   }
   [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="_headerActions"] [class*="QsffPG_root"] {
     position: absolute !important;
@@ -5878,6 +5946,22 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
       --dsh-composer-model-text-display: none;
       --dsh-composer-model-icon-display: block;
     }
+    /* 图标化后（上方变量钉死为 icon-only）宿主那套 padding:0 4px 0 8px 纯属
+       浪费（左 8px 是给文字留的）。2026-09-23 店主第二轮："范围有点大、
+       ⌄ 离图标远" ⇒ padding 归零、gap 归零，匣子只剩「图标 + ⌄」本身
+       （实测墨迹间距 10px → ~4px，匣宽 46 → ~32px）。issue #101 对账：原与
+       max-width 同块、无档位限定，768–1023 平板档文字在场时也被归零，chip
+       内部「图标|模型名|effort|⌄」贴死 —— 2026-09-24 挪进本 ≤767 专档。 */
+    [data-mobile-nav="frame"] [data-phase] [class*="_7KE1Ra_trigger"] {
+      padding: 0 !important;
+      gap: 0 !important;
+    }
+    /* ⌄ 的 svg 自身带内边距（墨迹比 viewBox 窄），再拉近 2px。gap 归零后两个
+       svg 的内边距会让墨迹直接贴住（实测墨迹连成一段），这里不再加负 margin，
+       留 ~2px 呼吸 —— 间距从 10px 收到 2px。 */
+    [data-mobile-nav="frame"] [data-phase] [class*="_7KE1Ra_chevron"] {
+      margin-left: 0 !important;
+    }
   }
   /* 模型 chip 宽度预算（只对仍显示文字的 768–1023 平板档有意义）：宿主
      trigger 的 max-width min(360px,45cqw) 在窄容器下只给
@@ -5887,17 +5971,9 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      (0,3,0)+!important 胜宿主 (0,1,0) 普通声明；60 数值可调。 */
   [data-mobile-nav="frame"] [data-phase] [class*="_7KE1Ra_trigger"] {
     max-width: min(360px, 60cqw) !important;
-    /* 图标化后宿主那套 padding:0 4px 0 8px 纯属浪费（左 8px 是给文字留的）。
-       2026-09-23 店主第二轮："范围有点大、⌄ 离图标远" ⇒ padding 归零、gap 归零，
-       匣子只剩「图标 + ⌄」本身（实测墨迹间距 10px → ~4px，匣宽 46 → ~32px）。 */
-    padding: 0 !important;
-    gap: 0 !important;
-  }
-  /* ⌄ 的 svg 自身带内边距（墨迹比 viewBox 窄），再拉近 2px。 */
-  [data-mobile-nav="frame"] [data-phase] [class*="_7KE1Ra_chevron"] {
-    /* gap 归零后两个 svg 的内边距会让墨迹直接贴住（实测墨迹连成一段），
-       这里不再加负 margin，留 ~2px 呼吸 —— 间距从 10px 收到 2px。 */
-    margin-left: 0 !important;
+    /* issue #101 对账：padding/gap 归零与 chevron margin-left:0 已分档至上方
+       ≤767 专档（那是「图标化后」的前提）；768–1023 文字显示档保留宿主
+       padding 0 4px 0 8px 与宿主 gap，⌄ 回宿主 margin。 */
   }
   /* --- Settings dialog on mobile ---
      Desktop: 800px two-column flex (188px nav + content). Mobile: a
@@ -5970,26 +6046,87 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :first-child > :first-child {
     display: none !important;
   }
-  /* The tab list scrolls in the space left by the toolbar: the toolbar
-     (config file + close) is reparented INTO this nav row by a client
-     reconciler task (settings-toolbar-reparent), so the tab list must be
-     anchored by its class, NOT by :last-child (the reparented toolbar
-     becomes the nav's new last child). */
+  /* The tab strip stays clear of the toolbar: the toolbar (the close ✕ on
+     this host — the config-file button is hidden below) is absolutely
+     positioned over the nav row's right end (#105 A' — it stays at its
+     React home in the content column; see below). The strip is pinned to
+     ONE horizontal scroller: flex-wrap:nowrap + overflow-x:auto.
+     2026-09-25, rc.2 portal regression: 0.1.7-rc.1 rendered this sheet in
+     place (inside the app frame); rc.2 wraps it in
+     createPortal(..., document.body) — diffed rc.1 vs rc.2 bundles, no
+     createPortal before — so every [data-mobile-nav="frame"]-scoped
+     dialog rule (the frame-era single-row scroller in compat.css among
+     them) went dead the moment the overlay became a direct body child.
+     What survived was this rule's own flex-wrap:wrap, which had been
+     losing to the host's nowrap scroller and now had nothing to lose to:
+     the cells broke into uneven rows (3/2/3/2/1 at 402px) whose first row
+     slid under the 138px toolbar (config-file button + close) — the
+     settings-sheet half of the owner's 2026-09-25 report. Pinning the
+     scroller here makes the geometry host-generation independent again;
+     the cells keep flex-shrink:0 + nowrap (rule below), the strip
+     scrolls, and the hairline scrollbar is the affordance. The scroller
+     VIEWPORT stops short of the toolbar zone: margin-right = toolbar
+     width (36: the 32px round close + 4px) + 6px gap (measured
+     2026-09-24) reproduces the reparent-era scroller geometry (its box
+     ended 6px short of the toolbar). The strip must be anchored by its
+     class. */
   [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :first-child [class*="_navList"] {
     flex: 1 1 auto;
     min-width: 0;
     flex-direction: row !important;
-    flex-wrap: wrap;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     gap: 6px;
-    overflow: visible;
+    margin-right: 42px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
   }
-  /* Content toolbar (Open configuration file + close): grouped flush to
-     the right edge, and reparented INTO the nav row on mobile by the
-     settings-toolbar-reparent reconciler task, so it shares one line with
-     the tabs (user feedback 2026-08-16 — the toolbar's own row left a
-     full-width dead gap under the tabs). Children carry official
-     auto-margins that would defeat flex-end, so neutralize them. The close
-     button gets a round tappable base so it reads as its own control, not
+  /* Hairline scrollbar for the tab strip: the default WebKit scrollbar
+     reads fat on a phone; 2px keeps the scroll affordance without the
+     bulk. (Portal-aware copies of the frame-scoped rules in compat.css,
+     which died with the rc.2 portal move.) */
+  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :first-child [class*="_navList"]::-webkit-scrollbar {
+    height: 2px !important;
+  }
+  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :first-child [class*="_navList"]::-webkit-scrollbar-thumb {
+    background: var(--dsw-alias-border-l2, rgba(0, 0, 0, .22)) !important;
+    border-radius: 1px !important;
+  }
+  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :first-child [class*="_navList"]::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+  /* Cells stay whole inside the scroller: no shrink, no wrap, compact
+     metrics. (Portal-aware copies of the frame-scoped rules in compat.css,
+     which died with the rc.2 portal move.) */
+  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :first-child [class*="_navCell"] {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
+    font-size: 13px !important;
+    justify-content: flex-start !important;
+  }
+  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :first-child [class*="_navCell"] svg {
+    width: 14px !important;
+    height: 14px !important;
+    flex: none !important;
+  }
+  /* Content toolbar (close, plus the config-file button on hosts that
+     render one): pinned over the nav row's right end, flush right.
+     #105 A' — the toolbar stays at its React home (the content column's
+     direct child) and is absolutely positioned against the dialog; the
+     dialog is position:absolute itself, so it is the containing block
+     and no new one is introduced. Constants measured 2026-09-24 (CDP,
+     393px): the reparented toolbar — whose visual this replaces — sat
+     at in-dialog dy=10 / fromRight=12, hence top 10px / right 12px.
+     Out of flow, the toolbar's own row disappears and the options area
+     starts right under the nav row; the navList's scroll viewport stops
+     short of the toolbar with margin-right = toolbar width (36: the 32px
+     round close + 4px) + 6px gap (measured). Children carry official
+     auto-margins
+     that would defeat flex-end, so neutralize them. The close button
+     gets a round tappable base so it reads as its own control, not
      part of the outline button.
      Anchored structurally, not by class substring: a bare [class*="_header"]
      also matches every plugin settings card header in the options area —
@@ -5998,28 +6135,49 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      siblings were renamed upstream in dsh-web-all 0.3.20, verified 2026-09-18), all sharing the upstream template text-align:left,
      gap:12px, padding:14px 16px). The old broad anchor right-aligned their
      text, gutted the padding and painted a 32px gray circle behind the
-     chevron (2026-09-05 sweep: 8 bleeding headers). The toolbar has two
-     structural homes, both covered below: after the reparent it is a direct
-     child of the nav row ([class*="_nav"]); before the reparent runs it is
-     the content column's direct child (the panel's :last-child). Card
-     headers live deeper — inside the options scroll area — and match
-     neither, so no per-plugin hash guards are needed. */
-  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > [class*="_nav"] > [class*="_header"]:not([class*="_headerActions"]),
+     chevron (2026-09-05 sweep: 8 bleeding headers). The toolbar's one
+     structural home is the content column's direct child (the panel's
+     :last-child); the post-reparent nav-row home died with the
+     settings-toolbar-reparent task. Card headers live deeper — inside
+     the options scroll area — and match neither, so no per-plugin hash
+     guards are needed. */
   [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :last-child > [class*="_header"]:not([class*="_headerActions"]) {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    /* z-index is load-bearing since 0.1.7-rc.2 (owner report 2026-09-25):
+       the sheet is portaled to <body>, and the market page (dshmarket's
+       nUhMVa_root, position:relative, z:auto) paints AFTER this header in
+       DOM order — both are z:auto positioned, so the market head covered
+       the pinned toolbar: the close ✕ stayed visible through the head's
+       transparent right end but hit-testing returned the head, so tapping
+       the ✕ did nothing ("按了关闭没用"). z-index lifts the toolbar into
+       the painted-above layer: above the market root and its sticky list
+       heads (.stickyHead z:5), still below the market's own transient
+       layers (.opPanel z:40, .lightbox z:10000) which SHOULD cover it.
+       Settings view: the toolbar sits over the nav row's reserved right
+       end (margin-right 42px), so nothing there to cover or be covered. */
+    z-index: 10;
     flex: 0 0 auto;
     justify-content: flex-end;
     align-items: center;
     gap: 8px;
     padding: 0 0 0 4px;
-    min-height: 40px;
+    /* Hug the close ✕ only: the host header box is 54px tall, and with the
+       actions hidden its empty lower half (above the market's "导出日志"
+       button, which starts ~13px under the ✕) formed a dead zone that
+       ate the export button's top-right corner once z-index lifted the
+       toolbar above it (owner report follow-up 2026-09-25). 32px = the
+       close's own height, so the toolbar's box ends where the ✕ ends. */
+    height: 32px;
+    min-height: 32px;
   }
-  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > [class*="_nav"] > [class*="_header"]:not([class*="_headerActions"]) > *,
   [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :last-child > [class*="_header"]:not([class*="_headerActions"]) > * {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
-  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > [class*="_nav"] > [class*="_header"]:not([class*="_headerActions"]) > :last-child,
   [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :last-child > [class*="_header"]:not([class*="_headerActions"]) > :last-child {
+    position: relative;
     width: 32px;
     height: 32px;
     border-radius: 50% !important;
@@ -6027,6 +6185,34 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     align-items: center;
     justify-content: center;
     background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06)) !important;
+  }
+  /* 32px is under the ~44px touch minimum and this ✕ shares the corner
+     with the market's version text (above-left) and its export button
+     (below-left) — the owner's "很容易误触" report 2026-09-25. Extend the
+     HIT area only (no visual change): the pseudo-element grows up, left
+     and right by 6px — never downward, where the market's "导出日志"
+     button starts ~13px under the ✕'s bottom edge and must keep its own
+     top-right corner. Anchored to the button (position:relative above),
+     so the extension travels with the pinned toolbar. */
+  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :last-child > [class*="_header"]:not([class*="_headerActions"]) > :last-child::after {
+    content: "";
+    position: absolute;
+    inset: -6px -6px 0 -6px;
+    border-radius: 50%;
+  }
+  /* The config-file action (a settings.action slot — dsh-version-update's
+     "打开配置文件") is hidden on phones: it is rarely needed here, and its
+     ~94px next to the 32px close made the pinned toolbar 138px wide —
+     wide enough to swallow the nav strip's first cells while the strip
+     still wrapped (2026-09-25 report, the other half of the same
+     regression as the scroller fix above). The close ✕ is the toolbar's
+     SIBLING, not its child (verified in the live DOM: header children are
+     [actions, close]), so hiding the actions never removes the way out.
+     Desktop keeps the button: this whole block sits inside the mobile
+     media wrapper. (Portal-aware replacement for the frame-scoped rule in
+     compat.css, which died with the rc.2 portal move.) */
+  [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :last-child > [class*="_header"]:not([class*="_headerActions"]) [class*="_actions"] {
+    display: none !important;
   }
   /* Appearance mode cards: the official cube row renders three tall
      vertical cards (~268px) that eat half the sheet. Turn them into a
@@ -6156,7 +6342,9 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     max-width: 100%;
     height: 36px !important;
     min-height: 36px !important;
-    padding: 0 6px;
+    /* 左右内边距 6 → 4（2026-09-23 用户拍板）：与 6 → 4 的三级间隙一起，
+       把「标准模式 / 智能体 / 文件夹」收成一组；文字本身不受影响。 */
+    padding: 0 4px;
     border: 0;
     background: transparent;
     font: inherit;
@@ -6504,8 +6692,12 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
      so position:fixed centers against the real viewport (a plain left:50%
      would resolve against the tiny relative trigger wrapper and land even
      further right). The upstream 86vw width cap, 70vh max-height and
-     internal scroll all still apply; the close button stays inside. */
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_opPanel"] {
+     internal scroll all still apply; the close button stays inside.
+     2026-09-25: re-anchored from [data-mobile-nav="frame"] [aria-modal]
+     to the market's own root marker — since rc.2 the whole settings
+     sheet (market included) is portaled to <body> and no longer matches a
+     frame-descendant selector. */
+  [data-dsh-market-root] [class*="_opPanel"] {
     position: fixed !important;
     top: 50% !important;
     bottom: auto !important;
@@ -6525,20 +6717,83 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
      sometimes-horizontal/sometimes-vertical flapping. Let the row wrap
      instead: line 1 keeps icon + title + repo + version, the update
      buttons get their own full-width-feeling second line, and the title
-     itself is locked to one ellipsized line no matter what follows it. */
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_titleRow"] {
+     itself is locked to one ellipsized line no matter what follows it.
+     2026-09-25: re-anchored from [data-mobile-nav="frame"] [aria-modal]
+     to the market's own root marker — since rc.2 the whole settings
+     sheet (market included) is portaled to <body> and no longer matches a
+     frame-descendant selector. Same day, second pass: the ported rule's
+     flex:1 1 auto on the title GREW it to fill the row, which pushed the
+     repo link and the version "v1.65.1" to the far right — exactly where
+     the pinned toolbar's close ✕ sits, crowding the corner the owner
+     reported as "很容易误触" (hit-test: the version box reached x≈378,
+     the close ✕ starts at x=350). flex:0 1 auto keeps the title at its
+     natural width (repo + version pack left, as upstream intends) while
+     still letting it shrink-and-ellipsize when the update buttons force a
+     wrap — the wrap rule above, not flex-grow, is what makes room for
+     them. */
+  [data-dsh-market-root] [class*="_titleRow"] {
     flex-wrap: wrap !important;
     row-gap: 6px !important;
   }
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_titleRow"] [class*="_title"] {
-    flex: 1 1 auto !important;
+  [data-dsh-market-root] [class*="_titleRow"] [class*="_title"] {
+    flex: 0 1 auto !important;
     min-width: 0 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_titleRow"] button {
+  [data-dsh-market-root] [class*="_titleRow"] button {
     white-space: nowrap !important;
+  }
+
+  /* ---------- dshmarket polish: card byline stays on one line ----------
+     The byline (avatar · owner · version · ↓downloads · ★stars) is a
+     wrapping flex row by upstream design — the market would rather drop
+     the counts to a second line than over-shrink the owner name (its
+     .owner carries flex:0 1 auto + ellipsis + min-width:44px exactly for
+     that). At a phone's card width the break point lands mid-row though:
+     everything but the star fits, so a lone "· ★ 8k" wraps onto its own
+     line under the author — inconsistent with the cards that happen to
+     fit, which reads as a rendering bug (owner report 2026-09-25,
+     IMG_4208: dsh-remote-web-ui and dsh-skill-explorer both orphaned the
+     star). Pin the row to one line instead: the owner is the market's own
+     flexible item, so it absorbs the squeeze and the counts stay whole.
+     Desktop cards are far wider than the row and never wrapped anyway. */
+  [data-dsh-market-root] [class*="_byline"] {
+    flex-wrap: nowrap !important;
+  }
+
+  /* ---------- dshmarket polish: top inset ----------
+     The sheet is pinned to the top of the screen (A': top = safe-area +
+     12px) and the market page started FLUSH against the sheet's top
+     edge — measured 2026-09-25: the title row's gap from the sheet's top
+     was 0px while the pinned close ✕ sat 10px under it, so the whole
+     page read as crushed against the boundary (owner report, IMG_4211:
+     "最上面快要顶到边界了... 把整体往下移一点，有点留白会更美观").
+     Give the page the same 12px inset its own horizontal padding already
+     has (the root box was 12px from each side, 0px from the top), so the
+     title lands ~12px under the sheet's rounded corner, level with the
+     close ✕. The market page is the sheet's CONTENT, so it moves; the
+     pinned toolbar (close ✕) belongs to the sheet and deliberately does
+     NOT move ("关闭按钮可以不动"). Scrolls away naturally with the page.
+     Desktop market is vertically centered with the host's own clearance
+     and never had this read; the rule is mobile-only. */
+  [data-dsh-market-root] {
+    margin-top: 12px !important;
+  }
+  /* Below ~360px the fixed-width counts plus the owner's 44px min overrun
+     the card, so the ellipsis eats most of the name ("omds..."). Trade text
+     size for name length on the smallest phones: 11px → 10px text and
+     6px → 4px gaps buy the owner roughly a third more room while the row
+     stays one line. Tablet/phone tiers above this width are unaffected. */
+  @media (max-width: 360px) {
+    [data-dsh-market-root] [class*="_byline"] {
+      gap: 4px !important;
+      font-size: 10px !important;
+    }
+    [data-dsh-market-root] [class*="_byline"] [class*="_dot"] {
+      margin-left: 3px !important;
+    }
   }
 
   /* ---------- dshmarket 1.20+ compat: keep the settings nav visible ----------
@@ -6549,9 +6804,25 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
      Our host's only close ✕ lives inside that very nav, so the market
      would leave no categories and no way back or out (dead-end UI,
      2026-08-23). Mirror upstream's exact media condition and restore the
-     nav: categories row + ✕ stay above the inline market page. */
+     nav: categories row + ✕ stay above the inline market page.
+     2026-09-25 (rc.2 regression): 0.1.7-rc.2 renders this sheet through
+     createPortal(..., document.body), so the frame-scoped selector matches
+     nothing on rc.2+ hosts and the market takeover silently won — no
+     categories row above the market page on every updated phone. The twin
+     rule below carries the same declaration on a structural anchor
+     ([role=dialog]:has(...) > nav, no frame prefix): on rc.1 hosts the
+     frame-scoped rule does the work and the twin is inert (the sheet is a
+     frame descendant there); on rc.2+ the twin carries it. Both stay
+     inside this file's mobile media wrapper, so desktop never sees them.
+     Premise note: this host generation keeps its close ✕ in the CONTENT
+     header (pinned top-right — see layout.css), so the dead-end half of
+     the 2026-08-23 report no longer applies; the rule is kept and twinned
+     for the categories row it restores (guarded by the test suite). */
   @media (max-width: 560px) {
     [data-mobile-nav="frame"] [role="dialog"]:has([data-dsh-market-root]) > nav {
+      display: flex !important;
+    }
+    [role="dialog"]:has([data-dsh-market-root]) > nav {
       display: flex !important;
     }
   }
@@ -6574,97 +6845,38 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   }
 
   /* ---------- dsh-web-ui polish: settings sheet ----------
-     The official dialog is a desktop two-column form; on a phone the
-     label/control split leaves a huge dead gap and long descriptions wrap
-     into tall stacks. Stack each row (text above, control full-width) and
-     keep the nav tabs on ONE horizontally scrolling row. */
+     Keep the nav tabs on ONE horizontally scrolling row. Setting rows need
+     no mobile rework: the host redesigned them into compact space-between
+     rows (text left, control right — verified in
+     dsh-client-ui-settings-general .Pt1bsG_row, 2026-09-24). The old
+     "stack each row" rules, written for the previous two-column generation
+     with its dead label/control gap, now fight that design and double every
+     row's height; they were removed (see the tombstone below). */
 
-  /* Nav tabs: single scrolling row instead of the 3-per-row grid — seven
-     categories wrap into three rows on a phone (~130px of sheet height);
-     one row with a thin scrollbar keeps every tab reachable and returns
-     that space to the options area (user feedback 2026-08-16). An earlier
-     one-row attempt had no scroll affordance and silently cut the last
-     tab off; the thin scrollbar IS the affordance. Scoped to the frame
-     marker: the desktop dialog keeps its official vertical nav column. */
-  [data-mobile-nav="frame"] [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])) > :first-child [class*="_navList"] {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    gap: 6px !important;
-    width: 100% !important;
-    scrollbar-width: thin !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  /* Hairline scrollbar for the tab row: the default WebKit scrollbar reads
-     fat on a phone; 2px keeps the scroll affordance without the bulk. */
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_navList"]::-webkit-scrollbar {
-    height: 2px !important;
-  }
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_navList"]::-webkit-scrollbar-thumb {
-    background: var(--dsw-alias-border-l2, rgba(0, 0, 0, .22)) !important;
-    border-radius: 1px !important;
-  }
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_navList"]::-webkit-scrollbar-track {
-    background: transparent !important;
-  }
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_navCell"] {
-    flex: 0 0 auto !important;
-    white-space: nowrap !important;
-    padding: 6px 8px !important;
-    gap: 6px !important;
-    font-size: 13px !important;
-    justify-content: flex-start !important;
-  }
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_navCell"] svg {
-    width: 14px !important;
-    height: 14px !important;
-    flex: none !important;
-  }
-  /* Content toolbar: the "Open configuration file" button is hidden on
-     mobile — it is rarely needed on a phone and steals ~180px from the
-     tab row's scroll area (user feedback 2026-08-16). Only the close ✕
-     stays, flush right in the nav row. Desktop untouched (frame scoped). */
-  [data-mobile-nav="frame"] [aria-modal="true"] [class*="_header"]:not([class*="_headerActions"]) [class*="_actions"] {
-    display: none !important;
-  }
-  /* Setting rows: text on top, control below at full width. Compound
-     "_row*" families are excluded: the Models page names its whole card
-     list "_rows" (plus "_rowCard/_rowHead/_rowIdentity/_rowActions"), and
-     the bare-substring match used to hand the list's first/last cards a
-     width:100% that - on the official content-box cards (+14px padding,
-     1px border) - ran 30px past their siblings and off-screen. */
-  [aria-modal="true"] [class*="_section"] [class*="_row"]:not([class*="_rows"]):not([class*="_rowCard"]):not([class*="_rowHead"]):not([class*="_rowIdentity"]):not([class*="_rowActions"]) {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 8px !important;
-  }
-  [aria-modal="true"] [class*="_section"] [class*="_row"]:not([class*="_rows"]):not([class*="_rowCard"]):not([class*="_rowHead"]):not([class*="_rowIdentity"]):not([class*="_rowActions"]) > :first-child {
-    width: 100% !important;
-    max-width: none !important;
-    /* 手机端「文字在上、控件在下」之后，宿主给文字容器留的 padding-right:48px
-       （桌面版给右侧控件让位用的）就成了纯溢出：真机实测 rowText 内容盒 315
-       + 48 = 363 > 内容面板 339 ⇒ **整个设置内容区能横向拖 36px**
-       （店主反馈："通用设置里怎么还可以往左滑"）。归零即根治。 */
-    padding-right: 0 !important;
-  }
-  [aria-modal="true"] [class*="_section"] [class*="_row"]:not([class*="_rows"]):not([class*="_rowCard"]):not([class*="_rowHead"]):not([class*="_rowIdentity"]):not([class*="_rowActions"]) > :last-child {
-    width: 100% !important;
-    max-width: none !important;
-  }
-  /* 开关不是"整行控件"。宿主的 Switch 是 button[role=switch]，官方尺寸
-     36×20（flex:0 0 auto）——上面那条 width:100% 把「开发者工具」那行的开关
-     拉成横贯整行的长条（店主 2026-09-23 截图："设置里的开关变得好长好长"）。
-     钉回原尺寸、靠左对齐（行已是 column + stretch，固定宽不会被拉伸）。
-     只命中 role=switch：其他"整行控件"（输入框 / 下拉 / 分段）保持原样。 */
-  [aria-modal="true"] [class*="_section"] [class*="_row"]:not([class*="_rows"]):not([class*="_rowCard"]):not([class*="_rowHead"]):not([class*="_rowIdentity"]):not([class*="_rowActions"]) > button[role="switch"] {
-    width: 36px !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
-    height: 20px !important;
-    flex: 0 0 auto !important;
-    align-self: flex-start !important;
-  }
+  /* Nav tabs + toolbar: TOMBSTONE (2026-09-25). This whole family —
+     the single-row scroller, its hairline scrollbar, the compact cells and
+     the hidden "Open configuration file" button — was scoped to
+     [data-mobile-nav="frame"] because rc.1 rendered the settings sheet in
+     place, inside the app frame. rc.2 wraps the sheet in
+     createPortal(..., document.body): the overlay is a direct body child,
+     nothing inside it matches a frame-descendant selector, and every rule
+     here went dead at once. The live symptoms were the nav cells wrapping
+     into uneven rows that slid under the 138px toolbar and the config-file
+     button reappearing in that toolbar (owner report 2026-09-25). The
+     portal-aware replacements live in layout.css.ts, in the "Settings
+     dialog on mobile" section, anchored on the same structural
+     :has(> :first-child > :last-child > button) gate (settings sheet only;
+     export dialog and directory picker stay excluded). Nothing to restore
+     here — do not re-add behind a frame selector. */
+  /* Setting rows: no mobile rework — the host renders compact space-between
+     rows natively (.Pt1bsG_row: text left, control right, 16px vertical
+     padding, .5px divider). The previous "stack each row" rule family
+     (column + gap:8 + control width:100% + the 36×20 switch cap that undid
+     it) was written for the old two-column generation; on the redesigned
+     host it doubled every row's height — the "settings feel vertically
+     empty" report 2026-09-24 — and was removed in full. If an older host
+     generation ever needs stacking again, reintroduce behind a generation
+     guard, not as a blanket [class*="_row"] override. */
   /* Models provider editor: a CLOSED <details> ("_customized", the customized
      models section) must not paint its body. This engine paints the ~1500px
      model catalog of the closed details as a ghost layer anyway: it overlays
@@ -6878,10 +7090,11 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   [data-mobile-nav="stats"] * {
     white-space: nowrap !important;
   }
-  /* 「上下文环」被 stats-line 效果挪进输入框行的右簇（店主 2026-09-23 确认：
-     环要、百分比数字不要）。font-size:0 只塌掉文本、环 svg 有显式尺寸不受影响；
-     它是右簇的固定成员，不参与压缩。 */
+  /* 「上下文环」显示在输入框行的右簇（店主 2026-09-23 确认：
+     环要、百分比数字不要）。font-size:0 只塌掉文本、环 svg 有显式尺寸不受
+     影响；绝对定位盖在自建占位上（见下方 #104 注释），不再搬动节点。 */
   [data-mobile-nav="stats-ring"] {
+    position: absolute !important;
     flex: 0 0 auto !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -6915,6 +7128,49 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
     width: 16px !important;
     height: 16px !important;
     flex: 0 0 auto !important;
+  }
+  /* 环与 TPS 读数不再搬动宿主 React 节点（#104：搬动后宿主卸载调 removeChild
+     对不上父节点直接抛 NotFoundError，SlotErrorBoundary 把整个 composer 槽位
+     清空）。节点留在 React 渲染的原位，可见槽位由插件自建占位顶住，宿主节点
+     绝对定位盖在占位上；占位是插件节点，宿主重建/卸载都不经过它。 */
+  [data-mobile-nav="stats-ring-reserve"],
+  [data-mobile-nav="stats-tps-reserve"] {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  [data-mobile-nav="stats-ring-reserve"] {
+    flex: 0 0 auto !important;
+    display: inline-block !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 2px 0 0 !important;
+    padding: 0 !important;
+  }
+  [data-mobile-nav="stats-tps"] {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+    line-height: 18px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  [data-mobile-nav="stats-tps"] * {
+    white-space: nowrap !important;
+  }
+  [data-mobile-nav="stats-tps"] span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    min-width: 0 !important;
+  }
+  /* overlay 的定位上下文：宿主自己没定位时才生效（无 !important，宿主样式随时
+     可以接管；stats-line 每帧按真实 positioned ancestor 计算，不受影响）。 */
+  [data-mobile-nav="stats-ring-dock"],
+  [data-mobile-nav="stats-tps-row"] {
+    position: relative;
   }
 
   /* ---------- dsh-genui panel dock ----------
@@ -6954,41 +7210,44 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
     padding-left: 4px !important;
   }
 
-  /* ---------- git-graph branch chip: inside the composer card ----------
+  /* ---------- git-graph branch chip: CSS re-anchor, no reparent (A′) ----------
      The branch chip (conversation.input.dock) floats between the dock rows
      and the input card; on a phone it reads as a stray capsule crowding the
-     composer. A client reconciler task (git-chip-reparent) reparents the
-     chip INTO the composer card; these rules pin it to the card's top-left
-     and give the card a dedicated chip row. The card is position: relative
-     by the official stylesheet, so the absolute anchor resolves against it.
+     composer. #105: the old fix reparented the chip INTO the composer card,
+     and React's unmount removeChild then threw NotFoundError into the
+     SlotErrorBoundary (same root cause as #104). A′ re-anchors instead:
+     the chip stays where React rendered it (inside the dock subtree) and
+     the composerStack becomes the containing block, with the anchor
+     constants = the card's static offset inside the stack + the original
+     (12,12) corner offset. Constants measured 2026-09-24 (CDP, 393px):
+     conversation phase card offset (16,0) → top 12 / left 28; hero phase
+     card offset (16,122.9) → top 134.9 / left 28 (hero override below).
      The plugin's own sheet sets all four offsets on the anchor, so
-     right/bottom must be neutralized too. Scope is the frame marker + the
-     anchor attribute (NOT the dock slot — the reparenting moves the chip
-     out of the dock's subtree). Desktop untouched: the frame marker only
-     exists below 1024px, and the effect restores the chip to the dock when
-     the viewport widens. Chip row geometry (2026-08-16, user feedback):
-     48px padding left a 16px dead gap between the chip and the input line
-     and made the composer read too tall; the row was tuned to 40px = chip
-     (24px) at top 12px + ~4px to the textarea. The chip itself has since
-     grown to 28px (git-graph chip CSS), which ate the breathing gap, so the
-     row is 44px to keep the same ~4px clearance (2026-09-06). */
-
+     right/bottom must be neutralized too. Desktop untouched: the frame
+     marker only exists below 1024px. Chip row geometry (2026-08-16, user
+     feedback): 48px padding left a 16px dead gap and made the composer read
+     too tall; 40px = chip (24px) at corner +12 + ~4px to the textarea; the
+     chip has since grown to 28px (git-graph chip CSS), so the row is 44px
+     (2026-09-06). The 44px clearance now keys off a STACK-level :has() —
+     the chip is no longer a card descendant, so a card-level :has() could
+     never match; the card disambiguation keeps non-composer cards (e.g. a
+     todo card sharing the stack) out of the chip row. */
+  [data-mobile-nav="frame"] [class*="_composerStack"] {
+    position: relative;
+  }
   [data-mobile-nav="frame"] [data-gitgraph-chip-anchor] {
     position: absolute !important;
     top: 12px !important;
-    left: 12px !important;
+    left: 28px !important;
     right: auto !important;
     bottom: auto !important;
     z-index: 1 !important;
   }
-  [data-mobile-nav="frame"] [class*="_card"]:has([data-gitgraph-chip-anchor]) {
-    padding-top: 44px !important;
+  [data-mobile-nav="frame"] [data-phase="hero"] [data-gitgraph-chip-anchor] {
+    top: 134.9px !important;
   }
-  /* Kill double-tap zoom on the chip wherever it lives (the tap-target trio
-     in misc.css is scoped to the dock slot and dies once the reparent moves
-     the anchor into the card). Geometry-free: touch-action only. */
-  [data-mobile-nav="frame"] [data-gitgraph-chip-anchor] [data-gitgraph-chip] {
-    touch-action: manipulation !important;
+  [data-mobile-nav="frame"] [class*="_composerStack"]:has([data-gitgraph-chip-anchor]) [class*="_card"]:has(textarea, [data-composer-input]) {
+    padding-top: 44px !important;
   }
 
   /* ---------- dsh-meme 表情选择卡片：右缘安全距离 ----------
@@ -7302,16 +7561,20 @@ exports.MISC_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   [data-phase="hero"] [class*="_card"]:has(textarea, [data-composer-input]) {
     gap: 8px !important;
   }
-  /* Cards carrying the reparented git branch chip must keep compat.css's
-     44px chip clearance: that rule sets padding-top: 44px on any card that
-     contains the absolutely-positioned chip anchor (top 12px + 28px chip —
-     the chip grew 24→28px, so the clearance grew 40→44px to keep the same
-     ~4px breathing gap). This compact override used to stomp it back to 6px
-     with the same specificity (this sheet loads after compat), so on the
-     hero empty state the chip painted over the input line (2026-09-06).
-     Excluding chip-bearing cards restores the clearance; the textarea
-     collapse below still applies to them. */
-  [data-phase="hero"] [class*="_card"]:has(textarea, [data-composer-input]):not(:has([data-gitgraph-chip-anchor])) {
+  /* Composer stacks carrying the git branch chip must keep compat.css's 44px
+     chip clearance: that rule sets padding-top: 44px on the composer card of
+     any stack that contains the absolutely-positioned chip anchor (A′, #105:
+     the chip stays in the dock subtree and is re-anchored to the stack, so
+     the exclusion moved from the card level to this stack-level :not(:has())
+     — a card-level :has() could never match anymore). Chip geometry: top
+     corner +12 + 28px chip — the chip grew 24→28px, so the clearance grew
+     40→44px to keep the same ~4px breathing gap (2026-09-06). This compact
+     override used to stomp the clearance back to 6px with the same
+     specificity (this sheet loads after compat), so on the hero empty state
+     the chip painted over the input line (2026-09-06). Excluding
+     chip-bearing stacks restores the clearance; the textarea collapse below
+     still applies to them. */
+  [data-phase="hero"] [class*="_composerStack"]:not(:has([data-gitgraph-chip-anchor])) [class*="_card"]:has(textarea, [data-composer-input]) {
     padding-top: 6px !important;
   }
   /* The official composer autosizes the textarea and writes an inline
@@ -7844,14 +8107,26 @@ function installSessionMenuDelete(ctx) {
             const label = item.querySelector('[class*="_itemLabel"]');
             return (label ?? item).textContent?.trim() ?? '';
         };
-        /** Whether a menu list is the host's per-session row menu. */
+        /**
+         * Whether a menu list is the host's per-session row menu. Containment
+         * style, never an exact item count: 0.1.7 added a fourth 「置顶会话」
+         * item (menu.pinSession, alongside rename / fork / archive) — a
+         * `length === 3` gate silently disabled the whole feature on 0.1.7.
+         * rename + fork + archiveSession is the discriminating triple (a
+         * full-host label audit: the fork label exists only in ui-workspace's
+         * session menu). Archived rows swap archive for 取消归档, so they do NOT
+         * match this signature and get no delete item — the host's own look
+         * (delete via unarchive first); resolution excludes archived ids anyway,
+         * so an injected item there would be a doomed deleteErrorResolve tap
+         * (#V1 N1: the removed unarchive branch used to inject exactly that).
+         */
         const isSessionMenu = (menu) => {
             const labels = [...menu.querySelectorAll('[role="menuitem"]')]
                 .map(itemLabel);
             const rename = wsT('rename');
             const fork = wsT('menu.fork');
-            const archive = wsT('menu.archiveSession');
-            return labels.length === 3 && labels.includes(rename) && labels.includes(fork) && labels.includes(archive);
+            return labels.includes(rename) && labels.includes(fork)
+                && labels.includes(wsT('menu.archiveSession'));
         };
         const closeDialog = () => {
             if (closeDialogOnKey !== null) {
@@ -7864,16 +8139,18 @@ function installSessionMenuDelete(ctx) {
                 dialogHost = null;
             }
         };
-        /** Show the delete confirmation as a bottom card over the frame.
-         *  Mounted on <body>, NOT in the frame: the third-party mobile shim
-         *  (@linxin666/dsh-web-all) listens in the CAPTURE phase on the frame and,
-         *  while the drawer is open, answers every click inside the frame but
+        /** Show the delete confirmation as a centered frosted-glass modal over
+         *  the frame. Mounted on <body>, NOT in the frame: the third-party mobile
+         *  shim (@linxin666/dsh-web-all) listens in the CAPTURE phase on the frame
+         *  and, while the drawer is open, answers every click inside the frame but
          *  outside [data-pane="sidebar"] with preventDefault + stopPropagation.
          *  A card inside the frame therefore had dead buttons — measured
          *  2026-09-14: a real touch tap on 「取消」 left the card open, and only
          *  Escape closed it. Body-level, the shim's listener never sees these
          *  clicks (its sibling menus are portaled there for the same reason), and
-         *  the card's own band lives in base.css (z 1400/1401, above the drawer). */
+         *  the dialog's band lives in base.css (backdrop z 1400 above the drawer
+         *  on the mobile branch). The card is appended INTO the backdrop so the
+         *  backdrop's flex centers it (base.css 2026-09-24 rework). */
         const showDeleteDialog = (sessionId, title) => {
             closeDialog();
             const host = document.body;
@@ -7895,7 +8172,16 @@ function installSessionMenuDelete(ctx) {
             const yesButton = card.querySelector('[data-mobile-nav="delete-confirm-yes"]');
             const errorLine = card.querySelector('[data-mobile-nav="delete-error"]');
             noButton?.addEventListener('click', closeDialog);
-            backdrop.addEventListener('click', closeDialog);
+            // The card is a CHILD of the backdrop (the CSS centers it through the
+            // backdrop's flex), so close only on genuine backdrop taps — without
+            // the target guard every card click (the async yes tap included) would
+            // bubble here and close the dialog before the fetch settles, killing
+            // the pending state and the error display path.
+            backdrop.addEventListener('click', (event) => {
+                if (event.target !== backdrop)
+                    return;
+                closeDialog();
+            });
             const onKey = (event) => {
                 if (event.key === 'Escape')
                     closeDialog();
@@ -7967,7 +8253,7 @@ function installSessionMenuDelete(ctx) {
                     ctx.layout.toggleSidebar();
             });
             host.appendChild(backdrop);
-            host.appendChild(card);
+            backdrop.appendChild(card);
             dialogHost = { backdrop, card };
         };
         /** Show a non-destructive error card (session could not be resolved). */
@@ -7987,7 +8273,13 @@ function installSessionMenuDelete(ctx) {
           <button type="button" data-mobile-nav="delete-confirm-no">${escapeHtml(navT('deleteConfirmNo'))}</button>
         </div>`;
             card.querySelector('[data-mobile-nav="delete-confirm-no"]')?.addEventListener('click', closeDialog);
-            backdrop.addEventListener('click', closeDialog);
+            // Same child-of-backdrop target guard as showDeleteDialog: error-card
+            // taps must not bubble into the backdrop's close.
+            backdrop.addEventListener('click', (event) => {
+                if (event.target !== backdrop)
+                    return;
+                closeDialog();
+            });
             const onKey = (event) => {
                 if (event.key === 'Escape')
                     closeDialog();
@@ -7995,7 +8287,7 @@ function installSessionMenuDelete(ctx) {
             document.addEventListener('keydown', onKey, true);
             closeDialogOnKey = onKey;
             host.appendChild(backdrop);
-            host.appendChild(card);
+            backdrop.appendChild(card);
             dialogHost = { backdrop, card };
         };
         /** Inject the delete item into one open session menu (idempotent). */
@@ -8060,11 +8352,25 @@ function installSessionMenuDelete(ctx) {
             });
             viewport.appendChild(clone);
         };
-        /** Inject into every open session menu. */
+        /**
+         * Inject into every open session menu. Blank (new-session) rows are
+         * excluded: the host renders their title as the localized "New session"
+         * label (`t("session.new")`) while the summary's `displayTitle` stays
+         * empty, so the delete flow could never resolve them — the tap would
+         * only end in a deleteErrorResolve card. A menu without the delete item
+         * is the host's own look for those rows. Known ceiling: a normal session
+         * manually titled exactly the host's "New session" label is mistaken for
+         * a blank row and gets no delete item either (accepted trade-off; its
+         * resolution itself would still work).
+         */
         const injectAll = () => {
+            const blankLabel = wsT('session.new');
             for (const menu of document.querySelectorAll('[role="menu"]')) {
-                if (isSessionMenu(menu))
-                    injectInto(menu);
+                if (!isSessionMenu(menu))
+                    continue;
+                if (anchor !== null && anchor.title === blankLabel)
+                    continue;
+                injectInto(menu);
             }
         };
         const scheduleInject = () => {
@@ -8467,6 +8773,171 @@ function installComposerPlusToggle(ctx) {
             document.removeEventListener('pointerdown', onEditorPointerDown, true);
             document.removeEventListener('click', onClickCapture, true);
             document.removeEventListener('click', onClickBubble, false);
+        };
+    });
+}
+};
+__modules["effects/workspace-chip-toggle.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installWorkspaceChipToggle = installWorkspaceChipToggle;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+/**
+ * 工作区 chip「再点关闭」的接管（2026-09-23，对账 0.1.7-rc.1）。
+ *
+ * 症状：hero 空态的工作区 chip，第一次点开工作区列表，**再点 chip 关不掉**
+ * （列表原地不动，等于又开一次）。要求的行为：单击打开、再单击关闭。
+ *
+ * 真根因（读宿主源码得出）：
+ * `ui-conversation` 的 chip 自己是正常 toggle（`ConversationContent.tsx`）：
+ *
+ *   onClick: () => { setPickerOpen(open => !open) }
+ *
+ * 关不掉的原因在 `ui-workspace` 的 WorkspacePickFlow 怎么开这个菜单：
+ *
+ *   <Menu anchor={null} portal getAnchorRect={anchorRef.current.getBoundingClientRect} … />
+ *
+ * `anchor={null}` ⇒ Menu 的 rootRef 是一个**空 span**，触发器 chip 在 Menu 子树之外；
+ * 而 `ui-primitives/Menu.tsx` 的「外部 pointerdown 关闭」只豁免 rootRef / listRef：
+ *
+ *   if (rootRef.current?.contains(target) === true) return
+ *   if (listRef.current?.contains(target) === true) return
+ *   onClose()
+ *
+ * ⇒ 菜单开着时点 chip：pointerdown 先被判成「外部点击」→ onClose()（翻到 false），
+ *   紧接着的 click 到达 chip 的 onClick → 又翻回 true。净效果＝再开一次。
+ * 旁证：同行的「预设」触发器传的是 `anchor={<button …/>}`（按钮在 rootRef 内），
+ * pointerdown 不被判外部，所以它没有这个毛病 —— 同一份 Menu，两种接线。
+ *
+ * 修法（只补这一个缺口，宿主关闭路径原样保留）：
+ *   pointerdown 捕获阶段：chip 自报 `aria-expanded="true"`（＝菜单真开着）且宿主的
+ *   portal 菜单在场时，记下这一击；
+ *   click 捕获阶段：同一 chip 的 click 直接 stopPropagation —— React 挂在 root 容器上
+ *   的 onClick 不再执行，chip 的 toggle 不会被翻回「开」，宿主 pointerdown 的那次
+ *   关闭成为唯一结果。菜单本来就关着时（第一击的开启路径）完全不介入。
+ *
+ * 开态读 `aria-expanded` 而不是「点在不在菜单里」：pointerdown 阶段 React 尚未重渲染，
+ * 读到的是这一击之前的真实状态；等到 click 再读 DOM 会读到未冲刷的旧树。
+ */
+/** hero 工作区 chip：hero 行的**直接子**按钮（预设触发器在 Menu 的 anchor span 里，不是直接子）。 */
+const CHIP_SELECTOR = '[class*="heroWorkspaceRow"] > button[aria-haspopup="menu"]';
+/** 宿主 Menu 的 portal 列表：只有它在场，宿主的「外部 pointerdown 关闭」才存在。 */
+const OPEN_MENU_SELECTOR = '[role="menu"]';
+function installWorkspaceChipToggle(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: workspace chip toggle', () => {
+        /** 这一击之前 chip 报「菜单开着」的那颗 chip（否则 null）。 */
+        let armed = null;
+        const chipFrom = (target) => target instanceof Element ? target.closest(CHIP_SELECTOR) : null;
+        const onPointerDownCapture = (event) => {
+            armed = null;
+            const chip = chipFrom(event.target);
+            if (chip === null)
+                return;
+            if (chip.getAttribute('aria-expanded') !== 'true')
+                return;
+            if (document.querySelector(OPEN_MENU_SELECTOR) === null)
+                return;
+            armed = chip;
+        };
+        const onClickCapture = (event) => {
+            const chip = armed;
+            armed = null;
+            if (chip === null || chipFrom(event.target) !== chip)
+                return;
+            event.stopPropagation();
+        };
+        document.addEventListener('pointerdown', onPointerDownCapture, true);
+        document.addEventListener('click', onClickCapture, true);
+        return () => {
+            armed = null;
+            document.removeEventListener('pointerdown', onPointerDownCapture, true);
+            document.removeEventListener('click', onClickCapture, true);
+        };
+    });
+}
+};
+__modules["effects/team-chip-toggle.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installTeamChipToggle = installTeamChipToggle;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+/**
+ * 团队 chip「再点关闭」的接管（2026-09-23，对账 0.1.7-rc.1）。
+ *
+ * 症状：点头部那颗智能体团队图标能打开面板，**再点同一颗关不掉**，必须点面板
+ * 四周（或按 Escape）才关。要求的行为：单击打开、再单击关闭。
+ *
+ * 真根因（读宿主源码得出，本轮真机复现）：
+ * `dsh-experimental-client-ui-agent-team/lib/client.js` 的触发器 onClick 只处理
+ * 「开」，开态时改为聚焦面板 —— 它自己**永远不关**：
+ *
+ *   onClick: () => {
+ *     cancelHoverChange()
+ *     pinnedRef.current = true
+ *     if (!open) changeOpen(true)
+ *     else panelRef.current?.focus()   // 开着就只 focus，不 toggle
+ *   }
+ *
+ * 关闭路径只有两条：`ui-primitives` 的 useDismissOnOutsidePointer（document 上的
+ * pointerdown，靶心在 root/panel 之外即 setOpen(false)）与面板内注册的 Escape
+ * keydown。桌面靠 hover 开合，这个「点了只 pin 不 toggle」不成问题；手机上就成了
+ * 「点了关不掉」。
+ *
+ * 修法（替用户把「点四周」这件事做掉，宿主两条关闭路径原样保留）：
+ *   pointerdown 捕获阶段：触发器自报 aria-expanded="true" 且宿主的 body portal
+ *   面板在场时，记下这一击；
+ *   click 捕获阶段：同一触发器 → 先向 document.body 派发一次合成 pointerdown
+ *   （靶心在 root 与面板之外 ⇒ 命中宿主自己的 outside-dismiss ⇒ 真关闭），
+ *   再 stopPropagation 掉这一击 click —— 否则宿主的 onClick 还会在旧闭包里走
+ *   else 分支去 focus 面板。
+ *
+ * 为什么先派发再吞 click（顺序不可换）：宿主 dismiss 是 document 上的 bubble
+ * 监听，我们处在 capture 阶段，同步派发即同步生效；而 click 一旦放过去，宿主的
+ * onClick 会看到尚未冲刷的 open=true 并执行 focus。
+ *
+ * 开态读 aria-expanded 而不是「点在不在面板里」：pointerdown 阶段 React 尚未重渲染，
+ * 读到的是这一击之前的真实状态（与 workspace-chip-toggle 同一条判据）。
+ */
+/** 团队 chip 根：宿主 agent-team 实验插件的稳定标记。 */
+const ROOT_SELECTOR = '[data-team-action]';
+/** 触发器：根的直接子按钮（aria-haspopup 是 dialog，不是 menu）。 */
+const TRIGGER_SELECTOR = '[data-team-action] > button[aria-haspopup="dialog"]';
+/** 面板：宿主 portal 到 body、带稳定标记与 role="dialog"。 */
+const PANEL_SELECTOR = '[data-team-panel]';
+function installTeamChipToggle(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: team chip toggle', () => {
+        /** 这一击之前自报「面板开着」的那颗触发器（否则 null）。 */
+        let armed = null;
+        const triggerFrom = (target) => target instanceof Element ? target.closest(TRIGGER_SELECTOR) : null;
+        const onPointerDownCapture = (event) => {
+            armed = null;
+            const trigger = triggerFrom(event.target);
+            if (trigger === null)
+                return;
+            if (trigger.getAttribute('aria-expanded') !== 'true')
+                return;
+            if (document.querySelector(ROOT_SELECTOR) === null)
+                return;
+            if (document.querySelector(PANEL_SELECTOR) === null)
+                return;
+            armed = trigger;
+        };
+        const onClickCapture = (event) => {
+            const trigger = armed;
+            armed = null;
+            if (trigger === null || triggerFrom(event.target) !== trigger)
+                return;
+            // 「点四周」这一步必须用 pointerdown：宿主的 dismiss 只监听 pointerdown。
+            // 靶心选 document.body —— 它既不在 root 内、也不在面板内，是最省事的真外部。
+            document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+            event.stopPropagation();
+        };
+        document.addEventListener('pointerdown', onPointerDownCapture, true);
+        document.addEventListener('click', onClickCapture, true);
+        return () => {
+            armed = null;
+            document.removeEventListener('pointerdown', onPointerDownCapture, true);
+            document.removeEventListener('click', onClickCapture, true);
         };
     });
 }
@@ -9152,6 +9623,8 @@ const subagent_chip_touch_ts_1 = require("./effects/subagent-chip-touch.js");
 const session_menu_ts_1 = require("./effects/session-menu.js");
 const composer_keyboard_guard_ts_1 = require("./effects/composer-keyboard-guard.js");
 const composer_plus_toggle_ts_1 = require("./effects/composer-plus-toggle.js");
+const workspace_chip_toggle_ts_1 = require("./effects/workspace-chip-toggle.js");
+const team_chip_toggle_ts_1 = require("./effects/team-chip-toggle.js");
 const model_menu_anchor_ts_1 = require("./effects/model-menu-anchor.js");
 const aionui_compat_ts_1 = require("./effects/aionui-compat.js");
 const panel_exit_ts_1 = require("./effects/panel-exit.js");
@@ -9338,6 +9811,14 @@ function apply(ctx) {
     // dismissed keyboard (upstream keepFocus focuses the editor on mousedown).
     (0, composer_keyboard_guard_ts_1.installComposerKeyboardGuard)(ctx);
     (0, composer_plus_toggle_ts_1.installComposerPlusToggle)(ctx);
+    // Hero workspace chip: the host's picker portaled its Menu with
+    // `anchor={null}`, so its own outside-pointerdown close eats the trigger's
+    // tap and the chip's toggle re-opens it. Swallow that one click.
+    (0, workspace_chip_toggle_ts_1.installWorkspaceChipToggle)(ctx);
+    // Agent Team chip: the host trigger only opens (its onClick focuses the panel
+    // when open, never toggles), so a second tap could not close it. Dispatch the
+    // outside pointerdown its own dismiss hook waits for, then swallow the click.
+    (0, team_chip_toggle_ts_1.installTeamChipToggle)(ctx);
     // Model/reasoning menu portals to <body>; the CSS centering rule died with the
     // portal move, so re-anchor it on the trigger here (owner report: opens far left).
     (0, model_menu_anchor_ts_1.installModelMenuAnchor)(ctx);

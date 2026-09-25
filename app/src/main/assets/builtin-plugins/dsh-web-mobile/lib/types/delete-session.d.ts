@@ -51,8 +51,9 @@ export type DeleteSessionResult = {
 } | {
     status: 500;
     ok: false;
+    deletedLiveSession?: true;
     error: {
-        code: 'delete-lookup-failed' | 'delete-failed';
+        code: 'delete-lookup-failed' | 'delete-failed' | 'cleanup-failed';
         message: string;
     };
 } | {
