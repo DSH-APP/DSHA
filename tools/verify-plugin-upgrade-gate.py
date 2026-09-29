@@ -72,7 +72,7 @@ def main() -> None:
         ("启动链接缓存与受管身份", "test-startup-recovery.py"),
         ("插件发现、启停与删除边界", "test-plugin-discovery.py"),
         ("系统与用户插件备份恢复分层", "test-backup-engine.py"),
-        ("第三方插件原生审阅", "test-plugin-review.py"),
+        ("第三方插件直接启用与旧标记迁移", "test-plugin-review.py"),
         ("插件依赖冻结与离线失败保护", "test-plugin-dependencies.py"),
         ("插件安装事务与强杀恢复", "test-plugin-transactions.py"),
     ]
@@ -81,7 +81,7 @@ def main() -> None:
 
     run("当前 DSH schema 迁移与逐节读回",[node,str(ROOT/"tools/test-rc1-settings-migration.mjs")],{"DSHA_TEST_RUNTIME":str(args.raw_runtime)})
     run(
-        "Web 插件管理原生审阅入口",
+        "Web 插件管理直接安装与启用",
         [node, str(ROOT / "tools/test-native-plugin-manager.mjs")],
         {
             "DSHA_TEST_RUNTIME": str(args.managed_runtime.resolve()),

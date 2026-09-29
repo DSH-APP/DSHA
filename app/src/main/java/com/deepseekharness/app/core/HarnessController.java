@@ -431,6 +431,11 @@ public class HarnessController {
                 throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("内置插件未完整注册，请先修复环境：") + detail);
             }
             Log.i("DSHA", com.deepseekharness.app.util.UiText.text("内置插件注册: ") + r.trim());
+            // 覆盖升级时只解除旧版自动生成的待审阅标记；尊重用户主动禁用。
+            var legacyPlugins = boot.runPluginManagerResult("migrate-review-markers", "");
+            String migratedPlugins = com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
+                    legacyPlugins, "PLUGIN_LEGACY_ACTIVATION");
+            startupDiagnostics.message(generation, migratedPlugins);
             }
             String startupProfile = "web";
             if (!safeMode)PluginActivationHooks.beforeLaunch(this,startupDiagnostics.recordId());

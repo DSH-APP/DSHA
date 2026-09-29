@@ -295,7 +295,7 @@
     "offline-rootfs.version",
     "pdf-compat-patch.json",
     "persona-compat-patch.json",
-    "plugin-manager-navigation-patch.json",
+    "plugin-manager-auto-enable-patch.json",
     "plugin-manager-policy-patch.json",
     "pnpm-runtime.bin",
     "profile-settings-review.js",

@@ -13,7 +13,7 @@ import com.deepseekharness.app.core.PluginRepository;
 import com.deepseekharness.app.util.PluginInstallLink;
 import com.deepseekharness.app.util.PluginSource;
 
-/** 网站唤起后显示真实包信息，用户确认后才写入插件配置。 */
+/** 网站唤起后解析、安装并启用插件；结果保留真实包信息。 */
 public final class PluginInstallActivity extends AppCompatActivity {
     private PluginRepository repository;
     private PluginInstallLink request;
@@ -45,7 +45,7 @@ public final class PluginInstallActivity extends AppCompatActivity {
             else inspect();
         });
         if (!HarnessController.get(this).isEnvironmentReady()) {
-            status.setText(com.deepseekharness.app.util.UiText.text("请先完成 DSHA 首次初始化，完成后会返回插件安装确认页")); install.setText(com.deepseekharness.app.util.UiText.text("初始化 DSHA"));
+            status.setText(com.deepseekharness.app.util.UiText.choose("请先完成 DSHA 首次初始化，完成后会继续安装插件", "Complete DSHA setup first; plugin installation will resume afterward")); install.setText(com.deepseekharness.app.util.UiText.text("初始化 DSHA"));
         } else if (saved == null) inspect();
     }
     private void inspect() { repository.inspect(PluginSource.parse(request.url), request.sha256, request.name, request.version); }
@@ -56,9 +56,13 @@ public final class PluginInstallActivity extends AppCompatActivity {
         }
         PluginRepository.Preview preview = repository.preview().getValue();
         if (preview != null) {
-            details.setText(preview.description()); install.setText(com.deepseekharness.app.util.UiText.text("确认安装"));
+            details.setText(preview.description());
+            install.setText(repository.isBusy()
+                    ? com.deepseekharness.app.util.UiText.choose("正在安装", "Installing")
+                    : com.deepseekharness.app.util.UiText.choose("重试安装", "Retry installation"));
+            install.setEnabled(!repository.isBusy());
         } else {
-            details.setText(com.deepseekharness.app.util.UiText.text("下载并解析插件包后，会显示真实作者、版本和兼容范围。确认安装前不会启用插件。\n\n") + com.deepseekharness.app.util.SensitiveData.redact(request.url));
+            details.setText(com.deepseekharness.app.util.UiText.choose("下载并解析插件包后自动安装、启用。\n\n", "The plugin will install and enable automatically after download and validation.\n\n") + com.deepseekharness.app.util.SensitiveData.redact(request.url));
             install.setText(HarnessController.get(this).isEnvironmentReady() ? com.deepseekharness.app.util.UiText.text("解析链接 / 重试") : com.deepseekharness.app.util.UiText.text("初始化 DSHA"));
         }
     }

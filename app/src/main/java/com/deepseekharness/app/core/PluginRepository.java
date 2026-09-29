@@ -44,6 +44,7 @@ public final class PluginRepository extends AndroidViewModel {
     private volatile PluginTask activeTask;
     private final android.os.Handler main = new android.os.Handler(android.os.Looper.getMainLooper());
     private Preview installedPreview;
+    private volatile Preview preparedPreview;
     private final MutableLiveData<Preview> preview = new MutableLiveData<>();
     private volatile List<PendingReview> pendingReviews=Collections.emptyList();
     public static final class PendingReview {
@@ -120,7 +121,7 @@ public final class PluginRepository extends AndroidViewModel {
                 if(pkg.optInt("dependencyCount")>50)text.append(com.deepseekharness.app.util.UiText.text("摘要显示前 50 项；确认时仍核对完整依赖内容。\n"));
                 String dependencyState=pkg.optString("dependencyState");
                 if(dependencyState.equals("legacy-unknown"))text.append(com.deepseekharness.app.util.UiText.text("历史依赖信息不足；本次核对现存源码和实际依赖，不重新解析旧版本。\n"));
-                if(dependencyState.equals("modified-original"))text.append(com.deepseekharness.app.util.UiText.text("现存内容与旧依赖记录不同；请按本次实际内容审阅。\n"));
+                if(dependencyState.equals("modified-original"))text.append(com.deepseekharness.app.util.UiText.choose("现存内容与旧依赖记录不同；已按本次内容重新核对。\n", "Existing content differs from the old dependency record; the current content was checked.\n"));
                 String locked=pkg.optString("dependencyLockSha256");if(!locked.isEmpty())text.append("pnpm · ").append(pkg.optString("packageManagerVersion").equals("not-executed")?com.deepseekharness.app.util.UiText.choose("随包依赖，未运行包管理器","Bundled dependencies; package manager not run"):pkg.optString("packageManagerVersion")).append("\nSHA-256: ").append(locked).append('\n');
                 JSONArray missing=pkg.optJSONArray("missingDependencies");if(missing!=null&&missing.length()>0)text.append(com.deepseekharness.app.util.UiText.text("缺失依赖：")).append(missing).append('\n');
                 if(pkg.optBoolean("existingConflict"))text.append(com.deepseekharness.app.util.UiText.text("当前已有同名插件，现有版本不会被覆盖。请先到插件管理处理冲突。\n"));
@@ -129,8 +130,10 @@ public final class PluginRepository extends AndroidViewModel {
             text.append(com.deepseekharness.app.util.UiText.text("来源：")).append(json.optString("source").isEmpty() ? com.deepseekharness.app.util.UiText.text("本地插件包") : json.optString("source"))
                     .append("\nSHA-256：").append(json.optString("sha256"))
                     .append(json.optString("contentsSha256").isEmpty()?"":"\n"+com.deepseekharness.app.util.UiText.text("已准备内容 SHA-256：")+json.optString("contentsSha256"))
-                    .append(com.deepseekharness.app.util.UiText.text(action.equals("install")?"\n\n确认后停止 Web 和终端，安装为停用状态；明确启用前不会加载。同名更新保留上一版。":"\n\n确认后停止 Web 和终端，再提交所审阅的启用或回退操作。"))
-                    .append(com.deepseekharness.app.util.UiText.text("\n这些是静态与完整性检查，不是安全认证。插件启用后在 DSHA 的权限范围内运行，暂存目录不提供权限隔离。"));
+                    .append(action.equals("install")
+                            ? com.deepseekharness.app.util.UiText.choose("\n\n安装后默认启用；Web 启动时加载，同名更新保留上一版。", "\n\nEnabled by default after installation; Web loads it on startup. Updates retain the previous version.")
+                            : com.deepseekharness.app.util.UiText.choose("\n\n正在处理启用或回退；启动 Web 后生效。", "\n\nApplying enable or rollback; the change takes effect on Web startup."))
+                    .append(com.deepseekharness.app.util.UiText.choose("\n插件将在 DSHA 的权限范围内运行。", "\nThe plugin runs with DSHA's permissions."));
             return SensitiveData.redact(text.toString());
         }
     }
@@ -163,19 +166,19 @@ public final class PluginRepository extends AndroidViewModel {
     public List<PendingReview> pendingReviews(){return pendingReviews;}
     public void openPendingReview(String id){
         if(id==null||!id.matches("[a-f0-9]{32}"))return;
-        submit("正在读取待审阅插件…",proot->receivePreview(result(runManager(proot,"show-preview "+ShellQuote.arg(id)))));
+        submit(com.deepseekharness.app.util.UiText.choose("正在恢复未完成的插件安装…", "Resuming the pending plugin installation…"),proot->receivePreview(result(runManager(proot,"show-preview "+ShellQuote.arg(id)))),this::confirmPreview);
     }
     public void reviewRestored(String operation,String node){
-        submit("正在只读准备隔离插件审阅…",proot->{
+        submit(com.deepseekharness.app.util.UiText.choose("正在准备隔离插件…", "Preparing the retained plugin…"),proot->{
             String group=com.deepseekharness.app.backup.QuarantinedPluginReview.prepare(getApplication(),operation,node,new com.deepseekharness.app.backup.BackupControl(null));
             return receivePreview(result(runManager(proot,"review-restored "+ShellQuote.arg(group)+" "+ShellQuote.arg(node))));
-        });
+        },this::confirmPreview);
     }
     public void reviewLegacyPreset(String retainedKey){
-        submit("正在检查旧预设候选与当前依赖…",proot->{
+        submit(com.deepseekharness.app.util.UiText.choose("正在准备旧预设候选与当前依赖…", "Preparing the legacy preset and current dependencies…"),proot->{
             String[] candidate=com.deepseekharness.app.backup.QuarantinedPluginReview.preparePreset(getApplication(),retainedKey,new com.deepseekharness.app.backup.BackupControl(null));
             return receivePreview(result(runManager(proot,"review-restored "+ShellQuote.arg(candidate[0])+" "+ShellQuote.arg(candidate[1]))));
-        });
+        },this::confirmPreview);
     }
 
     public void selectionMessage(String message) {
@@ -387,11 +390,11 @@ public final class PluginRepository extends AndroidViewModel {
         if (working.get()) return;
         Preview old = preview.getValue();
         submit("正在下载并解析：" + source.description(), proot -> {
-            if (old != null) { discardPreviewConfirmed(proot, old.id); preview.postValue(null); }
+            if (old != null) { discardPreviewConfirmed(proot, old.id); preparedPreview = null; preview.postValue(null); }
             JSONObject request = new JSONObject().put("command", source.command())
                     .put("sha256", sha256).put("name", name).put("version", version);
             return receivePreview(result(runManager(proot, "inspect " + ShellQuote.arg(request.toString()))));
-        }, null, true, () -> installationSucceeded = false);
+        }, this::confirmPreview, true, () -> installationSucceeded = false);
     }
 
     private String receivePreview(JSONObject output) throws Exception {
@@ -406,24 +409,35 @@ public final class PluginRepository extends AndroidViewModel {
             }
             throw new IOException("已取消解析并清理临时包");
         }
-        preview.postValue(new Preview(output.getJSONObject("preview")));
-        return "插件包已解析，请确认作者、版本和兼容范围后安装";
+        Preview candidate = new Preview(output.getJSONObject("preview"));
+        preparedPreview = candidate;
+        preview.postValue(candidate);
+        return com.deepseekharness.app.util.UiText.choose("插件包已解析，正在安装并启用", "Plugin package resolved; installing and enabling");
     }
 
     public void confirmPreview() {
-        Preview selected = preview.getValue();
+        Preview selected = preparedPreview != null ? preparedPreview : preview.getValue();
         if (selected == null || working.get()) return;
-        submit("正在安装已确认的插件包…", new Work(){
+        HarnessController controller = HarnessController.get(getApplication());
+        boolean resumeWeb = !controller.getWebAuthUrl().isEmpty()
+                && !controller.startupDiagnostics().snapshot().safe;
+        submit(com.deepseekharness.app.util.UiText.choose("正在提交插件并启用…", "Installing and enabling plugin…"), new Work(){
             @Override public boolean maintenance(){return true;}
             @Override public String run(ProotBootstrap proot)throws Exception{
-                activeTask.approve(selected.confirmation);
                 JSONObject output = result(runManager(proot, "install-preview " + ShellQuote.arg(selected.id)+" "+ShellQuote.arg(selected.confirmation)));
-                installationSucceeded = "ok".equals(output.optString("status"));return operationMessage(output);
+                if (!"ok".equals(output.optString("status"))) throw new IOException(operationMessage(output));
+                installationSucceeded = true;return operationMessage(output);
             }
-        }, null, true, () -> {
+        }, () -> {
+            preparedPreview = null;
+            preview.setValue(null);
+            if (resumeWeb && !controller.startWeb(message -> { }))
+                state.setValue(new State(items, false, com.deepseekharness.app.util.UiText.choose(
+                        "插件已安装并启用；Web 未自动重启，请在启动页重试",
+                        "Plugin installed and enabled; restart Web from the launch page")));
+        }, true, () -> {
             installationSucceeded = false;
             installedPreview = selected;
-            preview.setValue(null);
         });
     }
 
@@ -433,7 +447,7 @@ public final class PluginRepository extends AndroidViewModel {
         submit("正在清理插件安装预览…", proot -> {
             discardPreviewConfirmed(proot, old.id);
             return "插件安装预览已取消";
-        }, () -> preview.setValue(null), false);
+        }, () -> { preparedPreview = null; preview.setValue(null); }, false);
     }
 
     private static void discardPreviewConfirmed(ProotBootstrap proot, String id) throws Exception {
@@ -453,14 +467,14 @@ public final class PluginRepository extends AndroidViewModel {
         if (working.get() || !item.updateAvailable) return;
         Preview old = preview.getValue();
         submit("正在下载并核对更新包…", proot -> {
-            if (old != null) { discardPreviewConfirmed(proot, old.id); preview.postValue(null); }
+            if (old != null) { discardPreviewConfirmed(proot, old.id); preparedPreview = null; preview.postValue(null); }
             return receivePreview(result(runManager(proot, "prepare-update " + ShellQuote.arg(item.name))));
-        }, null, true);
+        }, this::confirmPreview, true);
     }
 
     public void rollback(Item item) {
         submit("正在回退 " + item.name + "…", proot -> receivePreview(result(runManager(proot, "rollback "
-                + ShellQuote.arg(item.name) + " " + ShellQuote.arg(item.rollbackVersion)))));
+                + ShellQuote.arg(item.name) + " " + ShellQuote.arg(item.rollbackVersion)))),this::confirmPreview);
     }
 
     public void safeMode(boolean enable, Runnable afterSuccess) {
@@ -474,8 +488,8 @@ public final class PluginRepository extends AndroidViewModel {
     public void importArchive(Uri uri) {
         if (working.get()) return;
         Preview old = preview.getValue();
-        submit("正在解析本地插件包，安装前需确认…", proot -> {
-            if (old != null) { discardPreviewConfirmed(proot, old.id); preview.postValue(null); }
+        submit(com.deepseekharness.app.util.UiText.choose("正在解析本地插件包…", "Resolving local plugin package…"), proot -> {
+            if (old != null) { discardPreviewConfirmed(proot, old.id); preparedPreview = null; preview.postValue(null); }
             File temporary = File.createTempFile("plugin-import-", ".bin", getApplication().getCacheDir());
             String container = "/root/.dsh/plugin-upload-" + UUID.randomUUID() + ".bin";
             try {
@@ -490,7 +504,7 @@ public final class PluginRepository extends AndroidViewModel {
                 temporary.delete();
                 cleanup(proot, container);
             }
-        }, null, true, () -> installationSucceeded = false);
+        }, this::confirmPreview, true, () -> installationSucceeded = false);
     }
 
     public void exportArchives(List<String> names, Uri uri) {
@@ -521,10 +535,6 @@ public final class PluginRepository extends AndroidViewModel {
     }
 
     public void setEnabled(Item item, boolean enable) {
-        if(enable&&!item.builtin&&!item.official){
-            submit("正在准备插件启用审阅…",proot->receivePreview(result(runManager(proot,"review-enable "+ShellQuote.arg(item.name)))));
-            return;
-        }
         submit("正在" + (enable ? "启用 " : "禁用 ") + item.name,
                 withItems((enable?"enable-list ":"disable-list ")+ShellQuote.arg(item.name)),null,false);
     }

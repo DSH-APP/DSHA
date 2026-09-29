@@ -7,6 +7,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import ssl
 import subprocess
 import tempfile
@@ -69,12 +70,13 @@ class PluginDownloadTest(unittest.TestCase):
                 finally: depth[0] -= 1
         def boundary(stage):
             self.assertEqual(1, depth[0]); boundaries.append(stage)
-        with patch.object(self.m.builtin, 'operation_lock', single_lock), patch.object(self.m.transactions(), 'boundary', boundary):
-            self.assertEqual('test-download', self.m.register_plugin(str(incoming), 'npm:test-download@1.0.0', reviewed=True))
+        link = patch.object(self.m.os, 'symlink', side_effect=lambda src, dst, **_: shutil.copytree(src, dst)) if os.name == 'nt' else contextlib.nullcontext()
+        with patch.object(self.m.builtin, 'operation_lock', single_lock), patch.object(self.m.transactions(), 'boundary', boundary), link:
+            self.assertEqual('test-download', self.m.register_plugin(str(incoming), 'npm:test-download@1.0.0'))
         self.assertEqual(1, len(acquisitions))
         self.assertIn('committed', boundaries)
-        self.assertEqual('DSHA_REVIEW_REQUIRED\n', Path(self.m.builtin.marker_path('test-download')).read_text())
-        self.assertNotIn('test-download', self.m.builtin.read_manifest()['dsh']['profile']['bundles'])
+        self.assertFalse(Path(self.m.builtin.marker_path('test-download')).exists())
+        self.assertIn('test-download', self.m.builtin.read_manifest()['dsh']['profile']['bundles'])
 
     def test_parallel_updates_are_bounded_and_keep_per_plugin_failure(self):
         names = ['test-download-'+str(i) for i in range(6)]

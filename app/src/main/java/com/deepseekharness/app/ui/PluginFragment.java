@@ -56,8 +56,6 @@ public class PluginFragment extends Fragment {
     private final Adapter adapter = new Adapter();
     private ArrayList<String> pendingExports = new ArrayList<>();
     private android.net.Uri pendingImport;
-    private AlertDialog previewDialog;
-    private String deferredPreviewId;
     /** Repository 随 Activity 留存；失效记录不能只挂在被替换的 Fragment 上。仅主线程访问。 */
     private static long installedRevision;
     private static final java.util.WeakHashMap<PluginRepository, Long> refreshedRevisions = new java.util.WeakHashMap<>();
@@ -171,7 +169,6 @@ public class PluginFragment extends Fragment {
             if (names != null) pendingExports = names;
             String imported = saved.getString("pendingImport");
             if (imported != null) pendingImport = android.net.Uri.parse(imported);
-            deferredPreviewId = saved.getString("deferredPreviewId");
         }
         linkInput = find(R.id.appbar_github_input);
         linkHint = find(R.id.pluginLinkHint);
@@ -199,6 +196,16 @@ public class PluginFragment extends Fragment {
         find(R.id.btnSort).setOnClickListener(v -> showSortOptions());
         hideBuiltin.setOnCheckedChangeListener((v, checked) -> render());
         search.addTextChangedListener(watcher(this::render));
+        search.setOnEditorActionListener((v, action, event) -> {
+            if (action != EditorInfo.IME_ACTION_DONE && (event == null
+                    || event.getKeyCode() != KeyEvent.KEYCODE_ENTER
+                    || event.getAction() != KeyEvent.ACTION_UP)) return false;
+            search.clearFocus();
+            android.view.inputmethod.InputMethodManager keyboard = (android.view.inputmethod.InputMethodManager)
+                    requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (keyboard != null) keyboard.hideSoftInputFromWindow(search.getWindowToken(), 0);
+            return true;
+        });
         linkInput.addTextChangedListener(watcher(this::recognizeLink));
         linkInput.setOnEditorActionListener((v, action, event) -> {
             if (action == EditorInfo.IME_ACTION_GO || action == EditorInfo.IME_ACTION_DONE
@@ -213,14 +220,6 @@ public class PluginFragment extends Fragment {
         status.setOnClickListener(v -> showPluginStatus());
         repository.state().observe(getViewLifecycleOwner(), state -> {
             current = state; render();
-            // finishTask publishes non-busy before its onSuccess clears a discarded preview.
-            // Defer until that callback completes; a failed discard keeps the same preview.
-            if (state != null && !state.busy && root != null) root.post(this::showInstallPreview);
-        });
-        repository.preview().observe(getViewLifecycleOwner(), value -> {
-            if (value == null) deferredPreviewId = null;
-            showInstallPreview();
-            if (current != null) render();
         });
         recognizeLink();
     }
@@ -241,12 +240,10 @@ public class PluginFragment extends Fragment {
         state.putString("sortOrder", sortOrder.name());
         state.putStringArrayList("pendingExports", pendingExports);
         if (pendingImport != null) state.putString("pendingImport", pendingImport.toString());
-        if (deferredPreviewId != null) state.putString("deferredPreviewId", deferredPreviewId);
     }
 
     @Override public void onDestroyView() {
         refreshHandler.removeCallbacks(refreshInvalidated);
-        if (previewDialog != null) { previewDialog.dismiss(); previewDialog = null; }
         ((RecyclerView) find(R.id.pluginList)).setAdapter(null);
         root = null; header = null; footer = null;
         linkInput = null;
@@ -269,21 +266,6 @@ public class PluginFragment extends Fragment {
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) { callback.run(); }
             @Override public void afterTextChanged(Editable e) { }
         };
-    }
-
-    private void showInstallPreview() {
-        if (root == null || repository.isBusy() || previewDialog != null) return;
-        PluginRepository.Preview preview = repository.preview().getValue();
-        if (preview == null) return;
-        if (preview.id.equals(deferredPreviewId)) return;
-        previewDialog = new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.text(preview.action.equals("install")?"确认安装插件":"审阅插件启用或回退"))
-                .setMessage(preview.description())
-                .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), (d, w) -> discardShownPreview(preview))
-                .setPositiveButton(com.deepseekharness.app.util.UiText.text(preview.action.equals("install")?"确认安装":preview.action.equals("rollback")?"确认回退":"确认启用"), (d, w) -> repository.confirmPreview())
-                .setOnCancelListener(d -> discardShownPreview(preview)).create();
-        previewDialog.setOnDismissListener(d -> previewDialog = null);
-        previewDialog.show();
-        if(preview.blocked())previewDialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setEnabled(false);
     }
 
     private void updateDownloadSourceLabel() {
@@ -314,28 +296,15 @@ public class PluginFragment extends Fragment {
                 }).setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null).show();
     }
 
-    private void discardShownPreview(PluginRepository.Preview shown) {
-        // A failed cleanup keeps the same preview. Do not reopen the same dialog on
-        // the next non-busy state update; the user can retry explicitly from status.
-        deferredPreviewId = shown.id;
-        repository.discardPreview();
-    }
-
     private void showPluginStatus() {
         if (current == null || current.message.isEmpty()) return;
-        PluginRepository.Preview retained = repository.preview().getValue();
-        boolean deferred = retained != null && retained.id.equals(deferredPreviewId) && !repository.isBusy();
         var dialog = new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
                 .setTitle(com.deepseekharness.app.util.UiText.text("插件操作结果"))
                 .setMessage(com.deepseekharness.app.util.UiStateText.render(current.message));
-        if (deferred) {
-            dialog.setPositiveButton(com.deepseekharness.app.util.UiText.choose("查看保留预览", "View retained preview"), (d, w) -> {
-                deferredPreviewId = null;
-                if (root != null) root.post(this::showInstallPreview);
-            }).setNeutralButton(com.deepseekharness.app.util.UiText.choose("重试清理", "Retry cleanup"), (d, w) -> {
-                deferredPreviewId = retained.id;
-                repository.discardPreview();
-            }).setNegativeButton(com.deepseekharness.app.util.UiText.choose("稍后处理", "Handle later"), null);
+        if (!repository.isBusy() && repository.preview().getValue() != null) {
+            dialog.setPositiveButton(com.deepseekharness.app.util.UiText.choose("重试安装", "Retry installation"), (d, w) -> repository.confirmPreview())
+                    .setNeutralButton(com.deepseekharness.app.util.UiText.choose("清理临时包", "Remove temporary package"), (d, w) -> repository.discardPreview())
+                    .setNegativeButton(com.deepseekharness.app.util.UiText.text("关闭"), null);
         } else dialog.setPositiveButton(com.deepseekharness.app.util.UiText.text("关闭"), null);
         dialog.show();
     }
@@ -439,12 +408,7 @@ public class PluginFragment extends Fragment {
         if (current.percent >= 0) progress.setProgress(current.percent);
         find(R.id.btnCancelPluginTask).setVisibility(current.busy ? View.VISIBLE : View.GONE);
         find(R.id.btnCancelPluginTask).setEnabled(current.cancellable);
-        PluginRepository.Preview retained = repository.preview().getValue();
-        boolean deferred = retained != null && retained.id.equals(deferredPreviewId) && !current.busy;
-        ((TextView) find(R.id.statusText)).setText(com.deepseekharness.app.util.UiStateText.render(current.message)
-                + (deferred ? com.deepseekharness.app.util.UiText.choose(
-                        "\n清理未确认；预览已保留。点此重试或稍后处理。",
-                        "\nCleanup is unconfirmed; the preview is retained. Tap to retry or handle it later.") : ""));
+        ((TextView) find(R.id.statusText)).setText(com.deepseekharness.app.util.UiStateText.render(current.message));
         for (int id : new int[]{R.id.btnImport, R.id.btnExport, R.id.btnRefresh, R.id.btnPluginUpdates, R.id.btnPluginRestore, R.id.btnPluginDownloadSource})
             find(id).setEnabled(!current.busy);
         TextView sort=find(R.id.btnSort);
@@ -474,7 +438,6 @@ public class PluginFragment extends Fragment {
         empty.setText(current.busy ? com.deepseekharness.app.util.UiText.text("正在读取插件…") : com.deepseekharness.app.util.UiText.text("没有符合条件的插件"));
         if(rebind)adapter.notifyDataSetChanged();
         recognizeLink();
-        showInstallPreview();
     }
 
     private String[] sortLabels() {
@@ -623,12 +586,12 @@ public class PluginFragment extends Fragment {
                     + (item.updateAvailable ? com.deepseekharness.app.util.UiText.text("\n可更新：") + item.latestVersion : ""));
             if(!item.dynamic&&!item.loadState.isEmpty()){
                 String state=switch(item.loadState){
-                    case "review-required" -> "待审阅启用";
-                    case "queued" -> "已批准，等待加载";
+                    case "review-required" -> "升级后待自动启用";
+                    case "queued" -> "等待加载";
                     case "attempted" -> "正在确认加载";
                     case "loaded" -> item.enabled?"已确认加载":"已禁用";
                     case "failed", "unconfirmed" -> "加载未确认，保持停用";
-                    case "changed" -> "内容已变化，需要重新审阅";
+                    case "changed" -> "内容已变化，请重新安装";
                     default -> item.enabled?"已启用":"已禁用";
                 };
                 holder.state.setText(com.deepseekharness.app.util.UiText.text(state)+(item.version.isEmpty()?"":" · "+item.version)

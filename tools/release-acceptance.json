@@ -181,7 +181,7 @@
       ]
     },
     {
-      "id": "plugin-preview",
+      "id": "plugin-install-flow",
       "paths": [
         "*/core/PluginRepository.java",
         "*/ui/PluginFragment.java"
@@ -191,7 +191,7 @@
         "low"
       ],
       "deviceChecks": [
-        "plugin-preview-cancel"
+        "plugin-install-auto"
       ]
     },
     {

@@ -82,9 +82,7 @@ class DiscoveryTest(unittest.TestCase):
             self.assertEqual(0, self.builtin.disable_plugin('test-plugin'))
             self.assertTrue((web / 'package.json').is_file())
             self.assertFalse(self.items()['test-plugin']['enabled'])
-            self.assertEqual(1, self.builtin.enable_plugin('test-plugin'))
-            with patch.object(self.builtin, '_native_review_approved', True, create=True):
-                self.assertEqual(0, self.builtin.enable_plugin('test-plugin'))
+            self.assertEqual(0, self.builtin.enable_plugin('test-plugin'))
         after = json.loads(self.manifest.read_text())
         self.assertEqual('^1.0.0', after['dependencies']['test-plugin'])
         self.assertIn('test-plugin', after['dsh']['profile']['bundles'])
@@ -102,7 +100,8 @@ class DiscoveryTest(unittest.TestCase):
             self.assertFalse(rows['test-plugin']['enabled']);self.assertTrue(rows['sibling-plugin']['enabled'])
             self.assertTrue((web/'package.json').is_file())
         with patch('sys.argv',['plugin-manager.py','enable-list','test-plugin']), contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(1,self.manager.main(),'合并入口也不能绕过第三方审阅')
+            self.assertEqual(0,self.manager.main(),'合并入口应可直接启用第三方插件')
+            self.assertEqual('queued',self.manager.lifecycle().activation_state()['entries']['test-plugin']['status'])
         with patch('sys.argv',['plugin-manager.py','delete-list','test-plugin']), patch.object(self.manager,'result') as result, contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(0,self.manager.main())
             self.assertNotIn('test-plugin',[r['name'] for r in result.call_args.kwargs['items']])
@@ -223,9 +222,7 @@ class DiscoveryTest(unittest.TestCase):
             raise
         original = self.plugin('root/.dsh/profiles/tui/node_modules')
         with contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(1, self.builtin.enable_plugin('test-plugin'))
-            with patch.object(self.builtin, '_native_review_approved', True, create=True):
-                code = self.builtin.enable_plugin('test-plugin')
+            code = self.builtin.enable_plugin('test-plugin')
         self.assertEqual(0, code)
         item = self.items()['test-plugin']
         self.assertTrue(item['enabled']); self.assertTrue(item['deletable'])

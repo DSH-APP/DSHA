@@ -553,9 +553,6 @@ def remove_link(name):
 
 def enable_plugin(name):
     """--enable：清禁用标记、加回 bundles、重建链接（官方核心无标记/链接，只改 bundles）。"""
-    if name not in OFFICIAL_BUNDLES and name not in builtin_names() and not globals().get('_native_review_approved', False):
-        print('BUILTIN_REGISTER_FAIL: 请在原生插件界面审阅并确认启用')
-        return 1
     lines = ["== " + time.strftime("%Y-%m-%d %H:%M:%S") + " 启用 " + name]
     try:
         existing_web = os.path.isfile(os.path.join(local(NODE_MODULES), name, "package.json"))

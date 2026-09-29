@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""真实文件验证静态审阅、审批绑定、旧安装及加载失败后的安全激活状态。"""
+"""验证直接启用、旧标记升级及加载失败后的插件状态。"""
 import contextlib
 import importlib.util
 import io
 import json
 import os
 from pathlib import Path
+import shutil
 import tempfile
 import tarfile
 import unittest
@@ -38,44 +39,65 @@ class ReviewTest(unittest.TestCase):
             self.life.review_existing('test-plugin')
             return result.call_args.kwargs['preview']
 
-    def approve(self,preview):
-        self.put(self.root/('root/.dsha-plugin-task-'+'1'*32+'.approval'),preview['confirmationSha256'])
-
     def enabled(self):
         return 'test-plugin' in json.loads(self.manifest.read_text())['dsh']['profile']['bundles']
 
     def enable(self):
-        preview=self.preview();self.approve(preview)
-        with contextlib.redirect_stdout(io.StringIO()):self.life.install_preview(preview['previewId'],preview['confirmationSha256'])
-        self.assertTrue(self.enabled());return preview
+        fingerprint=self.manager.dependencies().current(str(self.package))['sha256']
+        self.life.queue_activation('test-plugin',fingerprint,'1.0.0')
+        with contextlib.redirect_stdout(io.StringIO()):self.assertEqual(0,self.manager.builtin.enable_plugin('test-plugin'))
+        self.assertTrue(self.enabled())
 
-    def test_unreviewed_entry_is_rejected_and_native_confirmation_is_single_use(self):
+    def test_existing_plugin_enables_without_approval_file(self):
         preview=self.preview();self.assertEqual('legacy-unknown',preview['items'][0]['dependencyState'])
         self.assertFalse(self.enabled())
-        with self.assertRaisesRegex(ValueError,'原生插件界面'):
-            self.life.install_preview(preview['previewId'],preview['confirmationSha256'])
-        with contextlib.redirect_stdout(io.StringIO()):self.assertEqual(1,self.manager.builtin.enable_plugin('test-plugin'))
-        self.approve(preview)
         with contextlib.redirect_stdout(io.StringIO()):self.life.install_preview(preview['previewId'],preview['confirmationSha256'])
         self.assertTrue(self.enabled());self.assertFalse(Path(self.manager.task_file('.approval')).exists())
         self.assertEqual('queued',self.life.activation_state()['entries']['test-plugin']['status'])
 
-    def test_changed_source_after_review_does_not_enable(self):
-        preview=self.preview();self.approve(preview);self.put(self.package/'index.js','new source after review')
-        with self.assertRaisesRegex(ValueError,'审阅后发生变化'):
+    def test_changed_source_after_prepare_does_not_enable(self):
+        preview=self.preview();self.put(self.package/'index.js','new source after prepare')
+        with self.assertRaisesRegex(ValueError,'准备后发生变化'):
             self.life.install_preview(preview['previewId'],preview['confirmationSha256'])
-        self.assertFalse(self.enabled());self.assertEqual('new source after review',(self.package/'index.js').read_text())
+        self.assertFalse(self.enabled());self.assertEqual('new source after prepare',(self.package/'index.js').read_text())
 
-    def test_loading_failure_and_process_restart_do_not_repeat_candidate(self):
+    def test_upgrade_enables_only_exact_legacy_review_marker(self):
+        document=json.loads(self.manifest.read_text())
+        for name,marker in (('legacy-plugin','DSHA_REVIEW_REQUIRED\n'),('user-disabled','')):
+            directory=self.root/'root/.dsh/plugin-src'/name
+            self.put(directory/'package.json',{'name':name,'version':'1.0.0','dsh':{'bundle':{'patch':'cordis.patch.yml'}}})
+            self.put(directory/'cordis.patch.yml','[]\n')
+            self.put(directory/'index.js','export {};')
+            marker_path=self.root/'root/.dsh/profiles/web/node_modules'/(name+'.disabled')
+            marker_path.parent.mkdir(parents=True,exist_ok=True);marker_path.write_bytes(marker.encode())
+            document['dependencies'][name]='link:/root/.dsh/plugin-src/'+name
+        self.put(self.manifest,document)
+        self.assertEqual(b'DSHA_REVIEW_REQUIRED\n',(self.root/'root/.dsh/profiles/web/node_modules/legacy-plugin.disabled').read_bytes())
+        self.assertEqual('link:/root/.dsh/plugin-src/legacy-plugin',self.manager.builtin.read_manifest()['dependencies']['legacy-plugin'])
+        legacy=self.root/'root/.dsh/plugin-src/legacy-plugin'
+        self.assertEqual('legacy-plugin',self.manager.plugin_package(str(legacy))['name'])
+        self.assertEqual([],self.manager.dependencies().current(str(legacy))['missing'])
+        link=patch.object(self.manager.os,'symlink',side_effect=lambda src,dst,**_:shutil.copytree((Path(dst).parent/src).resolve(),dst)) if os.name=='nt' else contextlib.nullcontext()
+        with link,patch.object(self.manager,'result') as outcome,contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0,self.life.migrate_legacy_reviews())
+        self.assertEqual(['legacy-plugin'],outcome.call_args.kwargs['activated'],str(outcome.call_args))
+        self.assertFalse((self.root/'root/.dsh/profiles/web/node_modules/legacy-plugin.disabled').exists())
+        self.assertTrue((self.root/'root/.dsh/profiles/web/node_modules/user-disabled.disabled').exists())
+        bundles=json.loads(self.manifest.read_text())['dsh']['profile']['bundles']
+        self.assertIn('legacy-plugin',bundles);self.assertNotIn('user-disabled',bundles)
+
+    def test_real_failure_disables_but_incomplete_browser_start_can_retry(self):
         self.enable();first=str(uuid.uuid4())
         with contextlib.redirect_stdout(io.StringIO()):
             self.life.loading('begin',first);self.life.loading('failed',first)
             self.assertFalse(self.enabled());self.life.loading('begin',str(uuid.uuid4()));self.assertFalse(self.enabled())
         self.assertEqual('failed',self.life.activation_state()['entries']['test-plugin']['status'])
-        self.enable()
+        self.enable();first=str(uuid.uuid4());second=str(uuid.uuid4())
         with contextlib.redirect_stdout(io.StringIO()):
-            self.life.loading('begin',str(uuid.uuid4()));self.life.loading('begin',str(uuid.uuid4()))
-        self.assertFalse(self.enabled());self.assertEqual('unconfirmed',self.life.activation_state()['entries']['test-plugin']['status'])
+            self.life.loading('begin',first);self.life.loading('begin',second)
+        self.assertTrue(self.enabled())
+        self.assertEqual('attempted',self.life.activation_state()['entries']['test-plugin']['status'])
+        self.assertEqual(second,self.life.activation_state()['entries']['test-plugin']['startup'])
 
     def test_same_startup_compatibility_retry_retains_approval_but_rechecks_content(self):
         self.enable();startup=str(uuid.uuid4())
@@ -114,7 +136,7 @@ class ReviewTest(unittest.TestCase):
         return path,preview
 
     def test_restored_name_conflict_keeps_current_installation_untouched(self):
-        source,preview=self.restored('test-plugin');self.assertTrue(preview['items'][0]['existingConflict']);self.approve(preview)
+        source,preview=self.restored('test-plugin');self.assertTrue(preview['items'][0]['existingConflict'])
         with self.assertRaisesRegex(ValueError,'同名插件'):
             self.life.install_preview(preview['previewId'],preview['confirmationSha256'])
         self.assertEqual('1.0.0',json.loads((self.package/'package.json').read_text())['version']);self.assertTrue((source/'index.js').is_file())
@@ -150,7 +172,7 @@ class ReviewTest(unittest.TestCase):
 
     @unittest.skipIf(os.name=='nt','恢复插件真实软链启用在 Android/Linux 验证')
     def test_restored_new_name_activates_from_preserved_dependency_group(self):
-        source,preview=self.restored('restored-fixture');self.approve(preview)
+        source,preview=self.restored('restored-fixture')
         with contextlib.redirect_stdout(io.StringIO()):self.life.install_preview(preview['previewId'],preview['confirmationSha256'])
         manifest=json.loads(self.manifest.read_text());self.assertIn('restored-fixture',manifest['dsh']['profile']['bundles'])
         self.assertEqual(source.resolve(),(self.manifest.parent/'node_modules/restored-fixture').resolve())

@@ -18,12 +18,12 @@ public final class RetainedDataActivity extends AppCompatActivity {
     public static final class Model extends ViewModel {
         final Map<String,RetainedCatalogue.Entry> selected=new LinkedHashMap<>();final MutableLiveData<RetainedCatalogue.Page> entries=new MutableLiveData<>();
         final MutableLiveData<String> report=new MutableLiveData<>("");final AtomicBoolean working=new AtomicBoolean();
-        final List<RetainedCatalogue.Cursor> starts=new ArrayList<>();BackupControl control;int page;long requestId;boolean pluginAction;String deferredPreviewId;
+        final List<RetainedCatalogue.Cursor> starts=new ArrayList<>();BackupControl control;int page;long requestId;boolean pluginAction;
         public Model(){starts.add(null);}
         @Override protected void onCleared(){if(control!=null)control.cancel();}
     }
     private Model model;private LinearLayout rows;private TextView report,pageStatus;
-    private com.deepseekharness.app.core.PluginRepository plugins;private androidx.appcompat.app.AlertDialog pluginDialog;
+    private com.deepseekharness.app.core.PluginRepository plugins;
     private static String t(String zh,String en){return UiText.choose(zh,en);}
     private RetainedCatalogue catalogue()throws IOException{var fs=new AndroidBackupFileSystem();File files=getFilesDir().getCanonicalFile();return new RetainedCatalogue(fs,files,new UserDataLayout(fs,files).current());}
     @Override protected void onCreate(Bundle saved){
@@ -33,63 +33,15 @@ public final class RetainedDataActivity extends AppCompatActivity {
         TextView note=new TextView(this);note.setText(t("原件保持只读。记录中的成功状态不是本次重新验证；检查、导出与恢复分别处理。未知或受损原件继续保留。",
                 "Originals remain read-only. A recorded success is not a fresh verification. Inspect, export and restore are separate operations. Unknown or damaged originals remain retained."));note.setTextSize(14);note.setTextColor(getColor(R.color.text_secondary));note.setPadding(0,0,0,p/2);body.addView(note);
         button(body,t("刷新清单","Refresh list"),()->{if(model.working.get())return;model.page=0;model.starts.clear();model.starts.add(null);refresh();});button(body,t("检查所选记录","Inspect selected records"),this::inspect);
-        button(body,t("取消检查","Cancel inspection"),()->{if(model.control!=null)model.control.cancel();});report=new TextView(this);report.setOnClickListener(v->showRetainedPluginOptions());body.addView(report);
+        button(body,t("取消检查","Cancel inspection"),()->{if(model.control!=null)model.control.cancel();});report=new TextView(this);body.addView(report);
         pageStatus=new TextView(this);pageStatus.setTextColor(getColor(R.color.text_secondary));body.addView(pageStatus);
         rows=new LinearLayout(this);rows.setOrientation(LinearLayout.VERTICAL);body.addView(rows);
         model.report.observe(this,value->{StringJoiner lines=new StringJoiner("\n");for(String line:value.split("\n",-1))lines.add(UiStateText.render(line));report.setText(lines.toString());});model.entries.observe(this,this::render);if(model.entries.getValue()==null)refresh();
         plugins.state().observe(this,state->{
             if(model.pluginAction&&state!=null&&state.message!=null&&!state.message.isEmpty()){
-                var retained=plugins.preview().getValue();
-                boolean deferred=retained!=null&&retained.id.equals(model.deferredPreviewId)&&!state.busy;
-                model.report.setValue(UiStateText.render(state.message)+(deferred?t(
-                        "\n清理未确认；预览已保留。点此重试或稍后处理。",
-                        "\nCleanup is unconfirmed; the preview is retained. Tap to retry or handle it later."):""));
+                model.report.setValue(UiStateText.render(state.message));
             }
-            // Defer until finishTask has applied onSuccess. A failed discard retains preview.
-            if(model.pluginAction&&state!=null&&!state.busy)report.post(this::showPluginPreviewIfReady);
         });
-        plugins.preview().observe(this,preview->{
-            if(preview==null){model.deferredPreviewId=null;
-                var state=plugins.state().getValue();
-                if(model.pluginAction&&state!=null&&!state.busy&&state.message!=null)model.report.setValue(UiStateText.render(state.message));
-            }
-            showPluginPreviewIfReady();
-        });
-    }
-    private void showPluginPreviewIfReady(){
-        if(!model.pluginAction||plugins.isBusy()||pluginDialog!=null||isFinishing()||isDestroyed())return;
-        var preview=plugins.preview().getValue();if(preview==null)return;
-        if(preview.id.equals(model.deferredPreviewId))return;
-        pluginDialog=new DshaDialogBuilder(this).setTitle(t("审阅隔离插件","Review quarantined plugin")).setMessage(preview.description())
-                .setPositiveButton(t("确认启用","Confirm enable"),(d,w)->plugins.confirmPreview())
-                .setNegativeButton(t("取消","Cancel"),(d,w)->discardShownPluginPreview(preview))
-                .setNeutralButton(t("稍后处理","Handle later"),(d,w)->deferPluginPreview(preview))
-                .setOnCancelListener(d->deferPluginPreview(preview)).create();
-        pluginDialog.setOnDismissListener(d->pluginDialog=null);pluginDialog.show();
-        if(preview.blocked())pluginDialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setEnabled(false);
-    }
-
-    private void deferPluginPreview(com.deepseekharness.app.core.PluginRepository.Preview preview){
-        model.deferredPreviewId=preview.id;
-        model.report.setValue(t("插件预览已保留。点此重新打开、重试清理或稍后处理。",
-                "The plugin preview is retained. Tap to reopen, retry cleanup, or handle it later."));
-    }
-    private void discardShownPluginPreview(com.deepseekharness.app.core.PluginRepository.Preview preview){
-        model.deferredPreviewId=preview.id;
-        plugins.discardPreview();
-    }
-    private void showRetainedPluginOptions(){
-        var retained=plugins.preview().getValue();
-        if(!model.pluginAction||retained==null||!retained.id.equals(model.deferredPreviewId)||plugins.isBusy())return;
-        var state=plugins.state().getValue();
-        String detail=state==null?"":UiStateText.render(state.message);
-        new DshaDialogBuilder(this).setTitle(t("保留的插件预览","Retained plugin preview"))
-                .setMessage(detail.isEmpty()?t("预览仍在；请选择后续处理。","The preview remains. Choose what to do next."):detail)
-                .setPositiveButton(t("重新打开预览","Reopen preview"),(d,w)->{
-                    model.deferredPreviewId=null;report.post(this::showPluginPreviewIfReady);
-                }).setNeutralButton(t("重试清理","Retry cleanup"),(d,w)->{
-                    model.deferredPreviewId=retained.id;plugins.discardPreview();
-                }).setNegativeButton(t("稍后处理","Handle later"),null).show();
     }
     private void button(LinearLayout parent,String label,Runnable action){Button button=new Button(this);button.setText(label);button.setAllCaps(false);button.setIncludeFontPadding(false);button.setGravity(android.view.Gravity.CENTER);button.setMinHeight((int)(48*getResources().getDisplayMetrics().density));button.setBackgroundResource(R.drawable.bg_btn);button.setTextColor(getColor(R.color.text));LinearLayout.LayoutParams layout=new LinearLayout.LayoutParams(-1,-2);layout.topMargin=(int)(8*getResources().getDisplayMetrics().density);parent.addView(button,layout);button.setOnClickListener(v->action.run());}
     private void refresh(){if(!model.working.compareAndSet(false,true))return;
@@ -127,14 +79,14 @@ public final class RetainedDataActivity extends AppCompatActivity {
     }
     private void details(RetainedCatalogue.Entry entry){
         String scope=switch(entry.scope){case "application"->t("应用数据","Application data");case "sessions"->t("对话与附件","Conversations and attachments");case "settings"->t("设置","Settings");case "plugins"->t("插件","Plugins");case "projects"->t("项目文件","Project files");default->t("范围未确认","Scope unconfirmed");};
-        String protection=switch(entry.protection){case "VERIFY_BEFORE_EXPORT_OR_RESTORE"->t("操作前重新核对加密文件摘要","Recheck the encrypted file checksum before use");case "REVIEW_REQUIRED"->t("启用前需要审阅","Review required before activation");case "READ_ONLY_RESCUE_NO_AUTOMATIC_DELETION"->t("只读救援来源","Read-only rescue source");default->t("原件或记录保持保留","Originals or records remain retained");};
+        String protection=switch(entry.protection){case "VERIFY_BEFORE_EXPORT_OR_RESTORE"->t("操作前重新核对加密文件摘要","Recheck the encrypted file checksum before use");case "REVIEW_REQUIRED"->t("需手动选择恢复","Select manually to restore");case "READ_ONLY_RESCUE_NO_AUTOMATIC_DELETION"->t("只读救援来源","Read-only rescue source");default->t("原件或记录保持保留","Originals or records remain retained");};
         String detail=label(entry)+"\n\n"+t("范围：","Scope: ")+scope+"\n"+protection+"\n\n"+entry.directory.getAbsolutePath()+"\n\n"+t("不会执行保留目录中的程序，也不会自动删除原件。","Programs in the retained directory will not run, and originals will not be deleted automatically.");
         var dialog=new DshaDialogBuilder(this).setTitle(t("保留记录","Retained record")).setMessage(detail).setNegativeButton(t("关闭","Close"),null);
         if(entry.source!=null&&!entry.status.equals("DUPLICATE")){dialog.setNeutralButton(t("导出","Export"),(d,w)->open(entry,entry.part.equals("encrypted")?"reexport":"export-tree"));
             if(entry.kind==RetainedCatalogue.Kind.SETTINGS)dialog.setPositiveButton(t("检查设置差异","Review settings differences"),(d,w)->reviewSettings(entry));
-            else if(entry.kind==RetainedCatalogue.Kind.PRESET)dialog.setPositiveButton(t("检查并审阅预设","Inspect and review preset"),(d,w)->{model.pluginAction=true;plugins.reviewLegacyPreset(entry.key());});
+            else if(entry.kind==RetainedCatalogue.Kind.PRESET)dialog.setPositiveButton(t("恢复并启用预设","Restore and enable preset"),(d,w)->{model.pluginAction=true;plugins.reviewLegacyPreset(entry.key());});
             else if(entry.kind==RetainedCatalogue.Kind.MIGRATION) { /* migration records are read-only/export-only */ }
-            else if(entry.kind==RetainedCatalogue.Kind.QUARANTINE)dialog.setPositiveButton(t("审阅启用","Review activation"),(d,w)->{model.pluginAction=true;plugins.reviewRestored(entry.id,entry.part);});
+            else if(entry.kind==RetainedCatalogue.Kind.QUARANTINE)dialog.setPositiveButton(t("恢复并启用","Restore and enable"),(d,w)->{model.pluginAction=true;plugins.reviewRestored(entry.id,entry.part);});
             else dialog.setPositiveButton(t("预检恢复","Inspect restore"),(d,w)->open(entry,entry.part.equals("encrypted")?"restore-copy":"restore-tree"));}dialog.show();
     }
     private void open(RetainedCatalogue.Entry entry,String action){startActivity(new Intent(this,NativeDataActivity.class).putExtra("retained_key",entry.key()).putExtra("retained_action",action));}

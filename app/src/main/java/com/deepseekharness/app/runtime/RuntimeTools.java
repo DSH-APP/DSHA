@@ -66,8 +66,9 @@ final class RuntimeTools {
             patchClientModule(context, rootfs, "persona-compat-patch.json", "旧版 persona 预设");
             patchClientModule(context, rootfs, "models-navigation-patch.json", "模型配置入口");
             patchClientModule(context, rootfs, "subagent-navigation-patch.json", "子代理触摸导航");
-            patchClientModule(context, rootfs, "plugin-manager-policy-patch.json", "插件审阅");
-            patchClientModule(context, rootfs, "plugin-manager-navigation-patch.json", "插件原生入口");
+            removeLegacyPluginReviewPatches(context, rootfs);
+            patchClientModule(context, rootfs, "plugin-manager-policy-patch.json", "插件包管理");
+            patchClientModule(context, rootfs, "plugin-manager-auto-enable-patch.json", "插件安装后自动启用");
             patchClientModule(context, rootfs, "office-fonts-patch.json", "Office 字体");
             patchClientModule(context, rootfs, "deepseek-messages-compat-patch.json", "DeepSeek Messages 会话兼容");
             patchClientModule(context, rootfs, "rc1-settings-migration-patch.json", "rc1 设置迁移");
@@ -297,6 +298,18 @@ final class RuntimeTools {
     }
     private static void patchAgentPresets(Context context, File rootfs) throws IOException {
         patchClientModule(context, rootfs, "agent-preset-patch.json", "Agent 预设");
+    }
+    private static void removeLegacyPluginReviewPatches(Context context, File rootfs) throws IOException {
+        String[][] modules = {
+                {"@deepseek-ai/dsh-plugin-manager/lib/index.js", "DSHA_NATIVE_PLUGIN_POLICY_V1"},
+                {"@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js", "dshaNativeReviewRoute"}
+        };
+        for (String[] entry : modules) {
+            File file = new File(rootfs, "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/" + entry[0]);
+            if (!file.isFile() || !Compat.readAll(file).contains(entry[1])) continue;
+            if (restoreBundledClientModule(context, rootfs, entry[0]) == null)
+                throw new IOException("无法移除旧插件审阅补丁：" + entry[0]);
+        }
     }
     private static void patchClientModule(Context context, File rootfs, String asset, String description) throws IOException {
         File pkg = new File(rootfs, "usr/local/lib/node_modules/@deepseek-ai/dsh/package.json");

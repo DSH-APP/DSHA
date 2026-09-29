@@ -349,11 +349,9 @@ def transactions():
     return _transactions
 
 
-def register_plugin(root, source, expected_version=None, *, reviewed=False, restoring=False):
+def register_plugin(root, source, expected_version=None, *, restoring=False):
     pkg = plugin_package(root)
     name = pkg["name"]
-    if not reviewed:
-        raise ValueError('插件必须先完成静态预览并确认，不能直接安装')
     prepare_dependencies(root, pkg, restoring=restoring)
     source = dependencies().source_label(source)
     dest = local(os.path.join(PLUGIN_SRC, name))
@@ -396,9 +394,14 @@ def register_plugin(root, source, expected_version=None, *, reviewed=False, rest
             marker = builtin.marker_path(name)
             previous_bundles = doc.get("dsh", {}).get("profile", {}).get("bundles", [])
             known = name in doc.get("dependencies", {}) or name in previous_bundles
-            enabled = restoring and not os.path.isfile(marker) and (not known or name in previous_bundles)
             if os.path.lexists(marker) and (os.path.islink(marker) or not os.path.isfile(marker)):
                 raise ValueError('插件停用标记类型异常，原件已保留')
+            # 只继承用户明确的禁用意图。旧版自动写入的待审阅标记不是用户选择。
+            legacy_review = False
+            if os.path.isfile(marker) and os.path.getsize(marker) == len(b'DSHA_REVIEW_REQUIRED\n'):
+                with open(marker, 'rb') as stream:
+                    legacy_review = stream.read() == b'DSHA_REVIEW_REQUIRED\n'
+            enabled = (legacy_review or not known or name in previous_bundles) and (not os.path.isfile(marker) or legacy_review)
             existed = os.path.lexists(dest)
             if existed and (os.path.islink(dest) or not os.path.isdir(dest)):
                 raise ValueError("插件目标目录类型异常：" + name)
@@ -410,8 +413,7 @@ def register_plugin(root, source, expected_version=None, *, reviewed=False, rest
             doc["dsh"]["profile"]["patchReload"] = "startup"
             doc.setdefault("dependencies", {})[name] = "link:" + os.path.join(PLUGIN_SRC, name).replace("\\", "/")
             sources[name] = source or dependencies().source_label(repository_url(pkg)) or sources.get(name, "")
-            marker_bytes = b'DSHA_REVIEW_REQUIRED\n' if not enabled and not os.path.lexists(marker) else None
-            plan = transaction.prepare(work, name, prepared, doc, sources, marker_bytes)
+            plan = transaction.prepare(work, name, prepared, doc, sources, None, remove_marker=legacy_review)
             transaction.boundary('prepared')
             try:
                 transaction.apply_file(work, 'marker', plan)
@@ -784,13 +786,16 @@ def main():
     args = sys.argv[1:]
     try:
         check_cancel()
-        # 一次容器启动内完成变更与状态读取；仍沿用原锁、审阅及提交边界。
+        # 一次容器启动内完成变更与状态读取；仍沿用原锁与事务提交边界。
         if args == ["refresh"]:
             with builtin.operation_lock(check_cancel):
                 progress('refresh', '正在检测已安装插件…', cancellable=False)
                 if builtin.register() != 0:
                     raise ValueError('部分内置插件待修复，请检查环境')
+                lifecycle().migrate_legacy_reviews(locked=True)
                 return cmd_list('插件检测完成；变更后重启 Web 生效')
+        if args == ["migrate-review-markers"]:
+            return lifecycle().migrate_legacy_reviews()
         if len(args) == 2 and args[0] in ('enable-list', 'disable-list'):
             name = args[1]
             if not builtin.valid_name(name):
@@ -798,8 +803,17 @@ def main():
             with builtin.operation_lock(check_cancel):
                 enable = args[0] == 'enable-list'
                 progress('configure', '正在更新插件状态…', cancellable=False)
+                if enable and name not in builtin.OFFICIAL_BUNDLES and name not in builtin.builtin_names():
+                    directory = resolve_plugin_dir(name)
+                    if not directory:
+                        raise ValueError('找不到插件实体，请重新导入：' + name)
+                    package = plugin_package(directory)
+                    content = dependencies().current(directory)
+                    if content['missing']:
+                        raise ValueError('插件缺少运行依赖，请重新导入：' + name)
+                    lifecycle().queue_activation(name, content['sha256'], package['version'])
                 if (builtin.enable_plugin(name) if enable else builtin.disable_plugin(name)) != 0:
-                    raise ValueError('插件状态更新失败，请检查配置或审阅状态')
+                    raise ValueError('插件状态更新失败，请检查配置和安装文件')
                 return cmd_list('已' + ('启用 ' if enable else '禁用 ') + name + '；重启 Web 后生效')
         if len(args) == 2 and args[0] == 'delete-list':
             if cmd_delete(args[1]) != 0:
