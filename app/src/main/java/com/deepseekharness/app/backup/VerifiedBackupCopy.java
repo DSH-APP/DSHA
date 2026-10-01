@@ -3,7 +3,7 @@ package com.deepseekharness.app.backup;
 import java.io.*;
 import java.util.*;
 
-/** 复核本机先前完成的私有加密产物；不是对任意输入包的发送者认证，也不替代首次 AEAD 验证。 */
+/** 复核本机先前完成的私有备份产物（可选密码加密）；不是对任意输入包的发送者认证。 */
 public final class VerifiedBackupCopy {
     public final String id,sha256,integrity,scope;
     public final File artifact;
@@ -34,7 +34,8 @@ public final class VerifiedBackupCopy {
     }
     public void verify(BackupFileSystem fs,BackupControl control)throws IOException{
         try(InputStream input=fs.read(artifact,fs.stat(artifact))){
-            byte[] header=new byte[8];new DataInputStream(input).readFully(header);if(!Arrays.equals(header,PortableBackupCrypto.MAGIC))throw new IOException("VERIFIED_COPY_FORMAT");
+            byte[] header=new byte[8];new DataInputStream(input).readFully(header);
+            if(!Arrays.equals(header,PortableBackupCrypto.MAGIC)&&!BackupArchive.hasMagic(header))throw new IOException("VERIFIED_COPY_FORMAT");
         }
         try(InputStream input=fs.read(artifact,fs.stat(artifact))){if(!sha256.equals(BackupArchive.digest(input,control)))throw new IOException("VERIFIED_COPY_CHANGED");}
     }

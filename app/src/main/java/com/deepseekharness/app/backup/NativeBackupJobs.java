@@ -222,20 +222,21 @@ public final class NativeBackupJobs {
     private synchronized boolean exportInternal(NativeDataLocations.Selection selection,char[] suppliedPassword,Uri destination,String expectedName,boolean rescue,boolean automatic){
         if(state.busy||workers.isClosed()||AutomaticBackups.factoryResetPending(context))return false;
         if(!rescue&&MaintenanceCoordinator.pending(context.getFilesDir()))return false;
-        if(suppliedPassword==null||suppliedPassword.length<12||suppliedPassword.length>1024)return false;
-        char[] password=suppliedPassword.clone();
+        // 手动导出允许不加密；传入密码时仍沿用 v5 的最小长度和上限。
+        if(suppliedPassword!=null&&(suppliedPassword.length<12||suppliedPassword.length>1024))return false;
+        char[] password=suppliedPassword==null?null:suppliedPassword.clone();
         NativeDataLocations.Selection frozen=new NativeDataLocations.Selection();frozen.scope=selection.scope;frozen.includeApiKey=selection.includeApiKey;
         frozen.retainedKey=selection.retainedKey;
-        if(frozen.retainedKey!=null&&!frozen.retainedKey.isEmpty()&&!rescue){Arrays.fill(password,'\0');return false;}
+        if(frozen.retainedKey!=null&&!frozen.retainedKey.isEmpty()&&!rescue){if(password!=null)Arrays.fill(password,'\0');return false;}
         frozen.guestProjects.addAll(selection.guestProjects);
         try{for(BackupSource source:selection.documentProjects)frozen.documentProjects.add(source instanceof SafBackupSource?((SafBackupSource)source).copyForOperation():source);}
-        catch(IOException error){Arrays.fill(password,'\0');return false;}
+        catch(IOException error){if(password!=null)Arrays.fill(password,'\0');return false;}
         DataProtectionService.StartTicket protection=null;
         try {
             File parent=HostOperationArchive.reserve(fs,context.getFilesDir().getCanonicalFile());
             task=new File(parent,UUID.randomUUID().toString());fs.directory(task);
             control=new BackupControl(this::progress);update("PREPARING","","","",0,0,true);if(!automatic)protection=foreground();
-        }catch(IOException error){Arrays.fill(password,'\0');beginFailed(error);return false;}
+        }catch(IOException error){if(password!=null)Arrays.fill(password,'\0');beginFailed(error);return false;}
         final DataProtectionService.StartTicket activeProtection=protection;
         File owned=task;BackupControl cancellation=control;
         return launch(()->{
@@ -247,7 +248,7 @@ public final class NativeBackupJobs {
                 provenance.put("requestedScope",frozen.scope);if(automatic)provenance.put("automatic",true);
                 if(frozen.retainedKey!=null&&!frozen.retainedKey.isEmpty())provenance.put("retainedSource",frozen.retainedKey);
                 provenance.put("appVersion",BuildConfig.VERSION_NAME);provenance.put("runtime",com.deepseekharness.app.util.Constants.DSH_VERSION);
-                provenance.put("dataFormat","UNINSPECTED");provenance.put("sensitivePolicy","PASSWORD_ENCRYPTED");provenance.put("plugins",located.plugins==null?Collections.emptyMap():located.plugins.description());
+                provenance.put("dataFormat","UNINSPECTED");provenance.put("sensitivePolicy",password==null?"UNENCRYPTED":"PASSWORD_ENCRYPTED");provenance.put("plugins",located.plugins==null?Collections.emptyMap():located.plugins.description());
                 RuntimeDescriptor observed=null;try{if(frozen.retainedKey==null||frozen.retainedKey.isEmpty())observed=HarnessController.get(context).proot().installedRuntimeDescriptor();}catch(IOException unavailable){}
                 provenance.put("dataCompatibility",DataFormatEvidence.unknown(observed));
                 HostSnapshot.FinalCheck check=located.plugins==null?null:located.plugins::verify;
@@ -264,13 +265,22 @@ public final class NativeBackupJobs {
                 else summary=MaintenanceCoordinator.exclusive(HarnessController.get(context),()->HostSnapshot.create(fs,located.sources,owned,plain,provenance,false,cancellation,check));
                 try(InputStream input=fs.read(plain,fs.stat(plain))){BackupArchive.read(input,null,cancellation);}
                 String plainHash;try(InputStream input=fs.read(plain,fs.stat(plain))){plainHash=BackupArchive.digest(input,cancellation);}
-                update("ENCRYPTING","","","",BackupJson.number(summary,"entries"),BackupJson.number(summary,"bytes"),true);
-                try(InputStream input=fs.read(plain,fs.stat(plain));OutputStream output=fs.create(encrypted)){PortableBackupCrypto.encrypt(input,output,password,cancellation);}
-                java.security.MessageDigest authenticated=BackupArchive.sha();
-                try(InputStream input=fs.read(encrypted,fs.stat(encrypted));OutputStream verify=new java.security.DigestOutputStream(new OutputStream(){public void write(int b){}public void write(byte[] b,int o,int n){}},authenticated)){
-                    PortableBackupCrypto.decrypt(input,verify,password,cancellation);
+                update(password==null?"WRITING":"ENCRYPTING","","","",BackupJson.number(summary,"entries"),BackupJson.number(summary,"bytes"),true);
+                if(password!=null){
+                    try(InputStream input=fs.read(plain,fs.stat(plain));OutputStream output=fs.create(encrypted)){PortableBackupCrypto.encrypt(input,output,password,cancellation);}
+                    java.security.MessageDigest authenticated=BackupArchive.sha();
+                    try(InputStream input=fs.read(encrypted,fs.stat(encrypted));OutputStream verify=new java.security.DigestOutputStream(new OutputStream(){public void write(int b){}public void write(byte[] b,int o,int n){}},authenticated)){
+                        PortableBackupCrypto.decrypt(input,verify,password,cancellation);
+                    }
+                    if(!plainHash.equals(BackupArchive.hex(authenticated.digest())))throw new IOException("PRIVATE_ARTIFACT_VERIFICATION");
+                }else{
+                    // 无密码 dshbak 保留同一个带完整尾摘要的 BackupArchive 格式，
+                    // 导入时仍执行相同的范围、路径和校验流程。
+                    try(InputStream input=fs.read(plain,fs.stat(plain));OutputStream output=fs.create(encrypted)){
+                        byte[] buffer=new byte[65536];int n;while((n=input.read(buffer))!=-1){cancellation.check();output.write(buffer,0,n);}output.flush();
+                    }
+                    try(InputStream input=fs.read(encrypted,fs.stat(encrypted))){if(!plainHash.equals(BackupArchive.digest(input,cancellation)))throw new IOException("PRIVATE_ARTIFACT_VERIFICATION");}
                 }
-                if(!plainHash.equals(BackupArchive.hex(authenticated.digest())))throw new IOException("PRIVATE_ARTIFACT_VERIFICATION");
                 String artifactHash;try(InputStream input=fs.read(encrypted,fs.stat(encrypted))){artifactHash=BackupArchive.digest(input,cancellation);}
                 Map<String,Object> verification=new LinkedHashMap<>(summary);verification.put("encryptedSha256",artifactHash);verification.put("encryptedBytes",fs.stat(encrypted).size);
                 fs.atomic(owned,"verified.json",BackupJson.write(verification,BackupLimits.MANIFEST));fs.delete(plain);
@@ -289,7 +299,7 @@ public final class NativeBackupJobs {
                 }
                 update("FINISHED",result,"","portable.dshbak",BackupJson.number(summary,"entries"),fs.stat(encrypted).size,false);
             }catch(Exception error){try{update(error instanceof InterruptedIOException||cancellation.isCancelled()||"CANCELLED".equals(code(error))?"CANCELLED":"FAILED","",code(error),fs.stat(new File(owned,"verified.json")).type.equals("FILE")?"portable.dshbak":"",0,0,false);}catch(IOException retained){synchronized(this){state=new State(owned.getName(),"FAILED_RETAINED","","STATE_PERSISTENCE_FAILED","",0,0,false);}main.post(()->changes.setValue(state()));}}
-            finally{Arrays.fill(password,'\0');try{if(!fs.stat(plain).type.equals("MISSING"))fs.delete(plain);}catch(IOException ignored){}
+            finally{if(password!=null)Arrays.fill(password,'\0');try{if(!fs.stat(plain).type.equals("MISSING"))fs.delete(plain);}catch(IOException ignored){}
                 try{HostOperationArchive.archiveIfTerminal(fs,context.getFilesDir().getCanonicalFile(),owned);}catch(IOException ignored){}
                 synchronized(this){if(control==cancellation)control=null;}}
         },"host-data-export",password);
@@ -361,6 +371,11 @@ public final class NativeBackupJobs {
                 if(Arrays.equals(signature,PortableBackupCrypto.MAGIC)){
                     update("AUTHENTICATING","","","",0,fs.stat(input).size,true);
                     try(InputStream source=fs.read(input,fs.stat(input));OutputStream out=fs.create(plain)){PortableBackupCrypto.decrypt(source,out,password,cancellation);}
+                }else if(BackupArchive.hasMagic(signature)){
+                    // 无密码导出的 v5 dshbak 已经是可直接读取的 BackupArchive。
+                    try(InputStream source=fs.read(input,fs.stat(input));OutputStream out=fs.create(plain)){
+                        byte[] buffer=new byte[65536];int n;while((n=source.read(buffer))!=-1){cancellation.check();out.write(buffer,0,n);}out.flush();
+                    }
                 }else {
                     String filename=null;try(android.database.Cursor cursor=DocumentStreams.query(context.getContentResolver(),uri,new String[]{android.provider.OpenableColumns.DISPLAY_NAME},cancellation)){
                         if(cursor!=null&&cursor.moveToFirst())filename=cursor.getString(0);

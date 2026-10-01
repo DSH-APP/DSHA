@@ -19,6 +19,7 @@ final class RuntimeTools {
     private static String preparedRoot;
     private static String preparedApk;
     private static String preparedStamp;
+    private static boolean preparedWithNpm;
     private static final java.util.Set<File> preparedFiles = new java.util.LinkedHashSet<>();
 
     static void prepare(Context context, File rootfs) throws IOException {
@@ -32,20 +33,32 @@ final class RuntimeTools {
         synchronized (LOCK) {
             try { prepareResolver(context, rootfs); }
             catch(IOException error) { android.util.Log.w("DSHA","DNS configuration unchanged",error); }
+            File apk = new File(context.getPackageCodePath());
+            String identity = apk.getPath() + ":" + apk.length() + ":" + apk.lastModified();
+            String root = rootfs.getCanonicalPath();
             File installedDescriptor = new File(rootfs.getParentFile(), ".runtime-descriptor.json");
             if (requireNpm && installedDescriptor.isFile()
                     && !com.deepseekharness.app.util.MaintenanceGate.shared().isOwner()) {
                 // 已登记运行时的主体只能由维护事务切换。身份完全一致时仍允许修复 APK 自有
                 // 脚本/内置插件覆盖层，解决旧版提前 return 后长期沿用旧文件的问题。
                 String expected = assetRuntimeId(context);
-                if (expected.equals(descriptorRuntimeId(installedDescriptor)))
+                if (expected.equals(descriptorRuntimeId(installedDescriptor))) {
+                    if (root.equals(preparedRoot) && identity.equals(preparedApk) && preparedWithNpm
+                            && preparedStamp != null && preparedStamp.equals(stamp(rootfs))) return;
+                    preparedStamp = null;
                     prepareManagedOverlay(context, rootfs, expected);
+                    preparedFiles.add(installedDescriptor);
+                    preparedFiles.add(new File(rootfs, MANAGED_MARKER));
+                    preparedRoot = root;
+                    preparedApk = identity;
+                    preparedWithNpm = true;
+                    preparedStamp = stamp(rootfs);
+                }
                 return;
             }
-            File apk = new File(context.getPackageCodePath());
-            String identity = apk.getPath() + ":" + apk.length() + ":" + apk.lastModified();
-            String root = rootfs.getCanonicalPath();
             if (root.equals(preparedRoot) && identity.equals(preparedApk)
+                    && (!requireNpm || preparedWithNpm)
+                    && !com.deepseekharness.app.util.MaintenanceGate.shared().isOwner()
                     && preparedStamp != null && preparedStamp.equals(stamp(rootfs))) return;
             preparedStamp = null;
             preparedFiles.clear();
@@ -61,6 +74,8 @@ final class RuntimeTools {
             }
             patchComposerInput(context, rootfs);
             patchSessionNavigation(context, rootfs);
+            patchClientModule(context, rootfs, "queue-agent-patch.json", "队列空闲发送后端");
+            patchClientModule(context, rootfs, "queue-dock-patch.json", "队列箭头触屏发送");
             patchPdfCompatibility(context, rootfs);
             patchAgentPresets(context, rootfs);
             patchClientModule(context, rootfs, "persona-compat-patch.json", "旧版 persona 预设");
@@ -81,6 +96,7 @@ final class RuntimeTools {
                     com.deepseekharness.app.util.ManagedAssetVersion.bytes(managedIdentity), false);
             preparedRoot = root;
             preparedApk = identity;
+            preparedWithNpm = requireNpm;
             preparedStamp = stamp(rootfs);
         }
         }
@@ -92,7 +108,8 @@ final class RuntimeTools {
         File marker = new File(rootfs, MANAGED_MARKER);
         String current = marker.isFile() && !Compat.isSymbolicLink(marker) ? Compat.readAll(marker) : "";
         // 标记只说明上次完整写入时的身份，不能证明脚本或插件实体后来没有被删改。
-        // 每次只核对并按需重写固定数量的 APK 自有文件；不会遍历会话、项目或第三方插件。
+        // APK 或固定受管文件的 inode/大小/mtime 变化时重新核对；普通插件命令复用本进程
+        // 已准备结果，不重复读取大 JS。维护候选仍完整准备，不遍历第三方插件或个人数据。
         boolean markerCurrent = com.deepseekharness.app.util.ManagedAssetVersion.current(current, identity);
         preparedStamp = null;
         preparedFiles.clear();
@@ -101,10 +118,26 @@ final class RuntimeTools {
         // Web UI 的会话抽屉、预设标题和移动端插件都属于 APK 自有覆盖层，
         // 旧版本在这里提前 return 会让 rootfs 继续使用旧 bundle。
         // 两个补丁本身带有稳定 marker，重复启动时会安全跳过。
+        patchComposerInput(context, rootfs);
         patchSessionNavigation(context, rootfs);
+        patchClientModule(context, rootfs, "queue-agent-patch.json", "队列空闲发送后端");
+        patchClientModule(context, rootfs, "queue-dock-patch.json", "队列箭头触屏发送");
+        patchPdfCompatibility(context, rootfs);
         patchAgentPresets(context, rootfs);
+        patchClientModule(context, rootfs, "persona-compat-patch.json", "旧版 persona 预设");
+        patchClientModule(context, rootfs, "models-navigation-patch.json", "模型配置入口");
+        patchClientModule(context, rootfs, "subagent-navigation-patch.json", "子代理触摸导航");
+        removeLegacyPluginReviewPatches(context, rootfs);
+        patchClientModule(context, rootfs, "plugin-manager-policy-patch.json", "插件包管理");
+        patchClientModule(context, rootfs, "plugin-manager-auto-enable-patch.json", "插件安装后自动启用");
+        patchClientModule(context, rootfs, "office-fonts-patch.json", "Office 字体");
         patchClientModule(context, rootfs, "deepseek-messages-compat-patch.json", "DeepSeek Messages 会话兼容");
-            patchClientModule(context, rootfs, "rc1-settings-migration-patch.json", "rc1 设置迁移");
+        patchClientModule(context, rootfs, "rc1-settings-migration-patch.json", "rc1 设置迁移");
+        patchClientLanguage(context, rootfs);
+        patchTooltips(context, rootfs);
+        patchBrowserBootstrap(context, rootfs);
+        patchClientCombos(context, rootfs);
+        patchLanSettingsPersistence(rootfs);
         prepareBuiltinDependencies(rootfs);
         if (!markerCurrent || !marker.isFile() || Compat.isSymbolicLink(marker))
             writeIfChanged(marker, com.deepseekharness.app.util.ManagedAssetVersion.bytes(identity), false);
@@ -197,7 +230,7 @@ final class RuntimeTools {
                 if (!file.isFile() || Compat.isSymbolicLink(file)) return null;
                 android.system.StructStat stat = android.system.Os.lstat(file.getAbsolutePath());
                 value.append('|').append(stat.st_ino).append(':').append(stat.st_size).append(':')
-                        .append(file.lastModified());
+                        .append(file.lastModified()).append(':').append(stat.st_ctime).append(':').append(stat.st_mode);
             }
             return value.toString();
         } catch (android.system.ErrnoException error) { return null; }
@@ -244,6 +277,11 @@ final class RuntimeTools {
 
     static void applyEnvironment(Context context, File rootfs, Map<String, String> environment) {
         environment.put("DSHA_NATIVE_PLUGIN_MANAGER","1");
+        // 0.2.0-rc2 maintenance mode: the user explicitly requested an
+        // unrestricted repair shell and unlocked plugin dependency installs.
+        // The transaction/path checks remain in place, but DSH/pnpm must not
+        // silently add confirmation, frozen-lockfile, or lifecycle blocking.
+        environment.put("DSHA_PLUGIN_UNLOCKED", "1");
         environment.put("DSHA_ANDROID_RUNTIME","1");
         environment.put("DSHA_DNS_MODE",RuntimeHostPorts.shared().settings().dnsMode);
         String preload="--require=/usr/local/share/dsha/dns-compat.cjs";

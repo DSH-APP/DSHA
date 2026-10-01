@@ -99,12 +99,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         TextView title = findViewById(R.id.app_title);
-        TextView theme = findViewById(R.id.btn_theme);
-        boolean dark = ThemeController.isDark(this);
-        theme.setText("");
-        theme.setCompoundDrawablesWithIntrinsicBounds(dark?R.drawable.ic_ui2_sun:R.drawable.ic_ui2_moon,0,0,0);
-        theme.setContentDescription(dark ? com.deepseekharness.app.util.UiText.text("当前黑夜模式，点击切换白天") : com.deepseekharness.app.util.UiText.text("当前白天模式，点击切换黑夜"));
-        theme.setOnClickListener(v -> ThemeController.toggle(this));
+        renderThemeButton();
         findViewById(R.id.sub_back).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
         getSupportFragmentManager().addOnBackStackChangedListener(this::updateToolbar);
         getSupportFragmentManager().registerFragmentLifecycleCallbacks(new androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
@@ -217,6 +212,40 @@ public class MainActivity extends AppCompatActivity {
         }
         consumeOpenWeb(intent);
         consumeTaskTarget(intent);
+    }
+
+    private void renderThemeButton() {
+        TextView theme = findViewById(R.id.btn_theme);
+        String preference = ThemeController.preference(this);
+        boolean system = com.deepseekharness.app.util.UiThemePreference.SYSTEM.equals(preference);
+        boolean light = com.deepseekharness.app.util.UiThemePreference.LIGHT.equals(preference);
+        theme.setText("");
+        theme.setCompoundDrawablesWithIntrinsicBounds(system ? R.drawable.ic_ui2_auto
+                : light ? R.drawable.ic_ui2_sun : R.drawable.ic_ui2_moon, 0, 0, 0);
+        theme.setContentDescription(com.deepseekharness.app.util.UiText.text(system
+                ? "当前跟随系统，点击切换白天；长按跟随系统"
+                : light ? "当前白天模式，点击切换黑夜；长按跟随系统"
+                : "当前黑夜模式，点击切换跟随系统；长按跟随系统"));
+        theme.setOnClickListener(v -> {
+            ThemeController.cycle(this);
+            renderThemeButton();
+            showThemePreference();
+        });
+        theme.setOnLongClickListener(v -> {
+            ThemeController.followSystem(this);
+            renderThemeButton();
+            showThemePreference();
+            return true;
+        });
+    }
+
+    private void showThemePreference() {
+        String preference = ThemeController.preference(this);
+        String message = com.deepseekharness.app.util.UiThemePreference.SYSTEM.equals(preference)
+                ? "已跟随系统主题" : com.deepseekharness.app.util.UiThemePreference.LIGHT.equals(preference)
+                ? "已切换白天模式" : "已切换黑夜模式";
+        android.widget.Toast.makeText(this, com.deepseekharness.app.util.UiText.text(message),
+                android.widget.Toast.LENGTH_SHORT).show();
     }
 
     private void consumeTaskTarget(Intent intent) {

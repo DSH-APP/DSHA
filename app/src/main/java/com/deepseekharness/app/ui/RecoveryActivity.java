@@ -67,7 +67,7 @@ public final class RecoveryActivity extends AppCompatActivity {
             JSONArray targets=broker.targets();java.util.ArrayList<String> labels=new java.util.ArrayList<>(),ids=new java.util.ArrayList<>(),actions=new java.util.ArrayList<>();
             for(int i=0;i<targets.length();i++){JSONObject target=targets.getJSONObject(i);JSONArray choices=target.optJSONArray("actions");if(choices==null)continue;
                 for(int j=0;j<choices.length();j++){String action=choices.getString(j);if("profile-settings".equals(action))continue;
-                    String label=switch(action){case "recover-maintenance"->t("恢复中断维护","Recover interrupted maintenance");case "repair-runtime"->t("修复受管运行时","Repair managed runtime");
+                    String label=switch(action){case "recover-maintenance"->t("恢复中断维护","Recover interrupted maintenance");case "repair-runtime"->t("修复受管运行时","Repair managed runtime");case "repair-cli-dependencies"->t("修复 CLI/Node 依赖","Repair CLI/Node dependencies");
                         case "new-web-profile"->t("重建 Web 基础配置（原件留存）","Rebuild basic Web configuration (retain originals)");case "new-global-patch"->t("重建全局配置补丁（影响所有 Profile）","Rebuild global patch (all profiles)");default->action;};
                     labels.add(label);ids.add(target.getString("id"));actions.add(action);
                 }

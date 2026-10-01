@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.0-rc.2",
+  "module": "@deepseek-ai/dsh-api-session-controller/lib/index.js",
+  "patches": [
+    {
+      "before": "if (request.action.kind === \"steer\" && (target !== \"next-turn\" || agent.status !== \"running\")) throw new RemoteError(\"session/steer-unavailable\", \"current turn no longer accepts steering\", { itemId: request.itemId });",
+      "after": "if (request.action.kind === \"steer\" && target !== \"next-turn\") throw new RemoteError(\"session/steer-unavailable\", \"only next-turn queue items can be sent\", { itemId: request.itemId });"
+    },
+    {
+      "before": "case \"steer\":\n\t\t\t\tagent.inbox.remove(request.itemId);\n\t\t\t\tagent.steer(message);\n\t\t\t\tbreak;",
+      "after": "case \"steer\":\n\t\t\t\tagent.inbox.remove(request.itemId);\n\t\t\t\t// A queued row remains actionable after a run ends: steer while the\n\t\t\t\t// agent is busy, otherwise follow up and wake a fresh turn.\n\t\t\t\tif (agent.status === \"running\") agent.steer(message);\n\t\t\t\telse agent.followup(message);\n\t\t\t\tbreak;"
+    }
+  ]
+}

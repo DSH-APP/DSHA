@@ -11,4 +11,8 @@ public final class UiThemePreference {
         String mode = normalize(value);
         return DARK.equals(mode) || SYSTEM.equals(mode) && systemDark;
     }
+    public static String next(String value) {
+        String mode = normalize(value);
+        return SYSTEM.equals(mode) ? LIGHT : LIGHT.equals(mode) ? DARK : SYSTEM;
+    }
 }

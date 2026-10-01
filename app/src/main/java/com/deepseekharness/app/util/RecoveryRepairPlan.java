@@ -12,7 +12,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 /** 应急候选的单次决议；身份、源摘要或数据代次变化后必须重新预览。 */
 public final class RecoveryRepairPlan {
     public enum State { PENDING, APPLYING, APPLIED, REJECTED, FAILED, EXPIRED }
-    public static final Set<String> ACTIONS = Set.of("recover-maintenance", "repair-runtime", "profile-settings", "new-web-profile", "new-global-patch");
+    /**
+     * Recovery remains a five-tool, host-controlled surface.  CLI dependency
+     * repair is deliberately a separate action so the assistant can recover a
+     * missing package without receiving an arbitrary shell or node_modules
+     * write primitive.  The host rehydrates the pinned managed tree from the
+     * signed APK and runs the existing isolated trial before committing it.
+     */
+    public static final Set<String> ACTIONS = Set.of("recover-maintenance", "repair-runtime", "repair-cli-dependencies", "profile-settings", "new-web-profile", "new-global-patch");
     public final String id = UUID.randomUUID().toString();
     public final String nonce = UUID.randomUUID().toString();
     public final String session, action, target, sourceSha256, dataGeneration, content;

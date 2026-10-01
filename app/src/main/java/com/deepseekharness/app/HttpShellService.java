@@ -843,8 +843,14 @@ public final class HttpShellService {
             }
             if (r.equals("/app/ui/screenshot") || r.equals("/app/ui/shot")) {
                 // 截屏会把当前画面留到磁盘，等于一份可被后续读取的隐私快照
+                String format = getParam(q, "format", "path");
+                if (!format.equals("path") && !format.equals("mcp")) return "[ERR] SCREENSHOT_FORMAT_INVALID";
+                var controller = com.deepseekharness.app.core.HarnessController.get(ctx);
+                long generation = controller.getWebGeneration(), revision = uiGrant.revision();
                 if (!uiAuthorized(com.deepseekharness.app.util.UiText.text("截取当前屏幕并保存为图片"))) return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次截屏");
-                return DshaAccessibilityService.uiScreenshot();
+                return DshaAccessibilityService.uiScreenshot(() ->
+                        generation == controller.getWebGeneration() && revision == uiGrant.revision()
+                        && !controller.isStopping() && !controller.isUserStopped(), format.equals("mcp"));
             }
             if (r.equals("/app/ui/swipe")) {
                 int x1 = intParam(q, "x1", -1);

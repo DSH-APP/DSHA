@@ -169,17 +169,17 @@ class PluginDownloadTest(unittest.TestCase):
             with patch.object(self.m,'run_package_command',return_value=subprocess.CompletedProcess([],1,'',error)) as run:
                 n.package_command(['npm','pack','--','test@latest'],str(self.home));self.assertEqual(1,run.call_count)
 
-    def test_dependency_retry_keeps_existing_lock_and_disables_hooks(self):
+    def test_dependency_retry_keeps_existing_lock_and_allows_unlocked_hooks(self):
         n=self.network('mirror'); lock=self.home/'pnpm-lock.yaml';calls=[]
         def run(args,cwd):
             calls.append(args)
             if len(calls)==1:
                 lock.write_text('owned frozen bytes');return subprocess.CompletedProcess(args,1,'','ERR_PNPM_FETCH_503')
             self.assertEqual('owned frozen bytes',lock.read_text());return subprocess.CompletedProcess(args,0,'','')
-        args=['pnpm','install','--ignore-scripts','--ignore-pnpmfile','--no-frozen-lockfile']
+        args=['pnpm','install','--no-frozen-lockfile']
         with patch.object(self.m,'run_package_command',side_effect=run):n.package_command(args,str(self.home))
-        self.assertIn('--frozen-lockfile',calls[1]);self.assertNotIn('--no-frozen-lockfile',calls[1])
-        self.assertIn('--ignore-scripts',calls[1]);self.assertIn('--ignore-pnpmfile',calls[1])
+        self.assertIn('--no-frozen-lockfile',calls[1]);self.assertNotIn('--frozen-lockfile',calls[1])
+        self.assertNotIn('--ignore-scripts',calls[1]);self.assertNotIn('--ignore-pnpmfile',calls[1])
 
     def test_cancel_does_not_attempt_second_registry(self):
         n=self.network('mirror')

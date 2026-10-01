@@ -8,6 +8,16 @@ from runtime_input_contract import load, asset_paths, launcher_paths
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# The descriptor uses explicit data-format evidence rather than deriving
+# compatibility from a version number.  DSH 0.2.0-rc.2 keeps the same session
+# and JSON storage readers as the shipped 0.1.7-rc.2 runtime (both runtimes
+# expose the v4 session catalog and identical storage-json implementation), so
+# an upgrade may read the previous runtime's records.  Keep this list narrow:
+# a future runtime must add a reviewed entry here after comparing its readers.
+READ_COMPATIBILITY = {
+    '0.2.0-rc.2': ['dsh-0.1.7-rc.1', 'dsh-0.1.7-rc.2'],
+}
+
 def digest(path):
     value = hashlib.sha256()
     with path.open('rb') as stream:
@@ -22,7 +32,7 @@ def build_descriptor(root):
     inputs = {p.relative_to(assets).as_posix(): digest(p) for p in asset_paths(root, spec)}
     launchers = {name: digest(path) for name, path in launcher_paths(root, spec).items()}
     version = json.loads((root / 'tools/dsh-runtime/package.json').read_text(encoding='utf8'))['dependencies']['@deepseek-ai/dsh']
-    previous = ['dsh-0.1.7-rc.1'] if version == '0.1.7-rc.2' else []
+    previous = READ_COMPATIBILITY.get(version, [])
     contract = {'baseVersion': (assets / 'offline-rootfs.version').read_text().strip(),
                 'dshVersion': version, 'launcherContract': 'DSHA_ARM64_V2',
                 'launcherInputs': launchers, 'bridgeProtocol': 2,

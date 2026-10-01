@@ -51,7 +51,43 @@ class Migration(unittest.TestCase):
     def test_preset_source_and_candidate_remain_independent(self):
         preset=self.dsh/'.agent-presets/crew';preset.mkdir(parents=True);(preset/'agent.cordis.yml').write_text('- id: old\n')
         self.prepare();candidate=self.dsh/self.doc()['presets'][0]['candidate'];self.assertTrue((candidate/'bundle/package.json').is_file());(preset/'agent.cordis.yml').write_text('changed')
+        self.assertEqual(json.loads((candidate/'bundle/package.json').read_text())['dependencies']['@deepseek-ai/dsh-agent-preset'],'0.2.0-rc.2')
         self.assertEqual((candidate/'agent.cordis.yml').read_text(),'- id: old\n');self.assertEqual(self.finalize(),1)
+    def test_preset_root_metadata_is_snapshotted_without_becoming_directory_candidate(self):
+        presets=self.dsh/'.agent-presets';presets.mkdir();(presets/'index.json').write_text('{"selected":"crew"}')
+        (presets/'notes').write_text('keep this unknown root file')
+        crew=presets/'crew';crew.mkdir();(crew/'agent.cordis.yml').write_text('- id: old\n')
+        self.assertEqual(self.prepare(),0)
+        doc=self.doc();self.assertEqual(len(doc['presets']),1);self.assertEqual(doc['presets'][0]['id'],'crew')
+        rows={row['path']:row for row in doc['sources']}
+        for name,value in [('index.json','{"selected":"crew"}'),('notes','keep this unknown root file')]:
+            self.assertEqual((self.folder()/rows['.agent-presets/'+name]['snapshot']).read_text(),value)
+            self.assertEqual((presets/name).read_text(),value)
+            self.assertIn('PRESET_ROOT_FILE_PRESERVED:.agent-presets/'+name,doc['warnings'])
+        self.assertEqual(len(list((self.folder()/'snapshots').iterdir())),len(doc['sources']))
+    def test_post_snapshot_copy_failure_records_exact_operation_and_path(self):
+        crew=self.dsh/'.agent-presets/crew';crew.mkdir(parents=True);(crew/'agent.cordis.yml').write_text('- id: old\n')
+        with patch.object(mod.shutil,'copyfile',side_effect=IsADirectoryError(21,'is a directory')):
+            self.assertEqual(self.prepare(),1)
+        folder=next((self.state/'generations').iterdir());doc=json.loads((folder/'prepare.json').read_text())
+        self.assertEqual(doc['failure']['operation'],'preset-candidate-copy')
+        self.assertEqual(doc['failure']['path'],'.agent-presets/crew/agent.cordis.yml')
+        self.assertIn('IsADirectoryError',doc['failure']['traceback'])
+        self.assertFalse(doc['protectionComplete']);self.assertFalse((self.state/'current.json').exists())
+        self.assertEqual(len(list((folder/'snapshots').iterdir())),len(doc['sources']))
+        self.assertEqual((crew/'agent.cordis.yml').read_text(),'- id: old\n')
+    def test_directory_settings_has_typed_source_error(self):
+        settings=self.dsh/'settings.yaml';settings.unlink();settings.mkdir();(settings/'keep').write_text('original')
+        with self.assertRaises(mod.MigrationSourceError) as raised:self.prepare()
+        self.assertEqual(str(raised.exception),'MIGRATION_SOURCE_NOT_REGULAR')
+        self.assertEqual(raised.exception.operation,'settings-input')
+        self.assertEqual(raised.exception.logical,str(settings))
+        self.assertFalse((self.state/'current.json').exists());self.assertEqual((settings/'keep').read_text(),'original')
+    def test_directory_never_passes_snapshot_source_guard(self):
+        folder=self.root/'candidate';folder.mkdir();directory=self.dsh/'directory';directory.mkdir()
+        with self.assertRaisesRegex(mod.MigrationSourceError,'SOURCE_NOT_REGULAR'):
+            mod.snapshot_row(folder,self.dsh,directory,directory,[],'preset',0)
+        self.assertFalse((folder/'snapshots/0').exists())
     def test_stale_finalize_cannot_commit_new_startup(self):
         self.prepare();self.assertEqual(mod.finalize(str(self.root),str(self.state),'old-boot'),1);self.assertFalse((self.folder()/'receipt.json').exists())
     def link(self,target,link,directory=False):

@@ -16,6 +16,7 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
     static String stage(String value){return switch(value){
         case "PREPARING" -> t("准备数据", "Preparing data");
         case "CAPTURING" -> t("保存并核验文件", "Saving and verifying files");
+        case "WRITING" -> t("写入并验证无密码副本", "Writing and verifying an unencrypted copy");
         case "ENCRYPTING" -> t("加密并验证副本", "Encrypting and verifying the copy");
         case "EXPORTING" -> t("完成副本记录", "Finishing the copy record");
         default -> t("正在处理", "Working");

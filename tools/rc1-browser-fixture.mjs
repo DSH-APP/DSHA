@@ -11,9 +11,13 @@ export async function browserFixture(runtime=process.env.DSHA_TEST_RUNTIME||JSON
   let bootstrap=fs.readFileSync(path.join(root,entry),'utf8');
   const moduleMatch=bootstrap.match(/function ([A-Za-z_$][\w$]*)\(\)\{return\{react:/);
   if(!moduleMatch)throw Error('current frontend static module anchor changed');
-  const boundary=bootstrap.includes('const Jr=globalThis.dshDesktopBoot') ? 'const Jr=globalThis.dshDesktopBoot' : 'const uo=globalThis.dshDesktopBoot';
-  const boundaryIndex=bootstrap.indexOf(boundary);
-  if(boundaryIndex<0)throw Error('current frontend boot boundary changed');
+  // Rollup changes the local identifier in each release (rc2 uses `fo`).
+  // Match the semantic boot boundary once rather than older minified names;
+  // the prefix still contains this frontend's actual React and Primitives.
+  const boundaries=[...bootstrap.matchAll(/\bconst\s+[A-Za-z_$][\w$]*=globalThis\.dshDesktopBoot\b/g)];
+  if(boundaries.length!==1||boundaries[0].index<=moduleMatch.index)
+    throw Error('current frontend boot boundary changed');
+  const boundaryIndex=boundaries[0].index;
   bootstrap=bootstrap.slice(0,boundaryIndex)+
     `globalThis.auditModules=${moduleMatch[1]}();globalThis.auditExports={};window.__ModuleLoader__={load:({id,factory})=>{auditExports[id]=factory(name=>{if(!(name in auditModules))throw Error('Missing static module '+name);return auditModules[name]})}};`;
   const server=http.createServer((req,res)=>{

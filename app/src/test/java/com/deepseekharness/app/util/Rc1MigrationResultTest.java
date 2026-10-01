@@ -18,4 +18,13 @@ public class Rc1MigrationResultTest {
         assertThrows(IOException.class,()->Rc1MigrationResult.parse("ERROR: {\"status\":\"prepared\"}"));
         assertThrows(IOException.class,()->Rc1MigrationResult.parse("DSHA_RC1_MIGRATION={}\nDSHA_RC1_MIGRATION={}"));
     }
+    @Test public void routineReceiptsAreQuietButIncompleteProtectionRemainsVisible() {
+        assertTrue(Rc1MigrationResult.isRoutineReceipt(Map.of("status","already","protectionComplete",true)));
+        assertTrue(Rc1MigrationResult.isRoutineReceipt(Map.of("status","prepared","protectionComplete",true)));
+        assertTrue(Rc1MigrationResult.isRoutineReceipt(Map.of("status","committed","sourcePreserved",true,"settingsImported",true)));
+        assertFalse(Rc1MigrationResult.isRoutineReceipt(Map.of("status","already","protectionComplete",false)));
+        assertFalse(Rc1MigrationResult.isRoutineReceipt(Map.of("status","committed","sourcePreserved",false,"settingsImported",true)));
+        assertFalse(Rc1MigrationResult.isRoutineReceipt(Map.of("status","pending","sourcePreserved",true,"settingsImported",false)));
+        assertFalse(Rc1MigrationResult.isRoutineReceipt(Map.of("status","failed","protectionComplete",true)));
+    }
 }

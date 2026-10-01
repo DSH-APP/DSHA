@@ -10,6 +10,8 @@ public final class BackupArchive {
     private static final Set<String> SCOPES=new HashSet<>(Arrays.asList("application","sessions","settings","plugins","projects"));
     private static final Set<String> KINDS=new HashSet<>(Arrays.asList("FILE","DIRECTORY","LINK","MISSING","UNREADABLE","EXCLUDED"));
     private BackupArchive() { }
+    /** 判断输入是否为未加密的 v5 dshdata 归档头。 */
+    public static boolean hasMagic(byte[] header){return header!=null&&header.length>=MAGIC.length&&Arrays.equals(Arrays.copyOf(header,MAGIC.length),MAGIC);}
     public static MessageDigest sha() {try{return MessageDigest.getInstance("SHA-256");}catch(NoSuchAlgorithmException e){throw new IllegalStateException(e);}}
     public static String hex(byte[] bytes){StringBuilder out=new StringBuilder(bytes.length*2);for(byte b:bytes)out.append(String.format(Locale.ROOT,"%02x",b&255));return out.toString();}
     public static String digest(InputStream input,BackupControl control)throws IOException {

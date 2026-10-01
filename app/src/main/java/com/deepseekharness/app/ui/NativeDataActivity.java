@@ -40,7 +40,6 @@ public final class NativeDataActivity extends AppCompatActivity {
     private final ActivityResultLauncher<String> destination=registerForActivityResult(new ActivityResultContracts.CreateDocument("application/octet-stream"),uri->{
         if(pending.reexportId!=null){String source=pending.reexportId;pending.reexportId=null;if(uri!=null&&!jobs.reexport(source,uri,pending.filename))status.setText(t("副本无法重新导出，请检查记录或当前作业。", "The copy cannot be exported. Review its record or the current operation."));return;}
         if(uri==null){pending.clear();return;}
-        if(pending.password==null){status.setText(t("密码没有保存在设备中，请重新输入后导出。","The password was not saved. Enter it again to export."));return;}
         if(!jobs.export(pending.selection,pending.password,uri,pending.filename,pending.rescue))status.setText(t("已有任务或无法创建私有作业，请检查状态。","A task is already running or private storage is unavailable."));
         pending.clear();
     });
@@ -59,8 +58,8 @@ public final class NativeDataActivity extends AppCompatActivity {
         LinearLayout navigation=new LinearLayout(this);navigation.setGravity(android.view.Gravity.CENTER_VERTICAL);
         var back=UiNavigation.back(this,this::finish);navigation.addView(back,new LinearLayout.LayoutParams(dp(44),dp(48)));
         TextView brand=new TextView(this);brand.setText("DSHA");brand.setTextSize(18);brand.setTextColor(getColor(R.color.text));navigation.addView(brand);page.addView(navigation);
-        TextView title=text(backupMode?t("备份与恢复","Backup and restore"):exportOnly?t("加密导出","Encrypted export"):restoreOnly?t("从备份恢复","Restore a backup"):t("应用数据与救援","Application data and recovery"),24);title.setTypeface(null,android.graphics.Typeface.BOLD);
-        text(backupMode?t("导出、导入和自动备份集中在这里。","Export, import and automatic backups in one place."):exportOnly?t("选择范围和项目后，设置密码保存加密副本。","Choose data and projects, then protect the export with a password."):restoreOnly?t("先验证备份密码与内容，再确认恢复范围。","Verify the password and contents before confirming what to restore."):t("运行环境不可用时，也能检查并保护可读取的数据。","Inspect and protect readable data even when the runtime is unavailable."),13);
+        TextView title=text(backupMode?t("备份与恢复","Backup and restore"):exportOnly?t("数据导出","Data export"):restoreOnly?t("从备份恢复","Restore a backup"):t("应用数据与救援","Application data and recovery"),24);title.setTypeface(null,android.graphics.Typeface.BOLD);
+        text(backupMode?t("导出、导入和自动备份集中在这里。","Export, import and automatic backups in one place."):exportOnly?t("选择范围和项目后，可选择密码加密；留空即可导出。","Choose data and projects, then optionally protect the export with a password."):restoreOnly?t("先验证备份密码与内容，再确认恢复范围。","Verify the password and contents before confirming what to restore."):t("运行环境不可用时，也能检查并保护可读取的数据。","Inspect and protect readable data even when the runtime is unavailable."),13);
         status=text("",14);status.setTextIsSelectable(true);status.setBackgroundResource(R.drawable.bg_card);status.setPadding(dp(16),dp(12),dp(16),dp(12));
         section(t("选择数据范围","Choose data scope"));
         if(restoreOnly)body.setVisibility(View.GONE);
@@ -71,7 +70,7 @@ public final class NativeDataActivity extends AppCompatActivity {
         project=text(t("项目文件需单独选择目录；不会扫描整部手机。","Choose project folders explicitly; the app does not scan the whole device."),14);
         button(t("选择项目目录","Choose project folder"),()->projectPicker.launch(null));
         button(t("查看数据范围与位置","Review data scope and locations"),this::locations);
-        section(exportOnly?t("设置备份密码","Protect your backup"):restoreOnly?t("选择并验证","Select and verify"):t("导出与恢复","Export and restore"));
+        section(exportOnly?t("导出选项","Export options"):restoreOnly?t("选择并验证","Select and verify"):t("导出与恢复","Export and restore"));
         if(!restoreOnly){Button export=button(t("导出应用数据","Export application data"),()->password(false));export.setBackgroundResource(R.drawable.bg_btn_primary);export.setTextColor(androidx.core.content.ContextCompat.getColorStateList(this,R.color.button_primary_text));}
         if(!exportOnly&&!restoreOnly&&!backupMode)button(t("只读救援导出","Read-only rescue export"),()->password(true));
         if(!exportOnly){Button restore=button(t("导入备份","Import backup"),()->restorePicker.launch(new String[]{"application/octet-stream","application/gzip","*/*"}));if(restoreOnly){restore.setBackgroundResource(R.drawable.bg_btn_primary);restore.setTextColor(getColorStateList(R.color.button_primary_text));}}
@@ -190,23 +189,25 @@ public final class NativeDataActivity extends AppCompatActivity {
         LinearLayout fields=new LinearLayout(this);fields.setOrientation(LinearLayout.VERTICAL);fields.setPadding(dp(20),0,dp(20),0);
         TextView explanation=new TextView(this);explanation.setText(rescue?t("救援不会停止当前写入，结果将标明尽力救援或部分数据。不能据此删除原件。",
                 "Rescue does not stop current writers. The result is best-effort or partial and cannot justify deleting originals."):
-                t("将停止 Web、终端和写入任务后建立快照。项目、配置与聊天都可能含敏感内容；请保存至少 12 个字符的密码。",
-                "Web, terminals and write tasks will stop before the snapshot. Projects, configuration and conversations may contain secrets. Keep a password of at least 12 characters."));fields.addView(explanation);
+                t("将停止 Web、终端和写入任务后建立快照。密码加密是可选的；未启用密码时会导出普通 dshbak 文件。",
+                "Web, terminals and write tasks stop before the snapshot. Password protection is optional; without it the app exports a plain dshbak file."));fields.addView(explanation);
+        CheckBox protect=new CheckBox(this);protect.setText(t("使用密码加密（可选）","Encrypt with a password (optional)"));protect.setChecked(false);fields.addView(protect);
         EditText first=new EditText(this),second=new EditText(this);for(EditText input:new EditText[]{first,second}){input.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);input.setSaveEnabled(false);fields.addView(input);}
         first.setHint(t("备份密码","Backup password"));second.setHint(t("再次输入","Repeat password"));
+        first.setEnabled(false);second.setEnabled(false);protect.setOnCheckedChangeListener((button,checked)->{first.setEnabled(checked);second.setEnabled(checked);});
         ScrollView scroll=new ScrollView(this);scroll.addView(fields);
-        var dialog=new DshaDialogBuilder(this).setTitle(rescue?t("救援导出","Rescue export"):t("加密导出","Encrypted export")).setView(scroll).setPositiveButton(t("选择保存位置","Choose destination"),null).setNegativeButton(t("取消","Cancel"),null).create();
+        var dialog=new DshaDialogBuilder(this).setTitle(rescue?t("救援导出","Rescue export"):t("数据导出","Data export")).setView(scroll).setPositiveButton(t("选择保存位置","Choose destination"),null).setNegativeButton(t("取消","Cancel"),null).create();
         dialog.setOnShowListener(d->dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener(v->{
-            String a=first.getText().toString(),b=second.getText().toString();if(a.length()<12||a.length()>1024||!a.equals(b)){first.setError(t("至少 12 个字符，且两次输入一致","Use at least 12 characters and matching passwords"));return;}
-            pending.clear();pending.password=a.toCharArray();pending.selection=retained==null?selection():retained;pending.rescue=rescue;pending.filename="DSHA-data-v5-"+UUID.randomUUID()+".dshbak";
+            String a=first.getText().toString(),b=second.getText().toString();if(protect.isChecked()&&(a.length()<12||a.length()>1024||!a.equals(b))){first.setError(t("至少 12 个字符，且两次输入一致","Use at least 12 characters and matching passwords"));return;}
+            pending.clear();pending.password=protect.isChecked()?a.toCharArray():null;pending.selection=retained==null?selection():retained;pending.rescue=rescue;pending.filename="DSHA-data-v5-"+UUID.randomUUID()+".dshbak";
             first.getText().clear();second.getText().clear();dialog.dismiss();destination.launch(pending.filename);
         }));dialog.show();
     }
     private void restorePassword(Uri uri){restorePassword(uri,null);}
     private void restorePassword(Uri uri,String copy){
         if(jobs.state().busy)return;LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(20),0,dp(20),0);
-        TextView description=new TextView(this);description.setText(t("加密备份请输入密码；旧版明文 tar.gz 可留空。先在私有目录验证，确认前不会覆盖当前数据。",
-                "Enter the encrypted backup password, or leave it empty for legacy plain tar.gz. Verification uses private staging and does not overwrite current data."));content.addView(description);
+        TextView description=new TextView(this);description.setText(t("只有密码加密的备份需要输入密码；无密码 dshbak 和旧版明文 tar.gz 可留空。先在私有目录验证，确认前不会覆盖当前数据。",
+                "Only password-protected backups need a password; leave it empty for unencrypted dshbak files and legacy plain tar.gz. Verification uses private staging and does not overwrite current data."));content.addView(description);
         EditText password=new EditText(this);password.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);password.setSaveEnabled(false);content.addView(password);
         CheckBox include=new CheckBox(this);include.setText(t("恢复原生 API Key（默认保留本机凭据）","Restore native API key (keep local credentials by default)"));content.addView(include);
         TextView destinationLabel=new TextView(this);destinationLabel.setText(t("项目恢复位置（创建新的独立目录）","Project destination (creates a new separate directory)"));content.addView(destinationLabel);
@@ -226,6 +227,7 @@ public final class NativeDataActivity extends AppCompatActivity {
                 +t("\n确认后将停止 Web、终端和写任务，合并所选范围并替换归档中同名文件。未提及的文件保留。插件在独立目录隔离导入，项目恢复到新的独立目录。",
                 "\nConfirmation stops Web, terminals and writers, merges selected roots and replaces matching files from the archive. Unmentioned files remain. Plugins are quarantined and projects use new folders.");
             if(Boolean.TRUE.equals(preview.get("legacyConfirmationRequired")))info+=t("\n这是历史格式备份；摘要验证不代表来源身份认证。","\nThis is a legacy backup; checksum validation does not authenticate its sender.");
+            if("UNENCRYPTED".equals(preview.get("sensitivePolicy")))info+=t("\n这是未加密的 v5 备份；摘要能校验文件完整性，但不能提供保密或来源认证。","\nThis is an unencrypted v5 backup; the digest verifies file integrity but provides no confidentiality or sender authentication.");
             if(preview.get("warnings") instanceof List&&!((List<?>)preview.get("warnings")).isEmpty())info+=t("\n该来源含未确认的格式或恢复提示；不承诺可用于所有历史运行时。原件继续保留。","\nThis source has unconfirmed format or restore warnings. Compatibility with every historical runtime is not established. Originals remain retained.");
             info+=t("\n项目位置：","\nProject destination: ")+("GUEST_HOME".equals(preview.get("projectDestination"))?t("容器主目录的新目录","A new directory in container home"):t("应用私有项目区的新目录","A new directory in app-private projects"));
             previewDialog=new DshaDialogBuilder(this).setTitle(t("确认恢复范围","Confirm restore scope")).setMessage(info)
@@ -269,7 +271,7 @@ public final class NativeDataActivity extends AppCompatActivity {
             default:message=t("数据操作未完成。请查看错误代码和保留记录后重试。","The data operation did not complete. Review its error code and retained records before retrying.");
         }return message+"\n"+t("错误代码：","Error code: ")+code;
     }
-    private String stage(String stage){switch(stage){case "IDLE":return t("等待操作","Ready");case "PREPARING":case "COPYING_INPUT":return t("准备与读取数据","Preparing and reading data");case "CAPTURING":case "ARCHIVING":return t("生成私有快照","Creating private snapshot");case "ENCRYPTING":return t("加密备份","Encrypting backup");case "AUTHENTICATING":case "VERIFYING":return t("验证完整性与认证","Verifying integrity and authentication");case "EXPORTING":return t("写入所选位置","Writing to destination");case "COMMITTING":return t("提交数据，正在保持一致性","Committing data and maintaining consistency");case "STOPPING_WRITERS":case "PREPARING_RESTORE":return t("准备恢复并停止写入","Preparing restore and stopping writers");case "INTERRUPTED":return t("上次作业中断，原件与私有副本保留","Previous operation interrupted; originals and private copies retained");case "CANCELLED":return t("已取消","Cancelled");case "FAILED":case "FAILED_RETAINED":return t("作业未完成，原件保留","Operation incomplete; originals retained");default:return t("处理数据中","Processing data");}}
+    private String stage(String stage){switch(stage){case "IDLE":return t("等待操作","Ready");case "PREPARING":case "COPYING_INPUT":return t("准备与读取数据","Preparing and reading data");case "CAPTURING":case "ARCHIVING":return t("生成私有快照","Creating private snapshot");case "WRITING":return t("写入并验证无密码副本","Writing and verifying an unencrypted copy");case "ENCRYPTING":return t("加密备份","Encrypting backup");case "AUTHENTICATING":case "VERIFYING":return t("验证完整性与认证","Verifying integrity and authentication");case "EXPORTING":return t("写入所选位置","Writing to destination");case "COMMITTING":return t("提交数据，正在保持一致性","Committing data and maintaining consistency");case "STOPPING_WRITERS":case "PREPARING_RESTORE":return t("准备恢复并停止写入","Preparing restore and stopping writers");case "INTERRUPTED":return t("上次作业中断，原件与私有副本保留","Previous operation interrupted; originals and private copies retained");case "CANCELLED":return t("已取消","Cancelled");case "FAILED":case "FAILED_RETAINED":return t("作业未完成，原件保留","Operation incomplete; originals retained");default:return t("处理数据中","Processing data");}}
     private int dp(int n){return Math.round(n*getResources().getDisplayMetrics().density);}
     private TextView text(String value,int size){TextView text=new TextView(this);text.setText(value);text.setTextSize(size);text.setTextColor(getColor(R.color.text));text.setPadding(0,dp(10),0,dp(10));body.addView(text);return text;}
     private Button button(String label,Runnable click){Button button=new androidx.appcompat.widget.AppCompatButton(this);button.setTextSize(13);button.setBackgroundResource(R.drawable.bg_action_plain);button.setTextColor(getColor(R.color.primary));button.setText(label);button.setAllCaps(false);button.setIncludeFontPadding(false);button.setGravity(android.view.Gravity.CENTER);button.setMinHeight(dp(48));button.setOnClickListener(v->click.run());LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2);params.topMargin=dp(8);body.addView(button,params);return button;}

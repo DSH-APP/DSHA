@@ -3,6 +3,8 @@ plugins {
 }
 
 // 两版共用功能和离线环境；只有 low 携带兼容旧 Android 的 Gecko 内核。
+// 文件名独立于可诊断版本名，保持当前用户下载入口不变。
+ext.dshaApkNameVersion = '0.2.0-rc2'
 
 android {
     namespace 'com.deepseekharness.app'
@@ -15,8 +17,9 @@ android {
         applicationId "com.dsh.client"
         minSdk 30
         targetSdk 37
-        versionCode 148
-        versionName "0.1.7-rc2.1"
+        versionCode 150
+        // DSHA 修订号 + 固定的北京时间戳 + 内置 DSH 版本；同一交付重建不变。
+        versionName "0.2.1-20261001.1835-dsh0.2.0-rc.2"
         testInstrumentationRunner project.findProperty('dsha.testRunner') ?: "com.deepseekharness.app.Rc13Instrumentation"
         ndk {
             abiFilters 'arm64-v8a'

@@ -591,7 +591,7 @@ public class PluginFragment extends Fragment {
                     case "attempted" -> "正在确认加载";
                     case "loaded" -> item.enabled?"已确认加载":"已禁用";
                     case "failed", "unconfirmed" -> "加载未确认，保持停用";
-                    case "changed" -> "内容已变化，请重新安装";
+                    case "changed" -> com.deepseekharness.app.util.UiText.choose("加载期间内容变化；检查后重新启用", "Content changed during loading; check and enable again");
                     default -> item.enabled?"已启用":"已禁用";
                 };
                 holder.state.setText(com.deepseekharness.app.util.UiText.text(state)+(item.version.isEmpty()?"":" · "+item.version)
@@ -600,12 +600,12 @@ public class PluginFragment extends Fragment {
             holder.state.setTextColor(requireContext().getColor(
                     !item.available ? R.color.warn : item.enabled ? R.color.primary : R.color.text_muted));
             holder.description.setText(item.description.isEmpty()
-                    ? (item.official ? com.deepseekharness.app.util.UiText.text("官方核心") : item.builtin ? com.deepseekharness.app.util.UiText.text("DSHA 内置插件") : com.deepseekharness.app.util.UiText.text("第三方插件")) : item.builtin || item.official || item.dynamic ? com.deepseekharness.app.util.UiStateText.render(item.description) : item.description);
+                    ? (item.official ? com.deepseekharness.app.util.UiText.text("官方核心") : item.runtimeProvided ? com.deepseekharness.app.util.UiText.choose("随 DSH 安装提供", "Provided by DSH") : item.builtin ? com.deepseekharness.app.util.UiText.text("DSHA 内置插件") : com.deepseekharness.app.util.UiText.text("第三方插件")) : item.builtin || item.official || item.dynamic ? com.deepseekharness.app.util.UiStateText.render(item.description) : item.description);
             holder.itemView.findViewById(R.id.pluginActions).setOnClickListener(v -> itemActions(item));
             holder.itemView.findViewById(R.id.pluginActions).setContentDescription(com.deepseekharness.app.util.UiText.text("更多操作：") + item.name);
             android.widget.Button expand=holder.itemView.findViewById(R.id.pluginExpand),delete=holder.itemView.findViewById(R.id.pluginDelete);
             TextView details=holder.itemView.findViewById(R.id.pluginDetails);
-            String location=item.location.isEmpty()?com.deepseekharness.app.util.UiText.choose("未提供路径", "Path not provided"):item.location;
+            String location=item.runtimeProvided?com.deepseekharness.app.util.UiText.choose("随 DSH 安装提供", "Provided by DSH"):item.location.isEmpty()?com.deepseekharness.app.util.UiText.choose("未提供路径", "Path not provided"):item.location;
             String source=item.source.isEmpty()?(item.builtin?com.deepseekharness.app.util.UiText.choose("随包内置", "Bundled"):item.official?com.deepseekharness.app.util.UiText.choose("DSH 官方组件", "Official DSH component"):com.deepseekharness.app.util.UiText.choose("来源未记录", "Source not recorded")):item.source;
             details.setText(item.description+"\n\n"+com.deepseekharness.app.util.UiText.choose("版本：", "Version: ")+item.version+"\n"+com.deepseekharness.app.util.UiText.choose("位置：", "Location: ")+location+"\n"+com.deepseekharness.app.util.UiText.choose("来源：", "Source: ")+source);
             details.setVisibility(expandedPlugins.contains(item.name)?View.VISIBLE:View.GONE);

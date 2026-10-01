@@ -402,8 +402,9 @@ public class HarnessController {
             var migrationRun = boot.prepareRc1MigrationResult(startupDiagnostics.recordId());
             String migration = com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
                     migrationRun, "RC1_MIGRATION");
-            startupDiagnostics.message(generation, migration);
             Map<String,Object> migrationState = com.deepseekharness.app.util.Rc1MigrationResult.parse(migration);
+            if (!com.deepseekharness.app.util.Rc1MigrationResult.isRoutineReceipt(migrationState))
+                startupDiagnostics.message(generation, migration);
             if (!com.deepseekharness.app.util.Rc1MigrationResult.allowsStart(migrationState)) {
                 throw new java.io.IOException(com.deepseekharness.app.util.UiText.choose(
                         "rc1 迁移快照未完成，已阻止导入；原件保留。请检查存储权限和空间后重试：",
@@ -567,8 +568,9 @@ public class HarnessController {
                                 String result = com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
                                         proot.finalizeRc1MigrationResult(startupId), "RC1_FINALIZE");
                                 if (!lifecycle.isCurrent(generation)) return;
-                                startupDiagnostics.message(generation, result);
                                 Map<String,Object> state = com.deepseekharness.app.util.Rc1MigrationResult.parse(result);
+                                if (!com.deepseekharness.app.util.Rc1MigrationResult.isRoutineReceipt(state))
+                                    startupDiagnostics.message(generation, result);
                                 if (!"committed".equals(state.get("status")))
                                     reportStatus(generation, onStatus, com.deepseekharness.app.util.UiText.choose(
                                             "网页已就绪；部分旧数据仍待处理，请在保留数据中检查迁移记录。",

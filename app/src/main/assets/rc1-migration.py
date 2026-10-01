@@ -1,15 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """rc1 分代保护；宿主状态与用户可导入数据分离，失败不启动有副作用的导入。"""
-import argparse, hashlib, json, os, re, shutil, stat, tempfile, time, uuid
+import argparse, hashlib, json, os, re, shutil, stat, tempfile, time, traceback, uuid
 from pathlib import Path
 
-VERSION = '0.1.7-rc.2'
+# Dependency version for converted preset candidates, not a data-format claim.
+VERSION = '0.2.0-rc.2'
 # Stable asset marker: settings.yaml.imported is a retryable input after a
 # pending section result; it never authorizes a false committed receipt.
 RESTORED_SETTINGS_IMPORTED_FOR_RETRY = True
 MAX_FILES = 100000
 MAX_BYTES = 8 * 1024 * 1024 * 1024
+
+
+class MigrationSourceError(ValueError):
+    def __init__(self, reason, logical, actual, operation):
+        super().__init__(reason)
+        self.logical, self.actual, self.operation = str(logical), str(actual), operation
+
+
+def require_regular(logical, actual, operation):
+    node = os.stat(actual)
+    if not stat.S_ISREG(node.st_mode):
+        raise MigrationSourceError('MIGRATION_SOURCE_NOT_REGULAR', logical, actual, operation)
+    return node
+
+
+def failure_details(error, dsh, operation, logical=None, actual=None):
+    logical = getattr(error, 'logical', logical)
+    actual = getattr(error, 'actual', actual)
+    try: path = Path(logical).relative_to(dsh).as_posix() if logical else None
+    except ValueError: path = str(logical)
+    return dict(operation=getattr(error, 'operation', operation), path=path,
+                mapping=str(actual) if actual else None, errorType=type(error).__name__,
+                # Kept only in the private migration record; never snapshot file contents.
+                traceback=traceback.format_exc(limit=8)[-8192:])
 
 
 def digest(path):
@@ -93,12 +118,12 @@ def quick(dsh, resolver):
     for name in ('settings.yaml', 'settings.yaml.imported'):
         if os.path.lexists(dsh / name):
             actual, _ = resolver.resolve(dsh / name)
-            if actual.stat().st_size > 4 * 1024 * 1024: raise ValueError('SETTINGS_SIZE_LIMIT')
+            if require_regular(dsh / name, actual, 'settings-input').st_size > 4 * 1024 * 1024: raise ValueError('SETTINGS_SIZE_LIMIT')
             source[name] = digest(actual)
     restore = dsh / '.dsha-rc1-restore-generation'
     if restore.exists():
         actual, _ = resolver.resolve(restore)
-        if actual.stat().st_size > 4096: raise ValueError('RESTORE_GENERATION_FORMAT')
+        if require_regular(restore, actual, 'restore-generation').st_size > 4096: raise ValueError('RESTORE_GENERATION_FORMAT')
         source['restore'] = digest(actual)
     st = os.stat(dsh)
     return dict(dataRoot={'path':str(dsh), 'device':str(st.st_dev), 'inode':str(st.st_ino)}, inputs=source)
@@ -114,9 +139,12 @@ def same_input(old, current):
 
 def snapshot_row(folder, dsh, logical, actual, links, kind, ordinal):
     relative = logical.relative_to(dsh).as_posix()
-    before = os.stat(actual); destination = folder / 'snapshots' / str(ordinal)
+    before = require_regular(logical, actual, 'snapshot'); destination = folder / 'snapshots' / str(ordinal)
     destination.parent.mkdir(parents=True, exist_ok=True)
     with open(actual, 'rb') as source, open(destination, 'xb') as target:
+        opened = os.fstat(source.fileno())
+        if not stat.S_ISREG(opened.st_mode) or (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino):
+            raise MigrationSourceError('SOURCE_CHANGED_BEFORE_SNAPSHOT', logical, actual, 'snapshot')
         sha = hashlib.sha256(); total = 0
         for chunk in iter(lambda: source.read(1024 * 1024), b''):
             total += len(chunk)
@@ -124,7 +152,7 @@ def snapshot_row(folder, dsh, logical, actual, links, kind, ordinal):
             target.write(chunk); sha.update(chunk)
         target.flush(); os.fsync(target.fileno())
     after = os.stat(actual)
-    if (before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_ino, after.st_size, after.st_mtime_ns): raise ValueError('SOURCE_CHANGED_DURING_SNAPSHOT')
+    if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns): raise ValueError('SOURCE_CHANGED_DURING_SNAPSHOT')
     if digest(destination) != sha.hexdigest(): raise ValueError('SNAPSHOT_READBACK_FAILED')
     return dict(kind=kind, path=relative, size=total, sha256=sha.hexdigest(), snapshot=destination.relative_to(folder).as_posix(), links=links,
                 mapping=str(actual), sourceIdentity=[str(before.st_dev),str(before.st_ino)], type='file')
@@ -183,6 +211,7 @@ def prepare(root, state_root=None, startup_id='manual', approved=()):
     generation = str(uuid.uuid4()); folder = state/'generations'/generation; folder.mkdir(parents=True)
     doc = dict(version=2, dshVersion=VERSION, generation=generation, startupId=startup_id, dshHome=str(dsh), status='preparing', protectionComplete=False, createdAt=int(time.time()), **stamp, sources=[], presets=[], sessions=[], warnings=[])
     write_json(folder/'prepare.json', doc)
+    operation, logical, actual = 'snapshot', None, None
     try:
         total = 0
         inputs = [(dsh/name, 'settings', ()) for name in ('settings.yaml','settings.yaml.imported')]
@@ -200,10 +229,19 @@ def prepare(root, state_root=None, startup_id='manual', approved=()):
         for name in ('prepare.json','receipt.json'):
             old = dsh/'.dsha-rc1-migration'/name
             if old.is_file() and not old.is_symlink():
+                operation, logical, actual = 'legacy-record-copy', old, old
                 shutil.copyfile(old, folder/('legacy-'+name))
         preset_groups = {}
         for row in doc['sources']:
-            if row['kind'] == 'preset': preset_groups.setdefault(row['path'].split('/')[1],[]).append(row)
+            if row['kind'] != 'preset': continue
+            parts = Path(row['path']).parts
+            if len(parts) < 3:
+                # A .agent-presets root file is metadata/unknown input, not a preset
+                # directory. Its verified snapshot is retained above. Treating its
+                # filename as a preset used to copy a file onto candidate/".".
+                doc['warnings'].append('PRESET_ROOT_FILE_PRESERVED:' + row['path'])
+                continue
+            preset_groups.setdefault(parts[1],[]).append(row)
         for name, rows in preset_groups.items():
             sha = hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest()
             candidate = dsh/'.dsha-rc1-migration/legacy-agent-presets'/name/sha[:16]
@@ -211,9 +249,12 @@ def prepare(root, state_root=None, startup_id='manual', approved=()):
             candidate.mkdir(parents=True)
             for row in rows:
                 relative = Path(*Path(row['path']).parts[2:]); destination = candidate/relative
+                operation, logical, actual = 'preset-candidate-copy', dsh/row['path'], folder/row['snapshot']
                 destination.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(folder/row['snapshot'], destination)
+            operation, logical, actual = 'preset-conversion', dsh/'.agent-presets'/name, candidate
             bundle = legacy_preset_bundle(candidate, candidate, name)
             doc['presets'].append(dict(id=name,source='.agent-presets/'+name,candidate=candidate.relative_to(dsh).as_posix(),bundle=(Path(bundle).relative_to(dsh).as_posix() if bundle else None),sha256=sha,target='@deepseek-ai/dsh-agent-preset',activated=False,requiresReview=True,generation=generation))
+        operation, logical, actual = 'record-commit', None, folder
         doc.update(status='prepared',protectionComplete=True); write_json(folder/'prepare.json',doc)
         current = dict(version=2,generation=generation,startupId=startup_id,dshHome=str(dsh),**stamp)
         write_json(state/'current.json',current)
@@ -223,8 +264,9 @@ def prepare(root, state_root=None, startup_id='manual', approved=()):
         return 0
     except Exception as error:
         doc.update(status='failed',protectionComplete=False); doc['warnings'].append(str(error) if isinstance(error,ValueError) else type(error).__name__)
+        doc['failure'] = failure_details(error, dsh, operation, logical, actual)
         write_json(folder/'prepare.json',doc)
-        emit('failed',generation=generation,protectionComplete=False,stage='snapshot',reason=doc['warnings'][-1],continuation='检查存储权限和空间后重试；原件未删除')
+        emit('failed',generation=generation,protectionComplete=False,stage=operation,reason=doc['warnings'][-1],path=doc['failure']['path'],errorType=doc['failure']['errorType'],diagnostic='generations/'+generation+'/prepare.json',continuation='按迁移记录中的操作和路径检查；原件未删除')
         return 1
 
 
@@ -270,6 +312,6 @@ def main():
     parser=argparse.ArgumentParser(); parser.add_argument('command',choices=('prepare','finalize')); parser.add_argument('--root',default='/root'); parser.add_argument('--state-root',default='/run/dsha-rc1-state'); parser.add_argument('--startup-id',required=True); parser.add_argument('--approved-root',action='append',default=[]); args=parser.parse_args()
     try: return (prepare if args.command=='prepare' else finalize)(args.root,args.state_root,args.startup_id,args.approved_root)
     except Exception as error:
-        emit('error',protectionComplete=False,reason=str(error) if isinstance(error,ValueError) else type(error).__name__); return 1
+        emit('error',protectionComplete=False,reason=str(error) if isinstance(error,ValueError) else type(error).__name__,operation=getattr(error,'operation',args.command),path=getattr(error,'logical',None)); return 1
 
 if __name__=='__main__': raise SystemExit(main())

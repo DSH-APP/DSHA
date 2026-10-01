@@ -1,10 +1,10 @@
 {
-  "dshVersion": "0.1.7-rc.2",
+  "dshVersion": "0.2.0-rc.2",
   "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
   "patches": [
     {
       "before": "\t\tasync runPnpm(args, signal, requestId) {",
-      "after": "\t\tasync runPnpm(args, signal, requestId) {\n            if (process.env.DSHA_NATIVE_PLUGIN_MANAGER === '1') args=[...args,\"--ignore-scripts\",\"--ignore-pnpmfile\"];"
+      "after": "\t\tasync runPnpm(args, signal, requestId) {\n            // DSHA 0.2.0-rc2: keep upstream pnpm arguments; the native manager now permits unlocked installs and lifecycle hooks."
     }
   ]
 }

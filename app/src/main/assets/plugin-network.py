@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""插件市场的网络策略；仅改变只读下载，不执行安装钩子或重放正式提交。"""
+"""插件市场的网络策略；仅负责只读下载与有限换源，不重放正式提交。"""
 import concurrent.futures
 import os
 import re
@@ -126,7 +126,8 @@ class Network:
             # npm pack 的 -- 之后是包名；网络参数必须放在分隔符之前。
             at = args.index('--') if '--' in args else len(args)
             args[at:at] = options
-            if index and argv[0] == 'pnpm' and os.path.isfile(os.path.join(cwd, 'pnpm-lock.yaml')):
+            if index and argv[0] == 'pnpm' and os.path.isfile(os.path.join(cwd, 'pnpm-lock.yaml')) \
+                    and '--no-frozen-lockfile' not in args:
                 args = [arg for arg in args if arg != '--no-frozen-lockfile']
                 if '--frozen-lockfile' not in args:
                     args.append('--frozen-lockfile')

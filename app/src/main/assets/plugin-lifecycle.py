@@ -103,6 +103,8 @@ class Lifecycle:
                     skipped.append(name); continue
                 try:
                     package = self.g['plugin_package'](directory)
+                    if package['name'] != name:
+                        raise ValueError('插件名称与启用记录不一致：' + name)
                     content = self.g['dependencies']().current(directory)
                     if package['name'] != name or content['missing']:
                         skipped.append(name); continue
@@ -480,11 +482,27 @@ class Lifecycle:
                     directory = self.g['resolve_plugin_dir'](name)
                     if name not in enabled:
                         entry['status'] = 'disabled'; continue
-                    if not directory or self.g['dependencies']().current(directory)['sha256'] != entry.get('fingerprint'):
+                    if not directory:
                         if self.builtin.disable_plugin(name):
                             raise ValueError('无法保留插件停用状态，请先完成恢复')
-                        entry.update(status='changed', reason='CONTENT_CHANGED_BEFORE_LOAD'); continue
-                    entry.update(status='attempted', startup=startup)
+                        entry.update(status='changed', reason='PLUGIN_ENTITY_MISSING'); continue
+                    package = self.g['plugin_package'](directory)
+                    current = self.g['dependencies']().current(directory)
+                    if current['missing']:
+                        raise ValueError('插件缺少运行依赖：' + name + '：' + '、'.join(current['missing']))
+                    fingerprint = current['sha256']
+                    if entry.get('startup') == startup and fingerprint != entry.get('fingerprint'):
+                        # A compatibility retry in the same launch consumes the
+                        # same candidate; do not silently accept a mid-load edit.
+                        if self.builtin.disable_plugin(name):
+                            raise ValueError('无法保留插件停用状态，请先完成恢复')
+                        entry.update(status='changed', reason='CONTENT_CHANGED_DURING_LOAD'); continue
+                    edited = bool(entry.get('fingerprint') and fingerprint != entry['fingerprint'])
+                    # User-owned source is editable between launches. Its old
+                    # installation receipt remains untouched for history/rollback;
+                    # the load receipt describes the actual current candidate.
+                    entry.update(status='attempted', startup=startup, fingerprint=fingerprint,
+                                 version=package['version'], locallyEdited=edited)
                 elif entry.get('startup') == startup and status == 'attempted':
                     if action == 'complete':
                         entry.update(status='loaded', loadedAt=int(time.time()))
@@ -611,6 +629,9 @@ class Lifecycle:
             if not self.builtin.valid_name(item):
                 continue
             directory = self.g['resolve_plugin_dir'](item)
+            runtime = self.builtin.runtime_bundle_dir(item)
+            if runtime and directory and os.path.realpath(runtime) == os.path.realpath(directory):
+                continue
             pkg = self.read(os.path.join(directory, 'package.json'), {}) if directory else {}
             if not (pkg.get('dsh') or {}).get('bundle'):
                 continue

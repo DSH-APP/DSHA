@@ -63,7 +63,7 @@ public final class PluginRepository extends AndroidViewModel {
         public final String latestVersion, updatePreviewId, updateMessage, rollbackVersion, compatibility;
         public final String loadState;
         public final boolean updateAvailable;
-        public final boolean enabled, builtin, official, available, exportable, deletable;
+        public final boolean enabled, builtin, official, available, exportable, deletable, runtimeProvided;
         Item(JSONObject json) {
             name = json.optString("name");
             description = json.optString("description");
@@ -74,6 +74,7 @@ public final class PluginRepository extends AndroidViewModel {
             dynamic = json.optBoolean("dynamic");
             enabled = json.optBoolean("enabled");
             builtin = json.optBoolean("builtin");
+            runtimeProvided = json.optBoolean("runtimeProvided");
             official = json.optBoolean("official");
             available = json.optBoolean("available");
             exportable = json.optBoolean("exportable");

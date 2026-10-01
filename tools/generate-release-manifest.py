@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 from urllib.parse import quote, urlparse
+from release_names import apk_filename
 
 PUBLISH_CERT = 'e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5'
 
@@ -92,13 +93,13 @@ def main():
     artifacts = [inspect(args.standard, 'standard', args.build_tools, args.java),
                  inspect(args.low, 'low', args.build_tools, args.java)]
     version, code = artifacts[0]['versionName'], artifacts[0]['versionCode']
-    if not re.fullmatch(r'\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9.]+)?', version):
+    if not re.fullmatch(r'\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9.-]+)?', version):
         raise ValueError('版本名称无效')
     if artifacts[1]['versionName'] != version + 'low' or artifacts[1]['versionCode'] != code:
         raise ValueError('两版 APK 版本不一致')
     notes = args.notes.read_text(encoding='utf-8').strip()
     for artifact, apk in zip(artifacts, (args.standard, args.low)):
-        expected = f'dsha-{version}{"low" if artifact["flavor"] == "low" else ""}.apk'
+        expected = apk_filename(artifact['flavor'])
         if artifact['filename'] != expected:
             raise ValueError(f'发布文件名应为 {expected}')
         artifact['url'] = origin + '/downloads/' + quote(version) + '/' + quote(artifact['filename'])

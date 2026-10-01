@@ -23,6 +23,15 @@ public class VerifiedBackupCopyTest {
         byte[] before=Files.readAllBytes(copy.artifact.toPath());copy.verify(fs,new BackupControl(null));assertArrayEquals(before,Files.readAllBytes(copy.artifact.toPath()));
         assertEquals("projects",copy.scope);assertEquals("COMPLETE",copy.result(true));assertEquals("WRITTEN_UNVERIFIED",copy.result(false));
     }
+    @Test public void rereadCopyAcceptsOptionalPasswordlessDshbak()throws Exception{
+        File operations=temporary.newFolder(),operation=new File(operations,UUID.randomUUID().toString());fs.directory(operation);File file=new File(operation,"portable.dshbak");
+        byte[] archive=BackupArchiveTest.archive();Files.write(file.toPath(),archive);String hash;
+        try(InputStream in=fs.read(file,fs.stat(file))){hash=BackupArchive.digest(in,new BackupControl(null));}
+        Map<String,Object> record=new LinkedHashMap<>(Map.of("encryptedSha256",hash,"encryptedBytes",file.length(),"entries",2L,"createdAt",7L,"integrity","QUIESCENT","requestedScope","application","sensitivePolicy","UNENCRYPTED","plugins",Map.of()));
+        Files.write(new File(operation,"verified.json").toPath(),BackupJson.write(record,4096));
+        var copy=VerifiedBackupCopy.inspect(fs,operations,operation.getName());copy.verify(fs,new BackupControl(null));
+        assertEquals("COMPLETE",copy.result(true));
+    }
     @Test public void sameSizeCorruptionAndUnknownIdentifiersAreRejected()throws Exception{
         File operations=temporary.newFolder(),operation=fixture(operations,"QUIESCENT",Map.of());var copy=VerifiedBackupCopy.inspect(fs,operations,operation.getName());
         byte[] data=Files.readAllBytes(copy.artifact.toPath());data[data.length-1]^=1;Files.write(copy.artifact.toPath(),data);

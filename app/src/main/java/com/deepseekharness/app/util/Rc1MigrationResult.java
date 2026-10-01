@@ -24,4 +24,13 @@ public final class Rc1MigrationResult {
         return "skipped".equals(status)&&"DSH_MISSING".equals(value.get("reason"))
                 || Set.of("prepared","already").contains(status)&&Boolean.TRUE.equals(value.get("protectionComplete"));
     }
+    /** Successful protection receipts remain on disk, without flooding the visible startup log. */
+    public static boolean isRoutineReceipt(Map<String,Object> value) {
+        String status=String.valueOf(value.get("status"));
+        if (Set.of("prepared","already").contains(status))
+            return Boolean.TRUE.equals(value.get("protectionComplete"));
+        if ("committed".equals(status))
+            return Boolean.TRUE.equals(value.get("sourcePreserved")) && Boolean.TRUE.equals(value.get("settingsImported"));
+        return "skipped".equals(status) && "DSH_MISSING".equals(value.get("reason"));
+    }
 }

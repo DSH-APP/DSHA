@@ -108,6 +108,51 @@ class ReviewTest(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):self.life.loading('begin',startup)
         self.assertFalse(self.enabled());self.assertEqual('changed',self.life.activation_state()['entries']['test-plugin']['status'])
 
+    def test_user_edits_before_new_launch_are_loaded_with_current_fingerprint(self):
+        self.enable()
+        self.put(self.package/'index.js', 'user-owned edit before first launch')
+        first = str(uuid.uuid4())
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.life.loading('begin', first)
+        self.assertTrue(self.enabled())
+        first_entry = self.life.activation_state()['entries']['test-plugin']
+        self.assertTrue(first_entry['locallyEdited'])
+        self.assertEqual(self.manager.dependencies().current(str(self.package))['sha256'], first_entry['fingerprint'])
+        self.put(self.package/'index.js', 'second edit between launches')
+        second = str(uuid.uuid4())
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.life.loading('begin', second)
+        self.assertTrue(self.enabled())
+        entry = self.life.activation_state()['entries']['test-plugin']
+        self.assertEqual(second, entry['startup']); self.assertTrue(entry['locallyEdited'])
+        self.assertEqual('second edit between launches', (self.package/'index.js').read_text())
+
+    def test_fast_toggle_candidate_is_checked_before_load(self):
+        with patch('sys.argv', ['plugin-manager.py', 'enable-list', 'test-plugin']), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, self.manager.main())
+        self.put(self.package/'package.json', {'name':'test-plugin','version':'1.0.0',
+                   'dependencies':{'missing-required-dependency':'1.0.0'},'dsh':{'bundle':{'patch':'cordis.patch.yml'}}})
+        with self.assertRaisesRegex(ValueError, '缺少运行依赖'):
+            self.life.loading('begin', str(uuid.uuid4()))
+        self.assertEqual('queued', self.life.activation_state()['entries']['test-plugin']['status'])
+
+    def test_load_receipt_checks_install_anchor_bytes_not_shadowed_user_edit(self):
+        runtime = self.root/'usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/test-plugin'
+        self.put(runtime/'package.json', {'name':'test-plugin','version':'0.2.0-rc.2','dsh':{'bundle':{'patch':'cordis.patch.yml'}}})
+        self.put(runtime/'cordis.patch.yml', '[]\n')
+        self.put(runtime/'index.js', 'runtime bytes actually loaded by app-boot')
+        self.put(self.package/'index.js', 'shadowed user edit to preserve')
+        self.life.queue_activation('test-plugin', '', '1.0.0')
+        doc=json.loads(self.manifest.read_text());doc['dsh']['profile']['bundles']=['test-plugin'];self.put(self.manifest,doc)
+        actual=self.manager.dependencies().current(str(runtime))['sha256']
+        with patch.object(self.manager.dependencies(), 'current', wraps=self.manager.dependencies().current) as graph:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.life.loading('begin', str(uuid.uuid4()))
+            self.assertEqual(runtime.resolve(), Path(graph.call_args.args[0]).resolve())
+        entry=self.life.activation_state()['entries']['test-plugin']
+        self.assertEqual(actual, entry['fingerprint']);self.assertEqual('0.2.0-rc.2',entry['version'])
+        self.assertEqual('shadowed user edit to preserve',(self.package/'index.js').read_text())
+
     def test_confirmed_health_event_preserves_activation(self):
         self.enable();startup=str(uuid.uuid4())
         with contextlib.redirect_stdout(io.StringIO()):

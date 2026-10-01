@@ -24910,5 +24910,53 @@
       "app/src/main/assets/plugin-network.py"
     ],
     "uiFormat": true
+  },
+  {
+    "id": "issues84_theme_0",
+    "zh": "当前跟随系统，点击切换白天；长按跟随系统",
+    "en": "Following system. Tap for light mode; hold to follow system",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_1",
+    "zh": "当前白天模式，点击切换黑夜；长按跟随系统",
+    "en": "Light mode. Tap for dark mode; hold to follow system",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_2",
+    "zh": "当前黑夜模式，点击切换跟随系统；长按跟随系统",
+    "en": "Dark mode. Tap to follow system; hold to follow system",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_3",
+    "zh": "已跟随系统主题",
+    "en": "Following the system theme",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_4",
+    "zh": "已切换白天模式",
+    "en": "Light mode selected",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_5",
+    "zh": "已切换黑夜模式",
+    "en": "Dark mode selected",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
   }
 ]

@@ -256,7 +256,37 @@ def operation_lock(check_cancel=None):
                 fcntl.flock(lock, fcntl.LOCK_UN)
 
 
-def entity_dir(name):
+def runtime_bundle_dir(name):
+    """Match dsh's install anchor without treating its packages as user installs."""
+    if not valid_name(name):
+        return None
+    runtime = local('/usr/local/lib/node_modules/@deepseek-ai/dsh')
+    candidate = os.path.join(runtime, 'node_modules', name)
+    directory = os.path.realpath(candidate)
+    try:
+        if os.path.commonpath([os.path.realpath(runtime), directory]) != os.path.realpath(runtime):
+            return None
+        manifest = os.path.join(directory, 'package.json')
+        if os.path.getsize(manifest) > 1024 * 1024:
+            return None
+        with open(manifest, encoding='utf-8') as stream:
+            package = json.load(stream)
+        patch = package.get('dsh', {}).get('bundle', {}).get('patch')
+        patches = [patch] if isinstance(patch, str) else patch
+        if package.get('name') != name or not isinstance(patches, list) or not patches:
+            return None
+        for item in patches:
+            if not isinstance(item, str) or not item or os.path.isabs(item) or '\\' in item:
+                return None
+            resolved = os.path.realpath(os.path.join(directory, item))
+            if os.path.commonpath([directory, resolved]) != directory or not os.path.isfile(resolved):
+                return None
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+    return candidate
+
+
+def entity_dir(name, discovered=None):
     """内置插件名 → 其实体目录（/root/dsha-*），找不到（官方核心/第三方）返回 None。"""
     if not valid_name(name):
         return None
@@ -268,6 +298,11 @@ def entity_dir(name):
         # 签名系统插件只能来自当前 APK 刷新的受管实体。旧 profile 里的同名
         # 实体副本、plugin-src 草稿和全局包都不能抢在它前面。
         return None
+    # Official dsh resolveBundleDir checks installAnchor first. A same-name
+    # user copy must not be displayed/checked as the bytes Web will execute.
+    installed = runtime_bundle_dir(name)
+    if installed:
+        return installed
     if not system:
         active = os.path.join(NODE_MODULES, name)
         if os.path.isfile(local(os.path.join(active, "package.json"))):
@@ -276,7 +311,7 @@ def entity_dir(name):
     if os.path.isfile(local(os.path.join(imported, "package.json"))):
         return imported
     if name.startswith("@"):
-        found = discover_plugins().get(name)
+        found = (discover_plugins() if discovered is None else discovered).get(name)
         return found["directory"] if found else None
     cands = ["/root/" + name, "/root/dsha-" + name]
     if name.startswith("dsh-"):
@@ -284,7 +319,7 @@ def entity_dir(name):
     for c in cands:
         if os.path.isfile(local(os.path.join(c, "package.json"))):
             return c
-    found = discover_plugins().get(name)
+    found = (discover_plugins() if discovered is None else discovered).get(name)
     return found["directory"] if found else None
 
 
@@ -359,8 +394,19 @@ def is_disabled(name):
     return os.path.isfile(marker_path(name))
 
 
+_builtin_names_cache = None
+
+
 def builtin_names():
     """当前签名内置清单；固定清单永远是下限，文件只能追加合法名称。"""
+    global _builtin_names_cache
+    try:
+        info = os.stat(BUILTIN_LIST)
+        stamp = (info.st_dev, info.st_ino, info.st_mtime_ns, info.st_ctime_ns, info.st_size)
+    except OSError:
+        stamp = None
+    if _builtin_names_cache is not None and _builtin_names_cache[0] == stamp:
+        return list(_builtin_names_cache[1])
     names = list(DEFAULT_BUILTINS)
     try:
         with open(BUILTIN_LIST, encoding="utf-8") as f:
@@ -370,6 +416,7 @@ def builtin_names():
                     names.append(name)
     except OSError:
         pass
+    _builtin_names_cache = (stamp, tuple(names))
     return names
 
 
@@ -502,6 +549,10 @@ def ensure_symlink(name, d):
     """保证 profiles/web/node_modules/<name> 是指向实体目录的链接。返回 True=改动了。"""
     link = os.path.join(local(NODE_MODULES), name)
     target = local(d)
+    if os.path.abspath(link) == os.path.abspath(target):
+        # Existing user installs are already at this lookup location. Building
+        # a relative alias to itself would turn an old absolute link into a loop.
+        return False
     os.makedirs(os.path.dirname(link), exist_ok=True)
     if os.path.lexists(link):
         try:
@@ -557,6 +608,8 @@ def enable_plugin(name):
     try:
         existing_web = os.path.isfile(os.path.join(local(NODE_MODULES), name, "package.json"))
         d = entity_dir(name)
+        runtime = runtime_bundle_dir(name)
+        runtime_provided = bool(d and runtime and os.path.realpath(local(d)) == os.path.realpath(runtime))
         if d is None and name not in OFFICIAL_BUNDLES:
             link = os.path.join(local(NODE_MODULES), name, "package.json")
             if not os.path.isfile(link):
@@ -572,9 +625,9 @@ def enable_plugin(name):
         if name not in bundles:
             doc.setdefault("dsh", {}).setdefault("profile", {})["bundles"] = bundles + [name]
             changed = True
-        if d is not None and ensure_symlink(name, d):
+        if d is not None and not runtime_provided and ensure_symlink(name, d):
             changed = True
-        if d is not None:
+        if d is not None and not runtime_provided:
             active = os.path.join(local(NODE_MODULES), name)
             if (not os.path.isfile(os.path.join(active, "package.json"))
                     or name in builtin_names()

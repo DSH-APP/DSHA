@@ -438,6 +438,14 @@ public class DeviceBridgeService extends Service {
     private void onProbeOk(String detail) {
         consecutiveFailures = 0;
         setAdbState("connected", detail);
+        // A verified ADB probe also proves the WRITE_SECURE_SETTINGS grant can
+        // be used. Some ROMs silently unbind the accessibility service while
+        // leaving its secure-setting entry enabled; request one bounded
+        // rebind, while preserving an explicit user-off as the source of truth.
+        try {
+            DshaAccessibilityService.rebindIfEnabled(this);
+        } catch (Throwable ignored) {
+        }
         try {
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) nm.cancel(WATCH_NOTIF_ID);

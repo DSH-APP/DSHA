@@ -1163,8 +1163,8 @@ public class ProotBootstrap {
         argv.add("/bin/bash");
         ProcessBuilder pb = new ProcessBuilder(argv).redirectErrorStream(true);
         applyProotEnv(pb);
-        // 交互终端：危险命令启用确认
-        pb.environment().put("DSH_CONFIRM", "1");
+        // 交互终端：按用户 rc2.0 维护要求开放 shell 修复命令。
+        pb.environment().put("DSH_CONFIRM", "0");
         pb.environment().put("DSH_INTERACTIVE", "1");
             process = pb.start();
             work.retainUntilExit(process);

@@ -16,8 +16,8 @@ const [patch] = policy.patches;
 assert.equal(policy.patches.length, 1);
 assert.equal(upstreamHost.split(patch.before).length - 1, 1);
 assert.ok(currentHost === upstreamHost.replace(patch.before, patch.after), 'Host overlay differs from the pinned one-patch source');
-assert.match(currentHost, /--ignore-scripts/);
-assert.match(currentHost, /--ignore-pnpmfile/);
+assert.doesNotMatch(currentHost, /--ignore-scripts/);
+assert.doesNotMatch(currentHost, /--ignore-pnpmfile/);
 assert.doesNotMatch(currentHost, /DSHA_NATIVE_REVIEW_REQUIRED|DSHA_NATIVE_PLUGIN_POLICY_V1/);
 const uiPatch = JSON.parse(fs.readFileSync('app/src/main/assets/plugin-manager-auto-enable-patch.json', 'utf8')).patches[0];
 const upstreamUi = fs.readFileSync(path.join(raw, uiPath), 'utf8').replaceAll('\r\n', '\n');
@@ -53,4 +53,4 @@ try {
   if (original === undefined) delete process.env.DSHA_NATIVE_PLUGIN_MANAGER;
   else process.env.DSHA_NATIVE_PLUGIN_MANAGER = original;
 }
-console.log('PASS: Host plugin install, enable and remove are available; no review gate remains; pnpm lifecycle hooks stay disabled.');
+console.log('PASS: Host plugin install, enable and remove are available; no review gate remains; unlocked lifecycle install is preserved.');

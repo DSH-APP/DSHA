@@ -297,6 +297,8 @@
     "persona-compat-patch.json",
     "plugin-manager-auto-enable-patch.json",
     "plugin-manager-policy-patch.json",
+    "queue-agent-patch.json",
+    "queue-dock-patch.json",
     "pnpm-runtime.bin",
     "profile-settings-review.js",
     "rc1-settings-migration-patch.json",

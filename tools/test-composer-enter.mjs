@@ -23,7 +23,7 @@ function fixture() {
   for(const name of ['sn$2','ln$2','hn$2','fn$1','an$1','cn$1','Je$2'])ctx[name]=name;
   vm.createContext(ctx);vm.runInContext(source.slice(start,end)+'\nglobalThis.install=registerComposerKeymap;',ctx);
   const dispose=ctx.install(editor,handlers);
-  const enter=(properties={})=>{let prevented=0;const event=properties===null?null:{preventDefault(){prevented++},...properties};const consumed=commands.get('cn$1')(event);return{consumed,prevented}};
+  const enter=(properties={})=>{let prevented=0;const event=properties===null?null:{preventDefault(){prevented++},getModifierState(name){return this.modifierState?.[name]===true},...properties};const consumed=commands.get('cn$1')(event);return{consumed,prevented}};
   return{sent,enter,root,dispose,setMenu:value=>menu=value,setAllowed:value=>allowed=value,advance:ms=>now+=ms};
 }
 test('普通回车、Shift+Enter 与没有 keydown 的 IME 换行交给编辑器，不提交',()=>{

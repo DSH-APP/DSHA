@@ -23,6 +23,17 @@ public final class ThemeController {
     public static boolean isDark(Context context) {
         return (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
     }
+    public static String preference(Context context) {
+        return new ConfigStore(context).getUiTheme();
+    }
+    public static String cycle(Context context) {
+        String next = UiThemePreference.next(preference(context));
+        select(context, next);
+        return next;
+    }
+    public static void followSystem(Context context) {
+        select(context, UiThemePreference.SYSTEM);
+    }
     public static void toggle(Context context) {
         select(context, isDark(context) ? UiThemePreference.LIGHT : UiThemePreference.DARK);
     }

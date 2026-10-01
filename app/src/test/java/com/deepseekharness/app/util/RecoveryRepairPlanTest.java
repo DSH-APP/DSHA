@@ -34,6 +34,12 @@ public class RecoveryRepairPlanTest {
         assertThrows(IOException.class,()->new RecoveryRepairPlan(SESSION,1,"profile-settings","../credentials",HASH,DATA,"[]"));
         assertThrows(IOException.class,()->new RecoveryRepairPlan(SESSION,1,"profile-settings","profile-web",HASH,DATA,"x".repeat(262145)));
     }
+    @Test public void cliDependencyRepairIsPinnedHostAction() throws Exception {
+        assertTrue(RecoveryRepairPlan.ACTIONS.contains("repair-cli-dependencies"));
+        var p=new RecoveryRepairPlan(SESSION,1,"repair-cli-dependencies","runtime",HASH,DATA,"");
+        p.begin(SESSION,1,p.nonce,HASH,DATA);
+        assertEquals(RecoveryRepairPlan.State.APPLYING,p.state());
+    }
     @Test public void failureDoesNotPretendApplication() throws Exception {
         var p=plan();p.begin(SESSION,1,p.nonce,HASH,DATA);p.complete(false,"PERMISSION_DENIED");
         assertEquals(RecoveryRepairPlan.State.FAILED,p.state());assertEquals("PERMISSION_DENIED",p.message());

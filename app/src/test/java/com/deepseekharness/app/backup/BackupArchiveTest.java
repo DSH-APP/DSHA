@@ -6,6 +6,11 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 public class BackupArchiveTest {
+    @Test public void recognizesOnlyTheUnencryptedV5Header(){
+        byte[] header=new byte[]{'D','S','H','A','D','A','T','A'};
+        assertTrue(BackupArchive.hasMagic(header));header[0]='X';assertFalse(BackupArchive.hasMagic(header));
+        assertFalse(BackupArchive.hasMagic(new byte[]{'D','S','H'}));
+    }
     static Map<String,Object> summary(){Map<String,Object> m=new LinkedHashMap<>();m.put("operation","EXPORT");m.put("integrity","QUIESCENT");
         m.put("createdAt",1L);m.put("appVersion","test");m.put("runtime","test");m.put("dataFormat","dsh-v3");m.put("sensitivePolicy","ENCRYPTED");
         m.put("plugins",Collections.emptyMap());m.put("roots",Collections.singletonList(new LinkedHashMap<>(Map.of("id","dsh","scope","application"))));return m;}

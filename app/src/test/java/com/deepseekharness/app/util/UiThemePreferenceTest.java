@@ -17,4 +17,10 @@ public class UiThemePreferenceTest {
             assertTrue(UiThemePreference.isDark("dark", systemDark));
         }
     }
+    @Test public void cycleMakesSystemReachableAfterExplicitChoices() {
+        assertEquals("light", UiThemePreference.next("system"));
+        assertEquals("dark", UiThemePreference.next("light"));
+        assertEquals("system", UiThemePreference.next("dark"));
+        assertEquals("light", UiThemePreference.next(null));
+    }
 }

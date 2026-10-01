@@ -11,6 +11,8 @@ from pathlib import Path
 import json
 import recovery_runtime_overlay as browser_overlay
 
+CURRENT_DSH = json.loads((Path(__file__).parents[1] / 'tools/dsh-runtime/package.json').read_text(encoding='utf8'))['dependencies']['@deepseek-ai/dsh']
+
 spec=importlib.util.spec_from_file_location('recovery_assets',Path(__file__).with_name('prepare-recovery-assets.py'))
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
@@ -156,13 +158,13 @@ class RecoveryAssetTests(unittest.TestCase):
             (assets/'web-integration/es-compat.js').write_text('window.__ES_COMPAT__=true;',encoding='utf8')
             (assets/'web-integration/startup.js').write_text('window.__STARTUP__=true;',encoding='utf8')
             (assets/'web-integration/language.js').write_text('function installDshaLanguageBridge(){}',encoding='utf8')
-            spec=dict(dshVersion='0.1.7-rc.2',module=browser_overlay.TARGETS['client.pdf.js'].removeprefix(browser_overlay.PREFIX),
+            spec=dict(dshVersion=CURRENT_DSH,module=browser_overlay.TARGETS['client.pdf.js'].removeprefix(browser_overlay.PREFIX),
                       resourceModule=browser_overlay.TARGETS['client-resources.js'].removeprefix(browser_overlay.PREFIX),
                       asset='web-integration/es-compat.js',mainBefore='window.__ModuleLoader__.load({',
                       workerBefore='new Blob([_dsh_pdf_worker_default,',
                       resourceBefore='return hostname;',resourceAfter='return fixedHostname;')
             (assets/'pdf-compat-patch.json').write_text(json.dumps(spec),encoding='utf8')
-            language=dict(dshVersion='0.1.7-rc.2',module=browser_overlay.TARGETS['client-locale.js'].removeprefix(browser_overlay.PREFIX),
+            language=dict(dshVersion=CURRENT_DSH,module=browser_overlay.TARGETS['client-locale.js'].removeprefix(browser_overlay.PREFIX),
                           patches=[dict(before='provide locale;',after='provide locale; effect language;',prependAsset='web-integration/language.js'),
                                    dict(before='resolve active;',after='resolve active from native;'),
                                    dict(before='choose locale;',after='choose locale and notify native;')])
@@ -175,7 +177,7 @@ class RecoveryAssetTests(unittest.TestCase):
                      (browser_overlay.TARGETS['client-resources.js'],'return hostname;',False),
                      (browser_overlay.TARGETS['client-locale.js'],'provide locale; resolve active; choose locale;',False)])
             build_archive('window.__ModuleLoader__.load({\nnew Blob([_dsh_pdf_worker_default,')
-            raw, patched=browser_overlay.build(archive,assets,'0.1.7-rc.2')
+            raw, patched=browser_overlay.build(archive,assets,CURRENT_DSH)
             html=patched['index.html'].decode()
             self.assertLess(html.index('DSHA_BROWSER_COMPAT_BEGIN'),html.index('<script src="app.js"'))
             self.assertIn('window.__ES_COMPAT__=true;',html)
@@ -186,16 +188,16 @@ class RecoveryAssetTests(unittest.TestCase):
             self.assertIn('resolve active from native;',patched['client-locale.js'].decode())
             build_archive('window.__ModuleLoader__.load({\nno worker anchor')
             with self.assertRaisesRegex(ValueError,'RECOVERY_OVERLAY_ANCHOR'):
-                browser_overlay.build(archive,assets,'0.1.7-rc.2')
+                browser_overlay.build(archive,assets,CURRENT_DSH)
             spec['dshVersion']='future-version'
             (assets/'pdf-compat-patch.json').write_text(json.dumps(spec),encoding='utf8')
             with self.assertRaisesRegex(ValueError,'RECOVERY_PDF_RECIPE_PATH'):
-                browser_overlay.build(archive,assets,'0.1.7-rc.2')
-            spec['dshVersion']='0.1.7-rc.2';(assets/'pdf-compat-patch.json').write_text(json.dumps(spec),encoding='utf8')
+                browser_overlay.build(archive,assets,CURRENT_DSH)
+            spec['dshVersion']=CURRENT_DSH;(assets/'pdf-compat-patch.json').write_text(json.dumps(spec),encoding='utf8')
             language['patches'][1]['before']='missing locale anchor'
             (assets/'language-patch.json').write_text(json.dumps(language),encoding='utf8')
             with self.assertRaisesRegex(ValueError,'RECOVERY_OVERLAY_ANCHOR'):
-                browser_overlay.build(archive,assets,'0.1.7-rc.2')
+                browser_overlay.build(archive,assets,CURRENT_DSH)
 
 
 if __name__=='__main__':unittest.main()

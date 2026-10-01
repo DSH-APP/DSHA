@@ -15,6 +15,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from test_runtime_fixture import runtime as verified_runtime
 from release_acceptance import requirements as acceptance_requirements, validate as validate_acceptance, baseline_from_receipt
+from release_names import apk_filename
 
 ROOT=Path(__file__).resolve().parents[1]
 CERT='e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5'
@@ -69,10 +70,7 @@ def publish_apks(apks):
         source=Path(item['path'])
         if not source.is_file() or digest(source)!=item['sha256']:
             raise ValueError('DELIVERY_APK_CHANGED')
-        base=item['versionName'].removesuffix('low');suffix='low' if item['flavor']=='low' else ''
-        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,100}',base):
-            raise ValueError('DELIVERY_VERSION_NAME')
-        target=ROOT/'release'/f'dsha-{base}{suffix}.apk'
+        target=ROOT/'release'/apk_filename(item['flavor'], ROOT)
         target.parent.mkdir(parents=True,exist_ok=True)
         if not target.exists() or digest(target)!=item['sha256']:
             temporary=target.with_name(target.name+'.part-'+str(uuid.uuid4()))

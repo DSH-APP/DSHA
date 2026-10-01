@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """DSHA 插件包导入/导出/链接安装。末行 PLUGIN_RESULT JSON 是唯一操作结果。
-仅安装声明 dsh.bundle.patch 的发布包；安装依赖不执行 prepare/build 脚本。
+仅安装声明 dsh.bundle.patch 的发布包；0.2.0-rc2 按用户请求允许依赖生命周期脚本。
 """
 import importlib.util
 import json
@@ -487,12 +487,17 @@ def resolve_plugin_dir(name, discovered=None):
         # 同名实体或旧备份副本不能改变列表、导出或回退所看到的版本。
         directory = builtin.entity_dir(name)
         return local(directory) if directory else None
+    runtime = builtin.runtime_bundle_dir(name)
+    if runtime:
+        # Match dsh's authoritative installAnchor-before-configAnchor lookup.
+        # Shadowed user files remain in place, but are not the loaded candidate.
+        return runtime
     path = os.path.join(local(builtin.NODE_MODULES), name)
     if os.path.isfile(os.path.join(path, "package.json")):
         return os.path.realpath(path)
     if discovered is not None and name in discovered:
         return discovered[name]['directory']
-    directory = builtin.entity_dir(name)
+    directory = builtin.entity_dir(name, discovered)
     if directory:
         return local(directory)
     path = os.path.join(local(builtin.NODE_MODULES), name)
@@ -510,12 +515,21 @@ def cmd_export(names, out):
     os.makedirs(os.path.dirname(out), exist_ok=True)
     total, count = 0, 0
     excluded = []
+    runtime_sources = []
 
-    def add_tree(archive, path, arc, ancestors):
+    def add_tree(archive, path, arc, ancestors, runtime_source=None):
         nonlocal total, count
         progress('export', '正在打包：' + arc, count)
         real = os.path.realpath(path)
         basename = os.path.basename(path)
+        if runtime_source is not None:
+            # Manual export is a portable package source, not a second system
+            # runtime archive. Declared dependencies are checked on import.
+            if basename == 'node_modules':
+                excluded.append(arc)
+                return
+            if os.path.commonpath([runtime_source, real]) != runtime_source:
+                raise ValueError('随 DSH 安装提供的插件含包外链接，不能作为源码导出：' + arc)
         if basename in ('.npmrc', '.yarnrc.yml', '.env', '.dsha-dependencies.json') or basename.startswith('.env.'):
             excluded.append(arc)
             return
@@ -539,7 +553,7 @@ def cmd_export(names, out):
             archive.addfile(info)
             for child in sorted(os.listdir(real)):
                 if child not in (".git", ".cache", "__pycache__", ".DS_Store"):
-                    add_tree(archive, os.path.join(real, child), arc + "/" + child, ancestors | {real})
+                    add_tree(archive, os.path.join(real, child), arc + "/" + child, ancestors | {real}, runtime_source)
 
     try:
         with tarfile.open(out, "w:gz", dereference=True) as archive:
@@ -549,14 +563,21 @@ def cmd_export(names, out):
                 directory = resolve_plugin_dir(name)
                 if not directory:
                     raise ValueError("找不到插件实体：" + str(name))
-                add_tree(archive, directory, "plugins/" + name, set())
+                runtime = builtin.runtime_bundle_dir(name)
+                runtime_source = os.path.realpath(directory) if runtime and os.path.realpath(runtime) == os.path.realpath(directory) else None
+                if runtime_source is not None:
+                    runtime_sources.append(name)
+                add_tree(archive, directory, "plugins/" + name, set(), runtime_source)
         if os.path.getsize(out) > MAX_DOWNLOAD:
             raise ValueError("导出包超过 256 MiB，请减少插件数量")
     except Exception:
         if os.path.isfile(out):
             os.remove(out)
         raise
-    result("ok", "插件包已生成；凭据配置未导出，原生锁文件保留，导入时重新核对内容" if excluded else "插件包已生成", path=out, excluded=excluded)
+    message = "插件包已生成；凭据配置未导出，原生锁文件保留，导入时重新核对内容" if excluded else "插件包已生成"
+    if runtime_sources:
+        message += '；随 DSH 安装提供的组件仅导出源码，导入时核对并安装依赖'
+    result("ok", message, path=out, excluded=excluded, runtimeSources=runtime_sources)
     return 0
 
 
@@ -566,6 +587,10 @@ def cmd_delete(name):
         raise ValueError("无效的插件名称")
     if name in builtin.OFFICIAL_BUNDLES or name in builtin.builtin_names():
         raise ValueError("官方核心和内置插件请使用禁用开关，不能删除")
+    runtime = builtin.runtime_bundle_dir(name)
+    directory = resolve_plugin_dir(name)
+    if runtime and directory and os.path.realpath(runtime) == os.path.realpath(directory):
+        raise ValueError("随 DSH 安装提供的插件请使用禁用开关，不能删除")
     with builtin.operation_lock(check_cancel), committing('正在删除插件：' + name):
         doc = builtin.read_manifest()
         if doc is None:
@@ -712,8 +737,18 @@ def cmd_list(message="插件状态已同步"):
     if not isinstance(sources, dict):
         sources = {}
     discovered = builtin.discover_plugins()
+    system_names = set(builtin.builtin_names())
+    disabled_names = []
+    modules = local(builtin.NODE_MODULES)
+    if os.path.isdir(modules):
+        for entry in os.listdir(modules):
+            if entry.startswith('@') and os.path.isdir(os.path.join(modules, entry)):
+                disabled_names.extend(entry + '/' + child[:-9] for child in os.listdir(os.path.join(modules, entry))
+                                      if child.endswith('.disabled'))
+            elif entry.endswith('.disabled'):
+                disabled_names.append(entry[:-9])
     names = list(dict.fromkeys(list(builtin.OFFICIAL_BUNDLES) + builtin.builtin_names()
-                              + list(deps) + bundles + list(discovered)))
+                              + list(deps) + bundles + list(discovered) + disabled_names))
     items = []
     updates = lifecycle().read(lifecycle().path('plugin-updates.json'), {})
     for name in names:
@@ -722,22 +757,25 @@ def cmd_list(message="插件状态已同步"):
         official = name in builtin.OFFICIAL_BUNDLES
         directory = resolve_plugin_dir(name, discovered)
         pkg = read_json(os.path.join(directory, "package.json"), {}) if directory else {}
-        if name not in builtin.OFFICIAL_BUNDLES and name not in builtin.builtin_names() \
+        runtime_directory = builtin.runtime_bundle_dir(name)
+        runtime_provided = bool(directory and runtime_directory and os.path.realpath(directory) == os.path.realpath(runtime_directory))
+        if name not in builtin.OFFICIAL_BUNDLES and name not in system_names \
                 and name not in bundles and not (pkg.get("dsh") or {}).get("bundle"):
             continue
-        items.append(dict(name=name, enabled=name in bundles, builtin=name in builtin.builtin_names(),
+        items.append(dict(name=name, enabled=name in bundles, builtin=name in system_names or runtime_provided,
+                          runtimeProvided=runtime_provided,
                           official=official, available=official or directory is not None,
                           version=pkg.get("version", ""), description=pkg.get("description", ""),
-                          source=sources.get(name, "") or repository_url(pkg),
+                          source=repository_url(pkg) if runtime_provided else sources.get(name, "") or repository_url(pkg),
                           exportable=not official and directory is not None,
-                          deletable=not official and name not in builtin.builtin_names()
+                          deletable=not official and name not in system_names and not runtime_provided
                                     and (name in deps or name in bundles),
                           internal=official or name == 'dsh-app-integration',
                           detected=name in discovered and name not in deps and name not in bundles,
-                          location='、'.join(discovered.get(name, {}).get('locations', []))))
+                          location='随 DSH 安装提供' if runtime_provided else '、'.join(discovered.get(name, {}).get('locations', []))))
         update = updates.get(name, {})
-        previous = lifecycle().history_info(name) if not official and name not in builtin.builtin_names() else {}
-        items[-1].update(latestVersion=update.get('latestVersion', ''), updateAvailable=bool(update.get('available'))
+        previous = lifecycle().history_info(name) if not official and name not in system_names and not runtime_provided else {}
+        items[-1].update(latestVersion=update.get('latestVersion', ''), updateAvailable=not runtime_provided and bool(update.get('available'))
                          and update.get('installedVersion') == str(pkg.get('version', '')),
                          updatePreviewId=update.get('previewId', ''), updateMessage=update.get('message', '')
                          if update.get('installedVersion') == str(pkg.get('version', '')) else '',
@@ -790,9 +828,9 @@ def main():
         if args == ["refresh"]:
             with builtin.operation_lock(check_cancel):
                 progress('refresh', '正在检测已安装插件…', cancellable=False)
-                if builtin.register() != 0:
-                    raise ValueError('部分内置插件待修复，请检查环境')
-                lifecycle().migrate_legacy_reviews(locked=True)
+                # Registration and legacy migration belong to environment/Web
+                # preparation. Opening the list must not relink every runtime
+                # module, modify the profile, or hash all installed dependencies.
                 return cmd_list('插件检测完成；变更后重启 Web 生效')
         if args == ["migrate-review-markers"]:
             return lifecycle().migrate_legacy_reviews()
@@ -808,10 +846,11 @@ def main():
                     if not directory:
                         raise ValueError('找不到插件实体，请重新导入：' + name)
                     package = plugin_package(directory)
-                    content = dependencies().current(directory)
-                    if content['missing']:
-                        raise ValueError('插件缺少运行依赖，请重新导入：' + name)
-                    lifecycle().queue_activation(name, content['sha256'], package['version'])
+                    # The switch records intent. Check bytes/dependency graph at
+                    # the next Web load, where they are actually consumed.
+                    runtime = builtin.runtime_bundle_dir(name)
+                    if not runtime or os.path.realpath(runtime) != os.path.realpath(directory):
+                        lifecycle().queue_activation(name, '', package['version'])
                 if (builtin.enable_plugin(name) if enable else builtin.disable_plugin(name)) != 0:
                     raise ValueError('插件状态更新失败，请检查配置和安装文件')
                 return cmd_list('已' + ('启用 ' if enable else '禁用 ') + name + '；重启 Web 后生效')

@@ -6,9 +6,9 @@ build 131 增加向后兼容的 `dataCompatibility` 元数据：记录模型 sch
 
 ## 便携文件
 
-便携文件使用 `DSHA-data-v5-<UUID>.dshbak`。它不是 tar/gzip，也不能使用会被旧版判为全量恢复的 `DSHA-backup-*.tar.gz` 名称。当前导出只提供密码加密，没有自动明文降级。
+便携文件使用 `DSHA-data-v5-<UUID>.dshbak`。它不是 tar/gzip，也不能使用会被旧版判为全量恢复的 `DSHA-backup-*.tar.gz` 名称。导出时密码加密为可选项：勾选密码会生成 `DSHABAK5` 加密容器；不勾选则直接保存带完整尾摘要的 `DSHADATA` 容器。导入会按容器头识别两种 v5 形式，历史加密包仍需原密码。
 
-所有多字节整数按大端存储。加密头共 48 字节：
+所有多字节整数按大端存储。启用密码时，加密头共 48 字节：
 
 | 偏移 | 长度 | 含义 |
 |---:|---:|---|
@@ -23,7 +23,7 @@ build 131 增加向后兼容的 `dataCompatibility` 元数据：记录模型 sch
 
 密码直接编码为 UTF-8，不执行 Unicode 归一化。当前接口接收 12–1024 个 Java UTF-16 单元。密码、派生密钥与中间缓冲不写入任务记录或偏好；任务结束清理可清理的内存数组，但不承诺消除虚拟机或闪存中的所有历史副本。
 
-解密流在认证标签核验前可能产生明文，因此只能写本任务的私有隔离文件。只有 `doFinal` 成功且外层读完后，才调用归档解析与恢复计划。SHA-256 用于内容完整性，不证明发送者身份。排除原生 API Key 不等于所有内容已脱敏：聊天、项目、`.env`、插件配置也可能含秘密，仍须加密。
+解密流在认证标签核验前可能产生明文，因此只能写本任务的私有隔离文件。只有 `doFinal` 成功且外层读完后，才调用归档解析与恢复计划。SHA-256 用于内容完整性，不证明发送者身份。排除原生 API Key 不等于所有内容已脱敏：聊天、项目、`.env`、插件配置也可能含秘密。无密码导出不会提供保密性，只应保存到可信位置；需要保密时请勾选密码加密。
 
 派生参数依据 [OWASP 的 PBKDF2-HMAC-SHA256 建议](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)。密码学实现使用锁定的 Bouncy Castle 轻量 API，不替换系统 Provider。库版本、摘要和许可见 `tools/backup-dependencies.lock.json` 与 `THIRD_PARTY_NOTICES.md`。
 

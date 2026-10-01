@@ -43,6 +43,8 @@ public class DshaAccessibilityService extends AccessibilityService {
     private static volatile long watchUntil = 0L;
     private static volatile PairInfoListener listener;
     private static volatile String observedConnectHost="",observedConnectPort="";
+    private static volatile long lastKeepAliveAt;
+    private static final long KEEPALIVE_DEBOUNCE_MS = 30_000L;
 
     /** 三态：YES 确认已开 / NO 确认未开 / UNKNOWN 读不到设置（别当成未开）。
      *
@@ -108,6 +110,53 @@ public class DshaAccessibilityService extends AccessibilityService {
 
     public static boolean watching() {
         return System.currentTimeMillis() <= watchUntil;
+    }
+
+    /**
+     * Rebind only a service that the user already enabled in Android settings.
+     * The ADB pairing flow grants WRITE_SECURE_SETTINGS for this app; the ADB
+     * watchdog uses that grant after a verified probe to recover ROMs that
+     * silently unbind the accessibility service. A user who turns the service
+     * off removes the component, so this method never re-enables a manual off.
+     */
+    public static boolean rebindIfEnabled(Context context) {
+        if (instance != null || context == null || !enabled(context)) return false;
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (now - lastKeepAliveAt < KEEPALIVE_DEBOUNCE_MS) return false;
+        lastKeepAliveAt = now;
+        try {
+            if (context.checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) return false;
+            String configured = Settings.Secure.getString(context.getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            if (configured == null || configured.isEmpty()) return false;
+            String component = context.getPackageName() + "/" + DshaAccessibilityService.class.getName();
+            java.util.ArrayList<String> entries = new java.util.ArrayList<>();
+            boolean found = false;
+            for (String raw : configured.split(":")) {
+                String value = raw.trim();
+                if (value.isEmpty()) continue;
+                if (value.equalsIgnoreCase(component)
+                        || (value.startsWith(context.getPackageName() + "/")
+                        && DshaAccessibilityService.class.getName().endsWith(value.substring(value.indexOf('/') + 1)))) {
+                    found = true;
+                    continue;
+                }
+                entries.add(value);
+            }
+            if (!found) return false;
+            String disabled = android.text.TextUtils.join(":", entries);
+            if (!Settings.Secure.putString(context.getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, disabled)) return false;
+            android.os.SystemClock.sleep(120L);
+            if (!Settings.Secure.putString(context.getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, configured)) return false;
+            Log.i(TAG, "ADB watchdog requested an accessibility service rebind");
+            return true;
+        } catch (Throwable error) {
+            Log.w(TAG, "Accessibility rebind unavailable: " + error.getClass().getSimpleName());
+            return false;
+        }
     }
 
     @Override
@@ -195,6 +244,7 @@ public class DshaAccessibilityService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         instance = this;
+        lastKeepAliveAt = 0L;
         Log.i(TAG, "无障碍服务已连接");
     }
 
@@ -291,17 +341,18 @@ public class DshaAccessibilityService extends AccessibilityService {
     }
 
     private static void dumpNode(AccessibilityNodeInfo node, StringBuilder sb, int depth, int[] count) {
-        if (node == null || depth > 24 || count[0] > 200 || sb.length() > 12000) return;
+        if (node == null || depth > 24 || count[0] >= 200 || sb.length() > 12000) return;
         CharSequence t = node.getText();
         CharSequence d = node.getContentDescription();
         boolean clickable = node.isClickable();
         boolean editable = node.isEditable();
         String label = !TextUtils.isEmpty(t) ? t.toString()
                 : (!TextUtils.isEmpty(d) ? d.toString() : "");
+        android.graphics.Rect r = new android.graphics.Rect();
+        node.getBoundsInScreen(r);
         // 只输出「有文字」或「能点/能输入」的节点：全量节点树对 agent 是噪音
-        if (!label.isEmpty() || clickable || editable) {
-            android.graphics.Rect r = new android.graphics.Rect();
-            node.getBoundsInScreen(r);
+        if ((!label.isEmpty() || clickable || editable)
+                && com.deepseekharness.app.util.AccessibilityDumpBounds.ordered(r.left, r.top, r.right, r.bottom)) {
             count[0]++;
             sb.append('[').append(count[0]).append("] ");
             if (!label.isEmpty()) sb.append('"').append(label.replace('\n', ' ')).append('"');
@@ -538,38 +589,55 @@ public class DshaAccessibilityService extends AccessibilityService {
         }
     }
 
-    /** 截屏（Android 11+）。存成 PNG 落到 Download/DSHA 并返回路径 ——
-     *  直接回 base64 会把一张几百 KB 的图塞进会话，把上下文撑爆。
-     *  agent 拿到路径后可以走附件机制看图，或让用户自己打开。 */
+    /** 截屏（Android 11+）。普通调用返回路径；MCP 返回同一次截图的图片块，
+     *  不让 guest 再读取未挂载的 Android 多用户外部路径。 */
     @android.annotation.TargetApi(30)
     public static String uiScreenshot() {
+        return uiScreenshot(() -> true, false);
+    }
+
+    @android.annotation.TargetApi(30)
+    public static String uiScreenshot(java.util.function.BooleanSupplier validRun, boolean mcp) {
         DshaAccessibilityService s = instance;
         if (s == null) return NOT_READY;
+        if (!validRun.getAsBoolean()) return "[ERR] SCREENSHOT_RUN_CHANGED";
         if (android.os.Build.VERSION.SDK_INT < 30) {
             return com.deepseekharness.app.util.UiText.text("[ERR] 截屏需要 Android 11 及以上（当前 API ")
                     + android.os.Build.VERSION.SDK_INT + "）";
         }
         final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
         final String[] out = {com.deepseekharness.app.util.UiText.text("[ERR] 截屏无结果")};
+        final java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        final java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newSingleThreadExecutor();
         try {
             s.takeScreenshot(android.view.Display.DEFAULT_DISPLAY,
-                    java.util.concurrent.Executors.newSingleThreadExecutor(),
+                    executor,
                     new TakeScreenshotCallback() {
                         @Override
                         public void onSuccess(ScreenshotResult result) {
+                            android.graphics.Bitmap hardware = null, bmp = null;
                             try {
-                                android.graphics.Bitmap bmp = android.graphics.Bitmap.wrapHardwareBuffer(
+                                if (closed.get() || instance != s || !validRun.getAsBoolean()) {
+                                    out[0] = "[ERR] SCREENSHOT_RUN_CHANGED";
+                                    return;
+                                }
+                                hardware = android.graphics.Bitmap.wrapHardwareBuffer(
                                         result.getHardwareBuffer(), result.getColorSpace());
+                                // Encode an owned software bitmap, then release both the
+                                // temporary copy and the framework HardwareBuffer.
+                                bmp = hardware == null ? null : hardware.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
                                 if (bmp == null) {
                                     out[0] = com.deepseekharness.app.util.UiText.text("[ERR] 截屏数据无法解析");
                                 } else {
-                                    out[0] = saveShot(bmp);
-                                    bmp.recycle();
+                                    if (closed.get() || !validRun.getAsBoolean()) out[0] = "[ERR] SCREENSHOT_RUN_CHANGED";
+                                    else out[0] = saveShot(bmp, mcp);
                                 }
                             } catch (Throwable t) {
                                 out[0] = com.deepseekharness.app.util.UiText.text("[ERR] 保存截屏失败：")
                                         + SensitiveData.redact(String.valueOf(t));
                             } finally {
+                                if (bmp != null) bmp.recycle();
+                                if (hardware != null) hardware.recycle();
                                 try {
                                     result.getHardwareBuffer().close();
                                 } catch (Throwable ignored) {
@@ -580,23 +648,26 @@ public class DshaAccessibilityService extends AccessibilityService {
 
                         @Override
                         public void onFailure(int errorCode) {
-                            // 5 = 频率限制：系统对连续截屏有节流
                             out[0] = com.deepseekharness.app.util.UiText.text("[ERR] 截屏被系统拒绝（错误码 ") + errorCode
-                                    + (errorCode == 5 ? "，太频繁了，隔一秒再试" : "") + "）";
+                                    + (errorCode == ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT
+                                    ? com.deepseekharness.app.util.UiText.choose("，太频繁了，隔一秒再试", ", too frequent; wait a second before retrying") : "") + "）";
                             latch.countDown();
                         }
                     });
             if (!latch.await(10, java.util.concurrent.TimeUnit.SECONDS)) {
                 return com.deepseekharness.app.util.UiText.text("[ERR] 截屏超时");
             }
-            return out[0];
+            return instance == s && validRun.getAsBoolean() ? out[0] : "[ERR] SCREENSHOT_RUN_CHANGED";
         } catch (Throwable t) {
             return com.deepseekharness.app.util.UiText.text("[ERR] 截屏失败：") + SensitiveData.redact(String.valueOf(t));
+        } finally {
+            closed.set(true);
+            executor.shutdownNow();
         }
     }
 
     /** 保存到本应用的外部私有目录，截屏无需再申请“所有文件访问”。guest 可读取相同挂载。 */
-    private static String saveShot(android.graphics.Bitmap bmp) {
+    private static String saveShot(android.graphics.Bitmap bmp, boolean mcp) {
         try {
             DshaAccessibilityService service=instance;
             if(service==null)return NOT_READY;
@@ -612,6 +683,22 @@ public class DshaAccessibilityService extends AccessibilityService {
             try (java.io.FileOutputStream fo = new java.io.FileOutputStream(f)) {
                 if(!bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, fo))throw new java.io.IOException("PNG_ENCODING_FAILED");
             }
+            if (mcp) {
+                if (f.length() > 16L * 1024 * 1024) return "[ERR] SCREENSHOT_TOO_LARGE";
+                java.io.ByteArrayOutputStream encoded = new java.io.ByteArrayOutputStream();
+                try (java.io.FileInputStream input = new java.io.FileInputStream(f)) {
+                    byte[] buffer = new byte[8192]; int count, total = 0;
+                    while ((count = input.read(buffer)) != -1) {
+                        total += count;
+                        if (total > 16 * 1024 * 1024) return "[ERR] SCREENSHOT_TOO_LARGE";
+                        encoded.write(buffer, 0, count);
+                    }
+                }
+                byte[] png = encoded.toByteArray();
+                return new org.json.JSONObject().put("kind", "dsha-screenshot-v1")
+                        .put("path", f.getAbsolutePath()).put("mimeType", "image/png")
+                        .put("data", android.util.Base64.encodeToString(png, android.util.Base64.NO_WRAP)).toString();
+            }
             return com.deepseekharness.app.util.UiText.text("OK 截屏已保存：") + f.getAbsolutePath()
                     + "（" + bmp.getWidth() + "x" + bmp.getHeight() + "）";
         } catch (Throwable t) {
@@ -622,6 +709,16 @@ public class DshaAccessibilityService extends AccessibilityService {
     @Override
     public void onInterrupt() {
         // 无需处理：本服务不提供持续反馈
+    }
+
+    @Override
+    public boolean onUnbind(android.content.Intent intent) {
+        // Some ROMs unbind without destroying the service. Do not report a
+        // stale connected instance or keep a screen grant across that gap.
+        HttpShellService.revokeScreenGrant();
+        instance = null;
+        stopWatch();
+        return super.onUnbind(intent);
     }
 
     @Override

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""使用 pnpm 原生锁文件冻结解析；快照只记录实际内容，不执行插件或安装钩子。"""
+"""使用 pnpm 解析插件依赖；允许用户请求未锁定重解析和生命周期脚本。"""
 import hashlib
 import importlib.util
 import json
@@ -15,6 +15,7 @@ SNAPSHOT = '.dsha-dependencies.json'
 LOCK = 'pnpm-lock.yaml'
 MAX_ENTRIES = 100000
 MAX_BYTES = 2 * 1024 * 1024 * 1024
+PNPM_VERSION = '10.34.5'
 
 
 def digest(path, check=lambda: None):
@@ -243,6 +244,11 @@ class Dependencies:
         if os.path.islink(cache) or os.path.commonpath([os.path.realpath(self.home), os.path.realpath(cache)]) != os.path.realpath(self.home):
             raise ValueError('插件依赖缓存路径异常')
         cached = os.path.join(cache, identity)
+        # Each identity is a directory owned by the cache.  Do not follow a
+        # substituted symlink (or a regular file) while reading its metadata
+        # or replacing it after an unlocked refresh.
+        if os.path.lexists(cached) and (os.path.islink(cached) or not os.path.isdir(cached)):
+            raise ValueError('插件依赖缓存记录路径异常')
         missing = [name for name in dependencies if not os.path.isfile(os.path.join(root, 'node_modules', name, 'package.json'))]
         if missing and os.path.isdir(os.path.join(root, 'node_modules')) and os.listdir(os.path.join(root, 'node_modules')):
             raise ValueError('插件已附带部分依赖，缺失项未自动覆盖，请提供完整依赖包')
@@ -252,8 +258,8 @@ class Dependencies:
         if missing or optional and not os.path.isdir(os.path.join(root, 'node_modules')):
             version = self.g['run_package_command'](['pnpm', '--version'], cwd=self.home)
             manager_version = version.stdout.strip()
-            if version.returncode or not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', manager_version):
-                raise ValueError('无法确认 pnpm 版本，未更改已安装插件')
+            if version.returncode or manager_version != PNPM_VERSION:
+                raise ValueError('无法确认受管 pnpm 版本（需要 ' + PNPM_VERSION + '），未更改已安装插件')
             with tempfile.TemporaryDirectory(prefix='plugin-deps-', dir=self.home) as work:
                 chosen = None
                 original_manifest = False
@@ -272,21 +278,38 @@ class Dependencies:
                 if (planned.get('pnpm') or {}).get('patchedDependencies'):
                     raise ValueError('插件锁定补丁需要包含完整离线依赖')
                 self.g['write_json'](os.path.join(work, 'package.json'), planned)
-                if chosen:
+                # Online unlocked resolution must not seed pnpm with the old
+                # lock: pnpm otherwise keeps the previous graph even with
+                # --no-frozen-lockfile. Offline/recovery runs still reuse the
+                # verified cached lock and tree as their source of truth.
+                if chosen and offline:
                     shutil.copyfile(chosen, os.path.join(work, LOCK))
-                arguments = ['pnpm', 'install', '--prod', '--ignore-scripts', '--ignore-pnpmfile', '--frozen-lockfile' if chosen else '--no-frozen-lockfile',
+                # 用户已要求开放未锁定安装；保留事务、路径、摘要和回滚边界，
+                # 但不再强制 frozen lockfile，也不屏蔽生命周期脚本/pnpmfile。
+                arguments = ['pnpm', 'install', '--prod', '--no-frozen-lockfile',
+                             # pnpm 10 blocks dependency lifecycle scripts unless the
+                             # caller explicitly opts in.  Removing --ignore-scripts
+                             # alone therefore still skips postinstall/build hooks.
+                             '--config.dangerously-allow-all-builds=true',
+                             '--config.ignore-scripts=false',
+                             '--config.ignore-dep-scripts=false',
                              '--config.node-linker=hoisted', '--config.package-import-method=copy', '--config.auto-install-peers=false',
                              '--config.manage-package-manager-versions=false', '--reporter=append-only']
                 if offline:
                     arguments.append('--offline')
-                process = self.g['network']().package_command(arguments, cwd=work, frozen=bool(chosen), offline=offline)
+                # A cached lock is only authoritative for offline/recovery
+                # reuse. Online unlocked resolution must also avoid pnpm's
+                # prefer-offline hint, otherwise stale metadata can keep the
+                # old graph even though the lock was intentionally omitted.
+                process = self.g['network']().package_command(
+                    arguments, cwd=work, frozen=bool(chosen and offline), offline=offline)
                 if process.returncode:
                     codes = re.findall(r'ERR_PNPM_[A-Z0-9_]+', (process.stderr or '') + (process.stdout or ''))
                     raise ValueError('插件依赖安装失败：' + (codes[0] if codes else 'PNPM_FAILED'))
                 prepared_lock = os.path.join(work, LOCK)
                 lock_hash = validate_lock(prepared_lock)
-                if chosen and lock_hash != validate_lock(chosen):
-                    raise ValueError('冻结安装修改了锁文件，未提交插件')
+                # unlocked 模式允许 pnpm 更新/补写锁文件；新的锁摘要随事务和
+                # 实际依赖树一起记录，失败仍由外层事务恢复原目录。
                 modules = os.path.join(root, 'node_modules')
                 if os.path.islink(modules):
                     os.unlink(modules)
@@ -294,13 +317,26 @@ class Dependencies:
                     shutil.rmtree(modules)
                 shutil.move(os.path.join(work, 'node_modules'), modules)
                 shutil.copyfile(prepared_lock, os.path.join(root, LOCK))
-                if not os.path.exists(cached):
-                    if len(os.listdir(cache)) >= 128:
-                        raise ValueError('保留的插件锁记录已达上限，原记录未自动删除')
-                    with tempfile.TemporaryDirectory(prefix='.new-', dir=cache) as stage:
-                        self.g['write_json'](os.path.join(stage, 'state.json'), {'manifestSha256': manifest_sha, 'archiveSha256': archive_sha, 'managerVersion': manager_version, 'lockSha256': lock_hash, 'manifestMode': 'original' if original_manifest else 'runtime-dependencies'})
-                        shutil.copyfile(prepared_lock, os.path.join(stage, LOCK))
+                # An unlocked install may resolve a newer tree for the same
+                # archive identity. Refresh the cache atomically as well;
+                # leaving the old lock here would make the next invocation
+                # silently roll the plugin back to the stale dependency graph.
+                if not os.path.exists(cached) and len(os.listdir(cache)) >= 128:
+                    raise ValueError('保留的插件锁记录已达上限，原记录未自动删除')
+                old_cached = cached + '.old-' + os.urandom(8).hex()
+                with tempfile.TemporaryDirectory(prefix='.new-', dir=cache) as stage:
+                    self.g['write_json'](os.path.join(stage, 'state.json'), {'manifestSha256': manifest_sha, 'archiveSha256': archive_sha, 'managerVersion': manager_version, 'lockSha256': lock_hash, 'manifestMode': 'original' if original_manifest else 'runtime-dependencies'})
+                    shutil.copyfile(prepared_lock, os.path.join(stage, LOCK))
+                    if os.path.exists(cached):
+                        os.rename(cached, old_cached)
+                    try:
                         os.rename(stage, cached)
+                    except Exception:
+                        if os.path.exists(old_cached) and not os.path.exists(cached):
+                            os.rename(old_cached, cached)
+                        raise
+                if os.path.exists(old_cached):
+                    shutil.rmtree(old_cached)
                 state = 'locked'
         elif os.path.isfile(os.path.join(root, LOCK)):
             lock_hash = validate_lock(os.path.join(root, LOCK))

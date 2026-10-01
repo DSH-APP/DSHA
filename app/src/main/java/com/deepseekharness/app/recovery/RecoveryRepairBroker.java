@@ -107,7 +107,7 @@ public final class RecoveryRepairBroker implements AutoCloseable {
     public JSONArray targets()throws IOException {
         requireOpen();JSONArray rows=new JSONArray();
         rows.put(json("id","maintenance","label","中断维护 / Interrupted maintenance","actions",new JSONArray(List.of("recover-maintenance"))));
-        rows.put(json("id","runtime","label","签名 APK 运行时 / Signed APK runtime","actions",new JSONArray(List.of("repair-runtime"))));
+        rows.put(json("id","runtime","label","签名 APK 运行时与 CLI 依赖 / Signed APK runtime and CLI dependencies","actions",new JSONArray(List.of("repair-runtime","repair-cli-dependencies"))));
         rows.put(json("id","startup-log","label","最近启动阶段与原始错误 / Recent startup stages and errors","actions",new JSONArray()));
         rows.put(json("id","maintenance-log","label","最近维护阶段与失败原因 / Last maintenance stage and failure","actions",new JSONArray()));
         try {
@@ -179,10 +179,10 @@ public final class RecoveryRepairBroker implements AutoCloseable {
     public synchronized JSONObject propose(JSONObject request)throws IOException {
         requireOpen();if(candidates.size()>=MAX_PLANS)throw new IOException("REPAIR_PLAN_LIMIT");
         String action=request.optString("action"),target=request.optString("targetId"),content=request.optString("content","");
-        boolean recover=action.equals("recover-maintenance")&&target.equals("maintenance"),runtime=action.equals("repair-runtime")&&target.equals("runtime");
+        boolean recover=action.equals("recover-maintenance")&&target.equals("maintenance"),runtime=action.equals("repair-runtime")&&target.equals("runtime"),cliDependencies=action.equals("repair-cli-dependencies")&&target.equals("runtime");
         boolean settings=action.equals("profile-settings")&&profiles().containsKey(target);
         boolean newWeb=action.equals("new-web-profile")&&target.equals("configuration-web"),newGlobal=action.equals("new-global-patch")&&target.equals("global-patch");
-        if(!recover&&!runtime&&!settings&&!newWeb&&!newGlobal)throw new IOException("REPAIR_ACTION_TARGET");
+        if(!recover&&!runtime&&!cliDependencies&&!settings&&!newWeb&&!newGlobal)throw new IOException("REPAIR_ACTION_TARGET");
         if(!recover&&com.deepseekharness.app.core.MaintenanceCoordinator.pending(files))throw new IOException("REPAIR_RECOVER_PENDING_FIRST");
         if(!settings&&!content.isEmpty())throw new IOException("REPAIR_ACTION_CONTENT");
         if(settings&&(content.contains("***")||!content.equals(RecoveryBrokerProtocol.redact(content))))throw new IOException("REPAIR_CREDENTIALS_USE_NATIVE_SETTINGS");
@@ -198,15 +198,17 @@ public final class RecoveryRepairBroker implements AutoCloseable {
                 "sourceSha",p.sourceSha256,"dataGeneration",p.dataGeneration,"reason",p.message(),"message",p.message(),"nativeConfirmationRequired",true,
                 "writeBlocked",writeBlocked,"writeBlockedReason",writeBlockedReason,"sessionClosed",closed);
         if(full&&!closed)try{
-            boolean maintenanceAction=p.action.equals("recover-maintenance"),runtimeAction=p.action.equals("repair-runtime");
-            String before=maintenanceAction?maintenancePreview().toString(2):runtimeAction?runtimePreview().toString(2):RecoveryBrokerProtocol.redact(new String(source(p.target),StandardCharsets.UTF_8));
+            boolean maintenanceAction=p.action.equals("recover-maintenance"),runtimeAction=p.action.equals("repair-runtime"),cliDependencyAction=p.action.equals("repair-cli-dependencies");
+            String before=maintenanceAction?maintenancePreview().toString(2):(runtimeAction||cliDependencyAction)?runtimePreview().toString(2):RecoveryBrokerProtocol.redact(new String(source(p.target),StandardCharsets.UTF_8));
             result.put("before",before);result.put("after",maintenanceAction?
                     "1. 停止正式 Web 与终端并核验进程身份；无法确认退出即停止。\n2. 重新读取中断维护记录，按唯一已识别事务执行原有恢复/回切接口；多份冲突或损坏记录保持原样。\n3. 当前没有待恢复事务时只核验状态，不猜测要覆盖哪份数据。\n4. 原件、失败候选与维护记录继续保留；已提交事务不得覆盖后来的对话或配置。\n5. 完成后仍须重试正式 Web 并验证实际可用；本次确认不代表网页已恢复。"
                     :runtimeAction?"1. 停止正式 Web 与终端，取得原有数据维护屏障。\n2. 从当前签名 APK 准备运行时；同一基础环境执行受管更新，基础环境确需重建时先由宿主保护个人数据。\n3. 先校验候选，再执行隔离启动、存储和网页连接试验；未通过即按原事务保留现场或回切。\n4. 对话、配置、插件原件按现有事务保护；不会从应急模型下载程序或执行其代码。\n5. 当前原件及回切记录保存在应用私有 host-runtime-operations / host-environment-operations；成功后仍须核验正式 Web。"
+                    :cliDependencyAction?"1. 停止正式 Web 与终端，取得原有数据维护屏障。\n2. 仅从当前签名 APK 的受管 DSH/Node 依赖树恢复缺失或损坏的 CLI 依赖；不接受包名、版本、路径或命令参数。\n3. 按现有运行时事务校验摘要、隔离启动、存储、网页连接和插件加载；任何检查失败均保留原件并回切。\n4. 不执行 npm 生命周期脚本，不从应急模型下载代码，不直接修改用户 node_modules。\n5. 完成后仍须重试正式 Web，并以诊断结果确认 CLI 已就绪。"
                     :p.action.equals("new-web-profile")?"profiles/web/package.json → 官方基础 bundles：dsh-base + dsh-web-app\nprofiles/web/cordis.patch.yml → []\n旧插件构成与设置保存在配置快照；既有会话与凭据保持原位。 / Save old composition/settings, create basic Web profile; retain conversations and credentials."
                     :p.action.equals("new-global-patch")?"cordis.patch.yml → []\n对全部 Profile 的全局覆盖生效；原文保存在配置快照。 / Clears global overrides for every profile; original retained in snapshot.":SensitiveData.redact(p.content));
             result.put("description",p.action.equals("recover-maintenance")?"按原事务恢复中断维护，保留原件。 / Recover the recorded transaction and retain originals."
                     :p.action.equals("repair-runtime")?"从当前签名 APK 重建受管运行时，完成隔离试运行。 / Rebuild from this signed APK and run the isolated trial."
+                    :p.action.equals("repair-cli-dependencies")?"从当前签名 APK 恢复受管 CLI/Node 依赖并完成隔离试运行；不执行任意 shell。 / Restore managed CLI/Node dependencies from this signed APK and run the isolated trial; no arbitrary shell is executed."
                     :p.action.startsWith("new-")?"宿主直接保留原件并创建基础配置，无需先启动损坏 DSH。已存在的插件源码保留，恢复使用须审阅。 / Host retains originals and creates base configuration without starting broken DSH; plugin source retained for review."
                     :"只应用经当前 DSH schema 验证的普通设置；插件构成与凭据不由此入口修改。 / Apply only current-schema declarative settings; preserve plugin composition and credentials.");
         }catch(org.json.JSONException error){throw new IOException("REPAIR_JSON",error);}return result;
@@ -268,7 +270,7 @@ public final class RecoveryRepairBroker implements AutoCloseable {
                 if(!p.action.equals("recover-maintenance")&&com.deepseekharness.app.core.MaintenanceCoordinator.pending(files))throw new IOException("REPAIR_RECOVER_PENDING_FIRST");
                 HarnessController controller=HarnessController.get(context);
                 if(p.action.equals("recover-maintenance"))return EnvironmentMaintenance.recover(controller);
-                if(p.action.equals("repair-runtime"))return EnvironmentMaintenance.update(controller,ignored->{});
+                if(p.action.equals("repair-runtime")||p.action.equals("repair-cli-dependencies"))return EnvironmentMaintenance.update(controller,ignored->{});
                 if(p.action.equals("new-web-profile")||p.action.equals("new-global-patch")){
                     StartupRepairs.checkpoint(controller,json("command","new","target",p.action.equals("new-web-profile")?"web":"cordis.patch.yml"));
                     return "基础配置已由宿主事务创建并核对，原件保留；请重试正式启动确认实际可用。 / Base configuration created and checked by host transaction; originals retained. Retry normal startup to verify usability.";
