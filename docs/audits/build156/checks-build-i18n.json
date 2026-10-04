@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "sourceLexicalChecks": [
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+      "findings": [],
+      "dynamicUiTextArguments": 0
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateRepository.java",
+      "findings": [],
+      "dynamicUiTextArguments": 0
+    }
+  ],
+  "contribution": "docs/audits/build156/i18n-contribution-build.json",
+  "catalogMergeOwner": "ui",
+  "scope": "Actual current UpdateEngine/UpdateRepository lexical gate; UI catalog and full Android compile are separately verified.",
+  "actualCatalogTemplates": [
+    {
+      "command": [
+        "F:/DSHA/_toolchains/jdk-17/bin/javac.exe",
+        "-J-Duser.language=en",
+        "-encoding",
+        "UTF-8",
+        "--release",
+        "17",
+        "-cp",
+        "F:\\DSHA_RESTART\\app\\build\\build156-build-updates\\classes",
+        "-d",
+        "F:\\DSHA_RESTART\\app\\build\\build156-build-updates\\classes",
+        "F:\\DSHA_RESTART\\app\\build\\build156-build-updates\\UpdateTemplateFixture.java"
+      ],
+      "exitCode": 0,
+      "log": "app/build/build156-build-updates/template-javac.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "F:/DSHA/_toolchains/jdk-17/bin/java.exe",
+        "-Dfile.encoding=UTF-8",
+        "-cp",
+        "F:\\DSHA_RESTART\\app\\build\\build156-build-updates\\classes",
+        "UpdateTemplateFixture"
+      ],
+      "exitCode": 0,
+      "log": "app/build/build156-build-updates/templates.log",
+      "sha256": "0913bf2dc9634fb4f08ff6b55da8b8cbc6fcda69d31bb51f13cf58b6b38ba81e"
+    }
+  ],
+  "actualCatalogSha256": "5fec389d4393cce3e6f46a4a316978c6b54a23397a9d9d3be859e7a88e7c6e24",
+  "templateCount": 14
+}

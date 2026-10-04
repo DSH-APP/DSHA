@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "status": "REVIEWED_EXACT_COMPLETE_PARAGRAPHS",
+  "reviewedBeforeCount": 9,
+  "activeExplicitNonFindings": 8,
+  "absorbedIntoWholeTemplate": [
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+      "oldSignature": "+UiText.choose(\"原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。\",\"Original state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or enter the limited interface to export readable copies.\")",
+      "sourceSha256": "235d626350be8e5e3b853f82f95273390f0ec12df8e443906a0f2562deb28880",
+      "reason": "The complete footer is now inside the single registered maintenance body template, so its separate choose concatenation no longer exists."
+    }
+  ],
+  "baselineBeforeSha256": "3a90bfbb3d4868edc4272fe9e32731e3f27ba70be77f0d5714429825846909bf",
+  "baselineSha256": "ea8bfce055d6d6d5776efd0ccc6847805c918648b46db3705604e620f28e6f74",
+  "protectedDebtCount": 1,
+  "items": [
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在尝试清理旧版 Documents/dshdata；手动导出的备份与其他个人目录会保留…\",\"Attempting to remove legacy Documents/dshdata; exported backups and other personal folders stay untouched…\")+",
+      "sourceSha256": "59c698950d49d332d69243d227539cdeb360c8074c6d44608f8c9aef8569c5b6",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "A complete translated stage sentence is followed by an independent newline-prefixed progress line. The count line now uses the registered full template with raw entries and formatted bytes; the six stage sentences do not embed label fragments.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json",
+      "line": 403,
+      "excerpt": "396:   private static String formatProgress(String stage, long entries, long bytes) {\n397:     String count =\n398:         entries <= 0\n399:             ? \"\"\n400:             : com.deepseekharness.app.util.UiText.format(\n401:                 \"\\n已安全清理 %s 项 · %s\", entries, com.deepseekharness.app.util.Fmt.bytes(bytes));\n402:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PUBLIC.equals(stage))\n403:       return com.deepseekharness.app.util.UiText.choose(\n404:               \"正在尝试清理旧版 Documents/dshdata；手动导出的备份与其他个人目录会保留…\",\n405:               \"Attempting to remove legacy Documents/dshdata; exported backups and other personal folders stay untouched…\")\n406:           + count;\n407:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_RUNTIME.equals(stage))\n408:       return com.deepseekharness.app.util.UiText.choose(\n409:               \"正在清除运行环境、会话和插件…\", \"Removing the runtime, conversations, and plugins…\")\n410:           + count;\n411:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PRIVATE.equals(stage))\n412:       return com.deepseekharness.app.util.UiText.choose(\n413:               \"正在清除本机备份和应用私有文件…\", \"Removing local backups and private app files…\")\n414:           + count;\n415:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在清除运行环境、会话和插件…\",\"Removing the runtime, conversations, and plugins…\")+",
+      "sourceSha256": "59c698950d49d332d69243d227539cdeb360c8074c6d44608f8c9aef8569c5b6",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "A complete translated stage sentence is followed by an independent newline-prefixed progress line. The count line now uses the registered full template with raw entries and formatted bytes; the six stage sentences do not embed label fragments.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json",
+      "line": 408,
+      "excerpt": "401:                 \"\\n已安全清理 %s 项 · %s\", entries, com.deepseekharness.app.util.Fmt.bytes(bytes));\n402:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PUBLIC.equals(stage))\n403:       return com.deepseekharness.app.util.UiText.choose(\n404:               \"正在尝试清理旧版 Documents/dshdata；手动导出的备份与其他个人目录会保留…\",\n405:               \"Attempting to remove legacy Documents/dshdata; exported backups and other personal folders stay untouched…\")\n406:           + count;\n407:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_RUNTIME.equals(stage))\n408:       return com.deepseekharness.app.util.UiText.choose(\n409:               \"正在清除运行环境、会话和插件…\", \"Removing the runtime, conversations, and plugins…\")\n410:           + count;\n411:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PRIVATE.equals(stage))\n412:       return com.deepseekharness.app.util.UiText.choose(\n413:               \"正在清除本机备份和应用私有文件…\", \"Removing local backups and private app files…\")\n414:           + count;\n415:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))\n416:       return com.deepseekharness.app.util.UiText.choose(\n417:               \"正在清理缓存和临时文件…\", \"Clearing caches and temporary files…\")\n418:           + count;\n419:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n420:       return com.deepseekharness.app.util.UiText.choose("
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在清除本机备份和应用私有文件…\",\"Removing local backups and private app files…\")+",
+      "sourceSha256": "59c698950d49d332d69243d227539cdeb360c8074c6d44608f8c9aef8569c5b6",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "A complete translated stage sentence is followed by an independent newline-prefixed progress line. The count line now uses the registered full template with raw entries and formatted bytes; the six stage sentences do not embed label fragments.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json",
+      "line": 412,
+      "excerpt": "405:               \"Attempting to remove legacy Documents/dshdata; exported backups and other personal folders stay untouched…\")\n406:           + count;\n407:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_RUNTIME.equals(stage))\n408:       return com.deepseekharness.app.util.UiText.choose(\n409:               \"正在清除运行环境、会话和插件…\", \"Removing the runtime, conversations, and plugins…\")\n410:           + count;\n411:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PRIVATE.equals(stage))\n412:       return com.deepseekharness.app.util.UiText.choose(\n413:               \"正在清除本机备份和应用私有文件…\", \"Removing local backups and private app files…\")\n414:           + count;\n415:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))\n416:       return com.deepseekharness.app.util.UiText.choose(\n417:               \"正在清理缓存和临时文件…\", \"Clearing caches and temporary files…\")\n418:           + count;\n419:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n420:       return com.deepseekharness.app.util.UiText.choose(\n421:               \"正在重置设置、设备授权和 API Key…\", \"Resetting settings, device grants, and the API key…\")\n422:           + count;\n423:     return com.deepseekharness.app.util.UiText.choose(\n424:             \"格式化完成，正在返回欢迎页…\", \"Formatting is complete. Returning to welcome…\")"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在清理缓存和临时文件…\",\"Clearing caches and temporary files…\")+",
+      "sourceSha256": "59c698950d49d332d69243d227539cdeb360c8074c6d44608f8c9aef8569c5b6",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "A complete translated stage sentence is followed by an independent newline-prefixed progress line. The count line now uses the registered full template with raw entries and formatted bytes; the six stage sentences do not embed label fragments.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json",
+      "line": 416,
+      "excerpt": "409:               \"正在清除运行环境、会话和插件…\", \"Removing the runtime, conversations, and plugins…\")\n410:           + count;\n411:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PRIVATE.equals(stage))\n412:       return com.deepseekharness.app.util.UiText.choose(\n413:               \"正在清除本机备份和应用私有文件…\", \"Removing local backups and private app files…\")\n414:           + count;\n415:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))\n416:       return com.deepseekharness.app.util.UiText.choose(\n417:               \"正在清理缓存和临时文件…\", \"Clearing caches and temporary files…\")\n418:           + count;\n419:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n420:       return com.deepseekharness.app.util.UiText.choose(\n421:               \"正在重置设置、设备授权和 API Key…\", \"Resetting settings, device grants, and the API key…\")\n422:           + count;\n423:     return com.deepseekharness.app.util.UiText.choose(\n424:             \"格式化完成，正在返回欢迎页…\", \"Formatting is complete. Returning to welcome…\")\n425:         + count;\n426:   }\n427: \n428:   private static boolean isFactoryReset(BackupTaskState.Snapshot snapshot) {"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在重置设置、设备授权和 API Key…\",\"Resetting settings, device grants, and the API key…\")+",
+      "sourceSha256": "59c698950d49d332d69243d227539cdeb360c8074c6d44608f8c9aef8569c5b6",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "A complete translated stage sentence is followed by an independent newline-prefixed progress line. The count line now uses the registered full template with raw entries and formatted bytes; the six stage sentences do not embed label fragments.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json",
+      "line": 420,
+      "excerpt": "413:               \"正在清除本机备份和应用私有文件…\", \"Removing local backups and private app files…\")\n414:           + count;\n415:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))\n416:       return com.deepseekharness.app.util.UiText.choose(\n417:               \"正在清理缓存和临时文件…\", \"Clearing caches and temporary files…\")\n418:           + count;\n419:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n420:       return com.deepseekharness.app.util.UiText.choose(\n421:               \"正在重置设置、设备授权和 API Key…\", \"Resetting settings, device grants, and the API key…\")\n422:           + count;\n423:     return com.deepseekharness.app.util.UiText.choose(\n424:             \"格式化完成，正在返回欢迎页…\", \"Formatting is complete. Returning to welcome…\")\n425:         + count;\n426:   }\n427: \n428:   private static boolean isFactoryReset(BackupTaskState.Snapshot snapshot) {\n429:     return com.deepseekharness.app.util.BackupTaskKinds.is(FACTORY_RESET_KIND, snapshot.kind);\n430:   }\n431: \n432:   public boolean isFactoryReset(long id) {"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"格式化完成，正在返回欢迎页…\",\"Formatting is complete. Returning to welcome…\")+",
+      "sourceSha256": "59c698950d49d332d69243d227539cdeb360c8074c6d44608f8c9aef8569c5b6",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "A complete translated stage sentence is followed by an independent newline-prefixed progress line. The count line now uses the registered full template with raw entries and formatted bytes; the six stage sentences do not embed label fragments.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json",
+      "line": 423,
+      "excerpt": "416:       return com.deepseekharness.app.util.UiText.choose(\n417:               \"正在清理缓存和临时文件…\", \"Clearing caches and temporary files…\")\n418:           + count;\n419:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n420:       return com.deepseekharness.app.util.UiText.choose(\n421:               \"正在重置设置、设备授权和 API Key…\", \"Resetting settings, device grants, and the API key…\")\n422:           + count;\n423:     return com.deepseekharness.app.util.UiText.choose(\n424:             \"格式化完成，正在返回欢迎页…\", \"Formatting is complete. Returning to welcome…\")\n425:         + count;\n426:   }\n427: \n428:   private static boolean isFactoryReset(BackupTaskState.Snapshot snapshot) {\n429:     return com.deepseekharness.app.util.BackupTaskKinds.is(FACTORY_RESET_KIND, snapshot.kind);\n430:   }\n431: \n432:   public boolean isFactoryReset(long id) {\n433:     BackupTaskState.Snapshot snapshot = state.snapshot();\n434:     return id != 0 && snapshot.id == id && isFactoryReset(snapshot);\n435:   }"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+      "signature": "UiText.choose(\"环境重建完成，数据逐文件核验与运行试验通过。\\n\",\"Environment rebuilt; data verification and the runtime trial passed.\\n\")+",
+      "sourceSha256": "5d3d4ff417ef108ffb88ad994169fb4661c3e4e858b2959cf19b2b71cb50aac9",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "The complete translated rebuild-result sentence ends with a newline. The separately assembled cleanup outcome is either its own complete static result or registered complete error templates preserving raw error arguments. Joining these paragraphs is intentional.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json",
+      "line": 269,
+      "excerpt": "262:       } catch (IOException retained) {\n263:         cleanup +=\n264:             com.deepseekharness.app.util.UiText.format(\n265:                 \"\\n旧事务归档暂缓，原件保留：%s\",\n266:                 com.deepseekharness.app.backup.NativeBackupJobs.code(retained));\n267:       }\n268:       space.sample(Stage.RETIRED_CLEANUP, 0);\n269:       return com.deepseekharness.app.util.UiText.choose(\n270:               \"环境重建完成，数据逐文件核验与运行试验通过。\\n\",\n271:               \"Environment rebuilt; data verification and the runtime trial passed.\\n\")\n272:           + cleanup;\n273:     } catch (Exception failure) {\n274:       space.sample(Stage.FAILED, 0);\n275:       if (began && !RuntimeTasks.hasOtherTasks())\n276:         try {\n277:           transaction.rollback();\n278:           space.sample(Stage.ROLLED_BACK, 0);\n279:         } catch (Exception retained) {\n280:           failure.addSuppressed(retained);\n281:         }"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java",
+      "signature": "UiText.choose(\"独立应急 DSH 已就绪；正式环境保持原状。\",\"Independent recovery DSH is ready. The main environment is preserved.\")+",
+      "sourceSha256": "60ac14b4f30b2e6bf99ad6fcd32556b9fd0a658e25549214d77ee36e1f1eff1b",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "The complete recovery-ready sentence is followed by an optional independently translated credential notice. Each notice is a complete sentence with leading whitespace; no user credential or incomplete label is concatenated here.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json",
+      "line": 319,
+      "excerpt": "312:               RuntimeInstanceRegistry.shared()\n313:                   .registerRecovery(id, generation, identity, command, true);\n314:               created.recordOutcome(\"READY\", \"\");\n315:               publish(\n316:                   generation,\n317:                   id,\n318:                   \"READY\",\n319:                   UiText.choose(\n320:                           \"独立应急 DSH 已就绪；正式环境保持原状。\",\n321:                           \"Independent recovery DSH is ready. The main environment is preserved.\")\n322:                       + credentialNotice,\n323:                   \"\",\n324:                   auth.authUrl,\n325:                   exchange.cookie,\n326:                   auth.loopbackBaseUrl,\n327:                   credentialAvailable);\n328:             }\n329:           }\n330:         }\n331:         if (exchange == null && SystemClock.elapsedRealtime() - started > 60_000)"
+    }
+  ]
+}

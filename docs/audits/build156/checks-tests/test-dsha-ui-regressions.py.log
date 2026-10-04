@@ -1,0 +1,37 @@
+test_credentials_trimmed_by_field_not_wholesale (__main__.BackupLocalCredentialProtection.test_credentials_trimmed_by_field_not_wholesale) ... ok
+test_local_device_files_excluded (__main__.BackupLocalCredentialProtection.test_local_device_files_excluded) ... ok
+test_local_record_prefix_covers_browser_session (__main__.BackupLocalCredentialProtection.test_local_record_prefix_covers_browser_session) ... ok
+test_restore_rotates_local_token (__main__.BackupLocalCredentialProtection.test_restore_rotates_local_token) ... ok
+test_canonical_recheck_defeats_symlink (__main__.BridgeCredentialProtection.test_canonical_recheck_defeats_symlink) ... ok
+test_canonical_recheck_does_not_blanket_deny_rootfs (__main__.BridgeCredentialProtection.test_canonical_recheck_does_not_blanket_deny_rootfs) ... ok
+test_export_checks_path_policy (__main__.BridgeCredentialProtection.test_export_checks_path_policy) ... ok
+test_help_text_mentions_the_limit (__main__.BridgeCredentialProtection.test_help_text_mentions_the_limit) ... ok
+test_policy_covers_real_credential_files (__main__.BridgeCredentialProtection.test_policy_covers_real_credential_files) ... ok
+test_readfile_checks_path_policy (__main__.BridgeCredentialProtection.test_readfile_checks_path_policy) ... ok
+test_ids_unique (__main__.CatalogCoverage.test_ids_unique) ... ok
+test_new_ui_strings_are_translated (__main__.CatalogCoverage.test_new_ui_strings_are_translated) ... ok
+test_plugin_notification_strings_stay_translated (__main__.CatalogCoverage.test_plugin_notification_strings_stay_translated) ... ok
+test_language_dialog_offers_follow_system (__main__.LanguageDiscoverability.test_language_dialog_offers_follow_system) ... ok
+test_language_entry_shows_english_on_chinese_ui (__main__.LanguageDiscoverability.test_language_entry_shows_english_on_chinese_ui) ... ok
+test_language_entry_uses_stable_resource_id (__main__.LanguageDiscoverability.test_language_entry_uses_stable_resource_id) ... ok
+test_preference_key_matches_history (__main__.LanguageDiscoverability.test_preference_key_matches_history) ... ok
+test_app_notify_sets_content_intent (__main__.NotificationClickable.test_app_notify_sets_content_intent) ... ok
+test_auto_enter_judges_by_auth_url_not_by_failure_message (__main__.NotificationClickable.test_auto_enter_judges_by_auth_url_not_by_failure_message) ... ok
+test_content_intent_targets_main_activity_with_open_web (__main__.NotificationClickable.test_content_intent_targets_main_activity_with_open_web) ... ok
+test_dead_task_notifier_is_gone (__main__.NotificationClickable.test_dead_task_notifier_is_gone) ... ok
+test_foreground_suppression_uses_real_foreground_state (__main__.NotificationClickable.test_foreground_suppression_uses_real_foreground_state) ... ok
+test_main_activity_consumes_open_web (__main__.NotificationClickable.test_main_activity_consumes_open_web) ... ok
+test_open_web_registered_before_nav_selection (__main__.NotificationClickable.test_open_web_registered_before_nav_selection) ... ok
+test_system_language_is_pinned_early (__main__.NotificationClickable.test_system_language_is_pinned_early) ... ok
+test_system_language_supports_api_23 (__main__.NotificationClickable.test_system_language_supports_api_23) ... ok
+test_header_footer_are_inflated_after_layout_manager (__main__.PluginRecyclerSetup.test_header_footer_are_inflated_after_layout_manager) ... ok
+test_configstore_resolves_against_system (__main__.SystemLanguage.test_configstore_resolves_against_system) ... ok
+test_non_chinese_falls_back_to_english (__main__.SystemLanguage.test_non_chinese_falls_back_to_english) ... ok
+test_resolve_prefers_explicit_choice (__main__.SystemLanguage.test_resolve_prefers_explicit_choice) ... ok
+test_system_is_a_supported_value (__main__.SystemLanguage.test_system_is_a_supported_value) ... ok
+test_ui_text_never_stores_system_as_a_render_language (__main__.SystemLanguage.test_ui_text_never_stores_system_as_a_render_language) ... ok
+
+----------------------------------------------------------------------
+Ran 32 tests in 0.090s
+
+OK

@@ -6,6 +6,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -58,11 +59,13 @@ def deletion_fixture(root):
 
 class TransactionTest(unittest.TestCase):
     def setUp(self):
-        self.root = ROOT / 'app/build/round2-audit/b/plugin-transaction-tests' / str(uuid.uuid4())
-        self.root.mkdir(parents=True)
+        self.root = Path(tempfile.mkdtemp(prefix='dsha-plugin-transactions-'))
 
     def tearDown(self):
-        pass  # 本轮强杀日志和合成文件保留，便于核对失败边界。
+        if os.environ.get('DSHA_KEEP_FIXTURES') == '1':
+            print('KEPT_FIXTURE', self.root)
+        else:
+            shutil.rmtree(self.root)
 
     def kill(self, root, boundary, recovery=False, operation='install'):
         marker = root / 'plugin-boundary'
@@ -84,6 +87,7 @@ class TransactionTest(unittest.TestCase):
     def version(self, root, path):
         return json.loads((root / path / 'package.json').read_text())['version']
 
+    @unittest.skipIf(os.name == 'nt', '提交后的链接恢复需要 Android/Linux 的真实符号链接')
     def test_every_commit_boundary_recovers_or_preserves_finalized_user_changes(self):
         for boundary in ('prepared', 'old-moved', 'new-moved', 'activation-replaced', 'sources-replaced', 'history-retained', 'manifest-replaced', 'committed'):
             with self.subTest(boundary=boundary):
@@ -108,6 +112,7 @@ class TransactionTest(unittest.TestCase):
                         self.assertEqual('0.9.0', self.version(root, Path(module.lifecycle().history_path('test-plugin')).relative_to(root).as_posix() + '/package'))
                 self.assertEqual('newest conversation bytes', (root / 'root/.dsh/sessions/owned-conversation').read_text())
 
+    @unittest.skipIf(os.name == 'nt', '回切后的链接恢复需要 Android/Linux 的真实符号链接')
     def test_death_during_rollback_remains_recoverable(self):
         fixture(self.root); self.kill(self.root, 'manifest-replaced'); self.kill(self.root, 'rollback-new', True)
         with manager(self.root) as module:
@@ -288,6 +293,8 @@ if __name__ == '__main__':
             elif sys.argv[3] == 'delete':
                 module.cmd_delete('test-plugin')
             else:
-                module.register_plugin(str(root / 'incoming'), 'owned fixture', reviewed=True)
+                link = patch.object(module.os, 'symlink', side_effect=lambda src, dst, **_: shutil.copytree(src, dst)) if os.name == 'nt' else contextlib.nullcontext()
+                with link:
+                    module.register_plugin(str(root / 'incoming'), 'owned fixture')
     else:
         unittest.main(verbosity=2)

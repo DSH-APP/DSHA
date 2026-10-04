@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "owner": "mobile_server154",
+  "baselineBuild": 153,
+  "phase": "implemented-and-host-verified",
+  "scope": "Windows x64 Node 24.18.0 loopback HTTP and fingerprinted raw DSH 0.2.0-rc.2 temporary-directory fixtures; no phone/user data/model calls",
+  "items": [
+    {
+      "id": "D-BUG-08",
+      "status": "fixed",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+        "tools/mobile-server/compress.js",
+        "tools/apply-mobile-client-patches.mjs",
+        "tools/test-mobile-server-streams.mjs",
+        "tools/test-mobile-server-patches.mjs"
+      ],
+      "current": "No response-body buffering. Every write delegates to native Node with its encoding, callback and returned backpressure. Only a complete synchronous end(data) JSON body between 4 KiB and 1 MiB can compress; staged headers are released after one event-loop turn or immediately on write/flushHeaders. SSE, HEAD, no-body statuses, explicit chunking/encoding, strong byte validators, strict Content-Length, oversized bodies and q=0 remain native.",
+      "checks": [
+        "tools/test-mobile-server-streams.mjs: 28 real HTTP socket behavior tests PASS, including pre-end client data and callbacks, false/drain, string/Buffer/Uint8Array overloads, unfinished JSON/SSE and client abort, HEAD/empty, native validation and write-after-end callback errors",
+        "tools/test-mobile-server-patches.mjs: 3 PASS for fixed upstream SHA/anchor replay, canonical-output idempotence and source drift rejection",
+        "node tools/apply-mobile-client-patches.mjs --server app/build/mobile-upstream-a094/lib --check: PASS against a094288883b343e848d7f9cf302d73ad8ed4794b physical upstream bytes"
+      ],
+      "residual": [
+        "Compression remains a reversible process-wide ServerResponse prototype hook, so exact host/other-plugin HTTP behavior is covered by these Node fixtures; Android phone/long-session performance is not claimed.",
+        "Multi-write and greater-than-1-MiB JSON is deliberately streamed without compression; no arbitrary-duration or unbounded body buffering is retained."
+      ]
+    },
+    {
+      "id": "D-PLUG-03",
+      "status": "fixed-mobile-lifecycle",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js",
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/index.js",
+        "tools/mobile-server/delete-session.js",
+        "tools/mobile-server/index.js",
+        "tools/apply-mobile-client-patches.mjs",
+        "tools/test-mobile-delete.mjs"
+      ],
+      "current": "Capture the exact public AgentHandle at rc2 agents.create/resume, including traced Cordis consumers. Delete live sessions only after cancel, awaited whenIdle, sessions.flush returning true, complete handle.dispose and public registry absence checks. Reject unknown capabilities or failed/unfinished lifecycle operations with 409 and retain originals. Guard concurrent same-id creation/resume/deletion. Retain logs under the persistence root .sessions-trash with manifest; no TTL or automatic rm. Detect symlink/unknown-suffix conflicts and restore earlier payload names when a move fails. Workspace errors are reported as explicit warnings after retained deletion.",
+      "checks": [
+        "tools/test-mobile-delete.mjs: 15 PASS with real fingerprinted rc2 Cordis/SessionStore/AgentRegistry/AgentLoop/Jsonl and temporary roots",
+        "Real live maintenance cancellation waits for final event, flushes, disposes exact agent/session, retains final log event and permits read/write reopen after restore",
+        "Real resume and traced scoped-owner creation dispose only the agent lifecycle, keeping the consumer fiber alive",
+        "Flush rejection, unproven flush, idle rejection, dispose rejection, uncaptured live capability, setup race and duplicate deletion all retain logs/refuse destructive movement",
+        "24h-old unknown trash remains; suffix conflict preserves unknown original and rolls back prior renames; trash junction refuses external-directory writes",
+        "tools/test-mobile-auth.mjs: 19 PASS; existing Host/Origin/body-size gate remains authoritative",
+        "Combined test log: docs/audits/build154/mobile-server-tests.txt, 65 PASS / 0 fail / 0 skip"
+      ],
+      "residual": [
+        "Backup exclusion for precisely .dsh/sessions/.sessions-trash is owned by G1/G3 and is reconciled through their separate changes/tests; this record claims the mobile lifecycle portion.",
+        "Config-created agents or live agents from before lifecycle capture have no public owned handle and are intentionally refused with 409 until their owner stops them; no private-store fallback is provided.",
+        "No production Android session deletion or destructive phone fault injection was performed."
+      ]
+    }
+  ],
+  "newRuntimeInputs": [
+    "tools/mobile-server/compress.js",
+    "tools/mobile-server/delete-session.js",
+    "tools/mobile-server/index.js"
+  ],
+  "newHostTests": [
+    "tools/test-mobile-server-streams.mjs",
+    "tools/test-mobile-server-patches.mjs"
+  ],
+  "unchangedFrontend": "lib/client.js, upstream version 3.0.3 / a094288883b343e848d7f9cf302d73ad8ed4794b"
+}

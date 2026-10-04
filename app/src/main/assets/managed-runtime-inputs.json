@@ -73,16 +73,6 @@
       "executable": false
     },
     {
-      "asset": "startup-recovery.py",
-      "target": "root/.dsh/startup-recovery.py",
-      "executable": false
-    },
-    {
-      "asset": "startup-checkpoints.py",
-      "target": "root/.dsh/startup-checkpoints.py",
-      "executable": false
-    },
-    {
       "asset": "device-shell-policy.py",
       "target": "root/.dsh/device-shell-policy.py",
       "executable": false
@@ -276,10 +266,64 @@
       "asset": "dsha-runtime-env.sh",
       "target": "etc/profile.d/dsha-runtime-env.sh",
       "executable": false
+    },
+    {
+      "asset": "runtime-tools.json",
+      "target": "root/.dsh/runtime-tools.json",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins.json",
+      "target": "root/.dsh/builtin-plugins.json",
+      "executable": false
+    },
+    {
+      "asset": "credential-paths.json",
+      "target": "root/.dsh/credential-paths.json",
+      "executable": false
+    },
+    {
+      "asset": "adb-wheels.lock.json",
+      "target": "root/.dsh/adb-wheels.lock.json",
+      "executable": false
+    },
+    {
+      "asset": "runtime-patches.json",
+      "target": "root/.dsh/runtime-patches.json",
+      "executable": false
+    },
+    {
+      "asset": "bridge-token-compat.cjs",
+      "target": "root/.dsh/bridge-token-compat.cjs",
+      "executable": false
+    },
+    {
+      "asset": "credential-yaml-filter.cjs",
+      "target": "root/.dsh/credential-yaml-filter.cjs",
+      "executable": false
+    },
+    {
+      "asset": "legacy-preset-convert.cjs",
+      "target": "root/.dsh/legacy-preset-convert.cjs",
+      "executable": false
+    },
+    {
+      "asset": "adb-pair.py",
+      "target": "root/.dsh/adb-pair.py",
+      "executable": true
+    },
+    {
+      "asset": "adb-setup.sh",
+      "target": "root/.dsh/adb-setup.sh",
+      "executable": true
+    },
+    {
+      "asset": "adb-script-version",
+      "target": "root/.dsh/script-version",
+      "executable": false
     }
   ],
   "assetFiles": [
-    "agent-preset-patch.json",
     "client-combo-patch.json",
     "composer-enter-patch.json",
     "conversation-materialized-patch.json",
@@ -289,14 +333,15 @@
     "glibc-python.tar.gz",
     "language-patch.json",
     "lexical-claim-patch.json",
-    "models-navigation-patch.json",
     "office-fonts-patch.json",
     "offline-rootfs.bin",
     "offline-rootfs.version",
     "pdf-compat-patch.json",
     "persona-compat-patch.json",
-    "plugin-manager-navigation-patch.json",
+    "plugin-manager-auto-enable-patch.json",
     "plugin-manager-policy-patch.json",
+    "queue-agent-patch.json",
+    "queue-dock-patch.json",
     "pnpm-runtime.bin",
     "profile-settings-review.js",
     "rc1-settings-migration-patch.json",
@@ -304,7 +349,10 @@
     "runtime-trial-plugin.js",
     "session-interaction-patch.json",
     "subagent-navigation-patch.json",
-    "ubuntu-tools.bin"
+    "tooltip-entry-patch.json",
+    "tooltip-interaction-patch.json",
+    "ubuntu-tools.bin",
+    "workspace-directory-policy-patch.json"
   ],
   "assetTrees": [
     "web-integration",
@@ -314,7 +362,8 @@
   "launcherTrees": [
     "app/src/main/jniLibs",
     "app/src/low/jniLibs",
-    "app/src/main/java/com/deepseekharness/app/runtime"
+    "app/src/main/java/com/deepseekharness/app/runtime",
+    "app/src/main/java/com/deepseekharness/app/backup"
   ],
   "launcherSources": [
     "util/IsolatedCommand.java",
@@ -339,6 +388,121 @@
     "util/TerminalReady.java",
     "util/TerminalTabs.java",
     "DshaApp.java",
-    "PtySession.java"
+    "PtySession.java",
+    "util/ColdInstallPlan.java",
+    "util/ColdInstallPackages.java",
+    "util/PermissionMode.java",
+    "util/ColdRuntimeSelection.java",
+    "util/Ids.java",
+    "util/GuestPaths.java",
+    "util/BackupScopes.java",
+    "util/NpmPackageName.java",
+    "util/BuiltinPluginRegistry.java",
+    "util/CredentialPathRules.java",
+    "util/CredentialPaths.java",
+    "util/BackupTaskKinds.java",
+    "util/ManagedPatchChain.java",
+    "util/DiagnosticFailures.java",
+    "util/BundledRootfsAsset.java",
+    "util/AndroidGroupMap.java",
+    "util/BoundedOutputDrain.java",
+    "util/InstallStage.java",
+    "util/InstallFailure.java",
+    "core/StartupPipeline.java",
+    "core/WebOutputSession.java",
+    "core/WebStopCoordinator.java",
+    "core/DiagnosticHistory.java",
+    "core/DiagnosticLog.java",
+    "HttpShellService.java",
+    "DshaAccessibilityService.java",
+    "bridge/AdbBridge.java",
+    "util/SensitiveData.java",
+    "recovery/RecoveryStoragePlan.java",
+    "runtime/GuestPreparationFailure.java",
+    "util/StartupPageGate.java",
+    "HarnessService.java",
+    "util/DshAuthSession.java",
+    "util/DshAuthUrl.java",
+    "util/HttpProtocol.java",
+    "util/WebHealthProbe.java",
+    "util/VscreenBridgeRequest.java",
+    "util/TouchGestureDispatch.java",
+    "util/ManagedRuntimePaths.java",
+    "util/ProcStat.java",
+    "util/DiagnosticReport.java",
+    "util/StorageCategoryLabels.java",
+    "util/ScheduledBackupOwner.java",
+    "util/FileKind.java",
+    "util/NotificationIds.java",
+    "util/RuntimeTrialOutputPolicy.java",
+    "util/InstallProbe.java",
+    "util/BridgeRoutes.java",
+    "util/ProcessPipePoller.java",
+    "util/ApplicationOwner.java",
+    "core/HarnessSessionState.java",
+    "core/WebReadyTasks.java",
+    "util/WebLaunchCommand.java",
+    "util/LanAddressPolicy.java",
+    "util/ResolverConfig.java",
+    "util/ContainerFileTransfers.java",
+    "util/BridgeCredentialAuth.java",
+    "util/BridgeCredentialFiles.java",
+    "util/SelfPackageIdentity.java",
+    "util/DeviceAppPolicy.java",
+    "util/DeviceShellPolicy.java",
+    "util/ScreenTarget.java",
+    "util/SensitiveAppPolicy.java",
+    "util/VirtualScreenRequestFence.java",
+    "util/CoalescingPoller.java",
+    "DeviceBridgeService.java",
+    "DeviceShellExecutor.java",
+    "ShellService.java",
+    "RootShell.java",
+    "RootShellMain.java",
+    "vscreen/VirtualScreenCore.java",
+    "vscreen/VirtualScreenManager.java",
+    "vscreen/VirtualScreenPreviews.java",
+    "core/WebLifecycleController.java",
+    "core/LanAuthBridge.java",
+    "core/HostConfigService.java",
+    "core/WebProcessSession.java",
+    "core/StartupEnvironmentActions.java",
+    "core/StartupIssueBudget.java",
+    "core/PluginJournalRecovery.java",
+    "core/BackupTask.java",
+    "core/InstallRepository.java",
+    "util/ApplicationServiceSlot.java",
+    "util/Rc1MigrationReuse.java",
+    "util/RootShellCandidates.java",
+    "DeviceFileCore.java",
+    "bridge/AndroidDeviceFiles.java",
+    "bridge/AppDeviceActions.java",
+    "util/DeviceFileOperations.java",
+    "util/LanTokenState.java",
+    "util/DeviceScriptProof.java",
+    "util/PrivilegedContextFailure.java",
+    "util/ProcessBirthHandshake.java",
+    "util/TrialWaitBudget.java",
+    "util/WebForceStop.java",
+    "util/WebStopDiagnostic.java",
+    "util/WebStopException.java",
+    "data/PortableSettings.java",
+    "vscreen/VirtualScreenAccessibility.java"
+  ],
+  "generatorSources": [
+    "tools/mobile-server/compress.js",
+    "tools/mobile-server/delete-session.js",
+    "tools/mobile-server/index.js",
+    "tools/apply-mobile-client-patches.mjs",
+    "tools/generate-builtin-plugins.py",
+    "tools/generate-credential-paths.py",
+    "tools/prepare-runtime-tools.py",
+    "tools/runtime-tools.lock.json",
+    "tools/asset-deployment.json",
+    "tools/asset_deployment.py",
+    "tools/prepare-standard-assets.py",
+    "tools/verify-asset-deployment.py",
+    "tools/source_text.py",
+    "tools/backup-dependencies.lock.json"
   ]
 }

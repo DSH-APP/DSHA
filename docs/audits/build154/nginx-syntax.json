@@ -1,0 +1,8 @@
+{
+  "source": "https://nginx.org/download/nginx-1.28.3.zip",
+  "downloadSha256": "aad7bf75d669ece7671688bfdf35f1093d6a30d2e62469405f4d55d8d82d5fd3",
+  "configurationSha256": "932012e93f9eddafb6a57d68a3488c4b51e164f453fcc61b231cd1c677d11cce",
+  "exitCode": 0,
+  "syntaxLogSha256": "2e33233d07fc895fde5f6250c9208c622d8b29246b2700ab10042ed963c09d4c",
+  "scope": "Windows nginx 1.28.3 syntax with isolated fixture certificate/paths; no server deployment or Linux server claim"
+}

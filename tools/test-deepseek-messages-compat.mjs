@@ -1,6 +1,6 @@
 import { testRuntime } from './test-runtime-fixture.mjs';
 import assert from 'node:assert/strict';
-import { readFile, unlink, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, realpath, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
@@ -35,6 +35,7 @@ function archiveText(entry) {
 function buildScriptPatchedSource() {
   const script = [
     'import importlib.util, pathlib, sys',
+    'sys.path.insert(0, str(pathlib.Path(sys.argv[1]).resolve().parent))',
     'spec=importlib.util.spec_from_file_location("dsha_runtime_builder", sys.argv[1])',
     'module=importlib.util.module_from_spec(spec)',
     'spec.loader.exec_module(module)',
@@ -79,8 +80,8 @@ async function applyRecipe(source) {
   return patched;
 }
 
-async function loadSerialize(source, label) {
-  const testFile = path.join(path.dirname(moduleFile), `.dsha-messages-${label}-${process.pid}-${Date.now()}.mjs`);
+async function loadSerialize(source, label, directory) {
+  const testFile = path.join(directory, `.dsha-messages-${label}-${process.pid}-${Date.now()}.mjs`);
   await writeFile(testFile, `${source}\nexport { serialize as __dshaSerializeForTest };\n`, 'utf8');
   try {
     return (await import(`${pathToFileURL(testFile).href}?v=${Date.now()}`)).__dshaSerializeForTest;
@@ -125,10 +126,19 @@ assert.equal(occurrences(archiveSource, 'DSHA_DEEPSEEK_MESSAGES_PROJECTED_TOOL_C
 assert.equal(occurrences(archiveSource,
   'if (block.type === "tool-call") return [dshaMessagesProjectedToolCall(block)];'), 1,
   'generated runtime must route nested tool calls through the compatibility projection');
-const unpatchedSerialize = await loadSerialize(source, 'upstream');
+const fixtureRoot = await mkdtemp(path.join(root, 'app/build/deepseek-messages-source-'));
+try {
+const copiedPackage = path.join(fixtureRoot, 'package');
+await cp(path.dirname(path.dirname(moduleFile)), copiedPackage,
+  {recursive:true, force:false, errorOnExist:true, verbatimSymlinks:true});
+await symlink(runtime, path.join(fixtureRoot, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
+const probeDirectory = path.join(copiedPackage, 'lib');
+assert.equal(await readFile(path.join(probeDirectory, 'index.js'), 'utf8'), source,
+  'the owned package copy must contain the verified current upstream bytes');
+const unpatchedSerialize = await loadSerialize(source, 'upstream', probeDirectory);
 // Execute the bytes read from dsh-runtime.bin while resolving the locked
 // alpha.2 dependencies beside the fixture module.
-const serialize = await loadSerialize(archiveSource, 'archive');
+const serialize = await loadSerialize(archiveSource, 'archive', probeDirectory);
 const connection = {
   models: [{ id: 'deepseek-test', maxTokens: 4096, inputModalities: ['text', 'image'] }],
   defaults: { thinking: 'disabled', reasoningEffort: 'off' },
@@ -353,3 +363,10 @@ console.log(JSON.stringify({
   scenarios: ['agent-team', 'subagent-relay', 'compact', 'direct-tools',
     'error-tool-result', 'image-tool-result', 'old-session-replay', 'unsupported-content-guard']
 }));
+} finally {
+  const owned = await realpath(fixtureRoot);
+  const relative = path.relative(path.join(root, 'app/build'), owned);
+  if (!relative || relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative))
+    throw Error('Unsafe DeepSeek source fixture cleanup');
+  await rm(owned, {recursive:true, force:true});
+}

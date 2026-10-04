@@ -4,7 +4,7 @@
         <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:background="@drawable/bg_chip" android:fontFamily="monospace" android:paddingStart="@dimen/gap_control" android:paddingTop="7dp" android:paddingEnd="@dimen/gap_control" android:paddingBottom="7dp" android:text="@string/ui_m0178" android:ellipsize="end" android:maxLines="1" android:textColor="@color/text_secondary" android:textSize="@dimen/text_caption" android:gravity="center" android:includeFontPadding="false" />
         <TextView android:id="@+id/term_ctrlc" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0050" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" style="@style/Widget.DSHA.ToolbarAction" />
         <TextView android:id="@+id/term_clear" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="@string/ui_m0164" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" style="@style/Widget.DSHA.ToolbarAction" />
-        <TextView android:id="@+id/term_pty" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="PTY" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" style="@style/Widget.DSHA.ToolbarAction" />
+        <TextView android:id="@+id/term_pty" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="@string/ui_terminal_pty" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" style="@style/Widget.DSHA.ToolbarAction" />
     </LinearLayout>
     <include layout="@layout/view_terminal_tabs" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:background="@drawable/bg_preview" android:orientation="vertical">
@@ -12,7 +12,7 @@
             <TextView android:id="@+id/term_output" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:padding="@dimen/card_pad" android:textColor="@color/text_secondary" android:textIsSelectable="true" android:textSize="@dimen/text_caption" />
         </ScrollView>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/card" android:gravity="center_vertical" android:orientation="horizontal" android:padding="@dimen/gap_tight">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="monospace" android:text="# " android:textColor="@color/ok" android:textSize="@dimen/text_caption" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="monospace" android:text="@string/ui_terminal_prompt" android:textColor="@color/ok" android:textSize="@dimen/text_caption" />
             <EditText android:id="@+id/term_input" android:minHeight="48dp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:background="@android:color/transparent" android:fontFamily="monospace" android:hint="@string/ui_m0024" android:imeOptions="actionSend" android:inputType="text" android:maxLines="1" android:textColor="@color/text" android:textColorHint="@color/text_muted" android:textSize="@dimen/text_label" />
         </LinearLayout>
     </LinearLayout>

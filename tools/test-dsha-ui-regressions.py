@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""锁定三个已修复的回归点：语言可发现性、系统语言识别、通知可点击。
+"""Source/resource guards for language, notification and credential wiring.
 
-纯静态断言（读源码/资源），不需要 Android 运行时，可在 CI 与本地快速跑：
+These static checks complement real JVM policies and host restore fixtures; they do not
+prove Activity, NotificationManager, Android language services or restore execution.
+
+Run without Android:
   python3 tools/test-dsha-ui-regressions.py
-
-为什么用源码断言而不是单测：这三处都不是纯逻辑 —— 它们分别落在布局代码、
-偏好解析与 PendingIntent 构建上，跑起来需要 Activity/NotificationManager。
-这里钉住的是「修复本身的存在与形状」，防止后来的重构悄悄改回去。
 """
 from pathlib import Path
+import importlib.util
 import json
 import re
 import unittest
@@ -32,7 +32,21 @@ class LanguageDiscoverability(unittest.TestCase):
         a = '{http://schemas.android.com/apk/res/android}'
         row = next(node for node in root.iter() if node.get(a+'id') == '@+id/settings_appearance')
         self.assertEqual(row.get(a+'focusable'), 'true')
-        self.assertTrue(any('Language' in node.get(a+'text', '') for node in row.iter()))
+        strings = {}
+        for file in sorted((ROOT / 'app/src/main/res/values').glob('*.xml')):
+            for resource in ET.parse(file).getroot().findall('string'):
+                strings[resource.get('name')] = ''.join(resource.itertext())
+        def resolve(value):
+            seen = set()
+            while value.startswith('@string/'):
+                name = value.removeprefix('@string/')
+                self.assertNotIn(name, seen, 'language title resource cycle')
+                seen.add(name)
+                self.assertIn(name, strings, 'language title references a missing string')
+                value = strings[name]
+            return value
+        self.assertTrue(any('Language' in resolve(node.get(a+'text', '')) for node in row.iter()),
+                        'The resolved Chinese-page language entry must remain discoverable in English')
 
     def test_language_entry_uses_stable_resource_id(self):
         self.assertIn('v.findViewById(R.id.settings_language)', self.settings)
@@ -83,7 +97,7 @@ class SystemLanguage(unittest.TestCase):
     def test_ui_text_never_stores_system_as_a_render_language(self):
         ui = read('app/src/main/java/com/deepseekharness/app/util/UiText.java')
         # 渲染层只应看到 zh/en；system 必须被解析掉，否则 choose() 永远走中文分支
-        self.assertIn('language=UiLanguagePreference.resolve(value,SystemLanguage.tag());', ui)
+        self.assertRegex(ui, r'language\s*=\s*UiLanguagePreference\.resolve\(\s*value\s*,\s*SystemLanguage\.tag\(\s*\)\s*\)\s*;')
         self.assertNotIn('language=UiLanguagePreference.normalize(value)', ui)
 
     def test_configstore_resolves_against_system(self):
@@ -126,9 +140,11 @@ class NotificationClickable(unittest.TestCase):
         # setSelectedItemId 会同步触发监听器创建 LaunchFragment，
         # 标记必须在它之前登记，否则参数带不进去。
         main = read('app/src/main/java/com/deepseekharness/app/ui/MainActivity.java')
-        register = main.index('consumeOpenWeb(getIntent())')
-        select = main.index('nav.setSelectedItemId(getIntent().getBooleanExtra("open_plugins"')
-        self.assertLess(register, select,
+        register = re.search(r'consumeOpenWeb\(\s*getIntent\(\s*\)\s*\)\s*;', main)
+        select = re.search(r'nav\.setSelectedItemId\(\s*getIntent\(\s*\)\.getBooleanExtra\(\s*"open_plugins"', main)
+        self.assertIsNotNone(register, 'open_web 标记必须在 onCreate 登记')
+        self.assertIsNotNone(select, '初始导航仍须按 open_plugins 选择')
+        self.assertLess(register.start(), select.start(),
                         "consumeOpenWeb 必须在 setSelectedItemId 之前调用，否则 open_web 参数丢失")
 
     def test_system_language_is_pinned_early(self):
@@ -137,10 +153,11 @@ class NotificationClickable(unittest.TestCase):
         src = read('app/src/main/java/com/deepseekharness/app/util/SystemLanguage.java')
         self.assertIn('private static volatile String cached', src, "必须有锁存字段")
         self.assertIn('public static void initialize()', src, "必须提供 initialize()")
-        self.assertIn('if (cached == null) cached = detect();', src, "initialize 只生效第一次")
+        self.assertIn('initializeFromSystemTag', src, "锁存必须经过同一个已测试的状态入口")
+        self.assertIn('if (initialized) return;', src)
         app = read('app/src/main/java/com/deepseekharness/app/DshaApp.java')
         # 必须在 LanguageController.apply() 之前（后者会 Locale.setDefault）
-        init_at = app.index('SystemLanguage.initialize()')
+        init_at = re.search(r'SystemLanguage\.initialize\(', app).start()
         apply_at = app.index('LanguageController.apply(this)')
         self.assertLess(init_at, apply_at,
                         "SystemLanguage.initialize() 必须在 LanguageController.apply() 之前")
@@ -220,10 +237,12 @@ class BackupLocalCredentialProtection(unittest.TestCase):
         self.engine = read('app/src/main/assets/backup-engine.py')
 
     def test_local_device_files_excluded(self):
-        self.assertIn('LOCAL_DEVICE_FILES', self.engine)
-        self.assertIn('".bridge_token"', self.engine, "桥 token 必须从备份排除")
-        self.assertIn('".anonymous-user-id"', self.engine, "本机标识必须从备份排除")
-        self.assertIn('if scope == "full" and name in LOCAL_DEVICE_FILES:', self.engine)
+        spec=importlib.util.spec_from_file_location('current_backup_engine',ROOT/'app/src/main/assets/backup-engine.py')
+        engine=importlib.util.module_from_spec(spec);spec.loader.exec_module(engine)
+        for name in ('.bridge_token','.anonymous-user-id','.bridge_status.interrupted'):
+            self.assertTrue(engine.machine_name(name),name)
+        self.assertFalse(engine.machine_name('personal-project.env'))
+        self.assertIn('machine_name(name)',self.engine)
 
     def test_credentials_trimmed_by_field_not_wholesale(self):
         # 整文件排除会让用户换机后 API key 全丢，必须字段级剔除
@@ -239,8 +258,17 @@ class BackupLocalCredentialProtection(unittest.TestCase):
     def test_restore_rotates_local_token(self):
         # resetTokenAfterRestore 曾是死代码：老备份恢复后桥会拒绝所有请求
         src = read('app/src/main/java/com/deepseekharness/app/BackupManager.java')
-        self.assertIn('HttpShellService.resetTokenAfterRestore()', src,
-                      "恢复提交后必须轮换本机凭据，否则老备份恢复后桥不可用")
+        for name in ('restoreWithinDataTask', 'restorePrepared'):
+            method = src.split('public static String ' + name + '(', 1)[1]
+            method = method.split('public static ', 1)[0]
+            committed = method.index('if (!result.optBoolean("committed"))')
+            rotation = re.search(r'HttpShellService\.resetTokenAfterRestore\(\s*'
+                                 r'controller\.context\(\)\s*\)', method)
+            self.assertIsNotNone(rotation, name + "提交后必须轮换当前应用的本机凭据")
+            self.assertGreater(rotation.start(), committed,
+                               name + "不能在未确认恢复提交前轮换凭据")
+            self.assertLess(rotation.start(), method.index('return restoreMessage('),
+                            name + "不能先报告成功再轮换凭据")
 
 
 class CatalogCoverage(unittest.TestCase):

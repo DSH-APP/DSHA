@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "lane": "legacy",
+  "purpose": "Exact former source bytes remain history; current deployment and tests forbid their execution or APK selection.",
+  "sources": [
+    {
+      "source": "app/src/main/assets/dsh-deps-heal.sh",
+      "saved": "tools/history/build156/unused-assets/dsh-deps-heal.sh",
+      "sha256": "cc7d5644325fe0da1395bf37854ef81f32b14928274dd297837b42f2d4be696b",
+      "bytes": 4627,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/fix-stale-bundles.sh",
+      "saved": "tools/history/build156/unused-assets/fix-stale-bundles.sh",
+      "sha256": "20f35864222b08c868d7c4728b27be95ce7bd0dff05ac328e17c0dd17884b52b",
+      "bytes": 2785,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/flatten-l2s.py",
+      "saved": "tools/history/build156/unused-assets/flatten-l2s.py",
+      "sha256": "57dcde8eb8feb0db240baa47e896a05f8d1ad1320127391e79cccc8388da9d01",
+      "bytes": 9051,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/fs-write-patch.sh",
+      "saved": "tools/history/build156/unused-assets/fs-write-patch.sh",
+      "sha256": "3d0f4c9da218ed2d0fd26eb91ce2a17d13acceda2017aaf10164f28641febda8",
+      "bytes": 7811,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/heal-pnpm-shells.py",
+      "saved": "tools/history/build156/unused-assets/heal-pnpm-shells.py",
+      "sha256": "b4a89e8d91b40e828a899e05f1f18e69e414ce3974566299b5e83b75e265d859",
+      "bytes": 7249,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/heal-profile-boot.py",
+      "saved": "tools/history/build156/unused-assets/heal-profile-boot.py",
+      "sha256": "fae1664e191bacf77bfa30a66ea9844745ea0651515f378d36b972189559d9bb",
+      "bytes": 6721,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/heal-session.sh",
+      "saved": "tools/history/build156/unused-assets/heal-session.sh",
+      "sha256": "74a777da58a98943d5834f40685e31020265027e24dc5edb0699d474bd28f1cb",
+      "bytes": 1398,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/heal-sessions.py",
+      "saved": "tools/history/build156/unused-assets/heal-sessions.py",
+      "sha256": "d7e97239f92026e00bc52f1ceeffb8b59aee06ca15f4a333cefaedbdf6502544",
+      "bytes": 17165,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/migrate-public-data.sh",
+      "saved": "tools/history/build156/unused-assets/migrate-public-data.sh",
+      "sha256": "e8a670d8b1cb319630bd872722fda05a26c17ea3b61944f3226d5af0035ec15b",
+      "bytes": 4112,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/webserver-auth-patch.sh",
+      "saved": "tools/history/build156/unused-assets/webserver-auth-patch.sh",
+      "sha256": "0aed65c27904b59e01aeb5207f8ef4c3f1f2573026299529d9cd01c519ffeb24",
+      "bytes": 5696,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/webui-degrade-patch.sh",
+      "saved": "tools/history/build156/unused-assets/webui-degrade-patch.sh",
+      "sha256": "4cebcc4233197723b1acfafb772248f13c4c042a347a8ed718716765c3997313",
+      "bytes": 1465,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/webui-origin-port-patch.sh",
+      "saved": "tools/history/build156/unused-assets/webui-origin-port-patch.sh",
+      "sha256": "8647f3908b37887deaff1bc109a5c47a6c956fd32bba21854cbe77a7c6c63ffa",
+      "bytes": 2378,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    },
+    {
+      "source": "app/src/main/assets/webui-polyfill.sh",
+      "saved": "tools/history/build156/unused-assets/webui-polyfill.sh",
+      "sha256": "61e7355d1c1c14d46c8bf1e954ebc5a38d180dd4f3965efcbdeca4bd798ae543",
+      "bytes": 4010,
+      "reason": "No production Java, managed input, recovery consumer, build tool or current host test executes this retired implementation."
+    }
+  ]
+}

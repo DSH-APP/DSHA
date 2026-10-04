@@ -1,0 +1,34 @@
+[
+  {
+    "zh": "检查离线安装运行方式：%s",
+    "en": "Checking cold-install runtime: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java"
+    ]
+  },
+  {
+    "zh": "使用已验证方式安装离线工具：%s",
+    "en": "Installing offline tools with verified runtime: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java"
+    ]
+  },
+  {
+    "zh": "离线工具尚未安装完成；已保留解压文件、安装现场和诊断：\n%s",
+    "en": "Offline tools are incomplete; extracted files, installation state and diagnostics are retained:\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java"
+    ]
+  },
+  {
+    "zh": "隔离检查插件无法启动，详细原因：\n%s",
+    "en": "The isolated verification plugin could not start. Details:\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java"
+    ]
+  }
+]

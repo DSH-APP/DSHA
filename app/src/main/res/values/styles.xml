@@ -5,16 +5,7 @@
 -->
 <resources>
 
-    <style name="InstallStep" parent="Widget.DSHA.Button">
-        <item name="android:minHeight">56dp</item>
-        <item name="android:gravity">center</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingRight">16dp</item>
-        <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">12dp</item>
-        <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:background">@drawable/bg_btn</item>
-    </style>
+
 
     <style name="PluginAction" parent="DshaText.Label">
         <item name="android:includeFontPadding">false</item>
@@ -32,12 +23,7 @@
     </style>
 
     <!-- 页面主标题（每页顶部只有一个） -->
-    <style name="DshaText.Display" parent="">
-        <item name="android:textSize">@dimen/text_display</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text</item>
-        <item name="android:letterSpacing">-0.01</item>
-    </style>
+
 
     <!-- 区块标题（卡片内的小节名） -->
     <style name="DshaText.Title" parent="">
@@ -68,11 +54,7 @@
     </style>
 
     <!-- 卡片容器：统一底色、圆角、内边距 -->
-    <style name="DshaCard" parent="">
-        <item name="android:background">@drawable/bg_card</item>
-        <item name="android:padding">@dimen/card_pad</item>
-        <item name="android:orientation">vertical</item>
-    </style>
+
 
 
     <!-- 让 <Button> 回到「尊重 android:background」的行为。
@@ -127,10 +109,7 @@
     <style name="Widget.DSHA.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
         <item name="android:textColor">@color/button_text</item>
     </style>
-    <style name="Widget.DSHA.DangerButton" parent="Widget.DSHA.Button">
-        <item name="android:background">@drawable/bg_btn_danger</item>
-        <item name="android:textColor">@color/button_danger_text</item>
-    </style>
+
     <style name="DshaText.PageTitle" parent="DshaText.Title">
         <item name="android:textSize">@dimen/text_page_title</item>
     </style>

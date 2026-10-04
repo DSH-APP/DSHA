@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "command": [
+    "F:/DSHA/_toolchains/jdk-17/bin/java.exe",
+    "-Dfile.encoding=UTF-8",
+    "-Duser.language=en",
+    "-cp",
+    "C:\\Users\\18768\\.gradle\\wrapper\\dists\\gradle-9.3.1-bin\\23ovyewtku6u96viwx3xl3oks\\gradle-9.3.1\\lib\\groovy-4.0.29.jar;C:\\Users\\18768\\.gradle\\wrapper\\dists\\gradle-9.3.1-bin\\23ovyewtku6u96viwx3xl3oks\\gradle-9.3.1\\lib\\groovy-json-4.0.29.jar",
+    "groovy.ui.GroovyMain",
+    "F:\\DSHA_RESTART\\app\\build\\backup-dependencies\\BackupGateFixture.groovy",
+    "F:\\DSHA_RESTART",
+    "F:\\DSHA_RESTART\\app\\build\\backup-dependencies"
+  ],
+  "exitCode": 0,
+  "log": "app/build/backup-dependencies/backup-groovy.log",
+  "sha256": "b703771c1b6113486d7220b44b065d6bbec3709d56914fd5fae50b4279f3afa3",
+  "gateSourceSha256": "231ff0b2d810cf2d91f3e157ba73f382e403cc9e25432f37e35d3b46e632f08b",
+  "scope": "Actual verifyBackupDependencies doLast evaluated with mock Gradle DSL and actual three JAR bytes; no Gradle tasks run."
+}

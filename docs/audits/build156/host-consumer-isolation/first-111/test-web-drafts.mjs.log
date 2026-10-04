@@ -1,0 +1,18 @@
+✔ alpha.2 使用驻留 Session binding，不能遍历 WeakMap 或激活冷会话 (2.0562ms)
+✔ 阅读位置把一帧内的滚动合并，并延迟一次写入 (2.0262ms)
+✔ 旧阅读位置令牌被实际迁移，新位置不持久化任何查询串 (0.7088ms)
+✔ revision mismatch, wrong MIME and excessive size are not restored (0.515ms)
+✔ unchanged empty input restores exact bytes without sending (1.769ms)
+✔ an image added during database loading wins over the saved image (0.4635ms)
+✔ disposed session cannot restore an attachment after its delayed read (0.2221ms)
+✔ synchronous tombstone prevents old attachments from returning after interrupted commit (0.1522ms)
+✔ failed load or cross-page revision change never replaces a saved record with an empty draft (0.3154ms)
+﹣ 真实Chromium IndexedDB：有限GC、引用保护、容量和跨页删除证明 (0.3123ms) # Explicit fast VM-only scope; native store is tested by the full browser run
+ℹ tests 10
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 19.2788

@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "status": "PASS",
+  "sourceFrozen": true,
+  "sourceSha256": {
+    "tools/test-core-boundaries.py": "5f75121f7c02de2b6d6fc56667d924213c62fbb24d288357cf420861b9891754",
+    "app/src/main/java/com/deepseekharness/app/DshaApp.java": "0b46dc99a11735f356fb8e6b0771f09a2af3ca9ae2da4bcb0ad94b7ac454162a",
+    "app/src/main/java/com/deepseekharness/app/data/PortableSettings.java": "6e3acf3c5b0d5f9b217f538aaf31baf0b369ce535e77d992daaa0139937dad16",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java": "e5436d57e9d5c2a9ae70027814d3c069e1c27a4bdf80d54f00684e07ad0d76da",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java": "699a37edf8cedd6095bb774c5e8cbadf2608fa00e16ed29955e168ce72e767e4",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java": "965c05b10887afa929bd2b8f2bc4d109554cc998ce4b61d0131e6afe04aef0eb",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java": "48d8847c58524fe93f7c9ac2f877170827ac7941b2f1b36af3fca8f14c524077",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java": "5d1fd763cb36b7b95c1ef9aa5dbac28d051bb2b7f53c73f9be7815ac689e503d",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenInput.java": "d3f5d62200b67908d5f26ff0b3e81a4aa4989bbfdd3359be065593a0b625b94b"
+  },
+  "hostManifestSha256": "ffdc636684b216589f581bdf5d60658efb92d4050c151794628ec9ed44bf948c",
+  "checks": [
+    {
+      "path": "tools/test-core-boundaries.py",
+      "status": "PASS",
+      "log": "docs\\audits\\build156\\checks-tests-final-ownership\\test-core-boundaries.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-core-boundaries.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.39,
+      "logSha256": "aa2838e2a780d0a9fc609b049bacf17d793cce2100e47de93bed5d6570d7dd3e"
+    }
+  ],
+  "count": 9,
+  "scope": "Source structure only; bridge/core SDK/JVM/HTTP and final integrated host/Gradle evidence remain separate. Full APK/phone/platform behavior is not claimed."
+}

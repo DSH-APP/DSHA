@@ -1,0 +1,5474 @@
+{
+  "schema": 1,
+  "scope": "One bounded read-only236-item reconciliation of original reviews, current change evidence and actual cited source; only Root-authorized D-TEST35 test safety fix executed. No phone/Gradle/production changes. Parent then confirmed D-SEC-02/G1 and D-API-08/G2 corrections; those prior static observations are explicitly superseded. Review stopped at one pass.",
+  "snapshotUtc": "2026-10-03T02:22:41.928188+00:00",
+  "sourceItemCount": 236,
+  "reviewItemCount": 236,
+  "groups": {
+    "actionable_source": [
+      {
+        "ids": [
+          "D-RT-01"
+        ],
+        "status": "confirmed_current_health_is_tcp_only",
+        "priority": "P2",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+            "sha256": "eb72152e222d14b2a334a21762358e50e9ea78208f1c58e884572f06255526cb",
+            "matches": [
+              {
+                "line": 330,
+                "anchor": "private boolean isWebUp()",
+                "snippet": "private boolean isWebUp() {"
+              },
+              {
+                "line": 338,
+                "anchor": "s.connect(new java.net.InetSocketAddress",
+                "snippet": "s.connect(new java.net.InetSocketAddress(\"127.0.0.1\", port), 3000);"
+              },
+              {
+                "line": 280,
+                "anchor": "!c.getWebAuthUrl().isEmpty() && isWebUp()",
+                "snippet": "if (!c.getWebAuthUrl().isEmpty() && isWebUp()) {"
+              },
+              {
+                "line": 281,
+                "anchor": "c.reportWebHealth(generation, true)",
+                "snippet": "c.reportWebHealth(generation, true);"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Use bounded generation/actual-port/authenticated backend health evidence separately from listener existence and browser-stream state; preserve slow-start behavior and never restart Node solely because the client stream is lost.",
+        "reason": "An old auth URL plus TCP connect still reports healthy; listener existence does not establish backend service response.",
+        "change_records": [
+          {
+            "id": "D-RT-01",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_root/G4",
+                "owner": "root/G4",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "增加有界且绑定本轮端口/鉴权的分层健康证据；LISTENING不可当READY，也不能因客户端丢流重启Node。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "engineering_debt_requires_disposition": [
+      {
+        "ids": [
+          "D-NET-02"
+        ],
+        "status": "remaining_duplicate_policy_not_dns_overwrite",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/util/ResolverConfig.java",
+            "sha256": "53fc685c9a9563462525152230195ac5a43fbcce30977cfb7bd513bfaec69e73",
+            "matches": [
+              {
+                "line": 19,
+                "anchor": "if(!nameserver)",
+                "snippet": "if(!nameserver)text=terminated(text)+\"nameserver 8.8.8.8\\nnameserver 223.5.5.5\\n\";"
+              }
+            ]
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java",
+            "sha256": "38b6a0c9f460ef179fb4fd856fb1913866b0e1497425413dbdf32e4b22b0c630",
+            "matches": [
+              {
+                "line": 122,
+                "anchor": "nameserver 8.8.8.8",
+                "snippet": "+ \"if not re.search(r'^\\\\s*nameserver\\\\s+[^\\\\s#]+',s,re.M): write(p,s+'\\\\nnameserver 8.8.8.8\\\\nnameserver 223.5.5.5\\\\n'); print('已补齐 DNS',flush=True)\\n\""
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Centralize the fallback source and document exact fallback behavior. Existing nameserver/search/options and current DNS mode must remain; system-DNS adoption needs independent evidence.",
+        "reason": "Two literal fallback implementations remain. They run only when no nameserver exists, so this is not proof of forced user DNS replacement.",
+        "change_records": [
+          {
+            "id": "D-NET-02",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-PERF-02",
+          "D-CONC-02"
+        ],
+        "status": "remaining_virtualscreen_serialization_design",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+            "sha256": "bcc065f6e16fce1c6d8cc596375a7ed239e182a6a879201c55044cbc48ad4011",
+            "matches": [
+              {
+                "line": 108,
+                "anchor": "previewSince(Context",
+                "snippet": "public static JSONObject previewSince(Context c,String gen,long seq){synchronized(LOCK){return remember(request(\"/vscreen/preview\",\"since=\"+seq+\"&generation=\"+encode(gen)));}}"
+              },
+              {
+                "line": 109,
+                "anchor": "touch(Context",
+                "snippet": "public static JSONObject touch(Context c,String gen,long seq,String stroke,int action,float x,float y){synchronized(LOCK){if(!generation.equals(gen)||gen.isEmpty())return failure(\"STALE_GENERATION\");return request(\"/vscreen/touch\",\"generati"
+              },
+              {
+                "line": 51,
+                "anchor": "synchronized(LOCK)",
+                "snippet": "synchronized(LOCK){"
+              },
+              {
+                "line": 217,
+                "anchor": "setReadTimeout(12000)",
+                "snippet": "c.setRequestProperty(\"Authorization\",\"Bearer \"+requestToken);c.setConnectTimeout(2000);c.setReadTimeout(12000);"
+              }
+            ]
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+            "sha256": "13e97758c27ba28e53e39982b58e4b2514d5c5a4ee9eae096debf3f70abaf558",
+            "matches": [
+              {
+                "line": 14,
+                "anchor": "private static",
+                "snippet": "private static final Handler MAIN=new Handler(Looper.getMainLooper());"
+              }
+            ]
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java",
+            "sha256": "243ab33bb0de3e1d7a85ab831ad2ca85ae8c637ae87fa96eac738e2f9be03f6e",
+            "matches": [
+              {
+                "line": 17,
+                "anchor": "static",
+                "snippet": "private static final Handler MAIN=new Handler(Looper.getMainLooper());"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Either explicitly accept the measured experimental limit or move network I/O outside the state lock using immutable session/epoch snapshots and revalidation. Establish and test main-thread ownership for overlay/foreground publication.",
+        "reason": "Blocking HTTP still runs beneath the common LOCK; static UI state remains. No real-device latency or race demonstration was performed; do not claim this design debt eliminated.",
+        "change_records": [
+          {
+            "id": "D-PERF-02",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_root/G4",
+                "owner": "root/G4",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "锁仅保护会话快照，I/O锁外并回核epoch；触控有序独立通道，预览单调度器合并且停止时取消。"
+              }
+            ]
+          },
+          {
+            "id": "D-CONC-02",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_root/G4",
+                "owner": "root/G4",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "入口统一main dispatch/assert，逐会话封装状态，epoch核验旧回调，资源释放与视图生命周期一致。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-API-05",
+          "D-API-06",
+          "D-NAME-01"
+        ],
+        "status": "remaining_presentation_and_naming_coupling",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+            "sha256": "67aef237f2a93b37f900099f5df548424eb5527c2913ae00ac03d27306ee0d33",
+            "matches": [
+              {
+                "line": 170,
+                "anchor": "publishResults(String report",
+                "snippet": "private void publishResults(String report,ProotBootstrap proot,String selectedMode,String smokeStatus,String resources){"
+              },
+              {
+                "line": 187,
+                "anchor": "report.split",
+                "snippet": "String runtimeLines=java.util.Arrays.stream(report.split(\"\\\\n\")).filter(line->line.startsWith(\"Node:\")||line.startsWith(\"npm:\")||line.startsWith(\"Python:\")).collect(java.util.stream.Collectors.joining(\"\\n\"));"
+              },
+              {
+                "line": 188,
+                "anchor": "runtimeLines.contains",
+                "snippet": "rows.add(new Result(\"Node · npm · Python\",runtimeLines.contains(\"Node: v\")&&runtimeLines.contains(\"Python: Python\")?t(\"实际命令已响应\",\"Commands responded\"):t(\"查看检查结果\",\"Review results\"),runtimeLines.isEmpty()?report:runtimeLines));"
+              }
+            ]
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java",
+            "sha256": "337cbb1e4ec5f2cbcb630993c928038f6bb4994d236a0c504a09c6eb52c0091d",
+            "matches": [
+              {
+                "line": 25,
+                "anchor": "String[] zh=",
+                "snippet": "String[] zh={\"当前 Linux 与 DSH\",\"运行时回退副本\",\"环境重建保护副本\",\"旧版更新记录\",\"备份副本\",\"兼容浏览器数据\",\"宿主个人数据\",\"应用缓存\"};String[] en={\"Current Linux and DSH\",\"Runtime rollback copies\",\"Environment protection copies\",\"Legacy update records\",\"Backup copies\",\"Compatibil"
+              },
+              {
+                "line": 26,
+                "anchor": "for(var entry:sizes.entrySet())",
+                "snippet": "for(var entry:sizes.entrySet()){page.kv(rows,t(zh[i],en[i]),com.deepseekharness.app.util.Fmt.bytes(entry.getValue().bytes)+(entry.getValue().unreadable>0?t(\" + 部分不可读\",\" + unreadable entries\"):\"\"));i++;}"
+              }
+            ]
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/core/EnvironmentAccess.java",
+            "sha256": "785d0323a5e1b22107d008d4e91e566d2771e17294acf60fc0ab29ab55b02ba1",
+            "matches": [
+              {
+                "line": 15,
+                "anchor": "shouldAttemptRuntimeUpdate",
+                "snippet": "public static boolean shouldAttemptRuntimeUpdate(HarnessController controller){"
+              },
+              {
+                "line": 19,
+                "anchor": "shouldBlockRuntimeStart",
+                "snippet": "return com.deepseekharness.app.util.EnvironmentIdentity.shouldBlockRuntimeStart(false,true,"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Record explicit acceptance or migrate concrete callers to structured probe values/stable storage keys and clearly documented boolean semantics. Preserve existing persisted/public compatibility; do not mechanically rename every boolean/API.",
+        "reason": "The source still reverses presentation text, aligns labels by map position, and exposes a misleading legacy boolean name. These are current maintainability limits, not demonstrated data-loss bugs.",
+        "change_records": [
+          {
+            "id": "D-API-05",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_root/G4",
+                "owner": "root/G4",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "采集结构化DiagnosticReport，报告与卡片同一模型渲染，别从本地化文本推导健康。"
+              }
+            ]
+          },
+          {
+            "id": "D-API-06",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_G3",
+                "owner": "G3",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "按稳定key取标签，未知key显示原值，不改变清理对象边界。"
+              }
+            ]
+          },
+          {
+            "id": "D-NAME-01",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_root/G4",
+                "owner": "root/G4",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "更名为requiresMaintenanceBeforeStart并保留逻辑不变，不能改成直接允许启动。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-STYLE-01",
+          "D-ARCH-01",
+          "D-ARCH-04",
+          "D-ARCH-06",
+          "D-API-04",
+          "D-ARCH-05",
+          "D-DUP-19"
+        ],
+        "status": "bounded_refactor_not_complete_uniformity",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/engineering-standard.md",
+            "sha256": "5d65afcd16d21017fbf919130acf1daa0d98bdc27063b7a4762e3501386cdefa",
+            "matches": [
+              {
+                "line": 26,
+                "anchor": "不机械替换",
+                "snippet": "结构化输入在边界校验版本、类型、大小和重复值；未知数据保留并报告，不解释成新的本机授权。受信任生成 JSON 与用户输入采用相应严格度，逐步迁移具体调用点，不机械替换所有解析器。"
+              },
+              {
+                "line": 68,
+                "anchor": "不以行数",
+                "snippet": "每个审计项写明实际实现、检查和残余。可维护性建议按实际职责收敛；不以行数、覆盖率、白名单或未经校准的分数替代工程判断。"
+              }
+            ]
+          },
+          {
+            "file": "docs/module-map.md",
+            "sha256": "458e118f433b550a920fe486728edbaa0a3ab3baf74e05f0a072b502f3790392",
+            "matches": [
+              {
+                "line": 10,
+                "anchor": "HarnessController",
+                "snippet": "| Web 编排 | HarnessController | 唯一生产启动代次、队列、停止意图 |"
+              },
+              {
+                "line": 11,
+                "anchor": "StartupPipeline",
+                "snippet": "| 启动与输出 | StartupPipeline、WebOutputSession | 有序准备、当前进程输出、鉴权和 EOF；通过窄端口通知编排者 |"
+              }
+            ]
+          },
+          {
+            "file": "tools/check-source-hygiene.py",
+            "sha256": "abc3414a5358e9093da3e04becb5b6ad5f8c31962c305704101862642e2c1c70",
+            "matches": []
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+            "sha256": "3a4290f2ec1d67ff64a6758b8465b8e81a1bb8105eca4912ac14b3391ceb3bda",
+            "matches": [
+              {
+                "line": 10,
+                "anchor": "functional-audit",
+                "snippet": "private static final List<String> CACHE=List.of(\"runtime-startup\",\"functional-audit\",\"adb-flow-audit\",\"install-audit\",\"layout-audit\",\"plugin-sort-audit\",\"log-panel-audit\","
+              }
+            ]
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+            "sha256": "eb72152e222d14b2a334a21762358e50e9ea78208f1c58e884572f06255526cb",
+            "matches": [
+              {
+                "line": 34,
+                "anchor": "NOTIF_ID = 1001",
+                "snippet": "private static final int NOTIF_ID = 1001;"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Root must state the accepted residual and actual migration boundary for each ID. Source hygiene and collaborator extraction do not prove uniform formatting, enum conversion, notification centralization or complete responsibility decomposition.",
+        "reason": "Current source has useful explicit collaborators and policies; large-scale mechanical replacement was intentionally avoided. Record mitigation/accepted debt instead of blanket fixed.",
+        "change_records": [
+          {
+            "id": "D-STYLE-01",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_root",
+                "owner": "root",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "固定formatter并分包格式化，逻辑与格式变更分别审阅；不引入新依赖版本浮动或用格式重写掩盖功能差异。"
+              }
+            ]
+          },
+          {
+            "id": "D-ARCH-01",
+            "records": [
+              {
+                "report": "changes-G2.json",
+                "status": "implemented_pending_integration",
+                "owner": null,
+                "checks": [
+                  "StartupPipeline/WebOutputSession/WebStopCoordinator tests: 8 PASS; credentials first/failure short circuit/safe profile/stale generation/EOF is not exit/no token logging/confirmed stop"
+                ],
+                "residual": "Controller remains single lifecycle, generation, queue and fallback owner; full root behavior/architecture proof pending."
+              },
+              {
+                "report": "coverage-G2.json",
+                "status": "implemented_pending_integration",
+                "owner": "G2",
+                "checks": [
+                  "StartupPipeline/WebOutputSession/WebStopCoordinator tests: 8 PASS; credentials first/failure short circuit/safe profile/stale generation/EOF is not exit/no token logging/confirmed stop"
+                ],
+                "residual": "Controller remains single lifecycle, generation, queue and fallback owner; full root behavior/architecture proof pending."
+              }
+            ]
+          },
+          {
+            "id": "D-ARCH-04",
+            "records": [
+              {
+                "report": "changes-G2.json",
+                "status": "implemented_pending_architecture_gate",
+                "owner": null,
+                "checks": [
+                  "Real argv/env/process factory, signed guest tool installer, group adaptation and fresh transaction split; zero duplicate startRootfs boolean builders; core public APIs preserved"
+                ],
+                "residual": "Root full import+FQ layer proof, formatter and release checks required; no line-count score used as closure."
+              },
+              {
+                "report": "coverage-G2.json",
+                "status": "implemented_pending_architecture_gate",
+                "owner": "G2",
+                "checks": [
+                  "Real argv/env/process factory, signed guest tool installer, group adaptation and fresh transaction split; zero duplicate startRootfs boolean builders; core public APIs preserved"
+                ],
+                "residual": "Root full import+FQ layer proof, formatter and release checks required; no line-count score used as closure."
+              }
+            ]
+          },
+          {
+            "id": "D-ARCH-06",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_G1",
+                "owner": "G1",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "按路由域抽处理器并统一方法/鉴权/大小策略，契约回归先冻结现有工具能力与拒绝语义。"
+              }
+            ]
+          },
+          {
+            "id": "D-API-04",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_G3",
+                "owner": "G3",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "渐进类型化内部模型，序列化格式名称不变，未知类型仍拒绝；不要整库机械替换使协议变更。"
+              }
+            ]
+          },
+          {
+            "id": "D-ARCH-05",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_G3",
+                "owner": "G3",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "正式列表仅可证明再生缓存；历史夹具目录在保留区显示，不因本轮运行审计脚本创建/删除用户目录；新夹具留host。"
+              }
+            ]
+          },
+          {
+            "id": "D-DUP-19",
+            "records": [
+              {
+                "report": "changes-G3.json",
+                "status": "transferred",
+                "owner": "root",
+                "checks": [],
+                "residual": [
+                  "Implementation and verification reported by root; G3 does not claim complete"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DUP-22"
+        ],
+        "status": "historical_fixture_fork_retained",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/debug/assets/web-state-fixture.html",
+            "sha256": "52578517a4e0d3feb0b17f7021886a101000deffb09dda3b8b4d2162bfed07dd",
+            "matches": [
+              {
+                "line": 5,
+                "anchor": "multiple",
+                "snippet": "<input id=\"upload\" type=\"file\" multiple accept=\"image/*\" aria-label=\"独立图片上传\">"
+              }
+            ]
+          },
+          {
+            "file": "app/src/androidTest/assets/web-state-fixture.html",
+            "sha256": "89646d1144cc80a477514d3a9cbd252fd02f3623ea296c30bd6d1cd112d9dfc9",
+            "matches": []
+          }
+        ],
+        "necessary_action": "Document the deliberate historical single/multi-upload split or share the actual fixture with a tested mode contract. Do not claim deduplication from retirement of unrelated audit entries.",
+        "reason": "Two source-set fixture copies still exist; no current production failure follows from that fact.",
+        "change_records": [
+          {
+            "id": "D-DUP-22",
+            "records": [
+              {
+                "report": "changes-G3.json",
+                "status": "transferred",
+                "owner": "root",
+                "checks": [],
+                "residual": [
+                  "Implementation and verification reported by root; G3 does not claim complete"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-TEST-21"
+        ],
+        "status": "active_test_targets_unused_legacy_helpers",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/assets/adb-shell.py",
+            "sha256": "de41b0a3cf103cc4f6d99084f55ade2b59d7d5780dea07b03d63819acaccdbc0",
+            "matches": [
+              {
+                "line": 34,
+                "anchor": "READONLY_CMDS",
+                "snippet": "READONLY_CMDS = frozenset(('getprop', 'id', 'ps', 'df', 'free', 'uptime',"
+              },
+              {
+                "line": 59,
+                "anchor": "def is_readonly_cmd",
+                "snippet": "def is_readonly_cmd(cmd):"
+              },
+              {
+                "line": 326,
+                "anchor": "def request_confirm",
+                "snippet": "def request_confirm(cmd, reason=''):"
+              }
+            ]
+          },
+          {
+            "file": "tools/test-adb-flow.py",
+            "sha256": "7366c7117420a386ac0bc3880691a093e487d8e0ecc9f1228f5e0ad5e18401b3",
+            "matches": [
+              {
+                "line": 192,
+                "anchor": "adb.is_readonly_cmd",
+                "snippet": "self.assertFalse(adb.is_readonly_cmd(command), command)"
+              },
+              {
+                "line": 265,
+                "anchor": "adb.request_confirm",
+                "snippet": "with self.assertRaises(adb.ConfirmationError): adb.request_confirm('input tap 10 10')"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Retire misleading helper tests or test the current native-policy/actual dispatch decision path; preserve current permission policy. A passed dead-helper fixture is not a device-policy allow/deny proof.",
+        "reason": "The old helper names remain referenced mainly by tests and not the current execution entry.",
+        "change_records": [
+          {
+            "id": "D-TEST-21",
+            "records": []
+          }
+        ]
+      }
+    ],
+    "verification_remaining": [
+      {
+        "ids": [
+          "D-CONC-01"
+        ],
+        "status": "job_generation_publication_needs_proof",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackupService.java",
+            "sha256": "3eb8e0783e01f96c389fb3e41b5174d3269b4bc8792d3e9303f4ef0babcc78c5",
+            "matches": [
+              {
+                "line": 9,
+                "anchor": "private JobParameters active",
+                "snippet": "private JobParameters active;"
+              },
+              {
+                "line": 11,
+                "anchor": "private String owned",
+                "snippet": "private String owned=\"\";"
+              },
+              {
+                "line": 32,
+                "anchor": "owned=NativeBackupJobs",
+                "snippet": "owned=NativeBackupJobs.get(this).state().id;if(cancelled){NativeBackupJobs.get(this).cancel();return;}main.post(poll);"
+              },
+              {
+                "line": 41,
+                "anchor": "onStopJob",
+                "snippet": "@Override public boolean onStopJob(JobParameters params){cancelled=true;active=null;main.removeCallbacks(poll);var jobs=NativeBackupJobs.get(this);if(jobs.state().id.equals(owned)&&jobs.state().busy)jobs.cancel();return false;}"
+              },
+              {
+                "line": 21,
+                "anchor": "cancelled=false",
+                "snippet": "active=params;cancelled=false;owned=\"\";"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Exercise stop/restart while the old producer drains; bind worker publication and polling to one params/run identity. A volatile field alone does not establish ownership across job generations.",
+        "reason": "Handler publication and volatile cancellation may cover normal paths, so a current same-run data race is not asserted. The old-worker/new-job ownership edge lacks focused evidence and the ledger only transfers it.",
+        "change_records": [
+          {
+            "id": "D-CONC-01",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_G3",
+                "owner": "G3",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "把owned赋值/取消核验/poll统一post到main；不只是盲加volatile，确保取消不能漏掉已启动自动作业。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-BUILD-01",
+          "D-TEST-02",
+          "D-TEST-36",
+          "D-RT-10",
+          "D-RT-16",
+          "D-ARCH-04",
+          "D-DUP-01",
+          "D-DUP-02",
+          "D-DUP-03",
+          "D-DUP-04",
+          "D-DUP-05",
+          "D-DUP-10",
+          "D-PATCH-01",
+          "D-PATCH-02",
+          "D-PATCH-03",
+          "D-COMPAT-01",
+          "D-LEGACY-01"
+        ],
+        "status": "current_source_claims_need_frozen_integration_logs",
+        "evidence": [
+          {
+            "file": "tools/runtime_fixture_proof.py",
+            "sha256": "e8ab50833e515f8b3404e36e2206938f92230ed3a55a47cff43462a38f2134e8",
+            "matches": [
+              {
+                "line": 1,
+                "anchor": "schema",
+                "snippet": "\"\"\"Complete npm fixture content proof; producer-created schema 2 is required for reuse.\"\"\""
+              }
+            ]
+          },
+          {
+            "file": "app/src/main/assets/runtime-patches.json",
+            "sha256": "ef5e29c2b29ca79f2cdc60596e74ad7448573159a56ae20b08c7f889c259bf4d",
+            "matches": [
+              {
+                "line": 4,
+                "anchor": "active",
+                "snippet": "\"active\": ["
+              },
+              {
+                "line": 18,
+                "anchor": "specialized",
+                "snippet": "\"specialized\": [\"pdf-compat-patch.json\",\"web-integration/tooltip-patch.json\",\"browser-bootstrap\",\"client-combo-patch.json\",\"lan-settings-persistence\"],"
+              },
+              {
+                "line": 19,
+                "anchor": "retired",
+                "snippet": "\"retired\": ["
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Root must regenerate current frozen descriptors/archive/raw+managed proofs and execute declared full host/software/APK gates. Source/pending labels alone do not establish failure or success.",
+        "reason": "The child reports explicitly leave integration/archive/actual-platform scope to root. No build or fixture generator was run by this final bounded review."
+      }
+    ],
+    "accepted_policy": [
+      {
+        "ids": [
+          "D-SEC-10"
+        ],
+        "status": "accepted_current_user_policy",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/audits/build154/POLICY.md",
+            "sha256": "2eb8f1c78fa7f21159cc927ee6bdb833e91ba35670999e1e1a1e9888bf3d029f",
+            "matches": [
+              {
+                "line": 7,
+                "anchor": "终端",
+                "snippet": "- 正式终端允许修复shell。应急仍独立运行根、五个受控工具、原生确认写入。"
+              },
+              {
+                "line": 10,
+                "anchor": "未知",
+                "snippet": "- 原件/失败候选/未知进程保留；无出生身份不得发信号或清除停止屏障。完整格式化维持既有明确确认和严格核心数据核验；不擅改成只删私有目录的不同语义。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Carry the policy reason and residual into the final236 ledger; do not restore old review, destructive fallback or automatic deletion.",
+        "reason": "自动解析、安装和启用、开放依赖钩子均由当前用户/AGENTS 明确要求；外部调用链与风险存在，但不能采纳附件另一会话要求重新审阅/确认的决策。",
+        "change_records": [
+          {
+            "id": "D-SEC-10",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-RT-11"
+        ],
+        "status": "accepted_current_user_policy",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/audits/build154/POLICY.md",
+            "sha256": "2eb8f1c78fa7f21159cc927ee6bdb833e91ba35670999e1e1a1e9888bf3d029f",
+            "matches": [
+              {
+                "line": 7,
+                "anchor": "终端",
+                "snippet": "- 正式终端允许修复shell。应急仍独立运行根、五个受控工具、原生确认写入。"
+              },
+              {
+                "line": 10,
+                "anchor": "未知",
+                "snippet": "- 原件/失败候选/未知进程保留；无出生身份不得发信号或清除停止屏障。完整格式化维持既有明确确认和严格核心数据核验；不擅改成只删私有目录的不同语义。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Carry the policy reason and residual into the final236 ledger; do not restore old review, destructive fallback or automatic deletion.",
+        "reason": "RuntimeTrial和ProfileSettingsTrial保持可取消的慢启动等待，60秒仅提示；不是自动重试循环，当前约束禁止按启动超时强停。",
+        "change_records": [
+          {
+            "id": "D-RT-11",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "accepted_policy",
+                "owner": "G2 policy/device evidence",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "保留等待策略，增加等待时长及应用内取消可见性；取消后仍须确认退出，不能照附件设置硬终止并释放未知guest。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-RT-18"
+        ],
+        "status": "accepted_current_user_policy",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/audits/build154/POLICY.md",
+            "sha256": "2eb8f1c78fa7f21159cc927ee6bdb833e91ba35670999e1e1a1e9888bf3d029f",
+            "matches": [
+              {
+                "line": 7,
+                "anchor": "终端",
+                "snippet": "- 正式终端允许修复shell。应急仍独立运行根、五个受控工具、原生确认写入。"
+              },
+              {
+                "line": 10,
+                "anchor": "未知",
+                "snippet": "- 原件/失败候选/未知进程保留；无出生身份不得发信号或清除停止屏障。完整格式化维持既有明确确认和严格核心数据核验；不擅改成只删私有目录的不同语义。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Carry the policy reason and residual into the final236 ledger; do not restore old review, destructive fallback or automatic deletion.",
+        "reason": "未知/损坏有界guest记录确实挡写维护；独立应急只读启动不经过此锁，附件声称所有恢复无出口过宽。",
+        "change_records": [
+          {
+            "id": "D-RT-18",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "accepted_policy",
+                "owner": "G2 policy/device evidence",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "保持未证明退出不释放屏障；提供逐记录只读诊断与仅完整出生/UID/session证明的结束或退休路径，不能隔离畸形/LEADER_REUSED就放行或让格式化绕过。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-BAK-01"
+        ],
+        "status": "accepted_current_user_policy",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/audits/build154/POLICY.md",
+            "sha256": "2eb8f1c78fa7f21159cc927ee6bdb833e91ba35670999e1e1a1e9888bf3d029f",
+            "matches": [
+              {
+                "line": 7,
+                "anchor": "终端",
+                "snippet": "- 正式终端允许修复shell。应急仍独立运行根、五个受控工具、原生确认写入。"
+              },
+              {
+                "line": 10,
+                "anchor": "未知",
+                "snippet": "- 原件/失败候选/未知进程保留；无出生身份不得发信号或清除停止屏障。完整格式化维持既有明确确认和严格核心数据核验；不擅改成只删私有目录的不同语义。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Carry the policy reason and residual into the final236 ledger; do not restore old review, destructive fallback or automatic deletion.",
+        "reason": "内部自动副本随机密码加密是本轮 AGENTS 明确保留策略；缺旧密钥时 fail closed 避免替换密钥。无密码外部重导出已在152实现。错误码文案仍可改进。",
+        "change_records": [
+          {
+            "id": "D-BAK-01",
+            "records": [
+              {
+                "report": "changes-G3.json",
+                "status": "accepted_policy",
+                "owner": null,
+                "checks": [
+                  "Full source review disposition retained from review-G3.json; no policy reversal"
+                ],
+                "residual": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-BAK-03"
+        ],
+        "status": "accepted_current_user_policy",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/audits/build154/POLICY.md",
+            "sha256": "2eb8f1c78fa7f21159cc927ee6bdb833e91ba35670999e1e1a1e9888bf3d029f",
+            "matches": [
+              {
+                "line": 7,
+                "anchor": "终端",
+                "snippet": "- 正式终端允许修复shell。应急仍独立运行根、五个受控工具、原生确认写入。"
+              },
+              {
+                "line": 10,
+                "anchor": "未知",
+                "snippet": "- 原件/失败候选/未知进程保留；无出生身份不得发信号或清除停止屏障。完整格式化维持既有明确确认和严格核心数据核验；不擅改成只删私有目录的不同语义。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Carry the policy reason and residual into the final236 ledger; do not restore old review, destructive fallback or automatic deletion.",
+        "reason": "当前格式化明确提示尝试清理旧 Documents/dshdata；本轮附件另一会话“只删私有”并非直接指令。最新保留旧数据约束用于更新/恢复，不等同撤销用户确认的完整格式化。",
+        "change_records": [
+          {
+            "id": "D-BAK-03",
+            "records": [
+              {
+                "report": "changes-G3.json",
+                "status": "accepted_policy",
+                "owner": null,
+                "checks": [
+                  "Full source review disposition retained from review-G3.json; no policy reversal"
+                ],
+                "residual": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-BAK-04"
+        ],
+        "status": "accepted_current_user_policy",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/audits/build154/POLICY.md",
+            "sha256": "2eb8f1c78fa7f21159cc927ee6bdb833e91ba35670999e1e1a1e9888bf3d029f",
+            "matches": [
+              {
+                "line": 7,
+                "anchor": "终端",
+                "snippet": "- 正式终端允许修复shell。应急仍独立运行根、五个受控工具、原生确认写入。"
+              },
+              {
+                "line": 10,
+                "anchor": "未知",
+                "snippet": "- 原件/失败候选/未知进程保留；无出生身份不得发信号或清除停止屏障。完整格式化维持既有明确确认和严格核心数据核验；不擅改成只删私有目录的不同语义。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Carry the policy reason and residual into the final236 ledger; do not restore old review, destructive fallback or automatic deletion.",
+        "reason": "原件、失败候选与删除记录保留符合当前“不新增自动删除”的明确要求，不能按附件容量决策删除旧数据。删除文案及占用可见性仍可改善。",
+        "change_records": [
+          {
+            "id": "D-BAK-04",
+            "records": [
+              {
+                "report": "changes-G3.json",
+                "status": "accepted_policy",
+                "owner": null,
+                "checks": [
+                  "Full source review disposition retained from review-G3.json; no policy reversal"
+                ],
+                "residual": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-PERF-03"
+        ],
+        "status": "bounded_sync_compression_tradeoff",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+            "sha256": "fd164f2a84574f6730235b3d9f0c25b8b0f4f04c150a8ee0d8d6435177211d23",
+            "matches": [
+              {
+                "line": 12,
+                "anchor": "MAX_JSON_BYTES = 1024",
+                "snippet": "export const MAX_JSON_BYTES = 1024 * 1024;"
+              },
+              {
+                "line": 8,
+                "anchor": "brotliCompressSync",
+                "snippet": "import { brotliCompressSync, constants as zlibConstants, gzipSync } from 'node:zlib';"
+              },
+              {
+                "line": 91,
+                "anchor": "function patchedWrite",
+                "snippet": "function patchedWriteHead(...args) {"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Mark bounded mitigation/design tradeoff, with unmeasured phone latency explicit; do not say all compression is asynchronous.",
+        "reason": "The new implementation streams every write and caps complete-body synchronous compression at1MiB. This removes the original unbounded-large-body problem while retaining finite synchronous work.",
+        "change_records": [
+          {
+            "id": "D-PERF-03",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_G3",
+                "owner": "G3",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "异步有界压缩或流式实现，保持header、end回调、取消、错误语义；固定源码修订不整批升级mobile。"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "history_or_disabled_entry": [
+      {
+        "ids": [
+          "D-TEST-28"
+        ],
+        "status": "historical_not_current_restore_or_release_proof",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/test-alpha1-startup.mjs",
+            "sha256": "5049709b1857b5fca0075925dd8cef39080448152dbf6f0ff3fa9656f8926974",
+            "matches": []
+          }
+        ],
+        "necessary_action": "Keep history/device non-execution stage and exact original bytes. Retire still-active old manual build/control CLI paths where no current receiver exists; do not invoke them for this delivery.",
+        "reason": "Current manifest stage=history; D-TEST35 now uses only temporary targets (Windows2PASS/2POSIX skip) and does not claim current restore confinement.",
+        "change_records": [
+          {
+            "id": "D-TEST-28",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-TEST-29"
+        ],
+        "status": "historical_not_current_restore_or_release_proof",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/test-backup-device.py",
+            "sha256": "22e493dfd991df623e09089487c171d21c60085750adf304946b0f308809e0a1",
+            "matches": []
+          }
+        ],
+        "necessary_action": "Keep history/device non-execution stage and exact original bytes. Retire still-active old manual build/control CLI paths where no current receiver exists; do not invoke them for this delivery.",
+        "reason": "Current manifest stage=device; D-TEST35 now uses only temporary targets (Windows2PASS/2POSIX skip) and does not claim current restore confinement.",
+        "change_records": [
+          {
+            "id": "D-TEST-29",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-TEST-35"
+        ],
+        "status": "historical_not_current_restore_or_release_proof",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/test-restore-merge-wsdir.py",
+            "sha256": "a2aa72964e2e675598631b9d3dad92f0ac9b77a62f96c699d8a1edadd6e8c76e",
+            "matches": [
+              {
+                "line": 14,
+                "anchor": "history",
+                "snippet": "SOURCE=Path(__file__).resolve().parent/'history/engineering/assets/restore-merge.py'"
+              },
+              {
+                "line": 20,
+                "anchor": "TemporaryDirectory",
+                "snippet": "self.temp=tempfile.TemporaryDirectory(prefix='dsha-legacy-ws-')"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Keep history/device non-execution stage and exact original bytes. Retire still-active old manual build/control CLI paths where no current receiver exists; do not invoke them for this delivery.",
+        "reason": "Current manifest stage=history; D-TEST35 now uses only temporary targets (Windows2PASS/2POSIX skip) and does not claim current restore confinement.",
+        "change_records": [
+          {
+            "id": "D-TEST-35",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-TEST-37"
+        ],
+        "status": "historical_not_current_restore_or_release_proof",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/device-backup-audit.init.gradle",
+            "sha256": "2282eb856cc737563c2168f8ffd3fb8824a3774e7085cfb4a77ed7c5aff9e36b",
+            "matches": [
+              {
+                "line": 3,
+                "anchor": "DSHA_ENABLE_LEGACY_AUDIT",
+                "snippet": "if (System.getenv('DSHA_ENABLE_LEGACY_AUDIT') != '1') {"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Keep history/device non-execution stage and exact original bytes. Retire still-active old manual build/control CLI paths where no current receiver exists; do not invoke them for this delivery.",
+        "reason": "Current manifest stage=not an active current test; D-TEST35 now uses only temporary targets (Windows2PASS/2POSIX skip) and does not claim current restore confinement.",
+        "change_records": [
+          {
+            "id": "D-TEST-37",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-TEST-38"
+        ],
+        "status": "historical_not_current_restore_or_release_proof",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/control-functional-audit.py",
+            "sha256": "92965eb1b339d81b028307880ca208acbd86f0b2b7c0e1529ff85522eda2a691",
+            "matches": [
+              {
+                "line": 16,
+                "anchor": "assert re.fullmatch",
+                "snippet": "assert re.fullmatch(r\"[a-zA-Z0-9_-]{1,40}\", args.id)"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Keep history/device non-execution stage and exact original bytes. Retire still-active old manual build/control CLI paths where no current receiver exists; do not invoke them for this delivery.",
+        "reason": "Current manifest stage=not an active current test; D-TEST35 now uses only temporary targets (Windows2PASS/2POSIX skip) and does not claim current restore confinement.",
+        "change_records": [
+          {
+            "id": "D-TEST-38",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-TEST-27"
+        ],
+        "status": "historical_not_current_restore_or_release_proof",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/test-agent-preset-switch.mjs",
+            "exists": false
+          }
+        ],
+        "necessary_action": "Keep history/device non-execution stage and exact original bytes. Retire still-active old manual build/control CLI paths where no current receiver exists; do not invoke them for this delivery.",
+        "reason": "Current manifest stage=not an active current test; D-TEST35 now uses only temporary targets (Windows2PASS/2POSIX skip) and does not claim current restore confinement.",
+        "change_records": [
+          {
+            "id": "D-TEST-27",
+            "records": []
+          }
+        ]
+      }
+    ],
+    "requires_device_evidence": [
+      {
+        "ids": [
+          "D-ROOT-01"
+        ],
+        "status": "not_device_validated",
+        "priority": "P2",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/RootShell.java",
+            "sha256": "7bad79bd2ce3346de0477b96b99694c4c05ce34fbd6bca3e61b343301279019d",
+            "matches": [
+              {
+                "line": 22,
+                "anchor": "/system/bin/su",
+                "snippet": "for (String path : new String[]{\"/system/bin/su\", \"/system/xbin/su\", \"/sbin/su\", \"/debug_ramdisk/su\"})"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Keep exact source limits and obtain authorized relevant device/FS evidence before claiming new su paths or an exploitable shared-storage race. Descriptor-bound hardening may be evaluated in isolated host fixtures.",
+        "reason": "固定四个 su 路径仍在；未提供 KernelSU/APatch 真机或实际安装路径证据，不能确认所列新增路径存在或该设备受影响。",
+        "change_records": [
+          {
+            "id": "D-ROOT-01",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-SEC-06"
+        ],
+        "status": "not_device_validated",
+        "priority": "P2",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java",
+            "sha256": "8191ba0f369e399a0bc10bc83bf62a5152ed1ea8287235a74f40c1236cbfbae8",
+            "matches": [
+              {
+                "line": 44,
+                "anchor": "validateFiles",
+                "snippet": "validateFiles(plan);"
+              },
+              {
+                "line": 27,
+                "anchor": "runner.run",
+                "snippet": "String users = checked(runner.run(Arrays.asList(\"pm\", \"list\", \"packages\", \"-U\", \"-3\")));"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Keep exact source limits and obtain authorized relevant device/FS evidence before claiming new su paths or an exploitable shared-storage race. Descriptor-bound hardening may be evaluated in isolated host fixtures.",
+        "reason": "validateFiles 与外部 cp/mv/rm 存在静态检查/执行间隙，但普通 Android 共享存储是否允许攻击者创建相关 symlink/mount 及真实竞争利用尚未核验，不能直接报告已被绕过。",
+        "change_records": [
+          {
+            "id": "D-SEC-06",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DOC-20"
+        ],
+        "status": "linux_and_device_scope_not_executed_by_this_review",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": ".github/workflows/ci-fast.yml",
+            "sha256": "8ecc1cd27cbf53fb7ec508fcf195a8e1cfa61963cac14403d2d230f41c76ca1f",
+            "matches": [
+              {
+                "line": 13,
+                "anchor": "runs-on: ubuntu",
+                "snippet": "runs-on: ubuntu-24.04"
+              },
+              {
+                "line": 40,
+                "anchor": "testStandardDebugUnitTest",
+                "snippet": "./gradlew :app:testStandardDebugUnitTest :app:testLowDebugUnitTest -x :app:prepareStandardAssets -x :app:prepareRecoveryAssets --no-daemon --max-workers=2"
+              }
+            ]
+          },
+          {
+            "file": "docs/adr/0001-build154-boundaries.md",
+            "sha256": "73fd9fd78ca0229062203beaa8288b4d6207a25bf5fdde1e883813e4b7c5c2a8",
+            "matches": [
+              {
+                "line": 12,
+                "anchor": "不操作手机",
+                "snippet": "6. 本轮按用户要求不操作手机，不生成额外审计 APK。两版使用历史 E7E3、v1/v2/v3、原包名和递增版本码。软件核验只能证明签名/身份的覆盖安装前提，不能虚称实际覆盖安装和全设备兼容。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Distinguish authored Linux CI from a successful real Linux execution. Retain POSIX/device skips and full model/Android/FUSE gaps; final software gates need actual logs.",
+        "reason": "The workflow now exists, but file existence is not executed matrix coverage.",
+        "change_records": [
+          {
+            "id": "D-DOC-20",
+            "records": []
+          }
+        ]
+      }
+    ],
+    "legal_or_origin_unknown": [
+      {
+        "ids": [
+          "D-PROV-01"
+        ],
+        "status": "origin_documented_external_authorization_unknown",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/ShellService.java",
+            "sha256": "5b941e0b7a326a57040b5df88e5785fb07bdf852332426817cdf1114700f786e",
+            "matches": [
+              {
+                "line": 2,
+                "anchor": "Decompiled with CFR",
+                "snippet": "* Decompiled with CFR 0.152."
+              }
+            ]
+          },
+          {
+            "file": "docs/source-provenance.md",
+            "sha256": "ca2c395dbb6a2b6cede4a37ffbc52b47b25e32c9a3ab79c3eab6c1741e631c19",
+            "matches": [
+              {
+                "line": 3,
+                "anchor": "更早外部来源",
+                "snippet": "Shizuku `ShellService` 的旧文件头标注 CFR 0.152；该标注本身不能证明外部反编译对象、原作者身份或许可不兼容。可确认的仓库来源记录为提交 `5f984e4029a5223bcb37dc7d6d290268d2449609` 的该路径；其更早外部来源没有本轮可核验材料，不作法律定性。"
+              },
+              {
+                "line": 3,
+                "anchor": "不作法律定性",
+                "snippet": "Shizuku `ShellService` 的旧文件头标注 CFR 0.152；该标注本身不能证明外部反编译对象、原作者身份或许可不兼容。可确认的仓库来源记录为提交 `5f984e4029a5223bcb37dc7d6d290268d2449609` 的该路径；其更早外部来源没有本轮可核验材料，不作法律定性。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Keep provenance unknown and any future source/authorization review explicit; deleting the header alone is not evidence. Do not mark legal origin proven or allege infringement without evidence.",
+        "reason": "Root has documented the repository commit/current public API implementation; no authenticated earlier external origin was established.",
+        "change_records": [
+          {
+            "id": "D-PROV-01",
+            "records": []
+          }
+        ]
+      }
+    ],
+    "historical_invalid_digest": [
+      {
+        "ids": [
+          "D-DOC-19"
+        ],
+        "status": "invalid_record_disclosed_no_replacement",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/audits/build154/historical-invalid-digests.json",
+            "sha256": "0649bdc16978d38de1d21439e3a3287336dace3bc348905947ebec313723766e",
+            "matches": [
+              {
+                "line": 7,
+                "anchor": "invalid-63-hex",
+                "snippet": "\"status\": \"invalid-63-hex\","
+              }
+            ]
+          },
+          {
+            "file": "docs/releases/v0.1.7-alpha1-build143.md",
+            "sha256": "5098b37c195df515c8c45beefd7471685168213b106d58eaf453a587b1849dc3",
+            "matches": [
+              {
+                "line": 15,
+                "anchor": "不补位",
+                "snippet": "> **历史摘要录入错误，不能用于校验。** 下列63位值不是有效SHA-256。本轮未取得已核验且可与该记录一一绑定的原件或官方sidecar，不补位、不猜缺失字符、不借另一候选包替代；原记录保留用于追溯。"
+              }
+            ]
+          },
+          {
+            "file": "docs/releases/v0.1.7-alpha2-pre-release.md",
+            "sha256": "159786dc3abb1cf8df303aa646f83dbf91064a471e996a8d1cdb3c2cdf6c3c0c",
+            "matches": [
+              {
+                "line": 47,
+                "anchor": "不补位",
+                "snippet": "> **历史摘要录入错误，不能用于校验。** 下列63位值不是有效SHA-256。本轮未取得已核验且可与该记录一一绑定的原件或官方sidecar，不补位、不猜缺失字符、不借另一候选包替代；原记录保留用于追溯。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Terminal status is historical recording error/unverifiable, not fixed artifact digest. Only an authenticated original or official one-to-one sidecar can supply a replacement.",
+        "reason": "Two63-hex values are explicitly marked invalid; preserving them with error labels is honest disposition, not SHA verification.",
+        "change_records": [
+          {
+            "id": "D-DOC-19",
+            "records": [
+              {
+                "report": "changes-engineering-docs.json",
+                "status": "recording-error-explicit",
+                "owner": null,
+                "checks": [
+                  "Two 63-hex records explicitly invalid and unusable; no authenticated one-to-one original/official sidecar evidence, no guessed replacement"
+                ],
+                "residual": [
+                  "The real original digest is unresolved; this is not a claimed successful artifact verification."
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "resolved_current_source_but_old_ledger": [
+      {
+        "ids": [
+          "D-SEC-00"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/security-model.md",
+            "sha256": "91e397e1f5c2de983a7d33987d3b038279b70490efbdfd8c202afdb470116998",
+            "matches": [
+              {
+                "line": 5,
+                "anchor": "## 资产与主体",
+                "snippet": "## 资产与主体"
+              },
+              {
+                "line": 9,
+                "anchor": "## 信任边界",
+                "snippet": "## 信任边界"
+              },
+              {
+                "line": 22,
+                "anchor": "生命周期脚本",
+                "snippet": "正式终端允许修复 shell；链接、本地包和更新通过包格式、路径、摘要与事务检查后自动安装启用，不再要求插件审阅。依赖允许未锁定重解析、生命周期脚本和 pnpmfile，并记录实际锁与目录摘要以支持回切。用户主动禁用及安全模式意图仍保持。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-SEC-00",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-SEC-09"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+            "sha256": "8345e3e7441baaea7a99b6c5c357bf8301637b142275858b0c4496cbaae017ee",
+            "matches": [
+              {
+                "line": 402,
+                "anchor": "Map.of(\"DEEPSEEK_API_KEY\",launchKey)",
+                "snippet": "Map<String,String> launchEnvironment=launchKey.isEmpty()?Map.of():Map.of(\"DEEPSEEK_API_KEY\",launchKey);"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-SEC-09",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-SEC-17"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/assets/app-integration/client.js",
+            "sha256": "1b72e9418d3ae1288dd8659b2bfacd2d53fce1332fbb1c3ea03f844860105f90",
+            "matches": [
+              {
+                "line": 112,
+                "anchor": "previous.url = previous.url.split('?')",
+                "snippet": "previous.url = previous.url.split('?')[0].split('#')[0];"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-SEC-17",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-SEC-20"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/asset-deployment.json",
+            "sha256": "5b03ca3c83f0ad496cd7687b28fc5b284d22223b1ee3ad4ce227543b072804b9",
+            "matches": [
+              {
+                "line": 10,
+                "anchor": "backup-engine.py",
+                "snippet": "\"backup-engine.py\","
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-SEC-20",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-SEC-23"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/build.gradle",
+            "sha256": "879a3a347917a8102edcc9ca7535b4297388a3c4d6d2f6b51bb0d23a08b74782",
+            "matches": [
+              {
+                "line": 61,
+                "anchor": "DSHA_KEYSTORE_PASSWORD",
+                "snippet": "storePassword System.getenv(\"DSHA_KEYSTORE_PASSWORD\")"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-SEC-23",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-LIC-01"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "THIRD_PARTY_NOTICES.md",
+            "sha256": "4886a4a8622aaa6c04fb29421ab4cd7a7aa259f361137d3ed936a4ad81047ae1",
+            "matches": [
+              {
+                "line": 37,
+                "anchor": "Shizuku",
+                "snippet": "- Shizuku API/provider：Standard 13.1.5、Low 12.2.0（MIT），公开来源 RikkaApps/Shizuku-API；许可全文随 `assets/licenses/Shizuku-MIT.txt` 保存，原始 Git blob 及 SHA 记录在 build154 审计。"
+              },
+              {
+                "line": 25,
+                "anchor": "Termux",
+                "snippet": "- Termux terminal-emulator 的 `termux.c` 来自 v0.118.0；上游明确的 Apache-2.0 许可例外保存在 `tools/termux-jni/LICENSE.upstream.md`，全文为 `LICENSE-2.0.txt`。不要将该例外扩展到整个 Termux 应用。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-LIC-01",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-LIC-02"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/assets/licenses/proot-COPYING.txt",
+            "sha256": "0ffa6454acbe7e410ac6f0007df83b9b3161fe55484c1f4b87487c0f2d228a6d",
+            "matches": [
+              {
+                "line": 34,
+                "anchor": "GNU GENERAL PUBLIC LICENSE",
+                "snippet": "GNU GENERAL PUBLIC LICENSE"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-LIC-02",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-CI-01"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": ".github/workflows/ci-fast.yml",
+            "sha256": "8ecc1cd27cbf53fb7ec508fcf195a8e1cfa61963cac14403d2d230f41c76ca1f",
+            "matches": [
+              {
+                "line": 4,
+                "anchor": "pull_request",
+                "snippet": "pull_request:"
+              },
+              {
+                "line": 40,
+                "anchor": "testStandardDebugUnitTest",
+                "snippet": "./gradlew :app:testStandardDebugUnitTest :app:testLowDebugUnitTest -x :app:prepareStandardAssets -x :app:prepareRecoveryAssets --no-daemon --max-workers=2"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-CI-01",
+            "records": [
+              {
+                "report": "changes-engineering.json",
+                "status": "transferred",
+                "owner": "ROOT/CI",
+                "checks": [
+                  "Current .github/workflows fast/package/release do not reference this old chain; only the obsolete non-executable scripts/ci template and scripts call each other",
+                  "prepare-dsh-alpha-runtime.sh and generate-update-fixtures.py already retained with original SHA outside active scripts"
+                ],
+                "residual": [
+                  "Root owns new CI/build deployment and historical chain retirement; exact remaining physical paths recorded, no old chain executed."
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-CI-02"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/verify-stability.py",
+            "sha256": "4cc1d64f3e1d196943be2075bfed7faa2ff7e48881a2e98a8b60b4bfd297ce54",
+            "matches": [
+              {
+                "line": 240,
+                "anchor": "args.stage=='software'",
+                "snippet": "if args.stage=='software':"
+              },
+              {
+                "line": 246,
+                "anchor": "PASS_SOFTWARE",
+                "snippet": "report['status']='PASS_SOFTWARE'"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-CI-02",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-SUP-02"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/runtime-tools.lock.json",
+            "sha256": "dc6b58c0e3d514ff56242646d5db222d0e2b826321aa6ef1343ac2a405ab808b",
+            "matches": [
+              {
+                "line": 3,
+                "anchor": "pnpm",
+                "snippet": "\"pnpm\": {"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-SUP-02",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-TEST-01"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/test/java/com/deepseekharness/app/runtime/AdbWheelBundleTest.java",
+            "sha256": "8c9ea980a8fdfb210d658dd9211e52b316fce112cc1f6467bb3ac3c800f31d8b",
+            "matches": [
+              {
+                "line": 23,
+                "anchor": "dsha.assetsDir",
+                "snippet": "String directory=System.getProperty(\"dsha.assetsDir\");"
+              },
+              {
+                "line": 28,
+                "anchor": "adb-wheels.lock.json",
+                "snippet": "var lock=com.google.gson.JsonParser.parseString(Files.readString(new File(assets,\"adb-wheels.lock.json\").toPath())).getAsJsonObject();"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-TEST-01",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-TEST-24"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystem.java",
+            "sha256": "b19dbc7162eb5d720a5a2d101f59c820ecf1747b1b1c9745d270940e4c786d39",
+            "matches": [
+              {
+                "line": 13,
+                "anchor": "FileStore",
+                "snippet": "long device=Files.getFileStore(a.isSymbolicLink()?file.toPath().getParent():file.toPath()).name().hashCode();int mode=0700;"
+              },
+              {
+                "line": 15,
+                "anchor": "unix:",
+                "snippet": "Map<String,Object> unix=Files.readAttributes(file.toPath(),\"unix:dev,mode\",LinkOption.NOFOLLOW_LINKS);"
+              },
+              {
+                "line": 10,
+                "anchor": "class JvmBackupFileSystem",
+                "snippet": "public class JvmBackupFileSystem implements BackupFileSystem {"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-TEST-24",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-TEST-31"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "tools/host-tests.manifest.json",
+            "sha256": "200064b088ceee9e3a032d9ec4bb94536a94729f3827da2d0129a1f5477c590b",
+            "matches": [
+              {
+                "line": 583,
+                "anchor": "test-mobile-server-streams",
+                "snippet": "\"path\": \"tools/test-mobile-server-streams.mjs\","
+              },
+              {
+                "line": 123,
+                "anchor": "test-asset-deployment",
+                "snippet": "\"path\": \"tools/test-asset-deployment.py\","
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-TEST-31",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-IO-04"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/core/DiagnosticLog.java",
+            "sha256": "0677dce4f6247938927d12db2904b683be44b65ad287fa6b7340326786a71ed5",
+            "matches": [
+              {
+                "line": 22,
+                "anchor": "DiagnosticHistory.write",
+                "snippet": "DiagnosticHistory.write(fs,folder,line);"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-IO-04",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_root/G4",
+                "owner": "root/G4",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "有界追加/耐久轮换或安全AtomicFile，保留脱敏和旧失败；崩溃路径避免重写全部历史。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-ERR-01"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
+            "sha256": "1f9f962cf85243d99ed3d60f19e4886cd3a75854b66b3f4257b4ffc9407aae61",
+            "matches": [
+              {
+                "line": 365,
+                "anchor": "UI_REFRESH_FAILED",
+                "snippet": "getContext(), \"UI_REFRESH_FAILED\", failure.getClass().getSimpleName());"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-ERR-01",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_root",
+                "owner": "root",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "分离状态读取与渲染，仅捕获可恢复异常并限速记录/显示，Error不吞；生命周期离开正常短路不当故障。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-API-07"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+            "sha256": "571ba78671e5a27616a841c839a4f4f86c6ebb7bdb8bc75d736e4062e1ddfb61",
+            "matches": [
+              {
+                "line": 501,
+                "anchor": "PluginAction",
+                "snippet": "List<PluginAction> actions = new ArrayList<>();"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-API-07",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_G3",
+                "owner": "G3",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "类型化ActionItem与参数，按来源能力判断更新，显示/分派解耦；保留免审阅及用户禁用意图。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DEAD-04"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/assets/plugin-network.py",
+            "sha256": "927dd36a3d3c8818c1802887130dd6a66482645087f3cf32021c89651643da46",
+            "matches": [
+              {
+                "line": 129,
+                "anchor": "Source fallback keeps the caller's explicit lock policy unchanged",
+                "snippet": "# Source fallback keeps the caller's explicit lock policy unchanged."
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-DEAD-04",
+            "records": [
+              {
+                "report": "changes-engineering.json",
+                "status": "transferred",
+                "owner": "ROOT/plugin",
+                "checks": [
+                  "Current package_command still has pnpm retry frozen rewrite; its only dependency-install caller always supplies --no-frozen-lockfile, so the branch remains dead"
+                ],
+                "residual": [
+                  "Root owns active plugin policy/transaction changes; remove only retry frozen rewrite and keep current allowed lifecycle/unlocked policy."
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DEAD-05"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/assets/plugin-manager.py",
+            "sha256": "43b284cfd2219dd403f48a8fc32f3b65987c624ad67a71f0b16656fc6ea91690",
+            "matches": [
+              {
+                "line": 503,
+                "anchor": "return None",
+                "snippet": "return None"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-DEAD-05",
+            "records": [
+              {
+                "report": "changes-engineering.json",
+                "status": "transferred",
+                "owner": "ROOT/plugin",
+                "checks": [
+                  "Current get_package_dir still repeats the same NODE_MODULES/name/package.json existence block after unchanged read-only discovery/entity checks"
+                ],
+                "residual": [
+                  "Root owns active plugin maintenance; remove redundant final block only."
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DOC-04"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+            "sha256": "3058af9c948f1fd6ff21bdfff44733860bee3d060d9d07aac58c7f4927e982d2",
+            "matches": [
+              {
+                "line": 17,
+                "anchor": "接收窗口事件",
+                "snippet": "* 接收窗口事件的无障碍服务。事件处理仅在用户开启的短暂配对窗口扫描设置页，"
+              },
+              {
+                "line": 17,
+                "anchor": "短暂配对窗口",
+                "snippet": "* 接收窗口事件的无障碍服务。事件处理仅在用户开启的短暂配对窗口扫描设置页，"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-DOC-04",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DOC-11"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "THIRD_PARTY_NOTICES.md",
+            "sha256": "4886a4a8622aaa6c04fb29421ab4cd7a7aa259f361137d3ed936a4ad81047ae1",
+            "matches": [
+              {
+                "line": 14,
+                "anchor": "3.0.3",
+                "snippet": "- `dsh-web-mobile` **3.0.3**，MIT，来自 `https://github.com/mexiaosqwq/dsh-web-mobile`，固定提交 `a094288883b343e848d7f9cf302d73ad8ed4794b`。"
+              },
+              {
+                "line": 7,
+                "anchor": "0.2.0-rc.2",
+                "snippet": "- 当前 `@deepseek-ai/dsh` 为 **0.2.0-rc.2**。完整版本、来源与 integrity 见 `tools/dsh-runtime/package-lock.json`；各包原许可文件保留在运行归档中。"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-DOC-11",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DOC-12"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "AGENTS.md",
+            "sha256": "9758a0eeff609e570b8aef1bc36d7e538ed56cf6099ce8f6c97241ea044e44d5",
+            "matches": [
+              {
+                "line": 11,
+                "anchor": "0.2.0-rc.2",
+                "snippet": "pnpm + `@deepseek-ai/dsh`（**0.2.0-rc.2**）的 Web UI（`:3080`）。原生层是纯 Java 17、"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-DOC-12",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DOC-15"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/security-model.en.md",
+            "sha256": "e350bcb8cb5dc00359181070a7f3f9bc0259f9f09ffc53aebfea2e25e68dd500",
+            "matches": [
+              {
+                "line": 22,
+                "anchor": "lifecycle scripts",
+                "snippet": "Formal terminals allow repair shell commands. Link, local-package and update installs automatically commit and enable after package/path/digest/transaction checks; there is no plugin review gate. Dependencies may resolve without a frozen lo"
+              },
+              {
+                "line": 7,
+                "anchor": "same-UID",
+                "snippet": "Protected assets include conversations, attachments, personal projects, plugin sources and dependencies, settings, API keys, device grants, backups and managed runtime assets. Actors include the user, native app, same-UID Ubuntu/Node/plugin"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-DOC-15",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DOC-17"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "docs/plugins.md",
+            "sha256": "ff431107d5cd4ce48ee6b8f7916198df53b57e253af0fb23ced9a77444a3d576",
+            "matches": []
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-DOC-17",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DOC-25"
+        ],
+        "status": "current_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "website/data/catalog.mjs",
+            "sha256": "72f8c90e2e05e8a6dfb24615c8314c752e272ff9f1203edbae7d361423ec3d7e",
+            "matches": [
+              {
+                "line": 20,
+                "anchor": "source",
+                "snippet": "\"source\": \"https://github.com/sunsun320/dsh-peak-chip\","
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Add exact current implementation/mitigation and executed-scope checks to the final ledger; missing old checkpoint alone is not a code gap. Final integration/legal/device evidence is separate.",
+        "reason": "This snapshot has relevant real current source/docs; it is not claimed fully verified by static evidence alone.",
+        "change_records": [
+          {
+            "id": "D-DOC-25",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-SUP-01",
+          "D-BUILD-02",
+          "D-DOC-22"
+        ],
+        "status": "retirement_or_single_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "scripts/ci-make-offline-bundle.sh",
+            "exists": false
+          },
+          {
+            "file": "scripts/offline-provision.sh",
+            "exists": false
+          },
+          {
+            "file": "scripts/provision-builtin-plugins.sh",
+            "exists": false
+          },
+          {
+            "file": "scripts/make-offline-bundle.sh",
+            "exists": false
+          },
+          {
+            "file": "scripts/ci/android-build.yml",
+            "exists": false
+          }
+        ],
+        "necessary_action": "Bind root actual retirement/skill source/CI evidence to the original IDs. Do not treat the earlier transfer record as still-unimplemented.",
+        "reason": "Old offline chain is physically absent in this snapshot; source/website consolidation is root-owned and requires its real check logs.",
+        "change_records": [
+          {
+            "id": "D-SUP-01",
+            "records": [
+              {
+                "report": "changes-engineering.json",
+                "status": "transferred",
+                "owner": "ROOT/CI",
+                "checks": [
+                  "Current .github/workflows fast/package/release do not reference this old chain; only the obsolete non-executable scripts/ci template and scripts call each other",
+                  "prepare-dsh-alpha-runtime.sh and generate-update-fixtures.py already retained with original SHA outside active scripts"
+                ],
+                "residual": [
+                  "Root owns new CI/build deployment and historical chain retirement; exact remaining physical paths recorded, no old chain executed."
+                ]
+              }
+            ]
+          },
+          {
+            "id": "D-BUILD-02",
+            "records": [
+              {
+                "report": "changes-engineering.json",
+                "status": "transferred",
+                "owner": "ROOT/CI",
+                "checks": [
+                  "Current .github/workflows fast/package/release do not reference this old chain; only the obsolete non-executable scripts/ci template and scripts call each other",
+                  "prepare-dsh-alpha-runtime.sh and generate-update-fixtures.py already retained with original SHA outside active scripts"
+                ],
+                "residual": [
+                  "Root owns new CI/build deployment and historical chain retirement; exact remaining physical paths recorded, no old chain executed."
+                ]
+              }
+            ]
+          },
+          {
+            "id": "D-DOC-22",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-DUP-21",
+          "D-DOC-09",
+          "D-DOC-13"
+        ],
+        "status": "retirement_or_single_source_evidence_present",
+        "priority": "P3",
+        "evidence": [
+          {
+            "file": "agent-skills/README.md",
+            "sha256": "3524023b3d31ec0fc56824265fa342223d22c24a16717ad6d7d0016a69cd63d1",
+            "matches": [
+              {
+                "line": 3,
+                "anchor": "skills",
+                "snippet": "Two portable skills for agents running in a Linux/proot environment that need to control an Android device."
+              }
+            ]
+          },
+          {
+            "file": "website/build.mjs",
+            "exists": false
+          }
+        ],
+        "necessary_action": "Bind root actual retirement/skill source/CI evidence to the original IDs. Do not treat the earlier transfer record as still-unimplemented.",
+        "reason": "Old offline chain is physically absent in this snapshot; source/website consolidation is root-owned and requires its real check logs.",
+        "change_records": [
+          {
+            "id": "D-DUP-21",
+            "records": [
+              {
+                "report": "changes-G3.json",
+                "status": "transferred",
+                "owner": "root",
+                "checks": [],
+                "residual": [
+                  "Implementation and verification reported by root; G3 does not claim complete"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "D-DOC-09",
+            "records": []
+          },
+          {
+            "id": "D-DOC-13",
+            "records": []
+          }
+        ]
+      },
+      {
+        "ids": [
+          "D-SEC-02"
+        ],
+        "status": "corrected_after_snapshot_by_root_confirmed_owner",
+        "priority": "P2",
+        "evidence": [
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+            "sha256": "c967ce7b0cac26dd89d1b91a6649e456c50120c3d1c06665c35f388fbb29165e",
+            "matches": [
+              {
+                "line": 443,
+                "anchor": "pushFileIntoContainer",
+                "snippet": "public boolean pushFileIntoContainer(java.io.File src, String containerPath) {"
+              },
+              {
+                "line": 455,
+                "anchor": "pullFileFromContainer",
+                "snippet": "public boolean pullFileFromContainer(String containerPath, java.io.File dest) {"
+              }
+            ]
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+            "sha256": "18b2997837ffffa67044ce01ea7436968d0a60a0c9938a3fb2fb4e460fb296cf",
+            "matches": [
+              {
+                "line": 502,
+                "anchor": "pushFileIntoContainer",
+                "snippet": "if (!proot.pushFileIntoContainer(temporary, container)) throw new IOException(\"插件包写入容器失败\");"
+              },
+              {
+                "line": 521,
+                "anchor": "pullFileFromContainer",
+                "snippet": "if (!proot.pullFileFromContainer(container, temporary)) throw new IOException(\"插件包取回失败\");"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Attach the actual owner changes/tests and final frozen integration evidence; do not reopen from this old source snapshot.",
+        "reason": "Current RuntimeAssetFiles does not cover these remaining ordinary stream entries. This is same-UID accidental-overwrite protection, not demonstrated sandbox escape.",
+        "change_records": [
+          {
+            "id": "D-SEC-02",
+            "records": []
+          }
+        ],
+        "previous_static_evidence_superseded": true,
+        "rootConfirmation": "Root confirmed G1 implemented the real push/pull boundary correction after this bounded static snapshot."
+      },
+      {
+        "ids": [
+          "D-API-08"
+        ],
+        "status": "corrected_after_snapshot_by_root_confirmed_owner",
+        "priority": "P2",
+        "evidence": [
+          {
+            "file": "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs",
+            "sha256": "6a2a193e5f6b2a5661ba5c4c8fdb35bf57a872b3f5ba9be6f4b0694572ef33ad",
+            "matches": [
+              {
+                "line": 14,
+                "anchor": "android_vscreen_editor",
+                "snippet": "['android_vscreen_editor','读取或修改虚拟屏当前输入框；op 为 get/edit/submit。',{generation:{type:'string',maxLength:80},op:{type:'string',enum:['get','edit','submit']},editorId:{type:'string',maxLength:160},text:{type:'string',maxLength:16000},start:{type"
+              }
+            ]
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+            "sha256": "bcc065f6e16fce1c6d8cc596375a7ed239e182a6a879201c55044cbc48ad4011",
+            "matches": []
+          },
+          {
+            "file": "app/src/main/java/com/deepseekharness/app/util/HttpProtocol.java",
+            "sha256": "d6e725c90b882029cead279f714c29347e4985f18f610a858a4fade57ac43a7a",
+            "matches": [
+              {
+                "line": 15,
+                "anchor": "new Limits(98304",
+                "snippet": "public static final Limits BRIDGE = new Limits(98304,16384,131072,100,5000);"
+              }
+            ]
+          }
+        ],
+        "necessary_action": "Attach the actual owner changes/tests and final frozen integration evidence; do not reopen from this old source snapshot.",
+        "reason": "The MCP editor always calls /app/vscreen/editor with operation query, but the native editor branch ignores it and only retrieves the editor. Declared 16000 CJK characters encode to about144000 bytes, above the98304 first-line budget.",
+        "change_records": [
+          {
+            "id": "D-API-08",
+            "records": [
+              {
+                "report": "coverage-G2.json",
+                "status": "transferred_to_G1",
+                "owner": "G1",
+                "checks": [
+                  "See review-G2.json evidence; production owner final ledger required"
+                ],
+                "residual": "按操作必需字段验证；大text用有界POST body并同步桥route契约，保留generation/seq与设备权限边界。"
+              }
+            ]
+          }
+        ],
+        "previous_static_evidence_superseded": true,
+        "rootConfirmation": "Root confirmed G2 implemented the MCP/native schema/operation correction after this bounded static snapshot."
+      }
+    ]
+  },
+  "coverage": [
+    {
+      "id": "D-SEC-01",
+      "title": "TarGzipExtractor 链接越界校验为纯文本归一，不解析已解出的链接链",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-02",
+      "title": "宿主按 rootfs 相对路径读写容器文件时跟随 guest 可控符号链接",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "root_confirmed_corrected_after_snapshot",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SEC-00",
+      "title": "安全模型文档与实现不符且缺正式威胁模型/信任边界",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-ADB-01",
+      "title": "AdbBridge 写入的 allow-root-shell/confirm-shell-* 标记文件无读取方（死代码）",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-03",
+      "title": "桥 token 可经查询串传递，官方引导与多个内置插件把 token 放进 URL/命令行",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-04",
+      "title": "屏幕操作敏感应用判定靠包名子串黑名单且判定与执行间存在 TOCTOU，/app/launch 无授权闸",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-PROV-01",
+      "title": "ShellService.java 文件头标注 CFR 反编译，代码来源不明",
+      "group": "legal_or_origin_unknown",
+      "status": "origin_documented_external_authorization_unknown",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SEC-05",
+      "title": "局域网模式为明文 HTTP，首访 token 在 URL 中并被显示/复制到剪贴板",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-ROOT-01",
+      "title": "su 可执行文件只查 4 个硬编码路径",
+      "group": "requires_device_evidence",
+      "status": "not_device_validated",
+      "reviewStatus": "requires_device_evidence",
+      "records": []
+    },
+    {
+      "id": "D-SEC-06",
+      "title": "特权进程先校验路径再执行 cp/mv/rm，共享存储存在跨 App TOCTOU",
+      "group": "requires_device_evidence",
+      "status": "not_device_validated",
+      "reviewStatus": "requires_device_evidence",
+      "records": []
+    },
+    {
+      "id": "D-LIC-01",
+      "title": "THIRD_PARTY_NOTICES 缺 Shizuku、Termux AAR、core-js、sharp/libvips 等条目",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SEC-07",
+      "title": "SAF DocumentsProvider 可浏览/读取 rootfs 内桥 token、.credentials.yaml、.env",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-08",
+      "title": "旧版恢复从 .dsha-apikey 回填 Keystore 后不删除明文文件",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-NET-01",
+      "title": "全应用 usesCleartextTraffic=true，未用 network_security_config 限定 localhost",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-UI.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-01",
+      "title": "错误日志导出声称未读对话文件，但附带 dsh-web.log 尾部 256KiB 且仅正则脱敏",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "requires_device_evidence",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-UPD-01",
+      "title": "更新清单无签名，信任仅靠 HTTPS+清单内 sha256，pageUrl/notes 可被清单任意指定",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-UPD-02",
+      "title": "更新下载重定向只校验 https，不限定主机",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-09",
+      "title": "API key 以 export 拼进 bash -c 命令串，出现在 /proc/<pid>/cmdline",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-CFG-01",
+      "title": "沙箱档位无界面入口，两条导入路径缺省值不一致（'default' 疑似非法）",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-10",
+      "title": "外部链接一键安装并启用插件且执行生命周期脚本，无原生确认",
+      "group": "accepted_policy",
+      "status": "accepted_current_user_policy",
+      "reviewStatus": "accepted_policy",
+      "records": []
+    },
+    {
+      "id": "D-BRAND-01",
+      "title": "对外仓库地址/域名/群号分散硬编码，且两处指向迁移前旧仓库",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SEC-11",
+      "title": "配置页把解密后的 API key 明文填入 EditText 且未关闭实例状态保存",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-13",
+      "title": "页面任意脚本可伪造启动致命事件，触发跳转启动恢复页",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-UI.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-14",
+      "title": "虚拟屏动作按主屏前台包判定敏感应用，敏感应用闸被旁路",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-02",
+      "title": "SensitiveData.redact 依赖字段名/固定前缀，无前缀密钥漏脱敏且每次现编译正则",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-NET-02",
+      "title": "resolv.conf 缺 nameserver 时硬编码追加 8.8.8.8 与 223.5.5.5，两处重复且无配置",
+      "group": "engineering_debt_requires_disposition",
+      "status": "remaining_duplicate_policy_not_dns_overwrite",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SEC-15",
+      "title": "桥路径拒绝表 /root/.dsha- 前缀条目失效，且工作区 .env 可经 /app/export 落公共目录",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-16",
+      "title": "full 备份无条件把工作区 .env 与未脱敏 dsh-web.log 打进导出到 Download 的归档",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-17",
+      "title": "阅读位置记录把含查询串的 URL 写入 localStorage，可能持久化 ?token=",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SEC-18",
+      "title": "插件导出 dereference 跟随链接，非内置插件可把包外文件打进导出包",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-19",
+      "title": "root 读取短信库拦截不含 /data_mirror 绑定挂载路径",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-20",
+      "title": "selftest.py check_backup 把共享存储文件名拼进 bash -lc，存在命令注入",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SEC-21",
+      "title": "v5 备份机器状态名单写错桥 token 文件名，.bridge_token 会作为普通设置进入备份",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-03",
+      "title": "公开文档与测试脚本硬编码开发者 ADB 序列号、私网地址与本机路径",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SEC-22",
+      "title": "系统 Auto Backup/设备迁移整目录纳入 user-data-v5/，STABLE 布局下凭据随之离机",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-04",
+      "title": "无障碍说明承诺“不落盘”，但截屏 PNG 长期写入外部私有目录无清理",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "mitigated"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-23",
+      "title": "发布证书为 Android debug keystore，构建缺省口令回落为公开值 android",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-LIC-02",
+      "title": "GPL-2.0 proot 随所有 flavor 分发，但许可全文只在 low flavor",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-WEB-01",
+      "title": "官网 Nginx 下载 location 内 add_header 导致 HSTS/CSP 等 server 级安全头不继承",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-ARCH-01",
+      "title": "HarnessController 集中了 Web 生命周期、迁移、插件注册、LAN 鉴权、日志与配置重置",
+      "group": "engineering_debt_requires_disposition",
+      "status": "bounded_refactor_not_complete_uniformity",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "implemented_pending_integration"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "implemented_pending_integration"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-01",
+      "title": "Web 健康检查只做 TCP connect，不区分存活、鉴权就绪与服务就绪",
+      "group": "actionable_source",
+      "status": "confirmed_current_health_is_tcp_only",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root/G4"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-03",
+      "title": "UserDataBindings 用两级 getParentFile 隐式推导 filesDir",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-04",
+      "title": "脚本以 base64 内嵌进单个 bash -c 参数注入，受 128KB 单参数上限约束",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-I18N-01",
+      "title": "大量文案以 UiText.text 片段加数字拼接，无法整句翻译与处理复数",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-UI.json",
+          "status": "mitigated"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root"
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-02",
+      "title": "全局可变静态单例充当服务定位器（RuntimeHostPorts、MainActivity.current、vscreen 等）",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "constrained_runtime_ports_remaining_ui_to_root"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "constrained_runtime_ports_remaining_ui_to_root"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-05",
+      "title": "RuntimeHostPorts.emit 吞掉 Provider 异常，只保留最后一次的类名",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-PLAT-01",
+      "title": "PrivilegedPackageContext 反射调用隐藏 API ActivityThread.systemMain/getSystemContext",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "requires_device_evidence",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "requires_device_evidence"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-06",
+      "title": "BoundedGuestSessions 遇到单个畸形或无法证明已空的记录就整体抛错",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "duplicate",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "duplicate"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-07",
+      "title": "共享存储 bind 只在路径存在时添加，缺权限或不可见时静默缺失",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-08",
+      "title": "ContainerRuntime 接口的 Proot 实现 applyEnv/prepare 为空，真实逻辑散在 ProotBootstrap；BINDS 是接口常量",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-09",
+      "title": "安装步骤号 1-6 以魔数散布，失败原因用 String.valueOf(error) 直接展示",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-IO-01",
+      "title": "原子写有多套实现，BackupFileSystem.atomic 之外约 10 个文件自写 tmp+rename 且不 fsync 父目录",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-10",
+      "title": "IsolatedInstallProcess.exitValue 有副作用（置 closed、删 status 文件），waitFor 10ms 忙轮询",
+      "group": "verification_remaining",
+      "status": "reported_source_implementation_final_evidence_pending",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "implemented_pending_full_validation"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "implemented_pending_full_validation"
+        }
+      ]
+    },
+    {
+      "id": "D-PLAT-02",
+      "title": "ProcessIdentity.androidPid 从 Process 类名和 toString() 解析 pid，依赖 ART 内部实现",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "requires_device_evidence",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "requires_device_evidence"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-11",
+      "title": "RuntimeTrial 与 ProfileSettingsTrial 的等待循环没有总超时，只靠用户取消",
+      "group": "accepted_policy",
+      "status": "accepted_current_user_policy",
+      "reviewStatus": "accepted_policy",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "accepted_policy"
+        }
+      ]
+    },
+    {
+      "id": "D-STYLE-01",
+      "title": "大量源码多语句压缩在一行，未接入 formatter，难以审查",
+      "group": "engineering_debt_requires_disposition",
+      "status": "bounded_refactor_not_complete_uniformity",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root"
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-03",
+      "title": "分层反转：runtime/backup 层直接依赖 ui 与 core，缺少架构边界测试",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-12",
+      "title": "ProfileSettingsTrial 输出泵每 150ms 最多读 8KB，guest 输出过快时会被管道阻塞",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-IO-02",
+      "title": "TarGzipExtractor 的 symlink/硬链接/chmod 失败被 catch Throwable 吞掉，解压不完整仍报成功；lastSkipped/lastSkipNote 是死字段",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "mitigated"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G1"
+        }
+      ]
+    },
+    {
+      "id": "D-API-01",
+      "title": "WebProcessManager.stop/stopOne 以 String 返回错误，混用错误码与本地化文案",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed_at_supported_boundary"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed_at_supported_boundary"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-13",
+      "title": "停止 Web 只发 SIGTERM，卡死的 node 无法停止且没有强制路径",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-API-02",
+      "title": "以 exception.getMessage() 字符串比较做控制流",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed_runtime_owned"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed_runtime_owned"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-14",
+      "title": "ensureAndroidGroups 硬编码特定设备的 u0_a428/all_a428 组",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-API-03",
+      "title": "ProotBootstrap.startRootfs 有 5 层布尔参数重载，应改为 LaunchSpec 值对象",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-15",
+      "title": "findBundleEntry 用 4 个候选名加全 APK 子串匹配取最大条目的启发式定位离线包",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-16",
+      "title": "首次解压中途失败会留下非空 rootfs，之后不再允许首次解压，只能走维护重建",
+      "group": "verification_remaining",
+      "status": "reported_source_implementation_final_evidence_pending",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "implemented_pending_full_validation"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "implemented_pending_full_validation"
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-04",
+      "title": "ProotBootstrap 是 1579 行的 God class",
+      "group": "engineering_debt_requires_disposition",
+      "status": "bounded_refactor_not_complete_uniformity",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "implemented_pending_architecture_gate"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "implemented_pending_architecture_gate"
+        }
+      ]
+    },
+    {
+      "id": "D-API-04",
+      "title": "文件类型用字符串字面量（FILE/DIRECTORY/LINK/MISSING/UNREADABLE/EXCLUDED）在全包散布",
+      "group": "engineering_debt_requires_disposition",
+      "status": "bounded_refactor_not_complete_uniformity",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G3"
+        }
+      ]
+    },
+    {
+      "id": "D-CONC-01",
+      "title": "AutomaticBackupService 的 active/owned 在 worker 线程与主线程间共享，未加 volatile 或同步",
+      "group": "verification_remaining",
+      "status": "job_generation_publication_needs_proof",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G3"
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-05",
+      "title": "main 源集的 StorageMaintenance.CACHE 硬编码 debug/deviceAudit 审计目录名",
+      "group": "engineering_debt_requires_disposition",
+      "status": "bounded_refactor_not_complete_uniformity",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G3"
+        }
+      ]
+    },
+    {
+      "id": "D-DEP-01",
+      "title": "BackupJson（Gson 严格流式）与 org.json 两套 JSON 解析并存，严格性不同",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed_runtime_owned"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed_runtime_owned"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-17",
+      "title": "ProotBootstrap.uninstall 是无调用方的危险死代码，LEGACY 布局下会删掉 .dsh 用户数据",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-PERF-01",
+      "title": "HostSnapshot.create 每个文件先落盘 capture 再读两次，末尾还全量复核，I/O 约为数据量的 3-4 倍",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G3"
+        }
+      ]
+    },
+    {
+      "id": "D-I18N-02",
+      "title": "中文字面量未经 UiText 直接展示，另有布局 XML 内硬编码英文",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-UI.json",
+          "status": "mitigated"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root"
+        }
+      ]
+    },
+    {
+      "id": "D-IO-03",
+      "title": "runtime 包仍大量用 java.io.File 直接读写，未走 backup 包的安全文件系统层",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-PKG-01",
+      "title": "多处硬编码包名 com.dsh.client，applicationId 变化或加后缀即失效",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G1"
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-06",
+      "title": "HttpShellService.handle 用 30 多个 if-else 分支做路由，无路由表或处理器接口",
+      "group": "engineering_debt_requires_disposition",
+      "status": "bounded_refactor_not_complete_uniformity",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G1"
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-07",
+      "title": "旧 tar.gz（guest Python 引擎）与 v5 宿主原生 dshbak 两套备份/恢复系统并存",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G3"
+        }
+      ]
+    },
+    {
+      "id": "D-IO-04",
+      "title": "DiagnosticLog 每条事件截断重写整个文件，崩溃处理器中断写入会丢失全部历史",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root/G4"
+        }
+      ]
+    },
+    {
+      "id": "D-NAME-01",
+      "title": "EnvironmentAccess.shouldAttemptRuntimeUpdate 名为\"应尝试更新\"，实际返回\"是否阻止启动、需进入维护页\"",
+      "group": "engineering_debt_requires_disposition",
+      "status": "remaining_presentation_and_naming_coupling",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root/G4"
+        }
+      ]
+    },
+    {
+      "id": "D-HEUR-01",
+      "title": "StartupDiagnostics 用英文关键字正则把普通日志行判为插件故障，每次还整文件重写诊断日志",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-18",
+      "title": "有界 guest 记录畸形或会话无法证明已空时，恢复、重建、格式化全部被挡住，没有应用内出口",
+      "group": "accepted_policy",
+      "status": "accepted_current_user_policy",
+      "reviewStatus": "accepted_policy",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "accepted_policy"
+        }
+      ]
+    },
+    {
+      "id": "D-API-05",
+      "title": "DiagnosticRepository 从拼好的报告文本里反向解析结构化结果",
+      "group": "engineering_debt_requires_disposition",
+      "status": "remaining_presentation_and_naming_coupling",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root/G4"
+        }
+      ]
+    },
+    {
+      "id": "D-API-06",
+      "title": "StorageActivity 按迭代序号取标签，与 StorageMaintenance.inspect 的插入顺序隐式对齐",
+      "group": "engineering_debt_requires_disposition",
+      "status": "remaining_presentation_and_naming_coupling",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G3"
+        }
+      ]
+    },
+    {
+      "id": "D-A11Y-01",
+      "title": "无障碍缺口：SeekBar 无标签、空文本分页圆点、未关联 labelFor、符号状态点、看似可点的不可点行",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-UI.json",
+          "status": "mitigated"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root"
+        }
+      ]
+    },
+    {
+      "id": "D-I18N-03",
+      "title": "把用户输入、设备命令输出和网页提示文本交给 UiText.text 当翻译键查表",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-UI.json",
+          "status": "implemented"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root"
+        }
+      ]
+    },
+    {
+      "id": "D-ERR-01",
+      "title": "LaunchFragment.refreshRunState 整个方法体包在 catch(Throwable ignored) 中",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root"
+        }
+      ]
+    },
+    {
+      "id": "D-API-07",
+      "title": "PluginFragment 操作菜单以中文显示串作为分派键",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G3"
+        }
+      ]
+    },
+    {
+      "id": "D-PERF-02",
+      "title": "虚拟屏所有 HTTP 请求在同一把全局锁内做网络 I/O，预览轮询与触控互相阻塞",
+      "group": "engineering_debt_requires_disposition",
+      "status": "remaining_virtualscreen_serialization_design",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root/G4"
+        }
+      ]
+    },
+    {
+      "id": "D-CONC-02",
+      "title": "VirtualScreenOverlayController 与 VirtualScreenForeground 全部状态为静态可变字段，只靠主线程约定",
+      "group": "engineering_debt_requires_disposition",
+      "status": "remaining_virtualscreen_serialization_design",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root/G4"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-19",
+      "title": "应急舱失败候选、被替换的旧舱与每次的 recovery-sessions 实例没有任何清理路径",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed_with_retention_policy"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed_with_retention_policy"
+        }
+      ]
+    },
+    {
+      "id": "D-RES-01",
+      "title": "图片草稿 IndexedDB 记录只在本会话清空附件时删除，孤儿草稿会挤占 256MB 总配额",
+      "group": "resolved_current_source_with_explicit_residual",
+      "status": "see-changes-drafts-final",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_root"
+        }
+      ]
+    },
+    {
+      "id": "D-PERF-03",
+      "title": "dsh-web-mobile 在主线程用 brotliCompressSync/gzipSync 同步压缩大 JSON",
+      "group": "accepted_policy",
+      "status": "bounded_sync_compression_tradeoff",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G3"
+        }
+      ]
+    },
+    {
+      "id": "D-API-08",
+      "title": "vscreen 工具 schema 把所有属性设为 required，且长 text 经 GET 查询串传输会超过桥首行上限",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "root_confirmed_corrected_after_snapshot",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G1"
+        }
+      ]
+    },
+    {
+      "id": "D-PERF-04",
+      "title": "插件依赖安装整体 120s 超时，弱网下大插件可能稳定失败",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G3"
+        }
+      ]
+    },
+    {
+      "id": "D-FS-01",
+      "title": "runtime-fs 降级发布的 .dsha-publish.lock 从不删除，且 rename 后不 fsync 父目录",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RT-20",
+      "title": "STABLE 数据布局下桥 token 写到被 bind 遮住的 rootfs/root/.dsh，guest 可能读到过期 token",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "transferred_to_G1"
+        }
+      ]
+    },
+    {
+      "id": "D-HEUR-02",
+      "title": "WebProcSel.looksLikeWeb 子串宽匹配，同 UID 无关进程会被判为 Web，导致停止和维护被挡（失败闭合）",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-RES-02",
+      "title": "rc1 迁移 prepare 每次失败都新建 generation 并全量快照，失败不清理且无空间预检",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "fixed"
+        },
+        {
+          "report": "coverage-G2.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-01",
+      "title": "受管 node_modules 别名枚举在 installedManagedPaths 与 stage 中复制两份",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-02",
+      "title": "/proc/<pid>/stat 解析与 /proc 遍历在多个类中各自实现",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-03",
+      "title": "RuntimeTrial 与 ProfileSettingsTrial 的写文件、启动脚本与 CheckedExit 近乎复制",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-PATCH-01",
+      "title": "三项 Web 适配补丁因 dshVersion 不等被静默跳过：两项为不彻底退役，tooltip 为漏迁移",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-04",
+      "title": "RuntimeTools.prepare 与 prepareManagedOverlay 补丁调用序列复制两份",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-PATCH-02",
+      "title": "上游打包产物精确字符串补丁缺少清单化与目标版本命中门禁，版本判定两套",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-PATCH-03",
+      "title": "同一 LAN 设置补丁三处实现，失败语义与替换结果不一致；String.replace 式补丁与 ExactTextPatch 并存",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-05",
+      "title": "proot native 依赖（libtalloc/libandroid-shmem）复制逻辑在 ProotBootstrap 中重复 5 处",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-06",
+      "title": "备份热数据名单在 Java 与 Python 间多份硬编码，Java 侧 PUBLIC_HOT_ENTRIES 已无生产引用",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G1.json",
+          "status": "implemented"
+        },
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-07",
+      "title": "事务标记文件读写校验与 history proof 模式在十余个事务类中各自实现",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-LEGACY-01",
+      "title": "历史兼容分支（Legacy*/rc1 迁移/旧资产名兜底）无下线策略，rc1 迁移每次启动执行",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-09",
+      "title": "UserDataLayout.PRIVATE 私有目录名单与各事务类目录常量各自硬编码",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-PRESET-01",
+      "title": "旧预设转换时手拼 YAML 并逐行缩进嵌入原 agent.cordis.yml",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-10",
+      "title": "两套 tar 解析器质量不一：TarGzipExtractor 宽松且静默吞掉链接失败",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-BAK-01",
+      "title": "自动备份内部随机密钥丢失后旧自动备份不可解密，仅抛错误码",
+      "group": "accepted_policy",
+      "status": "accepted_current_user_policy",
+      "reviewStatus": "accepted_policy",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "accepted_policy"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-11",
+      "title": "备份 scope 名单 application/sessions/settings/plugins/projects 在三处字面量重复",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-12",
+      "title": "npm 包名正则在三个类中复制",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-BAK-02",
+      "title": "环境重建峰值空间为估算值，未实测",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "requires_device_evidence",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "requires_device_evidence"
+        }
+      ]
+    },
+    {
+      "id": "D-BAK-03",
+      "title": "格式化会删除公共存储 Documents/dshdata 整个目录，与用户决策相反",
+      "group": "accepted_policy",
+      "status": "accepted_current_user_policy",
+      "reviewStatus": "accepted_policy",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "accepted_policy"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-08",
+      "title": "系统插件启停投影逻辑在 SystemPluginState.apply 与 PluginRestoreGraph.applySystemPluginState 中近乎逐行复制",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-PLUG-01",
+      "title": "备份恢复/隔离审阅重建插件图时，受管依赖链接写成宿主绝对路径，guest 内无法解析",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-BAK-04",
+      "title": "保留区、事务归档与插件删除记录只增不减，无容量上限与用户清理入口",
+      "group": "accepted_policy",
+      "status": "accepted_current_user_policy",
+      "reviewStatus": "accepted_policy",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "accepted_policy"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-01",
+      "title": "NativeBackupJobs.loadLastState 的 UUID 正则少一组，指针缺失时永远找不到历史任务",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-13",
+      "title": "UUID 格式正则在 main 源集手写 35 处，已有 1 处手误",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-02",
+      "title": "/app/share?path= 用 file:// Uri 跨应用分享，targetSdk 37 下必然抛 FileUriExposedException",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-03",
+      "title": "生产恢复路径不重置 3090 桥 token，旧备份带回的 .bridge_token 原样覆盖",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-14",
+      "title": "rootfs 位置以 \"linux/ubuntu\" 字面量在 main 源集硬编码约 36 处",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-15",
+      "title": "selectDataHome 手写 pending 事务清单，漏 plugin-install-journals 与 bounded-guest，并以 recovery=true 绕过通用门禁",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-LEGACY-02",
+      "title": "任务 kind 用本地化显示文案存盘并参与控制流判断",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-16",
+      "title": "内置插件名单多处漂移：自测、重建快照、预置脚本、发布门禁与官网各写一份",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-17",
+      "title": "（已失效）终端 Ctrl 映射两段重复：当前源码已改用 TerminalView 回调，两段映射均不存在",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "already_fixed",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "already_fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-18",
+      "title": "插件删除确认框两份实现，文案与 i18n 写法不同",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-04",
+      "title": "虚拟屏预览单指手势在 streaming 模式下可能被注入两次",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-05",
+      "title": "导出到 Download 时 MIME 只区分 .txt/.zip，其余一律标为 application/gzip",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "already_fixed",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "already_fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-19",
+      "title": "通知/前台服务 ID 分散定义且两处为字面量，Constants 的“全局唯一”约定无保障",
+      "group": "engineering_debt_requires_disposition",
+      "status": "bounded_refactor_not_complete_uniformity",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-20",
+      "title": "两套 available() 轮询进程收集器回收语义不同（另有 IsolatedInstallProcess 自轮询）",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-COMPAT-01",
+      "title": "Low 线 Gecko 回退阈值 Chrome<118 无来源注释；ES 兼容垫片已补齐但版本不符时静默跳过注入",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-21",
+      "title": "同名 Agent 技能在 website 与 agent-skills 两处内容分叉，官网来源链接指向相矛盾版本",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "retirement_or_single_source_evidence_present",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DUP-22",
+      "title": "web-state-fixture.html 与 Web 回归夹具 Java 类在 androidTest 与 debug 两份并已分叉",
+      "group": "engineering_debt_requires_disposition",
+      "status": "historical_fixture_fork_retained",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-06",
+      "title": "凭据剔除只认两空格缩进块样式，flow 样式或其他缩进时浏览器会话密钥进入备份且无告警",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-PLUG-02",
+      "title": "内置插件注册：单个签名实体缺失即整体失败、隔离目录只增不清、命令行锁无超时",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-07",
+      "title": "heal-sessions 只补 source 时不计入 fixed，修复不写回（脚本无调用方）",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "not_applicable",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "not_applicable"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-08",
+      "title": "dsh-web-mobile 压缩补丁在延迟态丢弃 write 回调，并把 JSON 分块全部扣到 end",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        },
+        {
+          "report": "changes-mobile.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-PLUG-03",
+      "title": "删除活会话依赖宿主私有内部结构；.sessions-trash 保存会话全文且未被备份/导出排除",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "in_progress"
+        },
+        {
+          "report": "changes-mobile.json",
+          "status": "fixed-mobile-lifecycle"
+        }
+      ]
+    },
+    {
+      "id": "D-PLUG-04",
+      "title": "插件加载回执遇单个插件缺依赖即整轮抛错，其他插件状态更新不落盘",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-PLUG-05",
+      "title": "插件归档自带的 .dsha-dependencies.json 被直接采信，作者自填字段会显示在预览页",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-PATCH-04",
+      "title": "models-navigation 补丁已退役，但宿主仍派发 dsha-open-models，冒烟脚本仍套用",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-09",
+      "title": "plugin-manager.py 无参数调用时抛 IndexError，没有返回“不支持的插件操作”",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-COMPAT-02",
+      "title": "dsh-web-mobile 的 peerDependencies 上限 <0.2.0，与宿主 0.2.0-rc.2 不符，测试还把它锁死",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "not_applicable",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "not_applicable"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-10",
+      "title": "selftest.py 读日志只取前 400KB 再截尾，大日志时检查的是旧内容",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "not_applicable",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "not_applicable"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-11",
+      "title": "试运行自有插件失败判定用无锚定子串，可能被其他插件的错误行误触发",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-12",
+      "title": "fix-corrupt-session.py 只解压首帧后单帧写回，会静默丢掉后续事件",
+      "group": "resolved_current_source_with_explicit_residual",
+      "status": "see-changes-drafts-final",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G3.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-CI-01",
+      "title": "仓库没有在用的构建 CI，旧构建模板版本过期且不在触发路径",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-SUP-01",
+      "title": "离线 rootfs 构建脚本的运行时身份固定为 0.1.2-alpha.2，与当前 0.2.0-rc.2 脱节",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "retirement_or_single_source_evidence_present",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-CI-02",
+      "title": "verify-stability.py 缺签名私钥时整体判 FAIL，软件检查与签名发布没有拆分",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SUP-02",
+      "title": "随包 pnpm 版本 10.34.5 在多处硬编码，无单一来源",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-01",
+      "title": "AdbWheelBundleTest 用正则解析 Python 源码常量作契约，且依赖工作目录",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-02",
+      "title": "runtime 关键组件缺 JVM 单测：ProotBootstrap、TarGzipExtractor、RuntimeTools 补丁版本匹配、WebProcessManager.stopOne、RuntimeTrial",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-SUP-03",
+      "title": "adb-shell.py/device-shell-policy.py 有两条写入 rootfs 的路径，所有权与版本判据不一致",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-03",
+      "title": "Rc13Instrumentation 的 APK 校验场景把 versionCode 写死 114，在 build150 下必然失败",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-source-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-04",
+      "title": "LanguageSettingsAudit 按原文长度截取脱敏结果，脱敏缩短时越界",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-05",
+      "title": "InstallSettingsAudit 真实点击配置保存，触发全套保存副作用，注释不符",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-06",
+      "title": "FunctionalAuditInstrumentation 保存/恢复已删除的 backup_launch_count，属遗留死逻辑",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-source-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-07",
+      "title": "多个 debug 插桩自称“非调试包”但只存在于 debug 源集；InstallAudit 失败路径不回滚、夹具不清理",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-08",
+      "title": "Rc21AttachmentAudit 依赖的资产不在 debug 包中，且失败前已对真实环境执行维护更新",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-09",
+      "title": "UpgradeDeviceAudit 与 PluginListAudit 断言可见内置插件恰好 4 个，与现行 7 个不符",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-source-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DEBUG-01",
+      "title": "debug 插桩在 cacheDir 有意保留大体积夹具与截图，StorageMaintenance 不清理；failBackup 死代码",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-10",
+      "title": "DevicePolicyAudit 固定目录不清理，第二次运行必失败",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-11",
+      "title": "WebRegressionAudit 默认模式可能被替换为真实 Web 鉴权地址，测试与用户会话未隔离",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-source-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-12",
+      "title": "多终端/终端维护审计反射已不存在的静态字段 sessions，必然失败",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-13",
+      "title": "多个自测用解析后的语言保存/恢复，把“跟随系统”固化为显式 zh/en",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-14",
+      "title": "UiPolishAudit 把真实运行日志导出到公共 Download 并改写导出偏好，注释称“假日志”",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-15",
+      "title": "RecoveryEntryAudit 临时改名真实就绪标记，进程被杀时用户环境持续判定未就绪",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-17",
+      "title": "BrowserCompatibilityAudit 在 client.js 中找 PDF Worker 标记，实际在 client.pdf.js，断言必败",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-18",
+      "title": "TabletEnvironmentAudit/Rc21AttachmentAudit 依赖的测试资产未打进 APK",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-19",
+      "title": "两个插桩用字面量结果码 0/1，成功时返回 RESULT_CANCELED",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-20",
+      "title": "RuntimeStartupAudit 的 terminal-birth 模式要求非调试版，但现有构建配置下不可达",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-21",
+      "title": "自检“ADB 只读白名单”测试的是已不参与放行的死代码，给出虚假 PASS",
+      "group": "engineering_debt_requires_disposition",
+      "status": "active_test_targets_unused_legacy_helpers",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-BUILD-01",
+      "title": "提交中的 runtime-descriptor.json 与受管输入不一致，--check 在 Linux 构建必失败",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-22",
+      "title": "自检 write/会话补丁仍只认 DSHA_L2S_FIX*，现行运行时用 DSHA_ATOMIC_PUBLISH_V1 必报 FAIL",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-23",
+      "title": "三处单测断言名不副实：恒真断言、只查首尾引号、未断言脱敏",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-24",
+      "title": "backup 单测共用的 JvmBackupFileSystem 与生产实现差异大，防御分支未被覆盖",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-BUILD-02",
+      "title": "离线 rootfs 构建脚本复制已不存在的插件目录，整条旧构建链失修",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "retirement_or_single_source_evidence_present",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-REPRO-01",
+      "title": "入库原生产物 libdsha-session.so 只能用 Windows 本机路径重建；dns-compat-fixture.c 无构建脚本",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-26",
+      "title": "run-unit-tests.py 只编译 *Test.java，6 个测试辅助类缺失导致全量编译失败",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-27",
+      "title": "Agent 预设补丁测试不校验 dshVersion，生产对 0.2.0-rc.2 静默跳过；测试未接入门禁",
+      "group": "history_or_disabled_entry",
+      "status": "historical_not_current_restore_or_release_proof",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-28",
+      "title": "test-alpha1-startup.mjs 在干净检出下 ENOENT，属陈旧一次性测试",
+      "group": "history_or_disabled_entry",
+      "status": "historical_not_current_restore_or_release_proof",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-29",
+      "title": "test-backup-device.py 硬编码 Windows adb 路径，并在用户真实 rootfs 留下测试文件",
+      "group": "history_or_disabled_entry",
+      "status": "historical_not_current_restore_or_release_proof",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-30",
+      "title": "多个 Node 测试绕过 testRuntime 的版本/指纹校验，默认指向过时运行时",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-31",
+      "title": "约 23 个回归测试/夹具未接入任何测试入口，只能手动运行",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-32",
+      "title": "test-native-plugin-manager.mjs 在 app/build 创建临时目录不清理，干净检出下 ENOENT",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-33",
+      "title": "test-plugin-transactions.py 夹具固定在仓库 app/build/round2-audit 且从不清理",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-35",
+      "title": "test-restore-merge-wsdir.py 在宿主根目录 / 下建测试目录，且相对路径断言依赖 cwd",
+      "group": "history_or_disabled_entry",
+      "status": "historical_not_current_restore_or_release_proof",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-36",
+      "title": "testRuntime 的 environment 默认值两支相同，managed 与 raw 共用 DSHA_TEST_RUNTIME",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        },
+        {
+          "report": "changes-runtime-proof.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-37",
+      "title": "device-backup-audit.init.gradle 的源码 String.replace 补丁不命中时静默跳过",
+      "group": "history_or_disabled_entry",
+      "status": "historical_not_current_restore_or_release_proof",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-38",
+      "title": "control-functional-audit.py 参数校验用 assert、缺 --script 时崩溃、ADB 路径写死",
+      "group": "history_or_disabled_entry",
+      "status": "historical_not_current_restore_or_release_proof",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-TEST-39",
+      "title": "test-dsha-ui-regressions.py 与源码漂移，系统语言用例必然 ERROR；未接入任何入口",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-41",
+      "title": "两个 APK 发布核验脚本全部用 assert 实现，python -O/PYTHONOPTIMIZE 下门禁空转",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-ROOT.json",
+          "status": "implemented"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-02",
+      "title": "ProotBootstrap 注释仍写 dsh 1.2-alpha 与“四个内置插件”",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "duplicate",
+      "records": []
+    },
+    {
+      "id": "D-DEAD-01",
+      "title": "Java/脚本层死代码与死接口累积（含会绕过策略的旧确认路径）",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-owned-subset"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-03",
+      "title": "多处孤立/叠加 Javadoc，注释挂在错误的元素上",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-04",
+      "title": "无障碍服务类注释声称 packageNames 限定设置应用，与配置不符",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-05",
+      "title": "PluginNavigation 注释称安装经原生预览确认，实际外部来源无确认",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-06",
+      "title": "更新日志硬编码在 UpdateActivity 的 Java 字符串里",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-07",
+      "title": "SensitiveData 类注释仍写“骨架版、待回填”",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-08",
+      "title": "内置插件数量在注释里写成“四个”，实际 8 个",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-09",
+      "title": "官网分发的 Agent Skill 版本号与通道描述过时",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "retirement_or_single_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-10",
+      "title": "README 中英文停在 0.1.7-rc2/147，历史段落操作指引失效且互相矛盾",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-11",
+      "title": "THIRD_PARTY_NOTICES 的移动端插件与 DSH 依赖声明整段过时，“未修改”不成立",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-12",
+      "title": "AGENTS.md 新旧规则叠加，自相矛盾且多处过时",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-13",
+      "title": "agent-skills/device-shell 技能多处事实错误（/exec 缺 token、Termux 通道不存在、推荐裸 adb）",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "retirement_or_single_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DEAD-02",
+      "title": "backup-prepare.py、restore-merge.py 无调用方仍打进 APK，文案与现行引擎相反",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-14",
+      "title": "register-builtin-plugins.py 注释仍称四个内置插件，且有不可达 return",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "duplicate",
+      "records": []
+    },
+    {
+      "id": "D-DEAD-03",
+      "title": "十余个旧自愈/迁移脚本无部署方仍随 APK 打包（根因：assets 整目录 rglob）",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DEAD-04",
+      "title": "plugin-network 换源重试补 --frozen-lockfile 的分支不可达",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DEAD-05",
+      "title": "plugin-manager.resolve_plugin_dir 末尾重复检查永不命中",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "transferred"
+        }
+      ]
+    },
+    {
+      "id": "D-DEAD-06",
+      "title": "旧危险命令守卫 rootfs-confirm-install.sh 与 DangerShellGuard 均无部署/调用",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-15",
+      "title": "英文安全模型仍称 dsh-guard.sh 拦截危险命令，与中文版和实现不符",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DEAD-07",
+      "title": "4 个 drawable、1 个布局与 install_crash 按钮无引用仍随 APK 打包",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DEAD-08",
+      "title": "21 条中英字符串在代码与布局中无引用",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "duplicate",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-16",
+      "title": "历史升级报告/低版说明/ROADMAP 无历史标注，断言与现状不符",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering-docs.json",
+          "status": "fixed-own-scope"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-17",
+      "title": "plugins.md 称不执行安装脚本，实际已开启全部依赖生命周期脚本",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DEAD-09",
+      "title": "旧 webui/webserver 补丁脚本无部署方；startup-*.py 仍部署但无执行方；HttpShellService 注释引用旧鉴权补丁",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-G2.json",
+          "status": "runtime_layout_retired_scripts_removed"
+        },
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DEAD-10",
+      "title": "大量字符串/样式/尺寸/颜色资源无引用，未开 shrinkResources 与 lint 门禁",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-18",
+      "title": "android-standard.md 与 community-standard-feedback.md 以“当前”口吻描述旧版本",
+      "group": "root_ledger_reconciliation_only",
+      "status": "actual_root_work_must_be_bound_to_original_id_not_assumed_unimplemented",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-19",
+      "title": "两份发布说明的 Standard APK SHA-256 只有 63 位",
+      "group": "historical_invalid_digest",
+      "status": "invalid_record_disclosed_no_replacement",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering-docs.json",
+          "status": "recording-error-explicit"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-20",
+      "title": "发布构建与统一门禁在 Windows 主机执行，Linux 专属用例被跳过",
+      "group": "requires_device_evidence",
+      "status": "linux_and_device_scope_not_executed_by_this_review",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DOC-21",
+      "title": "接手指南的脚本、类名、行数、CI 描述大面积失配",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering-docs.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-DEAD-11",
+      "title": "scripts/ 下两个历史构建工具无调用方且锁定旧版本",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-22",
+      "title": "离线包预置的 bash 工具描述写死 ADB 唯一通道/uid=2000/无 token 的 /exec，且永不刷新",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "retirement_or_single_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    },
+    {
+      "id": "D-DEAD-12",
+      "title": "tools/TarRepro.java 无调用方且与 TarGzipExtractor 行为漂移",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DEAD-13",
+      "title": "tools/inject-arm64-natives.py 为 rc.1 一次性注入脚本，无调用方",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-23",
+      "title": "termux-jni README 重编参数与摘要停在旧值，与 build.ps1 和现行库不符",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering-docs.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-DEAD-14",
+      "title": "build-dsh-runtime.py 中 field_anchor/class_replacement 赋值后未使用",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-24",
+      "title": "rc2 审计目录的“当前版”文档与“修复前”版本字节相同",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering-docs.json",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "id": "D-DEAD-15",
+      "title": "pnpm-env-fix.sh 无调用方仍随 APK 打包",
+      "group": "reported_implementation_with_residual",
+      "status": "implementation_claim_requires_final_evidence",
+      "reviewStatus": "open",
+      "records": [
+        {
+          "report": "changes-engineering.json",
+          "status": "implemented-and-host-verified"
+        }
+      ]
+    },
+    {
+      "id": "D-DOC-25",
+      "title": "官网数据、发布说明与站点测试仍锁定 0.1.7-rc2/build147",
+      "group": "resolved_current_source_but_old_ledger",
+      "status": "current_source_evidence_present",
+      "reviewStatus": "open",
+      "records": []
+    }
+  ],
+  "interpretation": [
+    "A missing/transfer/old pending checkpoint is not proof code is unchanged. Current exact-file evidence takes precedence.",
+    "A mitigated/accepted/history/legal-unknown/recording-error status must not be flattened to fixed.",
+    "Reported child checks are scoped evidence, not all-device/model/complete final artifact verification.",
+    "Uninspected broad cases remain final-disposition-required instead of invented success/failure."
+  ],
+  "inputFingerprints": {
+    "source-items.json": "6fc2db25fc9a775c42fc1e48413e9d5c67c67b9e32de6f04e17032ee5fb87ba8",
+    "reviews.json": "00d5dccdf0aa870df9632d909914107814690f789d416aba2a5380c659d33b0d",
+    "changes-G1.json": "e789fe1092e57fc676fab897db87e4927d81a2163fcadcd93ebd108198f1ac90",
+    "changes-G2.json": "abf1fb6bddce753a12bc391d9cc4d2b33a2f31b3011292171cff8919cb24d06e",
+    "changes-G3.json": "f4b1c9ee5f8f351cab31ebcd3d21be138362641b50047e21ba333739e58e7102",
+    "changes-UI.json": "cdc49fe82538930ba99d70a21b1b19476c7781a8daad3721c981c11636809aec",
+    "changes-mobile.json": "09a61db25fa08ad906c11d3d37f226f92acb61a5d626b8e523d67042456593da",
+    "changes-ROOT.json": "076a6f121043d9c23e2287f4310bbfcd3a21c27d6b909fdc081569ed93d45f76",
+    "changes-engineering.json": "aa68167046be9975a781264d23fd82cfd2881cdec3df85316c3ec79e4d96ec69",
+    "changes-engineering-docs.json": "6fb300d4bb48633b34814e714e8c476a73678a6d77cd53eeafe24dd75cadd45b",
+    "changes-runtime-proof.json": "2d73d2a3a773afa1cfb5084a7f94f4eaab4f7ee66259a530aeddcc9528b1c700",
+    "coverage-G2.json": "ee3cdce240dbab591962a988354a529cdb15cc8dcb988ac7abd516ae697ae76c"
+  },
+  "remainingConfirmedSourceActionIds": [
+    "D-RT-01"
+  ],
+  "rootLedgerOnlyIds": [
+    "D-BRAND-01",
+    "D-PRIV-03",
+    "D-WEB-01",
+    "D-PERF-01",
+    "D-PKG-01",
+    "D-ARCH-07",
+    "D-PERF-04",
+    "D-DUP-01",
+    "D-DUP-02",
+    "D-DUP-03",
+    "D-PATCH-01",
+    "D-DUP-04",
+    "D-PATCH-02",
+    "D-PATCH-03",
+    "D-DUP-05",
+    "D-LEGACY-01",
+    "D-DUP-10",
+    "D-BUG-02",
+    "D-BUG-04",
+    "D-DUP-20",
+    "D-COMPAT-01",
+    "D-PATCH-04",
+    "D-BUG-11",
+    "D-TEST-02",
+    "D-SUP-03",
+    "D-BUILD-01",
+    "D-TEST-22",
+    "D-DOC-02",
+    "D-DOC-03",
+    "D-DOC-05",
+    "D-DOC-06",
+    "D-DOC-07",
+    "D-DOC-08",
+    "D-DOC-10",
+    "D-DOC-14",
+    "D-DOC-18"
+  ],
+  "rootHandoff": {
+    "confirmedSourceActions": [
+      "D-RT-01",
+      "D-RES-01",
+      "D-BUG-12"
+    ],
+    "sourceDebtDispositions": [
+      "D-NET-02",
+      "D-PERF-02",
+      "D-CONC-02",
+      "D-API-05",
+      "D-API-06",
+      "D-NAME-01",
+      "D-STYLE-01",
+      "D-ARCH-01",
+      "D-ARCH-04",
+      "D-ARCH-06",
+      "D-API-04",
+      "D-ARCH-05",
+      "D-DUP-19",
+      "D-DUP-22",
+      "D-TEST-21"
+    ],
+    "focusedOwnershipVerification": [
+      "D-CONC-01"
+    ],
+    "historyTest35": "TemporaryDirectory-only test corrected; history manifest stage already confirmed. Windows2PASS/2POSIX skip; no current restore claim.",
+    "finalGateScope": "Root owns software/host/runtime/archive/descriptor/APK/signature/release evidence; this review ran none of these gates."
+  },
+  "finalDraftFollowup": "docs/audits/build154/changes-drafts-final.json"
+}

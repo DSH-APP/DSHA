@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "status": "FROZEN_EXACT_PASSWORD_FREE_EXPORT_SUBTITLE",
+  "files": [
+    {
+      "file": "app/src/main/res/values/ui_iteration.xml",
+      "beforeSha256": "d26262747e0f4ad30a30df6e454860b90b3c114aee1c8409b63b6fbbb60f8088",
+      "preserved": "docs/audits/build156/password-free-subtitle/values-ui_iteration.xml.before",
+      "sha256": "5e15520c835d74f9a717cb5d1ed847c290f2269fb3c5d2fe3b80f19a5f1338cd",
+      "exactOnlyAuthorizedStaticMessage": true
+    },
+    {
+      "file": "app/src/main/res/values-en/ui_iteration.xml",
+      "beforeSha256": "8dc9cd9cb8d64f19eda294d334105e219f5064517e558296a69240da0f9e9099",
+      "preserved": "docs/audits/build156/password-free-subtitle/values-en-ui_iteration.xml.before",
+      "sha256": "d99397c33419e32bef52df75320ebb7b4595821bea2938a0e1bc2b15e7ae9755",
+      "exactOnlyAuthorizedStaticMessage": true
+    },
+    {
+      "file": "tools/i18n/messages.json",
+      "beforeSha256": "78e499bc41d6b5e0c185ee81595a49cd8c4f8ad173c0278b07df9683fd63019f",
+      "preserved": "docs/audits/build156/password-free-subtitle/i18n-messages.json.before",
+      "sha256": "4f73dc16db4734d96b33387240e226c6fc003468231ae6664f4f400bdbc3750b",
+      "exactOnlyAuthorizedStaticMessage": true
+    }
+  ],
+  "catalogue": {
+    "entries": 3528,
+    "formats": 441,
+    "sha256": "4f73dc16db4734d96b33387240e226c6fc003468231ae6664f4f400bdbc3750b"
+  },
+  "generatedSha256": "0dbf389e4e773e8044949d070f665b6acd9c355c97fc30be0426a2d6d31de584",
+  "sourceReference": "app/src/main/res/layout/fragment_workspace.xml @string/ui2_data_sub",
+  "checks": [
+    {
+      "command": "python -B tools/prepare-ui-languages.py --output app/build/audit-build156/ui/generated",
+      "result": "PASS 3528/3528 and strict format signatures",
+      "exitCode": 0
+    },
+    {
+      "command": "Exact byte replacement compare for 2XML and exact1 catalog dictionary diff + XML parse + actual layout binding + fresh generated pair inspection",
+      "result": "PASS only ui2_data_sub zh/en changed, no formatting/other-entry/API/logic change",
+      "exitCode": 0
+    }
+  ],
+  "scope": "Only3 authorized static UI text inputs; no archive, runtime descriptor, managed inputs, version, Gradle, phone or extra APK changes. Root will rebuild/revalidate production APK.",
+  "notChanged": "Other historical/current encrypted backup phrases retained outside this explicit subtitle scope."
+}

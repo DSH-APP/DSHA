@@ -1,0 +1,208 @@
+{
+  "schema": 1,
+  "status": "PASS_EXACT_CURRENT_LINT_CLASSIFICATION",
+  "run": "5e2d5521-beb5-4775-b87e-85a074b4aade",
+  "atUtc": "2026-10-03T22:43:08.398891+00:00",
+  "cacheReused": true,
+  "timestampsFresh": false,
+  "cacheContract": {
+    "path": "docs/audits/build156/release-lint-analysis-cache-contract.json",
+    "sha256": "a27392b65a7ba7cf62a81f36215c55a815bebba088d93da3c196bee2d2348c70"
+  },
+  "classification": "docs/audits/build156/release-lint-classification.json",
+  "classificationSha256": "f0c8053a9efded42e39a61b1da4201d0ecc379468edea89c76d35b36079054da",
+  "classifier": "docs/audits/build156/classify-release-lint-cache.py",
+  "classifierSha256": "7ce0c665c8ed805619d65e3dc9c2f7ba9abef727c200f6138bd3a9dc9e1fc709",
+  "baseClassifier": {
+    "path": "docs/audits/build156/classify-release-lint.py",
+    "sha256": "2712d195d1208513dc4094ee5904271999238660d9a891e142a8fa8eeb091d84"
+  },
+  "softwareManifest": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+    "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+    "status": "PASS_WITH_EXPLICIT_DEVICE_GAPS"
+  },
+  "sourceSnapshot": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+    "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+  },
+  "reports": [
+    {
+      "flavor": "standard",
+      "path": "app/build/reports/lint-results-standardRelease.xml",
+      "sha256": "f24312fc42738733c73814bea0e83d972e82fd8f5fc35727b2d9727c93a9f188",
+      "issues": 222,
+      "cacheReused": true,
+      "timestampsFresh": false,
+      "allRowsExact": true
+    },
+    {
+      "flavor": "low",
+      "path": "app/build/reports/lint-results-lowRelease.xml",
+      "sha256": "3c4b2373795b1292930e688e81097e09ffef6091cb297460e1e97f6c4db097a0",
+      "issues": 152,
+      "cacheReused": true,
+      "timestampsFresh": false,
+      "allRowsExact": true
+    }
+  ],
+  "summary": {
+    "standard": {
+      "warnings": 222,
+      "errors": 0,
+      "fatal": 0,
+      "allIssues": 222,
+      "classificationCounts": {
+        "user_authorized_capability_distribution_choice": 2,
+        "guarded_provider_diagnostic_choice": 2,
+        "synchronous_durability_ack_choice": 16,
+        "platform_hidden_api_unverified": 1,
+        "source_guarded_webview_feature": 2,
+        "source_guarded_resource_lifetime": 1,
+        "guest_path_or_denial_boundary_contract": 9,
+        "share_storage_path_boundary_contract": 1,
+        "framework_bound_storage_alias_contract": 1,
+        "older_platform_ignored_attribute": 1,
+        "apk_distribution_choice_aab_unverified": 1,
+        "activity_root_inflation_choice": 1,
+        "pinned_toolchain_choice": 1,
+        "final_apk_alignment_verified_device_missing": 1,
+        "api_annotation_propagation_improvement": 3,
+        "supported_api_drawable_choice_platform_unverified": 3,
+        "required_web_application_feature": 3,
+        "custom_trust_source_checked_platform_unverified": 1,
+        "explicit_cleartext_lan_contract": 1,
+        "list_update_performance_evidence_missing": 3,
+        "necessary_dual_flavor_api_guard": 63,
+        "shared_manifest_new_permission_annotation": 1,
+        "defensive_guard_below_supported_min": 3,
+        "shared_member_api_annotation_contract": 10,
+        "redundant_guard_after_prior_api_exit": 1,
+        "necessary_shared_resource_api_qualifier": 2,
+        "application_context_lifetime_contract": 6,
+        "application_overlay_lifetime_platform_unverified": 5,
+        "privileged_process_system_context_contract": 1,
+        "privileged_vscreen_process_context_contract": 1,
+        "retained_view_lifetime_platform_unverified": 1,
+        "layout_complexity_performance_unmeasured": 24,
+        "conservative_disk_bound_platform_unverified": 10,
+        "branding_asset_choice_platform_unverified": 22,
+        "autofill_semantics_requires_review": 5,
+        "custom_spinner_click_contract_platform_unverified": 1,
+        "raw_preview_metadata_display_contract": 1,
+        "layout_spacing_choice_visual_evidence_missing": 10,
+        "physical_screen_coordinate_choice": 1
+      }
+    },
+    "low": {
+      "warnings": 152,
+      "errors": 0,
+      "fatal": 0,
+      "allIssues": 152,
+      "classificationCounts": {
+        "user_authorized_capability_distribution_choice": 2,
+        "guarded_provider_diagnostic_choice": 2,
+        "synchronous_durability_ack_choice": 16,
+        "inlined_protocol_constant_choice": 4,
+        "verified_inlined_compatibility_constant": 2,
+        "platform_hidden_api_unverified": 1,
+        "source_guarded_webview_feature": 2,
+        "source_guarded_resource_lifetime": 1,
+        "guest_path_or_denial_boundary_contract": 9,
+        "share_storage_path_boundary_contract": 1,
+        "framework_bound_storage_alias_contract": 1,
+        "older_platform_ignored_attribute": 6,
+        "apk_distribution_choice_aab_unverified": 1,
+        "activity_root_inflation_choice": 1,
+        "pinned_toolchain_choice": 1,
+        "final_apk_alignment_verified_device_missing": 1,
+        "api_annotation_propagation_improvement": 3,
+        "supported_api_drawable_choice_platform_unverified": 3,
+        "required_web_application_feature": 3,
+        "custom_trust_source_checked_platform_unverified": 1,
+        "explicit_cleartext_lan_contract": 1,
+        "list_update_performance_evidence_missing": 3,
+        "defensive_guard_below_supported_min": 3,
+        "runtime_guard_under_higher_api_annotation": 2,
+        "redundant_guard_after_prior_api_exit": 1,
+        "application_context_lifetime_contract": 6,
+        "application_overlay_lifetime_platform_unverified": 5,
+        "privileged_process_system_context_contract": 1,
+        "privileged_vscreen_process_context_contract": 1,
+        "retained_view_lifetime_platform_unverified": 1,
+        "layout_complexity_performance_unmeasured": 24,
+        "conservative_disk_bound_platform_unverified": 10,
+        "branding_asset_choice_platform_unverified": 20,
+        "custom_spinner_click_contract_platform_unverified": 1,
+        "raw_preview_metadata_display_contract": 1,
+        "layout_spacing_choice_visual_evidence_missing": 10,
+        "physical_screen_coordinate_choice": 1
+      }
+    }
+  },
+  "softwareActionRequired": [],
+  "unknownReviewRequired": [
+    {
+      "flavor": "standard",
+      "issueIndex": 204,
+      "id": "Autofill",
+      "message": "Missing `autofillHints` attribute"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 205,
+      "id": "Autofill",
+      "message": "Missing `autofillHints` attribute"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 206,
+      "id": "Autofill",
+      "message": "Missing `autofillHints` attribute"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 207,
+      "id": "Autofill",
+      "message": "Missing `autofillHints` attribute"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 208,
+      "id": "Autofill",
+      "message": "Missing `autofillHints` attribute"
+    }
+  ],
+  "history": [
+    {
+      "path": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/release-lint-classification.json",
+      "sha256": "a81fefbad8cedf68ae350628577345aaf8bc6cfd86de81f49110a3dfb7b7f260"
+    },
+    {
+      "path": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/release-lint-classification-receipt.json",
+      "sha256": "031298d5bf0065ebddec0c625ec64bf1ff03747ca9c3d1532dd7c5c50e1fbdcf"
+    },
+    {
+      "path": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/final-termux-alignment-evidence.json",
+      "sha256": "be1a5ad3051248570c934443ac53f6408a1b5381679870ac51f19a12eebea80c"
+    }
+  ],
+  "checks": [
+    {
+      "command": "python -B docs/audits/build156/classify-release-lint-cache.py --run 5e2d5521-beb5-4775-b87e-85a074b4aade --manifest-sha256 922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626 --snapshot-sha256 ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222 --prior-classification app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/release-lint-classification.json",
+      "exitCode": 0,
+      "result": "PASS completed actuallintAnalyze+lintReport UP-TO-DATE, all1507 actualsource SHA values,374 XML issue rows/394 current-source locations and excerpts unchanged; only authorized DeviceGrants semantic delta after warning lines"
+    },
+    {
+      "command": "Independent parse and exact374 XML indices/id/severity/message/alllocations, sourceEvidence-to-ed38snapshot SHA comparison",
+      "exitCode": 0,
+      "result": "PASS source bindings;5 Autofill uncertainties preserved,Std222/Low152 Warning E/F0"
+    },
+    {
+      "command": "Read actual completed5e2 APKs c676/37aa hashes and selected libtermux PT_LOAD/RELRO mapped pages",
+      "exitCode": 0,
+      "result": "PASS current APK/ELF metadata; physical16KiB missing"
+    }
+  ],
+  "scope": "Explicitly verified analysis/report-cache contract, not fresh XML. Strict timestamp-only classifier is unchanged and still rejects stale timestamps without this separatemanifest/source/location proof. No source/SDK/APK/phone/Gradle or repeated112host test action by UI lane."
+}

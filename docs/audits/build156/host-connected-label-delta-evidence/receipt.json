@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "status": "PASS_ONLY_AFFECTED_HOST_SUPPLEMENT",
+  "latestSoftware": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+    "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+    "status": "PASS_WITH_EXPLICIT_DEVICE_GAPS",
+    "sourceSnapshotPath": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+    "sourceSnapshotSha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222",
+    "sourceCount": 1507,
+    "exactSourceBefore": true,
+    "exactSourceAfter": true,
+    "apks": [
+      {
+        "flavor": "standard",
+        "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+        "versionCode": 156
+      },
+      {
+        "flavor": "low",
+        "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+        "versionCode": 156
+      }
+    ]
+  },
+  "priorSoftware": {
+    "path": "app/build/stability-acceptance/281e14af-8e44-40bc-93b8-7095838cef42/manifest.json",
+    "sha256": "bf028e270a30c6959ec816d9ca8f7b0bbaa63c423e64a609114574ec66156779",
+    "sourceSnapshotSha256": "21874dcb53fe1356721711928ceb294e43cd69f168de2367438a372e5fb387c2"
+  },
+  "sealedSourceDelta": [
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+      "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a"
+    }
+  ],
+  "originalHost112": {
+    "path": "app/build/audit-build156/host-workspace-final/manifest.json",
+    "sha256": "bac509ddbf6934757a2cd2ea0e313316891013eb11b48de10279c263716fb984",
+    "status": "PASS_FOR_SELECTED_STAGES",
+    "entries": 112,
+    "preservedUntouched": true,
+    "notRepeated": true
+  },
+  "affectedProductionSourceReaders": 5,
+  "unchangedSelectedSourceReaders": 107,
+  "additionalFullTreeSourceChecks": [
+    {
+      "name": "current-full-ui-i18n",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "tools/check-ui-i18n.py",
+        "--report",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build156\\host-connected-label-delta\\ui-i18n-report.json"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 2.406,
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\current-full-ui-i18n.log",
+      "logSha256": "fbf97616a303c8e5ce9470ebc84d965de501e9d6fd984c4f7198874603653deb"
+    },
+    {
+      "name": "current-source-hygiene",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "tools/check-source-hygiene.py"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 0.719,
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\current-source-hygiene.log",
+      "logSha256": "63cf5ec8fc283b1182a6b1e36dfa4cbb3b8e2090b7709bbf9358d957f3e5721a"
+    }
+  ],
+  "supplementalHostChecks": [
+    {
+      "path": "tools/test-architecture-boundaries.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-architecture-boundaries.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-architecture-boundaries.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.094,
+      "logSha256": "a9d2155ae07e410a24db922f748c04bd020b93e2658b332ce7087f26bc2c36f4"
+    },
+    {
+      "path": "tools/test-asset-deployment.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-asset-deployment.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-asset-deployment.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.609,
+      "logSha256": "7879656470664999999ce943684da4886044d3d8e921da764d09318d763c939b"
+    },
+    {
+      "path": "tools/test-generated-asset-directory.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-generated-asset-directory.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-generated-asset-directory.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.578,
+      "logSha256": "a8f308259c32bda7e90232466a11eb5df5b9bba6dc73bc6261a0eca955552593"
+    },
+    {
+      "path": "tools/test-vscreen-manager-http.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-vscreen-manager-http.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-vscreen-manager-http.py",
+        "--jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "--sdk",
+        "F:\\DSHA\\_toolchains\\android-sdk",
+        "--gradle-home",
+        "F:\\DSHA\\_toolchains\\gradle-user-home"
+      ],
+      "exitCode": 0,
+      "seconds": 19.516,
+      "logSha256": "efc68a8610a882a14d432373a3c853fedab75437217ab61d74885e85edbf1db3"
+    },
+    {
+      "path": "tools/test-core-boundaries.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-core-boundaries.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-core-boundaries.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.422,
+      "logSha256": "bd65e90d0ee55e7636b414b4c6d918d5b41357ab18d20a71596b02ffa9a4eb65"
+    }
+  ],
+  "runtimeFixtureSelectionsInSupplement": 0,
+  "wholeParagraphNonfindingRulesModified": false,
+  "catalogChanged": false,
+  "sourceOrSoftwareManifestOrPhoneModified": false,
+  "sourceFingerprintAfterMatchesLatestSnapshot": true,
+  "notes": [
+    "The original112 executions are retained at their original snapshot; this is a five-entry current-source supplement, not a fabricated112 rerun.",
+    "test-dsha-ui-regressions.py reads fixed Settings/Main/Launch/Plugin/Backup/UiText/SystemLanguage/resource/catalog files; it does not read DeviceGrantsFragment or the full Java tree. Its selected inputs did not change and it was not rerun.",
+    "test-ui-i18n.py executes scanner tests on synthetic isolated sources. Its own production scanner implementation/catalog inputs are unchanged; the actual whole production inventory is separately rerun by check-ui-i18n.py.",
+    "check-ui-i18n output: newFindings0, eight existing complete-paragraph exact-source/occurrence declarations accepted, stale0, changed fragment file has no concatenation findings. The two new full literal tuples are independently matched to AccessibilitySetupActivity.",
+    "Declaration-only Android/framework/compiled dependencies used by narrow host tools are distinct from reviewed production source and their binary directory is not declared byte-identical. Latest5e2 fresh full Gradle/JUnit/Lint/APK scope is authoritative for new compiled production bytes.",
+    "No Android visual or accessibility connected-state behavior is inferred from host/source checks; root owns device evidence."
+  ]
+}

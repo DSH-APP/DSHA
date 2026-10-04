@@ -1,0 +1,7 @@
+{
+  "source": "Ubuntu rootfs usr/share/common-licenses/GPL-3; no text modification",
+  "archiveSha256": "0a680b5689b900a5313f53a8ae69c11cb76a12aeb47d75a071cdd7162747c00f",
+  "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+  "bytes": 35149,
+  "networkAttempt": "gnu.org fetch failed; retained actual bundled license text"
+}

@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "command": "python docs/audits/build156/merge-ledger.py --check",
+  "result": "exit 0; 236 exact IDs and complete owner coverage",
+  "buildExternalEvidenceIds": [
+    "D-BUILD-01",
+    "D-BUILD-02",
+    "D-CI-01",
+    "D-LIC-01",
+    "D-LIC-02",
+    "D-PROV-01",
+    "D-REPRO-01",
+    "D-SEC-23",
+    "D-UPD-01",
+    "D-UPD-02"
+  ],
+  "buildDeviceEvidenceIds": [
+    "D-SUP-03",
+    "D-UPD-01"
+  ],
+  "checksUnchanged": true,
+  "productionNoticesJarUnchangedByMigration": true,
+  "deferredIntegratedChecksPresentOnAll14Rows": true
+}

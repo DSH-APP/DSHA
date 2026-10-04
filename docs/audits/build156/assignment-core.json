@@ -1,0 +1,1010 @@
+{
+  "lane": "core",
+  "source": "D:\\qq\\文件\\DSHA-deliverables-20261002\\DSHA-deliverables-20261002",
+  "baselineBuild": 155,
+  "items": [
+    {
+      "source": {
+        "id": "D-API-01",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "WebProcessManager.stop/stopOne 以 String 返回错误，混用错误码与本地化文案",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java:317-341,349-420; core/HarnessController.java:375,785",
+        "recommendation": "定义 StopResult{Status status; String code; Object[] args}（Status: STOPPED, NOT_RUNNING, PENDING_EXIT, IDENTITY_CHANGED, DENIED, UNCONFIRMED, INTERRUPTED），WebProcessManager 只产出结构化结果，展示层用 code 查本地化模板。stop() 合并多个来源时保留全部结果列表。",
+        "acceptance": "WebProcessManagerTest 断言各分支返回的 Status；grep 门禁：runtime/WebProcessManager.java 中不再出现 UiText；UI 层单测按 Status 渲染中英文。",
+        "depends_on": "D-I18N-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-API-01",
+        "title": "WebProcessManager.stop/stopOne 以 String 返回错误，混用错误码与本地化文案",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java",
+          "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+          "app/src/main/java/com/deepseekharness/app/core/WebStopCoordinator.java",
+          "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "New StopResult status/code/detail + core stop coordinator full guest/owned-launcher confirmation; historical String stop delegates to typed result"
+        ],
+        "residual": [
+          "Private legacy stop script details stay human diagnostics; historical public text API retained."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-API-02",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "以 exception.getMessage() 字符串比较做控制流",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java:430,474-475,519-520; backup/NativeBackupJobs.java:320; ui/RetainedDataActivity.java:52; util/PluginOutput.java:54",
+        "recommendation": "引入 DshaException extends IOException { final ErrorCode code; }（ErrorCode 为枚举），抛出点改为 new DshaException(ErrorCode.ENV_NOT_READY)；捕获处用 instanceof + code 判断。可与 D-API-01 的 Status 枚举共用一套错误码。",
+        "acceptance": "grep 门禁：main 源集中 getMessage())?.(equals|startsWith|contains) 与 \"X\".equals(...getMessage()) 计数为 0；相关路径单测断言按 ErrorCode 分支。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-API-02",
+        "title": "以 exception.getMessage() 字符串比较做控制流",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+          "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java",
+          "app/src/main/java/com/deepseekharness/app/util/PluginOutput.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/GuestPreparationFailure.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Runtime preparation adapters now compare enum failure types, not getMessage text; outward historic codes preserved"
+        ],
+        "residual": [
+          "Other source owners must finish non-runtime message comparisons."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-API-04",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "文件类型用字符串字面量（FILE/DIRECTORY/LINK/MISSING/UNREADABLE/EXCLUDED）在全包散布",
+        "where": "app/src/main/java/com/deepseekharness/app/backup/BackupSource.java:15-19; backup/BackupFileSystem.java（Node.type）; 例 runtime/BoundedGuestSessions.java:61,77-78; backup/StorageMaintenance.java:22-23",
+        "recommendation": "定义 enum NodeType{FILE,DIRECTORY,LINK,MISSING,UNREADABLE,EXCLUDED}，Node.type/Item.kind 改为枚举；序列化到 dshbak manifest 时用 name()，读取时 valueOf 并对未知值报 MANIFEST_FORMAT，保证格式兼容。可用 IDE 结构化替换分包推进。",
+        "acceptance": "grep 门禁：main 源集中 '\"(FILE|DIRECTORY|LINK|MISSING|UNREADABLE|EXCLUDED)\"' 只出现在 NodeType 与 manifest 编解码处；现有 backup 单测与备份向量测试（generate-backup-vector）通过，旧 dshbak 能正常恢复。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-API-04",
+        "title": "文件类型用字符串字面量（FILE/DIRECTORY/LINK/MISSING/UNREADABLE/EXCLUDED）在全包散布",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/BackupFileSystem.java",
+          "app/src/main/java/com/deepseekharness/app/backup/BackupSource.java",
+          "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+          "docs/engineering-standard.md",
+          "docs/module-map.md",
+          "tools/check-source-hygiene.py",
+          "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Final bounded disposition: FileKind internal enum preserves existing wire labels and rejects unknown names; final JVM gates executed."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-API-07",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "PluginFragment 操作菜单以中文显示串作为分派键",
+        "where": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java:500-553; util/RecoveryStatusText.java:32-33",
+        "recommendation": "定义 enum PluginAction{DETAILS,CHECK_UPDATE,UPDATE_TO,ROLLBACK_TO,EXPORT,DELETE,COPY_NAME,COPY_SOURCE} 及携带版本参数的 ActionItem；显示文本由 action 渲染；CHECK_UPDATE 的可见性改用 item.updatable（来源可更新）而不是 deletable。RecoveryStatusText 改为按状态码渲染。",
+        "acceptance": "PluginFragment 动作构建抽为纯函数并单测：不同 item 组合下动作列表正确，切换语言不影响分派；grep 'startsWith(\"更新至 ' 为 0。",
+        "depends_on": "D-I18N-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-API-07",
+        "title": "PluginFragment 操作菜单以中文显示串作为分派键",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "source_corrected_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+          "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+          "app/src/main/java/com/deepseekharness/app/util/RecoveryStatusText.java"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "See review-G2.json evidence; production owner final ledger required"
+        ],
+        "residual": [
+          "类型化ActionItem与参数，按来源能力判断更新，显示/分派解耦；保留免审阅及用户禁用意图。"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "source_corrected_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-API-08",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "vscreen 工具 schema 把所有属性设为 required，且长 text 经 GET 查询串传输会超过桥首行上限",
+        "where": "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs:13-14,17,20; app/src/main/java/com/deepseekharness/app/util/HttpProtocol.java:15,44",
+        "recommendation": "按操作区分 required（用 oneOf 或在描述中说明，并在 validate 中按 action/op 校验必需字段，可选字段缺省不发送）；text 等大字段改为 POST body（JSON）发送，桥端对应路由接受 body；或把 text 上限降到能保证首行不超限的长度（约 10000 字节编码后）。",
+        "acceptance": "server.cjs 单测：android_vscreen_node action=click 不带 text 时通过校验；16000 个中文字符的 set_text 请求发送成功（对桥的集成测试或假服务断言请求方法为 POST、首行 < 98304）。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-API-08",
+        "title": "vscreen 工具 schema 把所有属性设为 required，且长 text 经 GET 查询串传输会超过桥首行上限",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs",
+          "app/src/main/java/com/deepseekharness/app/util/HttpProtocol.java",
+          "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "app/src/main/java/com/deepseekharness/app/util/VscreenBridgeRequest.java",
+          "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+          "app/src/test/java/com/deepseekharness/app/util/VscreenBridgeRequestTest.java",
+          "tools/test-vscreen.mjs"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Operation-specific MCP schema and actual native bridge dispatcher now agree on get/edit/submit; existing tools retained",
+          "Authenticated fixed-route POST receives bounded128KiB JSON with total10s body deadline;16000 Chinese input crosses actual buffered HTTP parser",
+          "MCP unwraps existing bridge result envelope; Node test + production dispatcher/real loopback JUnit4 + Android-dependent javac PASS",
+          "Node current13-tool schema/request/response-envelope test PASS",
+          "Actual production VscreenBridgeRequest operation dispatcher + real loopback HTTP buffered head/body +16000 Chinese text + oversize/truncation/duplicate-JSON/ambiguous-query checks:JUnit4 PASS",
+          "Standalone JDK17 compilation of current HttpShellService/VirtualScreenManager/request against StdRelease/G1/Android dependencies PASS"
+        ],
+        "residual": [
+          "No Android device test; preserved current generation/frame/permission/target checks are production source plus compile evidence, not hardware evidence.",
+          "No Android device operations or full Gradle by G2; actual virtual display/device authorization still needs separately scoped device evidence. Existing X-Token, current DSH generation/grant revision, target-package/current-window and frame/generation validation remain enforced; old GET editor operation read compatibility retained; POST length128KiB/deadline10s and fixed four routes, no global header budget expansion."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-ARCH-01",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "HarnessController 集中了 Web 生命周期、迁移、插件注册、LAN 鉴权、日志与配置重置",
+        "where": "app/src/main/java/com/deepseekharness/app/core/HarnessController.java:40-89,267-659,402-442,600-647,705-742,938-958",
+        "recommendation": "拆成 WebLifecycleController（启停/代际/恢复）、StartupPipeline（迁移→插件注册→legacy 激活，显式步骤列表）、LanAuthBridge（cookie 交换与 LanProxy 绑定）、HostConfigService（resetConfig/hostSettings）。HarnessController 只保留门面并按构造注入，去掉静态 get(ctx)。与 D-ARCH-02 一起做。",
+        "acceptance": "HarnessController.java ≤300 行；新增 StartupPipelineTest 用假端口验证步骤顺序与失败短路；现有 HarnessController*Test 与 assembleDebug 全绿；架构边界测试禁止 ui 直接调用新拆出的类以外的内部方法。",
+        "depends_on": "D-ARCH-02",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-ARCH-01",
+        "title": "HarnessController 集中了 Web 生命周期、迁移、插件注册、LAN 鉴权、日志与配置重置",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+          "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java",
+          "app/src/main/java/com/deepseekharness/app/core/WebOutputSession.java",
+          "app/src/main/java/com/deepseekharness/app/core/WebStopCoordinator.java",
+          "docs/engineering-standard.md",
+          "docs/module-map.md",
+          "tools/check-source-hygiene.py",
+          "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+          "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "docs/audits/build155/changes-root.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "DshaApp ApplicationOwner/HarnessSessionState share lifecycle state across real-app facades; physical application/service lifecycle remains untested."
+        ],
+        "residual": [
+          "DshaApp ApplicationOwner/HarnessSessionState share lifecycle state across real-app facades; physical application/service lifecycle remains untested."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_with_engineering_residual"
+      }
+    },
+    {
+      "source": {
+        "id": "D-ARCH-02",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "全局可变静态单例充当服务定位器（RuntimeHostPorts、MainActivity.current、vscreen 等）",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java:5-9; ui/MainActivity.java:22,314,441; ui/PluginFragment.java:60-77; vscreen/VirtualScreenManager.java:25-32; vscreen/VirtualScreenCore.java:27-31; vscreen/VirtualScreenForeground.java:19-20; vscreen/VirtualScreenOverlayController.java:15-17; recovery/RecoveryRepairBroker.java:61; PortableSettings.java:12-14,34",
+        "recommendation": "建立应用级组合根（DshaApp 内创建 AppGraph），把 RuntimeHostPorts、VirtualScreenManager、RecoveryRepairPlan、PortableSettings 改为实例并通过构造注入；MainActivity.current 删除，审计 instrumentation 改用 ActivityScenario/ActivityLifecycleMonitorRegistry 取当前 Activity；PluginFragment 的修订号移到 PluginRepository 实例字段。按包分批推进，先 runtime 后 vscreen。",
+        "acceptance": "架构测试（ArchUnit 或现有边界测试脚本）禁止 main 源集出现 'public static volatile .*Activity' 与非 final 的可变静态字段（白名单逐步收缩）；RuntimeHostPortsTest 改为每个用例 new 实例，不再依赖 shared()；debug 审计 instrumentation 在去掉 MainActivity.current 后通过。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-ARCH-02",
+        "title": "全局可变静态单例充当服务定位器（RuntimeHostPorts、MainActivity.current、vscreen 等）",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+          "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java",
+          "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+          "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+          "app/src/main/java/com/deepseekharness/app/data/PortableSettings.java",
+          "app/src/main/java/com/deepseekharness/app/core/HarnessController.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "docs/audits/build155/changes-root.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Unused strong MainActivity.current removed and WebReadyTasks/WebLaunchCommand narrow launch responsibility; other composition and physical lifecycle remain outside this host proof."
+        ],
+        "residual": [
+          "Unused strong MainActivity.current removed and WebReadyTasks/WebLaunchCommand narrow launch responsibility; other composition and physical lifecycle remain outside this host proof."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_with_engineering_residual"
+      }
+    },
+    {
+      "source": {
+        "id": "D-ARCH-03",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "分层反转：runtime/backup 层直接依赖 ui 与 core，缺少架构边界测试",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java:88; ui/RuntimeBrowserProbe.java; backup/DataProtectionService.java; backup/PostUpgradeCleanupService.java; backup/ExternalBackupScanner.java; backup/PluginInstallJournals.java; backup/ProfileSettingsTransaction.java:66,104,116",
+        "recommendation": "在 runtime 定义 BrowserProbe 接口（open(authUrl, baseUrl, cookie, control)），由 ui 层实现并在组合根注入；backup 对 core 的依赖改为依赖 runtime/backup 内定义的端口接口。新增 ArchUnit（固定版本）测试：runtime/backup/util 不得依赖 ui，backup 不得依赖 core（先用 freeze 记录现存违规，只允许减少）。",
+        "acceptance": "新增 ArchitectureTest（ArchUnit）在 ./gradlew test 中通过；违规基线文件条目数单调下降，最终 runtime→ui 为 0。",
+        "depends_on": "D-ARCH-02",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-ARCH-03",
+        "title": "分层反转：runtime/backup 层直接依赖 ui 与 core，缺少架构边界测试",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+          "app/src/main/java/com/deepseekharness/app/ui/RuntimeBrowserProbe.java",
+          "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+          "tools/test-architecture-boundaries.py",
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+          "app/src/main/java/com/deepseekharness/app/DshaApp.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "production no runtime to ui reference; BrowserProbe injected via application composition; G3 merged three explicit maintenance calls"
+        ],
+        "residual": [
+          "Full runtime trial/browser suite will be run by root; device renderer matrix not claimed."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-ARCH-06",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "HttpShellService.handle 用 30 多个 if-else 分支做路由，无路由表或处理器接口",
+        "where": "app/src/main/java/com/deepseekharness/app/HttpShellService.java:452-568（1707 行文件）",
+        "recommendation": "定义 interface RouteHandler{Response handle(Request)} 与 Route(path, method, policy, handler) 注册表；鉴权/确认策略作为 Route 的声明式属性由分发器统一执行；/app/help 从注册表生成。按路由组拆为 DeviceRoutes、VScreenRoutes、FileRoutes 等类。",
+        "acceptance": "新增 RouteTableTest：遍历注册表断言每个路由都声明了 policy，且未声明的路径返回 404；现有 HttpProtocolTest/桥审计 instrumentation（BridgeAuditInstrumentation）通过；HttpShellService.java ≤600 行。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-ARCH-06",
+        "title": "HttpShellService.handle 用 30 多个 if-else 分支做路由，无路由表或处理器接口",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "docs/engineering-standard.md",
+          "docs/module-map.md",
+          "tools/check-source-hygiene.py",
+          "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+          "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "docs/audits/build155/changes-bridge.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Explicit BridgeRoutes selection, one handler per public route; action bodies remain in HttpShellService."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_with_residual"
+      }
+    },
+    {
+      "source": {
+        "id": "D-ARCH-07",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "旧 tar.gz（guest Python 引擎）与 v5 宿主原生 dshbak 两套备份/恢复系统并存",
+        "where": "app/src/main/java/com/deepseekharness/app/BackupManager.java（354 行）; app/src/main/assets/backup-engine.py（902 行）; backup/NativeBackupJobs.java（449 行）; core/BackupTask.java:132-153; HttpShellService.java:1488",
+        "recommendation": "按第六节决策（只支持从 build147 起升级；旧链路只保留只读恢复；无部署方的死脚本删除）：删除旧格式的创建路径（BackupTask 中的 backupToExternal 调用、createMaintenanceBackup 若已被 v5 维护快照替代）；旧 tar.gz 只保留导入/只读恢复，迁到 backup/legacy/LegacyArchiveImporter；backup-engine.py 只保留恢复所需子命令，其它删除；BackupManager 中仍被使用的通用工具（safeError、数据任务锁封装）迁入 MaintenanceCoordinator 或 util。",
+        "acceptance": "grep：main 源集中不存在创建旧 tar.gz 备份的调用；旧格式样本（tools/fixtures 中提供 build147 产出的 tar.gz）能经 LegacyArchiveImporter 恢复的回归测试通过；backup-engine.py 只剩 restore 相关入口（脚本测试 scripts/test-*.py 覆盖）。",
+        "depends_on": "D-RT-20",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-ARCH-07",
+        "title": "旧 tar.gz（guest Python 引擎）与 v5 宿主原生 dshbak 两套备份/恢复系统并存",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "accepted_compatibility_contract",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+          "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+          "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+          "app/src/main/assets/backup-engine.py"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "docs/audits/build155/PLAN.md",
+          "reviews.json"
+        ],
+        "checks": [
+          "The current external writer is host v5 and historical archive readers remain required for old originals."
+        ],
+        "residual": [
+          "The current external writer is host v5 and historical archive readers remain required for old originals."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "documented_engineering_residual"
+      }
+    },
+    {
+      "source": {
+        "id": "D-DEP-01",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "BackupJson（Gson 严格流式）与 org.json 两套 JSON 解析并存，严格性不同",
+        "where": "app/src/main/java/com/deepseekharness/app/backup/BackupJson.java:12-30; runtime/RuntimeTools.java:148-157",
+        "recommendation": "统一以 BackupJson（改名 StrictJson 放到 util）作为唯一解析入口；先替换处理不可信输入（guest 产物、外部文件、网络响应）的 org.json 调用，再替换资产读取。加 lint/grep 门禁禁止新增 org.json 导入。",
+        "acceptance": "grep 门禁：app/src/main/java 中 'org.json' 出现次数逐步降到 0（基线文件只减不增）；StrictJsonTest 覆盖重复键、超深嵌套、超长字符串被拒绝。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-DEP-01",
+        "title": "BackupJson（Gson 严格流式）与 org.json 两套 JSON 解析并存，严格性不同",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/BackupJson.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Runtime recipe/descriptor/package JSON parsed by strict bounded BackupJson before JSONObject value access; JSON/text/assets2MiB/32MiB budgets"
+        ],
+        "residual": [
+          "org.json writing/view DTOs remain; other owners retain archive/schema strict readers."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-ERR-01",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "LaunchFragment.refreshRunState 整个方法体包在 catch(Throwable ignored) 中",
+        "where": "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java:59,303-362",
+        "recommendation": "只捕获预期的 RuntimeException，记录到 DiagnosticLog（同一异常类型每分钟限一次）并在界面显示\"状态刷新失败\"；不捕获 Error。顺带把方法拆为数据读取与渲染两步，读取部分可单测。",
+        "acceptance": "单测/Robolectric：注入抛 NPE 的 controller，断言 DiagnosticLog 有一条 UI_REFRESH_FAILED 且界面显示失败提示；grep 门禁：ui 包内 'catch (Throwable ignored)' 数量不高于基线并逐步下降。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-ERR-01",
+        "title": "LaunchFragment.refreshRunState 整个方法体包在 catch(Throwable ignored) 中",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "source_corrected_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "See review-G2.json evidence; production owner final ledger required"
+        ],
+        "residual": [
+          "分离状态读取与渲染，仅捕获可恢复异常并限速记录/显示，Error不吞；生命周期离开正常短路不当故障。"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "source_corrected_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-PKG-01",
+        "category": "架构与 API",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "多处硬编码包名 com.dsh.client，applicationId 变化或加后缀即失效",
+        "where": "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java:62; backup/MaintenanceDataSnapshot.java:22; util/DeviceAppPolicy.java:38; vscreen/VirtualScreenCore.java:135; DeviceShellExecutor.java:73; bridge/AdbBridge.java:365; app/build.gradle:17",
+        "recommendation": "main 进程内用 context.getPackageName()；app_process 入口（VirtualScreenCore、DeviceShellExecutor）没有 Context 时，用 BuildConfig.APPLICATION_ID。正则改为 Pattern.quote(packageName) 动态拼接。",
+        "acceptance": "grep 门禁：app/src/main/java 中 'com.dsh.client' 与 'com\\\\.dsh\\\\.client' 只允许出现在注释中；构建一个 applicationIdSuffix='.audit' 的变体，单测断言 DeviceAppPolicy 仍保护自身、GuestDataResolver 能识别该包名路径。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-PKG-01",
+        "title": "多处硬编码包名 com.dsh.client，applicationId 变化或加后缀即失效",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+          "app/src/main/java/com/deepseekharness/app/backup/MaintenanceDataSnapshot.java",
+          "app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java",
+          "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java",
+          "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+          "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+        ],
+        "evidenceReferences": [
+          "changes-final-identity.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Final bounded disposition: Final G1 actual package/UID/APK identity receipt; Shizuku 12 OEM reflection remains a device gap.",
+          "27 current-source JVM tests PASS across SelfPackageIdentity, DeviceAppPolicy, DeviceShellPolicy and GuestDataResolver: clone/multi-user UID, current APK binding, mismatched/missing identity, own/shared UID protection, strict 9-argument launch, declared-root aliases and retained historical L2S payload reads",
+          "Python host-only device-shell-policy 22 tests, ADB virtual-screen handshake 3 tests and ADB-flow 32 tests PASS. Keepalive test executes the real pair.main branch and proves only native actual selfPackage is granted; missing identity sends nothing. Existing unknown-send/no-replay and SMS boundaries remain",
+          "Current owned production sources plus actual Mobile launch/request-fence/preview collaborators compile with Java17 against actual Android37/AndroidX dependencies; no stub API compilation",
+          "One independent bounded read-only review found no actionable self-protection bypass or identity binding blocker; it explicitly retained the untested v12 dex-reflection/OEM matrix"
+        ],
+        "residual": [
+          "Shizuku 12 OEM/private Dex reflection and multi-user phone behavior remain unverified on devices."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-API-03",
+        "category": "架构与 API",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "ProotBootstrap.startRootfs 有 5 层布尔参数重载，应改为 LaunchSpec 值对象",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java:923-945,848,862,867,885,900,963,1461",
+        "recommendation": "定义 final class LaunchSpec（builder：runtime、hardlinks、isolated、coldTrace、pipedInput、record），只保留一个 startRootfs(String command, LaunchSpec spec)；各调用点改用具名 builder 方法。随 D-ARCH-04 的 RuntimeLauncher 拆分一起做。",
+        "acceptance": "ProotBootstrap（或拆出的 RuntimeLauncher）中 startRootfs 只有一个签名；LaunchSpecTest 覆盖默认值；assembleDebug 与现有单测通过。",
+        "depends_on": "D-ARCH-04",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-API-03",
+        "title": "ProotBootstrap.startRootfs 有 5 层布尔参数重载，应改为 LaunchSpec 值对象",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/LaunchSpec.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeLauncher.java",
+          "app/src/main/java/com/deepseekharness/app/core/HarnessController.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "RuntimeLauncherTest: API key in environment only, named options immutable, malformed env rejected"
+        ],
+        "residual": [
+          "Interactive command text remains user input; no argv secret is added by current Web launch."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-API-05",
+        "category": "架构与 API",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "DiagnosticRepository 从拼好的报告文本里反向解析结构化结果",
+        "where": "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java:187-188,196",
+        "recommendation": "collect 直接产出结构化对象 DiagnosticReport{runtimeVersions:Map, browserEngine:String, sections:List}，文本报告与结果卡片都从它渲染；去掉对报告文本的 split/contains。",
+        "acceptance": "DiagnosticRepositoryTest：英文与中文两种语言下 publishResults 的网页内核与 Node/Python 卡片内容一致；grep 'report.split' 在 DiagnosticRepository 中为 0。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-API-05",
+        "title": "DiagnosticRepository 从拼好的报告文本里反向解析结构化结果",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+          "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java",
+          "app/src/main/java/com/deepseekharness/app/core/EnvironmentAccess.java"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Final bounded disposition: DiagnosticReport supplies the structured current diagnostic projection."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-API-06",
+        "category": "架构与 API",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "StorageActivity 按迭代序号取标签，与 StorageMaintenance.inspect 的插入顺序隐式对齐",
+        "where": "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java:25-26; backup/StorageMaintenance.java:13-16",
+        "recommendation": "StorageActivity 用 Map<String,String[]> LABELS 按 key 取标签，未知 key 显示 key 本身；或让 inspect 返回带 labelKey 的 List<Entry>。",
+        "acceptance": "单测：inspect 结果多一个未知 key 时渲染不抛异常且显示该 key；现有 8 项标签不变。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-API-06",
+        "title": "StorageActivity 按迭代序号取标签，与 StorageMaintenance.inspect 的插入顺序隐式对齐",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java",
+          "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+          "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+          "app/src/main/java/com/deepseekharness/app/core/EnvironmentAccess.java"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Final bounded disposition: StorageCategoryLabels supplies stable-key labels at the UI boundary."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-ARCH-05",
+        "category": "架构与 API",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "main 源集的 StorageMaintenance.CACHE 硬编码 debug/deviceAudit 审计目录名",
+        "where": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java:10-11,49",
+        "recommendation": "main 的 CACHE 只保留可再生缓存（WebView、GPUCache、Code Cache、GrShaderCache、DawnCache）；审计目录统一放到 cache/dsha-audit/<name> 下，由 debug 源集的审计 teardown 自行删除，或在 debug 源集提供 StorageMaintenance 的扩展名单。夹具清理补齐 R08 列出的 <uuid> 目录。",
+        "acceptance": "grep 门禁：app/src/main 中不出现 '-audit\"' 字面量；debug 审计 instrumentation 结束后断言 cacheDir 与 rootfs/root 下无 *-audit-* 残留。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-ARCH-05",
+        "title": "main 源集的 StorageMaintenance.CACHE 硬编码 debug/deviceAudit 审计目录名",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+          "docs/engineering-standard.md",
+          "docs/module-map.md",
+          "tools/check-source-hygiene.py",
+          "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Final bounded disposition: StorageMaintenance cache uses stable categories and separately counts retained historical audit names."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-NAME-01",
+        "category": "架构与 API",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "EnvironmentAccess.shouldAttemptRuntimeUpdate 名为\"应尝试更新\"，实际返回\"是否阻止启动、需进入维护页\"",
+        "where": "app/src/main/java/com/deepseekharness/app/core/EnvironmentAccess.java:14-26; util/EnvironmentIdentity.java:27-33; core/HarnessController.java:291; ui/ExtractActivity.java:90; ui/MainActivity.java:78",
+        "recommendation": "重命名为 requiresMaintenanceBeforeStart（或 shouldBlockRuntimeStart），Javadoc 写清 true 的两种来源（有新候选未尝试 / 描述符无法认证）。纯重命名，IDE 重构即可。",
+        "acceptance": "grep 'shouldAttemptRuntimeUpdate' 为 0；assembleDebug 与现有 EnvironmentIdentity 单测通过；补一条单测：描述符读取抛 IOException 时返回 true。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-NAME-01",
+        "title": "EnvironmentAccess.shouldAttemptRuntimeUpdate 名为\"应尝试更新\"，实际返回\"是否阻止启动、需进入维护页\"",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "retired_current_source",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/core/EnvironmentAccess.java",
+          "app/src/main/java/com/deepseekharness/app/util/EnvironmentIdentity.java",
+          "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+          "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Final bounded disposition: The cited shouldAttemptRuntimeUpdate entry is absent from the current source."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "retired_current_source"
+      }
+    }
+  ]
+}

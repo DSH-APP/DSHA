@@ -1,0 +1,32 @@
+test_actual_clone_identity_protects_its_uid_and_missing_identity_never_stops (__main__.PolicyTest.test_actual_clone_identity_protects_its_uid_and_missing_identity_never_stops) ... ok
+test_aliases_and_protected_children (__main__.PolicyTest.test_aliases_and_protected_children) ... ok
+test_canonical_destination_cannot_escape (__main__.PolicyTest.test_canonical_destination_cannot_escape) ... ok
+test_copy_checks_effective_target_inside_existing_directory (__main__.PolicyTest.test_copy_checks_effective_target_inside_existing_directory) ... ok
+test_copy_readonly_source_allowed_and_execution_paths_normalized (__main__.PolicyTest.test_copy_readonly_source_allowed_and_execution_paths_normalized) ... ok
+test_file_helper_failure_is_returned_once_without_shell_fallback (__main__.PolicyTest.test_file_helper_failure_is_returned_once_without_shell_fallback) ... ok
+test_file_helper_identity_invalid_never_dispatches (__main__.PolicyTest.test_file_helper_identity_invalid_never_dispatches) ... ok
+test_file_helper_quotes_user_paths_as_data (__main__.PolicyTest.test_file_helper_quotes_user_paths_as_data) ... ok
+test_file_helper_unknown_result_is_not_replayed (__main__.PolicyTest.test_file_helper_unknown_result_is_not_replayed) ... ok
+test_mirror_and_adopted_sms_paths_cannot_be_read_or_walked (__main__.PolicyTest.test_mirror_and_adopted_sms_paths_cannot_be_read_or_walked) ... ok
+test_missing_mkdir_parents_resolve_existing_ancestor (__main__.PolicyTest.test_missing_mkdir_parents_resolve_existing_ancestor) ... ok
+test_mixed_batch_system_and_own_app_block_every_stop (__main__.PolicyTest.test_mixed_batch_system_and_own_app_block_every_stop) ... ok
+test_multiple_android_users_and_cloned_apps (__main__.PolicyTest.test_multiple_android_users_and_cloned_apps) ... ok
+test_pid_is_resolved_to_package (__main__.PolicyTest.test_pid_is_resolved_to_package) ... ok
+test_read_arguments_are_quoted_data (__main__.PolicyTest.test_read_arguments_are_quoted_data) ... ok
+test_recursive_delete_with_symlink_is_blocked (__main__.PolicyTest.test_recursive_delete_with_symlink_is_blocked) ... ok
+test_refresh_groups_before_each_user_app_stop (__main__.PolicyTest.test_refresh_groups_before_each_user_app_stop) ... ok
+test_root_cannot_follow_symlinked_copy_source_into_sms_provider (__main__.PolicyTest.test_root_cannot_follow_symlinked_copy_source_into_sms_provider) ... ok
+test_root_reads_and_copy_sources_cannot_read_sms_provider (__main__.PolicyTest.test_root_reads_and_copy_sources_cannot_read_sms_provider) ... ok
+test_root_recursive_traversal_cannot_enter_telephony_tree (__main__.PolicyTest.test_root_recursive_traversal_cannot_enter_telephony_tree) ... ok
+test_shared_system_uid_and_incomplete_inventory_are_blocked (__main__.PolicyTest.test_shared_system_uid_and_incomplete_inventory_are_blocked) ... ok
+test_sms_paths_consume_native_root_table_without_python_mirror (__main__.PolicyTest.test_sms_paths_consume_native_root_table_without_python_mirror) ... ok
+test_symlink_in_write_chain_is_blocked (__main__.PolicyTest.test_symlink_in_write_chain_is_blocked) ... ok
+test_system_and_unknown_packages_are_blocked (__main__.PolicyTest.test_system_and_unknown_packages_are_blocked) ... ok
+test_typed_virtual_screen_requires_ticket_and_exact_managed_source (__main__.PolicyTest.test_typed_virtual_screen_requires_ticket_and_exact_managed_source) ... ok
+test_unknown_plan_never_dispatches (__main__.PolicyTest.test_unknown_plan_never_dispatches) ... ok
+test_unreadable_metadata_blocks_mutation (__main__.PolicyTest.test_unreadable_metadata_blocks_mutation) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 0.005s
+
+OK

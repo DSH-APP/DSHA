@@ -1,0 +1,300 @@
+{
+  "schema": "dsha-device-lan-background-review-v1",
+  "reviewedAt": "2026-10-04T09:54:00+08:00",
+  "reviewMode": "host_only_new_standard_existing_private_evidence",
+  "softwareChanged": false,
+  "deviceCommandsByReviewer": 0,
+  "scope": {
+    "flavor": "standard",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+    "minSdk": 30,
+    "targetSdk": 37,
+    "debuggable": false,
+    "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+    "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "androidReleaseReportedByOperator": 13,
+    "deviceOperator": "runtime under parent-authorized exclusive device lease",
+    "lastUpdateTime": "2026-10-04T08:15:50+08:00",
+    "bindingBasis": "Exact APK preflight/supply ledger and successful overlay plus post-install package metadata; no installed APK byte-pull performed by reviewer.",
+    "transport": "Actual USB RNDIS IPv4 TCP, no adb forwarding for LAN requests.",
+    "powerAndDuration": "USB powered, short background/screen-off interval.",
+    "browserEngineEstablishedByTheseReceipts": false
+  },
+  "summary": {
+    "status": "pass_observed_bounded_new_standard_lan_scenario",
+    "unauthenticatedStatus": 401,
+    "authenticateStatus": 303,
+    "cookieHttpOnly": true,
+    "cookieSameSiteStrict": true,
+    "cookieMaxAgeSeconds": 43200,
+    "redirectToRoot": true,
+    "initFresh200Responses": 3,
+    "backgroundFresh200Responses": 3,
+    "screenOffFresh200Responses": 3,
+    "allNineAuthenticatedBodiesSameDigestAndSize": true,
+    "authenticatedBodyBytes": 158137,
+    "authenticatedBodySha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+    "firstScreenOffRequestAfterAsleepSampleSeconds": 274.638,
+    "overallDozeOemDeviceMatrix": "not_established",
+    "oldStandard5aebEvidenceUsedForThisCandidate": false
+  },
+  "sourceEvidence": {
+    "packageBinding": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/apk-preflight.json",
+        "sha256": "2b2582536a4e74a2ca46118c108d895fa13549baeb5b1f2c31a32c7ab5b56cdc",
+        "bytes": 905
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-install.txt",
+        "sha256": "c4aa470acafcf8576c15b0f0b5ae7e852d1ec5413372d0e6a9272e788e1306d3",
+        "bytes": 38
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-package-after.txt",
+        "sha256": "f696372fc91262fd51f91c0913310f863505694be90d419aea4e7d5e17fe2592",
+        "bytes": 13491
+      },
+      {
+        "path": "docs/audits/build156/final-apk-supply-checks.json",
+        "sha256": "4f7361be8931535c0037e3c50a5df814b49bbc7146f07be2f939c4749210d348",
+        "bytes": 69878
+      }
+    ],
+    "networkCollector": {
+      "path": "app/build/audit-build156/device-private/latest-lan-standard.py",
+      "sha256": "43e5fc93b3390864e33558614a896e1b649f152075832d68c8bbeaedb4f1a7dc",
+      "bytes": 2563,
+      "newHTTPConnectionPerRequestFunctionCall": true,
+      "successfulRequestsFullReadAndClose": true,
+      "privateInputReadTextCallsExplicitUtf8": 2,
+      "operatorRunCommands": [
+        "python app/build/audit-build156/device-private/latest-lan-standard.py standard init",
+        "python app/build/audit-build156/device-private/latest-lan-standard.py standard background",
+        "python app/build/audit-build156/device-private/latest-lan-standard.py standard screenoff"
+      ],
+      "executionAttribution": "runtime operator; none run by reviewer",
+      "lowCollectorUnchanged": {
+        "path": "app/build/audit-build156/device-private/latest-lan.py",
+        "sha256": "2178753d2121c2e5d365f1eec63f66f4ed0099d8a2fc2dabab69e42cc3cc4077",
+        "bytes": 2487
+      },
+      "collectorAstEquivalentToLowApartFromReadTextEncoding": true
+    },
+    "lanStages": [
+      {
+        "stage": "init",
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-lan-init.json",
+        "sha256": "7079480e72840c911d85d75224fbad45fa4c64fc55f48828b5c6752f1dc1f895",
+        "bytes": 1666,
+        "rows": [
+          {
+            "phase": "unauthenticated",
+            "time": "2026-10-04T09:38:51.373979+08:00",
+            "status": 401,
+            "bytes": 30,
+            "sha256": "0693073d6ff347fa0e41bdc48e7ad257e6408724df0d0e4611e02b563470b48b",
+            "seconds": 0.031
+          },
+          {
+            "phase": "authenticate",
+            "time": "2026-10-04T09:38:51.381743+08:00",
+            "status": 303,
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "seconds": 0.0,
+            "cookiePolicy": {
+              "HttpOnly": true,
+              "SameSite=Strict": true,
+              "Max-Age=43200": true
+            },
+            "redirectToRoot": true
+          },
+          {
+            "phase": "init",
+            "request": 0,
+            "time": "2026-10-04T09:38:51.434050+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+            "seconds": 0.046
+          },
+          {
+            "phase": "init",
+            "request": 1,
+            "time": "2026-10-04T09:38:56.464180+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+            "seconds": 0.032
+          },
+          {
+            "phase": "init",
+            "request": 2,
+            "time": "2026-10-04T09:39:01.484404+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+            "seconds": 0.015
+          }
+        ],
+        "freshConnectionsDeclared": true
+      },
+      {
+        "stage": "background",
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-lan-background.json",
+        "sha256": "8284bef5e14211aeffe302b4a79b741d47c99ceb3074b9a7c695be0b41886586",
+        "bytes": 1028,
+        "rows": [
+          {
+            "phase": "background",
+            "request": 0,
+            "time": "2026-10-04T09:39:03.766849+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+            "seconds": 0.032
+          },
+          {
+            "phase": "background",
+            "request": 1,
+            "time": "2026-10-04T09:39:08.797920+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+            "seconds": 0.016
+          },
+          {
+            "phase": "background",
+            "request": 2,
+            "time": "2026-10-04T09:39:13.822633+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+            "seconds": 0.016
+          }
+        ],
+        "freshConnectionsDeclared": true
+      },
+      {
+        "stage": "screenoff",
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-lan-screenoff.json",
+        "sha256": "fb62c97a05d8a20e39f6408c2fa5d65b840b77031cf2c0b94c5022025be3e832",
+        "bytes": 1025,
+        "rows": [
+          {
+            "phase": "screenoff",
+            "request": 0,
+            "time": "2026-10-04T09:43:50.837380+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+            "seconds": 0.094
+          },
+          {
+            "phase": "screenoff",
+            "request": 1,
+            "time": "2026-10-04T09:43:55.916652+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+            "seconds": 0.078
+          },
+          {
+            "phase": "screenoff",
+            "request": 2,
+            "time": "2026-10-04T09:44:00.964563+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "072cd26a4b0896a3a760a456b3b244a8c631e3d9029b0c3656e04be1e7539669",
+            "seconds": 0.047
+          }
+        ],
+        "freshConnectionsDeclared": true
+      }
+    ],
+    "screenOffState": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-screenoff-state.json",
+      "sha256": "3991f9bee5f1c506d0c026c9c1e2e7a5a891f9948a80f8c9066abb2da0ab4dac",
+      "bytes": 78,
+      "sampleTime": "2026-10-04T09:39:16.198+08:00",
+      "wakefulness": "Asleep",
+      "firstRequestAfterSampleSeconds": 274.638,
+      "lastRequestAfterSampleSeconds": 284.766,
+      "continuousSleepOrDozeEstablished": false
+    },
+    "nativeWarningAndCopyChain": {
+      "path": "app/build/audit-build156/device-private/lease-standard-lan-warning-confirmed-0885.png",
+      "sha256": "82f06b1c634c14d8bd4f090bd4a2c741a0ecc1f07e15868de0675223f1e085cd",
+      "bytes": 300853,
+      "actionIndex0Based": 1345,
+      "operatorTime": "2026-10-04T09:36:50.743236+08:00",
+      "copyTapActionIndex0Based": 1346,
+      "copyTapTime": "2026-10-04T09:38:49.006241+08:00",
+      "operatorReportedCopyCoordinateMatchedPrivately": true,
+      "privateNativeUrlSchemeIpv4PortAndSingleTokenQueryChecked": true,
+      "operatorReportedExpectedOriginAssertionSucceeded": true,
+      "imagePixelsPublished": false,
+      "visuallyReviewedByThisReviewer": false,
+      "semanticNativeWarningAndCopyAttribution": "runtime/root prior actual UI observation"
+    },
+    "operatorActionPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "f3d68576f700f2bf87d03837a30d768d3b53c3b6211b179559c23515aeecd9e2",
+      "bytes": 190887,
+      "records": 1347,
+      "lastIndex0Based": 1346,
+      "lastTime": "2026-10-04T09:38:49.006241+08:00",
+      "hashRecipe": "Exact original complete JSONL byte prefix through native LAN Copy tap; later appends excluded. Raw command arguments omitted."
+    }
+  },
+  "excludedInitialAttempts": {
+    "emptyClipboardReceipt": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-lan-no-copy-initial-private.json",
+      "sha256": "846b1f6ccb59b76e5e2f278fb49108f32f633aa49c2fcea657e0daadc497b9ba",
+      "bytes": 34,
+      "emptyResultCheckedPrivately": true,
+      "rawResultOmitted": true,
+      "countsAsAuthenticatedPass": false
+    },
+    "preAuthenticationScreenOffState": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-screenoff-unauthed-initial-state.json",
+      "sha256": "dbda28db02e14d37ba46501b86ecc360b6584286289016599454eadab1602e88",
+      "bytes": 79,
+      "countsAsAuthenticatedBackgroundOrScreenOffPass": false,
+      "stateSampleOnly": true
+    },
+    "operatorReportedInitialFailures": "Initial unauthenticated/empty-clipboard and host GBK decoding attempts preceded the actual native warning/copy/expected-origin chain and UTF-8 collector. They are preserved and excluded from authenticated PASS.",
+    "originalArtifactsModified": false,
+    "gbkFailureIsNotAnApplicationPermissionOrNetworkPass": true
+  },
+  "checks": [
+    {
+      "command": "PowerShell $reviewScript | python -: exact c676 package/preflight/supply/install binding; 11 LAN status/time/body rows/policy flags; Asleep timestamp delay; current collector request new-connection/read/close and 2 UTF-8 reads; AST-equivalence/unchangedLow SHA; native warning/copy action/file binding; private native URL shape; excluded initial clipboard/state receipts",
+      "exitCode": 0,
+      "lanRowsChecked": 11,
+      "authenticatedFreshSuccesses": 9,
+      "privateCredentialsAndPixelBodiesPublished": 0,
+      "phoneRequestsByReviewer": 0,
+      "productionSourceTestsBuildsOrChanges": 0
+    }
+  ],
+  "interpretationLimits": [
+    "This is actual operator-produced RNDIS evidence for new Standard c676 on the reported Android 13 phone. It does not inherit old Standard 5aeb device coverage.",
+    "The single Asleep sample precedes the first successful screen-off request by 274.638s. It does not establish continuous sleep, deep Doze, battery-powered/overnight endurance or every OEM restriction.",
+    "Native-warning/copy/background meanings and expected-origin execution are the operator observations. Reviewer checks persisted JSON, collector source, timestamps, action metadata and image hashes without phone commands or screenshot rendering.",
+    "Only cookie rejection/login and nine fresh HTTP root responses are covered. This does not test all LAN routes, WebSocket/pump lifecycle or every network/security scenario.",
+    "No browser-engine or Android6/7/Low/16KiB full matrix proof is inferred from the filename, SDK or this LAN response.",
+    "Initial failed clipboard/unauthenticated/GBK attempts stay separate. Availability/no-crash conclusions require separately bounded end logs."
+  ],
+  "privacy": {
+    "lanHostUrlTokenAndCookiePublished": false,
+    "credentialFilePathsOrDigestsPublished": false,
+    "deviceSerialPidUidPublished": false,
+    "rawHtmlPublished": false,
+    "screenshotPixelsPublished": false,
+    "rawCopyCoordinatesAndArgumentsPublished": false
+  }
+}

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """按仓库锁文件安装 Linux arm64 依赖，并生成已适配的离线覆盖层。"""
+from source_text import write_text as write_source_text, matches_text
 import argparse
 import importlib.util
 import json
@@ -37,7 +38,7 @@ def main():
     spec.loader.exec_module(builder)
     version = json.loads((ROOT / 'tools/dsh-runtime/package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
     report = builder.build(work / 'node_modules', ROOT / 'app/src/main/assets/dsh-runtime.bin', version)
-    (work / 'build-report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+    write_source_text(work / 'build-report.json',json.dumps(report, indent=2, ensure_ascii=False) + '\n',encoding='utf-8')
     print('新版离线覆盖层已生成：', report['sha256'])
 
 

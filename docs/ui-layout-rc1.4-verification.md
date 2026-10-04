@@ -1,5 +1,8 @@
 # rc1.4 原生 UI 排版优化验收
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 此页保留 9 月 7 日排版验收。其后同版本增加功能修复，当前安装包与摘要见[最新功能验收](functional-audit-rc1.4.md)；本页 APK 已归档到 `release/history/rc1.4-before-functional-audit-20260908`。
 
 按“紧凑但不要过于紧凑”的偏好完成排版重整。版本名仍为 rc1.4 / rc1.4low，版本码仍为 113，保留右上角日夜切换，不恢复设置主题卡片。

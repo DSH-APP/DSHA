@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "status": "PASS_CURRENT_785_STYLE_WITH_ONE_AUTHORIZED_SEMANTIC_FIX",
+  "runAwaited": "5e2d5521-beb5-4775-b87e-85a074b4aade",
+  "atUtc": "2026-10-03T21:39:10.814682+00:00",
+  "composite": {
+    "path": "docs/audits/build156/java-format-current-style.json",
+    "sha256": "8f47f0efc62a0893fad930618ddb8ea836ab414588bb8f3d2be36f81356bc442",
+    "files": 785,
+    "verified": 785,
+    "missing": [],
+    "extra": []
+  },
+  "priorPreserved": {
+    "path": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/java-format-current-style.json",
+    "sha256": "232de0273de064bb29b5a330358428428f9437f9776b51dcf86637dadcd54547"
+  },
+  "unchangedSourceFiles": 784,
+  "semanticChanges": [
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+      "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "beforeJavaTokenSha256": "57df7440222b53922c73a88ea5683e24f27c4b29c74554843a97920da4dc10a4",
+      "afterJavaTokenSha256": "e19ec74a7439b1bdc994b9d431b492ab194eb35b93e63d71ee9dfaca04222bca",
+      "semanticTokensEquivalent": false,
+      "formatterTokensPreservedOnlyAfterSemanticFix": true,
+      "currentProof": "app/build/java-format/bridge156-a11y-status-check.json",
+      "currentProofSha256": "2286bff5178a109e56743109baf8c0669d819bd325ebeb16872d50010f80b71c",
+      "meaning": "YES setting now requires connected() for available status; enabled-but-unbound waiting and muted state added using existing full zh/en. Javadoc updated; no permission/rebind/lifecycle behavior change claimed.",
+      "fixEvidence": "docs/audits/build156/bridge-a11y-bound-status-fix.json"
+    }
+  ],
+  "checks": [
+    {
+      "command": "python -B docs/audits/build156/refresh-current-style.py",
+      "exitCode": 0,
+      "result": "PASS785 current sources; freshFormatterFiles0; no --refresh, no source writes/reformatting"
+    },
+    {
+      "command": "Read785 source SHA/receipt SHA/pinned GJF identity/formatted SHA/javac token SHA bindings; compare prior current-style copy",
+      "exitCode": 0,
+      "result": "PASS784 source bytes unchanged; one explicit semantic file has current proof and new token fingerprint"
+    }
+  ],
+  "hostEvidenceScope": "No repeated112 host suite or full tests by UI lane. Existing host receipts retain their original source/input scope; this semantic delta requires new integrated and device checks, owned by build/root.",
+  "deferredIntegratedChecks": [
+    "Wait build confirmation of new5e2 APKs and both freshReleaseLint before updating classification/APK alignment; current5aeb/f8c artifacts remain old.",
+    "New source waiting/connected status requiresRoot formal-device acceptance; formatting proof is not behavioral/device proof."
+  ]
+}

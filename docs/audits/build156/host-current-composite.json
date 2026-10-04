@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "PASS_COMPLETE_ACTIVE_HOST_MANIFEST",
+  "scope": "112 declared entry points: original successful execution retained; five readers of the sole changed Java source actually rerun. Not a new112-entry run.",
+  "reports": [
+    {
+      "path": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "sha256": "bac509ddbf6934757a2cd2ea0e313316891013eb11b48de10279c263716fb984"
+    },
+    {
+      "path": "docs/audits/build156/host-connected-label-delta-evidence/affected-host-manifest.json",
+      "sha256": "6a4121452eb94eba5a647e93c26e07e0ea99a2286c05f52f8b5e6c24e0124839"
+    }
+  ],
+  "latestSoftware": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+    "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626"
+  },
+  "sourceSnapshot": {
+    "path": "F:\\DSHA_RESTART\\app\\build\\stability-acceptance\\5e2d5521-beb5-4775-b87e-85a074b4aade\\source-sha256.json",
+    "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+  },
+  "inputImpactReview": {
+    "path": "docs/audits/build156/host-connected-label-delta-evidence/host112-input-impact.json",
+    "sha256": "cd42a4df8515fd2bf4436b7cbccb60f3505581822974adb134d0a82ba5d84ed7"
+  },
+  "affectedCheckAndAdditionalSourceGateReceipt": {
+    "path": "docs/audits/build156/host-connected-label-delta-evidence/receipt.json",
+    "sha256": "5fbbc6c502a6acd539765416de40a2cab4688acf8b9c46927f7a8aa9f669325e"
+  },
+  "uniqueDeclaredEntryPoints": 112,
+  "entriesActuallyRerunAfterSourceDelta": 5,
+  "unchangedSelectedInputEntriesReused": 107,
+  "additionalFullTreeSourceGates": 2,
+  "packageHostEntries": 0,
+  "packageValidation": "Actual APK/ELF/signature gates belong to the linked completed software receipt.",
+  "limitations": "The source-reader review is not dynamic all-I/O tracing; no old compiled classpath byte equality or full device matrix is inferred."
+}

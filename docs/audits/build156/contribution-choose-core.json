@@ -1,0 +1,26 @@
+[
+  {
+    "zh": "\n已安全清理 %s 项 · %s",
+    "en": "\nSafely removed %s items · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/BackupTask.java"
+    ]
+  },
+  {
+    "zh": "Web 端口被占用：%s",
+    "en": "Web port in use: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java"
+    ]
+  },
+  {
+    "zh": "插件已卸载，可重试启动：%s",
+    "en": "Plugin removed. You can retry startup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupRepairs.java"
+    ]
+  }
+]

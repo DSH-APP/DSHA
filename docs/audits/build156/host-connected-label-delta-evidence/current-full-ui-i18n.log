@@ -1,0 +1,2 @@
+{"schema": 1, "scope": "production-source-lexical-only", "counts": {"translated_fragment_concat": 1}, "lexicalCandidateCounts": {"translated_choose_fragment_concat": 8, "translated_fragment_concat": 1}, "dynamicUiTextArgumentsForReview": 23, "newFindings": 0, "resolvedBaselineFindings": 0}
+UI_I18N_EXPLICIT_NONFINDINGS 8; stale declarations 0

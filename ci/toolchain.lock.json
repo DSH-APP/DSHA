@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "java": "17",
+  "node": "24",
+  "python": "3.12",
+  "gradle": "9.3.1",
+  "agp": "9.1.1",
+  "androidPlatform": "android-37.0",
+  "buildTools": "36.0.0",
+  "ndk": "26.3.11579264"
+}

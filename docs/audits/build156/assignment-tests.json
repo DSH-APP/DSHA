@@ -1,0 +1,2045 @@
+{
+  "lane": "tests",
+  "source": "D:\\qq\\文件\\DSHA-deliverables-20261002\\DSHA-deliverables-20261002",
+  "baselineBuild": 155,
+  "items": [
+    {
+      "source": {
+        "id": "D-TEST-21",
+        "category": "测试与调试代码",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "自检“ADB 只读白名单”测试的是已不参与放行的死代码，给出虚假 PASS",
+        "where": "app/src/main/assets/selftest.py:303-324; app/src/main/assets/adb-shell.py:34-76,475,508-516; tools/test-adb-flow.py:192-194",
+        "recommendation": "删除 adb-shell.py 中的 READONLY_CMDS/is_readonly_cmd 及 selftest.py 对应项、test-adb-flow.py:192-194；自检改为调用原生 /device/plan 的只读“dry-run”接口，对一组受保护命令（写 DCIM、settings put、短信写、/system 写）断言被拒、对 getprop 断言放行。",
+        "acceptance": "grep -rn 'is_readonly_cmd\\|READONLY_CMDS' app/src/main/assets tools 无命中；在真机运行自检，新增“设备命令策略”项对受保护命令返回拒绝并显示 PASS，人为放宽 DeviceShellPolicy 时该项 FAIL。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-21",
+        "title": "自检“ADB 只读白名单”测试的是已不参与放行的死代码，给出虚假 PASS",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "retired_current_source",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/assets/adb-shell.py",
+          "app/src/main/assets/selftest.py",
+          "tools/test-adb-flow.py"
+        ],
+        "evidenceReferences": [
+          "reviews.json"
+        ],
+        "checks": [
+          "Final bounded disposition: Intrusive old ADB/device audit runner retired to private exact-byte history."
+        ],
+        "residual": [
+          "Intrusive audit originals remain private historical evidence and are not executed."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "retired_current_source"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-22",
+        "category": "测试与调试代码",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "自检 write/会话补丁仍只认 DSHA_L2S_FIX*，现行运行时用 DSHA_ATOMIC_PUBLISH_V1 必报 FAIL",
+        "where": "app/src/main/assets/selftest.py:577-611; tools/build-dsh-runtime.py:477; app/src/main/assets/fs-write-patch.sh:52-63; app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java:369",
+        "recommendation": "selftest 两项改为：含 DSHA_ATOMIC_PUBLISH_V1 即 PASS（排他发布），旧 FIX 标记为 WARN；标记字符串从共享常量文件读取（与 fs-write-patch.sh、ProotBootstrap 同源），避免再次漂移。",
+        "acceptance": "新增 Python 单测：以含 DSHA_ATOMIC_PUBLISH_V1 的夹具模块运行 check_write_patch 得 PASS、空模块且 stage=ran 得 FAIL；真机在 build150 运行时上运行自检两项为 PASS。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-22",
+        "title": "自检 write/会话补丁仍只认 DSHA_L2S_FIX*，现行运行时用 DSHA_ATOMIC_PUBLISH_V1 必报 FAIL",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "retired_current_source",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/assets/fs-write-patch.sh",
+          "app/src/main/assets/selftest.py",
+          "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "tools/build-dsh-runtime.py"
+        ],
+        "evidenceReferences": [
+          "reviews.json"
+        ],
+        "checks": [
+          "Final bounded disposition: Cited DSHA_L2S_FIX-only path is absent from current tests; current attachment-store host regression passed."
+        ],
+        "residual": [
+          "Host attachment regression passed; Android FUSE behavior was not retested on a device."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "retired_current_source"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-26",
+        "category": "测试与调试代码",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "run-unit-tests.py 只编译 *Test.java，6 个测试辅助类缺失导致全量编译失败",
+        "where": "tools/run-unit-tests.py:145-149,191,210-216; app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystem.java; app/src/test/java/com/deepseekharness/app/*/*CrashProcess.java",
+        "recommendation": "L191 改为收集 src/test/java 下全部 *.java 编译，只把 *Test.java 作为待运行类；用 try/finally（或 tempfile.TemporaryDirectory）保证清理。长期以 gradle testDebugUnitTest 为准，run-unit-tests.py 仅作无 AGP 环境的后备。",
+        "acceptance": "在干净检出运行 python3 -B tools/run-unit-tests.py 全量编译通过并运行全部测试；故意制造编译错误后临时目录被删除；CI fast 阶段调用它或 gradle test 并要求 0 失败。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-26",
+        "title": "run-unit-tests.py 只编译 *Test.java，6 个测试辅助类缺失导致全量编译失败",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystem.java",
+          "tools/run-unit-tests.py"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "py_compile PASS；全量javac/JUnit待源冻结"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-31",
+        "category": "测试与调试代码",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "约 23 个回归测试/夹具未接入任何测试入口，只能手动运行",
+        "where": "tools/test-mobile-delete.mjs; test-mobile-gesture-guard.mjs; test-notification-actions.py; test-office-fonts.mjs; test-pdf-compat.mjs; test-device-shell-policy.py; test-dns-compat.mjs; test-dns-compat-device.mjs; test-dsh-sessions.mjs; test-dsha-ui-regressions.py; test-gecko-model-navigation.mjs; test-generated-asset-directory.py; test-documents-parent.ps1; test-plugin-states.mjs; test-queue-steer.mjs; test-proot-runtime-libs.py; test-profile-settings-cli.mjs; test-profile-settings-review.mjs; test-rc1-browser-behavior.mjs; test-recovery-agent.mjs; test-recovery-apk-assets.py; test-recovery-assets.py; overlay-bridge-test.mjs; tools/verify-stability.py:205-263; tools/verify-plugin-upgrade-gate.py:69-89",
+        "recommendation": "建立单一测试清单（如 tools/test-manifest.json：名称、命令、所需夹具、阶段 fast/package/device），由一个聚合入口（tools/run-host-tests.py）执行并在 CI fast 阶段运行；每个测试先修到可在干净检出通过（依赖 D-TEST-30/36/39 等），确无价值或依赖已退役版本的按 D-LEGACY-01 删除。新增门禁：tools/ 下 test-*.{py,mjs} 必须出现在清单中，否则 CI 失败。",
+        "acceptance": "python3 tools/check-test-manifest.py 断言 tools/test-* 与清单一一对应；CI fast 运行清单中全部 host 测试且通过；人为破坏 device-shell-policy 中一条保护规则时 CI 失败。",
+        "depends_on": "D-CI-01;D-TEST-30;D-TEST-36;D-TEST-39",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-31",
+        "title": "约 23 个回归测试/夹具未接入任何测试入口，只能手动运行",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/test-mobile-delete.mjs",
+          "tools/verify-plugin-upgrade-gate.py",
+          "tools/verify-stability.py",
+          "tools/host-tests.manifest.json",
+          "tools/run-host-tests.py"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "G2 complete manifest/runner reconciliation and two independent setup-failure aggregation probe reported PASS."
+        ],
+        "residual": [
+          "Registration is not actual full host test execution; parent owns final run."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-02",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "runtime 关键组件缺 JVM 单测：ProotBootstrap、TarGzipExtractor、RuntimeTools 补丁版本匹配、WebProcessManager.stopOne、RuntimeTrial",
+        "where": "app/src/test/java/com/deepseekharness/app/runtime/; app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java:307,357,440,476,529; tools/prepare-test-runtime.py:64; app/src/test/java/com/deepseekharness/app/runtime/AdbWheelBundleTest.java:35",
+        "recommendation": "补 JVM 单测：TarGzipExtractorTest（../ 路径、绝对路径、符号链接/硬链接逃逸、超大条目）；RuntimeToolsPatchTest（把各补丁 spec 的 dshVersion 与 runtime-descriptor.json dshVersion 比对，失配即失败，并把静默 return 改为可观测的“补丁跳过”记录）；WebProcessManager.stopOne 抽出 kill/wait 接口后用假实现测 SIGTERM 超时路径（与 D-RT-13 二次确认后 SIGKILL 一起测）；RuntimeTrial 主流程抽出文件系统依赖后测 recoverPending。ProotBootstrap 先拆出可测纯逻辑。",
+        "acceptance": "gradle testStandardDebugUnitTest（或 tools/run-unit-tests.py）包含上述新测试并在 CI fast 阶段运行；人为把某补丁 dshVersion 改成旧值时 RuntimeToolsPatchTest 失败；构造含 ../ 条目的 tar.gz 时 TarGzipExtractorTest 断言抛错且目标外无文件。",
+        "depends_on": "D-TEST-26;D-CI-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-02",
+        "title": "runtime 关键组件缺 JVM 单测：ProotBootstrap、TarGzipExtractor、RuntimeTools 补丁版本匹配、WebProcessManager.stopOne、RuntimeTrial",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implementation_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "app/src/test/java/com/deepseekharness/app/runtime/AdbWheelBundleTest.java",
+          "tools/prepare-test-runtime.py",
+          "tools/runtime_fixture_proof.py",
+          "app/src/main/assets/runtime-patches.json"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Artifact/source-review disposition only; this merger executed no tests, phone, Gradle or build commands."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implementation_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-03",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "Rc13Instrumentation 的 APK 校验场景把 versionCode 写死 114，在 build150 下必然失败",
+        "where": "app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java:139,187,190,211; app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java:356-357; app/build.gradle:20,23; app/src/androidTest/java/com/deepseekharness/app/core/OptimizationInstrumentation.java:65",
+        "recommendation": "L187/L211 改为读取 valid APK 的 PackageInfo.versionCode（同 OptimizationInstrumentation:65），并保证夹具 APK 版本码 > VERSION_CODE；L139 改为测试自己安装的合成插件或通过 instrumentation 参数传入插件名。",
+        "acceptance": "在任一真机上运行 ./gradlew connectedStandardDebugAndroidTest（默认 runner）APK 校验场景通过，且把夹具版本码改为 ≤150 时该断言失败；grep 'dsh-infinite-gen-3' app/src/androidTest 无命中。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-03",
+        "title": "Rc13Instrumentation 的 APK 校验场景把 versionCode 写死 114，在 build150 下必然失败",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/build.gradle",
+          "app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+          "app/src/androidTest/java/com/deepseekharness/app/core/OptimizationInstrumentation.java",
+          "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+          "docs/audits/build154/engineering-retired-sources.json"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Historical private-device plugin/downgrade APK runner preserved by source SHA; default class explicitly returns RETIRED/CANCELED without accessing real data"
+        ],
+        "residual": [
+          "Final complete runtime/asset/APK/release gates are root-owned; no device operation."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-05",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "InstallSettingsAudit 真实点击配置保存，触发全套保存副作用，注释不符",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/InstallSettingsAudit.java:16,72,77-81; app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java:126-162",
+        "recommendation": "把保存逻辑抽成 ConfigFragment 可注入的 ConfigSaver，审计中替换为记录调用的假实现；或在 finally 中快照并恢复整个 SharedPreferences 与凭据存储。改正 L16 注释为“仅 debug，会写入配置”。",
+        "acceptance": "运行该插桩前后导出 SharedPreferences 与加密凭据文件哈希一致；代码评审确认注释与行为一致。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-05",
+        "title": "InstallSettingsAudit 真实点击配置保存，触发全套保存副作用，注释不符",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/ui/InstallSettingsAudit.java",
+          "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java",
+          "tools/history/android-audits",
+          "app/src/debug/AndroidManifest.xml"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "retired-audit-sources.json原件hash保留"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-08",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "Rc21AttachmentAudit 依赖的资产不在 debug 包中，且失败前已对真实环境执行维护更新",
+        "where": "app/src/debug/java/com/deepseekharness/app/core/Rc21AttachmentAudit.java:32-41; app/src/debug/assets/; tools/device-backup-audit.init.gradle:24",
+        "recommendation": "若该审计仍需保留：把三个脚本以 Gradle 任务复制进 src/debug/assets（从 tools/ 生成），资产存在性检查与 Web/任务空闲检查移到 L34 之前；否则按 D-LEGACY-01 删除 Rc21AttachmentAudit。",
+        "acceptance": "unzip -l app-standard-debug.apk 含 assets/test-attachment-store.mjs 等三个文件，或该类已删除；代码评审确认 runDataTask 之前有前置检查。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-08",
+        "title": "Rc21AttachmentAudit 依赖的资产不在 debug 包中，且失败前已对真实环境执行维护更新",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+          "tools/device-backup-audit.init.gradle",
+          "tools/history/android-audits",
+          "app/src/debug/AndroidManifest.xml"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "5个旧入口明确退休并保留源码"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-09",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "UpgradeDeviceAudit 与 PluginListAudit 断言可见内置插件恰好 4 个，与现行 7 个不符",
+        "where": "app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java:128; app/src/debug/java/com/deepseekharness/app/ui/PluginListAudit.java:34,37; app/src/main/assets/register-builtin-plugins.py:57-66; app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java:26-30; app/src/main/java/com/deepseekharness/app/core/PluginRepository.java:561-562",
+        "recommendation": "断言改为与 register-builtin-plugins.py 的 DEFAULT_BUILTINS 减去 BuiltinPlugins.internal 后的集合逐项比对（而非计数），把该可见集合定义为单一常量供测试与 UI 使用；更新 BuiltinPlugins.java:26 注释与 PluginListAudit:37 文案。",
+        "acceptance": "新增 JVM 单测：解析 register-builtin-plugins.py（或其生成的 JSON）与 BuiltinPlugins.internal 推算的可见集合等于常量；grep '== 4\\|!=4' 于上述两文件无命中。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-09",
+        "title": "UpgradeDeviceAudit 与 PluginListAudit 断言可见内置插件恰好 4 个，与现行 7 个不符",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java",
+          "app/src/debug/java/com/deepseekharness/app/ui/PluginListAudit.java",
+          "app/src/main/assets/register-builtin-plugins.py",
+          "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+          "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Visible built-ins compared by exact current BuiltinPlugins registry set; historical real-device upgrader retired"
+        ],
+        "residual": [
+          "BuiltinPlugins stale four-plugin comment is owned by G3/root; no plugin install/device run"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-10",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "DevicePolicyAudit 固定目录不清理，第二次运行必失败",
+        "where": "app/src/debug/java/com/deepseekharness/app/DevicePolicyAudit.java:59-60,64-67,73-76; tools/device-policy-device-audit.py:171-177",
+        "recommendation": "Fixture 改为 cache/device-policy-audit-<UUID>（路径通过 instrumentation 结果回传给宿主脚本），Java finally 递归删除；或宿主脚本 finally 以 run-as com.dsh.client rm -rf cache/device-policy-audit 收尾，并在启动时先删除旧 done。",
+        "acceptance": "连续两次运行 python3 tools/device-policy-device-audit.py 均 PASS；第二次运行前后 run-as com.dsh.client ls cache 不含残留 device-policy-audit*。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-10",
+        "title": "DevicePolicyAudit 固定目录不清理，第二次运行必失败",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/DevicePolicyAudit.java",
+          "tools/device-policy-device-audit.py",
+          "app/src/debug/java/com/deepseekharness/app/OwnedAuditFiles.java"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "UUID per-run cache/preference identity and READY result binding; host script requires the same exact UUID; default bounded own-fixture cleanup",
+          "Actual debug Java compile and Python py_compile PASS"
+        ],
+        "residual": [
+          "No extra debug/audit APK generation or device execution; final Release Lint/APK gates are owned by root."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-11",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "候选",
+        "title": "WebRegressionAudit 默认模式可能被替换为真实 Web 鉴权地址，测试与用户会话未隔离",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/WebRegressionAudit.java:17,39-41,49-65,89; app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java:185-188",
+        "recommendation": "审计开始前要求 Web 未运行（检查 getWebAuthUrl() 为空，否则中止并提示），或像 upload 模式一样对所有模式统一注入夹具地址；更正 L17 注释。",
+        "acceptance": "在 Web 运行状态下启动 WebRegressionAudit 默认模式：应明确中止并报“需先停止 Web”，或页面 URL 断言为夹具服务器 base；代码评审确认所有模式使用同一注入路径。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-11",
+        "title": "WebRegressionAudit 默认模式可能被替换为真实 Web 鉴权地址，测试与用户会话未隔离",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/ui/WebRegressionAudit.java",
+          "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Require actual Web URL empty, no starting/running process and verified stopped barrier before fixture server or browser activity opens"
+        ],
+        "residual": [
+          "Final complete runtime/asset/APK/release gates are root-owned; no device operation."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-12",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "多终端/终端维护审计反射已不存在的静态字段 sessions，必然失败",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/MultiTerminalLanguageAudit.java:33; app/src/debug/java/com/deepseekharness/app/runtime/RuntimeStartupAudit.java:106; app/src/main/java/com/deepseekharness/app/core/TerminalSessionOwner.java:12-14; app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java:76; app/src/main/java/com/deepseekharness/app/ui/TerminalFragment.java:30",
+        "recommendation": "删除反射，改用 TerminalSessionOwner.shared().ptyTabs()/simpleTabs() 等公开只读访问（必要时给 TerminalSessionOwner 加 @VisibleForTesting 访问器）。",
+        "acceptance": "grep -rn 'getDeclaredField(\"sessions\")\\|\"sessions\"' app/src/debug 无命中；debug 源集编译通过，在真机运行两个审计不再出现 NoSuchFieldException。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-12",
+        "title": "多终端/终端维护审计反射已不存在的静态字段 sessions，必然失败",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/runtime/RuntimeStartupAudit.java",
+          "app/src/debug/java/com/deepseekharness/app/ui/MultiTerminalLanguageAudit.java",
+          "app/src/main/java/com/deepseekharness/app/core/TerminalSessionOwner.java",
+          "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java",
+          "app/src/main/java/com/deepseekharness/app/ui/TerminalFragment.java"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "完整编译待冻结"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-13",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "多个自测用解析后的语言保存/恢复，把“跟随系统”固化为显式 zh/en",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/LogPanelAudit.java:68,86; MultiTerminalLanguageAudit.java:115,132; PluginSortAudit.java:53,91; LayoutAuditInstrumentation.java:239,318; app/src/main/java/com/deepseekharness/app/core/ConfigStore.java:59-62; StartupRecoveryAudit.java:165-166",
+        "recommendation": "四处改为保存 prefs.getString(\"ui_language\", null) 原始值（或 ConfigStore.getUiLanguagePreference()），恢复时按原始值写回/删除；LogPanelAudit 同样区分键是否存在。可抽一个 PrefSnapshot 工具供各审计复用。",
+        "acceptance": "把 ui_language 设为 system 后依次运行四个审计，结束时 run-as 读 shared_prefs 中 ui_language 仍为 system；grep 四文件不再用 getUiLanguage() 作为恢复源。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-13",
+        "title": "多个自测用解析后的语言保存/恢复，把“跟随系统”固化为显式 zh/en",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/ui/LogPanelAudit.java",
+          "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+          "app/src/debug/java/com/deepseekharness/app/ui/PluginSortAudit.java",
+          "app/src/debug/java/com/deepseekharness/app/ui/LayoutAuditInstrumentation.java"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "完整编译待冻结；无手机"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-14",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "UiPolishAudit 把真实运行日志导出到公共 Download 并改写导出偏好，注释称“假日志”",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/UiPolishAudit.java:18,53,61,88-91; app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java:73,105-106",
+        "recommendation": "导出目标改为可注入：审计中注入假日志源与 cacheDir 下的临时导出目录；或在 finally 中通过返回的 uri 删除导出文件并恢复 last_uri 原值；更正 L18 注释。",
+        "acceptance": "运行审计前后 Download/DSHA/ 文件列表一致、dsha_log_exports 偏好值不变（adb shell ls 与 run-as 读 prefs 比对）。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-14",
+        "title": "UiPolishAudit 把真实运行日志导出到公共 Download 并改写导出偏好，注释称“假日志”",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/ui/UiPolishAudit.java",
+          "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java",
+          "tools/history/android-audits",
+          "app/src/debug/AndroidManifest.xml"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "原源码hash保留，不执行"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-15",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "候选",
+        "title": "RecoveryEntryAudit 临时改名真实就绪标记，进程被杀时用户环境持续判定未就绪",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/RecoveryEntryAudit.java:34-35,46,74; app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java:61",
+        "recommendation": "改用隔离的夹具 rootfs（与 InstallAuditInstrumentation 的 fixture 模式一致）测试恢复入口，不触碰真实标记；若必须使用真实环境，在主程序启动检查中加入“存在 .rc11-audit-ready-marker 且无 .offline-extracted 时改回”的自愈并记录日志。",
+        "acceptance": "grep -rn 'offline-extracted' app/src/debug 中 RecoveryEntryAudit 不再引用真实 rootfs 标记；或在审计中途 am force-stop 后重启 App，环境仍判定就绪（真机验收）。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-15",
+        "title": "RecoveryEntryAudit 临时改名真实就绪标记，进程被杀时用户环境持续判定未就绪",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/ui/RecoveryEntryAudit.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "tools/history/android-audits",
+          "app/src/debug/AndroidManifest.xml"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "原源码hash保留，不执行"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-17",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "BrowserCompatibilityAudit 在 client.js 中找 PDF Worker 标记，实际在 client.pdf.js，断言必败",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/BrowserCompatibilityAudit.java:48,50-52; app/src/main/assets/pdf-compat-patch.json:3",
+        "recommendation": "L48 路径改为从 pdf-compat-patch.json 的 module 字段读取（避免再次漂移），即 lib/client.pdf.js。",
+        "acceptance": "grep 'client.js\"' BrowserCompatibilityAudit.java 无命中且代码读取 pdf-compat-patch.json；在装有 0.2.0-rc.2 运行时的真机上运行该审计 PDF Worker 项通过。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-17",
+        "title": "BrowserCompatibilityAudit 在 client.js 中找 PDF Worker 标记，实际在 client.pdf.js，断言必败",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/ui/BrowserCompatibilityAudit.java"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "完整Java编译待冻结"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-18",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "TabletEnvironmentAudit/Rc21AttachmentAudit 依赖的测试资产未打进 APK",
+        "where": "app/src/debug/java/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java:22; app/src/debug/java/com/deepseekharness/app/core/Rc21AttachmentAudit.java:40-41; app/src/debug/assets/; tools/prepare-standard-assets.py:101-116",
+        "recommendation": "新增 Gradle 任务 prepareDebugTestAssets，把 tools/test-environment-data.py、tools/test-backup-engine.py 复制到 debug 构建的生成 assets（tablet-tests/、rc21-test-*.py），仅 debug 变体启用；或删除这些不再维护的审计模式。",
+        "acceptance": "unzip -l app-standard-debug.apk 含 assets/tablet-tests/test-environment-data.py 与 rc21-test-*.py；或相关类/模式已删除，grep 无引用。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-18",
+        "title": "TabletEnvironmentAudit/Rc21AttachmentAudit 依赖的测试资产未打进 APK",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+          "app/src/debug/java/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+          "tools/prepare-standard-assets.py",
+          "tools/history/android-audits",
+          "app/src/debug/AndroidManifest.xml"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "原源码hash保留，不执行"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-20",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "RuntimeStartupAudit 的 terminal-birth 模式要求非调试版，但现有构建配置下不可达",
+        "where": "app/src/debug/java/com/deepseekharness/app/runtime/RuntimeStartupAudit.java:169-170; tools/device-backup-audit.init.gradle:3-5,33",
+        "recommendation": "把 PTY 出生身份检查改为可在 debug 包运行（若 debuggable 影响的只是 ptrace/run-as 行为，则在断言中区分）；或在新 CI 方案中提供受控的 release-signed 测试 APK 并把该模式迁入；否则删除该模式并更新 README。",
+        "acceptance": "在 CI/真机验收流程中存在可执行 terminal-birth 的明确命令并产生 PASS；或 grep 'terminalBirth' 无命中且 README 已更新。",
+        "depends_on": "D-TEST-07",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-20",
+        "title": "RuntimeStartupAudit 的 terminal-birth 模式要求非调试版，但现有构建配置下不可达",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/runtime/RuntimeStartupAudit.java",
+          "tools/device-backup-audit.init.gradle"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Terminal birth fixture explicitly debug-only and emits its limited evidence scope; does not reject its only build type",
+          "Actual current debug javac PASS"
+        ],
+        "residual": [
+          "No extra debug/audit APK generation or device execution; final Release Lint/APK gates are owned by root."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-23",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "三处单测断言名不副实：恒真断言、只查首尾引号、未断言脱敏",
+        "where": "app/src/test/java/com/deepseekharness/app/util/ProcessTerminationTest.java:26-30; app/src/test/java/com/deepseekharness/app/util/ShellQuoteTest.java:32-39; app/src/test/java/com/deepseekharness/app/util/StartupHistoryStoreTest.java:14; app/src/main/java/com/deepseekharness/app/util/StartupHistoryStore.java:32",
+        "recommendation": "ProcessTermination：构造“同 UID 无关进程”并经与被停进程相同的选择路径传入，断言其不被 kill；ShellQuote：用 /bin/sh -c 'printf %s '+quoted 还原后 assertEquals 原值（或纯 Java 解析器）；StartupHistoryStore：读回记录文件断言不含 secret-value。",
+        "acceptance": "人为删掉 StartupHistoryStore.java:32 的 redact、或破坏 ShellQuote 转义时对应测试失败（变异检查）；gradle test 全部通过。",
+        "depends_on": "D-TEST-26",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-23",
+        "title": "三处单测断言名不副实：恒真断言、只查首尾引号、未断言脱敏",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/util/StartupHistoryStore.java",
+          "app/src/test/java/com/deepseekharness/app/util/ProcessTerminationTest.java",
+          "app/src/test/java/com/deepseekharness/app/util/ShellQuoteTest.java",
+          "app/src/test/java/com/deepseekharness/app/util/StartupHistoryStoreTest.java"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "14 JUnit PASS across the three classes; two actual primitive lifecycles verify supplied signal callbacks; independent POSIX literal scanner round-trips malicious/Unicode strings; durable history bytes inspected for secret absence"
+        ],
+        "residual": [
+          "ProcessTermination is a process/callback primitive with no PID/UID selector; this test no longer falsely claims unrelated same-UID selection coverage. Identity selection has separate production tests."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-24",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "backup 单测共用的 JvmBackupFileSystem 与生产实现差异大，防御分支未被覆盖",
+        "where": "app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystem.java:13,28; app/src/main/java/com/deepseekharness/app/backup/AndroidBackupFileSystem.java:43-50,91-99",
+        "recommendation": "JvmBackupFileSystem.stat 使用 Files.readAttributes(..., \"unix:*\") 的 dev 与 mode（非 Windows），move 复制生产的前置检查（父目录类型、device 比较、目标存在）；另加可注入故障的 FaultyBackupFileSystem 覆盖 UNSAFE_MOVE/PARENT_LINK 分支；O_PATH 语义由真机插桩覆盖。",
+        "acceptance": "新增测试：两个父目录 device 不同（假实现注入）时调用方收到 UNSAFE_MOVE；父目录替换为符号链接时得到 PARENT_LINK；mode 变化被检测。gradle test 通过。",
+        "depends_on": "D-TEST-26",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-24",
+        "title": "backup 单测共用的 JvmBackupFileSystem 与生产实现差异大，防御分支未被覆盖",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/AndroidBackupFileSystem.java",
+          "app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystem.java"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Parent fixture implementation receipt; final-disposition source evidence."
+        ],
+        "residual": [
+          "Windows fixture/native Android descriptor/FUSE behavior are not equivalent; final full tests and device proof separate."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-27",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "Agent 预设补丁测试不校验 dshVersion，生产对 0.2.0-rc.2 静默跳过；测试未接入门禁",
+        "where": "tools/test-agent-preset-switch.mjs:6-16; app/src/main/assets/agent-preset-patch.json:2-3; app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java:338,352-357",
+        "recommendation": "先确认 Agent 预设补丁在 0.2.0-rc.2 是否仍需要：若已退役（retiredFor 指示），删除 agent-preset-patch.json 与测试并从 managed-runtime-inputs/DataFormatEvidence 移除；若仍需要，更新 dshVersion 并在测试开头 assert.equal(spec.dshVersion, 运行时版本)，同时把测试接入 verify-plugin-upgrade-gate.py。",
+        "acceptance": "若保留：node tools/test-agent-preset-switch.mjs 在 dshVersion 不符时失败，且该命令出现在门禁脚本中；若删除：grep -rn 'agent-preset-patch' app tools 无命中，RuntimeDescriptorTest/DataFormatEvidence 同步更新。",
+        "depends_on": "D-TEST-02",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-27",
+        "title": "Agent 预设补丁测试不校验 dshVersion，生产对 0.2.0-rc.2 静默跳过；测试未接入门禁",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "retired_or_history_not_current_evidence",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "tools/test-agent-preset-switch.mjs"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Artifact/source-review disposition only; this merger executed no tests, phone, Gradle or build commands."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "retired_or_history_not_current_evidence"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-30",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "多个 Node 测试绕过 testRuntime 的版本/指纹校验，默认指向过时运行时",
+        "where": "tools/test-conversation-materialized.mjs:7; tools/test-chat-render-performance.mjs:6,46-49; tools/test-runtime-fixture.mjs:8-20; tools/test-issue67-startup.mjs:7; tools/verify-stability.py:206; tools/test-queue-steer.mjs:7-11; tools/test-plugin-states.mjs:39; tools/test-profile-settings-cli.mjs:6,8",
+        "recommendation": "所有 Node 测试统一通过 testRuntime(kind) 获取运行时目录，删除硬编码历史路径与直读 current.json；test-chat-render-performance 增加耗时阈值断言并收集真实 console/page 错误到 errors；verify-stability.py:206 为 issue67 显式传 DSHA_TEST_RUNTIME 或由 testRuntime 选择。",
+        "acceptance": "grep -rn 'locked-dsh-runtime\\|rc2-20260911\\|rc1-20260910\\|test-runtimes/current.json' tools/*.mjs 仅剩 test-runtime-fixture.mjs；把运行时指向 0.1.x 目录时上述测试以“Wrong runtime generation”失败；把渲染阈值设为 0 时性能测试失败。",
+        "depends_on": "D-TEST-36",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-30",
+        "title": "多个 Node 测试绕过 testRuntime 的版本/指纹校验，默认指向过时运行时",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/test-chat-render-performance.mjs",
+          "tools/test-conversation-materialized.mjs",
+          "tools/test-issue67-startup.mjs",
+          "tools/test-plugin-states.mjs",
+          "tools/test-profile-settings-cli.mjs",
+          "tools/test-queue-steer.mjs",
+          "tools/test-runtime-fixture.mjs",
+          "tools/verify-stability.py",
+          "tools/test-runtime-trial.mjs"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "node --check PASS；真实rc2行为/性能待冻结"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-35",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "test-restore-merge-wsdir.py 在宿主根目录 / 下建测试目录，且相对路径断言依赖 cwd",
+        "where": "tools/test-restore-merge-wsdir.py:53-60,73-80,85-88; app/src/main/assets/restore-merge.py:1069-1075",
+        "recommendation": "ensure_workspace_dirs 增加可注入的 root 前缀（生产传 rootfs 根，测试传 tempdir），并限制只在允许的工作区前缀（如 /root/ 或 Documents 映射）下创建，越界路径拒绝；测试改为在 tempdir 内验证，并新增越界路径（/etc/x、/root/../etc）被拒的用例；L87 改为检查 tempdir 内的相对路径。",
+        "acceptance": "以非 root 用户运行 python3 -B tools/test-restore-merge-wsdir.py 全部通过且宿主 / 下无 dsha_unit_ws_test_*；越界路径用例断言返回 False 且未创建目录。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-35",
+        "title": "test-restore-merge-wsdir.py 在宿主根目录 / 下建测试目录，且相对路径断言依赖 cwd",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "retired_or_history_not_current_evidence",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/assets/restore-merge.py",
+          "tools/test-restore-merge-wsdir.py",
+          "tools/history/engineering/assets/restore-merge.py",
+          "tools/host-tests.manifest.json"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Parent-authorized final exception: all synthetic targets under TemporaryDirectory/addCleanup, relative test uses real isolated cwd and finally restore; no legacy module blob changes or fake boundary monkeypatch",
+          "4 cases: Windows2PASS/2explicit POSIX skip; G2 manifest stage=history"
+        ],
+        "residual": [
+          "Legacy ensure_workspace_dirs accepts absolute POSIX paths generally; this is not current restore confinement proof. Current NativeBackup has independent gate."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "retired_or_history_not_current_evidence"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-39",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "脚本实测",
+        "title": "test-dsha-ui-regressions.py 与源码漂移，系统语言用例必然 ERROR；未接入任何入口",
+        "where": "tools/test-dsha-ui-regressions.py:136-146,239-243; app/src/main/java/com/deepseekharness/app/util/SystemLanguage.java:31-55; app/src/main/java/com/deepseekharness/app/DshaApp.java:18; app/src/main/java/com/deepseekharness/app/BackupManager.java:284",
+        "recommendation": "把 SystemLanguage 早期锁存改为 JVM 单测（调用 initializeFromSystemTag 后改 Locale.setDefault，断言 tag() 不变）；DshaApp 调用顺序可保留源码断言但改用正则匹配 initialize\\(；resetTokenAfterRestore 断言替换为对恢复流程的行为测试（D-BUG-03 修复时一并加）。修好后接入 D-TEST-31 的测试清单。",
+        "acceptance": "python3 -B tools/test-dsha-ui-regressions.py 在当前源码全部通过并出现在 CI fast 阶段；新增 SystemLanguageTest 在 gradle test 中通过。",
+        "depends_on": "D-TEST-31",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-39",
+        "title": "test-dsha-ui-regressions.py 与源码漂移，系统语言用例必然 ERROR；未接入任何入口",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+          "app/src/main/java/com/deepseekharness/app/DshaApp.java",
+          "app/src/main/java/com/deepseekharness/app/util/SystemLanguage.java",
+          "tools/test-dsha-ui-regressions.py"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "32/32 PASS"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-41",
+        "category": "测试与调试代码",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "两个 APK 发布核验脚本全部用 assert 实现，python -O/PYTHONOPTIMIZE 下门禁空转",
+        "where": "tools/verify-dsh-upgrade-apk.py:22-148; tools/verify-recovery-apk.py:23-61; tools/verify-stability.py:239,257; tools/verify-plugin-upgrade-gate.py:20-23,136-141",
+        "recommendation": "把 assert cond, code 统一替换为 require(cond, code)（失败 raise SystemExit/自定义异常）；调用方子进程环境中显式删除 PYTHONOPTIMIZE；同类改动覆盖 tools 下其他门禁脚本（可加 lint：tools/verify-*.py 禁止 assert 语句）。",
+        "acceptance": "PYTHONOPTIMIZE=1 python3 -B tools/verify-recovery-apk.py <篡改过 overlay 的 APK> 退出非 0；新增检查脚本（ast 扫描）断言 tools/verify-*.py 无 ast.Assert 节点，并在 CI fast 中运行。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-41",
+        "title": "两个 APK 发布核验脚本全部用 assert 实现，python -O/PYTHONOPTIMIZE 下门禁空转",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/verify-dsh-upgrade-apk.py",
+          "tools/verify-plugin-upgrade-gate.py",
+          "tools/verify-recovery-apk.py",
+          "tools/verify-stability.py",
+          "tools/verification_require.py"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "test-verification-require.py 2PASS",
+          "优化模式错误版本9 probe已从exit0变exit1"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-DEBUG-01",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "debug 插桩在 cacheDir 有意保留大体积夹具与截图，StorageMaintenance 不清理；failBackup 死代码",
+        "where": "app/src/debug/java/com/deepseekharness/app/core/MaintenanceFixtureInstrumentation.java:69,82,91,229,560,581,606; app/src/debug/java/com/deepseekharness/app/core/Rc21RecoveryAudit.java:19,74; app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java:111,126; app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java:10",
+        "recommendation": "保留现场改为显式参数（如 -e keepFixture 1），默认在 finally 删除；StorageMaintenance.CACHE 增加 maintenance-fixture-、rc21-recovery- 前缀与 startup-launch.png/startup-diagnostics-last.log；删除 failBackup 字段与 L581 分支，或补一个使用它的失败用例。",
+        "acceptance": "运行三个插桩（不带 keepFixture）后 run-as com.dsh.client ls cache 无上述残留；执行一次“清理缓存”后带 keepFixture 的残留也被清除；grep failBackup 无命中或有赋值 true 的用例。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-DEBUG-01",
+        "title": "debug 插桩在 cacheDir 有意保留大体积夹具与截图，StorageMaintenance 不清理；failBackup 死代码",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/core/MaintenanceFixtureInstrumentation.java",
+          "app/src/debug/java/com/deepseekharness/app/core/Rc21RecoveryAudit.java",
+          "app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java",
+          "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+          "app/src/debug/AndroidManifest.xml"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Default UUID fixture cleanup with keepFixture=1 explicit retention and unconfirmed-task refusal; removed never-enabled failBackup override; real-screen/log writer retired with original SHA; no silent cleanup of unknown historical fixture trees",
+          "Current debug javac PASS"
+        ],
+        "residual": [
+          "No APK/device operation; root owns final complete release gate."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-01",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "AdbWheelBundleTest 用正则解析 Python 源码常量作契约，且依赖工作目录",
+        "where": "app/src/test/java/com/deepseekharness/app/runtime/AdbWheelBundleTest.java:23-24,27-31",
+        "recommendation": "把 ADB 归档与 wheel 哈希移到单独的数据文件（如 assets/adb-wheels.lock.json），backup-engine.py 与该测试都读取它；资产目录通过 Gradle 注入的系统属性（systemProperty 'dsha.assetsDir'）传入，不再依赖 cwd。",
+        "acceptance": "在 app/ 与仓库根两种 cwd 下运行该测试均通过；修改锁文件中的一个哈希后测试失败。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-01",
+        "title": "AdbWheelBundleTest 用正则解析 Python 源码常量作契约，且依赖工作目录",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/test/java/com/deepseekharness/app/runtime/AdbWheelBundleTest.java",
+          "tools/adb-wheels.lock.json",
+          "app/src/test/java/com/deepseekharness/app/util/AdbWheelBundleTest.java",
+          "tools/run-unit-tests.py"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Parent actual source receipt; final flavor test execution pending."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-04",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "脚本实测",
+        "title": "LanguageSettingsAudit 按原文长度截取脱敏结果，脱敏缩短时越界",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/LanguageSettingsAudit.java:45; app/src/main/java/com/deepseekharness/app/util/SensitiveData.java:17",
+        "recommendation": "先脱敏再按脱敏结果长度截取：String safe = SensitiveData.redact(value); safe.substring(0, Math.min(180, safe.length()))。",
+        "acceptance": "新增 JVM 单测或把截取逻辑抽成工具方法并测试输入 '令牌 token=abcdefghij'（19 字符）不抛异常；grep 确认 L45 使用脱敏后长度。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-04",
+        "title": "LanguageSettingsAudit 按原文长度截取脱敏结果，脱敏缩短时越界",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/ui/LanguageSettingsAudit.java",
+          "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "源码边界核验；完整Java编译待冻结"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-06",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "FunctionalAuditInstrumentation 保存/恢复已删除的 backup_launch_count，属遗留死逻辑",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java:105,120,125,136,368; app/src/main/java/com/deepseekharness/app/core/ConfigStore.java:22-24",
+        "recommendation": "删除 backup_launch_count 相关的读取、检查点字段与恢复语句（L120、L125、L136、L368）。",
+        "acceptance": "grep -rn 'backup_launch_count' app/src/debug 无命中；debug 源集编译通过（./gradlew compileStandardDebugJavaWithJavac）。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-06",
+        "title": "FunctionalAuditInstrumentation 保存/恢复已删除的 backup_launch_count，属遗留死逻辑",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java",
+          "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+          "app/src/debug/AndroidManifest.xml"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Real-configuration credential workflow and obsolete backup_launch_count restore removed from active compilation/manifest; original source retained with SHA"
+        ],
+        "residual": [
+          "Final complete runtime/asset/APK/release gates are root-owned; no device operation."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-07",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "多个 debug 插桩自称“非调试包”但只存在于 debug 源集；InstallAudit 失败路径不回滚、夹具不清理",
+        "where": "app/src/debug/java/com/deepseekharness/app/ui/InstallAuditInstrumentation.java:121-125,197,263,282-292; tools/device-backup-audit.init.gradle:3-5,33; app/src/debug/java/com/deepseekharness/app/ui/MultiTerminalLanguageAudit.java:17; StartupRecoveryAudit.java:16; UiMotionAudit.java:8",
+        "recommendation": "把“非调试包/非调试真机”文案改为“debug 包”；pending.begin 后用 try/finally 保证 rollback；夹具目录在 finally 中递归删除（限定 install-audit 前缀）。",
+        "acceptance": "grep -rn '非调试' app/src/debug 无命中；构造 check 失败的场景后 cacheDir/install-audit 下无 missing-environment-* 残留且无 pending 事务。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-07",
+        "title": "多个 debug 插桩自称“非调试包”但只存在于 debug 源集；InstallAudit 失败路径不回滚、夹具不清理",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/ui/InstallAuditInstrumentation.java",
+          "app/src/debug/java/com/deepseekharness/app/ui/MultiTerminalLanguageAudit.java",
+          "tools/device-backup-audit.init.gradle",
+          "app/src/debug/java/com/deepseekharness/app/ui/StartupRecoveryAudit.java",
+          "app/src/debug/java/com/deepseekharness/app/ui/UiMotionAudit.java"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "DEBUG restriction now precedes all fixture modes; labels identify debug source set; pending rollback in finally; only owned missing-environment fixture removed after task/guest barrier",
+          "Actual current main/Standard/debug javac PASS"
+        ],
+        "residual": [
+          "No extra debug/audit APK generation or device execution; final Release Lint/APK gates are owned by root."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-19",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "两个插桩用字面量结果码 0/1，成功时返回 RESULT_CANCELED",
+        "where": "app/src/debug/java/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java:66; app/src/debug/java/com/deepseekharness/app/ui/ConfigurationAuditInstrumentation.java:61; tools/run-backup-device-audit.py:85",
+        "recommendation": "统一改为 finish(ok ? Activity.RESULT_OK : Activity.RESULT_CANCELED, result)；同样检查其他 debug 插桩（InstallSettingsAudit:81、LogPanelAudit:86 等也用 1:0 字面量），一并修正或抽公共基类。",
+        "acceptance": "grep -rn 'finish([^,]*?1:0' app/src/debug 无命中；宿主脚本解析 INSTRUMENTATION_CODE: -1 作为成功。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-19",
+        "title": "两个插桩用字面量结果码 0/1，成功时返回 RESULT_CANCELED",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/debug/java/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+          "app/src/debug/java/com/deepseekharness/app/ui/ConfigurationAuditInstrumentation.java",
+          "tools/run-backup-device-audit.py",
+          "app/src/debug/java",
+          "app/src/debug/AndroidManifest.xml",
+          "app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+          "docs/audits/build154/engineering-retired-sources.json"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Unambiguous instrumentation result uses Activity.RESULT_OK/CANCELED; real-credential ConfigurationAudit retired with exact original git blob/hash",
+          "Actual current debug javac PASS"
+        ],
+        "residual": [
+          "No extra debug/audit APK generation or device execution; final Release Lint/APK gates are owned by root."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-28",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "test-alpha1-startup.mjs 在干净检出下 ENOENT，属陈旧一次性测试",
+        "where": "tools/test-alpha1-startup.mjs:6; tools/test-alpha2-upgrade.mjs",
+        "recommendation": "按 D-ARCH-07/D-LEGACY-01 决策（只支持 build147 起升级）删除 test-alpha1-startup.mjs 与 test-alpha2-upgrade.mjs；若 startup-observer 仍需覆盖，在新测试中用 os.tmpdir() mkdtemp 并 finally 删除。",
+        "acceptance": "grep -rn 'test-alpha1-startup\\|test-alpha2-upgrade' tools 无命中（或新测试在干净检出下运行通过且不留目录）。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-28",
+        "title": "test-alpha1-startup.mjs 在干净检出下 ENOENT，属陈旧一次性测试",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "retired_or_history_not_current_evidence",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/test-alpha1-startup.mjs",
+          "tools/test-alpha2-upgrade.mjs"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Artifact/source-review disposition only; this merger executed no tests, phone, Gradle or build commands."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "retired_or_history_not_current_evidence"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-29",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "test-backup-device.py 硬编码 Windows adb 路径，并在用户真实 rootfs 留下测试文件",
+        "where": "tools/test-backup-device.py:9,12,22,28-34",
+        "recommendation": "ADB 改为 shutil.which('adb') 或 --adb/ANDROID_HOME 参数；夹具目录加随机后缀并在 try/finally 中删除 OWNED 目录与 /data/local/tmp/dsha-opt-* 文件；若已被其他门禁取代则删除该脚本。",
+        "acceptance": "在 Linux 主机上用 PATH 中的 adb 运行脚本成功；运行后 run-as com.dsh.client ls files/linux/ubuntu/root | grep dsha-opt 与 adb shell ls /data/local/tmp | grep dsha-opt 均无输出。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-29",
+        "title": "test-backup-device.py 硬编码 Windows adb 路径，并在用户真实 rootfs 留下测试文件",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "retired_or_history_not_current_evidence",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/test-backup-device.py"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Artifact/source-review disposition only; this merger executed no tests, phone, Gradle or build commands."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "retired_or_history_not_current_evidence"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-32",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "test-native-plugin-manager.mjs 在 app/build 创建临时目录不清理，干净检出下 ENOENT",
+        "where": "tools/test-native-plugin-manager.mjs:31,52-55",
+        "recommendation": "改为 fs.mkdtempSync(path.join(os.tmpdir(), 'native-plugin-policy-'))，在 finally 中 fs.rmSync(directory, {recursive:true, force:true})。",
+        "acceptance": "在无 app/build 的干净检出运行 node tools/test-native-plugin-manager.mjs 通过，运行后无 native-plugin-policy-* 残留。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-32",
+        "title": "test-native-plugin-manager.mjs 在 app/build 创建临时目录不清理，干净检出下 ENOENT",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/test-native-plugin-manager.mjs"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "node --check PASS；真实Host待管理夹具刷新"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-33",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "test-plugin-transactions.py 夹具固定在仓库 app/build/round2-audit 且从不清理",
+        "where": "tools/test-plugin-transactions.py:60-66",
+        "recommendation": "夹具改到 tempfile.mkdtemp()，默认在 tearDown 删除；仅在测试失败或设置 DSHA_KEEP_FIXTURES=1 时保留并打印路径；去掉 round2-audit 历史命名。",
+        "acceptance": "运行 python3 -B tools/test-plugin-transactions.py 全部通过后，app/build/round2-audit 不再生成且临时目录被删除；设置 DSHA_KEEP_FIXTURES=1 时路径被保留并输出。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-33",
+        "title": "test-plugin-transactions.py 夹具固定在仓库 app/build/round2-audit 且从不清理",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/test-plugin-transactions.py"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "语法检查；功能回归待源冻结"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-36",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "testRuntime 的 environment 默认值两支相同，managed 与 raw 共用 DSHA_TEST_RUNTIME",
+        "where": "tools/test-runtime-fixture.mjs:8,10,15-21; tools/test-office-fonts.mjs:3; tools/test-native-plugin-manager.mjs:8-9",
+        "recommendation": "非 raw 分支改为 'DSHA_TEST_MANAGED_RUNTIME'（或按 kind 生成 DSHA_TEST_<KIND>_RUNTIME），并同步文档/门禁脚本中的环境变量。",
+        "acceptance": "新增 node:test：设置 DSHA_TEST_RUNTIME=<raw 夹具> 后 testRuntime('managed') 仍从 current.json.managed 解析；grep \"'DSHA_TEST_RUNTIME':'DSHA_TEST_RUNTIME'\" 无命中。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-36",
+        "title": "testRuntime 的 environment 默认值两支相同，managed 与 raw 共用 DSHA_TEST_RUNTIME",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implementation_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/test-native-plugin-manager.mjs",
+          "tools/test-office-fonts.mjs",
+          "tools/test-runtime-fixture.mjs",
+          "tools/runtime_fixture_proof.py",
+          "tools/prepare-test-runtime.py",
+          "tools/test_runtime_fixture.py",
+          "tools/test-runtime-proof.py",
+          "app/src/main/assets/runtime-patches.json"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "changes-runtime-proof.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "selector语法检查，所有runtime回归待源冻结",
+          "9 PASS, 1 actual POSIX-link test skipped on Windows",
+          "Normal verified raw reuse installs once; changed cached bytes fail without marker rewrite; legacy npm-ci refresh preserves original",
+          "Node/Python complete-tree consumers reject dependency/support/binary and member-set changes",
+          "Specialized old tooltip is hashed/receipted, not applied; active registry order and builder-owned prepend idempotence tested",
+          "node --check and py_compile PASS"
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收",
+          "Root regenerates fresh schema2 raw/managed after current archive refresh; no actual generator/phone/APK execution in this subtask."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implementation_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-37",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "device-backup-audit.init.gradle 的源码 String.replace 补丁不命中时静默跳过",
+        "where": "tools/device-backup-audit.init.gradle:3-5,40-49",
+        "recommendation": "若按 D-LEGACY-01 不再启用，直接删除 tools/device-backup-audit.init.gradle 与 run-backup-device-audit.py；若保留，每处 replace 前断言 source.count(anchor)==1（Groovy: source.split(Pattern.quote(anchor), -1).size()-1 == 1），否则 throw GradleException。",
+        "acceptance": "删除后 grep -rn 'device-backup-audit.init.gradle' 无引用；或保留时把某锚点改错后 DSHA_ENABLE_LEGACY_AUDIT=1 gradle 任务失败。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-37",
+        "title": "device-backup-audit.init.gradle 的源码 String.replace 补丁不命中时静默跳过",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "retired_or_history_not_current_evidence",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/device-backup-audit.init.gradle"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Artifact/source-review disposition only; this merger executed no tests, phone, Gradle or build commands."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "retired_or_history_not_current_evidence"
+      }
+    },
+    {
+      "source": {
+        "id": "D-TEST-38",
+        "category": "测试与调试代码",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "control-functional-audit.py 参数校验用 assert、缺 --script 时崩溃、ADB 路径写死",
+        "where": "tools/control-functional-audit.py:10,13-21,22-27",
+        "recommendation": "id 校验改为 if not re.fullmatch(...): parser.error(...)；--script 与 --finish 用 argparse 互斥组且必选其一；ADB 取 shutil.which('adb') 或 --adb；拼接处统一 shlex.quote；command.json 按 id 命名。若该调试入口已无使用方，按 D-LEGACY-01 删除。",
+        "acceptance": "python3 -O tools/control-functional-audit.py 'a;b' 退出非 0 并提示非法 id；不带 --script/--finish 时给出 argparse 用法错误；grep 'F:\\\\' tools/control-functional-audit.py 无命中。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-TEST-38",
+        "title": "control-functional-audit.py 参数校验用 assert、缺 --script 时崩溃、ADB 路径写死",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "retired_or_history_not_current_evidence",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/control-functional-audit.py"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Artifact/source-review disposition only; this merger executed no tests, phone, Gradle or build commands."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "retired_or_history_not_current_evidence"
+      }
+    }
+  ]
+}

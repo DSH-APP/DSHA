@@ -1,0 +1,271 @@
+{
+  "schema": "low-gecko-owned-files-nav0-device-addendum-v1",
+  "reviewedAt": "2026-10-04T11:00:29+08:00",
+  "result": "pass_observed_selected_file_return_after_b_ready",
+  "softwareChanged": false,
+  "deviceCommandsExecutedByReviewer": 0,
+  "scope": {
+    "deviceOperator": "runtime exclusive lease",
+    "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "flavor": "low",
+    "androidRelease": 13,
+    "engine": "Gecko selected/saved and reopened by operator",
+    "fixtureName": "dsh-acceptance-156",
+    "fixtureVersion": "0.0.157",
+    "fixtureTgzSha256": "7d1cfe76216d8c35cef94dab9dd7de2100d39e3ef699a7453a0826aafe3f1787",
+    "navigationDelayMs": 0,
+    "actualAttempts": 1,
+    "oldSystemReturn": "two actual selected files confirmed, not a cancellation/null result",
+    "binding": "Exact signed same-APK overlay receipt, one pushed TGZ digest, explicit variant label/status and strict v157 collector. Owned event log has no standalone engine/APK metadata row."
+  },
+  "finding": {
+    "earlierBRequirementMet": true,
+    "pageBReadyAt": "2026-10-04T10:46:37.681+08:00",
+    "oldPickerPendingScreenshotAt": "2026-10-04T10:46:41.924815+08:00",
+    "oldPickerTwoSelectedScreenshotAt": "2026-10-04T10:47:50.720930+08:00",
+    "oldConfirmationActionLoggedAt": "2026-10-04T10:47:50.797752+08:00",
+    "returnedBWithoutResultScreenshotAt": "2026-10-04T10:47:53.217821+08:00",
+    "approximateBLeadSeconds": 73.117,
+    "oldRequestFileChangeOrResultEvents": 0,
+    "unsolicitedBFileEventsBeforeFreshClick": 0,
+    "freshBRequestAt": "2026-10-04T10:48:15.122+08:00",
+    "freshBFullByteResultAt": "2026-10-04T10:48:18.724+08:00",
+    "freshBatchMatches": true,
+    "summary": "B loaded before the still-pending actual Android picker and before its two-file confirmation by about73seconds. Returning that old selection left B without a result and produced no old-request file event. A distinct B user request then selected the two owned files again and reported their complete52/63byte sizes,SHA and order. This supplies the prior missing earlier-B/selected-result scenario on Low Gecko using the new isolated0ms fixture."
+  },
+  "ownedSentinelsInOrder": [
+    {
+      "name": "dsh-acceptance-156-a.txt",
+      "size": 52,
+      "sha256": "6015f0d76906328021f27c59003bda02eb3d78e07ec094173dcc8638554139af",
+      "order": 0,
+      "match": true
+    },
+    {
+      "name": "dsh-acceptance-156-b.txt",
+      "size": 63,
+      "sha256": "fd19dde3939b50dbd8b501855ddbe8262dbb42cfff5ae58ee8227acf0721ced3",
+      "order": 1,
+      "match": true
+    }
+  ],
+  "timeline": [
+    {
+      "index": 0,
+      "kind": "page-ready",
+      "page": "A/P1",
+      "serverTime": "2026-10-04T10:45:49.297+08:00",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index": 1,
+      "kind": "file-request",
+      "page": "A/P1",
+      "serverTime": "2026-10-04T10:46:37.491+08:00",
+      "request": "R1-old",
+      "test": "files-nav"
+    },
+    {
+      "index": 2,
+      "kind": "navigation-scheduled",
+      "page": "A/P1",
+      "serverTime": "2026-10-04T10:46:37.493+08:00",
+      "request": "R1-old",
+      "test": "files",
+      "status": "navigation-delay=0ms"
+    },
+    {
+      "index": 3,
+      "kind": "page-hide",
+      "page": "A/P1",
+      "serverTime": "2026-10-04T10:46:37.530+08:00",
+      "status": "all-owned-streams-stopped"
+    },
+    {
+      "index": 4,
+      "kind": "page-ready",
+      "page": "B/P2",
+      "serverTime": "2026-10-04T10:46:37.681+08:00",
+      "from": "A/P1",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index": 5,
+      "kind": "file-request",
+      "page": "B/P2",
+      "serverTime": "2026-10-04T10:48:15.122+08:00",
+      "from": "A/P1",
+      "request": "R2-fresh",
+      "test": "files"
+    },
+    {
+      "index": 6,
+      "kind": "file-change",
+      "page": "B/P2",
+      "serverTime": "2026-10-04T10:48:18.716+08:00",
+      "from": "A/P1",
+      "request": "R2-fresh",
+      "status": "received",
+      "count": 2
+    },
+    {
+      "index": 7,
+      "kind": "file-result",
+      "page": "B/P2",
+      "serverTime": "2026-10-04T10:48:18.724+08:00",
+      "from": "A/P1",
+      "request": "R2-fresh",
+      "status": "verified-owned-two-files",
+      "fileBatch": "ownedSentinelsInOrder"
+    },
+    {
+      "index": 8,
+      "kind": "page-hide",
+      "page": "B/P2",
+      "serverTime": "2026-10-04T10:48:38.558+08:00",
+      "from": "A/P1",
+      "status": "all-owned-streams-stopped"
+    }
+  ],
+  "previousEvidence": {
+    "path": "docs/audits/build156/device-final-low-gecko-fixture-review.json",
+    "sha256": "aba78cf6ab4802e74fceeb7492d706a230077eaf11b7112c43a4051c4618085d",
+    "unchanged": true,
+    "original1500msAttemptStillRecordedAsInconclusive": true,
+    "filesNavigationEvidenceGapNowSupplemented": true,
+    "geckoWrongPortNativeAttributionStillMissing": true
+  },
+  "sourceEvidence": {
+    "ownedJsonl": {
+      "privateGroup": "app/build/audit-build156/device-private/latest-retake-20261004/low-nav0-collected",
+      "sha256": "1163ed191e3c5ac0e9f65abee0ab8eb3e15a7beca0aa9d5626a6109090dffd64",
+      "bytes": 2989,
+      "events": 9
+    },
+    "collection": {
+      "sha256": "f8dceed8912c5d2947fc6654c4b7e5dd406155809de5973edc97cd156fbc3d11",
+      "bytes": 535,
+      "declaredDigestSizeRowsMatched": true
+    },
+    "sameSignedOverlayReceipt": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-nav0-once/receipt.json",
+      "sha256": "acfaa4c3c24790d8d6a155c8b23071b2c94a94cfcf5b9842289183d3e2e76c14"
+    },
+    "variantManifest": {
+      "path": "app/build/audit-build156/device-fixtures-nav0-v157/fixture-manifest.json",
+      "sha256": "17f19bbd58ff19339de01b4c5e62f4cde5320293e6bdd97aeb22c315db94462f",
+      "membersByteChecked": 9
+    },
+    "variantScriptSha256": "ef9a24405d15f12077744b9ce8117c6e54da84e13d33e74fcc126786a17c7321",
+    "strictCollector": {
+      "path": "app/build/audit-build156/device-fixtures-nav0-v157/collect-owned-fixture-v157.py",
+      "sha256": "dff32d27fb13d78c4ce587d883c8f5c091a411fe84924ae786018502248467ab",
+      "exactVersion": "0.0.157",
+      "originalNameAndIndexPinsUnchanged": true
+    },
+    "operatorActionsPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "daf70e3ea11e900dc0cc70c3d20a822c4fa3267819fab31fa46f6c290b89e0ee",
+      "bytes": 217575,
+      "records": 1527,
+      "lastIndex": 1526,
+      "lastTime": "2026-10-04T10:50:04.312100+08:00",
+      "hashRecipe": "SHA256 of first 217575 bytes; later append does not alter the prefix. Raw arguments/text omitted."
+    },
+    "screenshots": [
+      {
+        "file": "lease-low-nav0-config-browser-0926.png",
+        "sha256": "328a3568fc21092a082d053a4847c62e747ce9db052cf48355463a29d7bf38d3",
+        "bytes": 241930,
+        "operatorTime": "2026-10-04T10:42:28.967752+08:00",
+        "actionIndex0Based": 1465,
+        "visuallyReviewed": true
+      },
+      {
+        "file": "lease-low-nav0-gecko-saved-0927.png",
+        "sha256": "3be268ed3c3d8f5116ffacfbfc181affa72a1f121ded01c9deca5509f720360f",
+        "bytes": 301932,
+        "operatorTime": "2026-10-04T10:42:41.855402+08:00",
+        "actionIndex0Based": 1467,
+        "visuallyReviewed": true
+      },
+      {
+        "file": "lease-low-nav0-import-enabled-0933.png",
+        "sha256": "178c8dd116a1e261a6cf3af525cf8bfe372639a66f2394ca75e910c2313923ee",
+        "bytes": 238011,
+        "operatorTime": "2026-10-04T10:43:58.942151+08:00",
+        "actionIndex0Based": 1480,
+        "visuallyReviewed": true
+      },
+      {
+        "file": "lease-low-nav0-files-nav-selected-0939.png",
+        "sha256": "fc15e1b81057f6045aae2bea8ccdfaa5c0588cebcb1eb0a845985ab3a0a543a2",
+        "bytes": 268552,
+        "operatorTime": "2026-10-04T10:46:16.756290+08:00",
+        "actionIndex0Based": 1498,
+        "visuallyReviewed": true
+      },
+      {
+        "file": "lease-low-nav0-old-picker-pending-0940.png",
+        "sha256": "eb1e7e95f1aa7a57753a05ac348ce1bde2c3a47ccdcac65cf86071f5a6e786ed",
+        "bytes": 114992,
+        "operatorTime": "2026-10-04T10:46:41.924815+08:00",
+        "actionIndex0Based": 1500,
+        "visuallyReviewed": true
+      },
+      {
+        "file": "lease-low-nav0-old-picker-two-selected-0941.png",
+        "sha256": "1f9c0ed24ba28ac411710574d9688037759c7000e277d55c62b72fb18d2fb877",
+        "bytes": 113307,
+        "operatorTime": "2026-10-04T10:47:50.720930+08:00",
+        "actionIndex0Based": 1503,
+        "visuallyReviewed": true
+      },
+      {
+        "file": "lease-low-nav0-after-old-result-b-0942.png",
+        "sha256": "160ed7c5a12f6032b89bb5d457ad5e042be77ca91bf04111570fc6c08eed4f8a",
+        "bytes": 278855,
+        "operatorTime": "2026-10-04T10:47:53.217821+08:00",
+        "actionIndex0Based": 1505,
+        "visuallyReviewed": true
+      },
+      {
+        "file": "lease-low-nav0-fresh-b-two-selected-0943.png",
+        "sha256": "77961d5187e45e7bf242c1f32f2fdc066c6b32a778bdbc7e259f17b9bf9cf6ea",
+        "bytes": 113938,
+        "operatorTime": "2026-10-04T10:48:19.039195+08:00",
+        "actionIndex0Based": 1509,
+        "visuallyReviewed": true
+      },
+      {
+        "file": "lease-low-nav0-fresh-b-file-results-0944.png",
+        "sha256": "f32dbcea1cf45057ea7be2d575fe1770cb7c529d3c1154f82b2c4e4cba262c93",
+        "bytes": 328506,
+        "operatorTime": "2026-10-04T10:48:22.020316+08:00",
+        "actionIndex0Based": 1511,
+        "visuallyReviewed": true
+      }
+    ]
+  },
+  "validation": {
+    "command": "Read-only Python:9event/collection hashes,size/rows; precise A/B/request identity; actual0ms status; old-confirm coordinates/timing and9 screenshot hashes/visuals; exact two byte digests/order; signed same Low overlay and pushed packageSHA;9 TGZ members; strict157 collector and preserved historical reports.",
+    "exitCode": 0,
+    "events": 9,
+    "screenshots": 9,
+    "oldReportsPreserved": true
+  },
+  "limits": [
+    "This is one actual selected-file stale-navigation scenario, not an assertion about all callback permutations or the full Android/engine matrix.",
+    "PC/operator timestamps are logged around execution/capture and are not separately calibrated to the device clock. No subsecond native callback latency is inferred; the long B lead, visible pending/two-selected picker and returned-B image establish the observed ordering.",
+    "Old callback internal native dispatch is not instrumented; absence is bounded to this JSONL/UI observation interval.",
+    "This test adds no wrong-port/permissions-policy evidence. Gecko native origin attribution remains missing; Chromium and Gecko origin mechanisms are not asserted identical.",
+    "The variant changes only owned test scheduling,version,label/status; no APK/native hook or production behavior was changed. Earlier method-only preparation and1500ms partial reports remain historical originals."
+  ],
+  "privacy": {
+    "rawPrivatePixelsOrJsonlPublished": false,
+    "authValuesOrDeviceSerialPublished": false,
+    "privateRunPageRequestIdentifiersPublished": false
+  }
+}

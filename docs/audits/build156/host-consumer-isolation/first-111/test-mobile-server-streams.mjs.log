@@ -1,0 +1,42 @@
+✔ complete JSON compresses gzip, preserves reason/end callback (65.7611ms)
+✔ complete JSON compresses br, preserves reason/end callback (28.6137ms)
+✔ complete JSON compresses BR;q=1,gzip;q=0, preserves reason/end callback (14.8972ms)
+✔ accepted asynchronous end exposes native ended guard, immutable headers and one final callback (15.1073ms)
+✔ 17 MiB JSON passes through while a concurrent small request finishes within 100 ms (104.3437ms)
+✔ asynchronous worker saturation passes excess complete bodies through without queuing (45.3207ms)
+✔ scope excludes a different HTTP server and unload restores the prototype during accepted work (21.7029ms)
+✔ cancellation during accepted compression closes once and releases public end guards (30.1393ms)
+✔ write after accepted asynchronous end retains Node error and does not append a second body (5.658ms)
+✔ end overload buffer preserves original bytes (4.3269ms)
+✔ end overload uint8 preserves original bytes (3.9789ms)
+✔ end overload latin1 preserves original bytes (3.0216ms)
+✔ end overload implicit preserves original bytes (2.1398ms)
+✔ chunked JSON (explicit head) reaches client and callback before end (89.55ms)
+✔ chunked JSON (implicit head) reaches client and callback before end (92.7331ms)
+✔ large writes return native false and drain; all chunks/encodings/callbacks survive (30.7337ms)
+✔ write string encoding, Buffer encoding overload and Uint8Array preserve native callbacks and bytes (15.3436ms)
+✔ application/json unfinished stream sends data, supports client cancellation (15.9709ms)
+✔ text/event-stream unfinished stream sends data, supports client cancellation (15.684ms)
+✔ flushHeaders explicitly commits deferred JSON and retains streaming behavior (31.2926ms)
+✔ native pass-through head (14.9238ms)
+✔ native pass-through empty (15.0572ms)
+✔ native pass-through tiny (15.2317ms)
+✔ native pass-through oversized (14.6346ms)
+✔ native pass-through q-zero (15.565ms)
+✔ native pass-through encoded (15.6493ms)
+✔ native pass-through sse (15.6553ms)
+✔ native pass-through raw-headers (15.3679ms)
+✔ native pass-through no-transform (14.9111ms)
+✔ native pass-through chunked (16.3473ms)
+✔ native pass-through strong-etag (14.4863ms)
+✔ native pass-through strict-length (15.5609ms)
+✔ native pass-through 204 (15.8038ms)
+✔ writeHead validates native status/header errors synchronously; callback errors after end remain native (15.0907ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 866.2189

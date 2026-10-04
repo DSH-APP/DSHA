@@ -1,0 +1,9 @@
+test_active_device_flow_has_no_legacy_readonly_or_confirmation_surrogate (__main__.RetiredAuditContractTest.test_active_device_flow_has_no_legacy_readonly_or_confirmation_surrogate) ... ok
+test_browser_variants_share_real_scenarios_and_keep_single_and_multi_selection (__main__.RetiredAuditContractTest.test_browser_variants_share_real_scenarios_and_keep_single_and_multi_selection) ... ok
+test_exact_retired_originals_are_preserved_outside_active_source_sets (__main__.RetiredAuditContractTest.test_exact_retired_originals_are_preserved_outside_active_source_sets) ... ok
+test_pdf_module_and_language_restore_read_current_contracts (__main__.RetiredAuditContractTest.test_pdf_module_and_language_restore_read_current_contracts) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.010s
+
+OK

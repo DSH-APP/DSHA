@@ -1,0 +1,27 @@
+{
+  "area": "runtime",
+  "targets": ["D-ARCH-04", "D-DUP-20"],
+  "changed": [
+    "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/ColdBundleTransaction.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/ColdBundleExtractor.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java",
+    "app/src/main/java/com/deepseekharness/app/util/ProcessPipePoller.java",
+    "app/src/main/java/com/deepseekharness/app/util/InstallProcess.java",
+    "app/src/main/java/com/deepseekharness/app/util/BoundedProcessRunner.java",
+    "app/src/test/java/com/deepseekharness/app/util/BoundedProcessRunnerTest.java"
+  ],
+  "behavior": [
+    "Cold install recovery, candidate publication and rollback now run through ColdBundleTransaction behind the existing ProotBootstrap method.",
+    "Signed rootfs extraction and frozen offline tool slot validation run in separate collaborators while the original stop barriers, candidate checks and work retention stay in place.",
+    "Both bounded process readers use one available-byte, deadline, exit and final-tail poller; install cancellation and bounded head/tail result contracts remain separate.",
+    "The guest-aware IsolatedInstallProcess identity and close policy was retained unchanged."
+  ],
+  "validation": {
+    "focused_junit": "19 passed with Java 17, real process classes and only a minimal UiText stub",
+    "standard_low_compile": "ProotBootstrap and three cold collaborators compiled against existing Standard and Low debug class outputs with SDK 37",
+    "full_gradle": "blocked by concurrent HarnessController state.diagnostics and debug MainActivity.current compile errors; runtime descriptor check also requires regeneration"
+  },
+  "device_or_apk": "not run",
+  "remaining": "Plugin, maintenance and PTY method bodies remain in ProotBootstrap for later architectural extraction."
+}

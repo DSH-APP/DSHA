@@ -1,0 +1,488 @@
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:10: 错误: 找不到符号
+import com.deepseekharness.app.BackupManager;
+                              ^
+  符号:   类 BackupManager
+  位置: 程序包 com.deepseekharness.app
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:13: 错误: 找不到符号
+import com.deepseekharness.app.BackupManager;
+                              ^
+  符号:   类 BackupManager
+  位置: 程序包 com.deepseekharness.app
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutPreviewActivity.java:13: 错误: 找不到符号
+import com.deepseekharness.app.core.UpdateRepository;
+                                   ^
+  符号:   类 UpdateRepository
+  位置: 程序包 com.deepseekharness.app.core
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:128: 错误: 找不到符号
+  private InstallFragment attach(InstallRepository task) {
+          ^
+  符号:   类 InstallFragment
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:24: 错误: 找不到符号
+  private WebDownloadModel downloader;
+          ^
+  符号:   类 WebDownloadModel
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:147: 错误: 找不到符号
+  private WebDownloadModel model() {
+          ^
+  符号:   类 WebDownloadModel
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:62: 错误: 找不到符号
+      if (BackupManager.isEnvironmentTaskBusy()) throw new IOException("有真实环境任务运行，请完成后再执行 fixture");
+          ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:165: 错误: 找不到符号
+        BackupManager.runDataTask(
+        ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:182: 错误: 找不到符号
+        BackupManager.runDataTask(
+        ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:200: 错误: 找不到符号
+      check(!BackupManager.hasPendingMaintenance(harness), "失败已回切，无悬挂维护日志");
+             ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:220: 错误: 找不到符号
+        BackupManager.runDataTask(
+        ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:238: 错误: 找不到符号
+      check(interrupted && BackupManager.hasPendingMaintenance(harness), "磁盘日志识别未完成维护");
+                           ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:239: 错误: 找不到符号
+      BackupManager.recoverMaintenanceBeforeStart(harness);
+      ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:240: 错误: 找不到符号
+      check(!BackupManager.hasPendingMaintenance(harness), "重新读取日志后回切完成");
+             ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:259: 错误: 找不到符号
+                    BackupManager.runSnapshotTask(
+                    ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:260: 错误: 找不到符号
+                        harness, () -> BackupManager.runSnapshotTask(harness, () -> "nested-ok"));
+                                       ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:262: 错误: 找不到符号
+                BackupManager.runSnapshotTask(
+                ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:267: 错误: 找不到符号
+                        BackupManager.runDataTask(harness, () -> "不得在快照锁内停止");
+                        ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:289: 错误: 找不到符号
+              BackupManager.stopWebForMaintenance(harness);
+              ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:312: 错误: 找不到符号
+          check(!BackupManager.hasPendingMaintenance(harness), "停止完成前未进入环境切换事务");
+                 ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:324: 错误: 找不到符号
+        check(!BackupManager.hasPendingMaintenance(harness), "完成后无未提交维护");
+               ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:342: 错误: 找不到符号
+          BackupManager.runDataTask(harness, () -> "不得执行");
+          ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:400: 错误: 找不到符号
+        BackupManager.runDataTask(
+        ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:437: 错误: 找不到符号
+          RuntimeTasks.hasOtherTasks() && !BackupManager.isEnvironmentTaskBusy(),
+                                           ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:442: 错误: 找不到符号
+        BackupManager.recoverMaintenanceBeforeStart(harness);
+        ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:473: 错误: 找不到符号
+          BackupManager.runDataTask(harness, () -> EnvironmentMaintenance.recover(harness));
+          ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:479: 错误: 找不到符号
+        !BackupManager.hasPendingMaintenance(harness) && !RuntimeTasks.isBusy(),
+         ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:628: 错误: 找不到符号
+        !RuntimeTasks.isBusy() && !BackupManager.isEnvironmentTaskBusy(),
+                                   ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:671: 错误: 找不到符号
+        !BackupManager.hasPendingMaintenance(harness)
+         ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:672: 错误: 找不到符号
+            && !BackupManager.isEnvironmentTaskBusy()
+                ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:704: 错误: 找不到符号
+        BackupManager.runDataTask(
+        ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:717: 错误: 找不到符号
+          !BackupManager.isEnvironmentTaskBusy() && !BackupManager.hasPendingMaintenance(harness),
+           ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:717: 错误: 找不到符号
+          !BackupManager.isEnvironmentTaskBusy() && !BackupManager.hasPendingMaintenance(harness),
+                                                     ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:728: 错误: 找不到符号
+        BackupManager.runDataTask(harness, () -> "不得进入");
+        ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:736: 错误: 找不到符号
+          BackupManager.runDataTask(
+          ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:769: 错误: 找不到符号
+                BackupManager.runDataTask(
+                ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:792: 错误: 找不到符号
+        !BackupManager.isEnvironmentTaskBusy() && !RuntimeTasks.isBusy(),
+         ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:842: 错误: 找不到符号
+        BackupManager.runDataTask(
+        ^
+  符号:   变量 BackupManager
+  位置: 类 MaintenanceFixtureInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:129: 错误: 找不到符号
+    InstallFragment fragment = new InstallFragment();
+    ^
+  符号:   类 InstallFragment
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:129: 错误: 找不到符号
+    InstallFragment fragment = new InstallFragment();
+                                   ^
+  符号:   类 InstallFragment
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:144: 错误: 找不到符号
+            Field field = InstallFragment.class.getDeclaredField("repository");
+                          ^
+  符号:   类 InstallFragment
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:147: 错误: 找不到符号
+            Field revision = InstallFragment.class.getDeclaredField("shownRevision");
+                             ^
+  符号:   类 InstallFragment
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:185: 错误: 找不到符号
+              && !BackupManager.isRestoring()
+                  ^
+  符号:   变量 BackupManager
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:186: 错误: 找不到符号
+              && !BackupManager.hasPendingMaintenance(controller),
+                  ^
+  符号:   变量 BackupManager
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:367: 错误: 找不到符号
+    InstallFragment original = attach(repository);
+    ^
+  符号:   类 InstallFragment
+  位置: 类 InstallAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutPreviewActivity.java:47: 错误: 找不到符号
+      StartupRecoveryLayout page =
+      ^
+  符号:   类 StartupRecoveryLayout
+  位置: 类 LayoutPreviewActivity
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutPreviewActivity.java:48: 错误: 找不到符号
+          new StartupRecoveryLayout(
+              ^
+  符号:   类 StartupRecoveryLayout
+  位置: 类 LayoutPreviewActivity
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutPreviewActivity.java:162: 错误: 找不到符号
+              com.deepseekharness.app.util.UiText.text(ThemeController.isDark(this) ? "黑夜" : "白天"));
+                                                       ^
+  符号:   变量 ThemeController
+  位置: 类 LayoutPreviewActivity
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutPreviewActivity.java:189: 错误: 找不到符号
+          .replace(R.id.fragment_container, new SettingsFragment())
+                                                ^
+  符号:   类 SettingsFragment
+  位置: 类 LayoutPreviewActivity
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutPreviewActivity.java:231: 错误: 程序包UpdateRepository不存在
+        java.lang.reflect.Constructor<UpdateRepository.State> ctor =
+                                                      ^
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutPreviewActivity.java:232: 错误: 程序包UpdateRepository不存在
+            UpdateRepository.State.class.getDeclaredConstructor(
+                            ^
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutPreviewActivity.java:240: 错误: 程序包UpdateRepository不存在
+        UpdateRepository.State state =
+                        ^
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutPreviewActivity.java:250: 错误: 找不到符号
+        UpdateUi.render(canvas, state, false);
+        ^
+  符号:   变量 UpdateUi
+  位置: 类 LayoutPreviewActivity
+app\src\debug\java\com\deepseekharness\app\core\Rc21RecoveryAudit.java:92: 错误: 找不到符号
+      BackupManager.runDataTask(
+      ^
+  符号:   变量 BackupManager
+  位置: 类 Rc21RecoveryAudit
+app\src\debug\java\com\deepseekharness\app\core\Rc21RecoveryAudit.java:96: 错误: 找不到符号
+            String hash = BackupManager.createMaintenanceBackup(c, archive);
+                          ^
+  符号:   变量 BackupManager
+  位置: 类 Rc21RecoveryAudit
+app\src\debug\java\com\deepseekharness\app\core\Rc21RecoveryAudit.java:129: 错误: 找不到符号
+        BackupManager.runDataTask(
+        ^
+  符号:   变量 BackupManager
+  位置: 类 Rc21RecoveryAudit
+app\src\debug\java\com\deepseekharness\app\core\Rc21RecoveryAudit.java:150: 错误: 找不到符号
+      BackupManager.runDataTask(c, () -> EnvironmentMaintenance.rebuild(c, this::report));
+      ^
+  符号:   变量 BackupManager
+  位置: 类 Rc21RecoveryAudit
+app\src\debug\java\com\deepseekharness\app\core\Rc21RecoveryAudit.java:167: 错误: 找不到符号
+      BackupManager.runDataTask(c, () -> EnvironmentMaintenance.update(c, this::report));
+      ^
+  符号:   变量 BackupManager
+  位置: 类 Rc21RecoveryAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:98: 错误: 找不到符号
+              ((PreviewAuth) field(target, "previewAuth")).cancel();
+                ^
+  符号:   类 PreviewAuth
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:148: 错误: 找不到符号
+    WebDownloads value = (WebDownloads) field(page, "downloads");
+    ^
+  符号:   类 WebDownloads
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:148: 错误: 找不到符号
+    WebDownloads value = (WebDownloads) field(page, "downloads");
+                          ^
+  符号:   类 WebDownloads
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:367: 错误: 找不到符号
+          WebUploads.parseChooserResult(Activity.RESULT_OK, new Intent().setData(uri)).length == 1,
+          ^
+  符号:   变量 WebUploads
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:370: 错误: 找不到符号
+          WebUploads.parseChooserResult(Activity.RESULT_CANCELED, selection) == null, "取消必须回传空结果");
+          ^
+  符号:   变量 WebUploads
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:371: 错误: 找不到符号
+      check(WebUploads.parseChooserResult(Activity.RESULT_OK, null) == null, "空结果未处理");
+            ^
+  符号:   变量 WebUploads
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:375: 错误: 找不到符号
+      check(WebUploads.parseChooserResult(Activity.RESULT_OK, clipSelection).length == 2, "重复项未去重");
+            ^
+  符号:   变量 WebUploads
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:377: 错误: 找不到符号
+      check(WebUploads.parseChooserResult(Activity.RESULT_OK, clipSelection) == null, "混合非法来源未拒绝");
+            ^
+  符号:   变量 WebUploads
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:380: 错误: 找不到符号
+          WebUploads.fallback(
+          ^
+  符号:   变量 WebUploads
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:386: 错误: 程序包WebUploads不存在
+      try (WebUploads.Session uploads = new WebUploads.Session(getTargetContext().getCacheDir())) {
+                     ^
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:386: 错误: 程序包WebUploads不存在
+      try (WebUploads.Session uploads = new WebUploads.Session(getTargetContext().getCacheDir())) {
+                                                      ^
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:411: 错误: 找不到符号
+                new WebDownloadModel((Application) getTargetContext().getApplicationContext()));
+                    ^
+  符号:   类 WebDownloadModel
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:446: 错误: 找不到符号
+              new WebDownloadModel((Application) getTargetContext().getApplicationContext());
+                  ^
+  符号:   类 WebDownloadModel
+  位置: 类 WebBrowserAudit
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:479: 错误: 程序包WebUploads不存在
+    try (WebUploads.Session uploads = new WebUploads.Session(getTargetContext().getCacheDir())) {
+                   ^
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:479: 错误: 程序包WebUploads不存在
+    try (WebUploads.Session uploads = new WebUploads.Session(getTargetContext().getCacheDir())) {
+                                                    ^
+app\src\debug\java\com\deepseekharness\app\ui\WebBrowserAudit.java:481: 错误: 程序包WebUploads不存在
+        try (WebUploads.Batch batch =
+                       ^
+app\src\debug\java\com\deepseekharness\app\ui\BrowserCompatibilityAudit.java:138: 错误: 找不到符号
+      while ((!c.isEnvironmentReady() || BackupManager.isEnvironmentTaskBusy())
+                                         ^
+  符号:   变量 BackupManager
+  位置: 类 BrowserCompatibilityAudit
+app\src\debug\java\com\deepseekharness\app\ui\BrowserCompatibilityAudit.java:140: 错误: 找不到符号
+      check(c.isEnvironmentReady() && !BackupManager.isEnvironmentTaskBusy(), "环境未就绪");
+                                       ^
+  符号:   变量 BackupManager
+  位置: 类 BrowserCompatibilityAudit
+app\src\debug\java\com\deepseekharness\app\ui\BrowserCompatibilityAudit.java:141: 错误: 找不到符号
+      BackupManager.stopWebForMaintenance(c);
+      ^
+  符号:   变量 BackupManager
+  位置: 类 BrowserCompatibilityAudit
+app\src\debug\java\com\deepseekharness\app\ui\BrowserCompatibilityAudit.java:273: 错误: 找不到符号
+        BackupManager.stopWebForMaintenance(c);
+        ^
+  符号:   变量 BackupManager
+  位置: 类 BrowserCompatibilityAudit
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:317: 错误: 找不到符号
+            MainActivity.active() != null
+            ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:318: 错误: 找不到符号
+                && MainActivity.active()
+                   ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:328: 错误: 找不到符号
+                    MainActivity.active().findViewById(R.id.bottom_nav))
+                    ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:330: 错误: 找不到符号
+    until(() -> MainActivity.active().findViewById(R.id.settings_tabs) != null, "设置页未打开");
+                ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:333: 错误: 找不到符号
+            ((ViewGroup) MainActivity.active().findViewById(R.id.settings_tabs))
+                         ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:336: 错误: 找不到符号
+    until(() -> MainActivity.active().findViewById(R.id.config_save) != null, "配置页未打开");
+                ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:338: 错误: 找不到符号
+        ((TextView) MainActivity.active().findViewById(R.id.app_title))
+                    ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:344: 错误: 找不到符号
+        MainActivity.active().findViewById(R.id.sub_back).getVisibility() == View.VISIBLE,
+        ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:346: 错误: 找不到符号
+    ui(() -> ((EditText) MainActivity.active().findViewById(R.id.config_port)).setText("39081"));
+                         ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:347: 错误: 找不到符号
+    MainActivity before = MainActivity.active();
+    ^
+  符号:   类 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:347: 错误: 找不到符号
+    MainActivity before = MainActivity.active();
+                          ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:351: 错误: 找不到符号
+            MainActivity.active() != null
+            ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:352: 错误: 找不到符号
+                && MainActivity.active() != before
+                   ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:353: 错误: 找不到符号
+                && MainActivity.active().findViewById(R.id.config_save) != null,
+                   ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:356: 错误: 找不到符号
+        ((EditText) MainActivity.active().findViewById(R.id.config_port))
+                    ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:361: 错误: 找不到符号
+    ui(() -> MainActivity.active().findViewById(R.id.sub_back).performClick());
+             ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:362: 错误: 找不到符号
+    until(() -> MainActivity.active().findViewById(R.id.settings_tabs) != null, "返回设置失败");
+                ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:364: 错误: 找不到符号
+        MainActivity.active().findViewById(R.id.sub_back).getVisibility() == View.GONE,
+        ^
+  符号:   变量 MainActivity
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:377: 错误: 找不到符号
+                shown[0] = AboutDialog.show(screen);
+                           ^
+  符号:   变量 AboutDialog
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:380: 错误: 找不到符号
+              DshaDialogBuilder builder = new DshaDialogBuilder(screen);
+              ^
+  符号:   类 DshaDialogBuilder
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:380: 错误: 找不到符号
+              DshaDialogBuilder builder = new DshaDialogBuilder(screen);
+                                              ^
+  符号:   类 DshaDialogBuilder
+  位置: 类 LayoutAuditInstrumentation
+F:\DSHA_RESTART\app\src\debug\java\com\deepseekharness\app\ui\LayoutAuditInstrumentation.java:458: 错误: 找不到符号
+        ui(() -> LanguageController.select(getTargetContext(), args.getString("language")));
+                 ^
+  符号:   变量 LanguageController
+  位置: 类 LayoutAuditInstrumentation
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+100 个错误
+仅显示前 100 个错误（共 102 个）；若要查看更多错误，请使用 -Xmaxerrs

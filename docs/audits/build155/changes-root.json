@@ -1,0 +1,25 @@
+{
+  "targets": ["D-ARCH-01", "D-ARCH-02", "D-LEGACY-01"],
+  "files": [
+    "app/src/main/java/com/deepseekharness/app/DshaApp.java",
+    "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+    "app/src/main/java/com/deepseekharness/app/core/HarnessSessionState.java",
+    "app/src/main/java/com/deepseekharness/app/core/WebReadyTasks.java",
+    "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java",
+    "app/src/main/java/com/deepseekharness/app/util/ApplicationOwner.java",
+    "app/src/main/java/com/deepseekharness/app/util/LanAddressPolicy.java",
+    "app/src/main/java/com/deepseekharness/app/util/WebLaunchCommand.java"
+  ],
+  "changes": [
+    "Web lifetime, queue, run records, diagnostics, recovery and stop/auth results are application-owned, shared by real-app legacy facades; isolated test Contexts retain isolated state.",
+    "One lazy application service publishes only a completed instance, rejects recursion/null, and retries failed construction. Diagnostics health callbacks are initialized once rather than rebound by each facade.",
+    "The unused strong MainActivity.current reference is removed; existing audit sources query the real weak foreground lifecycle tracker without mutating production state.",
+    "Post-authentication migration and bounded LAN work use narrow WebReadyTasks ports, retaining generation checks and existing retry limits. A committed migration receipt missing either source-preserved or settings-imported proof is not presented as complete.",
+    "Launch commands explicitly capture their generation and keep credentials out of argv. LAN private IPv4 matching distinguishes 172.16/12 from public 172 addresses.",
+    "Changelog source follows the actual build version and uses the Python3.9-compatible LF writer."
+  ],
+  "executed": ["JDK17 actual helper/ready-task compilation plus 11 JUnit tests PASS; Gson 2.13.1 is the real strict JSON dependency"],
+  "pending": ["Current full Android sources, both flavor tests/lint, signed APK gates and final source snapshot"],
+  "preserved": ["Unique Web generation, known process/guest exit evidence, data barriers, historical data readers, open plugin/terminal policy and native-confirmed independent recovery"],
+  "device": "not operated; actual application, renderer and background lifecycle remain to be verified on devices"
+}

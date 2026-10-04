@@ -17,45 +17,49 @@ import android.content.Intent;
  */
 public class AdbKeepAliveReceiver extends BroadcastReceiver {
 
-    public static final String ACTION = "com.deepseekharness.app.ADB_KEEPALIVE";
-    private static final int REQ_CODE = 71;
-    private static final long INTERVAL_MS = 5 * 60_000L;
+  public static final String ACTION = "com.deepseekharness.app.ADB_KEEPALIVE";
+  private static final int REQ_CODE = 71;
+  private static final long INTERVAL_MS = 5 * 60_000L;
 
-    /** 排下一次唤醒（一次性闹钟，每次收到后重排） */
-    public static void schedule(Context ctx) {
-        try {
-            AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
-            if (am == null) return;
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
-                    System.currentTimeMillis() + INTERVAL_MS, pending(ctx));
-        } catch (Throwable ignored) {
-        }
+  /** 排下一次唤醒（一次性闹钟，每次收到后重排） */
+  public static void schedule(Context ctx) {
+    try {
+      AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+      if (am == null) return;
+      am.setAndAllowWhileIdle(
+          AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + INTERVAL_MS, pending(ctx));
+    } catch (Throwable ignored) {
     }
+  }
 
-    public static void cancel(Context ctx) {
-        try {
-            AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
-            if (am != null) am.cancel(pending(ctx));
-        } catch (Throwable ignored) {
-        }
+  public static void cancel(Context ctx) {
+    try {
+      AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+      if (am != null) am.cancel(pending(ctx));
+    } catch (Throwable ignored) {
     }
+  }
 
-    private static PendingIntent pending(Context ctx) {
-        Intent i = new Intent(ctx.getApplicationContext(), AdbKeepAliveReceiver.class).setAction(ACTION);
-        return PendingIntent.getBroadcast(ctx.getApplicationContext(), REQ_CODE, i,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-    }
+  private static PendingIntent pending(Context ctx) {
+    Intent i =
+        new Intent(ctx.getApplicationContext(), AdbKeepAliveReceiver.class).setAction(ACTION);
+    return PendingIntent.getBroadcast(
+        ctx.getApplicationContext(),
+        REQ_CODE,
+        i,
+        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+  }
 
-    @Override
-    public void onReceive(Context ctx, Intent intent) {
-        try {
-            if (!DeviceBridgeService.isAdbEnabled(ctx)) {
-                return; // 用户关了通道：不再排下一次，闹钟自然消失
-            }
-            // 服务若已被回收，kickNow 内部会按开关重新拉起
-            DeviceBridgeService.kickNow(ctx, com.deepseekharness.app.util.UiText.text("Alarm 唤醒"));
-            schedule(ctx);
-        } catch (Throwable ignored) {
-        }
+  @Override
+  public void onReceive(Context ctx, Intent intent) {
+    try {
+      if (!DeviceBridgeService.isAdbEnabled(ctx)) {
+        return; // 用户关了通道：不再排下一次，闹钟自然消失
+      }
+      // 服务若已被回收，kickNow 内部会按开关重新拉起
+      DeviceBridgeService.kickNow(ctx, com.deepseekharness.app.util.UiText.text("Alarm 唤醒"));
+      schedule(ctx);
+    } catch (Throwable ignored) {
     }
+  }
 }

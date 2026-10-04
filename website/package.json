@@ -1,6 +1,6 @@
 {
   "name": "dsha-marketplace",
-  "version": "0.1.7-rc2",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,5 +12,6 @@
     "jsdom": "30.0.1",
     "jsqr": "1.4.0",
     "qrcode-generator": "2.0.4"
-  }
+  },
+  "description": "Private site builder; public DSHA versions are supplied by the verified APK manifest."
 }

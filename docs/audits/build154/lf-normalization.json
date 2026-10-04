@@ -1,0 +1,1971 @@
+{
+  "schema": 1,
+  "immutableHistoricalBlobsExcluded": true,
+  "files": [
+    {
+      "path": "CHANGELOG.md",
+      "before": "e238ff31314b69a1bd40c64caf35ef848d60375feba78e2e9917ab81cf5fd761",
+      "after": "b59ef7e56d9e44465fc482b69f68f4b09a0929e92246c7de9754db3f2a768b25"
+    },
+    {
+      "path": "app/src/deviceAudit/java/com/deepseekharness/app/backup/AuditDocumentProvider.java",
+      "before": "f189c40f7842dbc31b68fcf88dae2f94b35ee28ae1d8a945b3a30366cfdf2d1a",
+      "after": "cfeb6f1f41a40491c82610b8f17826adbc647156766cb9aef0d3b8678a95bced"
+    },
+    {
+      "path": "app/src/deviceAudit/java/com/deepseekharness/app/backup/BackupWorkflowDeviceAudit.java",
+      "before": "822c2b933bda3eab3589b8168b70a765110511eacb1b5e258e23661437e39c3e",
+      "after": "b9bf67657ec6e494d19590d18646d25e7f98134f4ad1a2f9e69f90f80b44da6a"
+    },
+    {
+      "path": "app/src/deviceAudit/java/com/deepseekharness/app/backup/ReexportDeviceAudit.java",
+      "before": "eb0c679322eb4ea46cdc2e288714db715ca9674293b8be2aff54ed18085913e1",
+      "after": "dd98160a4ce115a8cd06aa0f721426300b2d55262f4486b21887709bc11408a7"
+    },
+    {
+      "path": "app/src/deviceAudit/java/com/deepseekharness/app/backup/RetainedWorkflowDeviceAudit.java",
+      "before": "c2ed601ed19f5d4e80bedba5d06453a2ed55077176c31ece5ac00828991d0f03",
+      "after": "6c7e056c29ffa05c7693217fa743f6ef1fd9c82542a4d396e627553dee2e3ff1"
+    },
+    {
+      "path": "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+      "before": "df34c16b9f3120c64384b3f3e3af186d0f492ef00e519829cfdce3e127434e8c",
+      "after": "06c413d965a4fae7fbe82b0b3cbae4c4671500d19927f9c0061899baa8ea741f"
+    },
+    {
+      "path": "app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java",
+      "before": "922bf64e1d4797065697f0e79902cd5fae9cea6a0c1426e17d3a5e26b17c608e",
+      "after": "5b7af1280478ad5ee5aaf88a04dee4187fe3f1496093b9748b04eab35708b68b"
+    },
+    {
+      "path": "app/src/main/AndroidManifest.xml",
+      "before": "d88944b7f678b98710c95330d0004d9c558e8fc93288e30136d84186bbac02fb",
+      "after": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246"
+    },
+    {
+      "path": "app/src/main/aidl/com/deepseekharness/app/IShellService.aidl",
+      "before": "e00dc17eb592022771097804c7fe2751036e312353c3551660dbc2bdcc5024dd",
+      "after": "dd49684d5b9f832971fa65a1d929cc99635837b2e4e5b304044a5c433420c775"
+    },
+    {
+      "path": "app/src/main/assets/app-integration/package.json",
+      "before": "2854dff94060cd461ddc655cf9cb45bf5ebd4b6ee4b7787387acabddb9c92963",
+      "after": "ee462abdee3918b47bd6276b1efd7f2d0bba3954cddd79944577bddcfd51f98a"
+    },
+    {
+      "path": "app/src/main/assets/backup-engine.py",
+      "before": "e47329b30204178055aab029d31fcd7bd0c883587e66c97acfc48f92b0ee114b",
+      "after": "1b416c035ef5c79aa4331a4dc67c07990ea0e4bacd8fe18087bd16cc4b8f662b"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-auto-review/package.json",
+      "before": "adcf8975b6dbf909a4d90a6a544ebbcd0fa3ed5954053e33b2b17d30740309a9",
+      "after": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json",
+      "before": "31bf974e41f24b5c704b57fef240ad2d2f83dec7e031d364ff0f3894ece9ae74",
+      "after": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json",
+      "before": "1cd3e4c907ae2c405eac60b5266732103751d617a003eb905449dc9a5f21eb58",
+      "after": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-status-overlay/lib/index.js",
+      "before": "bc7ef479f93d21becf508e0775d568418973dc85ff7576669b041d5713f7766c",
+      "after": "cf3b51585c8da0a522bcb45fa5851dfa16c512d1a9d92f37278f5af212cd5a7a"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-status-overlay/package.json",
+      "before": "ad01cc4dd6a34a5a5592ca404ba60f95fdafce57f0ba065b64dea5060623c43c",
+      "after": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-task-notifier/package.json",
+      "before": "da7a5a52b2d25a572a575acba3b5e48237b74cf4a5bacf8d30f57bb205dd5b4f",
+      "after": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/package.json",
+      "before": "8685b7fb7549c4ec531ecbaa7435e5b189f6988e6c4b8b589ad00ab5480924b3",
+      "after": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/LICENSE",
+      "before": "ba4c736e11f45710d75a9d1094a6e72cb43ec1cebda3d38d0522fe003dacfec6",
+      "after": "0d50650e8ee0e00996facf70e6d246dddb836e27c4ce7027cdcf800ac5758f4b"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/README.md",
+      "before": "501156dd4339da7a1ac0f44b098aab2d45011a606f52955d4c845ca55bf1edc0",
+      "after": "74ac331327897cdc63643e991d4598600e6e22605abef25abf8064236ee5cc67"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/cordis.patch.yml",
+      "before": "ebe9dacdd1ea6a4cc8432038146133e3966942c5f1e3a663f5ded0537f0ed382",
+      "after": "90e1e7a4ef3bfb11198cb1d686d4c5deb26bf3683915a78c5b4b050879393bb6"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/components/ComposerFileButton.d.ts",
+      "before": "8fa251413b07afed818b00dfc37622a8be39978adf3ef0f6f792d64ff8ae5272",
+      "after": "a689bd6a0c88ec3a1f27e0c65ea02723efcddc5aa62872437c48794cc6f304b3"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/components/MobileDrawerFooter.d.ts",
+      "before": "591008640cc9cfbc9bc517957dfeac2c1b8e66a830c4a98d144d92a661832650",
+      "after": "99343cbc8dde8d586bac0bf860a9f836f1e5320b08246f074fec79d680418d2b"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/components/MobileNavToggle.d.ts",
+      "before": "e5297d02a734f761e1f5bb88e58bf1b8e943bbc426e1cc8a77c5948cdc972910",
+      "after": "d8d58f37710cb9cfcc2245a4bcc13d925c6ba6cad6457b56bf865b35ed01c11d"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/components/open-files-panel.d.ts",
+      "before": "0f5a8da6f2a3652cb8e54ac982aeac8b38cdef3a23c112c6006cc2d470d1efa7",
+      "after": "9fee9325a68af8c7b48c31c900cca3e86252fb83425ee7969ce8c8b1f2b4843e"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/core/css-rules.d.ts",
+      "before": "4cdade56b485982cb9869acdd2e756439a75aace8d55104a5c1980c0765081a3",
+      "after": "9956a29bb59728957899fddc39f4989f38acd946069f5f6e30dee2a4cd91bb93"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/core/icon-compat.d.ts",
+      "before": "299db680e7e5c0ef2c2f50f9837fdae95cdde89b1b88bf7396d51e0b75c6ad01",
+      "after": "60c1adad8bb6c997b336617f2f1d11ce71fd82e81fe1e60a5fa128558afca3f2"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/core/layout-compat.d.ts",
+      "before": "321248eb070fe06fbea69da56ea222b50f1efa21c0ed2ae5cfda687d0a41db57",
+      "after": "a4b2b7484c1932cc494eadeb72c843f40e0b9eac9786898264c7f8ffdb664296"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/core/raf-scheduler.d.ts",
+      "before": "706ceabf30286c5ffe8ca1af37dd82a3200ab23316f950ccb716891397adefaa",
+      "after": "5bed7608669cf9190e7847629e53ffbd5655c591d66cfec1b9f22e2084af9d2f"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/core/reconciler-core.d.ts",
+      "before": "0377d4b176b3ceaecf36cbdaef5a5f18028e1d5db8402e11db75626182924321",
+      "after": "1ed97045dc6bc0eccb7149f5fe9bc58525e26388324aae2129b3ea28ea911251"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/core/sessions-compat.d.ts",
+      "before": "d08f7401e77843027e7d6686efb3f4a24fad89781766514265e1ea9a1f81f8c9",
+      "after": "02074e489af91b3b9e474d165330fae3e359b7099e03dc72f0cc467d79ae0c83"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/debug.d.ts",
+      "before": "b1e4fb739502d922f3529da9080017507c2d7b9437442bcebcd7f00e96efabcf",
+      "after": "6bcc17da4a66fb13b414600197dace8caa48f947ac3ba120817a5f09b94341ef"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/aionui-compat.d.ts",
+      "before": "a5a30154617099476411584a182ee7b375ee48a59ce02dca6e48ad8fa890d714",
+      "after": "4c58bcaa0b84dcbf4ac61dd457b94ab9493dc36c8ce8ec703e7c1d62dcead979"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/composer-keyboard-guard.d.ts",
+      "before": "75987b9e3a2c5bbc1d7376fb0c7c1ad8ac38117225924f2a5be0fb9f176b5259",
+      "after": "56cdb505700c9a30b45326a93821e31ecc2631021b001c3151f51808d094f5cc"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/composer-plus-toggle.d.ts",
+      "before": "ff6617d63ba5e5b1163e1d34b4545633e46fa89ff008f1caa350b67703b01028",
+      "after": "faa50429c6b6a6f1e96721ca653a219ac15c4533080fe739224b95d27c849a68"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/file-viewer-compat.d.ts",
+      "before": "84f65db30a90025cd0b0f0ff1fb8cc864fe9851fda5a1ec82021c66edee7314d",
+      "after": "1b145753abff324c7a3cc1caa6339b4cfc61b86d698b202f1e4903ead4fa40b2"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/gesture-guard.d.ts",
+      "before": "ff1c26e8cd7061b9d286293086be6302a2dd00d242a4c1b5f866718a0157f791",
+      "after": "2822aef080f1af491a20dcf71b94ac369fb8f8106678de217ecd6bb7c48d9e4e"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/git-chip-reparent.d.ts",
+      "before": "4ff09fd3a280eb53e557ac8a3cbf576b1a24a0625ae12dfb77f8af83cc313dda",
+      "after": "25ff096ce71e548f46f0dd7a04a7ad19d7592758deec8cc2d40ab32e156f8f84"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/model-menu-anchor.d.ts",
+      "before": "ba1438fb358ec61e746c4b76ce3e6d53e1bc9bc84a1ec93734f4b349ed02f12c",
+      "after": "5635322251f6b66ce21b7f789528e4ae41ef6dad37d5b2b1046b59a3d7a87092"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/overlay-backdrop-fab.d.ts",
+      "before": "b2c7728c67dfac613bbd846d838c52835cb494b55ccd08dc2c6ebf38528740b7",
+      "after": "c8c32e232c40ebc6b17855206caee471ffcf1cbc7b55ba7f411c6ff6cc2e2802"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/panel-exit.d.ts",
+      "before": "df3f5237bdf6cf25934b1e32e6e91ddf4303cc175aa1a3060c82f58960fdb792",
+      "after": "ccb29cd7658324360a64bee70c86596a36df34d1c71687afcd2f8e6333013b84"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/phone-chrome.d.ts",
+      "before": "69ea9f8f1c4a478c6effd9a3a3a170559c4beca91c6f4bff105f40a217b3c8c4",
+      "after": "e6d2defe20e772a8b245e05771c74e0bfd5e0bdb93f5ba774b38ce439b4c1b87"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/preview-fullscreen.d.ts",
+      "before": "08a37da9a42e1ed1a684df5d573cd726663d27123b503649c398dd58ca19d61f",
+      "after": "f0d0d3f2a202ce89e55e2c8b42df57fdf04d7cc13ea709b3ddb7a2818e5f1b90"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/session-menu.d.ts",
+      "before": "2de93bbdd5a36d02d3169bbc363b32a0035c62c99afd00982c6050cceb97f298",
+      "after": "1488d28a4b8af8eb63d199b7dd6d86a027b0578bc57027d31827089193e1f020"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/session-row-fiber.d.ts",
+      "before": "c0a4b03b25fdf21ef286bd3128caa3bcde26db14c3a7dbb0c37d54ab359a2632",
+      "after": "e5227898676f8bd06b5b9d0fc8834dbc04f7ff50c6dd45a84e87d0d7804d57d9"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/settings-toolbar-reparent.d.ts",
+      "before": "b53a1958705a7a76e32d900463b46485c700c779dec7c5652c25ffddd1376747",
+      "after": "95807b6b63cc5ee23caa7180b71a94da8b574fae0a5191b959c5192e447333d6"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/shortcut-modal-keyboard-guard.d.ts",
+      "before": "ec4259af504b0fe2cf13a2d894d92689076ecd3e2289ed622197dd888d08b04e",
+      "after": "eab0075b4d3c870d5c106e759038eb4f5b776101d1b93672f5317bf9098dad34"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/sidebar-swipe.d.ts",
+      "before": "811dff016dbac41c97891a8d583f9eab4fab746d896ac66101b1676ef0de67bb",
+      "after": "e3e2c9f7ba5c9b636ef9cc3943b3d26135fac3f24b20332d112eb5d7675365ad"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/stats-line.d.ts",
+      "before": "776a9ead2aadebb3a4d214fe0b5d53651656b6df2d2331d3ce1756823f4127c4",
+      "after": "3be674ebd03d8d4eeaea7df08781d2e121cf4a4e88f0370411179ef3a723267f"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/subagent-chip-touch.d.ts",
+      "before": "887823f1737c070d7331dc15a134a3f8f18291ad581080f78be0c824ee918348",
+      "after": "ff59bf31a4699a3f6cd0a787a60fe0f722c4e5d31c001fcdf3cefec080cd9327"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/team-chip-toggle.d.ts",
+      "before": "1fa4ef8c56171996dbb547dfda4a727e4254461c2b5e362bbaa6f235728f3d93",
+      "after": "1eb3100fabaeb09420765065a7b33ae696e6b4a5e4894f4dc5449ce56c51f137"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/effects/workspace-chip-toggle.d.ts",
+      "before": "9e0a5f6cd6aef575272519646b302f2825275b34d6d03404f5db904eee3f2660",
+      "after": "45ac2490f395b3bca7baf2bb63a74fb7b11bec1e6a1d422f84505ee26626bbbf"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/i18n/locales.d.ts",
+      "before": "6fcf5bf77aa34a70c5d9ec11cd6551d02a2e99b781b8650af389787a7c7b6d7b",
+      "after": "bbc3cd3f7bfdd771178a5420cffb6d7723b022a3219499cbcbaf0a6b4d52e983"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/index.d.ts",
+      "before": "4fdfb369f694c1f030e854f46bf4f843212f8518b3a61728852fd48b6459a10d",
+      "after": "3350535311dfd7927b73b1a166b52831f5016304b8855c5a95c59f533e5f3bfd"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/styles/base.css.d.ts",
+      "before": "8689f5618c98555845a93b73d9c39d91e8cdc4331e97b149c36022452a9e8665",
+      "after": "57b2e0aa87f30dc8120c0da1a828093c29b15bd8153d53c6f270b16b115e7371"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/styles/compat.css.d.ts",
+      "before": "66d51c162597ae7107205f49e80a3cab8d69cf07041bb54ee3bd2c1110b114bb",
+      "after": "d47bb93bb86ca3c403a1a08811f73247fb4f1bddf204536a7f9f07fd5303b9be"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/styles/index.d.ts",
+      "before": "931e04e6fd477a0d42f0aa8fcdf5ce9fa4519224e1175ea2768d9c89854a4e45",
+      "after": "a5ed738e1a926d2cd61ad40f2fea353e05a8e32d7bb04ad377877c4c38bd704a"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/styles/layout.css.d.ts",
+      "before": "1b799099d37b51bcf6331f64a90d97002a8ee3aa4476d786496edc9d58c860e7",
+      "after": "1ffe7e7f30f32f0479aa6ae575970e98f58398a4bdb33a03b989d50766acb572"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/client/styles/misc.css.d.ts",
+      "before": "b9288c8a5c65784e36fd8b7829f4e443d48eec697cd9d67911f7e59d9267d231",
+      "after": "808d1591dce793e99839697a630a9691fcb63cd534ec2536857aea79d2018f63"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/compress.d.ts",
+      "before": "d94cd5329fd2bd551ed7eabef9d7bd762db2adc74a0604a9a4aab713e5352dc4",
+      "after": "da23a968b68331f89b74f1d1769a2e468968e31e093f96d162d6adf7ec375c5c"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/delete-session.d.ts",
+      "before": "a9378ffceab13081c202fd7f140d1a3cac2d8a9384981de74cc1953342614519",
+      "after": "9f4a49277db2d821f4b1b88e9e688188f8658e43d79c4399b1f994c19bab2e05"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/types/index.d.ts",
+      "before": "d053afebca0ab1c1cc7b2e917f1d1ac9e20e637c7da18775ff78783a7853e225",
+      "after": "df5af8c85516065469eef207ec226d0263bc8cb5b769759e8eacf120d517df0c"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+      "before": "b75fd151c07e345e26ad0e0ff9177d5c51ee29d59340ef32323219bf180f508b",
+      "after": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f"
+    },
+    {
+      "path": "app/src/main/assets/dsh-deps-heal.sh",
+      "before": "6c8f4c44387c9c9a3f3bae2aefdb9d77fb8f58b2ec86d5afb86c268a5e3b5993",
+      "after": "cc7d5644325fe0da1395bf37854ef81f32b14928274dd297837b42f2d4be696b"
+    },
+    {
+      "path": "app/src/main/assets/fix-stale-bundles.sh",
+      "before": "d2f9d905040403f50a271f6cbbfabb5e778c6f5732faac47ff06eba818a4cf4e",
+      "after": "20f35864222b08c868d7c4728b27be95ce7bd0dff05ac328e17c0dd17884b52b"
+    },
+    {
+      "path": "app/src/main/assets/flatten-l2s.py",
+      "before": "e64eb220981ae5a4d861a530fe2b6f6dc1a9ccb0a576bdb1feeff588eeeee714",
+      "after": "57dcde8eb8feb0db240baa47e896a05f8d1ad1320127391e79cccc8388da9d01"
+    },
+    {
+      "path": "app/src/main/assets/fs-write-patch.sh",
+      "before": "b9491cc67413b166cd419dfdff7f9a6fe47a0885281ba35c76c5ed665271e446",
+      "after": "3d0f4c9da218ed2d0fd26eb91ce2a17d13acceda2017aaf10164f28641febda8"
+    },
+    {
+      "path": "app/src/main/assets/heal-pnpm-shells.py",
+      "before": "e493fcabe2b3ebc07f495864507645cc28f19b215af2e1eb65aa96c0a11a3564",
+      "after": "b4a89e8d91b40e828a899e05f1f18e69e414ce3974566299b5e83b75e265d859"
+    },
+    {
+      "path": "app/src/main/assets/heal-profile-boot.py",
+      "before": "e490ee61fc9dd5469c5c60ed0655eed31b092efbd0b53db66117b73d5706a1ef",
+      "after": "fae1664e191bacf77bfa30a66ea9844745ea0651515f378d36b972189559d9bb"
+    },
+    {
+      "path": "app/src/main/assets/heal-session.sh",
+      "before": "68f241a8196d2129b61f959e04524d3b110535ad927a610a23a69aaa3ba63137",
+      "after": "74a777da58a98943d5834f40685e31020265027e24dc5edb0699d474bd28f1cb"
+    },
+    {
+      "path": "app/src/main/assets/heal-sessions.py",
+      "before": "ab2a4c44f7585ac75e927acc6d344804164cbe5ee5c677696b0377d7deec86ab",
+      "after": "d7e97239f92026e00bc52f1ceeffb8b59aee06ca15f4a333cefaedbdf6502544"
+    },
+    {
+      "path": "app/src/main/assets/licenses/bouncycastle-LICENSE.txt",
+      "before": "b3c0e23a6fd287e05c4849faa17632d0b31bdc31fccc409caeb7661caea9d967",
+      "after": "89e61e44dcdd5bf128446fcdb8b2adf41d597d5c5a3de25e91c0b682af710ed8"
+    },
+    {
+      "path": "app/src/main/assets/managed-package-proofs.json",
+      "before": "153b049f1aa52cbbc3a7c9933bae2d6cda4f0e2ac5bbcc23b06f3dda7d345728",
+      "after": "b68bc55aa178ec114c70c77c78709b85361ba9d83df496273b1fa972f6e6aa79"
+    },
+    {
+      "path": "app/src/main/assets/migrate-public-data.sh",
+      "before": "8496644ec28fd6954d1d1b9eef20c66ef58214e540062b222d83d788ed67d417",
+      "after": "e8a670d8b1cb319630bd872722fda05a26c17ea3b61944f3226d5af0035ec15b"
+    },
+    {
+      "path": "app/src/main/assets/plugin-lifecycle.py",
+      "before": "376cfd14c31490e993fa3266da1ea0efe56a622f14400897e53d8818c5c7780e",
+      "after": "fcc85307242d3354c3dabb85494e40e8f6fb22dc751d2c89e04b476f9d4d3cf1"
+    },
+    {
+      "path": "app/src/main/assets/rc1-migration.py",
+      "before": "877abef89f17d0ba1d43f2c4b64049929ffe27fd4054ff3b3f9ddb416baecb60",
+      "after": "ff385420676ef4afdbe2431e070be98f3e223a739b9d16dd7de900c49178241c"
+    },
+    {
+      "path": "app/src/main/assets/register-builtin-plugins.py",
+      "before": "b6c450005fd350c0bcc819b9639719b45db1510517d9bc5fb202588b7e78ae34",
+      "after": "e7d63469e5e3a77a55ddce74ab9eaa0ffbcd29691146916dde9317e6fb4716e7"
+    },
+    {
+      "path": "app/src/main/assets/runtime-descriptor.json",
+      "before": "3b1d8992e30959c7ae986728ddb5ce68ce429ba4c4b6298dfa063955018904eb",
+      "after": "0719ff13810dbc0eca961b6b97e1aeeb24da25e395d2c76b1de5e8cea6474060"
+    },
+    {
+      "path": "app/src/main/assets/runtime-trial-page.js",
+      "before": "48d7ee3cd6ee2a20418e91cfcb3ed5a15511265d30b2f1f91a5c6fd3814e7308",
+      "after": "8706c7b5692d36921c9e1471bcaabf9a8f77209102a2d0af98b15370fcbf62e8"
+    },
+    {
+      "path": "app/src/main/assets/runtime-trial-plugin.js",
+      "before": "9a15d426e5bf2bab3a7e5b0b2a7a78981d68c8ac7975514c1c9db71be03591ff",
+      "after": "c6e75684dd3c8bfffd32ce78780d250723f6e56e10fa35141d1a954f4008cbac"
+    },
+    {
+      "path": "app/src/main/assets/startup-observer.cjs",
+      "before": "28fdc751e4b66c875d02931197d94e30140b305d5bc5292aeede180d4eb49243",
+      "after": "c93051cca99a0c688b119719997c5176ccf81b291703ac7275b7b8164354d508"
+    },
+    {
+      "path": "app/src/main/assets/web-integration/compat.js",
+      "before": "c0e53eb673fda76b8c889b71bcbbfb23f81f14a5898432642dce83f812fdade1",
+      "after": "dc935b398e32f5a712b5e621b02f063015f4125a352a49e2d416ff1df431d6ea"
+    },
+    {
+      "path": "app/src/main/assets/web-integration/manifest.json",
+      "before": "667f398372fc9d58fb2e5d1cf179a7838f812cd871bf7ff71c880107bf82328c",
+      "after": "03585dc7711a0d71bafb05e7060c9be9d2832ea76f6202000d125a12f850dd8f"
+    },
+    {
+      "path": "app/src/main/assets/webserver-auth-patch.sh",
+      "before": "ddf9ace21ed833a7659ac90809b4b086b50c13fa7e6b5594b10f2de0ab59e5a2",
+      "after": "0aed65c27904b59e01aeb5207f8ef4c3f1f2573026299529d9cd01c519ffeb24"
+    },
+    {
+      "path": "app/src/main/assets/webui-degrade-patch.sh",
+      "before": "74ee435b97d51cfe1a4883df8a706dccb6e714fd3bb91de6c7396bc7abe050b5",
+      "after": "4cebcc4233197723b1acfafb772248f13c4c042a347a8ed718716765c3997313"
+    },
+    {
+      "path": "app/src/main/assets/webui-origin-port-patch.sh",
+      "before": "4a461174557b5539ad2ca501faf6dbda8ff2d6e52b9ff2b272783f1f1de6f0a3",
+      "after": "8647f3908b37887deaff1bc109a5c47a6c956fd32bba21854cbe77a7c6c63ffa"
+    },
+    {
+      "path": "app/src/main/assets/webui-polyfill.sh",
+      "before": "436c6e9b430b57e5bc88fc05c6c3d687371f81a75a061e3f7c9c6ca8aa36750a",
+      "after": "61e7355d1c1c14d46c8bf1e954ebc5a38d180dd4f3965efcbdeca4bd798ae543"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+      "before": "919b82507db479355af0cdc14b8e3b20a3b6b5e0a66d28c1d023ddf7793fd238",
+      "after": "22ff117f801826065fbadba1fc974de2bf4873a2527d5bdc4b91e977faaa04ba"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/BootReceiver.java",
+      "before": "672c0625b961992f07c0a7585d5064facdc19e07cfb6e23e84ad86e0cc2802cb",
+      "after": "58399f46e5276a856f926627a2222bc4c3b5c0302fcb3b204d15b2188b248f6e"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ConfirmReceiver.java",
+      "before": "5edb31bf68b62c0b3ce3d5d3c5414fb1b11df7214c602987b8a772d30187d37c",
+      "after": "d33c70a9db65b466084cead5f6d0068c1d35f236cf012483ce38c4ef0344f45d"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/DeviceSense.java",
+      "before": "f1abb70eaff7f70675080b3d26286d3513ce944742c2f80b59c6ce78326f43dd",
+      "after": "e1aa07a56a8cf4fbd50dacd03cf6604a1dbe73e58a0397436ee14901658e5941"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "before": "c5b311c58f76c1c8ea1a8f83e1391f49c09cda919c35fa407bd885f0cb5677b4",
+      "after": "3058af9c948f1fd6ff21bdfff44733860bee3d060d9d07aac58c7f4927e982d2"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/DshaApp.java",
+      "before": "fd89f2cf2ae96ac73902e5e9183e73eebaf85b3ec9eda1532bee827a5c2db6df",
+      "after": "3b0054933406d4ac58e5daa435b7007d3dc80656a1d3f9077da4035449837afe"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+      "before": "1353baa7ca19a496dcaae4a5a4080dfd2162f7f61c66e8f344d97d57bc0c8af3",
+      "after": "eb72152e222d14b2a334a21762358e50e9ea78208f1c58e884572f06255526cb"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+      "before": "de86fd03c071246a53e29d0e97ce8b89dc394a2260a6c828c014a85abb32585f",
+      "after": "8923005ad578ec9013ea0a4a7108d1511a5736901cae935b216ab05e93d1961b"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/OverlayLines.java",
+      "before": "4a29d3549f3df2180e0b29e28b689acc0f42d60d4aab89302c4832cc152f90f2",
+      "after": "13fc4748a75396416c508f77f61d96f1a5fc1ead40dc9e4acf20dd37bd5ec6b1"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/RootShell.java",
+      "before": "ae6cc9bb0d8fbf30a236a7205ed3268bd06af02732246de4f4e47dee73db2d91",
+      "after": "7bad79bd2ce3346de0477b96b99694c4c05ce34fbd6bca3e61b343301279019d"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/AndroidBackupFileSystem.java",
+      "before": "c3f0e05f3873580f5783819720cabe698b55ba0ccefde3fb374bb6829e17cb3d",
+      "after": "992ebc6380d54c29e44a5376381bd321fc2566d91033dc5113aa144829dde845"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackupService.java",
+      "before": "ab2313ede03e7d0c5831fe187f5e9e18f7ba1ead7b22d0ab269700d9c0eb0b42",
+      "after": "3eb8e0783e01f96c389fb3e41b5174d3269b4bc8792d3e9303f4ef0babcc78c5"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "before": "bb942e420f57cc2199667062986bb4d5b95dca0514f1d919a6f13f5c2dac7bcc",
+      "after": "c4b3a1357199023e38dfda86df61a5ab828b3b1cc40d97a4f324ba5308089aea"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/BackupArchive.java",
+      "before": "1fa84ba825f6b107e3384a11f7945cbc5d59c29302fab8e790d5826df0bcdf00",
+      "after": "6ed0f40858f1cdbec24e95e4872b1e24d757f17914d55a8e908263cf3754dc90"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/ColdInstallTransaction.java",
+      "before": "85b9a3b0431a391e75d70191a948bb0a1f62b8735bfef4148f81b31d493deb06",
+      "after": "bb087abf43d6185cdbf23e00e8f426dcdac21eafc9a63e76cec31e502c8ca923"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/ConfigurationSnapshots.java",
+      "before": "8ef00134079bdbae4d9e958f7c795414db2ed85aa8e109fc65f32184896f29c0",
+      "after": "3361bef5381fdab0be04743a2c75d040b517a4ac3c027b424e8c374233934ecb"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+      "before": "e4c49f1ae00fec963f5f575efc3d8435a49f555f5d1982b1427d48f4f849dfdc",
+      "after": "af244df80fc4f0fe57b17db4cc625bbedc1b50cacb44b3c2c522e6912b45ab77"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/EnvironmentRebuildTransaction.java",
+      "before": "8215dcf9f05c21c389e39a47042d9c96838c5e87d3f4404e1bfe649c5f317946",
+      "after": "e54e38c0b0b0874430992b69b19668fdecdaa6f41663cc1bcb5a60041cf05aaf"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java",
+      "before": "920c3f4c97d6d9de8724da75215bfe13a2e1fd223de26ce7e146fe50dc7251d8",
+      "after": "236b6cb28d60e93bc7d66f1f5bdc76b8b2e2504bc61b99a5723a09cb56e512d5"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/HostOperationArchive.java",
+      "before": "7443eca06218f8e12bedef6f3e621d660a14976a59bc3df647531a4ddc397b17",
+      "after": "ef1591b91726b211761c9911bf4e1431a1b7c4829acfd87c7574419e8f48081c"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/HostPendingTransactions.java",
+      "before": "4bda8307e1beb9cfaac8c0d9a118b3cc87841c2286b1b8c77299e9ac81e5d8b6",
+      "after": "1cbde2ef3b90d534b7f52a7e9a73f1e0e384143998244763a870c871b38314a1"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/LegacyBackupImporter.java",
+      "before": "fb82cecbdda3ecb3b515f724c15beea8564e11adaf7f9232f5f738cb2031a35f",
+      "after": "a9f4c7b5c5a93ae185189b977ba7c6c60d461bd70433b85b06f8ffd719a71f0b"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java",
+      "before": "000f33cd92d18948f1438ed36dafe8c2321bd1cfcd3b9a106889e5a6f442713d",
+      "after": "84ca73220cf31d69d210e9d8199e05afc00c871c68ff5ebf330eabfa7fba4c59"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/ManagedRuntimeTransaction.java",
+      "before": "623ceed0404d06d08ae088c715f5de3f1b96b14967cea53127b270b37fab5341",
+      "after": "3161f37e73508e1188e212d053205d5d460eddad461fb87ec763a9c251a5a54d"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "before": "5b699ab6afdfd813b87cf5fe4df643aaf0ff23b27570bef1f341883fc7f2f192",
+      "after": "ff53924ee8d479107f60b12681ceef07b15305c175c9d9ad122f82dde939c961"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+      "before": "0bf53c4377f29cc3ad5efa68098d61d459f608df266b2ccf6280073e29b1781b",
+      "after": "d5152d843a4c420adb663b0461530207dd22e452759f87b603f13b8713aa570c"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/NativePluginGraph.java",
+      "before": "e4d3a8da5ba008b8190323388a316bda3d9c7b1c73d92064229d4bbd8a8e2294",
+      "after": "201fbe7ebe52b1216c76033c29c86cb8ea30162e9159cc745753d77105cba4b2"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+      "before": "abfb7351c5a17682f6410baefc6935111bb5d7fdacb87afb2aa85a0697e881c2",
+      "after": "fe0e81efe37f253b6666d573b44d6ffaae736a3fd1d491f065f0832675cc9959"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+      "before": "d1405bbd3f5672f1831945d1be5878edf4597073106db484dfc030e012647967",
+      "after": "6834ad0e5c2afa98576ddbfb1ce3d7fddabbc6f56a62a0112f3b05a33a1f9206"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java",
+      "before": "929a16ed84ee961b1de7fa3947ca6d2bfab3a65233150005fc08196283479057",
+      "after": "4f78f21663b4bfc1ea16f2047d96bae1d1e0aa3a8c8cbc79b836ea7a2ba24578"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/PostUpgradeCleanupService.java",
+      "before": "4f92ca14f78cab74d42b2d3b70216bb9bb979081421bf66183936dcb3412503d",
+      "after": "5af709cdee948b48bc1eb18404f1416d5502f344c0c21a2bf9aa0ebdd9f32cf3"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+      "before": "916eada175fd2269d204d0bca78b76385718dbd92106cae765a1142aa0247be4",
+      "after": "1566f9a28dcffcbf969507d0ae2540b0a93ab00cdb17c65d4861909d81143698"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/RestoreStaging.java",
+      "before": "fa7f0a05884c1c9837cc96dc1920011e4bb45a4635eb2efc6147330e6d38ed84",
+      "after": "f265e337ab35b65824ba94fba8b4418f715f8018de389d2c02de040d33ee6d8b"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+      "before": "d73c9d4d9a6086bfe2dee62918bd5b085c3e559a2ba70af175cdfec408643231",
+      "after": "cb41685ff0e520de14b75c44c4156edaea7b43dc99fbaaa50e14ba83757a2c0f"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+      "before": "a9ba93c16e8969dc3b0c9dc54d183a4abbe28c1c35e7dd05bcb7f7aff27017c7",
+      "after": "3a4290f2ec1d67ff64a6758b8465b8e81a1bb8105eca4912ac14b3391ceb3bda"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/SystemPluginState.java",
+      "before": "afa7ca50569d6b8d66df93985f3d07a6159a06c436ccd13cfd4c8b9bd89b1165",
+      "after": "989cf0baea5a3968a5ecfe3692a902792a9d9f26cf723c6963dc8515fd709aa0"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/backup/VerifiedBackupCopy.java",
+      "before": "019e248d69443c3f166705be97ef83475141478ec96fcff5cd49b56c1f90b980",
+      "after": "37e54cea1258e8c72db3eb94f1feff16a44aefb641162b7538704e6c5972c021"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+      "before": "9ac12d5fa6043993be777704ec646cbae26a89e0e1342e53220879c39e586d11",
+      "after": "971ff4ad1330a1c2b872e2292b7068b92e7a257513343df5aa29503a5e06ef4b"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/bridge/LocalNetworkAccess.java",
+      "before": "60f0f11ba97ee1854dd648bea18776ca173159fadc603445df55d024b3cf2dff",
+      "after": "0729ae59856767a88aecac80b062e63bff227fee0a0df16079f92c52a6bcbf2e"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "before": "e66e34176e153c56bbdf407c9dd088fad30b10f8c722b9724610fb53092031be",
+      "after": "0797c3c498d729edbbd1613d04c3925ce5dfd5bf1f2748fc7ea624fa0e0cc26b"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+      "before": "952cb8b8f3f4c2e7c7dabee5ea0523091adbe0a3dd776a3bd9c967a04ab12748",
+      "after": "7735aba042fafce6b939656fe72e4d8de6f5603fbf4ebb9e193f753b3951f6fd"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+      "before": "08ca6b33e54476c18239e7db0f1797e2f3deeb01e33703bfa6593dea28e8b4ef",
+      "after": "67aef237f2a93b37f900099f5df548424eb5527c2913ae00ac03d27306ee0d33"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java",
+      "before": "24e82f79595c29761a736ce2666e987283805e3c1e577ea9257837afbdd35080",
+      "after": "ec01e34246a87ee55765465d3b139fef1184c41474222b01edd900c97ac192ca"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+      "before": "d4653593d7e8445fdf18c7af27c2063575eb1df51bab7595397448bf2f7cf015",
+      "after": "8345e3e7441baaea7a99b6c5c357bf8301637b142275858b0c4496cbaae017ee"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java",
+      "before": "fac7d39efee7992deb711a2ac7e7e9694af924abc45606536453cadceba357ce",
+      "after": "d5313ebd7b17d35d9582b60026c163b8f19b4ef9103ccb24d601e672aadd2f23"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java",
+      "before": "194724bb574b2521115c71cb79fc290d092dcc09945176fca1699d5a4d76db59",
+      "after": "63f5fa6d068df4d39fad3d416e518a5343e1473e7e0a1ca53cc39386ccd12121"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/StartupRecoveryModel.java",
+      "before": "ddaf61727022a31081905811de8a46aa877783a270a8f7b1b9c944785b42786d",
+      "after": "c41285ac4f0b504af8122a8cbf92a0c0d7a45e9359ab95be981a1a23a58c5b17"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java",
+      "before": "08440a017ea19c8a469251cea53734df326ab04e1fa89740c7edb82d2debce8b",
+      "after": "df2202a495b308f94ba87d71bcbd12192a873063eed3cb9cf14f0100b53d1d9a"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "before": "7607c73f7b7a9e8f3c50d6ad6dff772ee07c066d56ce60b26b08077d08cb65da",
+      "after": "691fd10a4efce1b09a13cfb1b2baad3cbb176ebb63b0c9a712575e422131e58c"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/BoundedGuestSessions.java",
+      "before": "8622649ec7cf412ca3e9ab84189cfd0771056f63eea06b951f2c85209d7f48aa",
+      "after": "54a92c77d3778e7a86d235219fc4ee894f410366a54b9078226827bc8b935429"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java",
+      "before": "a8577e2138e504eff91055ece26a7af8227685fb3f18e0e5566805f0c1af54a9",
+      "after": "70fa511d45c78e91bf41b12fa450beb81998a7d52e3330e1b8c9d26e26491a31"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+      "before": "a9ebdb61346ae48b86acdedb831b3e3c00793b22e66cc4b3c945cc84045591d9",
+      "after": "7bce5a4d0a2a4b3699077211fc0680a918a5e5db8869cb22401886e9938a7622"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/RootfsInstaller.java",
+      "before": "c3ebb190c58ab16018593175991853ead1dcfbda637b96ac937c19ec8c01f3ef",
+      "after": "080f3e027b39922f409635e346c281684dd6be837fe7a01675e4fdaef9b2fb49"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+      "before": "ac9f927f1e94245f4c611c4bd9b331d8d6b1f379c36053058c34c6dca48e6ce8",
+      "after": "0f55ddafad711ca38dcc170843a507c85cafe2fe499f3afbac57fb7b3fa1ef47"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+      "before": "bff57e896bff7bfc362efef6c0b3fdad11f2d941a7a69068bf6c19461aa0f10f",
+      "after": "73099d5a23d8d46515f2828047b92d72abc6a3dd6b22ee8f58c367effa6b6d4b"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java",
+      "before": "0a151c329f117a8c8976dd290ca0fb9967fca6987dea7d6539951ec13020ce06",
+      "after": "d7079e69b98666d6690e949a5cc334bf97b497e279d4751fb0b0e0c68d546a39"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java",
+      "before": "69f725783a3fbe7d960fdc581988740093740393b9169f4f552eecc185a71eb6",
+      "after": "c4ad92127b3bb10c27cc94799cdee642ee25bc4d66ec13dc5f798d18026790e4"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/AboutFragment.java",
+      "before": "e0675e0fdf61276288e116a153643e835508874938c059d60eac3be55a64ba90",
+      "after": "6e5679b8e8ac55d693eaaaa4f1c0091339885a15ace570d3b9611af6aa933761"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/AccessibilitySetupActivity.java",
+      "before": "fddd25b2b2613edb8e409c449ead9be894bd409d11f6528ec601fe1c266c450b",
+      "after": "2fc970ca54656d1b303c97b8fd727512b2b72368b2df1d57fd706d9e9ae158e7"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java",
+      "before": "2825c48c32bebdc31192f177422a614f666d89473b30d7f8274f0827c2f00514",
+      "after": "12a70c72ed401171a7d73f500c79da8313671a83b61469853444d338e881b66e"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+      "before": "f8cc73b3267193d10020662d26bedbbb69c998e1d764b9eb591007b624806370",
+      "after": "a9a3c35e6966823944a962d4ea1a085c5f8e38ca7691beee9dd920f49c8f7a15"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/CardPage.java",
+      "before": "f4593a907157d18cd853a475a7332b2af26c22f3e2f659548588983225f29ce3",
+      "after": "92dda18cab88b40b5d8f6d3e597fe87ba6f9a6f7108a768cdaf92e9a49b6d157"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/CardSheet.java",
+      "before": "1a17f1483635764d23dff0740e9da491450ca7a8c06d5a6f1b5df31f388cc16e",
+      "after": "7d8c13f340ca8381f3d32cb1bc2a356953a2568c8ad68eb0f1cd442998f71994"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java",
+      "before": "a1bd110dc2777892557fa7db18bd7f940dc0654508c62fe9e6de6956f4c02976",
+      "after": "6656846d4505c6bc013b528c433d1e9f65ff006b31c07e23a552096db181fba0"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "before": "efb985aefc3d455c01e7fb367b14d0d2d7f8c76fb2ef0668f768169aa6f721b7",
+      "after": "e92045538d382bd30372b82e7f5617400110a1902b8dfa1bec04a28d7b2394a1"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/DshaSelectView.java",
+      "before": "51a741fd01db08c6670bebd3c933b835ec6872d910ce2ed9ac9fec996955549a",
+      "after": "cfd6113630cd18763198834e88d8a5ccf62a3df80d55539e8d1a0ac5a1b31baf"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+      "before": "674cad135ca8f3f1989786060cc8c87086745612070db92498f9206c83bf33bc",
+      "after": "d576f96e2c083d8a2c6b64d634669078d2cb984a0ee9a42809fb912a608de2bf"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java",
+      "before": "5235f6feff33d3a754ea428fa354c5e08c3887f83a8043095522aba3a1babf89",
+      "after": "b43c45bbc41d66d48c51615ff4573c6d543d711fa80881555b803aa282194fe1"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java",
+      "before": "cb5243f16aa34babc035a5101903e20618bbe8e199ab773498ee845afa5ace74",
+      "after": "5ed848871ca0282dbdb099296aa7905c057f5479eceb66ddbf1a75eaf9f4b026"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java",
+      "before": "39c7e344d00c8c61d46e0f472120e4998bcedec4451adc76fdd4a02c9e525b8b",
+      "after": "89aa19ef56fb769b80821b2cde4c8a472738cd6b93362fcacaee4d29a9c38f5e"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java",
+      "before": "ef2981a620f68d5568626a6c08a086701d83c38323503e6da5ffe0ed218c7e60",
+      "after": "4b1993a920b553343d31d445eedf8c1effcc9d225efbdf7d09df20c94724352d"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/OnboardingPrepareActivity.java",
+      "before": "73dbed5e241497ee9f3dbf898545e560fcac1a27e81b0589c607a81602ba57b7",
+      "after": "f40f54f50b485b3e6f3af3eaf0ad016ebb49ea7066cd438101cbec7992afcbca"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/OnboardingReadyActivity.java",
+      "before": "8d96af271f3a684a940cbc6a3def9d435d54d74b34c697885d869a637af9a237",
+      "after": "0f731efb6a8111b2f8e407c68ed9ed281f9b7fd41eb54543fc1cc2d8d7422393"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/OnboardingUi.java",
+      "before": "5cb791ac1a7235b082c7d1496a51e2f2308c4397afd2c00974525828db598b15",
+      "after": "8be0c612d48e4e0c3b76bfac6d37d42396f784222acb2fa8c4b408007969f459"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java",
+      "before": "d305553cc7f4206f2f578db762f23f7b817c920d438f44c7c0b21a5921156d71",
+      "after": "a6d4874c6c326d6f849acf0a2a1c7d0bed4f1a4d94f7a7705ce70c666c2b6516"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java",
+      "before": "d12fa9ce386b2e84febf008eb60dd08813fd020ea957a147b8a470aac5eb8059",
+      "after": "9df140b2f62614bb0625855327e0dc18e16c0f69f34491f2e9da44c802215e37"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "before": "f6ced1d3cfda5fafc3f3d156b8e5545c28f6fed6729ec40343e09525eea34d37",
+      "after": "571ba78671e5a27616a841c839a4f4f86c6ebb7bdb8bc75d736e4062e1ddfb61"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/RuntimeBrowserProbe.java",
+      "before": "83f5279a393f3cc01883e7abb00e52c77cf83f02507ddcf0f4a8f20b25565fec",
+      "after": "e3e956cf835134d6e06f55d74953fa5fa643547399afe0e3956199ea0a80a912"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java",
+      "before": "8689cbf95488f41da7df20658729b8aaa25af6b52e19b59e3cce7cdae071a1d8",
+      "after": "ff680e50f5d7fb21a782abaa98034b4a2202cdb24994b48dcd1245d375e4a8bb"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/StartupRecoveryLayout.java",
+      "before": "8eb0f90885e12426e9bccfad7aef41b8a42be1f3f355635a298cb4f230febc14",
+      "after": "1c181ead5bdd830119a45119ccfedf6a8dc758e67e15738cedeb74398e9d6b55"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java",
+      "before": "5a9ec8155de407eb895f9afb10360ca1741ef728ab545cceff6a1e19230956da",
+      "after": "337cbb1e4ec5f2cbcb630993c928038f6bb4994d236a0c504a09c6eb52c0091d"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java",
+      "before": "7b52bb1e731a2897fe259ac5140f02eaa69081a93b5dcba4d47b2fbe59de7772",
+      "after": "de53e41b02125aacf0a2fe2076177e53f60780e47d64bde9e4977cbf018b8435"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/WebPageScripts.java",
+      "before": "f6496be9381fbfdff3957e4e67b9bbaca045775de6fe10013441f9ff8dec42a4",
+      "after": "27c2e30e8141cd42a3933aeffbeaf613bfeceeeb26117d341a921e1f0588f434"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/WelcomeActivity.java",
+      "before": "a7864f5b0c09d8ded250e2b99fc8a10c6ecc4bfc3492ffce1b031677f7885e38",
+      "after": "a1a1f7b136881fbdab795bf531617e6a0c34263e1030eeab050cd13456b77329"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+      "before": "91bd4e3a51c6cc1d587f19135dcd977810a1ea4ad9f7ea6c70d188617e93c708",
+      "after": "10722550f31697f4a722d201cf694a137f75b09261a78eff51dcc2a8d4c81677"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/BackupFileNames.java",
+      "before": "f73bd6fcd7ae15d452565e24441682f582750b92db0c810ec098f9a25f137c18",
+      "after": "64c9bfbdf40df36982e06a76eea85183ad55a48d317213d9d6fe2a3de03b2586"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/BuiltinPluginRegistry.java",
+      "before": "7fe38f799acb812c5402ddbfc72a2a69b7a231815d7a55c199c39d7ee32b32db",
+      "after": "43a5df0daf4bf0ccd39d11ef21a36c353b72b8ed881332037ede7f71d09cd383"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java",
+      "before": "a9022706b287e743972a0ce86394b936ee14c803fd301d3ef09f1bd1fb2e4964",
+      "after": "9fba170a2e7a156c755fbe9d84ea21fc6151fe9b4988bf263715a55aa451ca46"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/ColdInstallPackages.java",
+      "before": "c17c37846d7a5b90cab2bfd91b7047564080be73e4cfec664896da8b581896e9",
+      "after": "7b9e8ba9c57ddc67f030860b2061a1fae7756433a7376838a69a84a7752103a2"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java",
+      "before": "c6d340f4519907ff41dbf1bc50562b7b0f79f58e46c09653087891c371716aa3",
+      "after": "38b6a0c9f460ef179fb4fd856fb1913866b0e1497425413dbdf32e4b22b0c630"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/ManagedRuntimeLayout.java",
+      "before": "2036d441d240543c2f81f55b68d2ee9cc99091eb90486e5012d55b7e9effb1bc",
+      "after": "e0cb7fc289657e2d007545abaab5e29558ec5019e58e0ae98148549033087292"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java",
+      "before": "1942be955dcc7fb8c17e7c5af3619f19033140bb8f9088c2aeb68778d13efcb3",
+      "after": "bb1d909d993a1e7ce0a26250cde93a4c49d5c2f3bbceebe2fe6d090d9e86522d"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/StartupText.java",
+      "before": "cf46b319624da0be5ad425187f8cf370e66e11dc97cdaae06e553f9fa8fa45f2",
+      "after": "6335b0f04edd0abfc40be24fc20cb2fd08765c23edc3078d393128589886920d"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/StartupTrace.java",
+      "before": "25f4d2f3547f3a5946999e8d93695a1b9518e1069da93743df864713ae49ff85",
+      "after": "b9d1828e57d6d824fb78b4be4157dee2281a06ed121f9a36c3d4332d7661324a"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/WebProcSel.java",
+      "before": "17696439481b52fd5f75e959b17e224a72b23ab592d78e5c32eb8d3c0f284518",
+      "after": "941cd2f273e718a31b90518f935a96f89acfc81350a87fdd25df702f8e7dbd6d"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java",
+      "before": "56654bd99e15391bd1008db84e7defa4b75438e6c0ec2b28b4a8ec90c5d52128",
+      "after": "420ac89643cced24682f656785731711f14e97e6a28e6726ce06a9cfbbfd6d97"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenChannels.java",
+      "before": "8e441c6482131956eca5caba336b94ae02cece2fe5a2ad2b418d2102907c87de",
+      "after": "72bca08ab887eae4e3d6d1b1a6c057c9b96cfb1d79bad4f3a02857a4b1cd2702"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+      "before": "ffc21fdc0d58111f0d6d2d957c3971f3f943087a11463426084cdb9d4e4846c5",
+      "after": "6114a2af4e9afe498bf2742a785ae93c2ac21b10d33a84f8e3b73ac4ba757971"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+      "before": "7047f1ff680a343daf9a9dc95ce76ebb985ecde7f5baab480c787bcc8088cb5c",
+      "after": "8d9beed0b25c136ccd925ff8adc8ec574025f118f4ed755df4c73a1e9e858784"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+      "before": "494bd5fa4db09caf616be1c2c4ec5882779f0e158b0d5f407663c2f5c58e5de1",
+      "after": "13e97758c27ba28e53e39982b58e4b2514d5c5a4ee9eae096debf3f70abaf558"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java",
+      "before": "2f952a820a487b4cb6955f1879397988acb158bff4931b5e17cd9d5fd61fa64d",
+      "after": "a178a9234aeb7b10d32b1ef6156d034223217761d52e24a0765935d4bb2d6e6d"
+    },
+    {
+      "path": "app/src/test/java/com/deepseekharness/app/backup/ManagedRuntimeTransactionTest.java",
+      "before": "f258dc6c1dcfdaf6566f6b1c4d2729c28ef04255731fe317671934be5f53cff5",
+      "after": "c3ea62c07fc215cefb4abd5d3ba3322e00d4abf55264fe5d1e3f250539c02967"
+    },
+    {
+      "path": "app/src/test/java/com/deepseekharness/app/util/ConfigInputTest.java",
+      "before": "6abdebf2ceb8cefe51d9506d5a46f0030e690548af641fa562b699df1d656f03",
+      "after": "d9131ff6e66fbb9bb4bf3b2205cd8f8b32f4a14bafc11f7f794a12a8329dbfb3"
+    },
+    {
+      "path": "app/src/test/java/com/deepseekharness/app/util/ProcessIdentityTest.java",
+      "before": "7a825eaec3e82a3078d26e7c70563c0162681475ecdf0595159bb869f00b244e",
+      "after": "79e3eab0d6028f5bca93a274e1cd1a2defb8fc335376029c0009197b8d4e1647"
+    },
+    {
+      "path": "app/src/test/java/com/deepseekharness/app/util/WebProcSelTest.java",
+      "before": "07c6a3072fb531927ba20624054b47bbcbf164c6ee8315272a48e2116d4561f6",
+      "after": "2caf64e008037d432941af727020dc73792e583b0a02c7908df145e13db77071"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/audit-seal.json",
+      "before": "254660b197a65dcc4e239a6bf7ce91460c0e0d88d637a71723f1f083048bd548",
+      "after": "e9554b01f4694646079f2f311848016017a2ace7e3e53cee3ff11294b57ff8d6"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/baseline-revalidation.json",
+      "before": "fc345815d595bab2d57f098e59b47734bf965631acf80b737951c37351117e8c",
+      "after": "ead171347124990125966420d35cfb5eb9661e3e024c775ab08f435e232d3f00"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/baseline.json",
+      "before": "96c44b87fee0bafd0d9810d6658420932216069750ba5085d4612a11134f8710",
+      "after": "63e9464de40d6cab539b4f0a247d183ef8194da19264abc0272b5ad429d823cb"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/binary-baseline.json",
+      "before": "f1956a8a8709c45656e51273c254b98d10acf07de620ea356c0d72b263aac4b8",
+      "after": "a3093c7ca3ba3ee10316f4f5aa118efd800e2ebce0ce5ad836ec0f8f556d89fb"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/chat-render-after.json",
+      "before": "35e65d1fbeac74cee124ed994a2fc9df57fea1ad2087661960fbec7df1b26f4e",
+      "after": "f99af271737e3a36adeb99a8d92cd901f9b5651599c7542a5f7044a932685432"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/chat-render-baseline.json",
+      "before": "35aa8b6196dfa3c5d48a09fc963ec6eeafd769742437bf886dba95a3a8c352bf",
+      "after": "cdda2445ebf7dcbc4e2a8e81a5c21d8894ef19ac0dad48d376018556b06fff81"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/coverage.csv",
+      "before": "12923177c66f691aef7ed650556d2662dfafb787a54ef7b2f8eddbb02b2d4a2c",
+      "after": "524aa45523e6a7d0099ba56edd146387b3ae643d05de9670440f52040694314c"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/device-baseline-summary.json",
+      "before": "93e4abafb17bf67f5a7b5432c1b9e47bfed4309b840be80222aae3da5de69c8a",
+      "after": "a1789201758af2121dec847d6dc6286c9535b8ee420839ce9d8b5b3852ec6793"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/js-syntax.json",
+      "before": "3a3ca9c20db940d2b61dc6eb396a5d23148fa99e290a74a5b120639514ff6045",
+      "after": "a1459439b0e352cfa1343b9401fc9d86c326bada1a73bce244a1d906697df380"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/json-xml-syntax.json",
+      "before": "c0e04f37e6127061b65551c5d837b8bb5182e5da792dec538e6a43f78bb4eab5",
+      "after": "7210d55d2b7a80c1b327dc602a81c83e5a283cb2b150639f15bea19251d023e0"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/powershell-syntax.json",
+      "before": "8311934825f4bd4a9a197ae6300e197df78c46556b0bfa084299691161e8e3a2",
+      "after": "5c533d81b6e43e0751c438822edad7a7ac579a0f22396dc023a99f18df675783"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/python-syntax.json",
+      "before": "9c5d773f2369c1c2825b48661f9e73f81ecd620dfa92e4a07e827b4c9af3584a",
+      "after": "761509e8b07c575c987fd22f7898e9ba09cd353a516bf818e7cddfe7414b608b"
+    },
+    {
+      "path": "docs/audits/2026-09-27-rc2-full-architecture/shell-syntax.json",
+      "before": "b038406780a61d30c5adbda7767695c635988d024e0c9d3083483f7c65a562a1",
+      "after": "6893bf2725135bfb7864c36fed4276271b5f5f98545279a6bb184f4a3d2d79c2"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/a05-b05-first-results.json",
+      "before": "0e356c2593756458c7c99403e9db634d3eaed305189d449594dd74d487555a05",
+      "after": "a57caf62e4b242acbb51381877dedeb18509758dbceda613f03d12957e2564ac"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/acceptance-draft.json",
+      "before": "94024de9c82f9ab26a13495a5dcd6f97c845ba1f31c71077992cbd0cf27835ce",
+      "after": "bbbee229c979c3767fe2c737d5467ef445afa09b8a944e0b3dfdef75ae323703"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/architecture-after.md",
+      "before": "6ec6f2c454a8fd57c968b3c6da71ab41fe459aff8562ec07fc0459c7a8ac6473",
+      "after": "b8f4e3af4866c98b1a0b0ef799a00a302c15e8085bf32784380f9a9edff4602f"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/audit-seal.json",
+      "before": "4329acf1e517285cf17ff3c071307862f4f098bd01a784fbf84630a991ed6c0c",
+      "after": "6a0b307596ff0b1cd590ab5aaaa3d95b5906923ded3593316c3bdd1333775db4"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/baseline.json",
+      "before": "c88a7615a56a5fded96a35cac79f65d5d587b730c2f1447da18bf63f6457482c",
+      "after": "a3fe69dd9a5c456b27854f75a4fc1537446adc64507eeeff5ef591563541b25d"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/chat-render-comparison.json",
+      "before": "6b6dbe4ab7772790e281d9fdb36dd11c88badf0a5e1b0994ce0bfa101c0bb52c",
+      "after": "43d0f6580304f2cb398079a4ed38093c5301a61d7372dd87a803ee5b2e23cff1"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/coverage-after-summary.json",
+      "before": "c0e437e8490df3b86e47d3176e13c2cee352253de364782c1cf46057397fe53c",
+      "after": "feb90021d082c2a6fc0b76ce72417bfa0a2f50c2ad919ea9af341f1aa48ce7e9"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/coverage-after.csv",
+      "before": "0d153b9b3344806ae8ade1e3ab3ad3863682f77fbdc2fa3d39773ad7a75a661f",
+      "after": "95821ca53b11cb89f16fa6b13ba4f583eae501d96c6bd6548f5d9537a9c62064"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/coverage.csv",
+      "before": "4e3f601340eceb7cbe7d1bf8db4944ccd1bfc45298d5911807e7aa4c7eb4469e",
+      "after": "3fbe27a437eb0e0cce687a5c045d189ed8f266d9a26ec2c2e88a2fa536f6f692"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/delivery-summary.json",
+      "before": "ea9c15a459cf7e98c3ee0624bdc80733a07673507e74bf30b4e763f16c653d57",
+      "after": "dcdc259e51de960d1241d7b2b5cd7a19bf83cdc401ceb86b1070acff780db328"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/dependencies-after.json",
+      "before": "8b7fe2813bebab2331a7207f2b9c83536d9f23d44beefcec8ae439a865454ec6",
+      "after": "3774ffa52083557b8fe64d2cab89e8e974c8b0e848849cc04a1a5073fa713810"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/dependencies-before.json",
+      "before": "e66d231f3e953e8e6f3e8acb412c92739ea28887d24c0d45fc59eb67ff72f32b",
+      "after": "9a721fa6a7bd072ab15c925207616f4e3a88f36d99651cceac592526c0bf7da8"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/dependency-comparison.json",
+      "before": "ac2636a306bcc4a42af2e92e1a4a0e4646d0d52336f218dcd9ca1481f8e092fa",
+      "after": "4673c6250e7a8896aeaad9e33640676b27e8e52aca2afe7ff07203e73aed0ab5"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/final-assessment.md",
+      "before": "4e7b7b43a936cd44e19f39603a95ae71ef9ade61b2d99e1c9ecf33d5730f5a77",
+      "after": "0df0ecdb8a3976d703f231d4539a269f16d1f0cf30ada8780ad0b715635e3b53"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/final-issue-status.md",
+      "before": "57cec5d6ad85737abe7b2a8ef7bd96e4d54ca6877e93502e6752ba6454178380",
+      "after": "f761e06aeb091901b8a38f2beda85a8082dbac93a580f5dbe5ff36e9330f2ced"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/first-unit-results.json",
+      "before": "8544ab7a18883fe2b9c18596ea9f5a15e8ae24af2f7a764598eb5027d7156069",
+      "after": "cef3d7d0e4e7e8c6d05b8ff2c8b58cf815e56a1c6ebace6e6a904edc06401546"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/follow-system-observation.md",
+      "before": "aa9615cd483d3c90d3a24f1a5bbbb282e74faf16a522ad0e538e22b8b90f8a56",
+      "after": "0c9cf86e7613937c8d0c6cc97230b5390a997c67e7c6acd3bbf008aa8754b2c2"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/gate10-results.json",
+      "before": "472e71313fd1eeb10242ae73e7fb31eb0095db600f67f81558348fdfaa2c8e5d",
+      "after": "912de429f78f8b37ddf8d548edebda8127fa7f3e37af9fe774fbd27239bb69fd"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/gate11-results.json",
+      "before": "b294ad52d205ff0b0fa84a8b8567a113952c71896bd82277bbeff1e8b5634584",
+      "after": "90f01d67aee7170683edf607c11e72a5b7fcb51ad32fb00f4a3e2e645fa960d0"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/gate16-results.json",
+      "before": "8bc0d30ec886949a7a3611e6674e9dae9e11686273144525784f5e4bc7820abb",
+      "after": "b4bb7a318da6ee339d6ede71a13bc7dd22e95c2bfca4ee80b78ffe4d8b34198e"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/gate19-results.json",
+      "before": "6e1b9ebb92e8a890e9419b558cf20384bef8419037f68aeccf08891c79624f9a",
+      "after": "e09ee21b5b8a67806c7ba30fbffb5c5316622e154a20680b31acd38dad255ab1"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/gate3-unit-results.json",
+      "before": "0ddfaedafcd4316774e4efad0fb85ff53efbef641b250983160e330475490ce1",
+      "after": "23ec3f286345811e880daf84352cd300b7c39914cde437fde757ceb9417f27ad"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/gate6-results.json",
+      "before": "7004d94a5dc38344a38db880e5269abda30ae7bf95b8a52c5ea44a3c5da34b85",
+      "after": "c6d00603f223e9304fdb4563433710c142359646804a88071ef8b9d3c31e5d52"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/gate7-results.json",
+      "before": "5dfdb181d091d35548cea4b37e0378a18bd385870da0166698dd99a669187c9e",
+      "after": "b1e302d26f9b57a3875fbc1fffb48a3c02ba8f6889aa063d9a340fcc24fb9e56"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/gate8-results.json",
+      "before": "8b69b779e038ceee46501d6c854b3afed0732a3446cf90c88c60f0b427e494b5",
+      "after": "9b0ebd78d87ae25ae927fa29451d9372f9f84ef6a419fc7e6e50a4d24f11e034"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/gate9-results.json",
+      "before": "22633c66c94e2b253941a88c1ccd93b151e287ddcfc3041e0b6231519b465f8c",
+      "after": "2e0a41b7ba704dd058f5859aa81036ae52f75a4c4e2d0a6978cbe55ec24d0392"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/global-enumeration-scope.json",
+      "before": "8b6c6fc6859231bfcfbfc4895be9efcf3eaef4c5990feff743b4b993a82f7c1b",
+      "after": "39d455ce3359bd14c45ef07611bb20531d51f38d184eb88f310f3e8c291899d0"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/inspection-leads.json",
+      "before": "3f926559c30a00dafde822eea1c04e9daf70fc2e4e3ba4b280d1c258e604202d",
+      "after": "0ec52d06e4925890d035fb8804fbdbaf3f41684e4b8293b8248636fe2e3d70fc"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/issue-status.md",
+      "before": "7b7e50b7b1df11519a1cb8ffe197073e8ca3f6f2686ce0bce7929b0202734032",
+      "after": "d0e396581cb075621267d5f028ced89582b78b0cc4b38cc008cd1f3145f5fd0d"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/javascript-syntax-before.json",
+      "before": "57a357def92812d98ebfe5d96b01ea490b130f9d9c8cac4cbea0cfc9ff382422",
+      "after": "ad11758a72ed10e22ff00c89fe1ce768ba2e1d4b0526bc41c1eb1da6efebeb6c"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/lint-categories.json",
+      "before": "ea8378e6c1008e1b7262b80fb112963250df3d26370cd34e67f78609a60de303",
+      "after": "da96eacc88afef2016bf6f0c6d87469fe2dbf4bc2541af53a6ed8ddc3096197d"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/managed-target-results.json",
+      "before": "46677b6a751430c04a296a16dbc126b339ced9a8f9a6a9724325bc010d52d48d",
+      "after": "65202c526a6108376aec1fda7adb80b657dbcb1611c4869dc17bf8daf1cc5dda"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/powershell-syntax-before.json",
+      "before": "8eb9aeec04843cabe235db92d026ed7363d605d138b7ec82e5cc62fa99925022",
+      "after": "c7ecd7595468c513ca75b7dfca6af3af30ab0cfc26fb23e0977184840006c258"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/syntax-before.json",
+      "before": "5954641df1cf01aceb81cd9b3b582a1c195a7cd365f3caac2425a097dfdcc213",
+      "after": "08b38137f05dcaf3f8ebc2ab15c7a4cf8267d481baa0467db2909e439c0120d5"
+    },
+    {
+      "path": "docs/audits/build154/CONTINUE.md",
+      "before": "cf7e735d1d3768c9637f14ca30a58fe19f6c91ce6c03d3074d0fabaf72f5d13e",
+      "after": "5a690493900dcc5f0d2b913a9d5a77522ef1c41c9d1559a5b31e838cf99610bc"
+    },
+    {
+      "path": "docs/audits/build154/FINDINGS-BEFORE.md",
+      "before": "f21cfed4b85d5663aa196110fbe053f3d4892988e7f93f1cab42233d1a1fd74a",
+      "after": "392342f825bb56b2de2074c58b6bda151fc0960124ceb5a1759ae248af0c429a"
+    },
+    {
+      "path": "docs/audits/build154/PLAN.md",
+      "before": "b9ef722f28baf0cbeaa4a4a916058f235544de388e7a1d3d8061a0f477a6a5c4",
+      "after": "91115c083a069ff8e3cfced1ae7771caf699638de1f59e8fee557cd23bdcd0f4"
+    },
+    {
+      "path": "docs/audits/build154/POLICY.md",
+      "before": "062d40610c3db76693ae906c9f6f3ac7c93fc83f7df19eb74bf3ced7448e22f5",
+      "after": "2eb8f1c78fa7f21159cc927ee6bdb833e91ba35670999e1e1a1e9888bf3d029f"
+    },
+    {
+      "path": "docs/audits/build154/changes-G1.json",
+      "before": "55b99b45892f7d2deef2247ff12b64cd155d4a7a21d79faadc41c4d49bb88d0e",
+      "after": "e789fe1092e57fc676fab897db87e4927d81a2163fcadcd93ebd108198f1ac90"
+    },
+    {
+      "path": "docs/audits/build154/changes-G2.json",
+      "before": "4ce9dd1f98755458f1d9ee0df27ee4c196a5e7ebc957bc6a71753308188e6b64",
+      "after": "abf1fb6bddce753a12bc391d9cc4d2b33a2f31b3011292171cff8919cb24d06e"
+    },
+    {
+      "path": "docs/audits/build154/changes-G3.json",
+      "before": "ac778573bb75bea8fef4a1fe673625b880e8dcc037b33d8dff815a7fbb4d3d23",
+      "after": "f4b1c9ee5f8f351cab31ebcd3d21be138362641b50047e21ba333739e58e7102"
+    },
+    {
+      "path": "docs/audits/build154/changes-ROOT.json",
+      "before": "20e375f28e86e30eb52c27d912aee75825308fded546f6f17206a7149b712a18",
+      "after": "076a6f121043d9c23e2287f4310bbfcd3a21c27d6b909fdc081569ed93d45f76"
+    },
+    {
+      "path": "docs/audits/build154/changes-UI.json",
+      "before": "a778771e54c81dc52853350af4a2fb17a46cf52ac4f69174a8195e1b9750617b",
+      "after": "cdc49fe82538930ba99d70a21b1b19476c7781a8daad3721c981c11636809aec"
+    },
+    {
+      "path": "docs/audits/build154/changes-engineering-docs.json",
+      "before": "ad0a0640e440282f8653b9a6a7268560451ce7fb15744d43db5d07b6184c79b7",
+      "after": "6fb300d4bb48633b34814e714e8c476a73678a6d77cd53eeafe24dd75cadd45b"
+    },
+    {
+      "path": "docs/audits/build154/changes-engineering.json",
+      "before": "3ca5a3934a39019fbbf1c89ec3af1cf36551263ecd4e3ab725df591c9ff3a7ae",
+      "after": "584d37bce80089843f89dc48059795f410ca801c46afc7cc7b46968c8e6fe825"
+    },
+    {
+      "path": "docs/audits/build154/changes-runtime-proof.json",
+      "before": "80f0a31bb16e93e67d7ea2fe9eacff039565a61a89d09d048179cdbd32866768",
+      "after": "2d73d2a3a773afa1cfb5084a7f94f4eaab4f7ee66259a530aeddcc9528b1c700"
+    },
+    {
+      "path": "docs/audits/build154/coverage-G2.json",
+      "before": "dbfc451410e3f4b90d6393836f00787b011c923256a6b6743b3c1fb5f19d8dca",
+      "after": "ee3cdce240dbab591962a988354a529cdb15cc8dcb988ac7abd516ae697ae76c"
+    },
+    {
+      "path": "docs/audits/build154/engineering-lint-summary.json",
+      "before": "1fa595787243400e93e5f5ed1714f19cb462ed292b95bd49e32d19af1bfe4d22",
+      "after": "93420ca783739503fce3aba87cf905a91102b09a0d423740efcf832fb1f22d5c"
+    },
+    {
+      "path": "docs/audits/build154/engineering-resource-cleanup.json",
+      "before": "3519715a045450d354437788825ab65d5f0a42e42db025dd97353351dc0fa201",
+      "after": "b36c159c9a9d8b03c50a4b9385b40e040261903c1743e0d8c0cc0e24dcda11eb"
+    },
+    {
+      "path": "docs/audits/build154/engineering-retired-sources.json",
+      "before": "82be8ef4adcdf69390c27c6bc7313d67c42cd6f8ea4380a6fd70ec92ea0ca1b1",
+      "after": "95e8bc2515e9b589b1aa9705136c6f04a14d464b3b73bf3ab5b95efcc0d4b006"
+    },
+    {
+      "path": "docs/audits/build154/execution-ledger.json",
+      "before": "95fbb74152a8f4b85f328b57f434b9e970ff2257cd672227c557239ddea47562",
+      "after": "d751e92c0e6dbd32f230dfbad26614a5aa5c28a78cf1f21f2530791329160025"
+    },
+    {
+      "path": "docs/audits/build154/final-root-review.json",
+      "before": "6bd06b8edb2cb8f6980b1cd3aba8d30f0c9dd483f29d9c503267c81dc24fc4da",
+      "after": "cba298ebaa835ab6865fb52d64b9f885bef1c93010970a3e0c5cf10874dd14e5"
+    },
+    {
+      "path": "docs/audits/build154/g3-repro-results.json",
+      "before": "14dc137ebfaf5dcba8cbf9e3fea91dbb10ef493a6463fe09d3133aa990b771f4",
+      "after": "f50b3c3a9fefc21f9940f3204554f655909697af5b166d9e2c2002fb06777993"
+    },
+    {
+      "path": "docs/audits/build154/g4-repro-results.json",
+      "before": "06035fcc1535f89d16585b574fc79074bd423c8976d312a0eaf17014a7b88735",
+      "after": "1f3776434d0546969a0296d01ef75455255c182a043bf1081550942b5890c39a"
+    },
+    {
+      "path": "docs/audits/build154/historical-invalid-digests.json",
+      "before": "0b8a2910a0460f92a83686a95b863128c1788ddb3860a06d92d0c41014c42bd7",
+      "after": "0649bdc16978d38de1d21439e3a3287336dace3bc348905947ebec313723766e"
+    },
+    {
+      "path": "docs/audits/build154/history-document-sources.json",
+      "before": "f39f5807f8faf4403ba7f91c9a983e651f3eb328bb9bb55ccb4145378fb3eb4d",
+      "after": "c791faa86f22442a5e3fea22ede59ed23e0cfe6d9ca10009411235f5f02ec12a"
+    },
+    {
+      "path": "docs/audits/build154/implementation-G2.json",
+      "before": "0a8644a9d921ac619e41cc93bc326436921ad5211a3054af38b6f521f0dd150d",
+      "after": "02952282ff4594bf02828fb36258b3fecdcffa122e475c0dcebe09b2c0ec9f00"
+    },
+    {
+      "path": "docs/audits/build154/license-download.json",
+      "before": "c88dc9abb9334f5bba890bf37cce718fb6a65e574709f39bb598c17d4da9793c",
+      "after": "456dc3f07589945fb696f8ac53202c39b10be5ea8c9633ef94aa475d1154ff47"
+    },
+    {
+      "path": "docs/audits/build154/nginx-syntax.json",
+      "before": "7b449a2fb4a14fdff80270caee7a37ae5d936e6647cad25001b8b01690a63840",
+      "after": "443a9ee077a8f4966bf015ec8d395af601a67b4fc5b40715badf305da89ae980"
+    },
+    {
+      "path": "docs/audits/build154/npm-licenses.json",
+      "before": "522a4f4bec6fd5a8f16b5bd6b6240477d7ffdc41ef36d0866b60150e165c0878",
+      "after": "fd80950a8d79aacd672d4bc2a5a80e10496e8cb8092c56d2b3137c6a89b62eec"
+    },
+    {
+      "path": "docs/audits/build154/retired-audit-sources.json",
+      "before": "56867e547228ddfdef3a529847c3e9ebc78bcc8f76325d70b6757e625e9d4640",
+      "after": "c4d17f8c5beb53cf76bb2885155e70c7301e66e90427e4bb4fd07b823968a3f1"
+    },
+    {
+      "path": "docs/audits/build154/review-G1.json",
+      "before": "5e1afc6b599993b416aab8c1d51f5798777c7851f5103da4d96e6593efda40a9",
+      "after": "44ad422fa9f80f5ee7e2e185241651b4daddf6fb4281ccab0e23c06f564f28cf"
+    },
+    {
+      "path": "docs/audits/build154/review-G2.json",
+      "before": "e59b3279a8012f37427c056445248190859c0107bf69eb68b7dccd29badffae7",
+      "after": "d305b6579ac3bafb394ca655de3f8c1ead07542022b8a781ee989d917457a988"
+    },
+    {
+      "path": "docs/audits/build154/review-G3.json",
+      "before": "8b73dcea54d62d2a49887f4095809361225a2988f9d4a8e8e6ebd3e310254b38",
+      "after": "05a66b5507764ef412c1fef06168a2f9ca733cc589ac05ee95200d95a0cc6dcd"
+    },
+    {
+      "path": "docs/audits/build154/review-G4.json",
+      "before": "fb51d249eb5bbac6f57503168e15d16ea5e2062944a112745fff84533f093c88",
+      "after": "02e076d861cbd2cb30e9625728b4978abc7625c41ccd19384dd60e9e86baab3c"
+    },
+    {
+      "path": "docs/audits/build154/review-G5.json",
+      "before": "14f9ffb90bef367608eef875e2999b95d24de5f619d38957b74941ec56d3106c",
+      "after": "91df5fd80dccf539290ae1f525a2edb0f8e4126ccd9427f0103599d1ef5682d1"
+    },
+    {
+      "path": "docs/audits/build154/reviews.json",
+      "before": "8dfe7f5bed9401f72c0a3ec52500dd674649a2e585a216906ed012fe50bd3a87",
+      "after": "00d5dccdf0aa870df9632d909914107814690f789d416aba2a5380c659d33b0d"
+    },
+    {
+      "path": "docs/audits/build154/root-retired-sources.json",
+      "before": "6a8b1b5470daf143eb81e1e5e6993e50a913168059032d6389c9bb7b21a88bb7",
+      "after": "967e896cfc5815b5ad9e4c9c196907466c6956a29c744259d89f72b4d793196d"
+    },
+    {
+      "path": "docs/audits/build154/shizuku-license-source.json",
+      "before": "bf2a61c205416ccb620cf49f9d0113983d0a8529f78befded0ad953aeafc583a",
+      "after": "1743245028e30fc0277899df851f1555b6cd5d6bd90c5f0c515a552995ac91b2"
+    },
+    {
+      "path": "docs/audits/build154/source-receipt.json",
+      "before": "b86f44fe395e95c24eac5ddb104f49f05ec0a8d2659e1d5e449ad2d657f4d3aa",
+      "after": "c7e5039c48fa81a61ce9f188f2a63704737a281285860765a574c75493fc90c9"
+    },
+    {
+      "path": "docs/backup-format-v5.md",
+      "before": "8e5d9c9bb13e7cf577f9baa9285f072a446fba860f8c3e9ce7b6a8f4e5d27683",
+      "after": "ab4a9a0436f5b8ad2a4aad23aefd2c1053a4fb6dc8557bd079cde1306ea2324e"
+    },
+    {
+      "path": "docs/backup-upgrade-baseline.md",
+      "before": "580e30a002019611302b92c1ba8f4626551bcde968787b15ba70bd64b4f3b7bd",
+      "after": "511aecb207fcefeabdfc4786a129ecbdf2420706e2a2131cb4ec91e8da5bf1e5"
+    },
+    {
+      "path": "docs/build131-device-followup.md",
+      "before": "f71945a4abafc8a7b0e5d35bf2e00ca85fc1fe6517e93b6c056ddf3786661730",
+      "after": "7e764473220a1b3348f5d2ee4eb2de0b4a54fc61ee5b648621d0d4b47156aa47"
+    },
+    {
+      "path": "docs/evidence/rc1.3/rc13-backend-test.txt",
+      "before": "d59a24e0aa76f66d53c8db3bf6ed58a16314771f0872f48c6870ff06650aee47",
+      "after": "ff4c211e4f0f27203d44d605dc4fb770185b3a26d23f21ef2534131b94061bc7"
+    },
+    {
+      "path": "docs/evidence/rc1.3/rc13-community-test.txt",
+      "before": "860c24385f1064259f5ee19cfcf62d4da7da98b8e0be7c9be0d7cf5b033c02a6",
+      "after": "8fc0fb9297d205832034cebb965272d908f53324920351bd75b9972be5c62886"
+    },
+    {
+      "path": "docs/evidence/rc1.3/rc13-diagnostic-test.txt",
+      "before": "f98f80e574b7caacce498a370a5c2dbf348163db5845ba2be974059de217feab",
+      "after": "202455f47b10b3b5e3521eec93828c64fef31817c692422987ab4acab104d3b8"
+    },
+    {
+      "path": "docs/evidence/rc1.3/rc13-plugin-flow-test.txt",
+      "before": "c7303f42b9731f1b6aa183b0a8477aa34056dbb81734d67f8ff8f0080f0aa1c9",
+      "after": "c12f70133ccacca1576fe85306b2a8d225f2055a3d41d20503264dc59f71bd1d"
+    },
+    {
+      "path": "docs/evidence/rc1.3/rc13-public-hashes.json",
+      "before": "64798b61d48a37834a2fe2fd2cef2d7877eaf85831a8e79db68d81b776070b6a",
+      "after": "5726ac9910ed4750e909d4af940d24d0d35edda12fec1975e1522d504de66fb1"
+    },
+    {
+      "path": "docs/evidence/rc1.3/rc13-standard-webview-test.txt",
+      "before": "277ed14a8bfd9dc4ccbae4944c4d9ca81999d9351960f9cc1fe63b1f29cb414e",
+      "after": "efb3cc8ea0411c090b77f96f0491062c1271701731fb833e48a13b44280747ee"
+    },
+    {
+      "path": "docs/evidence/rc1.3/rc13-update-network-test.txt",
+      "before": "b0972557a361bb68e1917f231657d436bfe224331bfa559ced014475b9c82957",
+      "after": "d44adc4db161263e34f0f494b6874ff0a7479596a5b65bd5722ef61fbe0236f7"
+    },
+    {
+      "path": "docs/evidence/rc1.3/release-manifest.json",
+      "before": "627a59adfaaed0fd4ed3ff48762e42225d13a445509c7fefc2e05d393fa4c460",
+      "after": "899fa5668adf6b76312fac665be4ee066dd5047a449bd49749299d744b6144da"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/adb-final-verify.log",
+      "before": "2c77440e8312818c57de7ae57cd0b816fab982ff4e0e68c73e992d91b66b1586",
+      "after": "00912777f9d854d72cb20fe3883dc5ff20833cd022096e28eb8ae543632ac1a9"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/bridge-all.log",
+      "before": "f767f05d7ad57561a74441a2f763b09bc9991bc3e03a8ec3cd22ea1ffc7935ea",
+      "after": "8fc692327b70115ccc47462cdfb55f97bb1f890738976b950f11330b87aadaae"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/cleanup.json",
+      "before": "bf444f1bc931416e3ee1d7ab343fe6fd0d1677617223d1f98ca078457a2d0868",
+      "after": "2c0d7202c4093b6389869a9860071d4bd3c7f143f29553c49d57fd30952af873"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/configuration.log",
+      "before": "17f916b4ebc025764a64c32bbf2141693ec082d85888814c7c4f2a091b6dc28b",
+      "after": "fe7edaa43820832478d3c98115d5528d2d85e208f4564e03cf45c70d68692327"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/diagnostic-pty-final.log",
+      "before": "6db0616ea1105ed5db26e3bf878a742ec742aad040734f39d32b18cbd7605ad6",
+      "after": "ad0ce7c52f7e196939dbb6167a2f18db1a5abb09b74b0cda917c3d6e6a8f79e1"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/diagnostic-pty-low.log",
+      "before": "6db0616ea1105ed5db26e3bf878a742ec742aad040734f39d32b18cbd7605ad6",
+      "after": "ad0ce7c52f7e196939dbb6167a2f18db1a5abb09b74b0cda917c3d6e6a8f79e1"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/fragment-session.json",
+      "before": "d2c3966a0edf14002bfb4ee44d9ecc2f043f9c9a256020d7f7204c535b62ad40",
+      "after": "a64270b1f404270018c8e59a5cd9a1f4000bcafbe93965c46d662192f5009c18"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/gecko-live-final.log",
+      "before": "1b82232e3b123ff7cf0fab21d951f8712352024252c331a0c62cc648d2f3267b",
+      "after": "36fa10945c811a550c755a8df757b8ecc80e6d1b9f1b59dde9a11ff85f08f18e"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/install-full.log",
+      "before": "d8000a8d0ba8e3024150443dcb55627deaecbbd3f8a7466869487ae5926a6daf",
+      "after": "2501bc9110c2f0d5d635ca56ff2e01d20d4597cb6ccf5f2e32b9f4847bafeecf"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/layout-final.log",
+      "before": "586cb360b45eb4b5374753b16e4e3c9f4c608295aa4321aaf8e41b63b8781fa3",
+      "after": "910997cb9334511fa880d0125900bb617ec8b5823772e9c7b1d2cf70ae8b9da5"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/low-elf.json",
+      "before": "5695f6b68f164dce74d041770b4cc3afde4a9e96cc3d338b0acbdf25b24e5bd0",
+      "after": "a20df021108da6722a2b0884f1115f8e23b0aedf2d183e5a5df32d60a001ec55"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/maintenance-all-final.log",
+      "before": "6e1e23f59bb979a8385d11fe809952bd8e3ef204837e3404bc2358f1535d650c",
+      "after": "c4e85b85d74105e59afc049c80a15aaa953258d59f148b9d565571c5c9aff33b"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/maintenance-runtime.log",
+      "before": "f8e464ddc1443b69eb4a42464d14eb1d93799a7a9fbd15212a290bc54524602a",
+      "after": "7e533aac27c7125e61b1c9a68292c502edca7d2c2a177ef098b177c3a9e6090f"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/maintenance-stop-final.log",
+      "before": "ed707bf74d44f738d2842a13597bce441ebd83c16bd51cc0f3cebdda93d76b77",
+      "after": "90f03e7efce39b19a0d0a5a815c9d36bcedd69244d43c7c9523cf8ac5983184a"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/proot-command-low.log",
+      "before": "1c534506acb4411d3c8f84445ed9f5dc3f4e27a8b3ea39340a257b6c05cdff7d",
+      "after": "7f6666a2815236b3ac74fbb8fb6f844f29f1cb4c6e8b5ae6d63e376840a65ad9"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/proot-command.log",
+      "before": "1c534506acb4411d3c8f84445ed9f5dc3f4e27a8b3ea39340a257b6c05cdff7d",
+      "after": "7f6666a2815236b3ac74fbb8fb6f844f29f1cb4c6e8b5ae6d63e376840a65ad9"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/release-build.log",
+      "before": "847bd5bb1a55d18ae4bd246601f2ba4a837a8ba62405b2d86f687cf7fe441e84",
+      "after": "53f2603ab0c3957f98dc18bc082075f6755e3098d58eb07d228742401e0741b8"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/release-verification.json",
+      "before": "f73fef448d85b40fab60680485ea4f79a0427d0d5e270a853c5ce47718024eb8",
+      "after": "6cdb973143d96ca7c696ba033ed7a68cf0f51688bad176f8e8d809ed105690ce"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/runtime-backup-final.log",
+      "before": "5fd7648b46cdc3d1eebece733c7c5b331bc5865d205c3a06c69d0613fd79bdfe",
+      "after": "670de3aca0a3b17033e678e5757f9e9cfab57a3ca424fbab832a2ca01311a2c2"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/standard-elf.json",
+      "before": "6914f53afee0f92a26f622b4da3bbc95553f0516222ec53efe054a9556480447",
+      "after": "9fe08c32a664d9014275d69e2d224c0297b8c0b0c80037bf8046320e993e3f8b"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/update-flow.log",
+      "before": "434df58dc3f7dd35b24989dc687cc4f749eb8327baa02d833f879b58c609856e",
+      "after": "eff62c6acc159e7c5ecfce6e3c3f5569e00951d7b8f722f2baafff4804f4cf8a"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/web-low.log",
+      "before": "fc39068c1235d0c1cd100aa1f08899a470a08f4152814381b54a7b195f2c975a",
+      "after": "445f66e8e6c0c0b8babfd243ce7310dacad4b7d857b431d80f9dafc560c5cf7c"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/web-standard.log",
+      "before": "291eb0985725c641355a2b6172d4e2216870cc222108988a3dffa8219f2af0a3",
+      "after": "d5100538ba8be21557ee312dba7374be15707a5a23d4a8f7ee692667fdf3ad6f"
+    },
+    {
+      "path": "docs/optimization-implementation.md",
+      "before": "1b6fe321c6eedd1c4aae68a10642506ce1296111abd68b236f5efe5fbe3e1e4d",
+      "after": "74ec17c8ad21e049bf683225dea31f406060067ca29f186d020ee1abc67c8c50"
+    },
+    {
+      "path": "docs/releases/v0.1.5-rc2-build121.md",
+      "before": "783e73b648fd262c2ae524bcd7bdd8639442e34ae3aa9440c408b232f20e5039",
+      "after": "e393fc5c23feada58224ecdd77d6f4c62e85e067818010579d9e34a410e7abc7"
+    },
+    {
+      "path": "docs/releases/v0.1.5-rc2-build122.md",
+      "before": "c93fa8cd810014eb3a50167c1adca179ca21641d47f41ef8a860adaafefa74b1",
+      "after": "1e6a1a98cf5d0d407b675ee313656094e18131ca8c21e3dd419e1dfad2527faa"
+    },
+    {
+      "path": "docs/releases/v0.1.5-rc2-build123.md",
+      "before": "806842ebd4b59131d13f06d79dc621e0f3b45178d66824a891894c1d4264f57e",
+      "after": "9233bef9ee41803214e2c51ad26ca174dd02f672f2d6532c7d7f5c038f32184c"
+    },
+    {
+      "path": "docs/releases/v0.1.5-rc2-build124.md",
+      "before": "2b87f572d25b338477ead5e68006643e9c1c48053f05a3e9ea17e479a72d8382",
+      "after": "dc4f71db25e3e94403f6492d061df9cf9c0a4666d021907153f3177c1202a3f2"
+    },
+    {
+      "path": "docs/releases/v0.1.5-rc2.1-build131.md",
+      "before": "7a33c922369ef1ade7e67c0fa6c3c6d131432d5c9298cfc893afc77c7ac144df",
+      "after": "c7f161b9d3f57f199bd8a2a589c084b8d8403213b6362691bf990c7923f2910b"
+    },
+    {
+      "path": "docs/releases/v0.1.6-alpha1-build132.md",
+      "before": "a1a090ae239678ba8058f533ab3c858543305bb9ca13ad427a3d4564dce8425c",
+      "after": "87e9170f67ec361e3bc4fce814a5567905bea2b3d5d3359464ac7f53695aa25a"
+    },
+    {
+      "path": "docs/releases/v0.1.6-alpha1-build134.md",
+      "before": "a98a467d6caebe0dc9c7410f5d59bf27ac7c496972d979f26a682da33ca9ad8b",
+      "after": "c13305abf75a3e28749fe1fd0ead95408e59f6a1e7fc58c303af34e301ae6ead"
+    },
+    {
+      "path": "docs/releases/v0.1.6-alpha1-build135.md",
+      "before": "cef75d1f6ac7d51dc6c59521d91fbfeb058af2a1b1668a5ce4c6a0b86f1e7839",
+      "after": "4c146a8b01e5b71aefc10704e3c9f92234525d738c2281790c7a448df5ef6dda"
+    },
+    {
+      "path": "docs/releases/v0.1.6-alpha1-device-acceptance.md",
+      "before": "e35707231f7674374cbad5debdc53f4a604197a7a472bd2364c313f70cb34b59",
+      "after": "b8e1969d8934c734f4b2ef4071089747012974d4dc13fb49c57e7e7b484c265d"
+    },
+    {
+      "path": "docs/releases/v0.1.6-alpha1-plan.md",
+      "before": "edefce190c99da869bcfce070ea13d044624eec93011b16f1760ef1723d432a9",
+      "after": "7d2dc53f7be7e9f95bd0c65acdeec509698e714fe82c4b81fefd2e846e989e0e"
+    },
+    {
+      "path": "docs/releases/v0.1.6-alpha1-ui-build133.md",
+      "before": "2522524c3b90bd76926288804c47f0507856f92b3658c51908631e81a1a3ac41",
+      "after": "805b5b62183231d7d71e74873e9e76514b8d0212693528b70e8cacaf906435b9"
+    },
+    {
+      "path": "docs/releases/v0.1.6-alpha2-build136.md",
+      "before": "e3d5ebe866b44a72b5a06e48b74c48bf81fe90ff0cecc5568115ed3fa8e085dd",
+      "after": "2edb483769612da880deba62becbc337e51b33362faf4dfc313efefad23f2646"
+    },
+    {
+      "path": "docs/releases/v0.1.7-rc2-apk-size.md",
+      "before": "6581e3091405d9d5a134b802360cb30ea0bc976969868c7305bc7d9038080198",
+      "after": "033b92d36e314e0f709f4b51358fa93037fab15cc300a24ea7a84455acbe457a"
+    },
+    {
+      "path": "docs/releases/v0.1.7-rc2-web-identity-recovery.md",
+      "before": "20325377200f790f8607434008ddcfa487ce960695ec32f0ad50c34ce57a66ab",
+      "after": "2735e5e8df1b132ea9773dab886cb7252870a5dfe07d588e47542b964c9c5dfd"
+    },
+    {
+      "path": "docs/releases/v0.1.7-rc2-web-mobile-3.0.3.md",
+      "before": "b69ffba43098e8bcf2e83711a5d3e603578662dfd8ca6f2616d329f47879c9be",
+      "after": "cf69853be3d099cd91d1f09e52c42ed247020e05a51c0c61c1b052716dba97c1"
+    },
+    {
+      "path": "docs/releases/v1.2.0-rc1.4.md",
+      "before": "a7cef59688ea332efedd0150970e654514cf8314bacf8cff0bb4837a5db0aea7",
+      "after": "70a95753c9808c33fee2418818388cdb2dd0c76214427eff1aa5a1861b5ef70b"
+    },
+    {
+      "path": "docs/stability-acceptance.md",
+      "before": "75a68e22dc3abb3f46d69e2b1488d249ece5bab4543cff1770aa46dd5c79664e",
+      "after": "b9c7a8e516bb670f92c1569da4ebf16b6f5cbfdfd256344cda86ea1f2008c6c8"
+    },
+    {
+      "path": "docs/star-history.json",
+      "before": "cb0917342787425d012164690c308bf84407c183938531ce87ce1d676f3875dd",
+      "after": "c3f992327941ebc8a2a4a5d258ade753eebb49686c7f25aefc080c0c6aced0f2"
+    },
+    {
+      "path": "docs/theme-rc1.4-verification.md",
+      "before": "76e8da9980b27b44663c6844db550431d54ae3fe5411b79fb2797c7a1546dfd8",
+      "after": "680fe9feedf2928f40bb619623d0e9d0e00ace1f94dcac26ab7ccf36918be600"
+    },
+    {
+      "path": "docs/theme-toolbar-only-rc1.4.md",
+      "before": "83f023fa22869c142638e04e93214c690aec061a5b2f70b40283c57c5fb2a8dd",
+      "after": "72727263626401d8dbe79a23f9c4c799bdf90be55d9b1d85f89ea16aec710dc9"
+    },
+    {
+      "path": "docs/ui-layout-rc1.4-verification.md",
+      "before": "88242df7898a53c4663cbafd7c14117ee7d160cc5191e036772e7980908c99f5",
+      "after": "c54071fd93d1f95a847fb62f86572ec7882acf28bdac72934e6f2c4fb162d6ad"
+    },
+    {
+      "path": "docs/upgrade-dsh-0.1.5-alpha.1.md",
+      "before": "d4883bbcdab5110cc87bef479e1c221fbcce9efd13b154dcc2d65b365bdfee94",
+      "after": "b97a1f48efb915dca2e6a38a7ac100d174a96c62bcd9540a030ddd3de162cfd2"
+    },
+    {
+      "path": "gradle/verification-metadata.xml",
+      "before": "488e614ed5535334a1c364f74730378c8ef1ec5c3d9ccdca7fcd439cdce44849",
+      "after": "a9c137c91f4658b15278563b74f2e7c71a24c6cc9d3825dd7e2b6934eb66efd8"
+    },
+    {
+      "path": "gradlew.bat",
+      "before": "fedad02c18e266ec094995a5751b7fe1eb6e74f66bf75db64fae2e50eb22c234",
+      "after": "9ca26d733ada3a45f27b2151288f54e75c9f95b287d1f82ef942ec5cc2d4f006"
+    },
+    {
+      "path": "release/0.1.6-alpha1-真机验收.txt",
+      "before": "1ba7b82de7e45cc2bb47bbbc2defe5101aeea0f584d22a33484079d6fa1a5b29",
+      "after": "889cbd5d3e41886a235c6a3b4ae89afbfebeddcf77bb6f71046c672143212b6d"
+    },
+    {
+      "path": "release/dsha-0.1.5-rc2.1-manifest.json",
+      "before": "e124a2480db978636c1743e2721b2fb17ca4d7fa76da7e022027e66833f301c3",
+      "after": "9c4d63387a8f8a014f20eecf3b3502df1e3b8c7fe7bdf4853164620ccec48b60"
+    },
+    {
+      "path": "tmp-gradle-init.gradle",
+      "before": "d475002eb33d9b11aa5bcdbf7af337b2bab17c0c43d5cb4993063fcbad477581",
+      "after": "084a9a54e2a78247da001fe4d546aef57618eef9c53337dfcc5e793b7ad57b1a"
+    },
+    {
+      "path": "tmp-indent.py",
+      "before": "ce98054e0547233c5b81dd04138bb90c5149aa8a15e630764c28efd05623d50b",
+      "after": "0b5e8cdfa6e57ddd05cb03a3f9c329d244a4972acc4dcbf678033577b844bdcc"
+    },
+    {
+      "path": "tmp-merge-base-client.js",
+      "before": "00280874dac442a0a372f3898e287947e4634c83dd8050f0198935253aaf8cdb",
+      "after": "e56acc0f8fced05a440f68a5e26d5186282e486de19df5ca458dfd0151bcb1e5"
+    },
+    {
+      "path": "tmp-merge-base-index.js",
+      "before": "0e9372b1a264413db2d6aa738711f1b939dae1abed819db0fbe72df01f9a2156",
+      "after": "fa644bdeba929d7b291cde283db2e2c7bc965393f2f1b5ceb4b8dc41d44d9b65"
+    },
+    {
+      "path": "tmp-merge-client-clean.js",
+      "before": "ee9207913c352f930089c14bd2aea2ae6bed3545f538a0692751f468e74a760a",
+      "after": "5adc3bbf045a0baafb33dfe6f7715eef562a547fbd833a4306417fb37ccf2a5d"
+    },
+    {
+      "path": "tmp-merge-client-result.js",
+      "before": "8f5581ba32d2f7b9d10d1c379f4315c05c1f8ec35402a4b0c2156be8a1f47d59",
+      "after": "3e3694ae106ba9ab30ee70469fdd5917a17db6415aa82b2855eadde50bb3b62e"
+    },
+    {
+      "path": "tmp-merge-index-clean.js",
+      "before": "2722a68a795515da906cb71f20e4ad837a2f85ef647b6402064fbcc5bf229cb4",
+      "after": "babb6fed5b6c4ba5ab8d920e5d024e5766f50074d365b302c8697aafeb7df610"
+    },
+    {
+      "path": "tmp-merge-index-result.js",
+      "before": "0d3c24a1ad3f4adb7f40ccae232f7503b3b52e758be041c300a7e7be5738de8c",
+      "after": "43fe74e7327c5d9868c858c0a3b8c4fbdb0941ad3b857b0efbca1fc3fa4b1d2d"
+    },
+    {
+      "path": "tmp-merge-ours-client.js",
+      "before": "2a6f8ce9de8a542d744f571db7455a433086cf37f9fe64da35a88e1effc6bbbe",
+      "after": "5e0786e9131e3585fc73aef494703ed9453bcbe76b740b834aaf79feb433af10"
+    },
+    {
+      "path": "tmp-merge-ours-index.js",
+      "before": "7509bfb2bb52410401e4ee1aa705ea93b982c87549e2f3d694bc0b4e94ceec4c",
+      "after": "3384d3e4318bca336917e1f667989202b4afb0b7ece7b16606c787ed1b3f3a55"
+    },
+    {
+      "path": "tmp-merge-theirs-client.js",
+      "before": "967241b6c7447eff4f2c85454c88730a5a361adc6502cb9d1f4807735b13fba4",
+      "after": "400b0ec19c2e51794e82e8588549160edb81368b51fb6f87bcb0ff24afa42ea3"
+    },
+    {
+      "path": "tmp-merge-theirs-index.js",
+      "before": "7286944ed03d23df96eed54eaf4fe6b596d8bc01f2a3baf7a20351e4f6a9158a",
+      "after": "6ca04f6ce174d6629ae1826cfe61ae313c6388b85f64229448900a75356d4e62"
+    },
+    {
+      "path": "tools/asset-deployment.json",
+      "before": "1d6c8f0ab520f5c3582c5b5f4b5c967ed1523b30fc9b87596a164faae3b417f1",
+      "after": "5b03ca3c83f0ad496cd7687b28fc5b284d22223b1ee3ad4ce227543b072804b9"
+    },
+    {
+      "path": "tools/fixtures/sessions/provenance.json",
+      "before": "9dd6da91a105694d028e381369cdf9307dd63c3789c0402cd9a80dc836bb0fc4",
+      "after": "95aa8356a9d8ff94deef2e400387783f9aa0de2884fa24e77b82e24ae318884f"
+    },
+    {
+      "path": "tools/host-tests.manifest.json",
+      "before": "f7e2d1d1c5ac386ce1e11e2dc3f5bf1112608d8933efeb532938dc6218a94199",
+      "after": "92388f6ea617c2eb38818f0b2ec4c1036857b0bf970377869bdb04df7892da1e"
+    },
+    {
+      "path": "tools/i18n/messages.json",
+      "before": "d1e31b80aff7c9b621ac5803d87a8dafde691cc5a632ee893bfc25eded78a862",
+      "after": "1b9db8b256acb493c8107de14ef359cde2b928e0e95ea4e4ae6975e8e3c6fa95"
+    },
+    {
+      "path": "tools/overlay-bridge-test.mjs",
+      "before": "fb6aef6be3c2924cc68371cef5d833651f1bd071d4295e5beaca207f4c26658a",
+      "after": "516180bdf89906940cc4b24a9a0ffc59a4e165c6693205a918d5823cc3efc82f"
+    },
+    {
+      "path": "tools/release-acceptance.json",
+      "before": "9d8504df446b0e7b6d892bf0a0224604848f9f9284fec6e7559ed5c10a432117",
+      "after": "c09f18349440402727593e0b17b61db85a9eddb6c4c9a3ea8613ad40596fb769"
+    },
+    {
+      "path": "tools/smoke-dsh-runtime.mjs",
+      "before": "2abb72bd708e3596871604d328c583eec1425173446edce22dc32d167ecbac58",
+      "after": "6bbb6b2466203074a2fe5541b3d3b4c13c8015e7289713fbfe8b40a7527dc046"
+    },
+    {
+      "path": "tools/test-adb-flow.py",
+      "before": "21e792f5849667b83e0a50e13ca45030ea91e6734f5a4abde57be8761b24d45d",
+      "after": "7366c7117420a386ac0bc3880691a093e487d8e0ecc9f1228f5e0ad5e18401b3"
+    },
+    {
+      "path": "tools/test-android-computer-use.mjs",
+      "before": "3d90ab112ed4190448ac7c41111b616e5d2a8e2c826711951a1bfa5708ee47fb",
+      "after": "1000b8125faea3cfde508736c7648efdad5bb2fcfb5b5f68f63a078250f9e78e"
+    },
+    {
+      "path": "tools/test-backup-engine.py",
+      "before": "fd1ba71c1367c9e79cb0d2953395ab9d5857e3ec29feff6fdc9bac604f0654b7",
+      "after": "9a25f7f52ba27d56252d684b503c1d179a8f7d31ce904c85bae08093eac335f7"
+    },
+    {
+      "path": "tools/test-chat-render-performance.mjs",
+      "before": "0ed45090e4425de817a06a2c5669ade2bef0f8503fac5de7f54c5a33eb5b0831",
+      "after": "c67e8a087b0133293d5072d1ce46ffd1dcb72670f63423f9c342d8e1216303a4"
+    },
+    {
+      "path": "tools/test-client-combo-cache.mjs",
+      "before": "ad953b1b6d254cdd0a8fc797e18f3cd3c4c6db7ce2ebd6c5b7133725032ccc8f",
+      "after": "bcd483c5f7f3a92c923daf279fd8a1aa1a3074574c57729aa3b9a682ff8d2d19"
+    },
+    {
+      "path": "tools/test-composer-enter.mjs",
+      "before": "575dc7fbe4e63612ae8f2f693f79899d70f4e52c6920d87462744b8079348c93",
+      "after": "9f88beaaaa8dcab97decdf8d5eff8803dc5a7d8b8934d807a079b6145e250c8a"
+    },
+    {
+      "path": "tools/test-deepseek-messages-compat.mjs",
+      "before": "cc16d216b900f50f747434f19462f097b6f94bb7729e95a7bea544486d6bf2e5",
+      "after": "5f9ffecdb38a870d6a975caae4d1afb53813dc51b155e895c090c5cec71aa8a7"
+    },
+    {
+      "path": "tools/test-device-shell-policy.py",
+      "before": "de9599afb0085e827acd2c24253c00f81e4e89251f0c13debe0592c79d6f3fbb",
+      "after": "2d1f5ab5ca15d7ac83ed9ea8b8b2dd762afb666bc27bcd65e0d31d1da674ae56"
+    },
+    {
+      "path": "tools/test-dsh-sessions.mjs",
+      "before": "c949fa6549cf8f66b47698e44ab167005d6abbcd375ad0de6e2b07a3388a99d3",
+      "after": "7818336cc9de8ffc7bae64dbbe117c17cb9b5fb106193628b138a65af76bdc19"
+    },
+    {
+      "path": "tools/test-gecko-model-navigation.mjs",
+      "before": "8fce7b499dbc640951a70d2a3163047936d45a505c344000e3bc892139d43d89",
+      "after": "f57d15fa98b64d69bbc0f714f1b75c1b31f32a0500cedb5c342700e2e3bb0bfb"
+    },
+    {
+      "path": "tools/test-mobile-update.mjs",
+      "before": "a7f1fef34d450c2acf822b66a7fa332fe4fcde6afb7f287440cac5eea43ce09f",
+      "after": "f4068dff9e5ec676c8858c8ea599fe807c5cde9624115198c735b1b748209b01"
+    },
+    {
+      "path": "tools/test-office-fonts.mjs",
+      "before": "ed0b4032a4d9cc69c462868828836a1295745780ccff1f4f862e9d922759fb2d",
+      "after": "4030894944df3e54646a94bc841733918497b5e60e927a19201fbab2ce789e70"
+    },
+    {
+      "path": "tools/test-profile-settings-review.mjs",
+      "before": "5e96a20baf2e1bc35ac9b45b3981b0dfc989e61a5f5e813b9c6080a630ad06c6",
+      "after": "b4d5179f535e4dfabe58cf15d135b6a992efe05951840a28dcbb9f4bb6d18520"
+    },
+    {
+      "path": "tools/test-rc1-migration.py",
+      "before": "ed57265262a8e17363f9c0275fc652caad2f8e400558bd75c520a6d81af26bc5",
+      "after": "1e9a4c6632985d0889eb57ea59e9b133099275451456306e00554e80f578cbcb"
+    },
+    {
+      "path": "tools/test-rc1-settings-migration.mjs",
+      "before": "a67e18b2172e78a753dcd849a98327ec543692db1e44f9a066dbde84809b14b3",
+      "after": "03a8a8730b76f198b07660a0569d93ebbced380ebf6a9d4d703824eb08f04a1a"
+    },
+    {
+      "path": "tools/test-restore-merge-plugins.py",
+      "before": "4318b15ead2a6cd5de6085b5c65760a3ec6c612388cdb45256c75cc233d0dbb0",
+      "after": "b52e3d387f8cccd3f0b0898fbaf1e84895a23327a67996d1cde5b1818aa39742"
+    },
+    {
+      "path": "tools/test-runtime-descriptor-inputs.py",
+      "before": "1ac0ac6bb33d103c5040381159080355b08989065211c6fb9c33848210d613e0",
+      "after": "f89b3609e0316f740370d92d35f2b8664dac180edfdad4e2d8ba9a8556478d9c"
+    },
+    {
+      "path": "tools/test-runtime-input-contract.py",
+      "before": "2f56f32dc600a465b22c11ee2b706640d56ce0a96f0567f34daf3da14df30a03",
+      "after": "3159feb1f16c69bc1cf8f32e1f815ebeb91f9779158affb6a036421ad53ee7a8"
+    },
+    {
+      "path": "tools/test-runtime-publish.mjs",
+      "before": "18e79f165a412d4d8605e549a8d3b66f20988f053029d37c828e1e1116d7f92d",
+      "after": "b1920c50e12f961eee89d149e00289cc47d192588ff1217e631209762617b03a"
+    },
+    {
+      "path": "tools/test-session-interaction.mjs",
+      "before": "7483be2c4a958fe66a5d02712c3ed384a1103e36bfdd0db387e7ee7ea54eb6b5",
+      "after": "6715ffc2bebc1444ddde3e3cfe0a1042a9e09992f868c6a57dfe854cc3607350"
+    },
+    {
+      "path": "tools/test-startup-checkpoints.py",
+      "before": "f135c529b42c61dd8c1c21d7d918f1f46912426f92a75a484dfca1b97a996848",
+      "after": "e4206f067dbb974adbbd1f1a2f71d8249ba90a7f028a2e5bd7fe965fe75c8069"
+    },
+    {
+      "path": "tools/test-startup-diagnostics.mjs",
+      "before": "a8f765e0dde3e0a60638ce25d24484f7d21eb3d88153d111bc4f78a52aabbbe9",
+      "after": "ce2b0b7e5be5c3eb1ca9fe32e20133da6bdf1d3486d8152b46c601e69258a778"
+    },
+    {
+      "path": "tools/test-startup-recovery.py",
+      "before": "bc7ca30ccfe1a6dd12a484612caafbb1bad8a7782088e261bfcb494e5f9a2f13",
+      "after": "44467232f753338e78eaccdc46c3a20d8336f9d28e91b45fe53d8bf0d3f82c29"
+    },
+    {
+      "path": "tools/test-tooltips.mjs",
+      "before": "f2840891b3deaea4b1940df49e405f7fb1056ec10fc0ab95b0c49900843ba59c",
+      "after": "6f7760de4ef70bc06c751048f81c08f2331dbfe56499210dda9e56d014ffa75b"
+    },
+    {
+      "path": "tools/test-ui-language.mjs",
+      "before": "c8f7a190c7e9cec70408f0c3ed6da19c2dc6645e8f345cb22578a999925339eb",
+      "after": "10992b9f3cba31af163b858b299b65c7886e821aec0d25cba2e7ff1e64b1d119"
+    },
+    {
+      "path": "tools/test-vscreen.mjs",
+      "before": "28bb243245421c04ee8cbb6190459ea3eb04375ba6870e7a7042e337aff454bb",
+      "after": "187b77c6dcc58e5aa6f40db627a6b01ae4243047e13ffc30849ab1113050e0a9"
+    },
+    {
+      "path": "tools/test-workflow-compat-alias.mjs",
+      "before": "05c8e3745915739c77e5aeb9e343c8c56227ff4183605ddf3f1231a4993bfe08",
+      "after": "6c58f0dbd1e3463d735930aaa09aac1a9b08c4079e76752fd6aaa0aba36d3215"
+    },
+    {
+      "path": "tools/test_runtime_fixture.py",
+      "before": "fcb06a3f320b7563de385363edbbc098687411f92cab3bea805c55563b2f11c5",
+      "after": "e5a9bc5c57c6e0be0ccd9153a6be21b4d7d160dd833f3401cf6400a1e1534452"
+    },
+    {
+      "path": "tools/ubuntu-tools/packages.lock.json",
+      "before": "ad942fb7e88689b77f4920a4ce73ed8d638fd87bd0bef79dc930d10f0adfd762",
+      "after": "5f75c41bb6a543143e4a05d78fc13f0abf54367c1f4454526a9266e119299c1e"
+    },
+    {
+      "path": "tools/verify-plugin-upgrade-gate.py",
+      "before": "5fd8d0fb3e87bba852b91fa8f098517b1ef7da003470eaa2b5d46eb0f541a4ff",
+      "after": "cd50d8e5e0e0e50f0447bd0cc1c70205837bf726862cbf73b2110cd1187768c7"
+    },
+    {
+      "path": "ui-preview/dsha-0.1.5-rc2.1-ui-v2.html",
+      "before": "cb2f8123452b9a1b8a23759ccc0d3b9b09a92407f50d4d4a4b14291f4de3d311",
+      "after": "5bc46667b0bf070074235777e5937e8ebc4930edc2871f94e9f3b38111700bf8"
+    },
+    {
+      "path": "ui-preview/fonts.css",
+      "before": "fc42ea5e8e042849ed231fe92036daf0c1af28c683a1c20c4b740cea7b19e495",
+      "after": "8a1910dfe2856edf0e525b8efb4f7b0312b062fea00ce731abd75936c270c137"
+    },
+    {
+      "path": "ui-preview/reference-readable.txt",
+      "before": "836c68577b20dfe52c33dcb3aecfdf1ee04bbcffcc3dcad2b17f728634ae3f51",
+      "after": "d273a5dae411e1af1e2d2a847f031ad58e49b6e30fc82c3cc7c199ea78822032"
+    },
+    {
+      "path": "website/package-lock.json",
+      "before": "0f19bbf882989998948b7a529ffb0b9eac9f451e9d9691df1f8c464751469a44",
+      "after": "9eefac775b9495c6f83fd2feb007465ee9d78d03fdf3b99d128796d1a5fa18fa"
+    },
+    {
+      "path": "website/package.json",
+      "before": "082ed9171e12f67d24ba4167cc3150915f31ea71d98cb0cd3aa4a18f3c3b5342",
+      "after": "c4002f996c5530ebaf9ed9f6743d0edd6bdedaf0bd9be3277dd14919bcdba710"
+    },
+    {
+      "path": "website/scripts/interactions.test.mjs",
+      "before": "5179b36c1a4217c41ca5555dab7119bba72b7b639596230bd428375ffed59f22",
+      "after": "b9a073c5641b096bea115c9d7d95694c225cf087519534f01095ef3d32a5ad89"
+    },
+    {
+      "path": "website/src/skills/device-shell/SKILL.md",
+      "before": "b09f2346031a5daa097af8eca8b1109490573caa2dae8e2e58f2295bed95681b",
+      "after": "aa4c1d8305b14dd6742dc64ca308b642af6c433997cb56e709500d6c72fc6542"
+    },
+    {
+      "path": "website/src/skills/screen-ocr-operator/SKILL.md",
+      "before": "0a069279a452b5881dd9ce8408c728423b78ea7a6900fa147a4fcce2c2ecd3e3",
+      "after": "d6b8eda76751da17cdad0c32632424ca623cd3945c9643eb39bacdff4615f93f"
+    }
+  ]
+}

@@ -1,0 +1,1223 @@
+{
+  "schema": 1,
+  "checkedAt": "2026-10-03T22:30:49.153080+00:00",
+  "status": "PASS_CURRENT_LOCAL_TWO_APKS_READ_ONLY",
+  "apks": [
+    {
+      "flavor": "standard",
+      "path": "app/build/outputs/apk/standard/release/app-standard-release.apk",
+      "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+      "bytes": 397302610,
+      "package": "com.dsh.client",
+      "versionCode": 156,
+      "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+      "minSdk": 30,
+      "abi": [
+        "arm64-v8a"
+      ],
+      "debuggable": false,
+      "signerCertificateSha256Set": [
+        "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+      ],
+      "verifiedSchemes": [
+        "v1",
+        "v2",
+        "v3"
+      ],
+      "embeddedSources": {
+        "dshRuntimeSha256": "3ddafc8f83fec8f13b9dfec7d51686af1d1aa82771e8dd0a65efb913d03b7bbb",
+        "runtimeId": "fdd8fc14ce4d00ada7948a570db4588c2fb088a8ade389c74f6555b553b470a2",
+        "recoveryContentId": "90b86cb94761ed5852299f45236c1b7c08d40b7838cf74162189df18abcb9fff",
+        "recoveryArchives": [
+          {
+            "asset": "recovery-rootfs.bin",
+            "source": "offline-rootfs.bin",
+            "sha256": "b9fe8a0460bc0d0e96f1cec0d65d46c9ff71a10c6a8d05a390b732a81d30cef3"
+          },
+          {
+            "asset": "recovery-dsh-runtime.bin",
+            "source": "recovery-dsh-runtime.bin",
+            "sha256": "d8acb0467e5d909ed39454fa63be837ec5548e3a256d76c00687b3ddbf6e8857"
+          }
+        ],
+        "requiredClassDefinitions": [
+          "Lcom/deepseekharness/app/backup/CredentialFileBackupSource;",
+          "Lcom/deepseekharness/app/backup/CredentialProjection;",
+          "Lorg/yaml/snakeyaml/Yaml;",
+          "Lorg/yaml/snakeyaml/constructor/SafeConstructor;"
+        ],
+        "jniMembers": [
+          {
+            "member": "lib/arm64-v8a/libandroidshmem.so",
+            "sha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libandroidshmem.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libdsha-session.so",
+            "sha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libdsha-session.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libproot.so",
+            "sha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproot.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libprootloader.so",
+            "sha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libprootloader.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libprootloader32.so",
+            "sha256": "9e0628acbe52bd5f7fda706581d6fa99f6336782a2452879d9d321875c638952",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libprootloader32.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot-bridge.so",
+            "sha256": "aba4a3b070feedbfa939bae72d598f7c2caf412a7c4aaf49193adfb2e7c76e89",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot-bridge.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot-linker.so",
+            "sha256": "8f20b1a155f029dc038d66485f18d036b0cf8be4275aebf76fe6702e91dd4de0",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot-linker.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot-runtime.so",
+            "sha256": "0903cea45424eccc71e00339c9124932b587694d49fc7c6ddbfc05e3fe10a966",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot-runtime.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot-stub-loader.so",
+            "sha256": "baeb2df0f6fccbc4cb8b9b2af114686f1e638f5eb8e4ad6d91a897a45b853c31",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot-stub-loader.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot.so",
+            "sha256": "5745ba3afaf3a74e57eb638cf40f3e627b7c3a683e55f3a2e88f373b68117b62",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libtalloc.so",
+            "sha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libtalloc.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libtermux.so",
+            "sha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libtermux.so",
+            "exactCheckedInBytes": true
+          }
+        ]
+      }
+    },
+    {
+      "flavor": "low",
+      "path": "app/build/outputs/apk/low/release/app-low-release.apk",
+      "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+      "bytes": 473097048,
+      "package": "com.dsh.client",
+      "versionCode": 156,
+      "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+      "minSdk": 23,
+      "abi": [
+        "arm64-v8a"
+      ],
+      "debuggable": false,
+      "signerCertificateSha256Set": [
+        "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+      ],
+      "verifiedSchemes": [
+        "v1",
+        "v2",
+        "v3"
+      ],
+      "embeddedSources": {
+        "dshRuntimeSha256": "3ddafc8f83fec8f13b9dfec7d51686af1d1aa82771e8dd0a65efb913d03b7bbb",
+        "runtimeId": "fdd8fc14ce4d00ada7948a570db4588c2fb088a8ade389c74f6555b553b470a2",
+        "recoveryContentId": "90b86cb94761ed5852299f45236c1b7c08d40b7838cf74162189df18abcb9fff",
+        "recoveryArchives": [
+          {
+            "asset": "recovery-rootfs.bin",
+            "source": "offline-rootfs.bin",
+            "sha256": "b9fe8a0460bc0d0e96f1cec0d65d46c9ff71a10c6a8d05a390b732a81d30cef3"
+          },
+          {
+            "asset": "recovery-dsh-runtime.bin",
+            "source": "recovery-dsh-runtime.bin",
+            "sha256": "d8acb0467e5d909ed39454fa63be837ec5548e3a256d76c00687b3ddbf6e8857"
+          }
+        ],
+        "requiredClassDefinitions": [
+          "Lcom/deepseekharness/app/backup/CredentialFileBackupSource;",
+          "Lcom/deepseekharness/app/backup/CredentialProjection;",
+          "Lorg/yaml/snakeyaml/Yaml;",
+          "Lorg/yaml/snakeyaml/constructor/SafeConstructor;"
+        ],
+        "jniMembers": [
+          {
+            "member": "lib/arm64-v8a/libandroidshmem.so",
+            "sha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libandroidshmem.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libcrashhelper.so",
+            "sha256": "0e904e5d1e317eee91c5cd2c894a3690902b8901542eecc1b5e5b71f71a42540",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libdsha-session.so",
+            "sha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libdsha-session.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libfreebl3.so",
+            "sha256": "2a7cee4f7c3c8dea512ff212e616b95aaa76b63d4f7c63878d872bf5e162c85e",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libgkcodecs.so",
+            "sha256": "9325d642487f16751a5d1533ebcb1153fa393d3f31cee9100c05e49b19b08b53",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/liblgpllibs.so",
+            "sha256": "2085157d932d50ca1a02d69ea42aa3d2041acff918ab7f0039b0ec8c0a6ccaea",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libminidump_analyzer.so",
+            "sha256": "8988ad2cc8f25fa9bfcfce6d683c26b6033fa56beca4fd9706cc8e52448e1edf",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libmozavcodec.so",
+            "sha256": "7f8b2d5588e35c7c991a40174fab2ae47af64887d812a3d6574cb01e43adc485",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libmozavutil.so",
+            "sha256": "2e83e3c8298f7603eb85c01f7d6c8390e879dd4b67c7df357064ec8006850d46",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libmozglue.so",
+            "sha256": "5c5aad83e4349ca0470acc57fe4174fb713b8bb16fbce6f596b8d342924d5812",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libnss3.so",
+            "sha256": "2e9f2a72f1a1e6034a212a44960d2a46d6a40895d71f2b6310bbe302f198d4a5",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libplugin-container.so",
+            "sha256": "fa25ffa1167cd43117c80a8906535dc80c5369c40f90449f8adceed688f56d56",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libproot.so",
+            "sha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproot.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libproot_legacy.so",
+            "sha256": "c4cec36906b973c5923023e3492b2b221a739a4a5fa1f6dc5bc834ac9a05e9db",
+            "checkedInSource": "app/src/low/jniLibs/arm64-v8a/libproot_legacy.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libprootloader.so",
+            "sha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libprootloader.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libprootloader32.so",
+            "sha256": "9e0628acbe52bd5f7fda706581d6fa99f6336782a2452879d9d321875c638952",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libprootloader32.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libprootloader_legacy.so",
+            "sha256": "e2d450b84960cf5e897a36549e86801b8010f440b6355983acce93c339bba610",
+            "checkedInSource": "app/src/low/jniLibs/arm64-v8a/libprootloader_legacy.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot-bridge.so",
+            "sha256": "aba4a3b070feedbfa939bae72d598f7c2caf412a7c4aaf49193adfb2e7c76e89",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot-bridge.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot-linker.so",
+            "sha256": "8f20b1a155f029dc038d66485f18d036b0cf8be4275aebf76fe6702e91dd4de0",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot-linker.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot-runtime.so",
+            "sha256": "0903cea45424eccc71e00339c9124932b587694d49fc7c6ddbfc05e3fe10a966",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot-runtime.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot-stub-loader.so",
+            "sha256": "baeb2df0f6fccbc4cb8b9b2af114686f1e638f5eb8e4ad6d91a897a45b853c31",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot-stub-loader.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libproroot.so",
+            "sha256": "5745ba3afaf3a74e57eb638cf40f3e627b7c3a683e55f3a2e88f373b68117b62",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libproroot.so",
+            "exactCheckedInBytes": false
+          },
+          {
+            "member": "lib/arm64-v8a/libsoftokn3.so",
+            "sha256": "77278da719f0ceb34c7bc2f038a6ff9459de6f556f7cba2958bb995f877b7766",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          },
+          {
+            "member": "lib/arm64-v8a/libtalloc.so",
+            "sha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libtalloc.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libtermux.so",
+            "sha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+            "checkedInSource": "app/src/main/jniLibs/arm64-v8a/libtermux.so",
+            "exactCheckedInBytes": true
+          },
+          {
+            "member": "lib/arm64-v8a/libxul.so",
+            "sha256": "50344d68788ad7be603cc4d7c1e9d0199e63548e1f42724cb912461f8a71a7cd",
+            "checkedInSource": null,
+            "exactCheckedInBytes": null
+          }
+        ]
+      }
+    }
+  ],
+  "commands": [
+    {
+      "name": "standard-signature-readonly",
+      "command": [
+        "F:\\DSHA\\_toolchains\\jdk-17\\bin\\java.exe",
+        "-jar",
+        "F:\\DSHA\\_toolchains\\android-sdk\\build-tools\\36.0.0\\lib\\apksigner.jar",
+        "verify",
+        "--min-sdk-version",
+        "23",
+        "--verbose",
+        "--print-certs",
+        "F:\\DSHA_RESTART\\app\\build\\outputs\\apk\\standard\\release\\app-standard-release.apk"
+      ],
+      "exitCode": 0,
+      "log": "app/build/audit-build156/standard-signature-readonly.log",
+      "sha256": "46f2c5d0705085e04d09099ca213365eaa6c4ff4ee9e9631bfa0ba6a97daa957"
+    },
+    {
+      "name": "standard-manifest-readonly",
+      "command": [
+        "F:\\DSHA\\_toolchains\\android-sdk\\build-tools\\36.0.0\\aapt.exe",
+        "dump",
+        "badging",
+        "F:\\DSHA_RESTART\\app\\build\\outputs\\apk\\standard\\release\\app-standard-release.apk"
+      ],
+      "exitCode": 0,
+      "log": "app/build/audit-build156/standard-manifest-readonly.log",
+      "sha256": "77ebdb65dd2b1138d608acaa21c0451845a20a2addcc8599c0ea6f50c5fef784"
+    },
+    {
+      "name": "low-signature-readonly",
+      "command": [
+        "F:\\DSHA\\_toolchains\\jdk-17\\bin\\java.exe",
+        "-jar",
+        "F:\\DSHA\\_toolchains\\android-sdk\\build-tools\\36.0.0\\lib\\apksigner.jar",
+        "verify",
+        "--min-sdk-version",
+        "23",
+        "--verbose",
+        "--print-certs",
+        "F:\\DSHA_RESTART\\app\\build\\outputs\\apk\\low\\release\\app-low-release.apk"
+      ],
+      "exitCode": 0,
+      "log": "app/build/audit-build156/low-signature-readonly.log",
+      "sha256": "a3a620f29bef0257106ff61a7c059ef427eecbd70fc35ceb696989530d7bef56"
+    },
+    {
+      "name": "low-manifest-readonly",
+      "command": [
+        "F:\\DSHA\\_toolchains\\android-sdk\\build-tools\\36.0.0\\aapt.exe",
+        "dump",
+        "badging",
+        "F:\\DSHA_RESTART\\app\\build\\outputs\\apk\\low\\release\\app-low-release.apk"
+      ],
+      "exitCode": 0,
+      "log": "app/build/audit-build156/low-manifest-readonly.log",
+      "sha256": "169b0cf481793ea4e754d25e6abd3aeef49e3c950232fac41e74cddf1aa571f0"
+    },
+    {
+      "name": "recovery-two-apk",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "tools/verify-recovery-apk.py",
+        "F:\\DSHA_RESTART\\app\\build\\outputs\\apk\\standard\\release\\app-standard-release.apk",
+        "F:\\DSHA_RESTART\\app\\build\\outputs\\apk\\low\\release\\app-low-release.apk"
+      ],
+      "exitCode": 0,
+      "log": "app/build/audit-build156/recovery-two-apk.log",
+      "sha256": "5c97284a6d5396d97ec56e8321f93648808be5d023155726bfd11eb9807da34c"
+    },
+    {
+      "name": "licenses-two-apk",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "tools/verify-third-party-apk.py",
+        "F:\\DSHA_RESTART\\app\\build\\outputs\\apk\\standard\\release\\app-standard-release.apk",
+        "F:\\DSHA_RESTART\\app\\build\\outputs\\apk\\low\\release\\app-low-release.apk",
+        "--output",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build156\\licenses-two-apk.json"
+      ],
+      "exitCode": 0,
+      "log": "app/build/audit-build156/licenses-two-apk.log",
+      "sha256": "9e5969f2fda9550a48aaf7eb815bd69df9c8d8d7d2929528ccd33e8d4054ebad"
+    }
+  ],
+  "sourceFrozen": true,
+  "productionModified": false,
+  "releaseCopied": false,
+  "signingPerformedBySupplyVerifier": false,
+  "gradleRunBySupplyVerifier": false,
+  "hostedCI": "not_executed",
+  "physicalAndroid": "not_performed",
+  "unprovenExternalOriginalOrigins": "unchanged_unknown",
+  "boundParentSoftwareReceipt": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+    "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+    "status": "PASS_WITH_EXPLICIT_DEVICE_GAPS",
+    "sameActualApkDigests": true,
+    "junit": {
+      "Standard": {
+        "tests": 1195,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 4
+      },
+      "Low": {
+        "tests": 1195,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 4
+      }
+    },
+    "validatedCommandLogs": 35,
+    "rawSourceSnapshot": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+      "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+    },
+    "currentSourceStillMatchesSnapshot": true,
+    "singleSourceDiffFrom281": [
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+        "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+        "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a"
+      }
+    ]
+  },
+  "nativeOriginBinding": {
+    "records": [
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libandroidshmem.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libandroidshmem.so",
+          "sha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libandroidshmem.so",
+        "mergedIntermediateSha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libandroidshmem.so",
+        "strippedIntermediateSha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+        "apkSha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libdsha-session.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libdsha-session.so",
+          "sha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libdsha-session.so",
+        "mergedIntermediateSha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libdsha-session.so",
+        "strippedIntermediateSha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+        "apkSha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libproot.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproot.so",
+          "sha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libproot.so",
+        "mergedIntermediateSha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libproot.so",
+        "strippedIntermediateSha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+        "apkSha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libprootloader.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libprootloader.so",
+          "sha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libprootloader.so",
+        "mergedIntermediateSha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libprootloader.so",
+        "strippedIntermediateSha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+        "apkSha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libprootloader32.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libprootloader32.so",
+          "sha256": "4c649eb2dce258c9111231940fdbf0474bcf1cd6dd447ad9bdf2898b35a85554",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libprootloader32.so",
+        "mergedIntermediateSha256": "4c649eb2dce258c9111231940fdbf0474bcf1cd6dd447ad9bdf2898b35a85554",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libprootloader32.so",
+        "strippedIntermediateSha256": "9e0628acbe52bd5f7fda706581d6fa99f6336782a2452879d9d321875c638952",
+        "apkSha256": "9e0628acbe52bd5f7fda706581d6fa99f6336782a2452879d9d321875c638952",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libproroot-bridge.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot-bridge.so",
+          "sha256": "1c5bc9537a270e8bf8b1c70222813f57b60b828bfb5503ddf8fe37685092de2f",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libproroot-bridge.so",
+        "mergedIntermediateSha256": "1c5bc9537a270e8bf8b1c70222813f57b60b828bfb5503ddf8fe37685092de2f",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libproroot-bridge.so",
+        "strippedIntermediateSha256": "aba4a3b070feedbfa939bae72d598f7c2caf412a7c4aaf49193adfb2e7c76e89",
+        "apkSha256": "aba4a3b070feedbfa939bae72d598f7c2caf412a7c4aaf49193adfb2e7c76e89",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libproroot-linker.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot-linker.so",
+          "sha256": "51a0ec5bfed00e572a0de09e22d9057e2befc386b78e426613d3e0ab03f4ecee",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libproroot-linker.so",
+        "mergedIntermediateSha256": "51a0ec5bfed00e572a0de09e22d9057e2befc386b78e426613d3e0ab03f4ecee",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libproroot-linker.so",
+        "strippedIntermediateSha256": "8f20b1a155f029dc038d66485f18d036b0cf8be4275aebf76fe6702e91dd4de0",
+        "apkSha256": "8f20b1a155f029dc038d66485f18d036b0cf8be4275aebf76fe6702e91dd4de0",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libproroot-runtime.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot-runtime.so",
+          "sha256": "8c47a0a7db32d84c179ebb5bf3640f655a3181860ece5886ae44d92858730c34",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libproroot-runtime.so",
+        "mergedIntermediateSha256": "8c47a0a7db32d84c179ebb5bf3640f655a3181860ece5886ae44d92858730c34",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libproroot-runtime.so",
+        "strippedIntermediateSha256": "0903cea45424eccc71e00339c9124932b587694d49fc7c6ddbfc05e3fe10a966",
+        "apkSha256": "0903cea45424eccc71e00339c9124932b587694d49fc7c6ddbfc05e3fe10a966",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libproroot-stub-loader.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot-stub-loader.so",
+          "sha256": "06c6624db3bdc45b9ced151cd781df439a37b47731d244b93e9d6a58cd48cde0",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libproroot-stub-loader.so",
+        "mergedIntermediateSha256": "06c6624db3bdc45b9ced151cd781df439a37b47731d244b93e9d6a58cd48cde0",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libproroot-stub-loader.so",
+        "strippedIntermediateSha256": "baeb2df0f6fccbc4cb8b9b2af114686f1e638f5eb8e4ad6d91a897a45b853c31",
+        "apkSha256": "baeb2df0f6fccbc4cb8b9b2af114686f1e638f5eb8e4ad6d91a897a45b853c31",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libproroot.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot.so",
+          "sha256": "a4e74d75b66cdc02b080adfe863dbf9951c3b30610d77beddc95488d5fe5de01",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libproroot.so",
+        "mergedIntermediateSha256": "a4e74d75b66cdc02b080adfe863dbf9951c3b30610d77beddc95488d5fe5de01",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libproroot.so",
+        "strippedIntermediateSha256": "5745ba3afaf3a74e57eb638cf40f3e627b7c3a683e55f3a2e88f373b68117b62",
+        "apkSha256": "5745ba3afaf3a74e57eb638cf40f3e627b7c3a683e55f3a2e88f373b68117b62",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libtalloc.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libtalloc.so",
+          "sha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libtalloc.so",
+        "mergedIntermediateSha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libtalloc.so",
+        "strippedIntermediateSha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+        "apkSha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "standard",
+        "member": "lib/arm64-v8a/libtermux.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libtermux.so",
+          "sha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/standardRelease/mergeStandardReleaseNativeLibs/out/lib/arm64-v8a/libtermux.so",
+        "mergedIntermediateSha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/standardRelease/stripStandardReleaseDebugSymbols/out/lib/arm64-v8a/libtermux.so",
+        "strippedIntermediateSha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+        "apkSha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libandroidshmem.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libandroidshmem.so",
+          "sha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libandroidshmem.so",
+        "mergedIntermediateSha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libandroidshmem.so",
+        "strippedIntermediateSha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+        "apkSha256": "84475798e07c8174dbbfaec70a827fdb02f19ffa69a589380c13e7507fd0e731",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libcrashhelper.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libcrashhelper.so",
+          "sha256": "0e904e5d1e317eee91c5cd2c894a3690902b8901542eecc1b5e5b71f71a42540",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libcrashhelper.so",
+        "mergedIntermediateSha256": "0e904e5d1e317eee91c5cd2c894a3690902b8901542eecc1b5e5b71f71a42540",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libcrashhelper.so",
+        "strippedIntermediateSha256": "0e904e5d1e317eee91c5cd2c894a3690902b8901542eecc1b5e5b71f71a42540",
+        "apkSha256": "0e904e5d1e317eee91c5cd2c894a3690902b8901542eecc1b5e5b71f71a42540",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libdsha-session.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libdsha-session.so",
+          "sha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libdsha-session.so",
+        "mergedIntermediateSha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libdsha-session.so",
+        "strippedIntermediateSha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+        "apkSha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libfreebl3.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libfreebl3.so",
+          "sha256": "2a7cee4f7c3c8dea512ff212e616b95aaa76b63d4f7c63878d872bf5e162c85e",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libfreebl3.so",
+        "mergedIntermediateSha256": "2a7cee4f7c3c8dea512ff212e616b95aaa76b63d4f7c63878d872bf5e162c85e",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libfreebl3.so",
+        "strippedIntermediateSha256": "2a7cee4f7c3c8dea512ff212e616b95aaa76b63d4f7c63878d872bf5e162c85e",
+        "apkSha256": "2a7cee4f7c3c8dea512ff212e616b95aaa76b63d4f7c63878d872bf5e162c85e",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libgkcodecs.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libgkcodecs.so",
+          "sha256": "9325d642487f16751a5d1533ebcb1153fa393d3f31cee9100c05e49b19b08b53",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libgkcodecs.so",
+        "mergedIntermediateSha256": "9325d642487f16751a5d1533ebcb1153fa393d3f31cee9100c05e49b19b08b53",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libgkcodecs.so",
+        "strippedIntermediateSha256": "9325d642487f16751a5d1533ebcb1153fa393d3f31cee9100c05e49b19b08b53",
+        "apkSha256": "9325d642487f16751a5d1533ebcb1153fa393d3f31cee9100c05e49b19b08b53",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/liblgpllibs.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/liblgpllibs.so",
+          "sha256": "2085157d932d50ca1a02d69ea42aa3d2041acff918ab7f0039b0ec8c0a6ccaea",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/liblgpllibs.so",
+        "mergedIntermediateSha256": "2085157d932d50ca1a02d69ea42aa3d2041acff918ab7f0039b0ec8c0a6ccaea",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/liblgpllibs.so",
+        "strippedIntermediateSha256": "2085157d932d50ca1a02d69ea42aa3d2041acff918ab7f0039b0ec8c0a6ccaea",
+        "apkSha256": "2085157d932d50ca1a02d69ea42aa3d2041acff918ab7f0039b0ec8c0a6ccaea",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libminidump_analyzer.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libminidump_analyzer.so",
+          "sha256": "8988ad2cc8f25fa9bfcfce6d683c26b6033fa56beca4fd9706cc8e52448e1edf",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libminidump_analyzer.so",
+        "mergedIntermediateSha256": "8988ad2cc8f25fa9bfcfce6d683c26b6033fa56beca4fd9706cc8e52448e1edf",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libminidump_analyzer.so",
+        "strippedIntermediateSha256": "8988ad2cc8f25fa9bfcfce6d683c26b6033fa56beca4fd9706cc8e52448e1edf",
+        "apkSha256": "8988ad2cc8f25fa9bfcfce6d683c26b6033fa56beca4fd9706cc8e52448e1edf",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libmozavcodec.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libmozavcodec.so",
+          "sha256": "7f8b2d5588e35c7c991a40174fab2ae47af64887d812a3d6574cb01e43adc485",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libmozavcodec.so",
+        "mergedIntermediateSha256": "7f8b2d5588e35c7c991a40174fab2ae47af64887d812a3d6574cb01e43adc485",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libmozavcodec.so",
+        "strippedIntermediateSha256": "7f8b2d5588e35c7c991a40174fab2ae47af64887d812a3d6574cb01e43adc485",
+        "apkSha256": "7f8b2d5588e35c7c991a40174fab2ae47af64887d812a3d6574cb01e43adc485",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libmozavutil.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libmozavutil.so",
+          "sha256": "2e83e3c8298f7603eb85c01f7d6c8390e879dd4b67c7df357064ec8006850d46",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libmozavutil.so",
+        "mergedIntermediateSha256": "2e83e3c8298f7603eb85c01f7d6c8390e879dd4b67c7df357064ec8006850d46",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libmozavutil.so",
+        "strippedIntermediateSha256": "2e83e3c8298f7603eb85c01f7d6c8390e879dd4b67c7df357064ec8006850d46",
+        "apkSha256": "2e83e3c8298f7603eb85c01f7d6c8390e879dd4b67c7df357064ec8006850d46",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libmozglue.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libmozglue.so",
+          "sha256": "5c5aad83e4349ca0470acc57fe4174fb713b8bb16fbce6f596b8d342924d5812",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libmozglue.so",
+        "mergedIntermediateSha256": "5c5aad83e4349ca0470acc57fe4174fb713b8bb16fbce6f596b8d342924d5812",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libmozglue.so",
+        "strippedIntermediateSha256": "5c5aad83e4349ca0470acc57fe4174fb713b8bb16fbce6f596b8d342924d5812",
+        "apkSha256": "5c5aad83e4349ca0470acc57fe4174fb713b8bb16fbce6f596b8d342924d5812",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libnss3.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libnss3.so",
+          "sha256": "2e9f2a72f1a1e6034a212a44960d2a46d6a40895d71f2b6310bbe302f198d4a5",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libnss3.so",
+        "mergedIntermediateSha256": "2e9f2a72f1a1e6034a212a44960d2a46d6a40895d71f2b6310bbe302f198d4a5",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libnss3.so",
+        "strippedIntermediateSha256": "2e9f2a72f1a1e6034a212a44960d2a46d6a40895d71f2b6310bbe302f198d4a5",
+        "apkSha256": "2e9f2a72f1a1e6034a212a44960d2a46d6a40895d71f2b6310bbe302f198d4a5",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libplugin-container.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libplugin-container.so",
+          "sha256": "fa25ffa1167cd43117c80a8906535dc80c5369c40f90449f8adceed688f56d56",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libplugin-container.so",
+        "mergedIntermediateSha256": "fa25ffa1167cd43117c80a8906535dc80c5369c40f90449f8adceed688f56d56",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libplugin-container.so",
+        "strippedIntermediateSha256": "fa25ffa1167cd43117c80a8906535dc80c5369c40f90449f8adceed688f56d56",
+        "apkSha256": "fa25ffa1167cd43117c80a8906535dc80c5369c40f90449f8adceed688f56d56",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libproot.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproot.so",
+          "sha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libproot.so",
+        "mergedIntermediateSha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libproot.so",
+        "strippedIntermediateSha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+        "apkSha256": "cbde86eb01b58413f9e4673e182caca5440e8fc4af8482a0e23d0faa0846f721",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libproot_legacy.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/low/jniLibs/arm64-v8a/libproot_legacy.so",
+          "sha256": "c4cec36906b973c5923023e3492b2b221a739a4a5fa1f6dc5bc834ac9a05e9db",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libproot_legacy.so",
+        "mergedIntermediateSha256": "c4cec36906b973c5923023e3492b2b221a739a4a5fa1f6dc5bc834ac9a05e9db",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libproot_legacy.so",
+        "strippedIntermediateSha256": "c4cec36906b973c5923023e3492b2b221a739a4a5fa1f6dc5bc834ac9a05e9db",
+        "apkSha256": "c4cec36906b973c5923023e3492b2b221a739a4a5fa1f6dc5bc834ac9a05e9db",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libprootloader.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libprootloader.so",
+          "sha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libprootloader.so",
+        "mergedIntermediateSha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libprootloader.so",
+        "strippedIntermediateSha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+        "apkSha256": "a2cbccfc776e23225b75e6700dd1990fcd505d2e973f5bfa19c76642d4e41c7d",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libprootloader32.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libprootloader32.so",
+          "sha256": "4c649eb2dce258c9111231940fdbf0474bcf1cd6dd447ad9bdf2898b35a85554",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libprootloader32.so",
+        "mergedIntermediateSha256": "4c649eb2dce258c9111231940fdbf0474bcf1cd6dd447ad9bdf2898b35a85554",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libprootloader32.so",
+        "strippedIntermediateSha256": "9e0628acbe52bd5f7fda706581d6fa99f6336782a2452879d9d321875c638952",
+        "apkSha256": "9e0628acbe52bd5f7fda706581d6fa99f6336782a2452879d9d321875c638952",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libprootloader_legacy.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/low/jniLibs/arm64-v8a/libprootloader_legacy.so",
+          "sha256": "e2d450b84960cf5e897a36549e86801b8010f440b6355983acce93c339bba610",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libprootloader_legacy.so",
+        "mergedIntermediateSha256": "e2d450b84960cf5e897a36549e86801b8010f440b6355983acce93c339bba610",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libprootloader_legacy.so",
+        "strippedIntermediateSha256": "e2d450b84960cf5e897a36549e86801b8010f440b6355983acce93c339bba610",
+        "apkSha256": "e2d450b84960cf5e897a36549e86801b8010f440b6355983acce93c339bba610",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libproroot-bridge.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot-bridge.so",
+          "sha256": "1c5bc9537a270e8bf8b1c70222813f57b60b828bfb5503ddf8fe37685092de2f",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libproroot-bridge.so",
+        "mergedIntermediateSha256": "1c5bc9537a270e8bf8b1c70222813f57b60b828bfb5503ddf8fe37685092de2f",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libproroot-bridge.so",
+        "strippedIntermediateSha256": "aba4a3b070feedbfa939bae72d598f7c2caf412a7c4aaf49193adfb2e7c76e89",
+        "apkSha256": "aba4a3b070feedbfa939bae72d598f7c2caf412a7c4aaf49193adfb2e7c76e89",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libproroot-linker.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot-linker.so",
+          "sha256": "51a0ec5bfed00e572a0de09e22d9057e2befc386b78e426613d3e0ab03f4ecee",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libproroot-linker.so",
+        "mergedIntermediateSha256": "51a0ec5bfed00e572a0de09e22d9057e2befc386b78e426613d3e0ab03f4ecee",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libproroot-linker.so",
+        "strippedIntermediateSha256": "8f20b1a155f029dc038d66485f18d036b0cf8be4275aebf76fe6702e91dd4de0",
+        "apkSha256": "8f20b1a155f029dc038d66485f18d036b0cf8be4275aebf76fe6702e91dd4de0",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libproroot-runtime.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot-runtime.so",
+          "sha256": "8c47a0a7db32d84c179ebb5bf3640f655a3181860ece5886ae44d92858730c34",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libproroot-runtime.so",
+        "mergedIntermediateSha256": "8c47a0a7db32d84c179ebb5bf3640f655a3181860ece5886ae44d92858730c34",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libproroot-runtime.so",
+        "strippedIntermediateSha256": "0903cea45424eccc71e00339c9124932b587694d49fc7c6ddbfc05e3fe10a966",
+        "apkSha256": "0903cea45424eccc71e00339c9124932b587694d49fc7c6ddbfc05e3fe10a966",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libproroot-stub-loader.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot-stub-loader.so",
+          "sha256": "06c6624db3bdc45b9ced151cd781df439a37b47731d244b93e9d6a58cd48cde0",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libproroot-stub-loader.so",
+        "mergedIntermediateSha256": "06c6624db3bdc45b9ced151cd781df439a37b47731d244b93e9d6a58cd48cde0",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libproroot-stub-loader.so",
+        "strippedIntermediateSha256": "baeb2df0f6fccbc4cb8b9b2af114686f1e638f5eb8e4ad6d91a897a45b853c31",
+        "apkSha256": "baeb2df0f6fccbc4cb8b9b2af114686f1e638f5eb8e4ad6d91a897a45b853c31",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libproroot.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libproroot.so",
+          "sha256": "a4e74d75b66cdc02b080adfe863dbf9951c3b30610d77beddc95488d5fe5de01",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libproroot.so",
+        "mergedIntermediateSha256": "a4e74d75b66cdc02b080adfe863dbf9951c3b30610d77beddc95488d5fe5de01",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libproroot.so",
+        "strippedIntermediateSha256": "5745ba3afaf3a74e57eb638cf40f3e627b7c3a683e55f3a2e88f373b68117b62",
+        "apkSha256": "5745ba3afaf3a74e57eb638cf40f3e627b7c3a683e55f3a2e88f373b68117b62",
+        "packagingChangesBytes": true,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libsoftokn3.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libsoftokn3.so",
+          "sha256": "77278da719f0ceb34c7bc2f038a6ff9459de6f556f7cba2958bb995f877b7766",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libsoftokn3.so",
+        "mergedIntermediateSha256": "77278da719f0ceb34c7bc2f038a6ff9459de6f556f7cba2958bb995f877b7766",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libsoftokn3.so",
+        "strippedIntermediateSha256": "77278da719f0ceb34c7bc2f038a6ff9459de6f556f7cba2958bb995f877b7766",
+        "apkSha256": "77278da719f0ceb34c7bc2f038a6ff9459de6f556f7cba2958bb995f877b7766",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libtalloc.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libtalloc.so",
+          "sha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libtalloc.so",
+        "mergedIntermediateSha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libtalloc.so",
+        "strippedIntermediateSha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+        "apkSha256": "3c9b207c0a6ea2896b7523e03f55d9ab0d9e88baa115d4c32b84058ff4246fbb",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libtermux.so",
+        "origin": {
+          "type": "checked_in_binary",
+          "path": "app/src/main/jniLibs/arm64-v8a/libtermux.so",
+          "sha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+          "externalOriginalAndLegalOrigin": "Any unproven original source/revision or rights remain unknown"
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libtermux.so",
+        "mergedIntermediateSha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libtermux.so",
+        "strippedIntermediateSha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+        "apkSha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      },
+      {
+        "flavor": "low",
+        "member": "lib/arm64-v8a/libxul.so",
+        "origin": {
+          "type": "locked_mozilla_geckoview_aar",
+          "coordinate": "org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653",
+          "path": "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.mozilla.geckoview\\geckoview-arm64-v8a\\143.0.20251003115653\\3b36d55c5623dcd7b01a487520fee32ab720022c\\geckoview-arm64-v8a-143.0.20251003115653.aar",
+          "archiveSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+          "member": "jni/arm64-v8a/libxul.so",
+          "sha256": "50344d68788ad7be603cc4d7c1e9d0199e63548e1f42724cb912461f8a71a7cd",
+          "gradleVerificationMetadataMatches": true
+        },
+        "mergedIntermediatePath": "app/build/intermediates/merged_native_libs/lowRelease/mergeLowReleaseNativeLibs/out/lib/arm64-v8a/libxul.so",
+        "mergedIntermediateSha256": "50344d68788ad7be603cc4d7c1e9d0199e63548e1f42724cb912461f8a71a7cd",
+        "strippedIntermediatePath": "app/build/intermediates/stripped_native_libs/lowRelease/stripLowReleaseDebugSymbols/out/lib/arm64-v8a/libxul.so",
+        "strippedIntermediateSha256": "50344d68788ad7be603cc4d7c1e9d0199e63548e1f42724cb912461f8a71a7cd",
+        "apkSha256": "50344d68788ad7be603cc4d7c1e9d0199e63548e1f42724cb912461f8a71a7cd",
+        "packagingChangesBytes": false,
+        "originToMergedExact": true,
+        "strippedToApkExact": true
+      }
+    ],
+    "allOriginToMergedAndStrippedToApkExact": true,
+    "lockedGeckoAarSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+    "sourceNote": "Actual Gradle symbol stripping changes six checked-in binary files per flavor; transformations do not prove unverified external original provenance or redistribution/modification rights"
+  },
+  "preservedBeforeAccessibilityStatus": {
+    "preservationReceipt": {
+      "path": "app/build/audit-build156/history/before-accessibility-status/preservation-receipt.json",
+      "sha256": "16f7bfb6c1d0a54abd7038cdfcc6ce0da36c5e443cd2ded1f126378d6de3da06"
+    },
+    "verifiedPreservedFiles": 729,
+    "oldDeviceReferencedSupplyReceipt": {
+      "path": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/final-apk-supply-checks.json",
+      "sha256": "deb65791a984f0aa6cf7aad210a757fb0fe889625138554dd71ab156cb5b9931"
+    },
+    "apks": [
+      {
+        "flavor": "standard",
+        "path": "app/build/audit-build156/history/before-accessibility-status/app/build/outputs/apk/standard/release/app-standard-release.apk",
+        "sha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b",
+        "preservedOriginalBytes": true
+      },
+      {
+        "flavor": "low",
+        "path": "app/build/audit-build156/history/before-accessibility-status/app/build/outputs/apk/low/release/app-low-release.apk",
+        "sha256": "f8c83d78ae4b2fe3c94295e2d5f3a262caddc5a5ac07f91e739c2ac1959875ed",
+        "preservedOriginalBytes": true
+      }
+    ],
+    "scope": "Historical source, software and device evidence remains bound only to its original APK bytes"
+  },
+  "preservedBeforeWorkspacePolicyApks": [
+    {
+      "path": "app/build/audit-build156/history/before-workspace-policy/app/build/outputs/apk/standard/release/app-standard-release.apk",
+      "sha256": "ea08a6cbe5fe2d95047be2bde90c7cf82fd4ecca0e96bd04a3b180e0ed9bb4e4",
+      "preservedOriginalBytes": true
+    },
+    {
+      "path": "app/build/audit-build156/history/before-workspace-policy/app/build/outputs/apk/low/release/app-low-release.apk",
+      "sha256": "9a67696006be4df8d822a3d3b1a416b5b34ba758471c9fc2521e3bbb874dd521",
+      "preservedOriginalBytes": true
+    }
+  ]
+}

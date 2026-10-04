@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "version": "2.4",
+  "commands": [
+    {
+      "command": [
+        "F:/DSHA/_toolchains/jdk-17/bin/javac.exe",
+        "-J-Duser.language=en",
+        "-encoding",
+        "UTF-8",
+        "--release",
+        "17",
+        "-cp",
+        "app\\build\\backup-dependencies\\snakeyaml-2.4.jar",
+        "-d",
+        "app\\build\\backup-dependencies\\classes",
+        "app\\build\\backup-dependencies\\SnakeYamlSafeFixture.java"
+      ],
+      "exitCode": 0,
+      "log": "app/build/backup-dependencies/javac-safety.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "F:/DSHA/_toolchains/jdk-17/bin/java.exe",
+        "--limit-modules",
+        "java.base",
+        "-Dfile.encoding=UTF-8",
+        "-Duser.language=en",
+        "-cp",
+        "app\\build\\backup-dependencies\\classes;app\\build\\backup-dependencies\\snakeyaml-2.4.jar",
+        "SnakeYamlSafeFixture"
+      ],
+      "exitCode": 0,
+      "log": "app/build/backup-dependencies/safeconstructor-core-only.log",
+      "sha256": "d9714bd095001bc85a5522651b0bb336b8c556ad03de9a5029930cf4843f564d"
+    }
+  ],
+  "runtimeDependencies": [],
+  "sourceFixtureSha256": "8ec5fe32b6fbcc0454b7abf6a6cdcd14f90dec37445f39366f1b4e1d5e340cc7",
+  "testedJdk": "17",
+  "javaDesktop": "not_available_to_test",
+  "safeDataCases": [
+    "map/dump/reopen",
+    "duplicate key rejection",
+    "global Java tag rejection",
+    "collection alias bound",
+    "nesting depth bound",
+    "codepoint bound"
+  ],
+  "androidScope": "Official Java8 classfiles and Android FIELD fallback source; SafeConstructor map path runs without java.desktop. Release D8/minSdk23 inspection and physical Android23 execution remain separate."
+}

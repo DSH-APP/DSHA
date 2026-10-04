@@ -14,20 +14,19 @@ package com.deepseekharness.app.util;
  */
 public final class ShellQuote {
 
-    private ShellQuote() {
-    }
+  private ShellQuote() {}
 
-    /**
-     * 单引号包裹，内部的单引号按 POSIX 惯例拆成 {@code '\''}。
-     *
-     * <p>单引号内除了单引号本身，shell 不做任何解释 —— {@code $}、反引号、{@code ;}、
-     * 换行、通配符全部按字面量传递，所以只要正确处理单引号这一个字符就够了。
-     *
-     * <p>{@code null} 给出空参数 {@code ''} 而不是抛异常：调用点大多在拼命令串的中间，
-     * 抛异常会把整条操作打断，而空参数会让命令自己失败并带上可读的错误输出。
-     */
-    public static String arg(String v) {
-        if (v == null) return "''";
-        return "'" + v.replace("'", "'\\''") + "'";
-    }
+  /**
+   * 单引号包裹，内部的单引号按 POSIX 惯例拆成 {@code '\''}。
+   *
+   * <p>单引号内除了单引号本身，shell 不做任何解释 —— {@code $}、反引号、{@code ;}、
+   * 换行、通配符全部按字面量传递，所以只要正确处理单引号这一个字符就够了。
+   *
+   * <p>{@code null} 给出空参数 {@code ''} 而不是抛异常：调用点大多在拼命令串的中间，
+   * 抛异常会把整条操作打断，而空参数会让命令自己失败并带上可读的错误输出。
+   */
+  public static String arg(String v) {
+    if (v == null) return "''";
+    return "'" + v.replace("'", "'\\''") + "'";
+  }
 }

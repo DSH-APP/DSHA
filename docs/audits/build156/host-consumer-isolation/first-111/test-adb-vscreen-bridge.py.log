@@ -1,0 +1,8 @@
+test_start_plan_is_returned_only_for_matching_ticket_and_exact_core_argv (__main__.ADBVirtualScreenBridgeTest.test_start_plan_is_returned_only_for_matching_ticket_and_exact_core_argv) ... ok
+test_ticket_is_consumed_before_one_remote_send_and_unknown_never_sends (__main__.ADBVirtualScreenBridgeTest.test_ticket_is_consumed_before_one_remote_send_and_unknown_never_sends) ... ok
+test_ticket_mode_rejects_root_or_caller_selected_endpoint (__main__.ADBVirtualScreenBridgeTest.test_ticket_mode_rejects_root_or_caller_selected_endpoint) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.047s
+
+OK

@@ -1,0 +1,1 @@
+{"status":"PASS","scenario":"proroot stale root/table readdir with backend-owned verified direct-path reopen","freshModulePermanentEmptyListing":"not-recovered"}

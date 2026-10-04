@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "tool": "google-java-format",
+  "version": "1.22.0",
+  "artifactSha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f",
+  "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\r\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+  "mode": "check",
+  "files": [
+    {
+      "file": "app/src/androidTest/java/com/deepseekharness/app/ui/WebInstrumentation.java",
+      "beforeSha256": "b2dfae98bf3312447fec9313a812d347bf07bf87d7e4f4261cef01f15ee0b2b6",
+      "formattedSha256": "b2dfae98bf3312447fec9313a812d347bf07bf87d7e4f4261cef01f15ee0b2b6",
+      "javaTokenSha256": "1371c766813f8554aca0276999cfdda701c0467f1647a684f271bf60283086e3",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/debug/java/com/deepseekharness/app/ui/BrowserCompatibilityAudit.java",
+      "beforeSha256": "d9db1e346d27388c0a285c2cc5b39877031dd25a96fa9f5a9f909677c3cabdd7",
+      "formattedSha256": "d9db1e346d27388c0a285c2cc5b39877031dd25a96fa9f5a9f909677c3cabdd7",
+      "javaTokenSha256": "31479685db2c7c3ae8864d62ca148be1012f2b48c60cdbc1045e231574796936",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/debug/java/com/deepseekharness/app/ui/WebBrowserAudit.java",
+      "beforeSha256": "56c0093bebb0434f6de44fa6f1c7155fcd5938f74d2de78aba8eea97646681a6",
+      "formattedSha256": "56c0093bebb0434f6de44fa6f1c7155fcd5938f74d2de78aba8eea97646681a6",
+      "javaTokenSha256": "f7d5369167f0cc9a8944de129e42577fcc2480007db36e6b292818c229f8deb0",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/debug/java/com/deepseekharness/app/ui/WebBrowserFixture.java",
+      "beforeSha256": "659e77e6f8a164c1fb5997404c6fefd857b44f80a3524a13f8f79a52ef2ea5e7",
+      "formattedSha256": "659e77e6f8a164c1fb5997404c6fefd857b44f80a3524a13f8f79a52ef2ea5e7",
+      "javaTokenSha256": "1c80d34b0725d079e4d1d753918cf787fb741c22be9f824ef39ab62c85a666b9",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/debug/java/com/deepseekharness/app/ui/WebRegressionAudit.java",
+      "beforeSha256": "bf8cad96ec8606471b48e046175ebe1e7bbbc401d460a6d0820b6d21f9fcdbfb",
+      "formattedSha256": "bf8cad96ec8606471b48e046175ebe1e7bbbc401d460a6d0820b6d21f9fcdbfb",
+      "javaTokenSha256": "9c21864508e95e6d914c55a3462f9816f303a43974ace3ab4d18cdab2ee461c7",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/test/java/com/deepseekharness/app/backup/DataRootPolicyTest.java",
+      "beforeSha256": "1d8ae336236b5ec5822ad60db087bada8377144aca5beacedf092fc6cf63e25c",
+      "formattedSha256": "1d8ae336236b5ec5822ad60db087bada8377144aca5beacedf092fc6cf63e25c",
+      "javaTokenSha256": "74a170e56e8918534eb65e5247b316982951c0490878b5a50c5184ab67adfded",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystemTest.java",
+      "beforeSha256": "4857e2f94b69c3431b46952af29fbf0267cb7a863456f23aa7a2b0aa256ee59f",
+      "formattedSha256": "4857e2f94b69c3431b46952af29fbf0267cb7a863456f23aa7a2b0aa256ee59f",
+      "javaTokenSha256": "58e62ec86033237733a5ecfede289a6f2c565ed0224215a738b3cf956226a958",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/test/java/com/deepseekharness/app/runtime/TarGzipExtractorTest.java",
+      "beforeSha256": "baabd5f9fd946f73197e566bfebbb96ae0e8cedc01170b1bf612a53b47cd8662",
+      "formattedSha256": "baabd5f9fd946f73197e566bfebbb96ae0e8cedc01170b1bf612a53b47cd8662",
+      "javaTokenSha256": "8a169eab59f1e5344d2c51d97ce95a216621166d122f805f7289896b23b4b9c7",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/test/java/com/deepseekharness/app/runtime/TrialRecoveryTest.java",
+      "beforeSha256": "a03a09397e8a9357a368ecd31d59561bcef6060404e2a5cd02c511162ee35fe1",
+      "formattedSha256": "a03a09397e8a9357a368ecd31d59561bcef6060404e2a5cd02c511162ee35fe1",
+      "javaTokenSha256": "f08deadea93f727a6a78c27ee479602204749c47cf2303960f78a3ca0ad35fe5",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/test/java/com/deepseekharness/app/util/ManagedPatchRegistryIntegrationTest.java",
+      "beforeSha256": "3945665b376551ead45e90821443af6ec0fe5672a2695d451a993c655fba6839",
+      "formattedSha256": "3945665b376551ead45e90821443af6ec0fe5672a2695d451a993c655fba6839",
+      "javaTokenSha256": "33f7fe0c33fcc4228cf4e3983a86c2a147f870461ad62887f20cb94fccf202b6",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/debug/java/com/deepseekharness/app/core/MaintenanceFixtureInstrumentation.java",
+      "beforeSha256": "833c66787309dfb99a0ece4bbfa6d81de9b89bae6d7cbdc14945fa86f3d6750d",
+      "formattedSha256": "833c66787309dfb99a0ece4bbfa6d81de9b89bae6d7cbdc14945fa86f3d6750d",
+      "javaTokenSha256": "531ed59789ab9a21005e02653f27c698eb0a165f719cf255381696f635236431",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/debug/java/com/deepseekharness/app/ui/InstallAuditInstrumentation.java",
+      "beforeSha256": "2bfab7972506a10f891b5abf07b51ae87ec1eeeb88d968496fee93d9d4a607d6",
+      "formattedSha256": "2bfab7972506a10f891b5abf07b51ae87ec1eeeb88d968496fee93d9d4a607d6",
+      "javaTokenSha256": "3dc505569fc5d22b2cc7dcbc27c0be141419dbb4400cc1c56f2c2d4d992e792d",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/debug/java/com/deepseekharness/app/core/Rc21RecoveryAudit.java",
+      "beforeSha256": "6f312ada746feda230420bf5a7665f61530b1934ac822e34ec538e636a6e3cb9",
+      "formattedSha256": "6f312ada746feda230420bf5a7665f61530b1934ac822e34ec538e636a6e3cb9",
+      "javaTokenSha256": "20991749e7b63b35b21339ed7efa842f563a609252dd2ab71a6959159bffb844",
+      "needsFormatting": false,
+      "diff": ""
+    }
+  ]
+}

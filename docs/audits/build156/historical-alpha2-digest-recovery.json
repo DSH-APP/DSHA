@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "status": "RECOVERED_FROM_ACTUAL_APK_AND_OFFICIAL_PUBLISHED_ASSETS",
+  "checkedAtUtc": "2026-10-03T22:24:57.003950+00:00",
+  "scope": "Historical alpha2 Standard only; no guessed replacement and no change to current build156 software or release files.",
+  "historicalDocument": "docs/releases/v0.1.7-alpha2-pre-release.md",
+  "invalidOriginalPreserved": "3258884e654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18",
+  "recoveredSha256": "3258884ae654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18",
+  "actualApk": {
+    "path": "release/dsha-0.1.7-alpha2.apk",
+    "bytes": 272933762,
+    "sha256": "3258884ae654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18"
+  },
+  "package": "com.dsh.client",
+  "versionCode": 145,
+  "versionName": "0.1.7-alpha2",
+  "debuggable": false,
+  "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+  "signatureSchemesVerified": [
+    "v1",
+    "v2",
+    "v3"
+  ],
+  "sources": {
+    "releaseUrl": "https://github.com/DSH-APP/DSHA/releases/tag/v0.1.7-alpha2",
+    "metadataUrl": "https://api.github.com/repos/DSH-APP/DSHA/releases/tags/v0.1.7-alpha2",
+    "releaseId": 394683261,
+    "publishedAt": "2026-09-23T13:37:57Z",
+    "artifact": {
+      "id": 583817993,
+      "name": "dsha-0.1.7-alpha2.apk",
+      "size": 272933762,
+      "digest": "sha256:3258884ae654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18",
+      "browser_download_url": "https://github.com/DSH-APP/DSHA/releases/download/v0.1.7-alpha2/dsha-0.1.7-alpha2.apk",
+      "created_at": "2026-09-23T13:21:46Z",
+      "updated_at": "2026-09-23T13:35:45Z"
+    },
+    "sidecar": {
+      "id": 583817997,
+      "name": "dsha-0.1.7-alpha2.apk.sha256",
+      "size": 89,
+      "digest": "sha256:0b918528b02d99c07bd3c9c999942d33faec015383c199eb7d85111c13b20c10",
+      "browser_download_url": "https://github.com/DSH-APP/DSHA/releases/download/v0.1.7-alpha2/dsha-0.1.7-alpha2.apk.sha256",
+      "created_at": "2026-09-23T13:21:46Z",
+      "updated_at": "2026-09-23T13:21:46Z"
+    }
+  },
+  "checks": {
+    "actualApkMatchesOfficialAssetDigestAndSize": true,
+    "fetchedOfficialSidecarMatchesLocalSidecarBytes": true,
+    "fetchedSidecarMatchesOfficialSidecarAssetDigestAndSize": true,
+    "oldInvalidValueMatchesOnlyOneDeletedHexCharacter": true,
+    "deletedCharacterOneBasedPosition": 8,
+    "digestWasCalculatedFromArtifactBeforeComparingTypo": true
+  },
+  "evidence": [
+    {
+      "path": "app/build/audit-build156/historical-digest-recovery/github-alpha2-release.json",
+      "bytes": 11643,
+      "sha256": "0e60cd15faa70995282eda7232a3c1e61673e25325b703d5944da84d5ddb5877"
+    },
+    {
+      "path": "app/build/audit-build156/historical-digest-recovery/github-alpha2-standard.apk.sha256",
+      "bytes": 89,
+      "sha256": "0b918528b02d99c07bd3c9c999942d33faec015383c199eb7d85111c13b20c10"
+    },
+    {
+      "path": "release/dsha-0.1.7-alpha2.apk.sha256",
+      "bytes": 89,
+      "sha256": "0b918528b02d99c07bd3c9c999942d33faec015383c199eb7d85111c13b20c10"
+    },
+    {
+      "path": "app/build/audit-build156/historical-digest-recovery/alpha2-standard-signature.txt",
+      "bytes": 10742,
+      "sha256": "46f2c5d0705085e04d09099ca213365eaa6c4ff4ee9e9631bfa0ba6a97daa957"
+    },
+    {
+      "path": "app/build/audit-build156/historical-digest-recovery/alpha2-standard-manifest.txt",
+      "bytes": 6286,
+      "sha256": "a470d7159afd2d1352463b5182ed487e9032495194db59d0c3fbb3fc4aae92db"
+    }
+  ],
+  "unresolved": [
+    {
+      "document": "docs/releases/v0.1.7-alpha1-build143.md",
+      "reason": "The available version143 Standard artifact has a different complete digest from the invalid historical alpha1 record. It is not substituted for that original candidate."
+    }
+  ]
+}

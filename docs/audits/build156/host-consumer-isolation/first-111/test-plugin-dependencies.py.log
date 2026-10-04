@@ -1,0 +1,15 @@
+test_author_snapshot_claims_do_not_become_local_verification (__main__.DependenciesTest.test_author_snapshot_claims_do_not_become_local_verification) ... ok
+test_cache_identity_symlink_is_rejected_without_following_external_state (__main__.DependenciesTest.test_cache_identity_symlink_is_rejected_without_following_external_state) ... skipped 'symlink creation requires elevated privileges on Windows'
+test_cancel_during_resolution_does_not_create_a_verified_snapshot (__main__.DependenciesTest.test_cancel_during_resolution_does_not_create_a_verified_snapshot) ... ok
+test_changed_confirmation_tree_and_credential_bearing_lock_are_rejected (__main__.DependenciesTest.test_changed_confirmation_tree_and_credential_bearing_lock_are_rejected) ... ok
+test_corrupt_lock_cache_fails_without_replacing_existing_version (__main__.DependenciesTest.test_corrupt_lock_cache_fails_without_replacing_existing_version) ... ok
+test_missing_offline_package_preserves_current_tree_and_has_specific_error (__main__.DependenciesTest.test_missing_offline_package_preserves_current_tree_and_has_specific_error) ... ok
+test_unlocked_refresh_replaces_same_identity_cache (__main__.DependenciesTest.test_unlocked_refresh_replaces_same_identity_cache) ... ok
+test_unlocked_resolution_runs_dependency_hooks_without_plugin_source_hooks (__main__.DependenciesTest.test_unlocked_resolution_runs_dependency_hooks_without_plugin_source_hooks) ... ok
+test_unmanaged_pnpm_version_is_rejected_before_dependency_install (__main__.DependenciesTest.test_unmanaged_pnpm_version_is_rejected_before_dependency_install) ... ok
+test_verified_rollback_never_calls_package_manager (__main__.DependenciesTest.test_verified_rollback_never_calls_package_manager) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 17.881s
+
+OK (skipped=1)

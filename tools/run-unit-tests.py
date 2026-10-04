@@ -18,6 +18,8 @@ aapt2 / d8 / 打包这一整条链。本脚本就是那条路，用来验证纯�
 Gradle 构建。它的定位是「本机没有可运行的 aapt2 时，仍然能验证 Java 改动」。
 """
 import os
+import hashlib
+import json
 import re
 import shutil
 import subprocess
@@ -44,6 +46,10 @@ def ensure_utf8_locale() -> None:
     坑二（真踩过）：不能只看「有没有设 locale 变量就跳过」。本机 LC_CTYPE=POSIX 是
     设着的，按那个判据会直接返回，UTF-8 从没生效。所以这里查 locale charmap 的实际值。
     """
+    if os.name == 'nt':
+        # Windows JVM file paths use Unicode independently of POSIX locale.
+        return
+
     def is_utf8() -> bool:
         try:
             r = subprocess.run(['locale', 'charmap'], capture_output=True, text=True, timeout=15)
@@ -99,11 +105,37 @@ def find_jar(gh: Path, *needles: str) -> Path:
     die(f'Gradle 缓存里找不到 {" 或 ".join(needles)}，先跑一次 Gradle 让它下载依赖')
 
 
+def locked_backup_classpath(gh):
+    """The fallback uses the same exact artifact versions and byte hashes as the APK."""
+    lock = json.loads((ROOT / 'tools/backup-dependencies.lock.json').read_text(encoding='utf-8'))
+    if lock.get('version') != 1 or not isinstance(lock.get('dependencies'), list):
+        die('BACKUP_DEPENDENCY_LOCK_SCHEMA')
+    selected = []
+    for row in lock['dependencies']:
+        filename = row['name'] + '-' + row['version'] + '.jar'
+        candidates = sorted((gh / 'caches/modules-2/files-2.1' / row['group'] / row['name'] / row['version']).glob('**/' + filename))
+        bundled = APP / 'build/backup-dependencies' / filename
+        if bundled.is_file():
+            candidates.insert(0, bundled)
+        if not candidates:
+            die('LOCKED_BACKUP_DEPENDENCY_MISSING:' + filename)
+        for file in candidates:
+            if hashlib.sha256(file.read_bytes()).hexdigest() != row['sha256']:
+                die('LOCKED_BACKUP_DEPENDENCY_SHA256:' + filename)
+        selected.append(str(candidates[0]))
+    return selected, {(row['group'], row['name']) for row in lock['dependencies']}
+
+
 def r_classpath_entry(gh: Path, gen: Path) -> str:
     """R 类：优先用 Gradle 生成好的 R.jar，没有就从 R.txt 生成 R.java。"""
-    for p in sorted(APP.glob('build/intermediates/compile_r_class_jar/*/*/R.jar')):
-        return str(p)
-    txt = next(iter(sorted(APP.glob('build/intermediates/compile_symbol_list/*/*/R.txt'))), None)
+    hits=list(APP.glob('build/intermediates/compile_and_runtime_r_class_jar/standardDebug/**/R.jar'))
+    if hits:
+        chosen=max(hits,key=lambda path:path.stat().st_mtime_ns)
+        if any(path.stat().st_mtime_ns>chosen.stat().st_mtime_ns for path in (APP/'src/main/res').rglob('*') if path.is_file()):
+            die('当前StandardDebug R.jar已过时；先processStandardDebugResources，不使用历史Audit R')
+        return str(chosen)
+    hits=list(APP.glob('build/intermediates/compile_symbol_list/standardDebug/**/R.txt'))
+    txt=max(hits,key=lambda path:path.stat().st_mtime_ns) if hits else None
     if txt is None:
         die('既没有 R.jar 也没有 R.txt —— 先成功跑一次资源处理（需要可用的 aapt2）')
     src = gen / 'R.java'
@@ -138,25 +170,33 @@ def _javac(sources, out: Path, cp) -> None:
     out.mkdir(parents=True, exist_ok=True)
     argfile = out.parent / f'{out.name}-args.txt'
     lines = ['-cp', os.pathsep.join(cp)] + list(sources)
-    argfile.write_text('\n'.join(lines), encoding='utf-8')
-    cmd = ['javac', '-nowarn', '-encoding', 'UTF-8', '-source', '17', '-target', '17',
+    write_argfile(argfile, lines)
+    cmd = ['javac', '-J-Dfile.encoding=UTF-8', '-J-Duser.language=en', '-J-Duser.country=US', '-nowarn', '-encoding', 'UTF-8', '-source', '17', '-target', '17',
            '-d', str(out), f'@{argfile}']
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
     if r.returncode != 0:
         errs = [l for l in (r.stdout + r.stderr).splitlines() if 'error:' in l]
         for line in errs[:40]:
             print(line, file=sys.stderr)
+        if not errs:
+            for line in (r.stdout+r.stderr).splitlines()[:25]:print(line,file=sys.stderr)
         die(f'javac 失败（{len(errs)} 条 error）')
 
 
 def main() -> int:
+    if sys.flags.optimize:
+        die('禁止 -O/PYTHONOPTIMIZE，测试校验必须执行')
     ensure_utf8_locale()
     gh = gradle_user_home()
     aj = android_jar()
     junit = find_jar(gh, 'junit-4.13.2', 'junit-4.13', 'junit-4.12')
     hamcrest = find_jar(gh, 'hamcrest-core-1.3', 'hamcrest-core')
 
-    work = Path(tempfile.mkdtemp(prefix='dsha-unjunit-'))
+    with tempfile.TemporaryDirectory(prefix='dsha-unjunit-') as folder:
+        return run_compiled_tests(Path(folder), gh, aj, junit, hamcrest)
+
+
+def run_compiled_tests(work, gh, aj, junit, hamcrest):
     gen = work / 'gen'
 
     # UiMessages 是 prepare-ui-languages.py 的产物，缺了就现场生成。
@@ -169,10 +209,12 @@ def main() -> int:
 
     r_entry = r_classpath_entry(gh, gen)
 
-    cp = [str(aj), r_entry, str(junit), str(hamcrest)]
-    for jar in list(gh.glob('caches/9.3.1/transforms/*/transformed/*/jars/classes.jar')) \
+    locked, coordinates = locked_backup_classpath(gh)
+    cp = [str(aj), r_entry, str(junit), str(hamcrest)] + locked
+    for jar in list((p for p in gh.glob('caches/9.3.1/transforms/**/classes.jar') if 'instrumented' not in p.parts)) \
             + [p for p in gh.glob('caches/modules-2/files-2.1/**/*.jar')
-               if p.is_file() and 'sources' not in p.name and 'javadoc' not in p.name]:
+               if p.is_file() and 'sources' not in p.name and 'javadoc' not in p.name
+               and not any(group in p.parts and name in p.parts for group, name in coordinates)]:
         cp.append(str(jar))
 
     roots = ['src/main/java', 'src/standard/java', 'src/debug/java']
@@ -188,7 +230,8 @@ def main() -> int:
     main_out = work / 'main'
     _javac(sorted(set(sources)), main_out, cp)
 
-    tests = sorted(str(p) for p in (APP / 'src/test/java').rglob('*Test.java'))
+    test_sources = collect_test_sources(APP)
+    tests = [p for p in test_sources if p.endswith('Test.java')]
     if not tests:
         die('没找到测试源码')
     only = [s for s in os.environ.get('DSHA_ONLY', '').split(',') if s]
@@ -196,24 +239,46 @@ def main() -> int:
         tests = [t for t in tests if any(f'{o}.java' in t for o in only)]
 
     test_out = work / 'test'
-    _javac(tests, test_out, cp + [str(main_out)])
+    _javac(test_sources, test_out, cp + [str(main_out)])
 
     # 必须是全限定名：JUnitCore 按 FQN 加载，裸类名会全部 ClassNotFound。
     classes = sorted(str(p.relative_to(test_out).with_suffix('')).replace(os.sep, '.')
                      for p in test_out.rglob('*Test.class'))
+    if only:
+        classes = [name for name in classes if name.rsplit('.', 1)[-1] in only]
+    if not classes:
+        die('没有匹配的测试类')
     run_cp = os.pathsep.join([str(test_out), str(main_out)] + cp)
     print(f'==> 纯 Java 单测：{len(classes)} 个测试类，{len(sources)} 个源文件，'
           f'android.jar={aj.name}')
     # 和 javac 同理：run 的 classpath 也不能走 argv（会被 proot 那层截断）。
     run_argfile = work / 'junit-args.txt'
-    run_argfile.write_text('\n'.join(['-cp', run_cp, 'org.junit.runner.JUnitCore'] + classes),
-                           encoding='utf-8')
-    r = subprocess.run(['java', f'@{run_argfile}'], capture_output=True, text=True)
+    # The JDK 17 native Windows launcher decodes @files before -Dfile.encoding applies.
+    write_argfile(run_argfile, ['-Ddsha.assetsDir=' + str(APP/'src/main/assets'), '-cp', run_cp,
+                               'org.junit.runner.JUnitCore'] + classes,
+                  encoding='mbcs' if os.name == 'nt' else 'utf-8')
+    r = subprocess.run(['java', '-Dfile.encoding=UTF-8', f'@{run_argfile}'],
+                       capture_output=True, text=True, encoding='utf-8', errors='replace')
     tail = (r.stdout + r.stderr).strip().splitlines()
     for line in tail[-25:]:
         print(line)
-    shutil.rmtree(work, ignore_errors=True)
     return r.returncode
+
+
+def collect_test_sources(app):
+    """Compile helpers and crash children too; only Test classes are selected for execution."""
+    return sorted(str(path) for path in (app / 'src/test/java').rglob('*.java'))
+
+
+def write_argfile(path, values, encoding='utf-8'):
+    """JDK argument files have their own quoting; whitespace and # are valid path characters."""
+    tokens = []
+    for value in values:
+        value = str(value)
+        if any(char in value for char in '\r\n\0'):
+            raise ValueError('JAVA_ARGFILE_CONTROL_CHARACTER')
+        tokens.append('"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"')
+    path.write_text('\n'.join(tokens) + '\n', encoding=encoding, newline='\n')
 
 
 if __name__ == '__main__':

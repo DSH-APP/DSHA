@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "officialBundles": [
+    {"name": "@deepseek-ai/dsh-base", "internal": true},
+    {"name": "@deepseek-ai/dsh-web-app", "internal": true}
+  ],
+  "plugins": [
+    {"name": "dsh-device-shell-guide", "guestDirectory": "/root/dsha-device-shell-guide", "entrypoint": "lib/index.js", "internal": false},
+    {"name": "dsh-task-notifier", "guestDirectory": "/root/dsha-task-notifier", "entrypoint": "lib/index.js", "internal": false},
+    {"name": "dsh-status-overlay", "guestDirectory": "/root/dsha-status-overlay", "entrypoint": "lib/index.js", "internal": false},
+    {"name": "dsh-web-mobile", "guestDirectory": "/root/dsha-web-mobile", "entrypoint": "lib/index.js", "internal": false},
+    {"name": "dsh-computer-use-android", "guestDirectory": "/root/dsha-computer-use-android", "entrypoint": "lib/index.js", "internal": false},
+    {"name": "dsh-auto-review", "guestDirectory": "/root/dsha-auto-review", "entrypoint": "lib/index.js", "internal": false},
+    {"name": "dsh-tool-vscreen", "guestDirectory": "/root/dsha-tool-vscreen", "entrypoint": "lib/index.js", "internal": false},
+    {"name": "dsh-app-integration", "guestDirectory": "/root/dsha-app-integration", "entrypoint": "index.js", "internal": true}
+  ]
+}

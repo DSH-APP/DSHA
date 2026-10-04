@@ -1,0 +1,14 @@
+JUnit version 4.13.2
+....................E..........................
+Time: 0.376
+There was 1 failure:
+1) everyRegisteredTemplateRoundTripsRawUnicodePercentAndNewlines(com.deepseekharness.app.util.UiStateTextTest)
+org.junit.ComparisonFailure: %s 项 · %s expected:<...原文 100% %d %s
+第二行:0 [item]s · 开始配对 用户原文 100% %...> but was:<...原文 100% %d %s
+第二行:0 [entrie]s · 开始配对 用户原文 100% %...>
+	at org.junit.Assert.assertEquals(Assert.java:117)
+	at com.deepseekharness.app.util.UiStateTextTest.everyRegisteredTemplateRoundTripsRawUnicodePercentAndNewlines(UiStateTextTest.java:22)
+
+FAILURES!!!
+Tests run: 46,  Failures: 1
+

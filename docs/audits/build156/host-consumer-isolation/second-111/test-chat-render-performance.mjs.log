@@ -1,0 +1,14 @@
+{
+  "runtime": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+  "scenario": "100 messages; code/stream placeholders; 6 mount/unmount cycles",
+  "samples": [
+    35.5,
+    37.900000005960464,
+    18.80000001192093,
+    32.29999998211861,
+    32.20000001788139,
+    32.900000005960464
+  ],
+  "flowRows": 100,
+  "htmlBytes": 41740
+}

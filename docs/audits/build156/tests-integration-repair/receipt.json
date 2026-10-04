@@ -1,0 +1,20 @@
+{
+  "scope": "Eight current edited debug/androidTest Java sources against actual Android37, fresh current core/runtime/backup compilation dependencies and locked Gson/BC/YAML; no Gradle, APK or device execution",
+  "sourceSha256": {
+    "app/src/debug/java/com/deepseekharness/app/core/MaintenanceFixtureInstrumentation.java": "833c66787309dfb99a0ece4bbfa6d81de9b89bae6d7cbdc14945fa86f3d6750d",
+    "app/src/debug/java/com/deepseekharness/app/ui/InstallAuditInstrumentation.java": "2bfab7972506a10f891b5abf07b51ae87ec1eeeb88d968496fee93d9d4a607d6",
+    "app/src/debug/java/com/deepseekharness/app/core/Rc21RecoveryAudit.java": "6f312ada746feda230420bf5a7665f61530b1934ac822e34ec538e636a6e3cb9",
+    "app/src/debug/java/com/deepseekharness/app/ui/WebBrowserAudit.java": "56c0093bebb0434f6de44fa6f1c7155fcd5938f74d2de78aba8eea97646681a6",
+    "app/src/debug/java/com/deepseekharness/app/ui/WebBrowserFixture.java": "659e77e6f8a164c1fb5997404c6fefd857b44f80a3524a13f8f79a52ef2ea5e7",
+    "app/src/debug/java/com/deepseekharness/app/ui/WebRegressionAudit.java": "bf8cad96ec8606471b48e046175ebe1e7bbbc401d460a6d0820b6d21f9fcdbfb",
+    "app/src/androidTest/java/com/deepseekharness/app/ui/WebInstrumentation.java": "b2dfae98bf3312447fec9313a812d347bf07bf87d7e4f4261cef01f15ee0b2b6",
+    "app/src/debug/java/com/deepseekharness/app/ui/BrowserCompatibilityAudit.java": "d9db1e346d27388c0a285c2cc5b39877031dd25a96fa9f5a9f909677c3cabdd7"
+  },
+  "exitCode": 1,
+  "logSha256": "c3fe86fb82956cc4fdd5bc6b22b636c09ddebc40aa0e21bf2f1c430a12ac3a21",
+  "dependencies": {
+    "currentCore": "app/build/audit-build156/core-jvm/main",
+    "Android": "F:\\DSHA\\_toolchains\\android-sdk\\platforms\\android-37.0\\android.jar",
+    "resources": "F:\\DSHA_RESTART\\app\\build\\intermediates\\compile_and_runtime_r_class_jar\\standardDebug\\processStandardDebugResources\\R.jar"
+  }
+}

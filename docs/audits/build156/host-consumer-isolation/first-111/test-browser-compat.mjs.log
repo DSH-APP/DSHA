@@ -1,0 +1,1 @@
+PASS browser compatibility: abort reasons, first-aborted precedence, validation, duplicate inputs, listener cleanup, manual-event protection, asynchronous timeout, long timers, UUID entropy format, idempotence and native preservation

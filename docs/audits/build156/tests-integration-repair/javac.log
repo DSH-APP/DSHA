@@ -1,0 +1,73 @@
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:14: 错误: 找不到符号
+import com.deepseekharness.app.BuildConfig;
+                              ^
+  符号:   类 BuildConfig
+  位置: 程序包 com.deepseekharness.app
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:39: 错误: 找不到符号
+  private volatile LayoutPreviewActivity page;
+                   ^
+  符号:   类 LayoutPreviewActivity
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\core\MaintenanceFixtureInstrumentation.java:61: 错误: 找不到符号
+      if (!com.deepseekharness.app.BuildConfig.DEBUG) throw new IOException("仅允许 debug fixture");
+                                  ^
+  符号:   类 BuildConfig
+  位置: 程序包 com.deepseekharness.app
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:55: 错误: 找不到符号
+    if (activity instanceof LayoutPreviewActivity
+                            ^
+  符号:   类 LayoutPreviewActivity
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:74: 错误: 找不到符号
+    if (activity instanceof LayoutPreviewActivity
+                            ^
+  符号:   类 LayoutPreviewActivity
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:76: 错误: 找不到符号
+      page = (LayoutPreviewActivity) activity;
+              ^
+  符号:   类 LayoutPreviewActivity
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:175: 错误: 找不到符号
+      check(BuildConfig.DEBUG, "仅允许 debug 包");
+            ^
+  符号:   变量 BuildConfig
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:283: 错误: 找不到符号
+        (LayoutPreviewActivity)
+         ^
+  符号:   类 LayoutPreviewActivity
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:285: 错误: 找不到符号
+                new Intent(app, LayoutPreviewActivity.class)
+                                ^
+  符号:   类 LayoutPreviewActivity
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:358: 错误: 找不到符号
+                  new Intent(app, LayoutPreviewActivity.class)
+                                  ^
+  符号:   类 LayoutPreviewActivity
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:382: 错误: 找不到符号
+    LayoutPreviewActivity old = page;
+    ^
+  符号:   类 LayoutPreviewActivity
+  位置: 类 InstallAuditInstrumentation
+app\src\debug\java\com\deepseekharness\app\ui\InstallAuditInstrumentation.java:477: 错误: 找不到符号
+      com.deepseekharness.app.OwnedAuditFiles.remove(output, fixture, "missing-environment-");
+                             ^
+  符号:   类 OwnedAuditFiles
+  位置: 程序包 com.deepseekharness.app
+app\src\debug\java\com\deepseekharness\app\core\Rc21RecoveryAudit.java:111: 错误: 找不到符号
+                    com.deepseekharness.app.BuildConfig.VERSION_NAME,
+                                           ^
+  符号:   类 BuildConfig
+  位置: 程序包 com.deepseekharness.app
+app\src\debug\java\com\deepseekharness\app\ui\BrowserCompatibilityAudit.java:169: 错误: 找不到符号
+              new Intent(getTargetContext(), FragmentSessionTestActivity.class)
+                                             ^
+  符号:   类 FragmentSessionTestActivity
+  位置: 类 BrowserCompatibilityAudit
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+14 个错误

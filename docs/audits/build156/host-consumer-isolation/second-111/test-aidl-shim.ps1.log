@@ -1,0 +1,6 @@
+==> 备份原生 aidl（x86_64，本机不可执行）：/f/DSHA_RESTART/app/build/tmp/aidl-shim-fixture-afc1b16b04ba400fb2fbd6fd5ff6a643/sdk/build-tools/36.0.0//aidl -> aidl.x86_64.disabled
+==> 已安装 aidl shim：/f/DSHA_RESTART/app/build/tmp/aidl-shim-fixture-afc1b16b04ba400fb2fbd6fd5ff6a643/sdk/build-tools/36.0.0//aidl
+==> 备份原生 aidl（x86_64，本机不可执行）：/f/DSHA_RESTART/app/build/tmp/aidl-shim-fixture-afc1b16b04ba400fb2fbd6fd5ff6a643/sdk/build-tools/36.0.0//aidl -> aidl.x86_64.disabled
+==> 已安装 aidl shim：/f/DSHA_RESTART/app/build/tmp/aidl-shim-fixture-afc1b16b04ba400fb2fbd6fd5ff6a643/sdk/build-tools/36.0.0//aidl
+==> aidl shim 已在位：/f/DSHA_RESTART/app/build/tmp/aidl-shim-fixture-afc1b16b04ba400fb2fbd6fd5ff6a643/sdk/build-tools/36.0.0//aidl
+AIDL shim restore fixture: PASS

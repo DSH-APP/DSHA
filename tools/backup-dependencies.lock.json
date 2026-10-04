@@ -18,6 +18,18 @@
       "license": "Bouncy-Castle (MIT-style)",
       "licenseAsset": "licenses/bouncycastle-LICENSE.txt",
       "source": "https://www.bouncycastle.org/download/bouncy-castle-java/"
+    },
+    {
+      "group": "org.yaml",
+      "name": "snakeyaml",
+      "version": "2.4",
+      "sha256": "ef779af5d29a9dde8cc70ce0341f5c6f7735e23edff9685ceaa9d35359b7bb7f",
+      "license": "Apache-2.0",
+      "licenseAsset": "licenses/snakeyaml-LICENSE.txt",
+      "licenseSha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+      "source": "https://bitbucket.org/snakeyaml/snakeyaml/src/snakeyaml-2.4/",
+      "artifact": "https://repo.maven.apache.org/maven2/org/yaml/snakeyaml/2.4/snakeyaml-2.4.jar",
+      "publishedSha1": "e0666b825b796f85521f02360e77f4c92c5a7a07"
     }
   ]
 }

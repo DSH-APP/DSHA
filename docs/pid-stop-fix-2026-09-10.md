@@ -1,5 +1,8 @@
 # 1.5-alpha.2 停止检查修订
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 修复更新时「无法确认 Web 已停止」的阻塞，并按用户要求取消启动超时自动终止。版本名、版本码 115、Ubuntu 基础版本 10 和 dsh 0.1.5-alpha.2 保持不变。
 
 ## 原因与处理

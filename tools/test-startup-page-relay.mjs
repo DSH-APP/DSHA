@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';import vm from 'node:vm';
+const source=fs.readFileSync(new URL('../app/src/main/assets/web-integration/startup-relay.js',import.meta.url),'utf8');
+const incoming=[],sent=[],events={};
+const port={onMessage:{addListener(fn){incoming.push(fn);}},postMessage(value){sent.push(JSON.parse(JSON.stringify(value)));}};
+const world={location:{origin:'http://127.0.0.1:3087',pathname:'/'},browser:{runtime:{connectNative(){return port;}}},document:{head:{appendChild(){}},createElement(){return {remove(){}};}},addEventListener(type,fn){events[type]=fn;},MutationObserver:class{observe(){} disconnect(){}}};
+world.window=world;world.top=world;vm.runInNewContext(source,world);
+events['dsha-startup']({detail:JSON.stringify({type:'issue',documentId:'fixture-doc',sequence:0,message:'early actual failure',fatal:true,nonce:'untrusted-page-token',page:'http://evil.example/'})});
+assert.equal(sent.length,0,'Early report waits for current native port binding');
+incoming[0]({type:'language',language:'en',observationNonce:'a'.repeat(32)});
+assert.equal(sent.length,1);assert.equal(sent[0].report.nonce,'a'.repeat(32));assert.equal(sent[0].report.page,'http://127.0.0.1:3087/');assert.equal(sent[0].report.fatal,true);
+events['dsha-startup']({detail:JSON.stringify({type:'ready',documentId:'fixture-doc',sequence:1,message:'ready',fatal:false})});
+assert.equal(sent[1].report.sequence,1);assert.equal(sent[1].report.type,'ready');
+events['dsha-startup']({detail:'not-json'});assert.equal(sent.length,2);
+events['dsha-language-selected']({detail:'system'});assert.equal(sent.length,2);
+console.log('Current Gecko relay: buffered pre-binding failure, current-port nonce/page stamping, raw report fields, malformed and invalid language bounds PASS. No browser/device network claimed.');

@@ -1,0 +1,450 @@
+{
+  "lane": "bridge",
+  "source": "D:\\qq\\文件\\DSHA-deliverables-20261002\\DSHA-deliverables-20261002",
+  "baselineBuild": 155,
+  "items": [
+    {
+      "source": {
+        "id": "D-SEC-03",
+        "category": "安全与隐私",
+        "severity": "P0",
+        "evidence": "静态核实",
+        "title": "桥 token 可经查询串传递，官方引导与多个内置插件把 token 放进 URL/命令行",
+        "where": "app/src/main/java/com/deepseekharness/app/HttpShellService.java:475-492,965-969; assets/builtin-plugins/dsh-device-shell-guide/lib/index.js:15-16; dsh-computer-use-android/lib/server.cjs:30-31; dsh-task-notifier/lib/index.js:8,30-40; dsh-tool-vscreen/lib/server.cjs:20; selftest.py:238-239,279; tools/test-android-computer-use.mjs:28",
+        "recommendation": "①/app/help 与 dsh-device-shell-guide 改为 curl -H \"X-Token: $(cat /root/.dsh/.bridge_token)\"（或 -H @file）；②computer-use/task-notifier/vscreen 插件改用 X-Token 头，test-android-computer-use.mjs:28 改为断言 searchParams 无 token 且 header 有；③selftest.py 若保留同改；④服务端加开关逐步弃用 query token（先记录告警，下一版本仅允许 WebView 首帧/LAN 首访专用路径），WebView 首帧 URL 另行处理（见 D-SEC-17）。",
+        "acceptance": "新增门禁 tools/test-bridge-token-transport.py：扫描 assets/ 与 HttpShellService 帮助文本，不得出现 'token=$T'、searchParams.set('token'、URLSearchParams({token；更新后的 test-android-computer-use.mjs、test-plugin-states.mjs、test-adb-flow.py 通过；HttpShellService 弃用阶段的单测验证 ?token= 被拒/告警。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-03",
+        "title": "桥 token 可经查询串传递，官方引导与多个内置插件把 token 放进 URL/命令行",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P0",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "app/src/main/assets/builtin-plugins/dsh-computer-use-android/lib/server.cjs",
+          "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/lib/index.js",
+          "app/src/main/assets/builtin-plugins/dsh-task-notifier/lib/index.js",
+          "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs",
+          "app/src/main/java/com/deepseekharness/app/util/BridgeCredentialAuth.java",
+          "app/src/main/java/com/deepseekharness/app/util/BridgeCredentialFiles.java",
+          "app/src/main/assets/bridge-token-compat.cjs",
+          "tools/test-bridge-token-compat.mjs"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Header-only and query/conflict/duplicate auth JVM checks PASS",
+          "Actual unmodified peak-chip 4.1.8 tgz function + Request/Headers/AbortSignal migration shim PASS",
+          "Bridge protocol 3 / header-x-token declared; browser universal injection does not claim CORS networking support"
+        ],
+        "residual": [
+          "Only literal loopback:3090 GET fetch is migrated. Unknown curl/http library legacy query clients require header update; no same-UID sandbox claim."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-04",
+        "category": "安全与隐私",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "屏幕操作敏感应用判定靠包名子串黑名单且判定与执行间存在 TOCTOU，/app/launch 无授权闸",
+        "where": "app/src/main/java/com/deepseekharness/app/HttpShellService.java:764-780,782-800,528-529,1271-1283; DshaAccessibilityService.java:257,394-400,458-470",
+        "recommendation": "①uiTapText/uiInput/swipe 执行时传入授权时的包名，执行前在同一 AccessibilityNodeInfo root 上校验 root.getPackageName() 一致，否则返回 [ERR] 前台已变化；②uiInput 去掉无焦点回退或要求明确节点；③/app/launch 对 isSensitiveApp 目标走 requestUserConfirm，并在启动后短时间内（如 3s）要求下一次 UI 动作重新确认；④敏感名单抽成可配置资源，增加类别判定（如 PackageManager 声明 HCE/支付、ApplicationInfo.category），并允许用户自定义追加。",
+        "acceptance": "JVM 单测：isSensitiveApp 覆盖新增类别；仪器测试/设备审计（tools/device-policy-device-audit.py）新增用例：授权后切换前台包再 tap → 返回前台已变化；/app/launch?pkg=<名单内包> 在无确认时返回需确认；uiInput 无焦点时返回错误。",
+        "depends_on": "D-SEC-00",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-04",
+        "title": "屏幕操作敏感应用判定靠包名子串黑名单且判定与执行间存在 TOCTOU，/app/launch 无授权闸",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+          "app/src/main/java/com/deepseekharness/app/util/ScreenTarget.java",
+          "app/src/main/java/com/deepseekharness/app/util/SensitiveAppPolicy.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Display/pkg/window target identity and unknown-sensitive pure JVM cases PASS",
+          "No missing-focus editable fallback; actual-source production javac PASS"
+        ],
+        "residual": [
+          "No phone evidence. Window changes fail closed; package sensitivity is a heuristic and does not guarantee all sensitive interfaces are detected."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-05",
+        "category": "安全与隐私",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "局域网模式为明文 HTTP，首访 token 在 URL 中并被显示/复制到剪贴板",
+        "where": "app/src/main/java/com/deepseekharness/app/LanProxyService.java:38,290,440-442,543-544; LanAuth.java:64,104; ui/LaunchFragment.java:371-406",
+        "recommendation": "①UI 明示“仅限可信局域网，流量未加密”，检测到开放/公共 WiFi（WifiManager 无加密/captive）时拒绝开启或二次确认；②剪贴板写入用 ClipDescription EXTRA_IS_SENSITIVE（Android 13+）并缩短 Toast 为不含 token；界面默认遮蔽 token，点击显示；③cookie Max-Age 缩短（如 12h）并在关闭 LAN 时轮换 token；④中长期：自签证书 TLS 或配对码一次性换 cookie，避免 token 进 URL。",
+        "acceptance": "JVM 单测：LanAuth 首访后重定向 Location 不含 token（已有逻辑补断言）；UI 测试/截图审计：LaunchFragment 地址文本默认不含完整 token，复制的 ClipData 带 sensitive 标志；关闭再开启 LAN 后旧 cookie 返回 401。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-05",
+        "title": "局域网模式为明文 HTTP，首访 token 在 URL 中并被显示/复制到剪贴板",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
+          "app/src/main/java/com/deepseekharness/app/LanProxyService.java",
+          "app/src/main/java/com/deepseekharness/app/LanAuth.java",
+          "app/src/main/java/com/deepseekharness/app/bridge/SensitiveClipboard.java",
+          "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "LAN address clipboard content preserved; sensitive flag on API24+, Toast no URL/token echo",
+          "Clipboard helper and bridge current-source production javac PASS"
+        ],
+        "residual": [
+          "LAN HTTP feature remains plaintext within selected network and Android23 cannot attach sensitive clipboard extras; no TLS/pairing claim or device clipboard test."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-14",
+        "category": "安全与隐私",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "虚拟屏动作按主屏前台包判定敏感应用，敏感应用闸被旁路",
+        "where": "app/src/main/java/com/deepseekharness/app/HttpShellService.java:782-788,875-885; vscreen/VirtualScreenCore.java:182,283; vscreen/VirtualScreenManager.bridge",
+        "recommendation": "uiAuthorized 增加目标参数：主屏用 currentPackage()，虚拟屏用 VirtualScreenManager 当前显示的顶层包名（launch 时用请求的 package）；VirtualScreenCore.launchPackage 与 /vscreen/launch 对 isSensitiveApp 目标强制逐次确认；see/tree 对敏感包返回拒绝或仅结构不含文本。敏感判定函数与 D-SEC-04 共用。",
+        "acceptance": "JVM 单测：注入虚拟屏前台包为 com.eg.android.AlipayGphone 时，有屏幕授权的 tap 仍触发确认；仪器/设备审计：/app/vscreen/launch?package=<敏感包> 无确认返回 USER_REJECTED；see/tree 对敏感包不回传文本。",
+        "depends_on": "D-SEC-04",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-14",
+        "title": "虚拟屏动作按主屏前台包判定敏感应用，敏感应用闸被旁路",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+          "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+          "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Privileged execution rechecks actual display top package; known expected target never succeeds when unverifiable",
+          "Stable VSCREEN_TARGET_UNVERIFIABLE/TARGET_CHANGED error; current Android37 source javac PASS"
+        ],
+        "residual": [
+          "TaskInfo hidden displayId availability and virtual display behavior require device evidence. Unknown target one-shot confirmation does not assert identity verification."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-19",
+        "category": "安全与隐私",
+        "severity": "P1",
+        "evidence": "候选",
+        "title": "root 读取短信库拦截不含 /data_mirror 绑定挂载路径",
+        "where": "app/src/main/assets/device-shell-policy.py:52-64,121-131; app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java:209-221; DeviceShellExecutor.java:88-104",
+        "recommendation": "Python 与 Java 两处同步：路径正则增加 ^/data_mirror/data_(?:ce|de)/[^/]+/[0-9]+/com\\.android\\.providers\\.telephony 以及 /data_mirror/cur_profiles 等；descendant 祖先增加 /data_mirror 及其各级前缀；更稳妥的做法是对 root READ 命令按 stat 的 (st_dev, st_ino) 与短信库目录比对，而非仅靠路径文本。两份实现应由同一规则表生成（消除 Python/Java 镜像漂移）。",
+        "acceptance": "Python 单测（tools/test-device-shell-policy.py）与 JVM 单测（DeviceShellPolicyTest）新增 /data_mirror/data_ce/null/0/com.android.providers.telephony/databases/mmssms.db、find /data_mirror 均被拒；真机 root 验收：cat 该路径返回 [POLICY_BLOCKED]。",
+        "depends_on": "D-SEC-00",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-19",
+        "title": "root 读取短信库拦截不含 /data_mirror 绑定挂载路径",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+          "app/src/main/assets/device-shell-policy.py",
+          "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java",
+          "tools/test-device-shell-policy.py"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Native mirrored/adopted SMS and ancestor bounds JVM PASS",
+          "21 real-source Python executor-policy tests PASS, including privileged adb and symlink-resolved read denial"
+        ],
+        "residual": [
+          "Real Root/Shizuku/SELinux/device channels not exercised; shared-storage cross-process races still require device evidence."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-NET-01",
+        "category": "安全与隐私",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "全应用 usesCleartextTraffic=true，未用 network_security_config 限定 localhost",
+        "where": "app/src/main/AndroidManifest.xml:56; app/src/main/res/xml/（无 network_security_config.xml）",
+        "recommendation": "新增 res/xml/network_security_config.xml：base-config cleartextTrafficPermitted=false，domain-config 对 127.0.0.1、localhost 允许明文；manifest 改为 android:networkSecurityConfig=\"@xml/network_security_config\" 并去掉 usesCleartextTraffic。外部 http 链接交给系统浏览器而非应用内 WebView。low flavor 的 GeckoView 不遵守 NSC，需在 GeckoPreviewActivity 的导航拦截中限制非 loopback 的 http。",
+        "acceptance": "aapt dump xmltree 校验 manifest 含 networkSecurityConfig；仪器测试：HttpURLConnection 访问 http://example.invalid 抛 cleartext 不允许异常，访问 http://127.0.0.1:3090/health 成功；WebView 加载 DSH Web（127.0.0.1）正常（现有启动冒烟测试）。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-NET-01",
+        "title": "全应用 usesCleartextTraffic=true，未用 network_security_config 限定 localhost",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/AndroidManifest.xml",
+          "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+          "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+          "app/src/main/res/xml/network_security_config.xml",
+          "tools/test-ui-boundaries154.py"
+        ],
+        "evidenceReferences": [
+          "changes-UI.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Known official update domains deny platform cleartext; localhost/IPv4/IPv6 and API23 compatibility retained in explicit NSC",
+          "Actual updater HTTPS and redirect execution tests PASS; XML/manifest static scope test PASS",
+          "Actual callers: native models/auth/runtime/bridge/download traffic is loopback-bound; external provider networking is guest Node. WebView third-party/user HTTP ability intentionally retained"
+        ],
+        "residual": [
+          "Base cleartext remains true by current functional authorization. NSC is not a guest Node, Gecko, raw-socket or system-browser firewall. Platform enforcement/device matrix not run."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-06",
+        "category": "安全与隐私",
+        "severity": "P2",
+        "evidence": "候选",
+        "title": "特权进程先校验路径再执行 cp/mv/rm，共享存储存在跨 App TOCTOU",
+        "where": "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java:43-47,112-129,131-151,152-160",
+        "recommendation": "执行器内用 Java/Os 实现文件操作而非外部 cp/mv/rm：基于 openat 风格逐级 O_NOFOLLOW|O_DIRECTORY 打开、unlinkat/renameat 相对父目录 fd 操作；或在外部命令上加 --no-dereference 并限制目标仅在 App 自有目录。至少对 rm -r 改为自实现递归删除，每级 lstat 后按 fd 操作。",
+        "acceptance": "JVM/仪器单测：模拟在 validateFiles 后、执行前替换路径为链接（注入 Runner 钩子），断言操作失败且受保护目录不变；tools/device-policy-device-audit.py 现有写保护用例全部通过。",
+        "depends_on": "D-SEC-00",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-06",
+        "title": "特权进程先校验路径再执行 cp/mv/rm，共享存储存在跨 App TOCTOU",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "requires_device_evidence",
+        "status": "requires_device_evidence",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Artifact/source-review disposition only; this merger executed no tests, phone, Gradle or build commands."
+        ],
+        "residual": [
+          "No Android device operation in this round; host/source evidence cannot establish ROM/FS/runtime/model matrix or upgrade installation."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "requires_device_evidence"
+      }
+    },
+    {
+      "source": {
+        "id": "D-ADB-01",
+        "category": "安全与隐私",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "AdbBridge 写入的 allow-root-shell/confirm-shell-* 标记文件无读取方（死代码）",
+        "where": "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java:203,206-221; tools/test-adb-flow.py:208; 对照 HttpShellService.java:663, core/HarnessController.java:247",
+        "recommendation": "删除 applySettingsOwned 中三处 setFlag 及“同步 ADB 授权”环境步骤（若无其他内容）；删除 test-adb-flow.py:208 对标记文件的 isfile mock；可在升级流程中清理 rootfs/root/.dsh 下残留标记。",
+        "acceptance": "grep -rn 'allow-root-shell\\|confirm-shell-' app tools 无结果；python3 tools/test-adb-flow.py 通过；root 开关关闭时 /exec?su=1 仍被 HttpShellService 拒绝（现有设备审计用例）。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-ADB-01",
+        "title": "AdbBridge 写入的 allow-root-shell/confirm-shell-* 标记文件无读取方（死代码）",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+          "app/src/main/assets/adb-shell.py",
+          "tools/test-adb-flow.py"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Removed3 unread deadflagwrites/misleading mocks;31 policyroute tests PASS"
+        ],
+        "residual": [
+          "Historical flag bytes retained; native policy is current authority."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    }
+  ]
+}

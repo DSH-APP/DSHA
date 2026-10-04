@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""专属临时根目录验证覆盖升级的数据迁移与拒绝危险归档。"""
+"""Historical Python v1 migration fixture only; current rebuilds use the native host transaction."""
 import importlib.util
 import io
 import json
@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-spec = importlib.util.spec_from_file_location('environment_data', Path(__file__).resolve().parents[1] / 'app/src/main/assets/environment-data.py')
+spec = importlib.util.spec_from_file_location('environment_data', Path(__file__).resolve().parents[1] / 'tools/history/build156/unused-assets/environment-data.py')
 engine = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(engine)
 

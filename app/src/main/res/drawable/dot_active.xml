@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- 引导页当前页指示：拉长成主色胶囊，比单纯换颜色更容易一眼定位 -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="@color/primary" />
-    <corners android:radius="@dimen/radius_pill" />
-</shape>

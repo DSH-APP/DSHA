@@ -1,5 +1,8 @@
 # 真机验收记录 · 2026-09-05
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 最新两版 versionCode 110 的下载、导入和 npm 验收与产物见 [后续修复记录](plugin-download-npm-fix-2026-09-05.md)。
 
 同日后续的插件布局与安装第 2 步修复及最新 APK 信息，见 [后续修复记录](plugin-layout-install-fix-2026-09-05.md)。

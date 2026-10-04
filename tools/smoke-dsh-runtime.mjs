@@ -9,18 +9,6 @@ const runtime = resolve(process.argv[2]);
 const home = resolve(process.argv[3]);
 const build = resolve('app/build') + sep;
 if (!home.startsWith(build)) throw new Error('测试数据目录必须位于 app/build');
-if (process.argv.includes('--models-entry')) {
-  const patch=JSON.parse(readFileSync('app/src/main/assets/models-navigation-patch.json','utf8'));
-  const client=resolve(runtime,'node_modules',patch.module);
-  if (!client.startsWith(build)) throw new Error('模型入口检查只能修改隔离运行时');
-  let content=readFileSync(client,'utf8').replace(/\r\n/g,'\n');
-  for(const {before,after} of patch.patches){
-    if(content.includes(after))continue;
-    if(content.split(before).length!==2)throw new Error('模型入口的上游源码不匹配');
-    content=content.replace(before,after);
-  }
-  writeFileSync(client,content);
-}
 if (process.argv.includes('--composer')) {
   const client=resolve(runtime,'node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js');
   if (!client.startsWith(build)) throw new Error('输入检查只能修改隔离运行时');
@@ -215,16 +203,6 @@ try {
         await page.screenshot({ path: resolve(home, 'browser-files.png'), fullPage: true });
         await page.evaluate(() => document.dispatchEvent(new Event('dsha-close-details')));
         await page.locator('[data-sidebar-right-panel][data-sidebar-right-open]').waitFor({ state: 'hidden' });
-      }
-      if (process.argv.includes('--models-entry')) {
-        for(const label of ['继续','稍后配置']) {
-          const button=page.getByRole('button',{name:label,exact:true});
-          if(await button.count() && await button.isVisible())await button.click();
-        }
-        // 原生入口事件应当通过真实布局服务展开默认收起的窄屏侧栏。
-        await page.evaluate(()=>{window.__DSHA_OPEN_MODELS__=true;window.dispatchEvent(new Event('dsha-open-models'));});
-        await page.getByRole('button',{name:'添加自定义提供方',exact:true}).waitFor({state:'visible'});
-        await page.screenshot({path:resolve(home,'models-entry.png'),fullPage:true});
       }
       const state = await page.evaluate(() => ({ text: document.body.innerText.slice(0, 9000),
         integration: document.documentElement.getAttribute('data-dsha-integration'),

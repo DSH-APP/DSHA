@@ -1,3 +1,4 @@
+import {testRuntime} from './test-runtime-fixture.mjs';
 // 使用锁定的 Cordis 与可控桥 IO，覆盖真实状态变化、迟到的桥及卸载时序。
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -36,7 +37,7 @@ test('桥晚于启动可重试，状态变化串行发送并清除已恢复故�
 });
 
 test('锁定 Cordis 实例：等待依赖、异步加载、实际失败和卸载的报告一致', async () => {
-  const {Context}=await import(pathToFileURL(resolve(process.env.DSHA_TEST_RUNTIME || 'app/build/rc1-20260910/locked-runtime','node_modules/@deepseek-ai/cordis/lib/index.js')));
+  const {Context}=await import(pathToFileURL(resolve(testRuntime('raw'),'node_modules/@deepseek-ai/cordis/lib/index.js')));
   const ctx=new Context();const fibers=[];
   try {
     const pending=ctx.plugin({name:'test-pending',inject:['fixtureMissing'],apply(){}});fibers.push(pending);

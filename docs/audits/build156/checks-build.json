@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "startedAt": "2026-10-03T12:27:39.372088+00:00",
+  "commands": [
+    {
+      "name": "ci-package",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/test-ci-package.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "log": "app/build/build156-build-checks/ci-package.log",
+      "sha256": "ed76b8cd56664c3711cd34072f297fe4ac54862ea0117b0fb9aacdd6aa9cd4c9"
+    },
+    {
+      "name": "native-builder-contract",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/test-native-session-build.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "log": "app/build/build156-build-checks/native-builder-contract.log",
+      "sha256": "af9cc7d4c95ff624283cabd8f8261957f5a5525c10015b2c058e962aba80fa8c"
+    },
+    {
+      "name": "descriptor-source-contract",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/test-runtime-descriptor-source.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "log": "app/build/build156-build-checks/descriptor-source-contract.log",
+      "sha256": "960edbdc52275db60b224b5ad175f6cb7079b6ed5d4eb81b8c62dc16465624a6"
+    },
+    {
+      "name": "generated-text",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/test-source-text.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "log": "app/build/build156-build-checks/generated-text.log",
+      "sha256": "6860e69449ede874c6d88096547601389d44c60bf0b06c02e6b5df19031f0277"
+    },
+    {
+      "name": "third-party-contract",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/test-third-party-notices.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "log": "app/build/build156-build-checks/third-party-contract.log",
+      "sha256": "8b7df4f4a25fc5466cbead22af349eaa2c77bbc2812f1d213484be4860bb161a"
+    },
+    {
+      "name": "release-evidence",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/test-release-evidence.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "log": "app/build/build156-build-checks/release-evidence.log",
+      "sha256": "ffe40085de9aea3f29e0e1da0e6afc771375a4491df98d1d202b438a808705bc"
+    },
+    {
+      "name": "runtime-tools",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/prepare-runtime-tools.py",
+        "--check"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "log": "app/build/build156-build-checks/runtime-tools.log",
+      "sha256": "bca4e0ca2a9bc87290064a2c047c8a47d2c1699738ac404f18335ca5ebf2271d"
+    },
+    {
+      "name": "ci-toolchain",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/ci-toolchain.py"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "log": "app/build/build156-build-checks/ci-toolchain.log",
+      "sha256": "873124793354852e12b73dc47db0d25bff5768457daf4b204a2bad8e80e4c2cd"
+    },
+    {
+      "name": "dns-compat",
+      "command": [
+        "node",
+        "--test",
+        "tools/test-dns-compat.mjs"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "passed": true,
+      "log": "app/build/build156-build-checks/dns-compat.log",
+      "sha256": "962d2caee8de411fa2f7b20f4e73e4ce6c9b68a8ec0f95a096aeb1bef1eaf052"
+    },
+    {
+      "name": "sign-requires-explicit-key",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/sign-release-apks.py",
+        "--apks",
+        "missing-standard-unsigned.apk",
+        "missing-low-unsigned.apk",
+        "--output",
+        "F:\\DSHA_RESTART\\app\\build\\build156-build-checks\\missing-key-output"
+      ],
+      "exitCode": 2,
+      "expectedExitCode": 2,
+      "passed": true,
+      "log": "app/build/build156-build-checks/sign-requires-explicit-key.log",
+      "sha256": "3dc2a541c99fcd1d96999619fa7278aeae529ee04247b6a41dc6e443e66fbe02"
+    }
+  ],
+  "noGradle": true,
+  "noApkGenerated": true,
+  "noSigningKeyRead": true,
+  "noDeviceOperation": true,
+  "linuxNativeDns": "explicitly_skipped_on_windows",
+  "nativeRebuild": "runtime_lane_owns_latest_source_and_binary; older source check is superseded"
+}

@@ -1,0 +1,493 @@
+{
+  "schema": 1,
+  "owner": "mobile_server154-engineering",
+  "phase": "source-frozen-own-scope",
+  "items": [
+    {
+      "id": "D-TEST-03",
+      "status": "implemented-and-source-verified",
+      "files": [
+        "app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+        "docs/audits/build154/engineering-retired-sources.json"
+      ],
+      "checks": [
+        "Historical private-device plugin/downgrade APK runner preserved by source SHA; default class explicitly returns RETIRED/CANCELED without accessing real data"
+      ],
+      "residual": [
+        "Final complete runtime/asset/APK/release gates are root-owned; no device operation."
+      ]
+    },
+    {
+      "id": "D-TEST-06",
+      "status": "implemented-and-source-verified",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java",
+        "app/src/debug/AndroidManifest.xml"
+      ],
+      "checks": [
+        "Real-configuration credential workflow and obsolete backup_launch_count restore removed from active compilation/manifest; original source retained with SHA"
+      ],
+      "residual": [
+        "Final complete runtime/asset/APK/release gates are root-owned; no device operation."
+      ]
+    },
+    {
+      "id": "D-TEST-09",
+      "status": "implemented-and-source-verified",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/ui/PluginListAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java"
+      ],
+      "checks": [
+        "Visible built-ins compared by exact current BuiltinPlugins registry set; historical real-device upgrader retired"
+      ],
+      "residual": [
+        "BuiltinPlugins stale four-plugin comment is owned by G3/root; no plugin install/device run"
+      ]
+    },
+    {
+      "id": "D-TEST-11",
+      "status": "implemented-and-source-verified",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/ui/WebRegressionAudit.java"
+      ],
+      "checks": [
+        "Require actual Web URL empty, no starting/running process and verified stopped barrier before fixture server or browser activity opens"
+      ],
+      "residual": [
+        "Final complete runtime/asset/APK/release gates are root-owned; no device operation."
+      ]
+    },
+    {
+      "id": "D-DEAD-01",
+      "status": "implemented-owned-subset",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/bridge/AppBridge.java",
+        "app/src/main/java/com/deepseekharness/app/DangerShellGuard.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WelcomeActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/OverlayStyleDialog.java",
+        "app/src/debug/java/com/deepseekharness/app/ui/LayoutAuditInstrumentation.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java"
+      ],
+      "checks": [
+        "Production/source references verified before retirement; original deleted source bytes retained with SHA; removed unused doRestore/pages and unreachable tap/swipe/key argv cases; retained LayoutAudit style and current OverlayFragment"
+      ],
+      "residual": [
+        "Final complete runtime/asset/APK/release gates are root-owned; no device operation."
+      ],
+      "transfer": [
+        {
+          "owner": "ROOT/G1",
+          "path": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "remaining": "unused private confirmEnabled/awaitConfirm"
+        },
+        {
+          "owner": "ROOT/G1",
+          "path": "app/src/main/assets/adb-shell.py",
+          "remaining": "unused READONLY_CMDS/is_readonly_cmd/request_confirm and corresponding tools/test-adb-flow.py legacy fixtures"
+        },
+        {
+          "owner": "ROOT/G2",
+          "path": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+          "remaining": "unused single-parameter validateRuntime overload; cleanupCompleted now has real host retirement cleanup and is not empty"
+        },
+        {
+          "owner": "ROOT/G1",
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+          "remaining": "public lastSkipped/lastSkipNote diagnostics have no external current reader; do not alter owner extractor boundary"
+        },
+        {
+          "owner": "ROOT/G3",
+          "path": "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java",
+          "remaining": "inBundlesSection is test-only; mark intent or retire with owner tests"
+        }
+      ]
+    },
+    {
+      "id": "D-TEST-07",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/ui/InstallAuditInstrumentation.java",
+        "app/src/debug/java/com/deepseekharness/app/ui/MultiTerminalLanguageAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/ui/StartupRecoveryAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/ui/UiMotionAudit.java"
+      ],
+      "checks": [
+        "DEBUG restriction now precedes all fixture modes; labels identify debug source set; pending rollback in finally; only owned missing-environment fixture removed after task/guest barrier",
+        "Actual current main/Standard/debug javac PASS"
+      ],
+      "residual": [
+        "No extra debug/audit APK generation or device execution; final Release Lint/APK gates are owned by root."
+      ]
+    },
+    {
+      "id": "D-TEST-10",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/DevicePolicyAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/OwnedAuditFiles.java",
+        "tools/device-policy-device-audit.py"
+      ],
+      "checks": [
+        "UUID per-run cache/preference identity and READY result binding; host script requires the same exact UUID; default bounded own-fixture cleanup",
+        "Actual debug Java compile and Python py_compile PASS"
+      ],
+      "residual": [
+        "No extra debug/audit APK generation or device execution; final Release Lint/APK gates are owned by root."
+      ]
+    },
+    {
+      "id": "D-TEST-19",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/debug/java",
+        "app/src/debug/AndroidManifest.xml",
+        "app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+        "docs/audits/build154/engineering-retired-sources.json"
+      ],
+      "checks": [
+        "Unambiguous instrumentation result uses Activity.RESULT_OK/CANCELED; real-credential ConfigurationAudit retired with exact original git blob/hash",
+        "Actual current debug javac PASS"
+      ],
+      "residual": [
+        "No extra debug/audit APK generation or device execution; final Release Lint/APK gates are owned by root."
+      ]
+    },
+    {
+      "id": "D-TEST-20",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/runtime/RuntimeStartupAudit.java"
+      ],
+      "checks": [
+        "Terminal birth fixture explicitly debug-only and emits its limited evidence scope; does not reject its only build type",
+        "Actual current debug javac PASS"
+      ],
+      "residual": [
+        "No extra debug/audit APK generation or device execution; final Release Lint/APK gates are owned by root."
+      ]
+    },
+    {
+      "id": "D-TEST-23",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/test/java/com/deepseekharness/app/util/ProcessTerminationTest.java",
+        "app/src/test/java/com/deepseekharness/app/util/ShellQuoteTest.java",
+        "app/src/test/java/com/deepseekharness/app/util/StartupHistoryStoreTest.java"
+      ],
+      "checks": [
+        "14 JUnit PASS across the three classes; two actual primitive lifecycles verify supplied signal callbacks; independent POSIX literal scanner round-trips malicious/Unicode strings; durable history bytes inspected for secret absence"
+      ],
+      "residual": [
+        "ProcessTermination is a process/callback primitive with no PID/UID selector; this test no longer falsely claims unrelated same-UID selection coverage. Identity selection has separate production tests."
+      ]
+    },
+    {
+      "id": "D-DEBUG-01",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/core/MaintenanceFixtureInstrumentation.java",
+        "app/src/debug/java/com/deepseekharness/app/core/Rc21RecoveryAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java",
+        "app/src/debug/AndroidManifest.xml"
+      ],
+      "checks": [
+        "Default UUID fixture cleanup with keepFixture=1 explicit retention and unconfirmed-task refusal; removed never-enabled failBackup override; real-screen/log writer retired with original SHA; no silent cleanup of unknown historical fixture trees",
+        "Current debug javac PASS"
+      ],
+      "residual": [
+        "No APK/device operation; root owns final complete release gate."
+      ]
+    },
+    {
+      "id": "D-DEAD-02",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/main/assets/backup-prepare.py",
+        "app/src/main/assets/restore-merge.py",
+        "tools/test-restore-merge-plugins.py",
+        "tools/test-restore-merge-wsdir.py",
+        "tools/history/engineering/assets"
+      ],
+      "checks": [
+        "No production readAsset/deployment caller; retained original script bytes/SHA outside APK; unchanged legacy module fixtures now point to retained source",
+        "4 plugin restore tests PASS; legacy workspace now4 safe cases, Windows2PASS/2POSIX skip, history-only; NativeBackup/legacy importer remain"
+      ],
+      "residual": [
+        "No APK/device operation; root owns final complete release gate."
+      ]
+    },
+    {
+      "id": "D-DEAD-03",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "tools/asset-deployment.json",
+        "tools/asset_deployment.py",
+        "tools/verify-asset-deployment.py",
+        "tools/prepare-standard-assets.py",
+        "tools/test-asset-deployment.py",
+        "app/src/main/assets/selftest.py"
+      ],
+      "checks": [
+        "Explicit root file/tree/input/generated inventories replace broad rglob copy selection; complete builtin/license/webextension trees retained; signed managed install and patch/prepend graphs, known dynamic Java reader contracts, literal additions and generated physical aliases checked",
+        "10 isolated/current-project tests PASS; 225 actual source files selected; current bridge-token Gecko shim and rootfs/runtime split behavior preserved",
+        "Obsolete selftest source retained with original SHA outside APK"
+      ],
+      "residual": [
+        "Root wires Gradle/input registries and final archive/physical APK gates; no unsupported phone claim."
+      ]
+    },
+    {
+      "id": "D-DEAD-06",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/main/assets/rootfs-confirm-install.sh",
+        "app/src/main/java/com/deepseekharness/app/DangerShellGuard.java",
+        "tools/history/engineering"
+      ],
+      "checks": [
+        "No production reader/caller; retired exact source bytes with SHA; current DeviceShellPolicy unchanged"
+      ],
+      "residual": [
+        "Old unused CI template reference and security documentation are root-owned cleanup."
+      ]
+    },
+    {
+      "id": "D-DEAD-07",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/main/res/drawable/dot_active.xml",
+        "app/src/main/res/drawable/dot_inactive.xml",
+        "app/src/main/res/drawable/ic_ui_info.xml",
+        "app/src/main/res/drawable/progress_determinate.xml",
+        "app/src/main/res/layout/dialog_remind_backup.xml",
+        "app/src/main/res/layout/fragment_install.xml",
+        "app/src/androidTest/java/com/deepseekharness/app/ui/ThemeInstrumentation.java"
+      ],
+      "checks": [
+        "Actual prior ReleaseLint candidates cross-checked against current Java/XML/tools before deleting; Theme test removes retired layout; invisible unbound install_crash button and unused ui_m0152 removed; original resource files retained",
+        "Actual Standard Release Java compilation PASS",
+        "Normal strict lintStandardRelease PASS: 0 errors and 0 UnusedResources; 306 other warnings; asset generators explicitly skipped for this source-only check"
+      ],
+      "residual": [
+        "Final complete runtime/asset/APK/release gates are root-owned; no device operation."
+      ]
+    },
+    {
+      "id": "D-DEAD-08",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/main/res/values",
+        "app/src/main/res/values-en",
+        "docs/audits/build154/engineering-resource-cleanup.json"
+      ],
+      "checks": [
+        "Removed only current unused string declarations identified by actual Release Lint plus live Java/XML/tool reference checks; retained current references; matching locales reviewed",
+        "Source resource snapshots/hash retained; Release Java compilation PASS",
+        "Normal strict lintStandardRelease PASS: 0 errors and 0 UnusedResources; 306 other warnings; asset generators explicitly skipped for this source-only check"
+      ],
+      "residual": [
+        "Final complete runtime/asset/APK/release gates are root-owned; no device operation."
+      ]
+    },
+    {
+      "id": "D-DEAD-09",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/main/assets/startup-checkpoints.py",
+        "app/src/main/assets/startup-recovery.py",
+        "tools/test-startup-checkpoints.py",
+        "tools/test-startup-recovery.py",
+        "tools/history/engineering/assets"
+      ],
+      "checks": [
+        "G2/root confirmed no production execution; root removed managed deployment; exact original scripts moved outside APK; native ConfigurationSnapshots v1 reader remains",
+        "7 checkpoint tests plus 4 recovery tests PASS (1 platform symlink skip stated)"
+      ],
+      "residual": [
+        "No APK/device operation; final complete release gates owned by root."
+      ]
+    },
+    {
+      "id": "D-DEAD-10",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/lint.xml",
+        "app/src/main/res",
+        "docs/audits/build154/engineering-resource-cleanup.json"
+      ],
+      "checks": [
+        "UnusedResources severity error; no R8/minification/resource shrink changes; 393 unused resource declarations removed with all-source usage checks and immutable original source snapshots",
+        "Current Standard Release Java compilation PASS",
+        "Normal strict lintStandardRelease PASS: 0 errors and 0 UnusedResources; 306 other warnings; asset generators explicitly skipped for this source-only check"
+      ],
+      "residual": [
+        "Fresh source-level lint has explicit standard/recovery asset-generator skips and cannot substitute final full release asset/APK verification."
+      ]
+    },
+    {
+      "id": "D-DEAD-11",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "scripts/prepare-dsh-alpha-runtime.sh",
+        "scripts/generate-update-fixtures.py",
+        "tools/history/engineering"
+      ],
+      "checks": [
+        "No current executable/deployment caller; obsolete alpha builder and private-device/downgrade audit-APK generator retired with exact source bytes/SHA"
+      ],
+      "residual": [
+        "Root owns historical CI/offline-chain comment/docs cleanup."
+      ]
+    },
+    {
+      "id": "D-DEAD-12",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "tools/TarRepro.java",
+        "tools/history/engineering/tools/TarRepro.java"
+      ],
+      "checks": [
+        "No callers; unsafe duplicate tar extractor retired with exact source SHA; actual production TarGzipExtractor and its isolated tests remain"
+      ],
+      "residual": [
+        "No APK/device operation; final complete release gates owned by root."
+      ]
+    },
+    {
+      "id": "D-DEAD-13",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "tools/inject-arm64-natives.py",
+        "tools/history/engineering/tools/inject-arm64-natives.py"
+      ],
+      "checks": [
+        "No executable/deployment caller; unverified archive-native injection retired with original SHA; current locked build-dsh-runtime path remains"
+      ],
+      "residual": [
+        "No APK/device operation; final complete release gates owned by root."
+      ]
+    },
+    {
+      "id": "D-DEAD-14",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "tools/build-dsh-runtime.py"
+      ],
+      "checks": [
+        "Removed only two unused local string declarations; actual class_anchor/direct-hint replacement and runtime transforms unchanged; Python py_compile PASS"
+      ],
+      "residual": [
+        "Full rebuilt managed runtime behavior is part of root final runtime gate."
+      ]
+    },
+    {
+      "id": "D-DEAD-15",
+      "status": "implemented-and-host-verified",
+      "files": [
+        "app/src/main/assets/pnpm-env-fix.sh",
+        "tools/history/engineering/assets/pnpm-env-fix.sh",
+        "tools/asset-deployment.json"
+      ],
+      "checks": [
+        "No RuntimeTools/Proot/managed install caller; old unlocked global npmrc/store mutation script retained with SHA outside APK; actual current explicit asset gate verifies absence"
+      ],
+      "residual": [
+        "No APK/device operation; final complete release gates owned by root."
+      ]
+    },
+    {
+      "id": "D-DEAD-04",
+      "status": "transferred",
+      "owner": "ROOT/plugin",
+      "files": [
+        "app/src/main/assets/plugin-network.py",
+        "app/src/main/assets/plugin-dependencies.py"
+      ],
+      "checks": [
+        "Current package_command still has pnpm retry frozen rewrite; its only dependency-install caller always supplies --no-frozen-lockfile, so the branch remains dead"
+      ],
+      "residual": [
+        "Root owns active plugin policy/transaction changes; remove only retry frozen rewrite and keep current allowed lifecycle/unlocked policy."
+      ]
+    },
+    {
+      "id": "D-DEAD-05",
+      "status": "transferred",
+      "owner": "ROOT/plugin",
+      "files": [
+        "app/src/main/assets/plugin-manager.py"
+      ],
+      "checks": [
+        "Current get_package_dir still repeats the same NODE_MODULES/name/package.json existence block after unchanged read-only discovery/entity checks"
+      ],
+      "residual": [
+        "Root owns active plugin maintenance; remove redundant final block only."
+      ]
+    },
+    {
+      "id": "D-CI-01/D-BUILD-02/D-SUP-01 historical-chain subset",
+      "status": "transferred",
+      "owner": "ROOT/CI",
+      "files": [
+        "scripts/ci/android-build.yml",
+        "scripts/ci-make-offline-bundle.sh",
+        "scripts/offline-provision.sh",
+        "scripts/provision-builtin-plugins.sh",
+        "scripts/make-offline-bundle.sh"
+      ],
+      "checks": [
+        "Current .github/workflows fast/package/release do not reference this old chain; only the obsolete non-executable scripts/ci template and scripts call each other",
+        "prepare-dsh-alpha-runtime.sh and generate-update-fixtures.py already retained with original SHA outside active scripts"
+      ],
+      "residual": [
+        "Root owns new CI/build deployment and historical chain retirement; exact remaining physical paths recorded, no old chain executed."
+      ]
+    },
+    {
+      "id": "D-TEST-35",
+      "status": "fixed-test-safety-history-only",
+      "files": [
+        "tools/test-restore-merge-wsdir.py",
+        "tools/history/engineering/assets/restore-merge.py",
+        "tools/host-tests.manifest.json"
+      ],
+      "checks": [
+        "Parent-authorized final exception: all synthetic targets under TemporaryDirectory/addCleanup, relative test uses real isolated cwd and finally restore; no legacy module blob changes or fake boundary monkeypatch",
+        "4 cases: Windows2PASS/2explicit POSIX skip; G2 manifest stage=history"
+      ],
+      "residual": [
+        "Legacy ensure_workspace_dirs accepts absolute POSIX paths generally; this is not current restore confinement proof. Current NativeBackup has independent gate."
+      ]
+    }
+  ],
+  "registrationRequests": {
+    "newHostTests": [
+      "tools/test-asset-deployment.py"
+    ],
+    "removeHostTests": [
+      "tools/test-agent-preset-switch.mjs"
+    ],
+    "assetGeneratorInputs": [
+      "tools/asset-deployment.json",
+      "tools/asset_deployment.py",
+      "tools/verify-asset-deployment.py"
+    ],
+    "newDebugSources": [
+      "app/src/debug/java/com/deepseekharness/app/OwnedAuditFiles.java"
+    ],
+    "retiredSourcesReceipt": "docs/audits/build154/engineering-retired-sources.json"
+  },
+  "validation": {
+    "currentJava": "Actual main/Standard/debug 431-source javac plus all test support sources; 14 targeted JUnit PASS; actual Gradle Standard Release Java compilation PASS",
+    "assetDeployment": "10 tests PASS; 225 real source files selected; exact source/physical transforms and dynamic readers/registries/extensions/builtin/licensing checked",
+    "historicalCompatibility": "Retained checkpoint7PASS; recovery4 tests (1 platform symlink skip); plugin restore4PASS. Legacy workspace test superseded by safe4-case suite: Windows2PASS/2explicit POSIX skip, stage=history, no current NativeBackup boundary claim.",
+    "resourceCleanup": "393 declarations across main/locales/flavors removed and 6 files retired; strict Standard Release Lint 0 errors/0 UnusedResources, 306 other warnings",
+    "boundary": "processStandardDebugResources and lintStandardRelease had -x prepareStandardAssets -x prepareRecoveryAssets; these are source checks, not complete release asset/APK/physical-device evidence",
+    "originals": "24 retired original source hashes rechecked; historical resources also retained as exact original byte snapshots",
+    "lintSummary": "docs/audits/build154/engineering-lint-summary.json",
+    "incrementalAssets": "test-generated-asset-directory.py 3 PASS; self-created small tar fixtures, current structured registry, unknown asset rejection, no offline artifacts needed; stays fast"
+  },
+  "documentationFollowup": "docs/audits/build154/changes-engineering-docs.json"
+}

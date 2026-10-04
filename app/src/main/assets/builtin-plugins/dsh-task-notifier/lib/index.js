@@ -5,7 +5,7 @@
  * agent 任务完成），通过 DSHA 3090 桥发 App 通知栏提醒。
  * 取代 App 端 TaskNotifier 的「轮询会话文件」方案（不准）。
  *
- * 链路：turn/end → curl http://127.0.0.1:3090/app/notify?title=&text=&token=
+ * 链路：turn/end → fetch http://127.0.0.1:3090/app/notify?title=&text=，X-Token 请求头鉴权
  * App 收到后在后台发通知（App 前台时 TaskNotifier 抑制，这里插件无感知——
  * 由 App 端 /app/notify 处理前台判断）。
  */
@@ -36,8 +36,8 @@ async function notifyApp(title, text) {
     const url = 'http://127.0.0.1:3090/app/notify'
       + '?title=' + encodeURIComponent(title)
       + '&text=' + encodeURIComponent(text)
-      + '&token=' + encodeURIComponent(token)
-    const resp = await fetch(url, { signal: AbortSignal.timeout(5000) })
+
+    const resp = await fetch(url, { headers: {'X-Token': token}, signal: AbortSignal.timeout(5000) })
     await resp.text()
   } catch {}
 }

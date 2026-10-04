@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """只读采样审计进程 PSS、设备电池和前台状态；不重置统计、不改变充电/电源设置。"""
-import argparse,datetime,json,os,re,subprocess,time,uuid
+import argparse,datetime,json,re,subprocess,time,uuid
+import sys,traceback
 from pathlib import Path
+from device_script_privacy import redact
 root=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--serial',required=True)
+parser.add_argument('--adb',required=True)
 parser.add_argument('--package',choices=['com.dsh.client.rc21audit','com.dsh.client.stabilityaudit'],default='com.dsh.client.rc21audit')
 parser.add_argument('--seconds',type=int,default=30)
 parser.add_argument('--scenario',default='foreground-idle-usb')
 args=parser.parse_args()
+sys.excepthook=lambda kind,error,trace: print(redact(''.join(traceback.format_exception(kind,error,trace)),(args.serial,args.adb)),file=sys.stderr)
 if not 1<=args.seconds<=600:parser.error('seconds must be in 1..600')
-sdk=Path(os.environ.get('ANDROID_HOME','F:/DSHA/_toolchains/android-sdk'));adb=[str(sdk/'platform-tools'/('adb.exe' if os.name=='nt' else 'adb')),'-s',args.serial,'shell']
+adb=[args.adb,'-s',args.serial,'shell']
 def read(*command):
     result=subprocess.run(adb+list(command),stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf8',errors='replace',timeout=15)
     return result.stdout.strip()
@@ -37,5 +41,5 @@ while True:
         'currentNow':read('cat','/sys/class/power_supply/battery/current_now'),'voltageNow':read('cat','/sys/class/power_supply/battery/voltage_now')})
     if time.monotonic()>=until:break
     time.sleep(min(5,max(0,until-time.monotonic())))
-target=owned/'measurement.json';target.write_text(json.dumps(record,ensure_ascii=False,indent=2),encoding='utf8')
-print(json.dumps({'report':str(target),'samples':len(record['samples']),'scope':record['scope']},ensure_ascii=False))
+target=owned/'measurement.json';target.write_text(json.dumps(redact(record, (args.serial, args.adb)),ensure_ascii=False,indent=2),encoding='utf8')
+print(json.dumps({'report':str(target.relative_to(root)),'samples':len(record['samples']),'scope':record['scope']},ensure_ascii=False))

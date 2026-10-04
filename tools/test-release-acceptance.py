@@ -24,11 +24,11 @@ class AcceptanceTest(unittest.TestCase):
         for flavor in ('standard','low'):
             self.assertIn('bounded-proroot-diagnostic',selected['required'][flavor])
             self.assertIn('terminal-close-and-web-restart',selected['required'][flavor])
-    def test_plugin_preview_changes_require_native_cancel_flow(self):
+    def test_plugin_install_changes_require_real_auto_activation(self):
         path='app/src/main/java/com/deepseekharness/app/core/PluginRepository.java'
         selected=requirements({path:'a'*64},{path:'b'*64})
         for flavor in ('standard','low'):
-            self.assertIn('plugin-preview-cancel',selected['required'][flavor])
+            self.assertIn('plugin-install-auto',selected['required'][flavor])
     def test_retained_navigation_changes_require_the_real_history_page(self):
         path='app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java'
         selected=requirements({path:'a'*64},{path:'b'*64})

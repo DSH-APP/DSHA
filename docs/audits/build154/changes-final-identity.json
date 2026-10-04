@@ -1,0 +1,89 @@
+{
+  "owner": "G1-final-bounded-identity-docs-privacy",
+  "items": [
+    {
+      "id": "D-DOC-03",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        "The original adjacent-Javadoc finding was reproduced: 9 adjacent pairs in these three files. A bounded lexical comment/string/text-block scanner identifies separate comment spans; each edit matches one exact span and one exact method declaration, without regex spanning */",
+        "Actual JDK17 javac lexer fingerprints prove identical exact non-comment tokens and literal spellings before/after the comment-only stage for all three files",
+        "A single post-change check found 0 adjacent pairs for the same original criterion; this does not claim full Javadoc/doclint compliance"
+      ],
+      "current": "Bridge header-auth documentation belongs to handle; currentToken no longer describes the retired query/webserver-auth patch. Toast, accessibility, overlay, plugins and endpoint-help comments belong to their actual methods. Redundant overlay/runtime-preparation notes were retired; bundle-extraction description moved off ExtractionProgress onto extractOfflineBundle.",
+      "residual": "The receipts apply to the documented comment-only stage. Mobile concurrently owns later OverlayController behavior changes; those current source bytes are preserved and are not claimed comment-only. Final source formatting/hashes belong to the delivery executor after all owners freeze."
+    },
+    {
+      "id": "D-PRIV-03",
+      "status": "implemented",
+      "files": [
+        "docs/1.2-upgrade-report.md",
+        "docs/build131-device-followup.md",
+        "docs/adb-flow-audit.md",
+        "docs/audits/build154/changes-device-scripts.json"
+      ],
+      "checks": [
+        "Three public evidence copies sanitized for explicit identifying device serial, private IPv4 and developer workspace/toolchain/home prefixes, preserving version/date/device-type/statistics/conclusions and all existing evidence hash strings",
+        "Existing retained history-document sources still match their declared SHA; the third pre-sanitization body is preserved in ignored private evidence with its SHA",
+        "Device-script leaf: 3 selection tests +10 existing audit-helper tests PASS; host manifest validates 103 entries after retiring two intrusive device-test rows and adding one pure selection test"
+      ],
+      "current": "The three historical debug/intrusive runners are removed from active tools paths and retained as exact original bytes plus Git blob/SHA evidence under tools/history/private-device-audits. Remaining real ADB helpers require explicit --adb/--serial and redact their chosen values. Public copies state their new sanitization boundary.",
+      "residual": "This does not erase Git history, previously published documents or every historical file. Original tools/history/private-device-audits and tools/history/documents must be excluded from the new public source snapshot while preserved privately. No device tool was run."
+    },
+    {
+      "id": "D-PKG-01",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/SelfPackageIdentity.java",
+        "app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/PrivilegedPackageContext.java",
+        "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java",
+        "app/src/main/java/com/deepseekharness/app/ShellService.java",
+        "app/src/main/java/com/deepseekharness/app/RootShell.java",
+        "app/src/main/java/com/deepseekharness/app/RootShellMain.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+        "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+        "app/src/main/java/com/deepseekharness/app/backup/MaintenanceDataSnapshot.java",
+        "app/src/main/assets/adb-pair.py",
+        "app/src/main/assets/adb-shell.py",
+        "app/src/main/assets/device-shell-policy.py",
+        "app/src/main/assets/adb-setup.sh",
+        "app/src/main/assets/dsha-device-shell.sh",
+        "app/src/main/assets/adb-script-version"
+      ],
+      "checks": [
+        "27 current-source JVM tests PASS across SelfPackageIdentity, DeviceAppPolicy, DeviceShellPolicy and GuestDataResolver: clone/multi-user UID, current APK binding, mismatched/missing identity, own/shared UID protection, strict 9-argument launch, declared-root aliases and retained historical L2S payload reads",
+        "Python host-only device-shell-policy 22 tests, ADB virtual-screen handshake 3 tests and ADB-flow 32 tests PASS. Keepalive test executes the real pair.main branch and proves only native actual selfPackage is granted; missing identity sends nothing. Existing unknown-send/no-replay and SMS boundaries remain",
+        "Current owned production sources plus actual Mobile launch/request-fence/preview collaborators compile with Java17 against actual Android37/AndroidX dependencies; no stub API compilation",
+        "One independent bounded read-only review found no actionable self-protection bypass or identity binding blocker; it explicitly retained the untested v12 dex-reflection/OEM matrix"
+      ],
+      "current": "Self protection uses a proved actual package and all of its observed UIDs. Root requests carry native Context package/UID, checked against PackageManager and the exact current app_process classpath. Shizuku13 consumes framework Context and Binder UID; legacy12 additionally verifies actual loaded DexFile APK origins, without parsing ClassLoader.toString. Virtual-screen Java/Python launch plans bind the actual Context package to the exact APK, and Core verifies that same package/source/classpath and propagates it to its child. Authenticated native device-plan output supplies selfPackage/selfUid/sourceApk; Python STOP and fixed keepalive grant use it rather than a guessed standard package. The original standard applicationId/signing are unchanged. Historical com.dsh.client L2S remapping remains read-only into the selected root; new host aliases come only from that selected actual root and do not cross user or CE/DE roots.",
+      "residual": "Shizuku12 private pathList/dexElements/dexFile access may be rejected on an untested OEM or Android build. STOP/virtual-screen then fail closed; ordinary reads do not require this identity lookup. Legacy Root ordinary reads without identity remain supported; legacy sensitive operations missing identity are rejected. Keepalive grant requires the local authenticated policy bridge; if unavailable it reports failure without guessing a package, while pairing remains preserved. No phone, low-API/OEM, privileged APK or signature-install matrix executed."
+    }
+  ],
+  "newSourceInputs": [
+    "app/src/main/java/com/deepseekharness/app/util/SelfPackageIdentity.java",
+    "app/src/test/java/com/deepseekharness/app/util/SelfPackageIdentityTest.java"
+  ],
+  "updatedTestInputs": [
+    "app/src/test/java/com/deepseekharness/app/util/DeviceAppPolicyTest.java",
+    "app/src/test/java/com/deepseekharness/app/util/DeviceShellPolicyTest.java",
+    "app/src/test/java/com/deepseekharness/app/backup/GuestDataResolverTest.java",
+    "tools/test-device-shell-policy.py",
+    "tools/test-adb-vscreen-bridge.py",
+    "tools/test-adb-flow.py"
+  ],
+  "bridgeCallerByMobile": "VirtualScreenManager actual start command appends --package plus app.getPackageName(); G1 does not own the concurrent Manager actions/locks",
+  "managedAssetMarker": "ADB fixed source/wrapper marker and adb-script-version are all 20, matched by AdbBridge.SCRIPT_VERSION; descriptors/manifests must be regenerated by the delivery owner",
+  "sourcesFrozen": true,
+  "noPhone": true,
+  "noGradle": true,
+  "noNewApk": true
+}

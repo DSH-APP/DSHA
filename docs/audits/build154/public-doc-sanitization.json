@@ -1,0 +1,44 @@
+[
+  {
+    "file": "docs/1.2-upgrade-report.md",
+    "beforeSha256": "5f447a5feb330f3747feaa2e45109456fd60b77310ccab94cef3fdbf904ed871",
+    "afterSha256": "a9d8a20a93c345bd0144757f9c2861b9c7ad322c97c5e246217e3b752bed3a53",
+    "redactions": {
+      "deviceSerial": 2,
+      "toolchainPath": 5,
+      "workspacePath": 6,
+      "userHome": 0,
+      "privateIPv4": 1
+    },
+    "evidenceHashesPreserved": true,
+    "originalBlobUnchanged": true
+  },
+  {
+    "file": "docs/build131-device-followup.md",
+    "beforeSha256": "7e764473220a1b3348f5d2ee4eb2de0b4a54fc61ee5b648621d0d4b47156aa47",
+    "afterSha256": "63efc67200e33383309462c99ee3e55ef02a56d31517d9ae894c2660c62f5337",
+    "redactions": {
+      "deviceSerial": 1,
+      "toolchainPath": 0,
+      "workspacePath": 0,
+      "userHome": 0,
+      "privateIPv4": 0
+    },
+    "evidenceHashesPreserved": true,
+    "originalBlobUnchanged": true
+  },
+  {
+    "file": "docs/adb-flow-audit.md",
+    "beforeSha256": "6dcc5c693ce4670acdfe39e6f565cfb04bef9d7a33b9795620e5e942ddedd450",
+    "afterSha256": "347f636812f9af313ab781da94803abed4e830b41bf091982c639b01b6ae7d83",
+    "redactions": {
+      "deviceSerial": 0,
+      "toolchainPath": 1,
+      "workspacePath": 1,
+      "userHome": 1,
+      "privateIPv4": 0
+    },
+    "evidenceHashesPreserved": true,
+    "originalBlobUnchanged": true
+  }
+]

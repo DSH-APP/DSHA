@@ -1,0 +1,19 @@
+{
+  "status": "FAILED_ONE_CANONICAL_WORDING_COLLISION",
+  "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+  "exitCode": 1,
+  "tests": 46,
+  "failures": 1,
+  "catalogSha256": "3ae0f4da2b83c4ce5d1e84ab5fef5d2af9cb484c5bf1c9773ada08311b66a8c6",
+  "generatedSha256": "c0c335e4a243702c053d5e3fb09abac63a7000a30ca7236d2904a912c14eb12e",
+  "logSha256": "eb391e30a6a86875856ec533426aec27622df51926f5a1b664774aaf6f29cfa0",
+  "newTemplate": {
+    "zh": "%s 项 · %s",
+    "en": "%s items · %s"
+  },
+  "overlappingExistingCanonical": {
+    "zh": "%s\n%s 项 · %s%s%s",
+    "en": "%s\n%s entries · %s%s%s"
+  },
+  "reason": "The deliberately raw first argument contains a newline, allowing the existing multi-line summary template to match. Arguments stayed verbatim; English items/entries disagreed. Normalize only the new phrase to the existing canonical word, without changing matching or old templates."
+}

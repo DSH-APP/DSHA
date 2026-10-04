@@ -1,0 +1,814 @@
+{
+  "lane": "build",
+  "source": "D:\\qq\\文件\\DSHA-deliverables-20261002\\DSHA-deliverables-20261002",
+  "baselineBuild": 155,
+  "items": [
+    {
+      "source": {
+        "id": "D-BUILD-01",
+        "category": "构建、CI 与供应链",
+        "severity": "P0",
+        "evidence": "脚本实测",
+        "title": "提交中的 runtime-descriptor.json 与受管输入不一致，--check 在 Linux 构建必失败",
+        "where": "app/src/main/assets/runtime-descriptor.json（inputs 103 项中 27 项）; app/build.gradle:163-177; tools/prepare-runtime-descriptor.py:45-52; app/src/main/assets/web-integration/es-compat.inputs.json:7; tools/prepare-standard-assets.py:121-123; app/src/test/java/com/deepseekharness/app/runtime/RuntimeDescriptorTest.java:31-33",
+        "recommendation": "1) 在 .gitattributes 为 *.js *.cjs *.mjs *.json *.py *.sh *.yml 及无后缀资产设 eol=lf，git add --renormalize；2) 在 Linux 上运行 tools/prepare-runtime-descriptor.py --write 和 es-compat 锁更新并审阅 9+6 项真实内容差异，确认与已发布 build150 一致后提交；3) RuntimeDescriptorTest 增加对每个 inputs/launcherInputs 实算哈希的比对；4) CI fast 阶段运行 prepare-runtime-descriptor.py --check，发布只允许在 Linux 构建机上进行。",
+        "acceptance": "干净 Linux 检出执行 python3 -B tools/prepare-runtime-descriptor.py --check 退出 0、./gradlew :app:prepareStandardAssets 成功；改动任一受管资产 1 字节后 RuntimeDescriptorTest 与 --check 均失败；git ls-files --eol 对受管资产全为 i/lf w/lf。",
+        "depends_on": "D-CI-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-BUILD-01",
+        "title": "提交中的 runtime-descriptor.json 与受管输入不一致，--check 在 Linux 构建必失败",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P0",
+        "reviewStatus": "open",
+        "status": "implementation_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/build.gradle",
+          "tools/prepare-runtime-descriptor.py",
+          "tools/prepare-standard-assets.py",
+          "tools/build-dsh-runtime.py",
+          "tools/prepare-backup-assets.py",
+          "tools/prepare-recovery-assets.py",
+          "tools/prepare-ui-languages.py",
+          "tools/prepare-dsh-runtime.py",
+          "tools/generate-builtin-plugins.py",
+          "tools/generate-credential-paths.py",
+          "tools/prepare-runtime-tools.py",
+          "tools/prepare-test-runtime.py",
+          "tools/source_text.py",
+          "tools/test-source-text.py",
+          "tools/runtime_fixture_proof.py",
+          "app/src/main/assets/runtime-patches.json"
+        ],
+        "evidenceReferences": [
+          "changes-source-text.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "7 generated-text tests PASS including simulated Windows open translation",
+          "Actual UI/builtin/descriptor generators emit/repair exact LF; byte checks reject preexisting CRLF",
+          "Python3.9 syntax of helper PASS; all requested generator py_compile PASS",
+          "Runtime proof regression 9 PASS, 1 Windows POSIX-link skip"
+        ],
+        "residual": [
+          "No complete runtime/archive generation executed; parent refreshes exact recipe proofs after source freeze. Explicit package/patch recipe CR bytes are preserved, not normalized away."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implementation_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-BUILD-02",
+        "category": "构建、CI 与供应链",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "离线 rootfs 构建脚本复制已不存在的插件目录，整条旧构建链失修",
+        "where": "scripts/ci-make-offline-bundle.sh:88-95; scripts/provision-builtin-plugins.sh:13,38-107; scripts/ci/android-build.yml:27,34; app/src/main/assets/builtin-plugins/",
+        "recommendation": "先确认 offline-rootfs.bin 当前由哪个脚本生成（tools/build-standard-runtime.py 等）。若此链路已被取代：按 D-LEGACY-01 删除 scripts/ci-make-offline-bundle.sh、provision-builtin-plugins.sh、offline-provision.sh、make-offline-bundle.sh、scripts/ci/；若仍在用：改为从 register-builtin-plugins.py DEFAULT_BUILTINS 与 assets/builtin-plugins/ 读取插件清单，不再写死目录名，并纳入 CI package 阶段实跑。",
+        "acceptance": "要么 scripts/ci-make-offline-bundle.sh 不存在且 grep 无引用；要么在 Linux arm64 CI 上运行该脚本成功，产物中 root/patches/builtin 含 DEFAULT_BUILTINS 全部插件，且 offline-rootfs.bin 哈希与 runtime-descriptor 记录一致。",
+        "depends_on": "D-CI-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-BUILD-02",
+        "title": "离线 rootfs 构建脚本复制已不存在的插件目录，整条旧构建链失修",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "scripts/ci-make-offline-bundle.sh",
+          "scripts/ci/android-build.yml",
+          "scripts/provision-builtin-plugins.sh",
+          "scripts/offline-provision.sh",
+          "scripts/make-offline-bundle.sh",
+          "docs/audits/build154/root-retired-sources.json",
+          "tools/history/root-build154/scripts/ci-make-offline-bundle.sh",
+          "tools/prepare-standard-assets.py"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Current .github/workflows fast/package/release do not reference this old chain; only the obsolete non-executable scripts/ci template and scripts call each other",
+          "prepare-dsh-alpha-runtime.sh and generate-update-fixtures.py already retained with original SHA outside active scripts",
+          "Parent retirement receipt; no old build scripts invoked."
+        ],
+        "residual": [
+          "Root owns new CI/build deployment and historical chain retirement; exact remaining physical paths recorded, no old chain executed."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-CI-01",
+        "category": "构建、CI 与供应链",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "仓库没有在用的构建 CI，旧构建模板版本过期且不在触发路径",
+        "where": ".github/workflows/star-history.yml; scripts/ci/android-build.yml:3-6,81,83-86,93; docs/接手指南.md:297-299; scripts/prepare-dsh-alpha-runtime.sh:10-11",
+        "recommendation": "在 .github/workflows 新建三条分离流水线（对应交付物 4）：fast（PR 触发：JVM 单测 run-unit-tests/gradle test、prepare-runtime-descriptor --check、tools 下 Node/Python 回归）、package（main/tag：完整 APK 资产检查，不需要私钥）、release（受保护环境手动触发、持有正式签名密钥）；SDK/Gradle 版本从 app/build.gradle 与 gradle-wrapper.properties 读取而非写死。删除 scripts/ci/android-build.yml 与 prepare-dsh-alpha-runtime.sh 等旧 CI 存档组件（D-LEGACY-01 决策：无部署方的死脚本删除），并改正 docs/接手指南.md:297-299 的发版说明。",
+        "acceptance": "PR 上可见 fast 工作流运行并作为必需检查；故意改坏一个单测或描述符输入时 fast 失败；grep -rn 'android-34\\|Gradle 8.5' scripts .github 无命中；接手指南发版段落与实际工作流一致。",
+        "depends_on": "D-CI-02;D-BUILD-01;D-TEST-26",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-CI-01",
+        "title": "仓库没有在用的构建 CI，旧构建模板版本过期且不在触发路径",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          ".github/workflows/star-history.yml",
+          "scripts/ci/android-build.yml",
+          "scripts/prepare-dsh-alpha-runtime.sh",
+          "scripts/ci-make-offline-bundle.sh",
+          "scripts/offline-provision.sh",
+          "scripts/provision-builtin-plugins.sh",
+          "scripts/make-offline-bundle.sh",
+          ".github/workflows/ci-fast.yml",
+          ".github/workflows/ci-package.yml",
+          ".github/workflows/release.yml",
+          "tools/run-host-tests.py",
+          "tools/host-tests.manifest.json"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Current .github/workflows fast/package/release do not reference this old chain; only the obsolete non-executable scripts/ci template and scripts call each other",
+          "prepare-dsh-alpha-runtime.sh and generate-update-fixtures.py already retained with original SHA outside active scripts",
+          "Parent authored current CI receipt and verify-ci-package4 PASS; no five-run hosted CI claim."
+        ],
+        "residual": [
+          "Root owns new CI/build deployment and historical chain retirement; exact remaining physical paths recorded, no old chain executed.",
+          "Hosted workflow/branch protection/release publication and final software execution are unverified."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-23",
+        "category": "安全与隐私",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "发布证书为 Android debug keystore，构建缺省口令回落为公开值 android",
+        "where": "app/build.gradle:45-61; docs/evidence/rc1.4-functional/release-build.log:3",
+        "recommendation": "按第六节决策签名问题留到最后，但可先做无破坏收敛：去掉 storePassword/keyPassword/keyAlias 的默认值回落，publish 构建缺口令即失败；构建日志不打印 keystore 绝对路径；后续评估 APK Signature Scheme v3 proof-of-rotation 轮换到新密钥（apksigner rotate），并把 keystore 移入 CI 机密存储。",
+        "acceptance": "Gradle 测试：未设置 DSHA_KEYSTORE_PASSWORD 时 assemblePublish 失败并给出明确提示；grep -n '?: \"android\"' app/build.gradle 无结果；轮换实施后 apksigner verify --print-certs 显示 v3 lineage 且旧版本可覆盖安装（真机验证）。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-23",
+        "title": "发布证书为 Android debug keystore，构建缺省口令回落为公开值 android",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/build.gradle",
+          "tools/generate-release-manifest.py",
+          "ci/release-identity.json"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Parent build/signing source receipt; final-disposition explicit password source evidence."
+        ],
+        "residual": [
+          "Historical keystore metadata is not rewritten; real E7E3/v1/v2/v3/nondebug final APK checks still pending."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-CI-02",
+        "category": "构建、CI 与供应链",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "verify-stability.py 缺签名私钥时整体判 FAIL，软件检查与签名发布没有拆分",
+        "where": "tools/verify-stability.py:180-181,191,232,286-291",
+        "recommendation": "把 verify-stability.py 拆成独立阶段/子命令：--stage software（单测、资产、ELF、运行时核对，不需要密钥，成功返回 0 且 status=PASS_SOFTWARE）、--stage sign（仅在受保护 release 环境运行，校验证书 SHA-256 与 V1/V2 签名，L243-245 逻辑迁入）、--stage device（外部真机证据）。缺密钥时 software 阶段不得失败。签名本身的处置按第六节决策留到最后。",
+        "acceptance": "在无 DSHA_KEYSTORE 的环境运行 python3 -B tools/verify-stability.py --stage software 退出码 0；同环境运行 --stage sign 明确失败并提示缺密钥；CI fast/package 工作流调用 software 阶段。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-CI-02",
+        "title": "verify-stability.py 缺签名私钥时整体判 FAIL，软件检查与签名发布没有拆分",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/verify-stability.py",
+          "app/build.gradle"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Parent current CI/signing receipt and final-disposition source evidence."
+        ],
+        "residual": [
+          "Actual signing tool/full software gates not established by authored source."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-LIC-01",
+        "category": "构建、CI 与供应链",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "THIRD_PARTY_NOTICES 缺 Shizuku、Termux AAR、core-js、sharp/libvips 等条目",
+        "where": "THIRD_PARTY_NOTICES.md:16-24,115-147; app/build.gradle:260-265; app/src/main/assets/licenses/; assets/web-integration/core-js.LICENSE",
+        "recommendation": "由构建生成许可清单：Gradle 依赖用 com.google.android.gms:oss-licenses-plugin 或 cashapp/licensee 生成并锁定（未知许可即失败）；dsh-runtime/插件 node_modules 用 license-checker 风格的自写脚本从 pnpm-lock 生成 NOTICES 片段；补写 Shizuku、Termux AAR、core-js、libdsha-session.so（来源与构建脚本）、sharp/libvips（LGPL 说明与源码链接）、ubjs、cua-driver（MIT AND MPL-2.0）条目；许可全文随 APK assets/licenses 分发并在 AboutFragment 列出。",
+        "acceptance": "CI 门禁：tools/check-third-party-notices.py 比对 build.gradle 依赖坐标、jniLibs 文件、runtime lock 中带非 MIT/ISC/BSD 许可的包与 NOTICES 条目，缺项即失败；aapt list 生成的 APK 中 assets/licenses 包含所有非宽松许可全文。",
+        "depends_on": "D-PROV-01;D-LIC-02",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-LIC-01",
+        "title": "THIRD_PARTY_NOTICES 缺 Shizuku、Termux AAR、core-js、sharp/libvips 等条目",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "THIRD_PARTY_NOTICES.md",
+          "app/build.gradle",
+          "tools/dsh-runtime/package-lock.json",
+          "app/src/main/assets/licenses",
+          "docs/audits/build154/npm-licenses.json",
+          "docs/audits/build154/shizuku-license-source.json",
+          "app/src/main/assets/licenses/Shizuku-MIT.txt",
+          "tools/termux-jni/LICENSE.upstream.md"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Actual license source/blob/SHA receipts exist; parent reports current notices complete."
+        ],
+        "residual": [
+          "Not a legal opinion or proof of all external source authorization; final APK inclusion remains separate."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-LIC-02",
+        "category": "构建、CI 与供应链",
+        "severity": "P2",
+        "evidence": "候选",
+        "title": "GPL-2.0 proot 随所有 flavor 分发，但许可全文只在 low flavor",
+        "where": "app/src/main/jniLibs/arm64-v8a/libproot.so,libprootloader.so,libprootloader32.so,libtalloc.so; app/src/main/assets/licenses/; app/src/low/assets/licenses/proot-COPYING.txt; ui/AboutFragment.java:22; THIRD_PARTY_NOTICES.md:24-33,122-124",
+        "recommendation": "把 proot-COPYING.txt 移到 main/assets/licenses（并补 talloc LGPL-3.0 文本）；NOTICES 标准版 proot 段固定上游 tag/commit 与构建脚本；AboutFragment 增加“开源许可”列表展示 assets/licenses 全部文件；书面提供源码获取说明（GPL-2 §3）。需法务确认。",
+        "acceptance": "CI：aapt list 标准版与 low 版 APK 均含 assets/licenses/proot-COPYING.txt 与 talloc 许可；check-third-party-notices 门禁（见 D-LIC-01）验证每个 jniLibs .so 都有 NOTICES 条目且含固定版本。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-LIC-02",
+        "title": "GPL-2.0 proot 随所有 flavor 分发，但许可全文只在 low flavor",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/jniLibs/arm64-v8a",
+          "app/src/main/assets/licenses",
+          "app/src/low/assets/licenses/proot-COPYING.txt",
+          "THIRD_PARTY_NOTICES.md",
+          "app/src/main/assets/licenses/proot-COPYING.txt"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Final-disposition source evidence and parent GPL full-byte receipt."
+        ],
+        "residual": [
+          "Final two APK license presence is pending."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-PROV-01",
+        "category": "构建、CI 与供应链",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "ShellService.java 文件头标注 CFR 反编译，代码来源不明",
+        "where": "app/src/main/java/com/deepseekharness/app/ShellService.java:1-3; AndroidManifest.xml:174-178; ShizukuShell.java:102",
+        "recommendation": "按第六节决策：重构中用自写实现替换（基于 Shizuku 官方 UserService 示例的公开 API，Apache-2.0，自行编写），保留现有行为（exec→DeviceShellExecutor.execute、execVirtualScreen、destroy 仅 uid 0/2000 退出、30s 期限），删除 CFR 标注，并在 THIRD_PARTY_NOTICES 中不再引用反编译来源。",
+        "acceptance": "grep -rn 'Decompiled with' app 无结果；现有 ShellService 包内测试（30s 期限构造器）与 Shizuku 通道设备审计通过；提交说明写明重写来源。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-PROV-01",
+        "title": "ShellService.java 文件头标注 CFR 反编译，代码来源不明",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "legal_or_origin_unknown",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/ShellService.java",
+          "THIRD_PARTY_NOTICES.md",
+          "docs/source-provenance.md"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Artifact/source-review disposition only; this merger executed no tests, phone, Gradle or build commands."
+        ],
+        "residual": [
+          "Documented repository origin and CFR annotation do not prove external author/license authorization or infringement; unknown is retained."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "unknown",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "legal_or_origin_unknown"
+      }
+    },
+    {
+      "source": {
+        "id": "D-REPRO-01",
+        "category": "构建、CI 与供应链",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "入库原生产物 libdsha-session.so 只能用 Windows 本机路径重建；dns-compat-fixture.c 无构建脚本",
+        "where": "tools/native-session/build.ps1:1-12; app/src/main/jniLibs/arm64-v8a/libdsha-session.so; app/src/main/assets/runtime-descriptor.json:13; tools/dns-compat-fixture.c:1-22",
+        "recommendation": "把 build.ps1 改写为跨平台脚本（Python 或 sh，NDK 路径取 ANDROID_NDK_HOME，版本锁定 26.3.11579264），在 CI package 阶段于 Linux 重建 libdsha-session.so 并与入库文件比对 sha256（必要时加 -ffile-prefix-map 等确保可复现）；dns-compat-fixture.c 增加同类构建脚本并接入 test-dns-compat，或删除。",
+        "acceptance": "CI 中运行 tools/native-session/build.py --check 重建产物哈希与入库 .so 一致；grep 'F:/' tools/native-session 无命中；dns-compat-fixture.c 有调用方或已删除。",
+        "depends_on": "D-CI-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-REPRO-01",
+        "title": "入库原生产物 libdsha-session.so 只能用 Windows 本机路径重建；dns-compat-fixture.c 无构建脚本",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "tools/native-session/build.ps1",
+          "tools/native-session/build.py"
+        ],
+        "evidenceReferences": [
+          "changes-ROOT.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Windows NDK26r独立编译SHA与当前入库库完全相同0ab7a3c3..."
+        ],
+        "residual": [
+          "最终软件门禁/交付尚未完成；未进行设备验收"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SUP-01",
+        "category": "构建、CI 与供应链",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "离线 rootfs 构建脚本的运行时身份固定为 0.1.2-alpha.2，与当前 0.2.0-rc.2 脱节",
+        "where": "scripts/ci-make-offline-bundle.sh:136; scripts/offline-provision.sh:11-13,46-48; scripts/prepare-dsh-alpha-runtime.sh:10-11; app/src/main/assets/runtime-descriptor.json:5",
+        "recommendation": "先确认该离线包链路是否仍为发布路径（与 D-BUILD-02 同一条链）。若不再使用，按 D-LEGACY-01 决策删除 scripts/ci-make-offline-bundle.sh、offline-provision.sh、prepare-dsh-alpha-runtime.sh；若保留，改为从 app/src/main/assets/runtime-descriptor.json 读取 runtimeId/dshVersion/upstreamTag/upstreamCommit，不再写字面量。",
+        "acceptance": "grep -rn '0.1.2-alpha.2' scripts tools app/src/main --exclude-dir=docs 无命中；若保留脚本，CI package 阶段运行离线包构建并比对其身份与 runtime-descriptor.json 一致。",
+        "depends_on": "D-BUILD-02",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SUP-01",
+        "title": "离线 rootfs 构建脚本的运行时身份固定为 0.1.2-alpha.2，与当前 0.2.0-rc.2 脱节",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "scripts/ci-make-offline-bundle.sh",
+          "scripts/offline-provision.sh",
+          "scripts/prepare-dsh-alpha-runtime.sh",
+          "scripts/ci/android-build.yml",
+          "scripts/provision-builtin-plugins.sh",
+          "scripts/make-offline-bundle.sh",
+          "docs/audits/build154/root-retired-sources.json",
+          "tools/history/root-build154/scripts/make-offline-bundle.sh",
+          "tools/prepare-dsh-runtime.py"
+        ],
+        "evidenceReferences": [
+          "changes-engineering.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Current .github/workflows fast/package/release do not reference this old chain; only the obsolete non-executable scripts/ci template and scripts call each other",
+          "prepare-dsh-alpha-runtime.sh and generate-update-fixtures.py already retained with original SHA outside active scripts",
+          "Parent actual fresh ARM archive receipt; old source paths retained in root-retired-sources.json."
+        ],
+        "residual": [
+          "Root owns new CI/build deployment and historical chain retirement; exact remaining physical paths recorded, no old chain executed.",
+          "Final archive/descriptor/APK byte verification still pending."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SUP-02",
+        "category": "构建、CI 与供应链",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "随包 pnpm 版本 10.34.5 在多处硬编码，无单一来源",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java:1534,1540; app/src/main/assets/plugin-dependencies.py:18; tools/build-standard-runtime.py:22; tools/verify-stability.py:226; app/src/main/assets/runtime-descriptor.json:142",
+        "recommendation": "以 tools/build-standard-runtime.py 的 PNPM_VERSION 为源，在构建时写入 runtime-descriptor.json（如 tools.pnpm.version）或生成 BuildConfig.PNPM_VERSION；ProotBootstrap 用该常量，plugin-dependencies.py 从描述符或环境读取，verify-stability.py 从同一来源比对。",
+        "acceptance": "grep -rn '10\\.34\\.5' app/src/main tools --include=*.java --include=*.py 仅剩单一定义处；新增 JVM 单测断言 BuildConfig/描述符版本与 build-standard-runtime.py 一致。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SUP-02",
+        "title": "随包 pnpm 版本 10.34.5 在多处硬编码，无单一来源",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/assets/plugin-dependencies.py",
+          "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "tools/build-standard-runtime.py",
+          "tools/verify-stability.py",
+          "tools/runtime-tools.lock.json",
+          "app/src/main/assets/runtime-tools.json",
+          "app/build.gradle"
+        ],
+        "evidenceReferences": [
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Parent lock/generator receipt and final-disposition current source evidence."
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SUP-03",
+        "category": "构建、CI 与供应链",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "adb-shell.py/device-shell-policy.py 有两条写入 rootfs 的路径，所有权与版本判据不一致",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java:165-186; app/src/main/assets/managed-runtime-inputs.json:86-92; app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java:31,35,126,133-146,262-263; app/src/main/assets/adb-shell.py:3; app/src/main/assets/dsha-device-shell.sh:2",
+        "recommendation": "以 managed-runtime-inputs.json 为唯一安装路径：AdbBridge.inject 改为调用 RuntimeTools 的受管安装（或只安装清单外的 adb-pair.py/adb-setup.sh），删除对 adb-shell.py/device-shell-policy.py 的 base64 覆盖；“是否最新”改为比对 runtime-descriptor.json 中的 sha256，删除手工 SCRIPT_VERSION 与脚本头注释版本号。",
+        "acceptance": "grep -n 'SCRIPT_VERSION' AdbBridge.java 无命中；新增 JVM 单测：AdbBridge 的 SCRIPTS 与 managed-runtime-inputs.json installs 的 target 无交集；改动 adb-shell.py 后描述符 --check 失败、AdbBridge 状态显示需更新。",
+        "depends_on": "D-BUILD-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SUP-03",
+        "title": "adb-shell.py/device-shell-policy.py 有两条写入 rootfs 的路径，所有权与版本判据不一致",
+        "sourceGroup": "G4",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [
+          "D-RT-04"
+        ],
+        "files": [
+          "app/src/main/assets/adb-shell.py",
+          "app/src/main/assets/dsha-device-shell.sh",
+          "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/GuestScripts.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/BasicToolsInstaller.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "200+KiB signed script stdin fixture/no argv growth; ADB host atomic publication avoids STABLE bind mv EBUSY;19 install/script/stage JUnit +31 ADB Python PASS"
+        ],
+        "residual": [
+          "Final registry must include all4scripts+script-version; root owns input registration."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-UPD-01",
+        "category": "安全与隐私",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "更新清单无签名，信任仅靠 HTTPS+清单内 sha256，pageUrl/notes 可被清单任意指定",
+        "where": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java:38,143,166,350-367; ui/UpdateActivity.java:54-55",
+        "recommendation": "按第六节决策：保留 dsha.cc 更新源、不加清单签名，维持现状。仅做低成本收敛：pageUrl 限定到 dsha.cc 与 github.com/DSH-APP 主机白名单，notes 按纯文本渲染并限长；在威胁模型 ADR 记录“用户已知劫持风险并接受”。FEED 常量与 D-BRAND-01 一起收敛为单一 BuildConfig 字段。",
+        "acceptance": "JVM 单测（UpdatePolicy）：pageUrl 非白名单主机时回退到默认发布页；notes 中 HTML/超长被截断；ADR 文件含该风险接受记录；validatePackage 现有签名不一致拒绝测试保持通过。",
+        "depends_on": "D-BRAND-01;D-SEC-23;D-SEC-00",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-UPD-01",
+        "title": "更新清单无签名，信任仅靠 HTTPS+清单内 sha256，pageUrl/notes 可被清单任意指定",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+          "app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java",
+          "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java",
+          "app/src/main/java/com/deepseekharness/app/util/UpdateLocations.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Official dsha.cc /download and DSH-APP/DSHA release pages and artifact paths only",
+          "Bounded native plain-text notes; unsafe/other-repo/userinfo/port/encoding URLs rejected; current source JVM policy tests PASS"
+        ],
+        "residual": [
+          "Metadata is HTTPS from configured official site, not an independent signed manifest. APK full SHA, package/version/flavor and installed signer checks remain; server compromise can still misdescribe official releases."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-UPD-02",
+        "category": "安全与隐私",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "更新下载重定向只校验 https，不限定主机",
+        "where": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java:374-393; util/ResumableDownload.java:39,44",
+        "recommendation": "在 connect 中维护主机白名单（dsha.cc、github.com、objects.githubusercontent.com、release-assets.githubusercontent.com 等实际发布 CDN），重定向目标不在白名单即报错；白名单与 FEED 一起放在单一配置处。",
+        "acceptance": "JVM 单测：注入 transport 返回 302 到 https://evil.example，断言抛异常；到白名单 CDN 正常继续；现有 ResumableDownload 测试通过。",
+        "depends_on": "D-UPD-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-UPD-02",
+        "title": "更新下载重定向只校验 https，不限定主机",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+          "app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java",
+          "app/src/main/java/com/deepseekharness/app/util/ResumableDownload.java",
+          "app/src/main/java/com/deepseekharness/app/util/UpdateRedirects.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Injected production redirect transport blocks malicious domain before open, restricts metadata chain, bounds 6 hops and closes every rejected hop",
+          "Official GitHub release-CDN Range chain then production ResumableDownload full-file SHA verification PASS; cancellation/unknown result no alternate source replay"
+        ],
+        "residual": [
+          "Actual live CDN/network edge matrix not run; approved current official GitHub CDN hosts only, unknown new CDN fails clearly for manual review. Final APK signer checks preserved."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    }
+  ]
+}

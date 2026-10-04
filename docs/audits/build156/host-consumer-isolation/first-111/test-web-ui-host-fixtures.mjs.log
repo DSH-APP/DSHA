@@ -1,0 +1,2 @@
+PASS WebUploadSessionBudget boundaries/cancellation; RecoveryLocalePolicy localhost authority/query
+PASS recovery Gecko relay is localhost-only, zh/en-only, and credential-blind

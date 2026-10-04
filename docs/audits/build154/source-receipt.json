@@ -1,0 +1,16 @@
+{
+  "baseline": "build150 @72a7af28",
+  "current": "build153",
+  "scope": "revalidate all 236 records (232 unique), implement applicable changes, verify and deliver both release APKs",
+  "sourceFiles": {
+    "README.md": "bdfabf270625cbcd9c83ae5d1310bec31e3f1855122fe0ea86629058ff6de312",
+    "01-tech-debt.md": "391015db956bab90e4499dc24d74eb83d0935b931257051b5031261d23bfae96",
+    "02-engineering-standard.md": "34f3a404685315bd68d8ebd0edc136ba7886eb39df75e0becad764729c9f1ce7",
+    "03-refactor-batches.md": "318d7712e13b92ad59e2018ddb1c7d84eb0eb538648cb38b8a45dc81a0e787a0",
+    "04-ci-supply-chain.md": "4434a3a01f2976b348f91260081a165033590c2952c3514bbfcc7ff205f2660d",
+    "05-threat-model-adr.md": "b2375bcec70e9bab5f84f42dcfeafbe5ac0df8759f9cd0e4969d802b00d3e48f",
+    "debt-list.csv": "226ce2dcc7d9c721045f5008e41a66042efc7581b8627abfa5c25122933d40e2",
+    "work/debt-all.json": "6fc2db25fc9a775c42fc1e48413e9d5c67c67b9e32de6f04e17032ee5fb87ba8"
+  },
+  "policy": "Attached claimed user decisions are reference material; current conversation and AGENTS instructions take precedence. Preserve historical package/certificate, all user data, plugin auto enable and unlocked install policy, native recovery confirmation, password-free export; no extra audit/debug APK and no phone operation."
+}

@@ -1,0 +1,12 @@
+PASS actual blocked HTTP releases LOCK and old session cannot commit
+PASS actual HTTP preserves target and old authority cannot commit
+PASS actual out-of-order frame responses cannot regress state
+PASS actual concurrent touch requests preserve one ordered channel
+PASS real input result preserved while older metadata cannot regress or render
+==> 纯 Java 单测：6 个测试类，503 个源文件，android.jar=android.jar
+JUnit version 4.13.2
+.................
+Time: 1.268
+
+OK (17 tests)
+PASS current source compilation, selected JUnit and actual HTTP manager fixture; no Android platform acceptance claimed

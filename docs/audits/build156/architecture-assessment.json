@@ -1,0 +1,809 @@
+{
+  "schemaVersion": 1,
+  "scope": "Final source-frozen architecture assessment plus root-authorized App ownership repair. Five original remaining-work topics and explicit design/contract/device boundaries are recorded; root formal sourcehash/full flavor/Lint/APK/ELF/signature/device gates remain separately bound.",
+  "baselineReference": {
+    "path": "docs/releases/build155-remaining-work-20261003.md",
+    "sha256": "823a658031b10ab82fe59f773c48f2d845c9f7fd9f47de87aaf4af1a0adcecfb",
+    "sourceArchive": "app/build/audit-build155/build155-complete-project-source.zip",
+    "sourceArchiveVerifiedSha256": "864df310ae80ea82b47efcfd46096e70c7e4bdcce8f6697a0b2bacb196277d32"
+  },
+  "measurementMethod": "UTF-8 decoded physical line count splitlines(); nonempty is a separate descriptive metric. Named dependency edges are unique (file,FQ type) references with comments removed, not a complete runtime/cross-language graph or a quality/performance score.",
+  "sourceMetrics": [
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+      "build155Archived": {
+        "physicalLines": 1198,
+        "nonemptyLines": 1100,
+        "sha256": "ac8b61d9d6e0e4a3753fc9daf3658cfb4d9dc73d8d95fa5ffcf9bf23c2ef0537"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 276,
+        "nonemptyLines": 225,
+        "sha256": "60e4ee398671ae2a5e17a71abc25cd432d3a32dd845b6622ef4de9c5632efd19"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 939,
+        "nonemptyLines": 865,
+        "sha256": "8f3761c290ce00c838c0e594a13942a2b0bc44011049e27522834f2c639b122f"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+      "build155Archived": {
+        "physicalLines": 1417,
+        "nonemptyLines": 1285,
+        "sha256": "2df7b9e18c934724a25fb1a525e6959c08498d33b9671261f3d017f3a6b2b646"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 496,
+        "nonemptyLines": 400,
+        "sha256": "6955fb3def0703a4640282de26d16e40b75064c9840bfa74e661fa3594fa84fe"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+      "build155Archived": {
+        "physicalLines": 2322,
+        "nonemptyLines": 2198,
+        "sha256": "7d3f2ae1dd1cf0eb7504e34819f95776c751138f9a6be70d00397fe606304a51"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 2112,
+        "nonemptyLines": 1991,
+        "sha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 104,
+        "nonemptyLines": 98,
+        "sha256": "226a1a5217944ee7a33d591101f4bdba115d89c6d51c782918c062a5803bd178"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/DshaApp.java",
+      "build155Archived": {
+        "physicalLines": 155,
+        "nonemptyLines": 141,
+        "sha256": "bb96d772fc3c22389ebb16ff5db240e464f16de8fec4818c93f3a6cd2af03528"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 231,
+        "nonemptyLines": 204,
+        "sha256": "0b46dc99a11735f356fb8e6b0771f09a2af3ca9ae2da4bcb0ad94b7ac454162a"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/HarnessSessionState.java",
+      "build155Archived": {
+        "physicalLines": 29,
+        "nonemptyLines": 27,
+        "sha256": "f7dc5da149f53b9c8d27691243b55f5d352dcc8461e83288355276246748fd3d"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 29,
+        "nonemptyLines": 27,
+        "sha256": "fa18efd4a231700b25815a84437e1e2b274270f941bead2865c3e3b6d7e7b3c1"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+      "build155Archived": {
+        "physicalLines": 163,
+        "nonemptyLines": 136,
+        "sha256": "aa715291457ad3403fed32365c84b453020d6ab4f6acd387f31aa12269107343"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 180,
+        "nonemptyLines": 150,
+        "sha256": "1f618b7d5ebb4d6ac3e7173164509801c2a1474786f8df254de95b6613823110"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/PluginJournalRecovery.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 58,
+        "nonemptyLines": 55,
+        "sha256": "8a12702fa7d9661979553f8d57ebdaed7cc5467833b64d4f03ebed97c8de7a42"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/WebStopCoordinator.java",
+      "build155Archived": {
+        "physicalLines": 58,
+        "nonemptyLines": 49,
+        "sha256": "27ec4e507439444ca45c4bde9ff0c0e9497544cc48da7e4110f9e39f3fdcd1ff"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 88,
+        "nonemptyLines": 75,
+        "sha256": "ce0a32b93e57f4b9d5d34321e9fd6f9fc3a5a05c699cea5ccdfe4e0f4e1b2b16"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 74,
+        "nonemptyLines": 67,
+        "sha256": "bd07a8fca3ee864a8c41c54919ea46bf02269e518b551384741c0c544b4c7937"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/LanAuthBridge.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 109,
+        "nonemptyLines": 92,
+        "sha256": "f10910901373806112ede34f8ed93ed69bdf6e47d07e4016874e30325ef0ec5a"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/HostConfigService.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 48,
+        "nonemptyLines": 42,
+        "sha256": "f05576add7958e42e3d66efed66afa889393205c5df8ac1dec7d81fd168c65a3"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/WebProcessSession.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 137,
+        "nonemptyLines": 120,
+        "sha256": "b493865113f71aed4bfd253932670a293a2ded5079e64f7f51bfbb4cfb5b09eb"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 244,
+        "nonemptyLines": 216,
+        "sha256": "f6b1976952ce25943be8f1832fece54738b9d999c973bf972a9d8f42ce853d62"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/runtime/Rc1MigrationCache.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 97,
+        "nonemptyLines": 91,
+        "sha256": "5285bbf8a96e17e02a0438578fa2b7d5a9fe8ded43091e95c42633139ad7d85f"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/Rc1MigrationReuse.java",
+      "build155Archived": null,
+      "currentAssessmentBytes": {
+        "physicalLines": 102,
+        "nonemptyLines": 93,
+        "sha256": "bed3470ff9d07c9be2cefa1094498bede6968ac53df8e1e7aeae4288b69682b6"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+      "build155Archived": {
+        "physicalLines": 821,
+        "nonemptyLines": 748,
+        "sha256": "5f026ea6083c449f10564008f32b887104052e8afec026bd5abb6fd51a8b2fdb"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 876,
+        "nonemptyLines": 793,
+        "sha256": "e5436d57e9d5c2a9ae70027814d3c069e1c27a4bdf80d54f00684e07ad0d76da"
+      }
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/data/PortableSettings.java",
+      "build155Archived": {
+        "physicalLines": 97,
+        "nonemptyLines": 88,
+        "sha256": "236d1faff2973986876889651d11f7cb9423b7e8dc38a21582f5cf1f70f8c77b"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 149,
+        "nonemptyLines": 133,
+        "sha256": "6e3acf3c5b0d5f9b217f538aaf31baf0b369ce535e77d992daaa0139937dad16"
+      }
+    },
+    {
+      "path": "tools/mobile-server/compress.js",
+      "build155Archived": {
+        "physicalLines": 180,
+        "nonemptyLines": 176,
+        "sha256": "fd164f2a84574f6730235b3d9f0c25b8b0f4f04c150a8ee0d8d6435177211d23"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 234,
+        "nonemptyLines": 230,
+        "sha256": "f5902f4f036d0f7a67d2ce6e4c71b01a98227cb4365abde7a4bf8f1bf5e6de0c"
+      }
+    },
+    {
+      "path": "tools/mobile-server/index.js",
+      "build155Archived": {
+        "physicalLines": 142,
+        "nonemptyLines": 142,
+        "sha256": "f7e77b66a94a5108ac64628b2a5085a37b98fb646de2c34258112330e058c77b"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 146,
+        "nonemptyLines": 146,
+        "sha256": "1ab8021dec1453ed7e48a43269efcc46598a27005de2d51b6644579544c90445"
+      }
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+      "build155Archived": {
+        "physicalLines": 180,
+        "nonemptyLines": 176,
+        "sha256": "fd164f2a84574f6730235b3d9f0c25b8b0f4f04c150a8ee0d8d6435177211d23"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 234,
+        "nonemptyLines": 230,
+        "sha256": "f5902f4f036d0f7a67d2ce6e4c71b01a98227cb4365abde7a4bf8f1bf5e6de0c"
+      }
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/index.js",
+      "build155Archived": {
+        "physicalLines": 142,
+        "nonemptyLines": 142,
+        "sha256": "f7e77b66a94a5108ac64628b2a5085a37b98fb646de2c34258112330e058c77b"
+      },
+      "currentAssessmentBytes": {
+        "physicalLines": 146,
+        "nonemptyLines": 146,
+        "sha256": "1ab8021dec1453ed7e48a43269efcc46598a27005de2d51b6644579544c90445"
+      }
+    }
+  ],
+  "namedDependencies": {
+    "build155BackupCoreEdges": [
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+        "type": "com.deepseekharness.app.core.BackupTask"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "type": "com.deepseekharness.app.core.UpdateEngine"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.ConfigStore"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.EnvironmentMaintenance"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "type": "com.deepseekharness.app.core.ConfigStore"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+        "type": "com.deepseekharness.app.core.ConfigStore"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PostUpgradeCleanupService.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.ConfigStore"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      }
+    ],
+    "currentBackupCoreEdges": [
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+        "type": "com.deepseekharness.app.core.BackupTask"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "type": "com.deepseekharness.app.core.UpdateEngine"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.ConfigStore"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.EnvironmentMaintenance"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "type": "com.deepseekharness.app.core.ConfigStore"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+        "type": "com.deepseekharness.app.core.ConfigStore"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PostUpgradeCleanupService.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.ConfigStore"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      }
+    ],
+    "removedEdges": [
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks"
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+        "type": "com.deepseekharness.app.core.HarnessController"
+      }
+    ],
+    "currentBackupCoreCount": 20,
+    "build155BackupCoreCount": 25,
+    "runtimeCoreOrUiAndBackupUiNamedReferences": [],
+    "perEdgeDispositions": [
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+        "type": "com.deepseekharness.app.core.HarnessController",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android JobScheduler coordinator: reads the one Web lifecycle/config owner and the UID-wide active-work registry before scheduling; it cannot invent an independent stop/idle authority."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android JobScheduler coordinator: reads the one Web lifecycle/config owner and the UID-wide active-work registry before scheduling; it cannot invent an independent stop/idle authority."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+        "type": "com.deepseekharness.app.core.BackupTask",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android foreground service: observes/cancels the exact BackupTask application owner and NativeBackupJobs lease; notification Activity destinations are supplied by MaintenanceUiPorts."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java",
+        "type": "com.deepseekharness.app.core.HarnessController",
+        "currentDisposition": "removed_unnecessary_business_dependency",
+        "reason": "Pure user-data predicate now receives only the selected rootfs File; actual legacy/stable body versus managed-marker behavior is covered by ExternalBackupDataPresenceTest."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "type": "com.deepseekharness.app.core.HarnessController",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android destructive-maintenance coordinator: requires the existing maintenance owner and drains the real Web/history/update writer before deleting private roots; file/format algorithms remain separate."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android destructive-maintenance coordinator: requires the existing maintenance owner and drains the real Web/history/update writer before deleting private roots; file/format algorithms remain separate."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "type": "com.deepseekharness.app.core.UpdateEngine",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android destructive-maintenance coordinator: requires the existing maintenance owner and drains the real Web/history/update writer before deleting private roots; file/format algorithms remain separate."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.ConfigStore",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.EnvironmentMaintenance",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.HarnessController",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "type": "com.deepseekharness.app.core.ConfigStore",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android storage/native-settings adapter: ConfigStore is the sole native preference serialization/installed-intent authority; the archive consumes its bytes through ValueBackupSource rather than owning a second preference store."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+        "type": "com.deepseekharness.app.core.ConfigStore",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android implementation of HostDataTransaction.Settings/Targets: it prepares/applies native preferences through ConfigStore; the pure transaction/restore plan only sees their explicit interfaces."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "type": "com.deepseekharness.app.core.HarnessController",
+        "currentDisposition": "removed_unnecessary_business_dependency",
+        "reason": "Guest execution/maintenance-authority recovery moved into core/PluginJournalRecovery; the backup journal class no longer imports or locates core."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+        "currentDisposition": "removed_unnecessary_business_dependency",
+        "reason": "Guest execution/maintenance-authority recovery moved into core/PluginJournalRecovery; the backup journal class no longer imports or locates core."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks",
+        "currentDisposition": "removed_unnecessary_business_dependency",
+        "reason": "Guest execution/maintenance-authority recovery moved into core/PluginJournalRecovery; the backup journal class no longer imports or locates core."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/PostUpgradeCleanupService.java",
+        "type": "com.deepseekharness.app.core.HarnessController",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android JobService: submits idle cleanup to the existing application lifecycle/maintenance owner, preserving live-process and byte-proof deletion barriers."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.ConfigStore",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android profile-import coordinator and implementation of transaction ports: native ConfigStore preference application and existing stop/lease/runtime-trial authority must be shared; file transaction algorithms do not locate a controller."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.HarnessController",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android profile-import coordinator and implementation of transaction ports: native ConfigStore preference application and existing stop/lease/runtime-trial authority must be shared; file transaction algorithms do not locate a controller."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android profile-import coordinator and implementation of transaction ports: native ConfigStore preference application and existing stop/lease/runtime-trial authority must be shared; file transaction algorithms do not locate a controller."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "type": "com.deepseekharness.app.core.RuntimeTasks",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android profile-import coordinator and implementation of transaction ports: native ConfigStore preference application and existing stop/lease/runtime-trial authority must be shared; file transaction algorithms do not locate a controller."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+        "type": "com.deepseekharness.app.core.HarnessController",
+        "currentDisposition": "removed_unnecessary_business_dependency",
+        "reason": "Preset conversion uses the explicit runtime ProotBootstrap adapter and its force-proot execution API; it no longer creates/locates a Web lifecycle controller."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+        "type": "com.deepseekharness.app.core.HarnessController",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android context/UI cleanup entry adapter: obtains app directories and the existing maintenance lease before calling bounded filesystem/runtime cleanup; cache/stat helpers do not publish Web state."
+      },
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+        "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+        "currentDisposition": "required_android_coordinator_fact",
+        "reason": "Android context/UI cleanup entry adapter: obtains app directories and the existing maintenance lease before calling bounded filesystem/runtime cleanup; cache/stat helpers do not publish Web state."
+      }
+    ]
+  },
+  "fiveRemainingWorkUpdates": [
+    {
+      "id": "remaining-work-1",
+      "topic": "ProotBootstrap职责",
+      "before": "build155已拆冷安装、解压、工具安装及公共输出；插件、数据维护与PTY仍在门面内。",
+      "after": "GuestPluginScripts/GuestScriptQueue、RuntimeExecution/RuntimeLauncher、TerminalRuntime、RecoveryToolchain、RuntimeDataTransfers/RootfsReadiness等承担实际执行；门面保留既有API与当前调用契约。",
+      "remainingDesign": [
+        "门面仍装配多个平台协作者；继续拆分应围绕实际输入、执行与退出责任，不能创建第二套runtime选择或工作锁。"
+      ],
+      "retainedContracts": [
+        "proot/proroot选择与失败证据",
+        "维护强制proot及未知写入不重放",
+        "PTY出生身份与实际guest退出",
+        "历史维护与数据读取兼容"
+      ],
+      "evidence": [
+        "docs/audits/build156/review-runtime.json",
+        "app/build/audit-build156/runtime/receipt.json"
+      ]
+    },
+    {
+      "id": "remaining-work-2",
+      "topic": "HttpShellService端点职责",
+      "before": "build155已有路由表/处理器映射，具体平台动作仍在服务内。",
+      "after": "明确BridgeRoutes和RouteHandler registry继续作为分发权威；launch/clipboard的PackageManager、主线程调用与界面授权动作已移AppDeviceActions，文件特权实际执行在AndroidDeviceFiles/DeviceFileCore及纯DeviceFileOperations。",
+      "remainingDesign": [
+        "服务内仍有read/export/open/share/ask、vscreen等端点协调动作，可按FileRoutes/VScreenRoutes/应用交互分组继续收敛。",
+        "认证、运行代次、授权与结果未知边界必须继续统一，不能因拆出handler绕过原策略。"
+      ],
+      "retainedContracts": [
+        "header-only本机桥鉴权",
+        "敏感应用/屏幕目标代次确认",
+        "有界socket/正文与结果未知不重放",
+        "旧未知路由响应兼容"
+      ],
+      "evidence": [
+        "docs/audits/build156/review-bridge.json",
+        "tools/test-bridge-routes.py",
+        "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+      ]
+    },
+    {
+      "id": "remaining-work-3",
+      "topic": "状态拥有者与依赖耦合",
+      "before": "build155已把Web状态收归ApplicationOwner/HarnessSessionState，但RuntimeHostPorts.shared和若干模块进程全局状态仍在。",
+      "after": "DshaApp instance owns Web/session/host ports/repositories/foreground slot and the reopened VirtualScreenManager/PortableSettings owners. Virtual screen state, locks, epoch, worker, previews and authorization follow the existing manager. Portable settings listener/error/writer and reset binding follow one application owner. Five unnecessary backup/core dependencies were removed; twenty explicit Android coordinator edges remain.",
+      "remainingDesign": [
+        "WebLifecycleController remains a substantial single-lifetime executor; further callback/startup/recovery coordination extraction must share the one existing session and queue.",
+        "Auxiliary app_process and UID-wide runtime/foreground registries have separate process/resource contracts; application instance conversion does not mean all static state or all dependency directions disappear.",
+        "Twenty reviewed backup/core Android job/service or native Settings/Targets adapter edges remain; freeze prevents growth but is not a proof of total dependency inversion."
+      ],
+      "retainedContracts": [
+        "单一Web代次/队列/停止意图",
+        "单一硬件会话与授权代次",
+        "全UID维护/终端/前台工作租约",
+        "ConfigStore唯一native配置写入与凭据状态",
+        "未知进程/记录继续阻止破坏性维护"
+      ],
+      "evidence": [
+        "docs/audits/build156/review-core.json",
+        "docs/audits/build156/architecture-backup-core-dispositions.json",
+        "tools/architecture-backup-core-baseline.json"
+      ]
+    },
+    {
+      "id": "remaining-work-4",
+      "topic": "rc1迁移退出重复工作",
+      "before": "build155prepare/finalize仍每启动进入guest调用链，缓存未形成严格退出条件。",
+      "after": "Rc1MigrationReuse与Rc1MigrationCache绑定v2同代记录、实际数据根dev/inode、已提交/原件保留/导入标志以及当前小配置与restore marker摘要；实际GuestPluginScripts prepare/finalize可复用本次已证实完成的结果而不再次启动guest迁移。",
+      "remainingDesign": [
+        "接口与缺证fallback仍保留；不能按APK版本、升级徽标或archive自称已完成来跳过。",
+        "历史/链接/输入变化或读证失败继续真实校验；删除最后历史读者须另有真实迁移覆盖依据。"
+      ],
+      "retainedContracts": [
+        "旧数据与旧settings同存均核对",
+        "未经证实的读取/变化不当cache hit",
+        "配置原件与迁移保护记录保留"
+      ],
+      "evidence": [
+        "docs/audits/build156/review-legacy.json",
+        "docs/audits/build156/review-runtime.json",
+        "app/src/main/java/com/deepseekharness/app/runtime/Rc1MigrationCache.java"
+      ]
+    },
+    {
+      "id": "remaining-work-5",
+      "topic": "移动插件HTTP压缩",
+      "before": "build155大响应/多次write已流式，小于等于1MiB完整JSON仍同步压缩；全局HTTP hook长期影响未测。",
+      "after": "完整一次end(data)且4KiB至1MiB的符合条件JSON使用异步gzip/brotli（quality=4），同时最多两个待完成压缩；饱和/流式/大响应/HEAD/SSE/已编码等走Node原生路径。实际carrier端口限制只覆盖公共WebServer，取消、回调、backpressure与卸载后已接收任务有当前fixture。",
+      "remainingDesign": [
+        "仍会临时包装Node ServerResponse.prototype；第三方再包装/长期load-unload交互和Android息屏时序未形成完整设备证据。",
+        "不把宿主event-loop预算断言等同手机性能收益；未测量改善百分比。"
+      ],
+      "retainedContracts": [
+        "流式正文不整包积累",
+        "原encoding/callback与backpressure",
+        "真实传输边界/Node end语义",
+        "非目标server保持原路径"
+      ],
+      "evidence": [
+        "docs/audits/build156/review-plugins.json",
+        "tools/test-mobile-server-streams.mjs",
+        "tools/mobile-server/compress.js"
+      ]
+    }
+  ],
+  "compressionSourceFacts": {
+    "synchronousCompressionCallReferences": 0,
+    "maxCompleteJsonBytes": 1048576,
+    "minCompleteJsonBytes": 4096,
+    "maxOutstandingCompressions": 2,
+    "carrierScope": "req.socket.localPort equals actual public webServer.port",
+    "prototypeHookRetained": true,
+    "carrierScopePresent": true,
+    "performanceImprovementPercent": null
+  },
+  "classificationLimits": {
+    "originalD_ARCH_06": "The absence of a declared route table is resolved; further endpoint grouping remains visible design work, not a redefinition of the original issue.",
+    "allDependencyInversionClaimed": false,
+    "allMutableStaticsEliminated": false,
+    "architectureDebtScore": null,
+    "performancePercent": null,
+    "fiveDesignItemsAllDisappeared": false
+  },
+  "evidenceScope": {
+    "ownerSourceReview": [
+      "docs/audits/build156/review-core.json",
+      "docs/audits/build156/review-runtime.json",
+      "docs/audits/build156/review-bridge.json",
+      "docs/audits/build156/review-legacy.json",
+      "docs/audits/build156/review-plugins.json"
+    ],
+    "executedChecksNotRerunByThisAssessment": false,
+    "device": "No device was read or operated by this assessment. Any current non-destructive signed-device acceptance is independently bound by the root report; Android6/7/OEM/FUSE/16KiB/power-loss/full external services must retain their actual coverage limits.",
+    "formalSourcehashDualFlavorLintApkElfSignature": "Root final integration/release report binds these separately; this file’s selected current source fingerprints are assessment evidence only.",
+    "ownershipFollowUp": [
+      {
+        "receipt": "app/build/audit-build156/portable-owner/receipt.json",
+        "scope": "3 actual PortableSettings lifecycle tests using real Executor and actual Android37 SharedPreferences interfaces with fake storage; no device IO claim"
+      },
+      {
+        "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+        "scope": "348 current main / 37 test sources, fresh3502catalog; 126 run/125pass/1 Windows real-link creation capability assumption; includes current DshaApp/Portable/NativeDataActivity/vscreen/bridge/BackupManager callback closure"
+      },
+      {
+        "command": "python tools/test-core-boundaries.py",
+        "scope": "9 source ownership checks; does not substitute for SharedPreferences ordering, authorization-revocation or Android hardware behavior"
+      },
+      {
+        "receipt": "docs/audits/build156/bridge-vscreen-ownership.json",
+        "scope": "Final current main/standard Release actual SDK37/R/freshcatalog compile; 25 selected JVM and 6 actual HTTP cases; final GJF/token/source proofs. Host framework-construction bypass/UI effects are explicitly limited, no real VirtualDisplay/Android/OEM claim."
+      }
+    ],
+    "finalVsManagerSha256": "e5436d57e9d5c2a9ae70027814d3c069e1c27a4bdf80d54f00684e07ad0d76da",
+    "postCoreSdkFormattingProof": "Final bridge GJF token/source fingerprints bind any formatting/import-only changes after the focused 348-source Core closure; bridge separately recompiles actual final main/standard Release sources."
+  },
+  "applicationOwnerFacts": {
+    "root": "DshaApp",
+    "singleWebState": "HarnessSessionState",
+    "ownedServices": [
+      "HarnessController",
+      "BackupTask",
+      "InstallRepository",
+      "PluginRepository",
+      "RuntimeHostPorts",
+      "HarnessService slot",
+      "VirtualScreenManager",
+      "PortableSettings"
+    ],
+    "virtualScreen": "One lazy application manager owns action/state locks, lifecycle epoch, authorization token/generation, worker, preview/foreground/overlay and node cache; static Context facade resolves existing App owner. Auxiliary app_process remains a distinct one-process entry contract.",
+    "portableSettings": "listener/error/writer/binding are instance fields; one listener per active/portable pair, stale listener binding rejected, reset detaches/invalidate -> drains accepted write -> clears -> initializes one new listener.",
+    "appCurrentGlobalIntroduced": false,
+    "sourceFrozen": true
+  }
+}

@@ -12,7 +12,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "app" / "src" / "main" / "assets" / "restore-merge.py"
+SOURCE = ROOT / "tools" / "history" / "engineering" / "assets" / "restore-merge.py"
 SPEC = importlib.util.spec_from_file_location("dsha_restore_merge_plugins", SOURCE)
 MODULE = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None

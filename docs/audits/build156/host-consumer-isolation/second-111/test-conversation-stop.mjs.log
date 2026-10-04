@@ -1,0 +1,12 @@
+✔ ordinary running turn remains stoppable with text draft, pending admission and attachments (3.4342ms)
+✔ empty running ordinary turn uses one primary stop; blocked draft still stops (0.9601ms)
+✔ idle and read-only subagent do not offer cancellation; missing handler stays disabled (1.568ms)
+✔ Host cancellation keeps queued inbox work and calls the current Agent once (0.8678ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10.2404

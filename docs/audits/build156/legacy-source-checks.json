@@ -1,0 +1,178 @@
+{
+  "schema": 1,
+  "lane": "legacy",
+  "scope": "Current source structure and exact historical bytes only; no Android/device behavior implied.",
+  "checks": [
+    {
+      "id": "dead_asset_bytes",
+      "description": "All 15 retired source records preserve exact SHA/size and their production paths are absent",
+      "passed": true,
+      "files": [
+        "docs/audits/build156/retired-asset-sources.json",
+        "docs/audits/build156/retired-environment-data-sources.json"
+      ]
+    },
+    {
+      "id": "dead_java",
+      "description": "Removed named unused Java components and named unused helpers are absent from current main source",
+      "passed": true,
+      "files": [
+        "app/src/main/java"
+      ]
+    },
+    {
+      "id": "uuid_source",
+      "description": "Only Ids.java defines the lowercase UUID regex literal",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/Ids.java",
+        "tools/check-source-hygiene.py"
+      ]
+    },
+    {
+      "id": "backup_scope",
+      "description": "Archive, native locations and verified-copy delegate to BackupScopes.ALL",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BackupScopes.java"
+      ]
+    },
+    {
+      "id": "package_name",
+      "description": "All four historical/current plugin graph readers use bounded NpmPackageName.validArchive",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/NpmPackageName.java"
+      ]
+    },
+    {
+      "id": "pending_gate",
+      "description": "selectDataHome reads HostMaintenancePending.inspect and no hand-written HostPendingTransactions.pending remains",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java"
+      ]
+    },
+    {
+      "id": "task_kind",
+      "description": "Persistent task kinds normalize at read/start and ExtractActivity checks the stable REBUILD ID",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BackupTaskKinds.java"
+      ]
+    },
+    {
+      "id": "proc_parser",
+      "description": "Birth/session policies delegate to one ProcStat parser",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ProcStat.java"
+      ]
+    },
+    {
+      "id": "trial_exit",
+      "description": "Exactly one CheckedExit implementation is shared by both trial contracts",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TrialSupport.java"
+      ]
+    },
+    {
+      "id": "system_projection",
+      "description": "Current settings application and restored graph share SystemPluginProjection",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/SystemPluginProjection.java"
+      ]
+    },
+    {
+      "id": "shared_poll",
+      "description": "InstallProcess and bounded collector share pipe polling while their owners retain separate termination contracts",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ProcessPipePoller.java"
+      ]
+    },
+    {
+      "id": "tar_parser",
+      "description": "Signed asset extraction calls the same checksum/PAX/duplicate member parser as the legacy tar reader, with separate write/link authority",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ArchiveFileBoundary.java"
+      ]
+    },
+    {
+      "id": "delete_action",
+      "description": "Menu and card actions call one confirmDelete and only one repository.delete(item) remains",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+      ]
+    },
+    {
+      "id": "retired_resources",
+      "description": "Named unused resource files and install_crash are absent",
+      "passed": true,
+      "files": [
+        "app/src/main/res/layout/fragment_install.xml"
+      ]
+    },
+    {
+      "id": "resource_keys",
+      "description": "Four changed bilingual resource files retain matching key sets",
+      "passed": true,
+      "files": [
+        "app/src/main/res/values/alpha1_strings.xml",
+        "app/src/main/res/values/dns_strings.xml",
+        "app/src/main/res/values/picture_in_picture_strings.xml",
+        "app/src/main/res/values/refresh_strings.xml"
+      ]
+    },
+    {
+      "id": "lint_policy",
+      "description": "UnusedResources is configured as an error; resource shrinking/minification is not substituted for lifecycle validation",
+      "passed": true,
+      "files": [
+        "app/lint.xml",
+        "app/build.gradle"
+      ]
+    },
+    {
+      "id": "dead_build_tools",
+      "description": "Obsolete build/injection/reproducer sources are absent from current executable tools",
+      "passed": true,
+      "files": [
+        "tools/build-dsh-runtime.py",
+        "tools/history/engineering"
+      ]
+    },
+    {
+      "id": "single_html",
+      "description": "One web-state HTML source supplies both test source sets",
+      "passed": true,
+      "files": [
+        "tools/fixtures/web-state/web-state-fixture.html",
+        "app/build.gradle"
+      ]
+    },
+    {
+      "id": "skills_source",
+      "description": "Website builds and checks its skill downloads against the canonical agent-skills source",
+      "passed": true,
+      "files": [
+        "website/scripts/build.mjs",
+        "website/scripts/site.test.mjs"
+      ]
+    },
+    {
+      "id": "new_rebuild",
+      "description": "The current rebuild uses host snapshots and EnvironmentRebuildTransaction; native behavior tests exercise those actual classes",
+      "passed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+        "app/src/test/java/com/deepseekharness/app/backup/NativeEnvironmentRebuildTest.java"
+      ]
+    }
+  ]
+}

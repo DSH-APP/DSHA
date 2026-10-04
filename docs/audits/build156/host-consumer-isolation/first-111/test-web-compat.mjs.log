@@ -1,0 +1,19 @@
+✔ PDF 单行前导保持 Base64 换行与空白语义 (43.7885ms)
+✔ 旧 WebView 和独立 Worker 都能使用 PDF 的迭代器链，提前结束会关闭生成器 (17.9321ms)
+✔ PDF URL、Promise.try 和精确求和在缺失新接口时仍保留语义 (5.2143ms)
+✔ PDF 字体与二进制转换保留字节、偏移和转移后的失效语义 (4.2669ms)
+✔ 兼容脚本重复注入不改变已有 Iterator 和已补齐的方法 (7.7031ms)
+✔ HTML boot-ready marker resolves before the frontend modules start (0.9645ms)
+✔ Promise subclass and rejection preserve native call semantics (1.1647ms)
+✔ existing browser implementation is kept unchanged (0.6087ms)
+✔ PDF 使用的 Map 插入保留已有 undefined、只计算一次且覆盖回调中的同键写入 (0.8394ms)
+✔ WeakMap 拒绝无效键且不运行回调，补丁方法不可枚举 (0.7074ms)
+✔ 集合已有原生实现时保持其函数身份 (1.0006ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 94.3953

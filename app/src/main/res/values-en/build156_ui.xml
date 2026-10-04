@@ -1,0 +1,14 @@
+<resources>
+    <string name="ui_lan_unencrypted">LAN access uses HTTP, with unencrypted traffic. Use trusted networks and share connection links only with trusted devices.</string>
+    <string name="ui_welcome_counter">%1$d / 7</string>
+    <string name="ui_welcome_initial_counter">1 / 7</string>
+    <string name="ui_language_title">Language</string>
+    <string name="ui_adb_host_label">Device address (leave blank for discovery)</string>
+    <string name="ui_adb_port_label">Pairing port (leave blank for discovery)</string>
+    <string name="ui_adb_code_label">Pairing code (6 digits)</string>
+    <string name="ui_api_key_replacement_label">New API key (leave blank to keep the saved record)</string>
+    <plurals name="plugin_count">
+        <item quantity="one">%d plugin</item>
+        <item quantity="other">%d plugins</item>
+    </plurals>
+</resources>

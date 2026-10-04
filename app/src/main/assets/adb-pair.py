@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# DSHA_ADB_SCRIPT_VERSION=19
+# DSHA_ADB_SCRIPT_VERSION=20
 """无线配对只握手一次；配对授权与连接验证分别反馈。
 
 PAIR_OK 表示配对完成；只有 CONNECT_OK 才能执行设备命令。
@@ -109,12 +109,17 @@ def main():
         from adb_shell_wifi.auth.sign_pythonrsa import PythonRSASigner
         # 固定的应用设置操作，没有接收任意命令的“内部跳过”入口。
         try:
+            # Native authenticated plan supplies the actual app identity; no CLI/query package is trusted.
+            identity = adb.request_device_plan('id', False)
+            package = identity.get('selfPackage')
+            if not isinstance(package,str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+',package):
+                raise adb.policy.Blocked('SELF_PACKAGE_UNVERIFIED')
             result = adb.connect_with_retry(AdbDeviceTls, PythonRSASigner,
-                'pm grant com.dsh.client android.permission.WRITE_SECURE_SETTINGS',
+                adb.policy.argv_command(['pm','grant',package,'android.permission.WRITE_SECURE_SETTINGS']),
                 a.connect_port, a.host, connect_timeout=15, command_timeout=10)
             print(result.output); print('[EXIT=%d]' % result.exit_code)
             return result.exit_code
-        except (adb.ConnectFail, adb.ExecutionUnknown) as error:
+        except (adb.ConnectFail, adb.ExecutionUnknown, adb.policy.Blocked) as error:
             print('KEEPALIVE_WARN: %s\n[EXIT=1]' % error)
             return 1
     if a.genkey:

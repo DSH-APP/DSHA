@@ -13,8 +13,8 @@ import subprocess
 import sys
 import time
 import uuid
+from device_script_privacy import redact
 
-ADB = r'F:\DSHA\_toolchains\android-sdk\platform-tools\adb.exe'
 FOLDER = 'cache/adb-flow-audit/'
 OPERATIONS = ('status', 'prepare', 'verify', 'pair', 'state', 'launch', 'rotate', 'theme', 'lifecycle', 'stop')
 
@@ -39,8 +39,10 @@ def request(op, host='', port='', connect_port='', ui=False, code='', night='tog
     return data
 
 
-def adb_prefix(executable, serial=''):
-    return [executable] + (['-s', serial] if serial else [])
+def adb_prefix(executable, serial):
+    if not executable or not serial:
+        raise ValueError('必须明确指定 --adb 和 --serial')
+    return [executable, '-s', serial]
 
 
 def read_report(prefix, name):
@@ -111,8 +113,8 @@ def main():
             self.exit(2, display({'error': message}) + '\n')
     parser = PrivateParser(description=__doc__, allow_abbrev=False)
     parser.add_argument('op', choices=OPERATIONS)
-    parser.add_argument('--adb', default=ADB)
-    parser.add_argument('--serial', default='')
+    parser.add_argument('--adb', required=True)
+    parser.add_argument('--serial', required=True)
     parser.add_argument('--host', default='')
     parser.add_argument('--port', default='')
     parser.add_argument('--connect-port', default='')
@@ -133,12 +135,12 @@ def main():
                 secret = getpass.getpass('本次系统配对码（隐藏输入）：').strip()
         data = request(args.op, args.host, args.port, args.connect_port, args.ui, secret, args.night)
         result = run(adb_prefix(args.adb, args.serial), data, not args.no_wait, args.timeout)
-        print(display(result, secret))
+        print(redact(display(result, secret), (args.adb, args.serial)))
         if result.get('ok') is False or result.get('outcome') in ('FAIL', 'PAIRED_UNVERIFIED', 'ENVIRONMENT_BUSY'):
             return 1
         return 0
     except (ValueError, RuntimeError) as e:
-        print(display({'error': str(e)}, secret), file=sys.stderr)
+        print(redact(display({'error': str(e)}, secret), (args.adb, args.serial)), file=sys.stderr)
         return 1
     except (subprocess.SubprocessError, OSError):
         print('ADB 传输未确认；请先检查 state，不要直接重发配对。', file=sys.stderr)

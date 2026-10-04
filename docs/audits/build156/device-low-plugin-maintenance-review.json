@@ -1,0 +1,330 @@
+{
+  "schema": "dsha-plugin-device-ui-maintenance-review-v1",
+  "reviewedAt": "2026-10-04T08:08:16+08:00",
+  "reviewMode": "read_only_host_evidence",
+  "softwareChanged": false,
+  "fixtureChanged": false,
+  "deviceCommandsExecutedByReviewer": 0,
+  "scope": {
+    "deviceOperator": "runtime exclusive device lease",
+    "flavor": "low",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+    "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "debuggable": false,
+    "androidRelease": 13,
+    "engine": "Native plugin maintenance screens; prior explicitly selected Gecko run is separately reported.",
+    "overlayAt": "2026-10-04T06:14:39.173661+08:00",
+    "maintenanceEvidenceStartAt": "2026-10-04T07:43:59.873318+08:00",
+    "maintenanceEvidenceEndAt": "2026-10-04T07:59:29.639127+08:00",
+    "subjectPlugin": "dsh-acceptance-156",
+    "subjectVersion": "0.0.156",
+    "expectedFrozenTgzSha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+    "expectedFrozenTgzBytes": 9687
+  },
+  "summary": {
+    "downloadSourceUiOptionsVisible": 3,
+    "mirrorSelectionUiObserved": true,
+    "autoSelectionRestoredUiObserved": true,
+    "initialOwnedPluginConfirmedLoadedVisible": true,
+    "initialOfficialTemplateConfirmedLoadedVisible": true,
+    "exactOwnedDeleteConfirmationVisible": true,
+    "loadingEntryRemovalAndOriginalRetentionReportedByUi": true,
+    "localSafPackageSelectionVisible": true,
+    "localParseToAutomaticInstallEnableUiObserved": true,
+    "manualInstallReviewApprovalActionsBetweenPickAndSuccess": 0,
+    "postImportNativeReadyVisible": true,
+    "nativeReadyElapsedSecondsDisplayed": 9.0,
+    "currentDeviceJournalIndependentlyRead": false,
+    "currentRetainedOriginalTreeIndependentlyHashed": false,
+    "npmMirrorNetworkFallbackTestedByThisEvidence": false
+  },
+  "observations": [
+    {
+      "id": "source-selector",
+      "result": "pass_visible_ui",
+      "screenshots": [
+        "lease-low-plugin-source-options-0769",
+        "lease-low-source-mirror-selected-0770",
+        "lease-low-source-auto-restored-0771"
+      ],
+      "times": [
+        "2026-10-04T07:43:59.873318+08:00",
+        "2026-10-04T07:47:25.787378+08:00",
+        "2026-10-04T07:47:30.523028+08:00"
+      ],
+      "summary": "The native dialog shows auto, npm official and npmmirror. Selecting npmmirror visibly changes the source label; selecting auto restores the label, which remains auto through local import completion.",
+      "limit": "This records UI choice and restoration. It does not verify an npm package request using the mirror, real mirror failure, fallback replay, or persistence across process death."
+    },
+    {
+      "id": "initial-loaded-state",
+      "result": "pass_visible_ui",
+      "screenshots": [
+        "lease-low-a156-owned-installed-0775"
+      ],
+      "time": "2026-10-04T07:51:40.434567+08:00",
+      "summary": "Before deletion, the native manager shows dsh-acceptance-156 0.0.156 and the previously reviewed official @local/my-decoration 1.0.0 as confirmed loaded, with enabled switches.",
+      "limit": "This snapshot precedes deletion and reimport. It does not independently verify the subsequent import candidate load digest or prove the route used to download the official template."
+    },
+    {
+      "id": "exact-owned-remove",
+      "result": "pass_visible_ui",
+      "screenshots": [
+        "lease-low-owned-plugin-delete-confirm-0776",
+        "lease-low-owned-plugin-delete-result-0777",
+        "lease-low-package-reimport-entry-0778"
+      ],
+      "confirmationAt": "2026-10-04T07:52:26.372493+08:00",
+      "deleteActionAt": "2026-10-04T07:53:40.180581+08:00",
+      "completionMessageAt": "2026-10-04T07:53:49.848630+08:00",
+      "summary": "The confirmation names only dsh-acceptance-156 and states loading-path removal with original preservation. After the accepted delete, the completed market message states its loading entry was removed and its original retained in the data page retained area.",
+      "limit": "The intermediate 0777 image is still syncing the list and contains old cached cards. Completion text at 0778 is the observed UI result; this review did not read the device transaction marker, inspect final loading-path aliases, or hash the retained original."
+    },
+    {
+      "id": "local-auto-install-enable",
+      "result": "pass_visible_ui",
+      "screenshots": [
+        "lease-low-owned-tgz-pick-0782",
+        "lease-low-package-import-running-0783",
+        "lease-low-import-auto-commit-result-0784"
+      ],
+      "pickerVisibleAt": "2026-10-04T07:56:42.430947+08:00",
+      "packageSelectionActionAt": "2026-10-04T07:57:23.125925+08:00",
+      "parsingVisibleAt": "2026-10-04T07:57:25.662844+08:00",
+      "installEnableSuccessVisibleAt": "2026-10-04T07:59:26.473818+08:00",
+      "summary": "The Android SAF picker shows the owned acceptance folder and its 9.69 kB package. Selecting the package enters local parsing, then the native result says installed and enabled. Only passive screenshot actions occur between the package pick and that result; there is no separate manual review/install approval. Current source wires importArchive completion directly to confirmPreview, which submits the same prepared candidate and confirmation digest.",
+      "commitInterpretation": "The UI result and source path support the normal automatic commit/enable behavior. The current device journal was not collected/read here, so the committed marker, candidate/content digest and filesystem switch are not independently re-proven from this UI evidence.",
+      "packageIdentityLimit": "The original local fixture is independently unchanged at 9687 bytes/SHA595abc..., and the operator identifies this SAF item as that pushed fixture. The SAF-imported byte digest is not visible in these screenshots or a collected current journal."
+    },
+    {
+      "id": "post-import-ready",
+      "result": "pass_visible_ui",
+      "screenshots": [
+        "lease-low-import-main-state-0785"
+      ],
+      "time": "2026-10-04T07:59:29.639127+08:00",
+      "summary": "The native launch page after import shows DSH ready, actual port 3080, runtime READY, and this displayed startup trace reports service/authentication ready at 9.0 seconds. Between pick and success there is no launch action; the next tap only opens the native launch tab. This is consistent with the source automatic startWeb continuation when Web was running.",
+      "limit": "No current PID birth identity, startup ID, exact plugin activation receipt or fresh post-reimport plugin route was independently read in this review. The displayed 9.0 seconds is a trace value, not a measured total package-import duration."
+    }
+  ],
+  "sourceContractAnchors": [
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+      "line": 824,
+      "meaning": "SAF byte copy/inspect followed by this::confirmPreview."
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+      "line": 691,
+      "meaning": "Install prepared candidate with confirmation digest; source continuation restarts Web when appropriate."
+    },
+    {
+      "path": "app/src/main/assets/plugin-lifecycle.py",
+      "line": 420,
+      "meaning": "Recheck staged archive/content/dependency identities, register exact prepared roots, then return installed/enabled result."
+    },
+    {
+      "path": "app/src/main/assets/plugin-manager.py",
+      "line": 585,
+      "meaning": "Apply fixed plan, switch plugin/activation/source/manifest, retain prior object, mark committed before successful registration return."
+    },
+    {
+      "path": "app/src/main/assets/plugin-transactions.py",
+      "line": 208,
+      "meaning": "Deletion moves exact owned objects into operation storage and marks the delete transaction committed."
+    }
+  ],
+  "sourceEvidence": {
+    "apkPreflight": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/apk-preflight.json",
+      "sha256": "2b2582536a4e74a2ca46118c108d895fa13549baeb5b1f2c31a32c7ab5b56cdc"
+    },
+    "operatorActionsPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "40f61d8165927de49d0cf4ccffd5d85aeaf085b89d583de2e09167a78ca427dc",
+      "bytes": 154857,
+      "records": 1082,
+      "lastRecordIndex0Based": 1081,
+      "lastTime": "2026-10-04T07:59:29.639127+08:00",
+      "hashRecipe": "SHA256 of first 154857 bytes (1082 complete rows); later appended actions do not alter this proof. Raw command arguments, input text and unrelated rows are omitted."
+    },
+    "screenshots": [
+      {
+        "id": "lease-low-plugin-source-options-0769",
+        "privateEvidenceFile": "lease-low-plugin-source-options-0769.png",
+        "sha256": "76ae28046cdf0166a355d5d4f19771f531ecfeb903df37710541c64dc2346ab5",
+        "bytes": 195176,
+        "actionIndex0Based": 1047,
+        "operatorTime": "2026-10-04T07:43:59.873318+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-source-mirror-selected-0770",
+        "privateEvidenceFile": "lease-low-source-mirror-selected-0770.png",
+        "sha256": "4eae5f1f1a92a08ab739c59bdcdb1d763dc98521a81092b0ef6f19ad7cf9a4ec",
+        "bytes": 238827,
+        "actionIndex0Based": 1049,
+        "operatorTime": "2026-10-04T07:47:25.787378+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-source-auto-restored-0771",
+        "privateEvidenceFile": "lease-low-source-auto-restored-0771.png",
+        "sha256": "250f9490e6c02a8ca9483aaf5ad0483837909ce8881c19fb62cbd3ea3bd08ee0",
+        "bytes": 238908,
+        "actionIndex0Based": 1052,
+        "operatorTime": "2026-10-04T07:47:30.523028+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-a156-owned-installed-0775",
+        "privateEvidenceFile": "lease-low-a156-owned-installed-0775.png",
+        "sha256": "947ab4d6d6467f2c87c13e05601535994741862797f36fa078a1d99175fbc8af",
+        "bytes": 212199,
+        "actionIndex0Based": 1059,
+        "operatorTime": "2026-10-04T07:51:40.434567+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-owned-plugin-delete-confirm-0776",
+        "privateEvidenceFile": "lease-low-owned-plugin-delete-confirm-0776.png",
+        "sha256": "dc77b5f7f6960c4e5e0e8688f71fdd93a6eed7e17fdfeeb47ba01a43daccd11f",
+        "bytes": 227199,
+        "actionIndex0Based": 1061,
+        "operatorTime": "2026-10-04T07:52:26.372493+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-owned-plugin-delete-result-0777",
+        "privateEvidenceFile": "lease-low-owned-plugin-delete-result-0777.png",
+        "sha256": "aa187dff13c6510757fa1e284c1d0ed130d855f84119a9b868d620fe750be0c1",
+        "bytes": 196680,
+        "actionIndex0Based": 1063,
+        "operatorTime": "2026-10-04T07:53:42.691236+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-package-reimport-entry-0778",
+        "privateEvidenceFile": "lease-low-package-reimport-entry-0778.png",
+        "sha256": "cca0c2075f87f84386d9d2a45aec9bc7bb5150920f5141d8b9c9b372326b98cc",
+        "bytes": 254990,
+        "actionIndex0Based": 1067,
+        "operatorTime": "2026-10-04T07:53:49.848630+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-owned-tgz-pick-0782",
+        "privateEvidenceFile": "lease-low-owned-tgz-pick-0782.png",
+        "sha256": "997340fa512d3524368a481a28cad2cddbd2e33320d239308d55eaa5133039e4",
+        "bytes": 118339,
+        "actionIndex0Based": 1076,
+        "operatorTime": "2026-10-04T07:56:42.430947+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-package-import-running-0783",
+        "privateEvidenceFile": "lease-low-package-import-running-0783.png",
+        "sha256": "e939fc312a129d34cac601aa2c78d43e44746933ee9de97692f7827844794513",
+        "bytes": 227716,
+        "actionIndex0Based": 1078,
+        "operatorTime": "2026-10-04T07:57:25.662844+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-import-auto-commit-result-0784",
+        "privateEvidenceFile": "lease-low-import-auto-commit-result-0784.png",
+        "sha256": "6c07a8a25414c914acd69ccda00f01470237a44609fb8274ba461623ab945cba",
+        "bytes": 238138,
+        "actionIndex0Based": 1079,
+        "operatorTime": "2026-10-04T07:59:26.473818+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-import-main-state-0785",
+        "privateEvidenceFile": "lease-low-import-main-state-0785.png",
+        "sha256": "2f719f15d0af7e893d172c73a1fdfa38d309e7dde34df3d8da162a3d270af1e1",
+        "bytes": 255717,
+        "actionIndex0Based": 1081,
+        "operatorTime": "2026-10-04T07:59:29.639127+08:00",
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false,
+        "privateAuthenticationUrlPresent": true,
+        "redactionRequiredBeforeAnyPublication": true
+      }
+    ],
+    "sourceFiles": [
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+        "sha256": "eaf5fa52064af3656f00acbacab3be6cafa2b25fa137dfd7cf0464edab2ac8e1"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "sha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d"
+      },
+      {
+        "path": "app/src/main/assets/plugin-lifecycle.py",
+        "sha256": "bd08db4cd03c99b3cb4b815e2361421702cf488e342d0fe369a29f189bd8de02"
+      },
+      {
+        "path": "app/src/main/assets/plugin-manager.py",
+        "sha256": "b7f232ad73d6af9e22324a841f62c308b3ce4e403ea80f566af33ab7a3d530bd"
+      },
+      {
+        "path": "app/src/main/assets/plugin-transactions.py",
+        "sha256": "aa36d2acf5e07287b27b43b26e1d924485428986ce30e36574597d165db3c496"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "sha256": "5530e1f8adeec5969506694800eb0d9e1913bbd1de21742f29ee0ac2f30da5f5"
+      }
+    ],
+    "frozenFixtureTgz": {
+      "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156.tgz",
+      "sha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+      "bytes": 9687
+    }
+  },
+  "validation": {
+    "command": "Read-only Python assertions: bind APK/preflight/overlay, verify no intervening overlay in this prefix, correlate SAF pick/delete target and passive-only actions through installation success, verify 11 screenshot SHA against action rows, hash 6 source files and unchanged frozen tgz, preserve both prior fixture reports byte-identical. Source contract inspected; no device journal read.",
+    "exitCode": 0,
+    "screenshotDigestsMatched": 11,
+    "screenshotImagesVisuallyReviewed": 11,
+    "sourceFilesOnlyRead": 6
+  },
+  "priorEvidencePreserved": [
+    {
+      "path": "docs/audits/build156/device-final-low-gecko-fixture-review.json",
+      "sha256": "aba78cf6ab4802e74fceeb7492d706a230077eaf11b7112c43a4051c4618085d",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-final-standard-fixture-review.json",
+      "sha256": "108867f71ab1e6b4b6d663cb118f3471dcc92d41cd538383aedd08984161efa7",
+      "unchanged": true
+    }
+  ],
+  "limits": [
+    "Visible success and source control flow support automatic install/enable, but current device commit journal, installed candidate digest and retained-original bytes are not independently checked in this UI-only review.",
+    "Mirror choice is a UI check; no actual npm mirror failure/fallback or unlocked dependencies/hooks installation is exercised by this healthy dependency-free local package.",
+    "The initial confirmed-loaded snapshot cannot be promoted to a fresh post-reimport plugin digest/handshake proof. Native READY is recorded separately.",
+    "The previous 25-event Low media/file record remains in its earlier collection and is not relabeled as post-reimport or new Standard evidence.",
+    "Raw screenshots remain private; 0785 contains a dynamic authentication URL and must not be published without redaction. No credentials, authentication URL value or device serial appears in this public report."
+  ],
+  "privacy": {
+    "rawPrivatePixelsCopied": false,
+    "rawPrivateActionBodiesCopied": false,
+    "userFileContentsCopied": false,
+    "subjectOnly": "Owned acceptance plugin maintenance and already-reviewed official template label; no unrelated user plugin mutations were performed by reviewer."
+  }
+}

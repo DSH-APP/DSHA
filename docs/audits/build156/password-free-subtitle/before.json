@@ -1,0 +1,17 @@
+[
+  {
+    "file": "app/src/main/res/values/ui_iteration.xml",
+    "beforeSha256": "d26262747e0f4ad30a30df6e454860b90b3c114aee1c8409b63b6fbbb60f8088",
+    "preserved": "docs/audits/build156/password-free-subtitle/values-ui_iteration.xml.before"
+  },
+  {
+    "file": "app/src/main/res/values-en/ui_iteration.xml",
+    "beforeSha256": "8dc9cd9cb8d64f19eda294d334105e219f5064517e558296a69240da0f9e9099",
+    "preserved": "docs/audits/build156/password-free-subtitle/values-en-ui_iteration.xml.before"
+  },
+  {
+    "file": "tools/i18n/messages.json",
+    "beforeSha256": "78e499bc41d6b5e0c185ee81595a49cd8c4f8ad173c0278b07df9683fd63019f",
+    "preserved": "docs/audits/build156/password-free-subtitle/i18n-messages.json.before"
+  }
+]

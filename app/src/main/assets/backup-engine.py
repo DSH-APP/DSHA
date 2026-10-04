@@ -29,15 +29,41 @@ MANIFEST = ".dsha-backup-manifest.json"
 # 离线安装用户的 API key 不会落到工作目录 .env。备份时由 Android
 # 的 native-config 按「包含 API Key」开关显式注入这个受控文件；源树中
 # 若残留旧文件也不能在用户关闭开关后意外随包带走。
-API_KEY_FILE = ".dsha-apikey"
+def credential_paths():
+    base = Path(__file__).resolve().parent
+    for path in (base / 'credential-paths.json', base / '.dsha-credential-paths.json', base / '.dsh/credential-paths.json'):
+        if not path.is_file(): continue
+        value = json.loads(path.read_text(encoding='utf8'))
+        if value.get('schemaVersion') != 1:
+            raise ValueError('CREDENTIAL_PATHS_INVALID')
+        for section, field in (('externalMachine','exact'),('externalMachine','prefixes'),('backupMachine','additionalExact')):
+            entries = (value.get(section) or {}).get(field)
+            if not isinstance(entries,list) or any(not isinstance(name,str) or not name or '/' in name or '\\' in name for name in entries):
+                raise ValueError('CREDENTIAL_PATHS_INVALID')
+        for entry in value.get('sessionExclusions',[]):
+            if not isinstance(entry,dict) or not isinstance(entry.get('root'),str) or not isinstance(entry.get('relative'),str) or '/' in entry['relative'] or '\\' in entry['relative'] or entry['relative'] in ('','..','.'):
+                raise ValueError('CREDENTIAL_PATHS_INVALID')
+        key=(value.get('names') or {}).get('legacyApiKey')
+        if not isinstance(key,str) or not key or '/' in key or '\\' in key:
+            raise ValueError('CREDENTIAL_PATHS_INVALID')
+        return value
+    raise ValueError('CREDENTIAL_PATHS_MISSING')
+
+
+_CREDENTIAL_PATHS = credential_paths()
+API_KEY_FILE = _CREDENTIAL_PATHS['names']['legacyApiKey']
 # 属于「这台机器」而不是用户的凭据/标识：换机后无意义，恢复后由对应组件重新生成。
 # 实测确认：把它们打进备份等于把可用凭据写进公共目录（见 docs/security-model.md）。
-LOCAL_DEVICE_FILES = {
-    # 3090 桥 token：本机 loopback 桥的共享凭据
-    ".bridge_token",
-    # 匿名设备标识
-    ".anonymous-user-id",
-}
+LOCAL_DEVICE_FILES = set(_CREDENTIAL_PATHS['externalMachine']['exact']) | set(_CREDENTIAL_PATHS['backupMachine']['additionalExact'])
+LOCAL_DEVICE_PREFIXES = tuple(_CREDENTIAL_PATHS['externalMachine']['prefixes'])
+
+
+def machine_name(name):
+    return name in LOCAL_DEVICE_FILES or name.startswith(LOCAL_DEVICE_PREFIXES)
+
+
+def root_exclusions(name):
+    return {entry['relative'] for entry in _CREDENTIAL_PATHS['sessionExclusions'] if entry['root'] == name}
 # 凭据文件里需要剔除的「本机」记录（字段级剔除，保留用户的 API key）
 CREDENTIAL_FILE = ".credentials.yaml"
 CREDENTIAL_RECORDS = ("client-connection/",)
@@ -49,24 +75,21 @@ SKIP.add(API_KEY_FILE)
 # 仅排除 App 管理的顶层缓存；插件内同名目录与配对密钥均属于备份内容。
 TOP_CACHE = {"plugin-previews", "plugin-updates.json", ".plugins.lock"}
 # APK 管理的缓存只有摘要一致时才排除；用户修改或另加的文件仍备份。
-ADB_ARCHIVE_SHA256 = '173000bd60f8d58f90f988320b9b675540806139da9eae64ea78a0e6ecf5d9d4'
-ADB_WHEEL_CACHE = {
-    "adb_shell_wifi-0.5.0-py3-none-any.whl": "231d4c608f2631ddb2df55bdc7ea111c43275277d04fcbc791f8b613dfaa391a",
-    "aiofiles-25.1.0-py3-none-any.whl": "abe311e527c862958650f9438e859c1fa7568a141b22abcd015e120e86a85695",
-    "async_timeout-5.0.1-py3-none-any.whl": "39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c",
-    "cffi-2.1.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl": "68e62fe11f30d5ca8289242866f0a5291402d8529ca2178ab8afc5c9694ae890",
-    "cryptography-50.0.0-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl": "fd9192b7b70c573d7f214eb1ae35e00d359f6f5e4b27c7e21e30de1fc6204645",
-    "ifaddr-0.2.0-py3-none-any.whl": "085e0305cfe6f16ab12d72e2024030f5d52674afad6911bb1eee207177b8a748",
-    "pip-26.2.1-py3-none-any.whl": "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e",
-    "pyasn1-0.6.4-py3-none-any.whl": "deda9277cfd454080ec40b207fb6df82206a3a2688735233cdcd8d3d565f088b",
-    "pycparser-3.0-py3-none-any.whl": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
-    "pyopenssl-26.4.0-py3-none-any.whl": "f0eb0cb2d581d3ad2b9c489468485e7f2ab6727d08401bcf9d824c3caddf3c1c",
-    "rsa-4.9.1-py3-none-any.whl": "68635866661c6836b8d39430f97a996acbd61bfa49406748ea243539fe239762",
-    "setuptools-84.0.0-py3-none-any.whl": "51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670",
-    "spake2_cffi-1.0.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "72267aa5bc611528235f274c3b261cb4650c71a65ecf7dbfe181960798588769",
-    "typing_extensions-4.16.0-py3-none-any.whl": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
-    "zeroconf-0.150.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "e17a3adc2e4e425c59a1f2a72e289706ec6655fead4d5287f23e1748663df7dc"
-}
+def adb_wheel_identity():
+    base = Path(__file__).resolve().parent
+    for path in (base / 'adb-wheels.lock.json', base / '.dsha-adb-wheels.lock.json', base / '.dsh/adb-wheels.lock.json'):
+        if not path.is_file(): continue
+        value = json.loads(path.read_text(encoding='utf8'))
+        wheels = value.get('wheels')
+        if value.get('schema') != 1 or not re.fullmatch('[a-f0-9]{64}', str(value.get('archiveSha256', ''))) or not isinstance(wheels, dict) or any(not re.fullmatch('[a-f0-9]{64}', str(sha)) for sha in wheels.values()):
+            raise ValueError('ADB_WHEEL_IDENTITY_INVALID')
+        return value
+    raise ValueError('ADB_WHEEL_IDENTITY_MISSING')
+
+
+_ADB_WHEEL_IDENTITY = adb_wheel_identity()
+ADB_ARCHIVE_SHA256 = _ADB_WHEEL_IDENTITY['archiveSha256']
+ADB_WHEEL_CACHE = _ADB_WHEEL_IDENTITY['wheels']
 MAX_BYTES = 16 * 1024 ** 3
 MAX_FILES = 300000
 RESERVE = 32 * 1024 ** 2
@@ -116,37 +139,35 @@ def unlink_symlink(path):
 
 
 def trim_local_records(text, prefixes=CREDENTIAL_RECORDS):
-    """从凭据 YAML 文本里剔除「本机」记录，返回 (新文本, 被剔除的键)。
-
-    字段级剔除而不是整文件排除：`.credentials.yaml` 的 `refs` 里是用户的
-    API key（换机后还要用），`records` 里的 `client-connection/browser-session`
-    才是本机 cookie 签名密钥（恢复后由 dsh 重新生成）。
-
-    用文本行处理而非 YAML 库：容器内不保证有 pyyaml，而且这里只需要
-    「删掉某个顶层键及其子行」这一种操作。解析失败不抛异常 —— 交回原文本，
-    由调用方决定是否因此阻断备份（宁可少删也不能删错结构）。
-    """
-    lines = text.splitlines(keepends=True)
-    out, removed, index = [], [], 0
-    while index < len(lines):
-        line = lines[index]
-        match = re.match(r'^([ \t]{2})(["\']?)([^"\':]+)\2\s*:\s*$', line.rstrip("\n"))
-        if match and match.group(3).startswith(tuple(prefixes)):
-            removed.append(match.group(3))
-            index += 1
-            while index < len(lines):
-                following = lines[index]
-                if following.strip() == "":
-                    index += 1
-                    continue
-                indent = len(following) - len(following.lstrip(" "))
-                if indent <= 2:
-                    break
-                index += 1
-            continue
-        out.append(line)
-        index += 1
-    return "".join(out), removed
+    """Use the pinned YAML parser, remove local records, fail closed on unsupported input."""
+    if len(text.encode('utf8')) > 1024 * 1024:
+        raise ValueError('CREDENTIAL_TRIM_FAILED')
+    if not text.strip():
+        return text, []
+    base = Path(__file__).resolve().parent
+    scripts = (base / 'credential-yaml-filter.cjs', base / '.dsha-credential-yaml-filter.cjs')
+    script = next((path for path in scripts if path.is_file()), None)
+    module = Path('/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/yaml')
+    # Host fixtures use only their recorded current npm runtime, not a global
+    # or user project module. Production never accepts an arbitrary module path.
+    if not module.is_dir() and len(Path(__file__).resolve().parents) > 4:
+        repo = Path(__file__).resolve().parents[4]
+        pointer = repo / 'app/build/test-runtimes/current.json'
+        if pointer.is_file() and (repo / 'tools/dsh-runtime/package-lock.json').is_file():
+            fixture = json.loads(pointer.read_text(encoding='utf8'))
+            module = Path(fixture['raw']) / 'node_modules/yaml'
+    if script is None or not (module / 'package.json').is_file():
+        raise ValueError('CREDENTIAL_TRIM_FAILED: controlled YAML parser unavailable')
+    environment = dict(os.environ)
+    environment.pop('NODE_OPTIONS', None); environment.pop('NODE_PATH', None)
+    process = subprocess.run(['node', str(script), str(module)], input=json.dumps({'text': text, 'prefixes': list(prefixes)}),
+                             text=True, encoding='utf8', stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=20, env=environment)
+    if process.returncode or len(process.stdout) > 2 * 1024 * 1024:
+        raise ValueError('CREDENTIAL_TRIM_FAILED')
+    result = json.loads(process.stdout)
+    if not isinstance(result.get('text'), str) or not isinstance(result.get('removed'), list):
+        raise ValueError('CREDENTIAL_TRIM_FAILED')
+    return result['text'], result['removed']
 
 
 def copy_credentials(src, dst, checks=None):
@@ -167,7 +188,7 @@ def copy_credentials(src, dst, checks=None):
     return removed
 
 
-def copy_data(src, dst, exclude=(), ancestors=(), checks=None):
+def copy_data(src, dst, exclude=(), ancestors=(), checks=None, exclude_root=()):
     """热目录解引用，同时检测循环、特殊文件和复制期间的变化。"""
     src, dst = Path(src), Path(dst)
     resolved = src.resolve(strict=True)
@@ -176,14 +197,15 @@ def copy_data(src, dst, exclude=(), ancestors=(), checks=None):
     mode = resolved.stat().st_mode
     if stat.S_ISDIR(mode):
         dst.mkdir(parents=True, exist_ok=True)
-        before = sorted(p.name for p in resolved.iterdir() if p.name not in exclude)
+        effective_exclude = set(exclude) | set(exclude_root)
+        before = sorted(p.name for p in resolved.iterdir() if p.name not in effective_exclude)
         for name in before:
             copy_data(resolved / name, dst / name, exclude, ancestors + (resolved,), checks)
-        after = sorted(p.name for p in resolved.iterdir() if p.name not in exclude)
+        after = sorted(p.name for p in resolved.iterdir() if p.name not in effective_exclude)
         if before != after:
             raise ValueError("备份期间目录内容变化，请停止 Web 后重试：" + str(src))
         if checks is not None:
-            checks.append((resolved, before, exclude))
+            checks.append((resolved, before, effective_exclude))
     elif stat.S_ISREG(mode):
         before = resolved.stat()
         dst.parent.mkdir(parents=True, exist_ok=True)
@@ -304,7 +326,7 @@ def make_backup(root, output, scope, app_version="unknown", app_code=0,
                 continue  # 已安装源码按 profile 依赖内联，避免重复和无引用缓存。
             src = root / ".dsh" / name
             if os.path.lexists(src):
-                if scope == "full" and name in LOCAL_DEVICE_FILES:
+                if scope == "full" and machine_name(name):
                     continue
                 if scope == "full" and name == CREDENTIAL_FILE and src.is_file():
                     pruned_credentials = copy_credentials(src, stage / ".dsh" / name, checks)
@@ -315,15 +337,13 @@ def make_backup(root, output, scope, app_version="unknown", app_code=0,
                     copy_wheel_cache(src, stage / ".dsh" / name, checks, cache_checks)
                     continue
                 copy_data(src, stage / ".dsh" / name,
-                          exclude=SKIP - {"node_modules"} if name == "plugin-history" else SKIP, checks=checks)
+                          exclude=SKIP - {"node_modules"} if name == "plugin-history" else SKIP, checks=checks,
+                          exclude_root=root_exclusions(name))
         plugins = inline_plugins(root, stage, checks) if not absent and scope in ("full", "plugins") else []
-        if scope == "full":
-            wd = Path(workdir)
-            if not wd.is_absolute():
-                wd = root / wd
-            for name in (".env", "dsh-web.log"):
-                if (wd / name).is_file():
-                    copy_data(wd / name, stage / ".dsha-workdir" / name, checks=checks)
+        # Explicit legacy transition exports never copy an unredacted process
+        # log or the entire workspace .env. Native settings supply only the
+        # credential the user selected. Historical .dsha-workdir members remain
+        # readable by the old-format importer; current project export is separate.
         native_values = {}
         if native_config and scope in ("full", "settings"):
             native_values = json.loads(Path(native_config).read_text(encoding="utf-8"))
@@ -742,9 +762,26 @@ def restore_archive(root, archive, filename_scope="full", workdir="deepseek-harn
             shutil.copytree(current, candidate, symlinks=True)
         else:
             candidate.mkdir()
-        selected = SCOPES[scope] or [p.name for p in source.iterdir() if p.name not in SKIP]
+            # Machine records never come from an archive. A full logical data
+            # replacement retains this machine's current records and safety
+            # intent, copying link objects rather than reading their targets.
+            if current.is_dir():
+                for child in current.iterdir():
+                    if not machine_name(child.name):
+                        continue
+                    destination = candidate / child.name
+                    mode = child.lstat().st_mode
+                    if stat.S_ISDIR(mode):
+                        shutil.copytree(child, destination, symlinks=True)
+                    elif stat.S_ISREG(mode) or stat.S_ISLNK(mode):
+                        shutil.copy2(child, destination, follow_symlinks=False)
+                    else:
+                        raise ValueError('本机状态类型未知，原件保留：' + child.name)
+        selected = SCOPES[scope] or [p.name for p in source.iterdir() if p.name not in SKIP and not machine_name(p.name)]
         replacements = []
         for name in selected:
+            if machine_name(name):
+                continue
             src = source / name
             if not src.exists():
                 continue
@@ -756,7 +793,10 @@ def restore_archive(root, archive, filename_scope="full", workdir="deepseek-harn
                 replacements.append((src, public))
                 dst.symlink_to(public, target_is_directory=src.is_dir())
             else:
-                copy_data(src, dst)
+                if name == CREDENTIAL_FILE:
+                    copy_credentials(src, dst)
+                else:
+                    copy_data(src, dst, exclude_root=root_exclusions(name))
         manifest = info["manifest"]
         if scope in ("full", "plugins"):
             signed_system = signed_system_plugins()

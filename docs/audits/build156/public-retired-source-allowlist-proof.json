@@ -1,0 +1,597 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS_EXACT_PUBLIC_RETIRED_SOURCE_SELECTION",
+  "checkedAtUtc": "2026-10-03T23:27:10.247354+00:00",
+  "problem": "The previous broad history exclusion removed 27 exact original-byte fixtures required by two currently active host consumers; build/package producers do not execute these retired implementations.",
+  "originalScript": {
+    "path": "app/build/audit-build156/history/before-public-retired-source-allowlist/freeze-project.before.py",
+    "sha256": "051024647509338073e468c6fdc140dd8852696e3ea3a70b7fdd008f002deaa5",
+    "bytes": 8403
+  },
+  "currentScript": {
+    "path": "docs/audits/build156/freeze-project.py",
+    "sha256": "ec9ec1ccc2d5ba08326188f9ff5ffdc968c6732fe9791400eb5c5a8ac72198dd",
+    "bytes": 21970
+  },
+  "consumers": [
+    {
+      "path": "tools/test-asset-deployment.py",
+      "sha256": "54ad1d461dd6c3013a4461661ff98bf314877ea9aef74af8aaa2333308309a62",
+      "bytes": 7222
+    },
+    {
+      "path": "tools/test-retired-audit-contract.py",
+      "sha256": "b1a5f91060cb12a95a297322e4cac14667db269a89e005a961e650650d752503",
+      "bytes": 4699
+    }
+  ],
+  "manifestAuthorities": [
+    {
+      "path": "docs/audits/build154/engineering-retired-sources.json",
+      "sha256": "0e2f6113109d89614b6ede8e742e2f58fc71dd6631287920654ec344eba15bdd",
+      "bytes": 11348
+    },
+    {
+      "path": "docs/audits/build154/retired-audit-sources.json",
+      "sha256": "c4d17f8c5beb53cf76bb2885155e70c7301e66e90427e4bb4fd07b823968a3f1",
+      "bytes": 2246
+    },
+    {
+      "path": "docs/audits/build156/retired-asset-sources.json",
+      "sha256": "eff2b16e19d8b3306e5aa01326d581351c5fd8b2d6e505561d910ed2996a9193",
+      "bytes": 5308
+    },
+    {
+      "path": "docs/audits/build156/retired-environment-data-sources.json",
+      "sha256": "3cc86e4f71fb802dd783b36a3d86305df17821e4ce685f67eab35711e3d6bef4",
+      "bytes": 1244
+    },
+    {
+      "path": "docs/audits/build156/retired-test-control-sources.json",
+      "sha256": "e9692ba21984391cca0c594115b9dfe5121d027395331134c7037865d388d672",
+      "bytes": 761
+    }
+  ],
+  "allowedFiles": [
+    {
+      "path": "tools/history/build156/unused-assets/dsh-deps-heal.sh",
+      "source": "app/src/main/assets/dsh-deps-heal.sh",
+      "sha256": "cc7d5644325fe0da1395bf37854ef81f32b14928274dd297837b42f2d4be696b",
+      "bytes": 4627,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/fix-stale-bundles.sh",
+      "source": "app/src/main/assets/fix-stale-bundles.sh",
+      "sha256": "20f35864222b08c868d7c4728b27be95ce7bd0dff05ac328e17c0dd17884b52b",
+      "bytes": 2785,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/flatten-l2s.py",
+      "source": "app/src/main/assets/flatten-l2s.py",
+      "sha256": "57dcde8eb8feb0db240baa47e896a05f8d1ad1320127391e79cccc8388da9d01",
+      "bytes": 9051,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/fs-write-patch.sh",
+      "source": "app/src/main/assets/fs-write-patch.sh",
+      "sha256": "3d0f4c9da218ed2d0fd26eb91ce2a17d13acceda2017aaf10164f28641febda8",
+      "bytes": 7811,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/heal-pnpm-shells.py",
+      "source": "app/src/main/assets/heal-pnpm-shells.py",
+      "sha256": "b4a89e8d91b40e828a899e05f1f18e69e414ce3974566299b5e83b75e265d859",
+      "bytes": 7249,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/heal-profile-boot.py",
+      "source": "app/src/main/assets/heal-profile-boot.py",
+      "sha256": "fae1664e191bacf77bfa30a66ea9844745ea0651515f378d36b972189559d9bb",
+      "bytes": 6721,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/heal-session.sh",
+      "source": "app/src/main/assets/heal-session.sh",
+      "sha256": "74a777da58a98943d5834f40685e31020265027e24dc5edb0699d474bd28f1cb",
+      "bytes": 1398,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/heal-sessions.py",
+      "source": "app/src/main/assets/heal-sessions.py",
+      "sha256": "d7e97239f92026e00bc52f1ceeffb8b59aee06ca15f4a333cefaedbdf6502544",
+      "bytes": 17165,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/migrate-public-data.sh",
+      "source": "app/src/main/assets/migrate-public-data.sh",
+      "sha256": "e8a670d8b1cb319630bd872722fda05a26c17ea3b61944f3226d5af0035ec15b",
+      "bytes": 4112,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/webserver-auth-patch.sh",
+      "source": "app/src/main/assets/webserver-auth-patch.sh",
+      "sha256": "0aed65c27904b59e01aeb5207f8ef4c3f1f2573026299529d9cd01c519ffeb24",
+      "bytes": 5696,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/webui-degrade-patch.sh",
+      "source": "app/src/main/assets/webui-degrade-patch.sh",
+      "sha256": "4cebcc4233197723b1acfafb772248f13c4c042a347a8ed718716765c3997313",
+      "bytes": 1465,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/webui-origin-port-patch.sh",
+      "source": "app/src/main/assets/webui-origin-port-patch.sh",
+      "sha256": "8647f3908b37887deaff1bc109a5c47a6c956fd32bba21854cbe77a7c6c63ffa",
+      "bytes": 2378,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/webui-polyfill.sh",
+      "source": "app/src/main/assets/webui-polyfill.sh",
+      "sha256": "61e7355d1c1c14d46c8bf1e954ebc5a38d180dd4f3965efcbdeca4bd798ae543",
+      "bytes": 4010,
+      "manifest": "docs/audits/build156/retired-asset-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/environment-data.py",
+      "source": "app/src/main/assets/environment-data.py",
+      "sha256": "157c142ff226fc53db1ae242e12d98f294e4b686bee39d103f235d9ba585299a",
+      "bytes": 19011,
+      "manifest": "docs/audits/build156/retired-environment-data-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/java/core/EnvironmentDataBackup.java",
+      "source": "app/src/main/java/com/deepseekharness/app/core/EnvironmentDataBackup.java",
+      "sha256": "01cd0056045072e11b3c92c57bb9a958296d75d69cf2b42e29af20bd3b66d3a4",
+      "bytes": 6710,
+      "manifest": "docs/audits/build156/retired-environment-data-sources.json",
+      "consumer": "tools/test-asset-deployment.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/android-audits/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+      "source": "app/src/debug/java/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+      "sha256": "43f8c205a0151637ab079233f9d9f04c7473315062786f0d71b8b4d9b78b6f47",
+      "bytes": 4113,
+      "manifest": "docs/audits/build154/retired-audit-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/android-audits/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+      "source": "app/src/debug/java/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+      "sha256": "571ea622953a0e4902226bf700bfe850e946683527ea6d4465898ebc0da56c63",
+      "bytes": 6711,
+      "manifest": "docs/audits/build154/retired-audit-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/android-audits/com/deepseekharness/app/ui/RecoveryEntryAudit.java",
+      "source": "app/src/debug/java/com/deepseekharness/app/ui/RecoveryEntryAudit.java",
+      "sha256": "4738882d38ea085d1c02a73fd49cd81c3e6bae66e9fb791479e32887137de0a2",
+      "bytes": 5995,
+      "manifest": "docs/audits/build154/retired-audit-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/android-audits/com/deepseekharness/app/ui/InstallSettingsAudit.java",
+      "source": "app/src/debug/java/com/deepseekharness/app/ui/InstallSettingsAudit.java",
+      "sha256": "412daab1d95aa00f324bc2e91b0fbafaae96dadcecd4f6d180c6a1d1c9fac362",
+      "bytes": 5889,
+      "manifest": "docs/audits/build154/retired-audit-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/android-audits/com/deepseekharness/app/ui/UiPolishAudit.java",
+      "source": "app/src/debug/java/com/deepseekharness/app/ui/UiPolishAudit.java",
+      "sha256": "6c0471fbb0a43e2e857e08b6acf103207eaee9cad765f45186a52e5797054a65",
+      "bytes": 7788,
+      "manifest": "docs/audits/build154/retired-audit-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/engineering/app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+      "source": "app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+      "sha256": "d12bd2755bf96a3e315851685681bfd044da1d52c9d9d7b02750f87489761fa8",
+      "bytes": 21759,
+      "manifest": "docs/audits/build154/engineering-retired-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java",
+      "source": "app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java",
+      "sha256": "7273cd229462512a41cfb14e1f94ddb72ccea400b5f1fa2c10177c2fe9d3b96b",
+      "bytes": 30627,
+      "manifest": "docs/audits/build154/engineering-retired-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java",
+      "source": "app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java",
+      "sha256": "1938c926bcbfdc3a9d2d7c4f3df384ad905cba059be37c62077e5855ce6a75e8",
+      "bytes": 11892,
+      "manifest": "docs/audits/build154/engineering-retired-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java",
+      "source": "app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java",
+      "sha256": "cc2bc5c760311166600227f68a87f46b787602e2ab520c2657174d91aa22d0fc",
+      "bytes": 8979,
+      "manifest": "docs/audits/build154/engineering-retired-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/ui/ConfigurationAuditInstrumentation.java",
+      "source": "app/src/debug/java/com/deepseekharness/app/ui/ConfigurationAuditInstrumentation.java",
+      "sha256": "e84af6dc17d5aa2930504de70550167367d9d74e1e882a8fea559df38755043c",
+      "bytes": 4395,
+      "manifest": "docs/audits/build154/engineering-retired-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/obsolete-device-audits/control-functional-audit.py",
+      "source": "tools/control-functional-audit.py",
+      "sha256": "92965eb1b339d81b028307880ca208acbd86f0b2b7c0e1529ff85522eda2a691",
+      "bytes": 1788,
+      "manifest": "docs/audits/build156/retired-test-control-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    },
+    {
+      "path": "tools/history/build156/obsolete-device-audits/device-backup-audit.init.gradle",
+      "source": "tools/device-backup-audit.init.gradle",
+      "sha256": "2282eb856cc737563c2168f8ffd3fb8824a3774e7085cfb4a77ed7c5aff9e36b",
+      "bytes": 5849,
+      "manifest": "docs/audits/build156/retired-test-control-sources.json",
+      "consumer": "tools/test-retired-audit-contract.py",
+      "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+    }
+  ],
+  "fileCount": 27,
+  "bytes": 215974,
+  "checks": [
+    {
+      "name": "current-public-retired-byte-check",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\docs\\audits\\build156\\freeze-project.py",
+        "--check-public-retired-sources"
+      ],
+      "exitCode": 0,
+      "log": "app/build/audit-build156/public-retired-source-selection-tests/current-public-retired-byte-check.log",
+      "logSha256": "2d6f14476021c3c4f0ec22d2cc3eedf514e4c789d9528a855965822a8f110342",
+      "result": {
+        "status": "PASS_PUBLIC_RETIRED_SOURCE_BYTES",
+        "files": 27,
+        "bytes": 215974,
+        "sources": [
+          {
+            "path": "tools/history/build156/unused-assets/dsh-deps-heal.sh",
+            "source": "app/src/main/assets/dsh-deps-heal.sh",
+            "sha256": "cc7d5644325fe0da1395bf37854ef81f32b14928274dd297837b42f2d4be696b",
+            "bytes": 4627,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/fix-stale-bundles.sh",
+            "source": "app/src/main/assets/fix-stale-bundles.sh",
+            "sha256": "20f35864222b08c868d7c4728b27be95ce7bd0dff05ac328e17c0dd17884b52b",
+            "bytes": 2785,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/flatten-l2s.py",
+            "source": "app/src/main/assets/flatten-l2s.py",
+            "sha256": "57dcde8eb8feb0db240baa47e896a05f8d1ad1320127391e79cccc8388da9d01",
+            "bytes": 9051,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/fs-write-patch.sh",
+            "source": "app/src/main/assets/fs-write-patch.sh",
+            "sha256": "3d0f4c9da218ed2d0fd26eb91ce2a17d13acceda2017aaf10164f28641febda8",
+            "bytes": 7811,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/heal-pnpm-shells.py",
+            "source": "app/src/main/assets/heal-pnpm-shells.py",
+            "sha256": "b4a89e8d91b40e828a899e05f1f18e69e414ce3974566299b5e83b75e265d859",
+            "bytes": 7249,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/heal-profile-boot.py",
+            "source": "app/src/main/assets/heal-profile-boot.py",
+            "sha256": "fae1664e191bacf77bfa30a66ea9844745ea0651515f378d36b972189559d9bb",
+            "bytes": 6721,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/heal-session.sh",
+            "source": "app/src/main/assets/heal-session.sh",
+            "sha256": "74a777da58a98943d5834f40685e31020265027e24dc5edb0699d474bd28f1cb",
+            "bytes": 1398,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/heal-sessions.py",
+            "source": "app/src/main/assets/heal-sessions.py",
+            "sha256": "d7e97239f92026e00bc52f1ceeffb8b59aee06ca15f4a333cefaedbdf6502544",
+            "bytes": 17165,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/migrate-public-data.sh",
+            "source": "app/src/main/assets/migrate-public-data.sh",
+            "sha256": "e8a670d8b1cb319630bd872722fda05a26c17ea3b61944f3226d5af0035ec15b",
+            "bytes": 4112,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/webserver-auth-patch.sh",
+            "source": "app/src/main/assets/webserver-auth-patch.sh",
+            "sha256": "0aed65c27904b59e01aeb5207f8ef4c3f1f2573026299529d9cd01c519ffeb24",
+            "bytes": 5696,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/webui-degrade-patch.sh",
+            "source": "app/src/main/assets/webui-degrade-patch.sh",
+            "sha256": "4cebcc4233197723b1acfafb772248f13c4c042a347a8ed718716765c3997313",
+            "bytes": 1465,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/webui-origin-port-patch.sh",
+            "source": "app/src/main/assets/webui-origin-port-patch.sh",
+            "sha256": "8647f3908b37887deaff1bc109a5c47a6c956fd32bba21854cbe77a7c6c63ffa",
+            "bytes": 2378,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/webui-polyfill.sh",
+            "source": "app/src/main/assets/webui-polyfill.sh",
+            "sha256": "61e7355d1c1c14d46c8bf1e954ebc5a38d180dd4f3965efcbdeca4bd798ae543",
+            "bytes": 4010,
+            "manifest": "docs/audits/build156/retired-asset-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/unused-assets/environment-data.py",
+            "source": "app/src/main/assets/environment-data.py",
+            "sha256": "157c142ff226fc53db1ae242e12d98f294e4b686bee39d103f235d9ba585299a",
+            "bytes": 19011,
+            "manifest": "docs/audits/build156/retired-environment-data-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/java/core/EnvironmentDataBackup.java",
+            "source": "app/src/main/java/com/deepseekharness/app/core/EnvironmentDataBackup.java",
+            "sha256": "01cd0056045072e11b3c92c57bb9a958296d75d69cf2b42e29af20bd3b66d3a4",
+            "bytes": 6710,
+            "manifest": "docs/audits/build156/retired-environment-data-sources.json",
+            "consumer": "tools/test-asset-deployment.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/android-audits/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+            "source": "app/src/debug/java/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+            "sha256": "43f8c205a0151637ab079233f9d9f04c7473315062786f0d71b8b4d9b78b6f47",
+            "bytes": 4113,
+            "manifest": "docs/audits/build154/retired-audit-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/android-audits/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+            "source": "app/src/debug/java/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+            "sha256": "571ea622953a0e4902226bf700bfe850e946683527ea6d4465898ebc0da56c63",
+            "bytes": 6711,
+            "manifest": "docs/audits/build154/retired-audit-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/android-audits/com/deepseekharness/app/ui/RecoveryEntryAudit.java",
+            "source": "app/src/debug/java/com/deepseekharness/app/ui/RecoveryEntryAudit.java",
+            "sha256": "4738882d38ea085d1c02a73fd49cd81c3e6bae66e9fb791479e32887137de0a2",
+            "bytes": 5995,
+            "manifest": "docs/audits/build154/retired-audit-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/android-audits/com/deepseekharness/app/ui/InstallSettingsAudit.java",
+            "source": "app/src/debug/java/com/deepseekharness/app/ui/InstallSettingsAudit.java",
+            "sha256": "412daab1d95aa00f324bc2e91b0fbafaae96dadcecd4f6d180c6a1d1c9fac362",
+            "bytes": 5889,
+            "manifest": "docs/audits/build154/retired-audit-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/android-audits/com/deepseekharness/app/ui/UiPolishAudit.java",
+            "source": "app/src/debug/java/com/deepseekharness/app/ui/UiPolishAudit.java",
+            "sha256": "6c0471fbb0a43e2e857e08b6acf103207eaee9cad765f45186a52e5797054a65",
+            "bytes": 7788,
+            "manifest": "docs/audits/build154/retired-audit-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/engineering/app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+            "source": "app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+            "sha256": "d12bd2755bf96a3e315851685681bfd044da1d52c9d9d7b02750f87489761fa8",
+            "bytes": 21759,
+            "manifest": "docs/audits/build154/engineering-retired-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java",
+            "source": "app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java",
+            "sha256": "7273cd229462512a41cfb14e1f94ddb72ccea400b5f1fa2c10177c2fe9d3b96b",
+            "bytes": 30627,
+            "manifest": "docs/audits/build154/engineering-retired-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java",
+            "source": "app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java",
+            "sha256": "1938c926bcbfdc3a9d2d7c4f3df384ad905cba059be37c62077e5855ce6a75e8",
+            "bytes": 11892,
+            "manifest": "docs/audits/build154/engineering-retired-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java",
+            "source": "app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java",
+            "sha256": "cc2bc5c760311166600227f68a87f46b787602e2ab520c2657174d91aa22d0fc",
+            "bytes": 8979,
+            "manifest": "docs/audits/build154/engineering-retired-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/ui/ConfigurationAuditInstrumentation.java",
+            "source": "app/src/debug/java/com/deepseekharness/app/ui/ConfigurationAuditInstrumentation.java",
+            "sha256": "e84af6dc17d5aa2930504de70550167367d9d74e1e882a8fea559df38755043c",
+            "bytes": 4395,
+            "manifest": "docs/audits/build154/engineering-retired-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/obsolete-device-audits/control-functional-audit.py",
+            "source": "tools/control-functional-audit.py",
+            "sha256": "92965eb1b339d81b028307880ca208acbd86f0b2b7c0e1529ff85522eda2a691",
+            "bytes": 1788,
+            "manifest": "docs/audits/build156/retired-test-control-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          },
+          {
+            "path": "tools/history/build156/obsolete-device-audits/device-backup-audit.init.gradle",
+            "source": "tools/device-backup-audit.init.gradle",
+            "sha256": "2282eb856cc737563c2168f8ffd3fb8824a3774e7085cfb4a77ed7c5aff9e36b",
+            "bytes": 5849,
+            "manifest": "docs/audits/build156/retired-test-control-sources.json",
+            "consumer": "tools/test-retired-audit-contract.py",
+            "scope": "required current host byte-provenance fixture; never an APK source/deployment input"
+          }
+        ],
+        "zipCreated": false
+      }
+    },
+    {
+      "name": "public-retired-selection-self-tests",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\docs\\audits\\build156\\freeze-project.py",
+        "--self-test-public-retired-sources"
+      ],
+      "exitCode": 0,
+      "log": "app/build/audit-build156/public-retired-source-selection-tests/public-retired-selection-self-tests.log",
+      "logSha256": "b0e2fc80211c6fd51f20ae3b079851bf848cf24ef5de7bbb21602b73186a7975",
+      "result": {
+        "status": "PASS_PUBLIC_RETIRED_SELECTION_SELF_TESTS",
+        "tests": 5,
+        "scope": "owned temporary fixtures and selection/denial policy; links use explicit modeled metadata, not an OS symlink claim"
+      }
+    }
+  ],
+  "inclusionPolicy": "Recompute only the finite reviewed origin/path mapping from existing manifest SHA records. Reject unknown destination before reading it, then verify workspace/history containment, all ancestor symlink/junction metadata, allowed source suffix, file type, exact byte count when declared, and SHA. Unknown/private history and credential material remain excluded. Git candidate selection is unioned with this explicit required set.",
+  "apkSourceSnapshot": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+    "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222",
+    "bytes": 202368
+  },
+  "scope": "Source ZIP reproducibility correction only. These 27 source-byte fixtures and this docs-only archive script are outside the APK software input inventory; current 5e2 signed APK/JUnit/host evidence is not invalidated or relabelled.",
+  "limits": [
+    "No final ZIP, final ledger, APK, source snapshot or phone action occurred.",
+    "Five new focused selector self-tests only; the existing nine finalizer self-tests and software/host suites were not rerun.",
+    "Link/junction denial is checked with explicit modeled metadata in self-tests; current actual27 are separately checked link-free.",
+    "Only active current consumers determine this set; additional declared history-stage tests and private historical documents are not included."
+  ]
+}

@@ -1,0 +1,25 @@
+test_changed_source_after_prepare_does_not_enable (__main__.ReviewTest.test_changed_source_after_prepare_does_not_enable) ... ok
+test_confirmed_health_event_preserves_activation (__main__.ReviewTest.test_confirmed_health_event_preserves_activation) ... ok
+test_edit_cannot_change_package_identity_under_existing_activation_name (__main__.ReviewTest.test_edit_cannot_change_package_identity_under_existing_activation_name) ... ok
+test_empty_cli_has_stable_error (__main__.ReviewTest.test_empty_cli_has_stable_error) ... ok
+test_existing_plugin_enables_without_approval_file (__main__.ReviewTest.test_existing_plugin_enables_without_approval_file) ... ok
+test_export_external_source_link_fails_without_touching_original (__main__.ReviewTest.test_export_external_source_link_fails_without_touching_original) ... ok
+test_export_shared_dependencies_materializes_only_bound_packages_and_bins (__main__.ReviewTest.test_export_shared_dependencies_materializes_only_bound_packages_and_bins) ... ok
+test_fast_toggle_candidate_is_checked_before_load (__main__.ReviewTest.test_fast_toggle_candidate_is_checked_before_load) ... ok
+test_load_receipt_checks_install_anchor_bytes_not_shadowed_user_edit (__main__.ReviewTest.test_load_receipt_checks_install_anchor_bytes_not_shadowed_user_edit) ... ok
+test_one_missing_dependency_does_not_discard_another_plugin_load_receipt (__main__.ReviewTest.test_one_missing_dependency_does_not_discard_another_plugin_load_receipt) ... ok
+test_pending_previews_survive_new_manager_and_corrupt_record_is_retained (__main__.ReviewTest.test_pending_previews_survive_new_manager_and_corrupt_record_is_retained) ... ok
+test_plugin_export_excludes_credentials_but_keeps_native_lock_and_originals (__main__.ReviewTest.test_plugin_export_excludes_credentials_but_keeps_native_lock_and_originals) ... ok
+test_plugin_without_valid_version_cannot_reach_review_or_activation (__main__.ReviewTest.test_plugin_without_valid_version_cannot_reach_review_or_activation) ... ok
+test_real_failure_disables_but_incomplete_browser_start_can_retry (__main__.ReviewTest.test_real_failure_disables_but_incomplete_browser_start_can_retry) ... ok
+test_restored_name_conflict_keeps_current_installation_untouched (__main__.ReviewTest.test_restored_name_conflict_keeps_current_installation_untouched) ... ok
+test_restored_new_name_activates_from_preserved_dependency_group (__main__.ReviewTest.test_restored_new_name_activates_from_preserved_dependency_group) ... skipped '恢复插件真实软链启用在 Android/Linux 验证'
+test_safe_mode_restores_only_unchanged_previously_enabled_source (__main__.ReviewTest.test_safe_mode_restores_only_unchanged_previously_enabled_source) ... ok
+test_same_startup_compatibility_retry_retains_approval_but_rechecks_content (__main__.ReviewTest.test_same_startup_compatibility_retry_retains_approval_but_rechecks_content) ... ok
+test_upgrade_enables_only_exact_legacy_review_marker (__main__.ReviewTest.test_upgrade_enables_only_exact_legacy_review_marker) ... ok
+test_user_edits_before_new_launch_are_loaded_with_current_fingerprint (__main__.ReviewTest.test_user_edits_before_new_launch_are_loaded_with_current_fingerprint) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 4.459s
+
+OK (skipped=1)

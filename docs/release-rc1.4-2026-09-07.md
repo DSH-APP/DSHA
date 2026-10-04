@@ -1,5 +1,8 @@
 # rc1.4 完整验收记录 · 2026-09-07
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 此页记录首次 rc1.4 交付，其原文件现保留在 `release/history/rc1.4-before-theme-20260907`。其后追加了主题、排版及功能修复，仍为 rc1.4 / 113；当前安装包和 SHA-256 以 [2026-09-08 功能验收](functional-audit-rc1.4.md)为准。
 
 本轮清单中的应用、备份和网页优化已完成。双版本本地交付位于 `F:\DSHA_RESTART\release`，历史 APK/摘要保留。官网修复已上线；尚未创建 rc1.4 GitHub Release，公开更新接口继续提供已发布 rc1.3。

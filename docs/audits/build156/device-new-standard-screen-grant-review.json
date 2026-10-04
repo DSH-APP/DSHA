@@ -1,0 +1,569 @@
+{
+  "schema": "dsha-device-screen-grant-review-v1",
+  "reviewedAt": "2026-10-04T10:18:25+08:00",
+  "reviewMode": "host_only_new_standard_existing_private_evidence",
+  "softwareChanged": false,
+  "deviceCommandsByReviewer": 0,
+  "scope": {
+    "flavor": "standard",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+    "minSdk": 30,
+    "targetSdk": 37,
+    "debuggable": false,
+    "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+    "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "androidReleaseReportedByOperator": 13,
+    "deviceOperator": "runtime under parent-authorized exclusive device lease",
+    "lastUpdateTime": "2026-10-04T08:15:50+08:00",
+    "bindingBasis": "Exact APK preflight/supply ledger and successful overlay plus post-install package metadata; no installed APK byte-pull performed by reviewer.",
+    "testTarget": "own DSHA native UI only",
+    "routePath": "/app/ui/dump",
+    "authorizationMethod": "Explicit root-authorized runtime operator Allow/Deny through bounded native read-only dialog input tap; no HTTP confirmation API.",
+    "oldStandard5aebEvidenceUsedForThisCandidate": false,
+    "browserEngineProofFromThisScreenChain": false
+  },
+  "summary": {
+    "status": "pass_observed_bounded_new_standard_screen_chain",
+    "nativeAllowSelections": 2,
+    "positiveOwnDshaTreeReceipts": 2,
+    "nativeDenyReceiptsWithoutTree": 2,
+    "manualRevocationRequiresNewNativeConfirmation": true,
+    "ordinaryWebStopStartRequiresNewNativeConfirmation": true,
+    "firstAllowTargetChangedReceiptsRetained": 2,
+    "allFourNativeChoicesHaveSelectedAtPendingAndAfterEvidence": true,
+    "referencePromptCropMatches": 4,
+    "enabledServiceListsSameBytesBeforeAndAfterOrdinaryRebind": true,
+    "overallDeviceMatrixStatus": "partial_device_coverage"
+  },
+  "sourceEvidence": {
+    "newPackageBindingReview": {
+      "path": "docs/audits/build156/device-standard-lan-background-review.json",
+      "sha256": "67b69cabb5cd0626db7f4f042994ec48aa310b173699fef3d8ee19824d454de4",
+      "bytes": 13809
+    },
+    "nativeBoundedOperatorHelper": {
+      "path": "app/build/audit-build156/device-private/native-read-confirm-bounded.py",
+      "sha256": "8679882b495097ed136255c5142f1225281938970cb47ba921e362b4402539db",
+      "bytes": 3939,
+      "sourceVersionScope": "Current unchanged helper accounts for all four Standard receipts, each with selectedAt/pending/after evidence.",
+      "guardsReadFromCurrentSource": [
+        "Exactly one current-focus line must name com.dsh.client/",
+        "Owned dump reader process remains pending before native selection",
+        "Screenshot size must be 1080x2400",
+        "Read-only dialog/body and both-button crop must byte-match reviewed reference RGB pixels",
+        "Final pending check and elapsed limit under 12s precede the direct native input tap",
+        "Only explicit allow/deny operator argument chooses the native button"
+      ],
+      "deviceCalls": "Only dumpsys window, exec-out screencap, and one input tap call site. No uiautomator or HTTP /confirm path appears in this helper.",
+      "executedByReviewer": false
+    },
+    "ownedReadClient": {
+      "path": "app/build/audit-build156/device-private/owned-ui-inspect.py",
+      "sha256": "0b5af81290fb0dda5875e542be326f07ce72beb5f4cd9e79402087d925303665",
+      "bytes": 13732,
+      "requestContract": "One GET /app/ui/dump, raw response saved privately; no approval/point/input endpoint; safe exact-whitelist stdout only.",
+      "executedByReviewer": false
+    },
+    "knownReadOnlyReferenceDialog": {
+      "path": "app/build/audit-build156/device-private/lease-low-active-screen-prompt-0763.png",
+      "sha256": "37b2d5375adad43d669ae0be90405660916eff711ae86ab96d51e952735c16ee",
+      "bytes": 224866,
+      "actionIndex0Based": 1017,
+      "operatorTime": "2026-10-04T07:32:50.179011+08:00",
+      "imageSize": [
+        1080,
+        2400
+      ],
+      "dialogBox": [
+        125,
+        900,
+        950,
+        1540
+      ],
+      "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+      "semanticReadOnlyBodyAndButtonsReviewedBy": "root/runtime device operator previously visually inspected reference763; this reviewer checks exact RGB crop equality without rendering pixels.",
+      "pixelsPublished": false,
+      "referenceRole": "Known read-only body/both-button pixel shape only; Low hardware coverage is not transferred to Standard."
+    },
+    "nativeChoiceReceipts": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-first-owned-allow-native-choice.json",
+        "sha256": "6b8472ef44b41a200cd6e9334afe8cf67599f9bed5ca30c308dd5f59a360d9d5",
+        "bytes": 514,
+        "case": "standard-first-owned-allow",
+        "explicitOperatorChoice": "allow",
+        "startedAt": "2026-10-04T09:58:08.443+08:00",
+        "selectedAt": "2026-10-04T09:58:09.463+08:00",
+        "finishedAt": "2026-10-04T09:58:10.304+08:00",
+        "elapsedSeconds": 1.861,
+        "ownedReaderStillPendingAtChoice": true,
+        "inspectedDialogExactPixelMatch": true,
+        "readerExitCode": 3,
+        "promptActionIndex0Based": 1381,
+        "tapActionIndex0Based": 1382,
+        "afterActionIndex0Based": 1383
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-manual-revoke-deny-native-choice.json",
+        "sha256": "f0873617405725bebdfb7eea816f3b9d6760c758f564cc718d6b1b4d3e93d868",
+        "bytes": 513,
+        "case": "standard-after-manual-revoke-deny",
+        "explicitOperatorChoice": "deny",
+        "startedAt": "2026-10-04T09:59:36.258+08:00",
+        "selectedAt": "2026-10-04T09:59:37.297+08:00",
+        "finishedAt": "2026-10-04T09:59:38.128+08:00",
+        "elapsedSeconds": 1.87,
+        "ownedReaderStillPendingAtChoice": true,
+        "inspectedDialogExactPixelMatch": true,
+        "readerExitCode": 3,
+        "promptActionIndex0Based": 1386,
+        "tapActionIndex0Based": 1387,
+        "afterActionIndex0Based": 1388
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-allow-for-generation-native-choice.json",
+        "sha256": "90dabc7fa1a9210a2cdb587757073ecaf67a47e55a8c2c616174997e644bd6ae",
+        "bytes": 511,
+        "case": "standard-allow-for-generation",
+        "explicitOperatorChoice": "allow",
+        "startedAt": "2026-10-04T09:59:39.004+08:00",
+        "selectedAt": "2026-10-04T09:59:40.063+08:00",
+        "finishedAt": "2026-10-04T09:59:40.930+08:00",
+        "elapsedSeconds": 1.926,
+        "ownedReaderStillPendingAtChoice": true,
+        "inspectedDialogExactPixelMatch": true,
+        "readerExitCode": 3,
+        "promptActionIndex0Based": 1389,
+        "tapActionIndex0Based": 1390,
+        "afterActionIndex0Based": 1391
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-normal-stop-start-deny-native-choice.json",
+        "sha256": "0463f78aa2d1b6a36619d723611498b6d13542c818f8716a427c5991880b4b8c",
+        "bytes": 510,
+        "case": "standard-after-normal-stop-start-deny",
+        "explicitOperatorChoice": "deny",
+        "startedAt": "2026-10-04T10:01:48.052+08:00",
+        "selectedAt": "2026-10-04T10:01:49.490+08:00",
+        "finishedAt": "2026-10-04T10:01:50.510+08:00",
+        "elapsedSeconds": 2.458,
+        "ownedReaderStillPendingAtChoice": true,
+        "inspectedDialogExactPixelMatch": true,
+        "readerExitCode": 3,
+        "promptActionIndex0Based": 1398,
+        "tapActionIndex0Based": 1399,
+        "afterActionIndex0Based": 1400
+      }
+    ],
+    "promptAndAfterScreenshotFingerprints": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-first-owned-allow-inspected-native-prompt.png",
+        "sha256": "c37ac83247ce556806856f35a2e5f4988b2cffa6a4df389761ddfb8fa21c7033",
+        "bytes": 232784,
+        "actionIndex0Based": 1381,
+        "operatorTime": "2026-10-04T09:58:09.394199+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false,
+        "cropMatchesKnownReadOnlyReference": true,
+        "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-first-owned-allow-native-choice-after.png",
+        "sha256": "37de4d97ce30b181b1e0618bc9145af6f801be79403fcb8e39628fcf8ba06859",
+        "bytes": 242731,
+        "actionIndex0Based": 1383,
+        "operatorTime": "2026-10-04T09:58:10.303920+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-manual-revoke-deny-inspected-native-prompt.png",
+        "sha256": "d2cc04b431aca42a0d0c53719479c82eb109e52d9a43c12b3d7e522abcc46722",
+        "bytes": 277160,
+        "actionIndex0Based": 1386,
+        "operatorTime": "2026-10-04T09:59:37.238195+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false,
+        "cropMatchesKnownReadOnlyReference": true,
+        "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-manual-revoke-deny-native-choice-after.png",
+        "sha256": "e6ba2df2df4b9df76f76629681aece74c5b6d8665112cc9caa7152975cbad188",
+        "bytes": 289705,
+        "actionIndex0Based": 1388,
+        "operatorTime": "2026-10-04T09:59:38.128449+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-allow-for-generation-inspected-native-prompt.png",
+        "sha256": "c41b98512086fe4fe756da283b3a0d232488247e2b97c26c88061f5d1f51b9fc",
+        "bytes": 231653,
+        "actionIndex0Based": 1389,
+        "operatorTime": "2026-10-04T09:59:39.990557+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false,
+        "cropMatchesKnownReadOnlyReference": true,
+        "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-allow-for-generation-native-choice-after.png",
+        "sha256": "22887efd8238c411cf604b53d3aff62da7abeb5e6a4238de5546fbb7d97b13b3",
+        "bytes": 241710,
+        "actionIndex0Based": 1391,
+        "operatorTime": "2026-10-04T09:59:40.929671+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-normal-stop-start-deny-inspected-native-prompt.png",
+        "sha256": "b05d81457042b275e069e3ce76280ae4721a02cca7be5a61550efd919705aaaf",
+        "bytes": 279147,
+        "actionIndex0Based": 1398,
+        "operatorTime": "2026-10-04T10:01:49.419464+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false,
+        "cropMatchesKnownReadOnlyReference": true,
+        "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-normal-stop-start-deny-native-choice-after.png",
+        "sha256": "f664f63b2a84b2e21662fd3c6d5da4e40a82c4e4d765904258b5650a77b4f7cf",
+        "bytes": 256298,
+        "actionIndex0Based": 1400,
+        "operatorTime": "2026-10-04T10:01:50.510341+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false
+      }
+    ],
+    "responseReceipts": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-first-owned-allow-dump.json",
+        "sha256": "66613dce7ad6f37b7ef9467c76f854b279704dacdd1b2a8bdcaf30dea8c11f8b",
+        "bytes": 88,
+        "case": "standard-first-owned-allow",
+        "routePath": "/app/ui/dump",
+        "stableErrorCode": "SCREEN_TARGET_CHANGED",
+        "stableRefusalPrefix": null,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-manual-revoke-deny-dump.json",
+        "sha256": "63bb3a790128325d14faa6f82f248948bc32885808e353345c32f9d60cda6a25",
+        "bytes": 49,
+        "case": "standard-after-manual-revoke-deny",
+        "routePath": "/app/ui/dump",
+        "stableErrorCode": null,
+        "stableRefusalPrefix": "[ERR] 你拒绝了这次屏幕读取",
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-allow-for-generation-dump.json",
+        "sha256": "66613dce7ad6f37b7ef9467c76f854b279704dacdd1b2a8bdcaf30dea8c11f8b",
+        "bytes": 88,
+        "case": "standard-allow-for-generation",
+        "routePath": "/app/ui/dump",
+        "stableErrorCode": "SCREEN_TARGET_CHANGED",
+        "stableRefusalPrefix": null,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-normal-stop-start-deny-dump.json",
+        "sha256": "63bb3a790128325d14faa6f82f248948bc32885808e353345c32f9d60cda6a25",
+        "bytes": 49,
+        "case": "standard-after-normal-stop-start-deny",
+        "routePath": "/app/ui/dump",
+        "stableErrorCode": null,
+        "stableRefusalPrefix": "[ERR] 你拒绝了这次屏幕读取",
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      }
+    ],
+    "positiveOwnTreeReceipts": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-positive-own-tree.json",
+        "sha256": "5fab181a014a235c0120a8e881eba2f9305186410cd3838310e06e3183390375",
+        "bytes": 2047,
+        "ownDshaWindow": true,
+        "treeNodesPresent": true,
+        "hostFileMtime": "2026-10-04T09:58:11.226+08:00",
+        "mtimeIsNotADeviceEventTimestamp": true,
+        "rawTreeOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-second-positive-own-tree.json",
+        "sha256": "5fab181a014a235c0120a8e881eba2f9305186410cd3838310e06e3183390375",
+        "bytes": 2047,
+        "ownDshaWindow": true,
+        "treeNodesPresent": true,
+        "hostFileMtime": "2026-10-04T09:59:41.843+08:00",
+        "mtimeIsNotADeviceEventTimestamp": true,
+        "rawTreeOmitted": true
+      }
+    ],
+    "inspectLogs": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-first-owned-allow-inspect.log",
+        "sha256": "8bc9b6b903bc44155759782657abd9cf5df614a5699498ee8866c7144dbd0587",
+        "bytes": 29,
+        "safeOriginalMarker": "[ERR] SCREEN_TARGET_CHANGED",
+        "rawLogOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-manual-revoke-deny-inspect.log",
+        "sha256": "507a157e24ff65093b60929880844b5b1688634813e00912b491acaa1d00d18b",
+        "bytes": 38,
+        "safeOriginalMarker": "[ERR] 你拒绝了这次屏幕读取",
+        "rawLogOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-allow-for-generation-inspect.log",
+        "sha256": "8bc9b6b903bc44155759782657abd9cf5df614a5699498ee8866c7144dbd0587",
+        "bytes": 29,
+        "safeOriginalMarker": "[ERR] SCREEN_TARGET_CHANGED",
+        "rawLogOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-after-normal-stop-start-deny-inspect.log",
+        "sha256": "507a157e24ff65093b60929880844b5b1688634813e00912b491acaa1d00d18b",
+        "bytes": 38,
+        "safeOriginalMarker": "[ERR] 你拒绝了这次屏幕读取",
+        "rawLogOmitted": true
+      }
+    ],
+    "nativeRebindRevokeStopStartContextScreenshots": [
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-screen-setup-status-0886.png",
+        "sha256": "9bb011dfc4b5dc930c795595de79602674076f497e5370d5391ac0d91987b2f8",
+        "bytes": 243765,
+        "actionIndex0Based": 1357,
+        "operatorTime": "2026-10-04T09:44:11.260808+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-dsha-accessibility-toggle-0890.png",
+        "sha256": "c8ffe6544a0503a0bf7e49c926f4b36279e4564dbdf8e4d484766ae2040ff15f",
+        "bytes": 235131,
+        "actionIndex0Based": 1365,
+        "operatorTime": "2026-10-04T09:50:27.299729+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-dsha-service-off-confirm-0891.png",
+        "sha256": "681fe1848c05282b0864a7fdedf254db96a94de3bc6b4f860430b2612716809e",
+        "bytes": 259277,
+        "actionIndex0Based": 1367,
+        "operatorTime": "2026-10-04T09:51:30.753425+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-dsha-service-disabled-for-rebind-0892.png",
+        "sha256": "5083fc210b150b808ab95997f0cba9143efa33dae3d6fbc1f3bbe133c207e8e0",
+        "bytes": 234645,
+        "actionIndex0Based": 1369,
+        "operatorTime": "2026-10-04T09:52:46.898953+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-dsha-service-native-enable-warning-0893.png",
+        "sha256": "39e24aa1471caa47919a4111f52816e2270d7e563a3451fcea179445414665a5",
+        "bytes": 296222,
+        "actionIndex0Based": 1371,
+        "operatorTime": "2026-10-04T09:52:50.616564+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-native-enable-timer-ready-0894.png",
+        "sha256": "5628c9072b4aa83b550c0489287402b113bc527a56b6e5765233836cb688964c",
+        "bytes": 293544,
+        "actionIndex0Based": 1373,
+        "operatorTime": "2026-10-04T09:54:18.630908+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-dsha-service-enabled-after-system-warning-0895.png",
+        "sha256": "90a57b9fe8ec8f201d898f45a4d1fd29dd4ab49db5d75d0373cfca462672eaf2",
+        "bytes": 234413,
+        "actionIndex0Based": 1375,
+        "operatorTime": "2026-10-04T09:55:46.281814+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-dsha-setup-after-rebind-0896.png",
+        "sha256": "dd78875f444f31f057a7d6343402d82c389640dbbfc73c4725e709ac7089e8ce",
+        "bytes": 280620,
+        "actionIndex0Based": 1379,
+        "operatorTime": "2026-10-04T09:55:52.542294+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-native-revoke-coordinate-0897.png",
+        "sha256": "37de4d97ce30b181b1e0618bc9145af6f801be79403fcb8e39628fcf8ba06859",
+        "bytes": 242731,
+        "actionIndex0Based": 1384,
+        "operatorTime": "2026-10-04T09:58:13.167573+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-screen-generation-normal-stop-0898.png",
+        "sha256": "19b87eed3e5d00142bdb33e190759d3d1ac5689a3d0d2f12751f4ebb880c9c10",
+        "bytes": 255422,
+        "actionIndex0Based": 1394,
+        "operatorTime": "2026-10-04T09:59:46.343999+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-screen-generation-normal-start-0899.png",
+        "sha256": "8f4d373212429747c66ffcf2d564f05a7a50e3bd628cb70d515238492735f637",
+        "bytes": 251331,
+        "actionIndex0Based": 1396,
+        "operatorTime": "2026-10-04T09:59:49.531732+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-standard-after-screen-generation-ready-0900.png",
+        "sha256": "f664f63b2a84b2e21662fd3c6d5da4e40a82c4e4d765904258b5650a77b4f7cf",
+        "bytes": 256298,
+        "actionIndex0Based": 1397,
+        "operatorTime": "2026-10-04T10:01:47.132251+08:00",
+        "nativeUiMeaningAttribution": "runtime/root actual UI observation; reviewer checks SHA/time only",
+        "pixelsPublished": false
+      }
+    ],
+    "enabledServiceLists": {
+      "before": {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-accessibility-before-rebind-private.txt",
+        "sha256": "96389ac7eef243b6bc87c0457c21dafed52cf5d6f70bc10fa2ac8920b3354a10",
+        "bytes": 164
+      },
+      "after": {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-accessibility-after-rebind-private.txt",
+        "sha256": "96389ac7eef243b6bc87c0457c21dafed52cf5d6f70bc10fa2ac8920b3354a10",
+        "bytes": 164
+      },
+      "byteIdentical": true,
+      "rawComponentListsPublished": false
+    },
+    "earlierPermissionChangeSnapshot": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-permission-change-exit-private.txt",
+      "sha256": "63e4b41ff10f86b3ea62ec595ba0f1dc180a209329e8d52421dbf25e454e8986",
+      "bytes": 6450,
+      "eventTime": "2026-10-04T08:36:43.606+08:00",
+      "reason": "PERMISSION CHANGE",
+      "role": "Explains prior enabled-but-disconnected period; not ordinary Web-stop proof.",
+      "rawExitDescriptionsPublished": false
+    },
+    "operatorActionPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "2d4dae4754b0914cdc8b7e8f97a88194bef875055d86a93318cd30035eab7ca2",
+      "bytes": 200176,
+      "records": 1401,
+      "lastIndex0Based": 1400,
+      "lastTime": "2026-10-04T10:01:50.510341+08:00",
+      "hashRecipe": "Exact original complete JSONL byte prefix through last Standard native-choice after screenshot. Later appends and raw arguments excluded."
+    }
+  },
+  "scenarios": [
+    {
+      "id": "enabled_but_not_bound_then_normal_rebind",
+      "status": "observed_operator_ui_and_positive_read",
+      "initialStatusScreenshotActionIndex0Based": 1357,
+      "initialStateReportedByOperator": "Enabled but not bound after microphone permission reset killed main process.",
+      "normalRebindScreenshotActionIndices0Based": [
+        1365,
+        1367,
+        1369,
+        1371,
+        1373,
+        1375,
+        1379
+      ],
+      "operatorProcedure": "Only DSHA service off/on through ordinary system enable warning/timer; other services retained.",
+      "beforeAfterEnabledListsSameBytes": true,
+      "followingPositiveOwnTree": "standard-positive-own-tree.json",
+      "currentDeviceGrantsLabelPixelsIndependentlyReadByReviewer": false
+    },
+    {
+      "id": "native_allow_then_own_read",
+      "status": "pass_observed",
+      "nativeChoiceCase": "standard-first-owned-allow",
+      "firstResult": "SCREEN_TARGET_CHANGED with no tree",
+      "followingPositive": "standard-positive-own-tree.json"
+    },
+    {
+      "id": "manual_grant_revocation",
+      "status": "pass_observed",
+      "positiveBeforeRevoke": "standard-positive-own-tree.json",
+      "revokeActionIndex0Based": 1385,
+      "revokeScreenshotActionIndex0Based": 1384,
+      "requestedRevokeGeometryMatchedPrivateOwnTree": true,
+      "nativeChoiceCase": "standard-after-manual-revoke-deny",
+      "resultPrefix": "[ERR] 你拒绝了这次屏幕读取",
+      "treeReturned": false
+    },
+    {
+      "id": "reallow_then_normal_web_generation_revocation",
+      "status": "pass_observed",
+      "nativeAllowCase": "standard-allow-for-generation",
+      "firstAllowResult": "SCREEN_TARGET_CHANGED with no tree",
+      "followingPositive": "standard-second-positive-own-tree.json",
+      "normalStopActionIndex0Based": 1393,
+      "normalStoppedScreenshotActionIndex0Based": 1394,
+      "normalStartActionIndex0Based": 1395,
+      "normalStartingScreenshotActionIndex0Based": 1396,
+      "newReadyScreenshotActionIndex0Based": 1397,
+      "operatorReportsActualReady": true,
+      "newNativeDenyCase": "standard-after-normal-stop-start-deny",
+      "resultPrefix": "[ERR] 你拒绝了这次屏幕读取",
+      "treeReturned": false,
+      "priorRememberedGrantBypassedNewPrompt": false
+    }
+  ],
+  "checks": [
+    {
+      "command": "PowerShell $reviewScript | python -: all 4 native receipts/selectedAt/pending/after; 4 RGB crops to known reference; 6 dump envelopes; 4 safe inspect logs; 2 own-tree mtimes before manual revoke/stop; actual revoke-node geometry from private tree; byte-identical service enabled lists; 12 native context screenshots and exact action prefix; permission-change marker separated",
+      "exitCode": 0,
+      "nativeChoiceReceipts": 4,
+      "cropMatches": 4,
+      "dumpResponses": 6,
+      "inspectLogs": 4,
+      "enabledListsByteEqual": true,
+      "deviceCommandsByReviewer": 0,
+      "productionSourceBuildsTestsOrChanges": 0
+    }
+  ],
+  "interpretationLimits": [
+    "Only new Standard c676 on this reported Android 13 phone and own DSHA native app are covered. It is separate from old Standard 5aeb observations and does not inherit them.",
+    "The enabled-but-disconnected period follows the actual microphone permission change. Ordinary DSHA-only rebind plus real own-tree positive reads shows restored accessibility availability; this reviewer does not independently OCR the connected/waiting label pixels.",
+    "Native UI meanings/read-only reference semantics and authorization come from the root/runtime operator. The reviewer verifies private RGB hashes, source fingerprints, safe response markers, geometry and action times without executing the helper.",
+    "All 4 cases have selectedAt and pending-reader receipts. Source guard before native tap is not an atomic proof of every possible concurrency race.",
+    "No numeric Web generation or crafted stale-generation client parameter is persisted. New-prompt/deny after operator-observed ordinary Stop/Start is behavioral revocation evidence.",
+    "No sensitive-app/virtual-display/async-screenshot callback matrix, Android6/7/16KiB or universal browser/device matrix is claimed.",
+    "HTTP status lines are not saved by these dump envelopes; refusals are checked at result level. The separate old-LAN credential extension uses actual HTTP statuses."
+  ],
+  "privacy": {
+    "tokensCookiesHeadersPublished": false,
+    "deviceSerialPidUidPublished": false,
+    "rawTreePublished": false,
+    "screenshotPixelsPublished": false,
+    "rawControlCoordinatesOrArgumentsPublished": false,
+    "rawEnabledServiceListPublished": false
+  }
+}

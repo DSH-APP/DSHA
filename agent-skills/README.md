@@ -1,38 +1,16 @@
-# Android Agent Skills
+# DSHA 设备操作技能
 
-Two portable skills for agents running in a Linux/proot environment that need to control an Android device.
+`agent-skills/` 是两个技能的唯一源。网站构建从此复制实际 SKILL.md 和仓库 MIT 许可；网站目录中的历史测试记录不能证明修改后的文档已在当前手机复验。
 
-## Contents
-
-| Skill | Purpose |
+| 技能 | 用途 |
 |---|---|
-| `device-shell` | Execute shell commands on an Android device via ADB, or via an optional local Shizuku HTTP bridge. |
-| `screen-ocr-operator` | See and operate the Android screen through an OCR/vision model + ADB. Optimized commander workflow with minimal round-trips. |
+| `device-shell` | 通过应用管理的设备通道执行明确授权的 Android 命令，并核对身份与结果。 |
+| `screen-ocr-operator` | 使用实际授权的读屏/截图接口核对目标、方向和坐标，再小步操作。 |
 
-## Install
+将技能目录复制到当前 Agent 的技能搜索目录，例如 `~/.agents/skills/` 或项目的 `.agents/skills/`，保留 `<name>/SKILL.md` 结构。它们是工作流文档，不通过“导入插件包”安装。
 
-Copy each skill folder into your agent skills directory, for example:
+Root、Shizuku 或 ADB 任一通道在“设备能力授权”就绪后可使用；原生层在发送前选择实际通道。先用 `/root/dsh-bin/adb-shell "id"` 核对返回身份，不能假设总是 uid=2000、要求先配 ADB 或借裸 adb 绕过入口。结果未知时不换通道重放。
 
-```bash
-cp -r device-shell ~/.agents/skills/
-cp -r screen-ocr-operator ~/.agents/skills/
-# or into a project's .agents/skills/
-```
+屏幕、短信、录音等能力有各自的授权与运行代次，不能从备份继承。截图可能含私人内容；文件结果只清理本次工具明确创建的临时文件，不删除用户历史原件。原生 PNG 结果与当前读屏接口是否可用，以实际应用、系统和授权为准。图片发送到用户选择的模型服务时，适用该服务的请求与费用规则。
 
-The folder layout matches the standard skill format:
-
-```
-<skill-name>/
-  SKILL.md
-```
-
-## Requirements
-
-- `adb` available in the agent environment.
-- An Android device authorized for ADB.
-- For `screen-ocr-operator`: an OpenAI-compatible vision/OCR model API and your own API key.
-
-## Notes
-
-- Replace placeholders such as `<serial>`, `<YOUR_VISION_MODEL>`, and `<YOUR_API_KEY>` with your actual values.
-- No private endpoints, keys, or device-specific identifiers are included.
+技能不包含密钥、设备序列号或连接地址。确需直接调用本机桥，使用技能中受管私有请求头文件示例，不把 token 放入 URL、参数或日志。当前源码文档检查不等于所有 Agent、模型和 Android 设备组合通过。

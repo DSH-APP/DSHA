@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "licenses": [
+    {
+      "target": "app/src/main/assets/licenses/LGPL-3.0.txt",
+      "sourceArchive": "app/src/main/assets/offline-rootfs.bin",
+      "sourceArchiveSha256": "0a680b5689b900a5313f53a8ae69c11cb76a12aeb47d75a071cdd7162747c00f",
+      "sourceMember": "./usr/share/common-licenses/LGPL-3",
+      "bytes": 7652,
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+    },
+    {
+      "target": "app/src/main/assets/licenses/MPL-2.0.txt",
+      "sourceArchive": "app/src/main/assets/offline-rootfs.bin",
+      "sourceArchiveSha256": "0a680b5689b900a5313f53a8ae69c11cb76a12aeb47d75a071cdd7162747c00f",
+      "sourceMember": "./usr/share/common-licenses/MPL-2.0",
+      "bytes": 16726,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+    }
+  ],
+  "limitation": "Exact license text copies from the locally locked Ubuntu archive. Generic license text does not establish the source, revision or redistribution rights of any native binary."
+}

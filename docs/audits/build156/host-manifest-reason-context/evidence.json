@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "change": "Single test-vscreen-manager-http.py reason text only; paths/args/requires/environment/stages/test count unchanged. No source restoration performed by tests lane.",
+  "lastWriteTimeNs": 1791040319017675000,
+  "lastWriteTimeUtc": "2026-10-03T15:11:59.017675+00:00",
+  "oldSha256": "72c55ed043c2954617a9c5c8369f36c0fb40406048872f0673032f1bdd522f04",
+  "newSha256": "ffdc636684b216589f581bdf5d60658efb92d4050c151794628ec9ed44bf948c",
+  "oldBytes": "docs/audits/build156/host-manifest-reason-context/before-reason.json",
+  "newBytes": "docs/audits/build156/host-manifest-reason-context/after-reason.json",
+  "oldProof": "docs/audits/build156/checks-tests-session-repair/manifest.json",
+  "oldReason": "Current Java source and bounded local HTTP fixture after StandardDebug resource generation; no device access",
+  "newReason": "Fresh main/standard release source compilation with current StandardRelease resources and BuildConfig, locked host dependencies, owned-state JUnit and real bounded loopback HTTP; no device, Gradle or APK generation",
+  "allFurtherToolsAndAppSourceWritesStopped": true
+}

@@ -1,8 +1,13 @@
 /* 页面启动观察：模块实际加载/应用错误和官方启动失败屏；不吞异常、不改插件开关。 */
 (function () {
   'use strict';
-  if (window.top !== window || window.__dshaStartupObserved) return;
+  if (window.top !== window) return;
+  var binding=window.__DSHA_PAGE_BINDING__||{};
+  if(window.__dshaStartupObserved&&window.__dshaStartupObservationNonce===String(binding.nonce||''))return;
   window.__dshaStartupObserved = true;
+  window.__dshaStartupObservationNonce=String(binding.nonce||'');
+  var documentId=String(Date.now())+'-'+Math.random().toString(36).slice(2);
+  window.__dshaStartupDocumentId=documentId;
   var ready = false, seenBoot = false, lastFailure = '', count = 0;
   // dsh-client 可在页面重渲染时再次调用同一个插件的 apply。成功结果
   // 对启动诊断没有新增信息；只记录首次成功，错误/下一次错误前的加载仍保留。
@@ -10,7 +15,8 @@
   function uiText(zh, en) { return window.__DSHA_LANGUAGE__ === 'en' ? en : zh; }
   function report(type, id, message, fatal) {
     if (count++ > 500) return;
-    var text = JSON.stringify({type:type, id:String(id || '').slice(0,214), message:String(message || '').slice(0,6000), fatal:!!fatal && !ready});
+    var text = JSON.stringify({type:type, id:String(id || '').slice(0,214), message:String(message || '').slice(0,6000), fatal:!!fatal && !ready,
+      nonce:String(binding.nonce||''),documentId:documentId,sequence:count-1,page:location.origin+location.pathname});
     console.info('[DSHA_PAGE] ' + text);
     window.dispatchEvent(new CustomEvent('dsha-startup', {detail:text}));
   }
@@ -76,7 +82,7 @@
     if (event.error || event.message) report('issue', '', detail(event.error || event.message) + '\n' + (event.filename || ''));
   });
   window.addEventListener('unhandledrejection', function (event) { report('issue', '', detail(event.reason)); });
-  var observer = new MutationObserver(function () {
+  function inspect() {
     wrap(window.__ModuleLoader__);
     var boot = document.querySelector('[data-dsh-boot]');
     if (boot) {
@@ -90,6 +96,10 @@
     if (document.querySelector('[data-composer-input]') || (seenBoot && !boot && root && root.children.length)) {
       ready = true; report('ready', '', uiText('网页已就绪', 'Web page ready')); observer.disconnect();
     }
-  });
+  }
+  var observer = new MutationObserver(inspect);
   observer.observe(document, {childList:true, subtree:true, characterData:true});
+  // Old WebView has no document-start hook: inspect a failure/ready screen
+  // that already exists when the fallback observer is injected.
+  inspect();
 })();

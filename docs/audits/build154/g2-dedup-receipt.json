@@ -1,0 +1,69 @@
+{
+  "ids": [
+    "D-DUP-01",
+    "D-DUP-02",
+    "D-DUP-03"
+  ],
+  "checks": [
+    "JDK17 standalone JUnit23 PASS;12 new helper behavior cases+11 old identity policy cases",
+    "Current main8-file Android dependency javac PASS"
+  ],
+  "scope": "Bounded3 architecture tasks; no phone/Gradle. Git/MSYS shell mechanics are not Android birth proof.",
+  "files": {
+    "app/src/main/java/com/deepseekharness/app/util/ManagedRuntimePaths.java": {
+      "sha256": "89f4a1d178b79a830d52a7a5594be3667b36cb342bf63920010dd8c71c2cab5a",
+      "bytes": 2999,
+      "crlfCount": 0
+    },
+    "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java": {
+      "sha256": "6c273c865eb5f5b9a4732df04be9751b92595a080d0d9d97095c615c3a595ba6",
+      "bytes": 6843,
+      "crlfCount": 0
+    },
+    "app/src/test/java/com/deepseekharness/app/util/ManagedRuntimePathsTest.java": {
+      "sha256": "e2291c47623e80031664e2d8189ee387d3c39f215f68060de551a6d0d29763bc",
+      "bytes": 5310,
+      "crlfCount": 0
+    },
+    "app/src/main/java/com/deepseekharness/app/util/ProcStat.java": {
+      "sha256": "8105e621c9e3d09c7627bfdf72efc7335eb1f08bb2d4d4952ca6f957071aa44e",
+      "bytes": 1544,
+      "crlfCount": 0
+    },
+    "app/src/main/java/com/deepseekharness/app/util/WebPidIdentity.java": {
+      "sha256": "817d392c715cc61145cf8086c3d4603a504443ae37c5171eb14302722ca6f7d1",
+      "bytes": 974,
+      "crlfCount": 0
+    },
+    "app/src/main/java/com/deepseekharness/app/util/ProcessIdentity.java": {
+      "sha256": "60530cb808e8aa967aa5e89d40b12edfa3476fd4b22cecc5722c5c35d29845bd",
+      "bytes": 2974,
+      "crlfCount": 0
+    },
+    "app/src/test/java/com/deepseekharness/app/util/ProcStatTest.java": {
+      "sha256": "7365c1a399ca66d91c19013cbf5ed60d6e00a68e664462cd8bb8eb00393276d2",
+      "bytes": 2839,
+      "crlfCount": 0
+    },
+    "app/src/main/java/com/deepseekharness/app/runtime/TrialSupport.java": {
+      "sha256": "958878f5481cfbe81f36c9ba922ab41d3be1b72b6babb7786721198296995155",
+      "bytes": 2877,
+      "crlfCount": 0
+    },
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java": {
+      "sha256": "9ea55e2cdc3067a4fa42a1da41e80f35587a27d0abb4679f5d4c47d630917cc7",
+      "bytes": 17869,
+      "crlfCount": 0
+    },
+    "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java": {
+      "sha256": "81ca81653213ff3b81604877cd5822cc100d7984742b9a3330a8f9a9887dad6e",
+      "bytes": 9529,
+      "crlfCount": 0
+    },
+    "app/src/test/java/com/deepseekharness/app/runtime/TrialSupportTest.java": {
+      "sha256": "f75b77edb39355de7890bf1ba2d3e52fe1913b43edd9639a27ab71fb28940ae2",
+      "bytes": 6394,
+      "crlfCount": 0
+    }
+  }
+}

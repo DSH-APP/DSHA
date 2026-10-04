@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """从已锁定的 dsh 覆盖层生成包来源证明；只排除内容及文件位完全一致的可重建依赖。"""
+from source_text import write_text as write_source_text, matches_text
 from pathlib import Path
 import tarfile,hashlib,json,sys
 root=Path(__file__).resolve().parents[1]
@@ -27,9 +28,9 @@ target=root/'app/src/main/assets/managed-package-proofs.json'
 content=json.dumps(output,ensure_ascii=False,indent=2)+'\n'
 args=sys.argv[1:]
 if args==['--check']:
- if not target.is_file() or target.read_text(encoding='utf8')!=content:
+ if not matches_text(target,content,encoding='utf8'):
   raise SystemExit('受管依赖证明与当前归档不一致；先运行 tools/prepare-backup-assets.py --write 并审阅改动')
 elif args==[] or args==['--write']:
- target.write_text(content,encoding='utf8')
+ write_source_text(target,content,encoding='utf8')
 else:raise SystemExit('usage: prepare-backup-assets.py [--check|--write]')
 print('managed package proofs:',len(proofs))

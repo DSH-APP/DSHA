@@ -1,0 +1,223 @@
+{
+  "schema": 1,
+  "purpose": "Explicit APK members: file additions require review. Complete signed builtin/license/extension trees retain dynamic resources. Archive source inputs use the existing split-runtime generators. Historical scripts live outside APK deployment.",
+  "packagedFiles": [
+    "adb-pair.py",
+    "adb-script-version",
+    "adb-setup.sh",
+    "adb-shell.py",
+    "adb-wheels.lock.json",
+    "backup-engine.py",
+    "backup-plugin-graph.py",
+    "bridge-token-compat.cjs",
+    "builtin-plugins.json",
+    "ca-certificates.crt",
+    "client-combo-patch.json",
+    "composer-enter-patch.json",
+    "conversation-materialized-patch.json",
+    "credential-paths.json",
+    "credential-yaml-filter.cjs",
+    "deepseek-messages-compat-patch.json",
+    "device-shell-policy.py",
+    "dns-compat.cjs",
+    "dsha-builtin.txt",
+    "dsha-deepseek-messages-compat.js",
+    "dsha-device-shell.sh",
+    "dsha-plugin.sh",
+    "dsha-runtime-env.sh",
+    "install-basic-tools.sh",
+    "install-ubuntu-tools.sh",
+    "language-patch.json",
+    "legacy-preset-convert.cjs",
+    "licenses/LGPL-3.0.txt",
+    "licenses/MPL-2.0.txt",
+    "licenses/snakeyaml-LICENSE.txt",
+    "lexical-claim-patch.json",
+    "managed-package-proofs.json",
+    "managed-runtime-inputs.json",
+    "office-fonts-patch.json",
+    "offline-rootfs.version",
+    "pdf-compat-patch.json",
+    "persona-compat-patch.json",
+    "plugin-dependencies.py",
+    "plugin-lifecycle.py",
+    "plugin-manager-auto-enable-patch.json",
+    "plugin-manager-policy-patch.json",
+    "plugin-manager.py",
+    "plugin-network.py",
+    "plugin-semver.cjs",
+    "plugin-transactions.py",
+    "pnpm-runtime.bin",
+    "profile-settings-review.js",
+    "python-support.bin",
+    "queue-agent-patch.json",
+    "queue-dock-patch.json",
+    "rc1-migration.py",
+    "rc1-settings-migration-patch.json",
+    "rc1-settings-migration.cjs",
+    "recovery-agent.js",
+    "recovery-profile-package.json",
+    "recovery-profile.patch.yml",
+    "register-builtin-plugins.py",
+    "runtime-descriptor.json",
+    "runtime-patches.json",
+    "runtime-tools.json",
+    "runtime-trial-page.js",
+    "runtime-trial-plugin.js",
+    "session-interaction-patch.json",
+    "startup-observer.cjs",
+    "subagent-navigation-patch.json",
+    "tooltip-entry-patch.json",
+    "tooltip-interaction-patch.json",
+    "ubuntu-tools.bin",
+    "workspace-directory-policy-patch.json"
+  ],
+  "packagedTrees": [
+    "app-integration",
+    "builtin-plugins",
+    "client-combo-cache",
+    "licenses",
+    "recovery-web-integration",
+    "runtime-fs",
+    "session-compat",
+    "web-integration"
+  ],
+  "sourceInputs": [
+    "offline-rootfs.bin",
+    "dsh-runtime.bin",
+    "dsh-runtime.inputs.json",
+    "ubuntu-tools.inputs.json",
+    "glibc-python.tar.gz",
+    "adb-wheels.tar.gz"
+  ],
+  "sourceOnlyTrees": [
+    "runtime-python"
+  ],
+  "generatedFiles": [
+    "glibc-python.bin",
+    "adb-wheels.bin",
+    "offline-rootfs.bin",
+    "offline-rootfs.bytes",
+    "offline-rootfs.sha256",
+    "offline-rootfs.layout",
+    "dsh-runtime.bin",
+    "dsh-runtime.sha256",
+    "web-integration/gecko-compat.js"
+  ],
+  "externalGeneratedFiles": [
+    "recovery-runtime.json",
+    "recovery-asset-locations.json",
+    "recovery-overlay/index.html",
+    "recovery-overlay/client.pdf.js",
+    "recovery-overlay/client-resources.js",
+    "recovery-overlay/client-locale.js"
+  ],
+  "extensionTrees": [
+    "web-integration",
+    "recovery-web-integration"
+  ],
+  "optionalHistoricalReads": [
+    "adb-wheels.tar.gz",
+    "glibc-python.tar.gz",
+    "glibc-python.tar"
+  ],
+  "dynamicReaders": [
+    {
+      "source": "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+      "method": "readAsset(name)",
+      "contract": "BackupManager legacy reader helper/identity loops; current environment snapshots use the host filesystem.",
+      "assets": [
+        "backup-engine.py",
+        "backup-plugin-graph.py",
+        "register-builtin-plugins.py",
+        "credential-yaml-filter.cjs",
+        "credential-paths.json",
+        "adb-wheels.lock.json",
+        "builtin-plugins.json"
+      ]
+    },
+    {
+      "source": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+      "method": "assetText/assetObject/installManagedAssets",
+      "contract": "managed-runtime installs, active/specialized runtime-patches and prependAsset. Signed builtin directories remain complete.",
+      "assets": [
+        "managed-runtime-inputs.json",
+        "runtime-patches.json",
+        "adb-pair.py",
+        "adb-shell.py",
+        "adb-setup.sh",
+        "device-shell-policy.py",
+        "adb-script-version"
+      ]
+    },
+    {
+      "source": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+      "method": "readAssetString/findBundleEntry",
+      "contract": "Existing split-runtime/archive generator; rootfs and managed metadata.",
+      "assets": [
+        "runtime-descriptor.json",
+        "offline-rootfs.version",
+        "offline-rootfs.bytes",
+        "offline-rootfs.layout",
+        "offline-rootfs.bin",
+        "dsh-runtime.bin",
+        "ubuntu-tools.bin"
+      ]
+    },
+    {
+      "source": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "method": "readAsset(name)/locations",
+      "contract": "prepareRecoveryAssets writes exact pinned runtime map and archives outside standard assets; recovery APK gate validates mapped physical bytes.",
+      "assets": [
+        "recovery-agent.js",
+        "recovery-profile.patch.yml",
+        "recovery-profile-package.json",
+        "recovery-runtime.json",
+        "recovery-asset-locations.json"
+      ]
+    },
+    {
+      "source": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+      "method": "asset(name)",
+      "contract": "Known isolated trial page/plugin.",
+      "assets": [
+        "runtime-trial-page.js",
+        "runtime-trial-plugin.js"
+      ]
+    },
+    {
+      "source": "app/src/main/java/com/deepseekharness/app/ui/WebPageScripts.java",
+      "method": "read(context,path)",
+      "contract": "Exact page compatibility/locale/back integration; ES5 token shim also enters generated Gecko content.",
+      "assets": [
+        "web-integration/es-compat.js",
+        "web-integration/compat.js",
+        "bridge-token-compat.cjs",
+        "web-integration/startup.js",
+        "web-integration/page.js"
+      ]
+    },
+    {
+      "source": "app/src/main/java/com/deepseekharness/app/ui/AboutFragment.java",
+      "method": "showLicenses assets.list(licenses) and assets.open(licenses/name)",
+      "contract": "The complete signed license tree is retained; user-visible license content is enumerated only from that packaged directory. Entry names are validated by the reader, not arbitrary user paths.",
+      "assets": [
+        "licenses/DSHA-MIT.txt",
+        "licenses/GPL-3.0.txt",
+        "licenses/LGPL-3.0.txt",
+        "licenses/MPL-2.0.txt",
+        "licenses/Shizuku-MIT.txt",
+        "licenses/Termux-terminal-Apache-2.0.txt",
+        "licenses/bouncycastle-LICENSE.txt",
+        "licenses/certifi-LICENSE.txt",
+        "licenses/gson-LICENSE.txt",
+        "licenses/proot-COPYING.txt",
+        "licenses/snakeyaml-LICENSE.txt"
+      ]
+    }
+  ],
+  "sourceTransforms": {
+    "glibc-python.tar.gz": "glibc-python.bin",
+    "adb-wheels.tar.gz": "adb-wheels.bin"
+  }
+}

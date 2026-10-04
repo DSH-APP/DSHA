@@ -81,9 +81,9 @@ class RecoveryApkAssetsTests(unittest.TestCase):
             with zipfile.ZipFile(memory) as apk:verifier.verify_overlays(apk,description)
         verify(payloads,descriptor)
         changed=dict(payloads);changed['index.html']=b'tampered'
-        with self.assertRaisesRegex(AssertionError,'RECOVERY_OVERLAY_HASH'):verify(changed,descriptor)
+        with self.assertRaisesRegex(RuntimeError,'RECOVERY_OVERLAY_HASH'):verify(changed,descriptor)
         stale=copy.deepcopy(descriptor);stale['files'][0]['sha256']='b'*64
-        with self.assertRaisesRegex(AssertionError,'RECOVERY_OVERLAY_PROOF'):verify(payloads,stale)
+        with self.assertRaisesRegex(RuntimeError,'RECOVERY_OVERLAY_PROOF'):verify(payloads,stale)
         missing=dict(payloads);missing.pop('client.pdf.js')
         with self.assertRaises(KeyError):verify(missing,descriptor)
 
@@ -97,7 +97,7 @@ class RecoveryApkAssetsTests(unittest.TestCase):
             with zipfile.ZipFile(memory) as apk:verifier.verify_overlay_inputs(apk,descriptor)
         check(content)
         changed=dict(content);changed['web-integration/language.js']=b'changed'
-        with self.assertRaisesRegex(AssertionError,'RECOVERY_OVERLAY_INPUT_HASH'):check(changed)
+        with self.assertRaisesRegex(RuntimeError,'RECOVERY_OVERLAY_INPUT_HASH'):check(changed)
 
 
 if __name__ == '__main__': unittest.main()

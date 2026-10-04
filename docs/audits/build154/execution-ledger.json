@@ -1,0 +1,2378 @@
+{
+  "schema": 1,
+  "baseline": 153,
+  "target": 154,
+  "reviewCoverage": 236,
+  "sourceUnique": 232,
+  "reviewStatusCounts": {
+    "open": 215,
+    "requires_device_evidence": 6,
+    "accepted_policy": 6,
+    "duplicate": 4,
+    "already_fixed": 2,
+    "not_applicable": 3
+  },
+  "phase": "implementation",
+  "items": [
+    {
+      "id": "D-SEC-01",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "词法链接目标检查与 FileOutputStream 跟随链接仍在；输入目前只见签名随包资产。报告 a→.. 例子会被拒绝，真正需回归的是 a→.、b→a/.. 的链式解析及已有目标链接。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-02",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "containerFile 仍直接 new File(rootfsDir, rel)，push/pull 用普通文件流；既有 guest 目标链接可被宿主写入跟随，属于防误覆盖缺口而非同 UID 隔离漏洞。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-00",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "中英文安全文档仍写依赖安装禁用生命周期脚本，与当前明确开放钩子的实现和 AGENTS 覆盖条款冲突；已有同 UID 边界文档，报告称完全缺失不准确。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ADB-01",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "AdbBridge 仍写三个旧标记，adb-shell 无读取方；测试仍模拟这些标记。真实授权在原生偏好及设备命令策略。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-03",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "桥仍接受 query token；四个内置客户端/指南仍在 URL 中传递 token。隐私风险确实存在，但任何新 header 示例也不能把秘密直接展开进 curl argv。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-04",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "敏感包名子串判定、授权时/执行时重新取窗口的间隙与无焦点输入回退仍存在；appLaunch 不经屏幕授权。真实错点/输入效果需设备证据。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PROV-01",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "CFR 标注仍在，但标注本身不能证明侵权、外部反编译来源或当前实现许可不兼容。实现已大量使用仓库自己的执行器。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-05",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "LAN 明文 HTTP 是既有功能并已部分说明；完整 token 仍在地址文本、剪贴板及 Toast，cookie 有较长有效期。不得把“HTTP 存在”自动当成授权变更。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ROOT-01",
+      "group": "G1",
+      "reviewStatus": "requires_device_evidence",
+      "implementationStatus": "unverified_device",
+      "changes": [],
+      "checks": [],
+      "reason": "固定四个 su 路径仍在；未提供 KernelSU/APatch 真机或实际安装路径证据，不能确认所列新增路径存在或该设备受影响。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-06",
+      "group": "G1",
+      "reviewStatus": "requires_device_evidence",
+      "implementationStatus": "unverified_device",
+      "changes": [],
+      "checks": [],
+      "reason": "validateFiles 与外部 cp/mv/rm 存在静态检查/执行间隙，但普通 Android 共享存储是否允许攻击者创建相关 symlink/mount 及真实竞争利用尚未核验，不能直接报告已被绕过。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-LIC-01",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "NOTICES 漏 Shizuku 与终端 AAR 等精确组件说明，运行时许可集合未对应实际打包内容。不能只按 npm 锁中的所有平台包推断实际分发。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-07",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "SAF 授权与文档路径边界确实存在，不是任意外部 App 无授权读取；但用户授予目录树后 privateDocument 不隐藏桥 token/credentials 等文件，与桥拒绝策略不一致。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-08",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "旧恢复 syncApiKeyFromRootfs 成功后仍留下明文 .dsha-apikey；新 v5 已不把它作为普通设置导出。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-NET-01",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "全局 cleartext 标志仍为 true，无 NSC 文件；外部 http 不受该平台配置约束的可能性尚在，不能假定限制宿主就限制 guest Node。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PRIV-01",
+      "group": "G1",
+      "reviewStatus": "requires_device_evidence",
+      "implementationStatus": "unverified_device",
+      "changes": [],
+      "checks": [],
+      "reason": "默认诊断导出确实附 dsh-web.log 尾部且只做尽力正则脱敏；“日志实际包含哪些对话/工具片段”未取得真实样本，不据源码推断已泄露用户对话。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-UPD-01",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "feed 无签名，pageUrl 只要求 HTTPS；APK 安装仍核对包名、版本、flavor、minSDK 和历史签名证书集合，不能声称伪造清单可直接安装异签名包。附件“用户接受不签名”不是本轮授权。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-UPD-02",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "最多六跳 HTTPS 重定向仍不限定主机；这是连接/可用性/隐私边界，不是绕过最终哈希与 APK 签名。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-09",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "runCoreCommand 仍将实际 API Key 拼到 export/bash -c 命令串；ShellQuote 防注入不等于防 argv 泄露，同 UID 环境变量本来也可读。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-CFG-01",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "danger-full-access 是当前明确默认策略，不能作为漏洞修改；但 prepareHostSettings 的 permissionMode 缺省仍为 default，读取/投影也无三档归一，非法输入一致性问题尚在。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-10",
+      "group": "G1",
+      "reviewStatus": "accepted_policy",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "自动解析、安装和启用、开放依赖钩子均由当前用户/AGENTS 明确要求；外部调用链与风险存在，但不能采纳附件另一会话要求重新审阅/确认的决策。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BRAND-01",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "AboutDialog、ConfigFragment 与官网投稿链接仍指迁移前仓库，其他入口用当前仓库，集中配置未完成。报告的两个 website 根脚本在当前树不在所列位置。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-11",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "配置页仍把解密密钥回填 EditText，布局未显式 saveEnabled=false；是否系统实际持久化 password 文本需设备证据，不能当作已泄露到磁盘。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-13",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "同源诊断事件在启动未 ready 时可由页面脚本伪造；pageEvent 已有 browserReady 与 generation 守卫，报告“运行中可随时反复跳恢复”的泛化不成立。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-14",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "appVscreen 仍调用只看主屏 currentPackage 的 uiAuthorized；目标显示/launch 包没有绑定，因此代码上的策略错位尚在。是否可运行具体敏感 App、读取其内容仍需设备证据。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PRIV-02",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "正则每次编译且不能覆盖无字段名 AIza/JWT 等；当前实际源码夹具证明合成值不变。任何正则都不能保证任意秘密全量脱敏。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-NET-02",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "无有效 nameserver 时仍在 ResolverConfig/InstallProbe 两份逻辑写固定公共回落 DNS；它是兼容策略并非已证明用户 DNS 被强制覆盖。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-15",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "路径段匹配不能实现 /root/.dsha- 文件名前缀，工作区 .env 也不在拒绝表；实际当前 Java 夹具两条都允许。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-16",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "旧 BackupManager→backup-engine 的 full 仍原样带工作区 .env 和运行日志；默认 UI 已迁宿主 v5，不能把旧链描述为当前所有备份入口，更不能把用户授权的无密码导出本身判为 P0。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-17",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "阅读位置仍直接保存 pathname+search；正常首帧 DSH 是否立即剥 token 未核实，不能宣称已有真实 Web token 泄露。保存逻辑本身无敏感参数保证。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-18",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "所有第三方导出的 add_tree 会 realpath+deref，包内约束仅 runtime_source 分支；源码上可把工作区包外链接带入导出，真实机上未演示。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-19",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Java 与 Python 短信 provider 路径规则都未覆盖 /data_mirror；实际 Java plan 接受镜像路径 cat/find。实际 Root/SELinux 能否读取仍未操作手机核实。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-20",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "selftest.py 的文件名 shell 拼接确实不安全；当前原生自检未找到部署/调用该 Python 脚本的活跃链，风险属旧/手动复活脚本，不是当前入口已被利用。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-21",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "MACHINE 仍列旧错误名称，真实 .bridge_token 和匿名 ID 不在集合；v5 NativeDataLocations 对未知子项按 settings 归档，因此两种布局应统一排除。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PRIV-03",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "已确认公开历史文档与设备脚本含固定序列号、私网地址及具体开发路径；报告未证明这些值导致远程控制或密钥材料泄漏，属于隐私/可迁移性卫生。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-22",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "STABLE 整目录 include 确实覆盖凭据/本机状态；cloud 的传输加密要求不能替代文件排除，device-transfer 与 v28 规则也存在不对称。尚未声称已检查实际系统迁移包。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PRIV-04",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "屏幕说明仍承诺不落盘，但 saveShot 对普通/MCP 都先写外部私有 PNG，未找到轮换/删除；路径私有不等于不存在或不长期保存。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SEC-23",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "历史 E7E3 发布证书必须保持以覆盖安装，这是明确要求；构建仍默认公开口令/alias 并打印绝对路径。CFR/debug 文件名不证明证书或私钥已泄露，不能擅自换签名。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-LIC-02",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "标准源集含 proot 二进制，main/licenses 未有 proot 全文，low 有；NOTICES 标准段无精确对应源码版本，talloc 仅合并列名。不是已作出的法律违规结论。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-WEB-01",
+      "group": "G1",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "下载 location 自己声明 add_header 而未复制 server 级全部安全头；静态配置不符合统一安全头意图。未读取服务器实际配置/响应，不能称部署已缺头。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ARCH-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "HarnessController仍995行，启动、迁移、插件、cookie/LAN、日志和resetConfig同类；已有RuntimeHostPorts/RuntimeWorkPort但启动步骤仍内联。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "HarnessService.isWebUp仍只Socket.connect，半断网页流或只监听不服务仍被判healthy；151客户端恢复不等于服务业务健康。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-03",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "UserDataBindings.append仍从rootfs两级父推files并mkdir迁移记录；不是显式宿主布局依赖。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-04",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "AdbBridge.injectOwned仍把4脚本base64塞单个命令；已有秘密stdin入口没有用于此批注入；当前尚未E2BIG。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-I18N-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "UiText.text仍整串查表，BasicToolsInstaller等保留片段加数字；模板类UiStateText不是所有界面的统一格式入口。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ARCH-02",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "RuntimeHostPorts共享实例、MainActivity.current强静态引用、PluginFragment修订表、虚拟屏全局可变状态仍在。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-05",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "RuntimeHostPorts.emit仍只保留最后异常类名；153成功runtime选择回调单独传播错误，没有把它吞成诊断。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PLAT-01",
+      "group": "G2",
+      "reviewStatus": "requires_device_evidence",
+      "implementationStatus": "unverified_device",
+      "changes": [],
+      "checks": [],
+      "reason": "app_process privileged Context仍反射systemMain/getSystemContext且失败闭合；没有证据表明当前支持设备上失效。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-06",
+      "group": "G2",
+      "reviewStatus": "duplicate",
+      "implementationStatus": "linked",
+      "changes": [],
+      "checks": [],
+      "reason": "畸形/未知guest记录确实fail-closed；与D-RT-18同一门禁链，不能把损坏日志当进程已空。",
+      "duplicate_of": "D-RT-18"
+    },
+    {
+      "id": "D-RT-07",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ContainerRuntime仍exists检查跳过bind，无BIND_SKIPPED记录；存储授权页单独提示，启动侧原因链不完整。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-08",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Proot环境仍由Bootstrap处理，Proot.applyEnv/prepare空；rt.applyEnv被catch Throwable忽略；BINDS为可改数组。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-09",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "InstallPipeline/InstallProbe/BasicToolsInstaller仍以1-6数字协作，修复异常String.valueOf显示；InstallTask已有脱敏。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-IO-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "BackupFileSystem.atomic有恢复边界与目录sync；ManagedRuntimeAssets.writeMarker仍文件sync+renameTo、无目录sync；多套原子写不能等同耐久。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-10",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "IsolatedInstallProcess.exitValue会置closed及删status，waitFor和close轮询；身份与整组退出核验正确，未见忙等导致错误的实测。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PLAT-02",
+      "group": "G2",
+      "reviewStatus": "requires_device_evidence",
+      "implementationStatus": "unverified_device",
+      "changes": [],
+      "checks": [],
+      "reason": "androidPid仍解析限定Process类名/toString，不匹配返回-1拒绝信号；兼容风险未在新ROM证明。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-11",
+      "group": "G2",
+      "reviewStatus": "accepted_policy",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "RuntimeTrial和ProfileSettingsTrial保持可取消的慢启动等待，60秒仅提示；不是自动重试循环，当前约束禁止按启动超时强停。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-STYLE-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "RuntimeTrial等大量单行复合语句仍存在，构建未接formatter；影响可审阅性。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ARCH-03",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "RuntimeTrial仍直接调用ui.RuntimeBrowserProbe，backup仍依赖core/UI；附件称无架构门禁已过时，tools/test-architecture-boundaries.py存在但仅锁部分边界。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-12",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ProfileSettingsTrial仍150ms只读最多8KiB且丢弃输出；RuntimeTrial已每轮256KiB排空并保留尾部。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-IO-02",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "TarGzipExtractor symlink/link/chmod异常仍吞掉，未知type跳过；lastSkipped/lastSkipNote仅声明，缺完整提取回执。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-API-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "WebProcessManager返回空串/错误码/本地化句子混合结果，只保留首错误；调用者还依赖.isEmpty判断成功。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-13",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "已核验Web仅SIGTERM，3秒未退即保留环境；没有身份安全的可选force入口。不能宣称当前误杀，阻塞风险是候选。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-API-02",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ENV_NOT_READY等消息字符串仍参与控制流，Backup/Retained也依赖getMessage字面量；涉及机器码与展示混用。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-14",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ensureAndroidGroups仍含all_a428/50428和u0_a428/20428，随后虽合并真实Groups但遗留错误命名。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-API-03",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "startRootfs布尔重载链仍在，153又增加coldMode参数；参数组合含多处false/null。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-15",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "findBundleEntry仍候选名及全APK子串最大条目回退；当前构建固定生成offline-rootfs.bin。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-16",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "初解压失败留下非空rootfs，正常首次提取拒绝覆盖；153修了重建失败回切，但尚未引入隔离首次stage发布。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ARCH-04",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Bootstrap当前1609行，launcher、脚本、解压、离线工具、Python/pnpm、组和救援职责仍聚集。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-API-04",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Node.type/Item.kind仍字符串，按FILE/DIRECTORY等判断广泛存在；解析unknown继续明确报错。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-CONC-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "owned仍worker写、main读取；active大部分main confinement；Handler发布后可见，但onStopJob在发布前与worker交错需更清楚的单owner策略，缺复现。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ARCH-05",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "StorageMaintenance.CACHE仍含7个仅历史审计使用的files目录名；正式缓存和审计空间归属混杂。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEP-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "BackupJson严格有界并拒重复；RuntimeTools仍org.json读受管/宿主文件；不同输入信任边界需要区分，不能推称全部可攻击。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-17",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "uninstall仍rm-rf整个linux，误注释称.dsh不受影响；未找到调用方，LEGACY数据确在删除树内。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PERF-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "HostSnapshot仍源→capture、capture重读hash、再读归档，末尾实际verify，冗余读确实存在；3-4倍仅静态估计。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-I18N-02",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Scanner.describe大小/时间未知仍中文原文；欢迎页2/3标题及Computer Use仍布局英文硬码。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-IO-03",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Http token/status及runtime部分写入仍Compat跟随路径截断；153新包槽已局部使用安全FS，并未覆盖这些敏感点。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PKG-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "旧L2S resolver regex及privileged设备入口仍硬码com.dsh.client；153仅冷包槽已采用实际Context/AppInfo，不是全局解决。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ARCH-06",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "HttpShellService仍大型route if分派类，鉴权/参数和业务内联；没有统一类型化路由表。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ARCH-07",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "BackupTask仍调用BackupManager.backupToExternal；宿主v5与guest旧写/读系统仍并存。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-IO-04",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "DiagnosticLog.record仍读旧文件再Compat截断写全日志，崩溃时也调用它；ColdInstallDiagnostics已有AtomicFile对比。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-NAME-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "EnvironmentAccess.shouldAttemptRuntimeUpdate仍实际用shouldBlockRuntimeStart，名字与true语义不一致。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-HEUR-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "StartupDiagnostics仍英文关键词+12行归属窗口生成issue；结构化fatal另有独立标记，不能混称任意普通行会立即fatal。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-18",
+      "group": "G2",
+      "reviewStatus": "accepted_policy",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "未知/损坏有界guest记录确实挡写维护；独立应急只读启动不经过此锁，附件声称所有恢复无出口过宽。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-API-05",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "DiagnosticRepository仍从最终报告split标题和Node/npm/Python前缀反解析结果，当前译文碰巧匹配。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-API-06",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "StorageActivity zh/en数组按i与inspect LinkedHashMap顺序对应，当前8项一致，新增类别易越界/错标签。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-A11Y-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Overlay两SeekBar无标签；欢迎空圆点未排除读屏；不可点击介绍行带交互外观；部分输入无labelFor。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-I18N-03",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "配对码、设备返回和Gecko网页prompt.message仍交UiText.text；数字目前通常无匹配键，但网页原文可能命中。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-ERR-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "LaunchFragment.refreshRunState末尾仍catch(Throwable ignored)，每次刷新错误会静默冻结旧界面。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-API-07",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "PluginFragment菜单仍中文equals/startsWith分派和substring4；check-update仍依赖deletable。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PERF-02",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "VScreen status/preview/touch/editor/tree等在全局LOCK下做最长12秒I/O，多预览源还不断new Thread；延迟值尚未实测。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-CONC-02",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Overlay/Foreground仍静态View与bitmap状态，hide/sync无线程断言；常规stop已post main，不能误称当前stop必跨线程。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-19",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "RecoveryRuntime失败pending、被替换retained及session实例缺空间治理，扩展rootfs残留可累积；实际容量未设备量化。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RES-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "IndexedDB草稿只空files时delete，quota256MiB会受旧记录累积影响；未复现满额。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PERF-03",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "mobile compress仍brotliCompressSync/gzipSync在Node事件循环处理大body，确有同步阻塞代码，耗时未测。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-API-08",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "vscreen工具仍required全部字段与GET URLSearchParams，16k中文约144k编码，超过98304首行预算。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PERF-04",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "run_package_command默认120s，network调用未给更长timeout且会换源；当前用户允许生命周期脚本，自动重放可能重复副作用。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-FS-01",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "runtime-fs降级每target永久lock且publish仅文件sync无父sync；永久锁本身防inode分裂有意，不能简单删除。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RT-20",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "STABLE回挂整个.dsh且不含token/status/apikey例外；Http token固定LEGACY，旧BackupManager key同步也固定LEGACY，源码未见其它同步者。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-HEUR-02",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "looksLikeWeb仍含dsh web/dsh-cli/bin.js+web宽子串；maySignalWeb严格所以误判只会阻维护而非直接误杀。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-RES-02",
+      "group": "G2",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "rc1 prepare失败新建generation且已复制snapshot保留，下轮重新复制；无disk_usage/statvfs；已修IsADirectoryError但未解决失败累积。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-01",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "installedManagedPaths 与 stage 仍分别枚举 scope/global/bin 别名及四个标记；错误文案与路径前缀策略也分叉。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-02",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "WebPidIdentity 与 ProcessIdentity 两个 stat 解析器仍在；字段索引目前均正确，差异主要是 parent/session 范围与状态语义，并非已证实误杀。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-03",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "RuntimeTrial/ProfileSettingsTrial 仍有两份 write、PID/starttime shell 和 CheckedExit；回收职责不能仅按进程启动器退出合并。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PATCH-01",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "agent-preset/models-navigation 有 retiredFor 且在当前 rc2 有意不应用；tooltip 仍锁 0.1.5。三者资产及调用未清退，跳过无显式状态。不能把前两者重套到 rc2。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-04",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "prepare 与 prepareManagedOverlay 仍维护近同两份补丁序列；build149 已补齐受管路径的遗漏，但结构重复尚在。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PATCH-02",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "当前精确锚点有测试运行时和构建摘要校验，并非毫无门禁；但没有完整 active/retired 清单，版本不等仍多个静默 return，旧 tooltip 不进入当前演练。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PATCH-03",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "LAN 的 ExactTextPatch、InstallProbe Python 替换与 ensureDshRuntimePatches 的宽松告警仍并存，替换注释不同；旧 link→rename 文本分支也保留。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-05",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "libtalloc/libandroid-shmem 复制确实仍分布五条 proot 执行路径；当前没有证据说明任一份名称已错。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-06",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Java/Python 热数据及本机文件名仍多份；PUBLIC_HOT_ENTRIES/snapshotEntries 仅声明和单测使用。DataRootPolicy 仍写 bridge-token。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-07",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "事务 marker 与 completed history proof 仍有多份；不同域的磁盘格式与恢复所有权也确实不同，不能整体替换为一种新格式。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-LEGACY-01",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "rc1 prepare/finalize 每次 Web 启动仍调用 Python；build150 已压掉 already/skipped 日志但未消除进程开销。LegacyImporter 是可达的宿主旧包读取，不是死代码。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-09",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "UserDataLayout.PRIVATE 为黑名单；cold-install/diagnostic 等新顶层文件不在其中，且事务各自另有根常量。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PRESET-01",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "旧预设候选手拼 YAML 并缩进原文本；ID 已正则限制，不能定性为名字注入，但根结构与合法标签仍未显式预检。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-10",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "受信任 APK 解压器与外部 tar 读取器仍不同：前者不核 checksum 且吞链接创建失败，后者严格核 tar/gzip/重复路径。不是任意外部归档可直接调用前者。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BAK-01",
+      "group": "G3",
+      "reviewStatus": "accepted_policy",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "内部自动副本随机密码加密是本轮 AGENTS 明确保留策略；缺旧密钥时 fail closed 避免替换密钥。无密码外部重导出已在152实现。错误码文案仍可改进。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-11",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "application/sessions/settings/plugins/projects 仍在 Archive、NativeDataLocations、VerifiedCopy 重复声明。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-12",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "包名正则三处仍有不同长度/.. 限制；Python/npm 下载另用更严格小写规则。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BAK-02",
+      "group": "G3",
+      "reviewStatus": "requires_device_evidence",
+      "implementationStatus": "unverified_device",
+      "changes": [],
+      "checks": [],
+      "reason": "两轮空间预检仍为 expanded+固定余量及 expanded+2×归档字节；旧树已占用空间不能再次盲加。没有真实峰值测量证据。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BAK-03",
+      "group": "G3",
+      "reviewStatus": "accepted_policy",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "当前格式化明确提示尝试清理旧 Documents/dshdata；本轮附件另一会话“只删私有”并非直接指令。最新保留旧数据约束用于更新/恢复，不等同撤销用户确认的完整格式化。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-08",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "SystemPluginState 与 PluginRestoreGraph 仍两份投影；缺 profile 与保存原声明策略确实不同。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PLUG-01",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Graph store 外目标仍写 target.getAbsolutePath() 到 symlink 与 link:。CurrentManagedPackages 返回 host 路径，Container BINDS 没有 /data；预设转换另有手工 host→guest。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BAK-04",
+      "group": "G3",
+      "reviewStatus": "accepted_policy",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "原件、失败候选与删除记录保留符合当前“不新增自动删除”的明确要求，不能按附件容量决策删除旧数据。删除文案及占用可见性仍可改善。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-01",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "completed 回退扫描正则仍少一组 {4}；有效UUID实际匹配 false。活跃列表和 last 指针分支正则正确不能掩盖该分叉。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-13",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "多个 UUID 正则仍复制，NativeBackupJobs 回退扫描确有少段错误。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-02",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "/app/share 文件分支仍 Uri.fromFile，目标SDK37；还使用边界不严格的外部路径 startsWith。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-03",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "v5机器名单仍 bridge-token；Python full恢复只排SKIP，旧LOCAL_DEVICE_FILES仍可恢复。活跃 BackupTask→restoreWithinDataTask 未重置内存桥token，另一旧恢复分叉才调用 resetTokenAfterRestore。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-14",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "linux/ubuntu 路径仍多处散落；宿主/guest转换另有手切字符串。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-15",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "selectDataHome recovery=true 仍手列6域，漏插件安装/有界guest；ConfigurationSnapshots 仍选LEGACY而非 current。原件目录选择仍可改变后续恢复视图。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-LEGACY-02",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "格式化已使用稳定kind，兼容旧kind为必要读取；重建/选择根等仍用翻译文案存盘和判断，语言切换可漂移。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-16",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "核心当前名单部分已由门禁核对；旧 environment-data/selftest、维护验证4个入口与发布APK抽查5个仍漂移。新 rebuild 已走宿主 MaintenanceDataSnapshot，故不能称旧Python漏项当前必覆盖新系统。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-17",
+      "group": "G3",
+      "reviewStatus": "already_fixed",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "当前 onKeyDown/onCodePoint 只门禁，Ctrl由TerminalView读取状态；旧重复映射已不存在。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-18",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "菜单和卡片仍各实现删除确认，文字与国际化方式不同，菜单用中文动作文字分派。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-04",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ACTION_UP流式UP后把streaming置false，随后仍发listener.input；源码确有两条同笔分派，底层是否拒绝取决于帧/active时序。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-05",
+      "group": "G3",
+      "reviewStatus": "already_fixed",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "DownloadsExport 已调用 BackupFileNames.exportMimeType；未知扩展名返回application/octet-stream，不再把所有文件标gzip。仍可增PNG/JSON等具体类型。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-19",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "服务通知ID确实散落且部分字面量；目前值各不同，未发现真实冲突。端口还涉及默认/实际Web端口，不能简单全改一常量。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-20",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "InstallProcess与BoundedProcessRunner仍重复available轮询；终止确认语义不同，但有界guest caller额外close/retain负责整组确认，不能定性全部裸漏回收。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-COMPAT-01",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Low回退118阈值仍无来源说明；当前有真实兼容注入和能力检查，不是全无polyfill。版本不符静默return与补丁清单问题重叠。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-21",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "website技能包与agent-skills文案/设备通道规则确实不同，catalog来源仍指旧英文目录；网站文本还旧版本。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DUP-22",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "androidTest/debug HTML多选格式和Java消费契约确实分叉；是历史夹具维护债，不可生成额外审计APK来验收本轮。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-06",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "真实 trim_local_records 对block删成功，flow/四空格保留client-connection且不报错。旧Python恢复路径仍可达；v5另有宿主过滤不可代替旧分支。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PLUG-02",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "签名builtin缺失仍使register整体失败；刷新页150已改只读故不再因此列表刷新失败。隔离原件保留是政策；CLI锁仍无限等待。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-07",
+      "group": "G3",
+      "reviewStatus": "not_applicable",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "脚本只补source不计fixed确仍存在，但main/构建部署名单无该脚本，设置自测已转DiagnosticActivity；不构成当前会话自动自愈故障。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-08",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "实际NodeHTTP复现write回调在end前后都未触发，首块end前0字节；问题不是仅理论。全局prototype补丁仍会影响其它JSON路由。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PLUG-03",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "默认上游session root是.dsh/sessions，回收站因此位于sessions/.sessions-trash，native/Python递归备份没有排除。注销仍依赖private store可选链，实际0.2生命周期需新夹具。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PLUG-04",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "缺依赖仍直接raise在整轮write之前，其他entry变更只在内存；同样manifest错误应当逐插件隔离诊断。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PLUG-05",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "存在快照时prepare原样返回inspect；虽核字节/锁摘要，但state/managerVersion/integrity等作者字段仍作为本机事实展示，且不再补依赖。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-PATCH-04",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "native/Gecko仍派发dsha-open-models，smoke --models-entry仍不检查retiredFor；当前真正接收器只在已退休patch中。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-09",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "隔离无参调用实际返回error/list index out of range；原生正常带参数但CLI报错仍不合契约。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-COMPAT-02",
+      "group": "G3",
+      "reviewStatus": "not_applicable",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "审计漏了上游includePrerelease:true。当前0.2.0-rc.2低于0.2.0最终版，九个移动peer范围在真实上游规则都满足；evaluatePluginCompatibility返回undefined。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-10",
+      "group": "G3",
+      "reviewStatus": "not_applicable",
+      "implementationStatus": "not_required",
+      "changes": [],
+      "checks": [],
+      "reason": "selftest日志确从头截400K再尾12K，但已无生产部署/调用；Settings.runSelftest仅打开DiagnosticActivity。不能称当前原生诊断必漏新日志。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-11",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ownedPluginFailure仍用无锚定子串；其它plugin loader消息含自有名字即可误判。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUG-12",
+      "group": "G3",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "手工脚本仍存在且docstring公开用法，忽略坏JSON行确定可丢事件；decompress首帧行为尚未对当前zstandard实包做新夹具。无App调用方不能使危险手工入口自动安全。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-CI-01",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": ".github/workflows 只有 star-history.yml。构建模板放在 scripts/ci/android-build.yml（GitHub 不会执行该路径），内容为 push main/arena/** 触发、装 platforms;android-34/build-tools 34.0.0、Gradle 8.5、只跑 :app:assembleDebug；而工程实际为 targetSdk 37（app/build.gradle:19）、Gradle wrapper 9.3.1、AGP 9.1.1。docs/接手指南.md:297-299 仍写 git tag 推送即触发 CI 自动构建发布，与事实不符。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SUP-01",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ci-make-offline-bundle.sh:136 与 offline-provision.sh:11-13/46-48 把 expected runtimeId/dshVersion/upstreamTag 写死为 dsh-v0.1.2-alpha.2（含固定 upstreamCommit），prepare-dsh-alpha-runtime.sh:10-11 同样；当前 runtime-descriptor.json:5 的 dshVersion 为 0.2.0-rc.2。三处版本身份各自硬编码，无单一来源。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-CI-02",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L180-181 以 DSHA_KEYSTORE 是否存在决定 signed；全部软件检查跑完后 L232 在 not signed 时 raise RuntimeError，被 L286-287 捕获为 INCOMPLETE_OR_FAILED，L291 返回 1。没有私钥的环境（PR CI、其他维护者）无法得到“软件检查通过”的成功退出码。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SUP-02",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ProotBootstrap.installBundledPnpm 在 L1534（比对标记）与 L1540（写标记）两处写死 \"10.34.5\"；plugin-dependencies.py:18、build-standard-runtime.py:22、verify-stability.py:226 又各自写一份；runtime-descriptor.json:142 只记录 pnpm-runtime.bin 的哈希，不含版本号。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-01",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L23-24 先试 app/src/main/assets 再退回 src/main/assets，按 cwd 猜路径；L27-31 读 backup-engine.py 文本，用正则 ADB_ARCHIVE_SHA256 = '...' 与 \"*.whl\": \"<hash>\" 提取期望值作为测试契约。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-02",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "153已加入ColdInstallPlan/Packages真实边界单测；Tar提取、补丁契约、RuntimeTrial核心和Web停止适配仍应扩展可测试接口。禁止为覆盖率伪造平台调用。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-SUP-03",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "RuntimeTools.installManagedAssets 按 managed-runtime-inputs.json 把 adb-shell.py、device-shell-policy.py 安装到 root/.dsh/（内容哈希进 runtime-descriptor）；AdbBridge.injectOwned（L133-146）又把 SCRIPTS（adb-pair.py/adb-shell.py/adb-setup.sh/device-shell-policy.py）以 base64 覆盖写到同一 /root/.dsh/，并以手工常量 SCRIPT_VERSION=\"19\"（L35）写 script-version、在 L262-263 grep 脚本内的 # DSHA_ADB_SCRIPT_VERSION=19 判定是否最新。当前各处均为 19，一致。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-03",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "默认 runner 为 Rc13Instrumentation（build.gradle:23）。L187、L211 以 versionCode=114 构造 Release；UpdateEngine.validatePackage:357 要求 APK 版本码 == release.versionCode 且 > BuildConfig.VERSION_CODE(150)，两者不可同时满足，L190 有效包校验必抛错；错误包“被拒绝”断言因此无区分力。core/OptimizationInstrumentation.java:65 已改为 info.versionCode。L139 硬编码验收机私有插件 dsh-infinite-gen-3。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-04",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L45 执行 SensitiveData.redact(value).substring(0, Math.min(180, value.length()))，长度取自脱敏前的 value；redact 把 token=xxx 等替换成更短的占位后，substring 超出脱敏结果长度抛 StringIndexOutOfBoundsException。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-05",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L72 performClick R.id.config_save，执行 ConfigFragment.java:126 起的保存监听器（API Key 重新加密 L138、端口、运行时、DNS、LAN、悬浮窗等）；finally（L79）只恢复 KEY_BACKUP_KEY。L16 类注释称“发布构建中验证……只写模拟日志和可恢复的布尔偏好”，而该类只在 debug 源集且会写多项真实配置。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-06",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ConfigStore 构造（L22-24）会删除 backup_launch_count；L105 先构造 ConfigStore，L125 再读该键，oldCount 基本恒为 null；L120/L136/L368 的检查点保存与恢复因此无实际作用。L368 在 finally 中做 (Integer) 强转，若值类型不符抛 ClassCastException 会跳过后续 finish()。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-07",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "InstallAuditInstrumentation 的 fixture 模式（L121-123）在 L125 BuildConfig.DEBUG 检查之前返回，L197 文案为“PASS 非调试包”；但该类只在 debug 源集，唯一非 debug 插桩构建 device-backup-audit.init.gradle:33 只复制 LayoutAuditInstrumentation/LayoutPreviewActivity，且 L3-5 未设 DSHA_ENABLE_LEGACY_AUDIT=1 时直接抛错。L283 pending.begin 后 L289-290 的 check 失败会抛出，L292 rollback 不执行；L263 的 missing-environment-<UUID> 夹具目录从不删除。MultiTerminalLanguageAudit:17、StartupRecoveryAudit:16、UiMotionAudit:8 注释同样称“非调试”。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-08",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L34 先执行 BackupManager.runDataTask(c, EnvironmentMaintenance.update)（会停止用户 Web），之后 L36/L40/L41 复制 test-attachment-store.mjs、rc21-test-backup.py、rc21-test-personal.py；debug/assets 只有 web-state-fixture.html，test-attachment-store.mjs 只由 device-backup-audit.init.gradle:24 注入已停用的 deviceAudit 构建，rc21-test-*.py 全仓无生成者，复制必失败。运行前没有检查 Web/RuntimeTasks 是否空闲。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-09",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "register-builtin-plugins.py:57-66 的 DEFAULT_BUILTINS 共 8 个；PluginRepository.readItems:561-562 只按 BuiltinPlugins.internal 隐藏 dsh-base/dsh-web-app/dsh-app-integration，8 个中只有 dsh-app-integration 被隐藏，可见 builtin 为 7 个。UpgradeDeviceAudit:128 要求 ==4，PluginListAudit:34 builtins!=4 即失败，L37 文案“四项内置组件”；BuiltinPlugins.java:26 注释也写“只展示四个功能插件”。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEBUG-01",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "MaintenanceFixture 以 maintenance-fixture-<UUID>- 为前缀（L606）建含完整 rootfs 的夹具（L69 要求 ≥3 GiB），L82/91/229 明示“fixture 原样保留”；Rc21RecoveryAudit 的 rc21-recovery-<UUID>（L19）在 finally（L74）只返回路径不删；StartupDiagnosticsAudit 写 startup-launch.png（L111，前台截图，可能含对话内容）与 startup-diagnostics-last.log（L126）。StorageMaintenance.CACHE（L10）只按固定目录名清理，不含这些前缀/文件。FixtureHarness.failBackup（L560，L581 读取）从未被置 true。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-10",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Fixture 以固定目录 cache/device-policy-audit 为根，L76 mkdirs 失败即抛“测试目录已存在或不可写”。Java finally（L64-67）只停 bridge、清偏好；宿主脚本 finally（L171-177）只删随机 tmp/Download 目录、移除 forward 并 touch done。全仓无删除 cache/device-policy-audit 的代码，token/ready/done 残留。若手工只删 ready 不删 done，L59 循环会立即视宿主已完成。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-11",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L17 注释称“不接触用户会话”；L41 只用 Intent extra url 指向本地夹具服务器，L89 启动用户 MainActivity。WebPreviewActivity.onCreate L187-188：HarnessController.getWebAuthUrl() 非空且不同于 extra 时，用真实鉴权地址替换 authUrl 并清空 cookie/restoreState。upload 模式（L49-65）用反射覆盖 authUrl/baseUrl，默认模式没有。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-12",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "MultiTerminalLanguageAudit:33 与 RuntimeStartupAudit:106 用 getDeclaredField(\"sessions\") 读 PtyTerminalFragment/TerminalFragment 的静态字段；终端标签已迁到 TerminalSessionOwner 的私有实例字段 pty/simple（L13-14），两个 Fragment 只剩 OWNER（PtyTerminalFragment:76）。反射必抛 NoSuchFieldException。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-13",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "四个审计用 ConfigStore.getUiLanguage()（L59-62：按系统解析后的 zh/en）作为原值，恢复时写回 ui_language。偏好原本为 \"system\" 时被写成显式语言。LogPanelAudit:86 用 LanguageController.select(language) 无条件写入，未设置时也会固化；其余三处只在原先存在键时写错。StartupRecoveryAudit:165-166 用原始 prefs 值恢复，是正确写法。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-14",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L18 注释“假日志验证脱敏”；但 L53 用真实 Application 启动 DiagnosticActivity.downloadLogs，L61 断言真实下载完成；ErrorLogRepository 导出包含 linux/ubuntu/root/dsh-web.log 尾部（L105-106）到公共 Download/DSHA/，并写 dsha_log_exports.last_uri（L73）。finally（L88-91）只清 fakeBase 夹具。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-15",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L34-35 定位真实 .offline-extracted（ProotBootstrap.java:61 的就绪标记）并在 L46 改名为 .rc11-audit-ready-marker，仅在 L74 同进程 finally 改回。全仓只有本文件识别 .rc11-audit-ready-marker，主程序无自愈逻辑。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-17",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L48 读取 dsh-client-ui-sidebar-documentpreview/lib/client.js，L50 查找 'var _dsh_pdf_worker_default = '，L52 未找到即失败；生产补丁 pdf-compat-patch.json:3 的 module 是 lib/client.pdf.js。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-18",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "TabletEnvironmentAudit:22 copyAsset(\"tablet-tests/test-environment-data.py\")，Rc21AttachmentAudit:40-41 复制 rc21-test-backup.py/rc21-test-personal.py；find app/src 无 tablet-tests 目录与 rc21-test-*；debug/assets 只有 web-state-fixture.html；prepare-standard-assets.py:101-116 只复制 src/main/assets，没有任何步骤把 tools/test-environment-data.py 打包。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-19",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "两处 finish(failure?1:0, result)：成功回 0（=Activity.RESULT_CANCELED）、失败回 1（RESULT_FIRST_USER）；DevicePolicyAudit:76 等用 RESULT_OK/RESULT_CANCELED。现有脚本（run-backup-device-audit.py:85）按 result=PASS 文本判定，不读 INSTRUMENTATION_CODE。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-20",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "terminalBirth（L169-170）在 BuildConfig.DEBUG 为 true 时抛“必须使用非调试版复测”；该类只在 debug 源集。唯一非调试插桩构建 deviceAudit 只复制 LayoutAuditInstrumentation/LayoutPreviewActivity（init.gradle:33），且未设 DSHA_ENABLE_LEGACY_AUDIT=1 时 L3-5 直接抛错。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-21",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "selftest.py无当前部署入口，该假PASS属于死自检代码而非当前原生DiagnosticActivity；移除旧脚本或退役断言，同时保留执行侧DeviceShellPolicy测试。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUILD-01",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "当前153原始字节描述符通过；Git LF检出仍改变受管JS等输入。实际检测404份tracked文本含CRLF。二进制必须排除归一化；通过规范化实际文本后重新生成所有证明修复，不能只让哈希忽略换行。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-22",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "当前FS实际使用atomic-publish；旧selftest未部署，按死资产处理，不能降级现行原子发布。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-23",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ProcessTerminationTest.ignoredGracefulSignalEscalatesOnlyForPassedProcess 的 unrelated 从未传给 stop()，assertTrue(unrelated.alive) 恒真；ShellQuoteTest.roundTripOnPluginLikeValue 只断言首尾为单引号，不验证转义与还原；StartupHistoryStoreTest L14 传入 reason \"token=secret-value\"，但不断言落盘内容已脱敏（主代码 StartupHistoryStore.java:32 有 redact）。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-24",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "153新Linux父别名夹具已经执行8边界证明，JVM测试FS仍伪device/mode；应读取实际unix属性并保留Windows可靠回退，再增故障注入FS，不能将宿主夹具宣传为Android验证。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-BUILD-02",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "ci-make-offline-bundle.sh:91-95 cp -a app/src/main/assets/{device-shell-guide,task-notifier,status-overlay,web-mobile}，这四个目录在 build150 不存在（实际为 assets/builtin-plugins/dsh-*，共 7 个目录）；脚本 set -euo pipefail，cp 失败即中止。provision-builtin-plugins.sh 只预置 4 个插件，不含 dsh-computer-use-android/dsh-auto-review/dsh-tool-vscreen/dsh-app-integration。唯一调用方是不会被 GitHub 执行的 scripts/ci/android-build.yml:34。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-REPRO-01",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "build.ps1 默认 SDK 为 F:/DSHA/_toolchains/android-sdk，硬编码 NDK 26.3.11579264 的 prebuilt/windows-x86_64 与 clang.exe，输出直接覆盖 jniLibs 下的入库 .so；runtime-descriptor.json:13 只记录该 .so 的 sha256，没有任何检查从 session-launcher.c 重建并比对。tools/dns-compat-fixture.c 全仓无编译或注入引用。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-26",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L191 只收集 src/test/java 下 *Test.java；src/test 中的 JvmBackupFileSystem.java 与 ConfigResetCrashProcess/ConfigurationCrashProcess/EnvironmentCrashProcess/HostRuntimeCrashProcess/HostTransactionCrashProcess 共 6 个辅助类不参与编译，被多个测试引用（如 AutomaticBackupPrunerTest:13），全量运行时 javac cannot find symbol，L145-149 die。失败路径不清理临时目录（L215 rmtree 只在成功末尾执行）。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-27",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "agent-preset-patch明确retiredFor rc2；上游已接管入口，禁止重新套用rc1补丁。清理调用与死测试时必须保留历史格式证据的可读兼容。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-28",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L6 fs.mkdtempSync(path.resolve('app/build/alpha1-016-intake/observer-fixture-'))，未先创建父目录（mkdtemp 不递归），干净检出必然 ENOENT；临时目录不清理。test-alpha2-upgrade.mjs 依赖 app/build/release136 下旧运行时。两者无调用方。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-29",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L9 ADB 固定为 F:\\DSHA\\_toolchains\\android-sdk\\platform-tools\\adb.exe；L12/L22 在 com.dsh.client 的真实 files/linux/ubuntu/root/.dsha-opt-{backup|plugin}-check 建目录，L28-34 push 到 /data/local/tmp/dsha-opt-* 再复制进去；全文件（51 行）无任何 rm/清理。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-30",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "test-conversation-materialized.mjs:7 默认 app/build/locked-dsh-runtime-rc1；test-chat-render-performance.mjs:6 直读 test-runtimes/current.json 的 raw，且 L46-49 errors 恒为空数组、无性能阈值断言；二者均不经 testRuntime（test-runtime-fixture.mjs:8-20 会校验 dsh 版本与 proof 指纹）。同型：test-issue67-startup.mjs:7 硬编码 app/build/rc2-20260911/locked-runtime，且被 verify-stability.py:206 无参调用——门禁实际在 0.1.x 旧运行时上验证 persona 补丁（dshVersion=0.2.0-rc.2）；test-queue-steer、test-plugin-states、test-profile-settings-cli、rc1-browser-fixture 等同样绕过。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-31",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "本轮抽查 test-mobile-delete、test-mobile-gesture-guard、test-notification-actions、test-office-fonts、test-pdf-compat、test-device-shell-policy、overlay-bridge-test、test-queue-steer：grep 源码（排除 docs/audits）除自身外零引用；verify-stability.py、verify-plugin-upgrade-gate.py、run-unit-tests.py、app/build.gradle 均不调用。其中包含设备命令策略（短信/系统目录保护）、DNS 回落、应急恢复资产等安全/可用性关键回归。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-32",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L31 fs.mkdtempSync(path.resolve('app/build/native-plugin-policy-'))，未先确保 app/build 存在；L52-55 finally 只恢复环境变量，不删 sdk/profile 临时目录。同批 test-plugin-resolution-order.mjs:54-56 有清理。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-33",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "setUp（L62）把根目录设为 ROOT/app/build/round2-audit/b/plugin-transaction-tests/<uuid>；tearDown（L65-66）为 pass，注释称刻意保留强杀日志与合成文件。每个子测试留下一棵插件树、事务目录与子进程日志。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-35",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "用例1（L53）与用例3（L73-74）的目标为 /dsha_unit_ws_test_<时间戳>，直接在宿主真实根目录创建（L59/L79 用 rmtree 清理）；非 root 主机在 L74 os.makedirs 抛 PermissionError，root 主机在中途失败时污染 /。L87 以 os.path.isdir(\"relative\") 判断相对路径未创建，依赖当前 cwd。被测 ensure_workspace_dirs（restore-merge.py:1069-1075）对任意绝对路径 makedirs（只要求以 / 开头），这一边界没有测试覆盖。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-36",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L8 environment=kind==='raw'?'DSHA_TEST_RUNTIME':'DSHA_TEST_RUNTIME'，两支相同。testRuntime('managed')（test-office-fonts.mjs:3、test-native-plugin-manager.mjs:8）会读取为 raw 设定的 DSHA_TEST_RUNTIME。有 proof 文件时 L21 以“wrong fixture kind”报错；无 proof 且 DSHA_ALLOW_UNVERIFIED_RUNTIME=1 时（L15-17）直接返回错误类型的目录。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-37",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "旧额外审计APK入口被显式门禁禁止；本轮不启用、不生成。可删除危险构建入口但保留有价值历史源码/报告。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-38",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L10 ADB 固定为 F:\\DSHA\\...\\adb.exe，无参数覆盖；L16 用 assert 校验 id（python -O 下失效），id 随后拼入 run-as 内层 sh 命令（L31 cat folder+id.json）；未传 --script 且未 --finish 时 L21 args.script.read_text 抛 AttributeError；所有调用共用单一 command.json，并发会互相覆盖。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-39",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "153实际运行32项、1项失败，旧SystemLanguage源码文字断言漂移；现行UiLanguagePreferenceTest已有真实锁存/并发边界测试，因此应修测试入口和错误断言，不能为迎合旧断言回退生产锁存实现。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-TEST-41",
+      "group": "G4",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "verify-dsh-upgrade-apk.py 有 35 处、verify-recovery-apk.py 有 16 处 assert 语句承担全部校验（如 verify-recovery-apk.py:22-28 的 overlay 数量/路径/哈希）。调用方 verify-stability.py:239/257 与 verify-plugin-upgrade-gate.py:139-140 用 -B 不带 -O；但 verify-plugin-upgrade-gate.py:22 复制 os.environ，PYTHONOPTIMIZE 会被继承。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-02",
+      "group": "G5",
+      "reviewStatus": "duplicate",
+      "implementationStatus": "linked",
+      "changes": [],
+      "checks": [],
+      "reason": "L300 段标题写“dsh 1.2-alpha 在 Android proot 下的兼容”，L380/L387-388 称注册“rootfs 烘焙的四个内置插件”；实际内置 dsh 为 0.2.0-rc.2（app/build.gradle:22），BuiltinPlugins.DEFAULT_BUILTINS 为 7 个，加 dsh-app-integration 共 8 个签名内置。",
+      "duplicate_of": "D-DOC-08"
+    },
+    {
+      "id": "D-DEAD-01",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "逐项核对：AppBridge 接口全库无实现/引用；ProotBootstrap.uninstall()、TarGzipExtractor.lastSkipped 无调用方；HttpShellService.confirmEnabled()/awaitConfirm() 为 private 且无调用；AdbBridge.grantSecureSettings 的局部变量 pkg=\"com.dsh.client\" 未使用；allow-root-shell/confirm-shell-* 标记只有 tools/test-adb-flow.py 读取；DangerShellGuard 无引用；EnvironmentMaintenance.cleanupCompleted 方法体为空但 Javadoc 称“回收已提交事务”，HarnessController:396 仍调用；validateRuntime(proot) 单参私有重载无调用（调用方均传 false）；deleteTree 在 main 外仅 debug 审计插桩调用；WorkspaceFragment.doRestore 无调用；WelcomeActivity.pages 未用；OverlayStyleDialog 仅被 debug LayoutAuditInstrumentation 使用，ConfigFragment.showOverlayStyleDialog 实际打开 OverlayFragment；VirtualScreenCore 中 tap/swipe/key 已在前面注入路径返回，argv switch 里这三个 case 不可达，且 swipe 时长下限两处不一致（0 vs 50）；inBundlesSection 只被单测调用；adb-shell.py 的 READONLY_CMDS/is_readonly_cmd/request_confirm 主流程不调用；agent-preset-patch.json 因 dshVersion 闸被跳过，相关 js/css 成死资产；adb-pair.py:113 写死 com.dsh.client。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-03",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "脚本扫描 main/java 中“/** */ 后紧跟另一个 /**”的情形共 9 处，例如 HttpShellService.java:401“校验查询串/头中的 token”后紧跟 currentToken() 的 Javadoc，实际修饰的是 currentToken；L742“/app/toast”注释后紧跟屏幕操作注释和一段 // 分隔块。原 token 校验方法的注释已与方法分离。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-04",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "类注释“隐私边界三层”第 1 层称清单 android:packageNames 限定 com.android.settings、别的应用连事件都收不到；实际 accessibility_service_config.xml 不设 packageNames（L3 注释明确说不限定），事件类型 typeWindowStateChanged|typeWindowContentChanged、canRetrieveWindowContent/canTakeScreenshot 均开启，系统会投递全部应用的事件。xml 注释本身与配置一致。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-05",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "不恢复原生审阅。准确说明链接解析、实际摘要和事务校验后自动提交启用；保留用户禁用/安全模式意图。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-06",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "update_changelog 点击回调把中英两份更新说明以 UiText.choose(\"DSHA \"+VERSION_NAME+...) 字符串字面量写在单行（该行 1185 字符，含 12 个 \\n）；与 docs/releases 下的发布说明是两份独立文本。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-07",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "类注释称“骨架版只覆盖最关键的 API key 环境变量形态；完整版按原 SensitiveData 回填”；实际 redact 已有 7 条替换规则：PEM 私钥、Authorization/Cookie 头、查询串 token/api_key 等、KEY=value 形态、URL userinfo、Bearer、sk-/gh*_/github_pat_ 令牌。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-08",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "BuiltinPlugins 类注释称“rootfs 烘焙的 dsh-device-shell-guide 等四个”；DEFAULT_BUILTINS 列 7 个（device-shell-guide、task-notifier、status-overlay、web-mobile、computer-use-android、auto-review、tool-vscreen），再加 dsh-app-integration 共 8 个签名内置。ProotBootstrap 与 register-builtin-plugins.py 注释有同样过时说法。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-09",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "两个技能写死“DSHA 1.2.0-rc1.1 / dsh 0.1.2-rc.1”，前置条件只要求启用 ADB 并配对，身份预期为 uid=2000(shell)；实际 adb-shell.py:475-476 request_native_execution 由原生层先选 root/Shizuku，只在明确 ADB 计划时连接 ADB，身份可能是 root 或 Shizuku uid。build.mjs 下载页/归档名/FAQ 及 testedDsh/compatibleDsha 缺省值、install-page.mjs:9“DSHA rc1.3 或更新”仍是旧版本号体系。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-10",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "README准确描述公开147版本，但没有区分本地153源码；保留公开下载及用户历史主页说明，增加本地源码状态与准确构建指引，不伪造新版已经发布。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-11",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "NOTICES 写 dsh-mobile-nav v2.1.1、包名 @dsh-external/dsh-mobile-nav、许可位于 app/src/main/assets/mobile-nav/LICENSE（目录不存在）、“上游构建产物未作任何修改”并列 5 个 sha256（client.js 6c6ee969…）。实际内置 builtin-plugins/dsh-web-mobile 3.0.3，tools/apply-mobile-client-patches.mjs 对上游 client.js 做十余处替换与 CSS 注入，现内置 lib/client.js sha256 为 3e5568a4…。L5-7 仍写 DSH 0.1.6-alpha.2 与 libreoffice-kit@0.0.1/-wasm@0.0.1，锁文件为 0.1.2/0.1.1。migrateLegacyMobileAdapt 在 app/src 无匹配。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-12",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "附件要求只支持147起升级、恢复外链审阅与当前兼容/开放安装要求冲突；只收敛矛盾陈旧规范，保持历史读取。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-13",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "技能以 adb -s <serial> shell 为主要用法（L15-33），L46 的 curl 127.0.0.1:<port>/exec 示例不带 token，照抄必得 [UNAUTHORIZED]；“Termux 通道”描述的 ~/dsh-bin 包装 pm/sm/settings + termux-dialog 确认在现行实现中不存在；Notes 称 ADB shell 为 uid=2000 且段落重复。内置引导插件 index.js:48 明确禁止用裸 adb。README.md:314 指导用户 cp -r agent-skills/device-shell 直接使用。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-02",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "现行宿主v5不调用backup-prepare/restore-merge。退役未部署脚本可行，已有旧归档读取与NativeBackup恢复能力必须保留。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-14",
+      "group": "G5",
+      "reviewStatus": "duplicate",
+      "implementationStatus": "linked",
+      "changes": [],
+      "checks": [],
+      "reason": "docstring L5-6 只列 4 个插件，L56 注释“认出这四个内置插件”，而 L57-66 DEFAULT_BUILTINS 为 8 个；L384 return found 之后 L385 还有 return None，不可达。",
+      "duplicate_of": "D-DOC-08"
+    },
+    {
+      "id": "D-DEAD-03",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "整目录rglob确实打包死脚本；采用独立部署清单/用途白名单并核对全部APK读取，不能只用正则引用粗略裁掉许可或动态加载资源。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-04",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L129-130 条件要求 argv 为 pnpm、存在 pnpm-lock.yaml 且 args 中没有 --no-frozen-lockfile；唯一走 package_command 的 pnpm 调用 plugin-dependencies.py:289 总是带 --no-frozen-lockfile，因此条件恒假；L131 过滤 --no-frozen-lockfile 在该条件下也是空操作。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-05",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L495-497 已检查 node_modules/<name>/package.json 并返回；L503-505 重复同一条件，中间分支不修改 path 或文件系统，故不可达。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-06",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "rootfs-confirm-install.sh 在 app/src 与 tools 中零部署（仅 scripts/ci/android-build.yml:27 用作离线 rootfs 缓存 key 的 hashFiles 输入）；DangerShellGuard 全库无引用，其注释仍描述 dsh-guard.sh 判据。现行 /confirm 只对 DeviceShellPolicy 判为 READ 的命令返回 YES（HttpShellService:563-567），即便旧守卫复活，rm 等包装也会被一律拒绝。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-15",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "英文版 L97-103 称 dsh-guard.sh 拦截 rm -rf、块设备、ADB 卸载并交给用户决定；中文版 L105-114 已改为原生 DeviceShellPolicy 解析命令、拦截返回 [POLICY_BLOCKED]/126、/confirm 只对只读查询返回 YES。selftest.check_guard 仍以 /root/dsh-bin/.version 与 dsh-confirm.sh 判定守卫，现行运行时不生成这些文件。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-07",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "脚本复核：4 个 drawable 在 app/src 全部源集与 tools 中无引用（WelcomeActivity 已改用 bg_ui2_dot）；dialog_remind_backup 仅出现在 androidTest ThemeInstrumentation:111 的布局测量列表；fragment_install.xml:128 的 install_crash 按钮（visibility=gone）无任何 R.id 绑定。build.gradle:76 minifyEnabled false，未开 shrinkResources。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-08",
+      "group": "G5",
+      "reviewStatus": "duplicate",
+      "implementationStatus": "linked",
+      "changes": [],
+      "checks": [],
+      "reason": "脚本复核：refresh_strings.xml 9 条、dns_strings.xml 5 条、alpha1_strings.xml 5 条、picture_in_picture_strings.xml 2 条，共 21 条在全部源集与 tools 中无 R.string/@string/字面键名引用；values-en 有同名副本。",
+      "duplicate_of": "D-DEAD-10"
+    },
+    {
+      "id": "D-DOC-16",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "历史报告加时间/版本横幅而不改写旧验收事实。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-17",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "按当前开放依赖政策修正文档；依赖生命周期与插件自身source钩子分别如实记录，不夸大所有钩子都已执行。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-09",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "当前verify-plugin-upgrade-gate已调用test-startup-recovery.py，附件所称测试无入口不准确；生产Python checkpoint/recovery部署与执行职责仍需要退役审核，宿主历史v1读取必须保留。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-10",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "本次正则复核（R.string/@string/字面键名，含 values 内交叉引用）：ui_strings.xml 216 条中 128 条无引用、ui_iteration.xml 153 条中 29 条、web_port.xml 1/1、refresh_strings.xml 9/14、dns_strings.xml 5/8、alpha1_strings.xml 5/7、picture_in_picture_strings.xml 2/9；部分未用文案已与现行为矛盾（ui_m0040“默认最新 RC”、ui2_review_hint 与自动启用相反）。styles/dimens/colors 未用项沿用台账结论未逐一复核。代码中存在 getIdentifier 调用（ThemeInstrumentation、LayoutPreviewActivity，均查 layout），不影响字符串判定。build.gradle 未开 shrinkResources，无 lint UnusedResources 门禁。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-18",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "android-standard.md 称“当前预览版为 1.2.0-rc1.2（versionCode 111）”并链接 rc1.2 发布说明；community-standard-feedback.md:28 称“Web UI 由 GeckoView 呈现、Android 8+”。现行为 build150/内置 dsh 0.2.0-rc.2，标准版 Android 11+ 系统 WebView。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-19",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "当前文件63位摘要可静态确认，回填须取可验证原包或官方sidecar；拿不到证据则明确录入错误，禁止补猜缺失字符。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-20",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "Linux CI配置和宿主Linux夹具可本轮实现；设备矩阵、线上连续5次CI及真机证据不能由本地检查推导。Windows开发保持支持，生成物实际字节必须跨平台一致。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-21",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "指南要求每轮运行 tools/pure-logic-test.sh、archive-e2e-test.sh、restore-scope-test.sh，及 tools/pack-local.sh——四个文件均不存在；代码地图中的 PluginController、PluginSpec、PublicDirs、ArchiveProbe、PatchToggle 在 app/src 中无对应类；HarnessController 实在 core/ 且 995 行（指南称约 6200 行）；坑 8 称容器以 --kill-on-exit 启动，ContainerRuntime.java:18 注释说明 argv 不带该参数；L299 称推 git tag 触发 CI 构建发布，而 .github/workflows 只有 star-history.yml。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-11",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "prepare-dsh-alpha-runtime.sh 锁 DSH 0.1.2-alpha.2/pnpm 11.7.0，只在 ci-make-offline-bundle.sh:5 注释中被提及、无执行方，docs/upgrade-dsh-0.1.5-alpha.1.md:46 已称其为旧流程存档但脚本头无弃用标注；L217 对整个 tar 列表用 '(^|/)(packages/|apps/)' 正则判坏条目，会误伤依赖包内合法目录。generate-update-fixtures.py 无调用方，默认 --version-code 114、输出 app/build/rc13-update-fixtures、build-tools 36.0.0、java.exe/keytool.exe（Windows 专用），对 build150 生成的“valid”样本实为降级包。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-22",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "provision-builtin-plugins.sh 由 ci-make-offline-bundle.sh:89-107 在构建离线 rootfs 时执行，向 /root/.dsh 的 home patch 追加 persistent-bash 工具描述：“adb-shell 唯一可用通道，uid=2000，已配对”“Shizuku 桥备用 curl 127.0.0.1:3090/exec”（无 token）。仅在找不到 dsha-device-guide-bash 标记时追加，App 侧 app/src/main 中没有该标记的刷新逻辑。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-12",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "TarRepro 全仓仅自身引用；L42-46 对 PAX 头（x/K）只读取后丢弃、不解析 path（生产实现有 parsePaxPath），L51 直接 new File(dest,name) 无路径穿越校验，也不复刻 safeSymlinkTarget 的绝对→相对转换。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-13",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "全仓（排除 docs/audits）无引用；L25 PREFIX 指向 dsh 包内 node_modules，与 rc.2 覆盖层布局不符；L54-62 只跳过目录，链接条目经 extractfile 当普通文件处理，且不校验 tgz 完整性。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-23",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "README L34-35 写目标 aarch64-linux-android26、common-page-size=16384，L36 附近给 SHA-256 411e90…；build.ps1:1 默认 MinApi 23、:62 common-page-size=4096；L5 现行哈希 0c6b8775… 与 jniLibs/arm64-v8a/libtermux.so 实测 sha256 一致。重编命令写死 F:/DSHA/_toolchains 路径。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-14",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "L433 field_anchor、L437 class_replacement 只定义不使用；L440 实际用内联字符串替换 tracker 声明，内联版本与 class_replacement 内容不同（不含 Bounded LRU 注释块）。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-24",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "修复前文档重复不是新的架构结论；保留历史，注明当前必须看build154复核报告。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DEAD-15",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "grep 'pnpm-env-fix' 仅命中自身（L18 日志路径）与 docs/proroot-experiment-plan.md；RuntimeTools/ProotBootstrap/managed-runtime-inputs.json 均不部署。功能已由插件依赖安装的 --config.package-import-method=copy 取代。脚本改写全局 /root/.npmrc，L50-56 对 pnpm store tmp 无锁 rm -rf。",
+      "duplicate_of": ""
+    },
+    {
+      "id": "D-DOC-25",
+      "group": "G5",
+      "reviewStatus": "open",
+      "implementationStatus": "pending",
+      "changes": [],
+      "checks": [],
+      "reason": "网站静态数据确为公开147。本轮同步本地源码构建数据及本地交付版本，未经本轮明确部署动作不声称dsha.cc上线或GitHub Release已更新。",
+      "duplicate_of": ""
+    }
+  ]
+}

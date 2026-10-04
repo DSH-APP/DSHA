@@ -16,7 +16,14 @@ for file in (JAVA/'runtime').glob('*.java'):
 for tree in ('main','standard','low'):
     for file in (ROOT/f'app/src/{tree}/java').rglob('*.java'):
         source=file.read_text(encoding='utf8')
-        if file.name!='HarnessController.java' and re.search(r'new\s+(?:com\.deepseekharness\.app\.core\.)?HarnessController\s*\(',source):
+        constructors=re.findall(r'new\s+(?:com\.deepseekharness\.app\.core\.)?HarnessController\s*\(',source)
+        if file.name=='HarnessController.java':
+            continue
+        if file.name=='DshaApp.java' and tree=='main':
+            if len(constructors)!=1 or not re.search(
+                    r'harnessOwner\.get\s*\(\s*\(\s*\)\s*->\s*new\s+(?:com\.deepseekharness\.app\.core\.)?HarnessController\s*\(\s*this\s*\)',source):
+                errors.append(str(file)+': application composition must own exactly one lazy controller construction')
+        elif constructors:
             errors.append(str(file)+': independent production controller owner')
 coordinator=(JAVA/'core/MaintenanceCoordinator.java').read_text(encoding='utf8')
 if re.search(r'\b(?:PtyTerminalFragment|TerminalFragment)\b',coordinator):
@@ -34,4 +41,4 @@ tabbar=(JAVA/'ui/TerminalTabBar.java').read_text(encoding='utf8')
 if not re.search(r'render\s*\(View\s+root,\s*TerminalTabs\.ReadOnly<',tabbar):
     errors.append('TerminalTabBar must consume read-only tab view')
 if errors:raise SystemExit('\n'.join(errors))
-print('PASS pure policies; runtime maintenance/configuration/diagnostic ports; single production controller construction')
+print('PASS pure policies; runtime maintenance/configuration/diagnostic ports; exactly one application-owned controller construction')

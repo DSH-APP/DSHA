@@ -1,36 +1,33 @@
 <?xml version='1.0' encoding='utf-8'?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingLeft="18dp" android:paddingRight="18dp" android:paddingTop="14dp" android:paddingBottom="22dp">
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="01 / BUILT FOR YOUR FLOW" android:textSize="12sp" android:textColor="@color/primary" android:includeFontPadding="false" android:letterSpacing=".15" android:layout_marginBottom="16dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/welcome_eyebrow1" android:textSize="12sp" android:textColor="@color/primary" android:includeFontPadding="false" android:letterSpacing=".15" android:layout_marginBottom="16dp" />
         <ImageView android:layout_width="48dp" android:layout_height="48dp" android:src="@drawable/ic_plugins" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_welcome_title1" android:textSize="26sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_welcome_lead1" android:textSize="13sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:lineSpacingExtra="6dp" android:layout_marginTop="14dp" />
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:layout_marginTop="18dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/welcome_item_1_0" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="false" android:focusable="false" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/welcome_item_1_0" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="false" android:focusable="false" android:gravity="center_vertical">
                 <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_chat" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_w1_0" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_ws1_0" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
                 </LinearLayout>
-                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
             </LinearLayout>
             <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/welcome_item_1_1" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="false" android:focusable="false" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/welcome_item_1_1" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="false" android:focusable="false" android:gravity="center_vertical">
                 <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_terminal" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_w1_1" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_ws1_1" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
                 </LinearLayout>
-                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
             </LinearLayout>
             <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/welcome_item_1_2" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="false" android:focusable="false" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/welcome_item_1_2" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="false" android:focusable="false" android:gravity="center_vertical">
                 <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_plugins" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_w1_2" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_ws1_2" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
                 </LinearLayout>
-                <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

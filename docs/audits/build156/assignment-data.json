@@ -1,0 +1,1106 @@
+{
+  "lane": "data",
+  "source": "D:\\qq\\文件\\DSHA-deliverables-20261002\\DSHA-deliverables-20261002",
+  "baselineBuild": 155,
+  "items": [
+    {
+      "source": {
+        "id": "D-SEC-07",
+        "category": "安全与隐私",
+        "severity": "P0",
+        "evidence": "静态核实",
+        "title": "SAF DocumentsProvider 可浏览/读取 rootfs 内桥 token、.credentials.yaml、.env",
+        "where": "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java:70-74,111,156; backup/UserDataLayout.java:58-68; AndroidManifest.xml:121-128; 对照 util/BridgePathPolicy.java:13-19,75,103,123",
+        "recommendation": "在 UserDataLayout.privateDocument（或 DshaDocumentsProvider.resolve）中复用 BridgePathPolicy.deniedHostPath/deniedGuestView 判定：凭据文件（.bridge_token、.credentials.yaml、.credentials、.env*、.dsha-apikey、.anonymous-user-id、/root/.dsha-* 状态文件）在 queryChildDocuments 中隐藏、openDocument 拒绝；抽一个共享 CredentialPaths 常量类供桥、SAF、备份（D-SEC-21/22）共用。",
+        "acceptance": "JVM 单测：UserDataLayout/DshaDocumentsProvider 对上述路径 privateDocument==true 且列目录不返回；新增策略一致性测试：遍历 CredentialPaths，断言 BridgePathPolicy、SAF、备份三处均拒绝；真机用 DocumentsUI 打开 DSHA 树核对 .dsh 下凭据不可见。",
+        "depends_on": "D-SEC-15",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-07",
+        "title": "SAF DocumentsProvider 可浏览/读取 rootfs 内桥 token、.credentials.yaml、.env",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P0",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java",
+          "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java",
+          "app/src/main/java/com/deepseekharness/app/util/BridgePathPolicy.java",
+          "app/src/main/java/com/deepseekharness/app/util/CredentialPaths.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "25 actual-source isolated JVM tests PASS",
+          "current-source behavior assertions PASS"
+        ],
+        "residual": [
+          "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-15",
+        "category": "安全与隐私",
+        "severity": "P0",
+        "evidence": "脚本实测",
+        "title": "桥路径拒绝表 /root/.dsha- 前缀条目失效，且工作区 .env 可经 /app/export 落公共目录",
+        "where": "app/src/main/java/com/deepseekharness/app/util/BridgePathPolicy.java:38-53,75,177-183; HttpShellService.appExport/appReadFile; backup/NativeConfigurationReset.java:21-24,39; app/src/test/.../BridgePathPolicyTest.java:57; tools/test-dsha-ui-regressions.py:207-210",
+        "recommendation": "①BridgePathPolicy 增加 DENIED_NAME_PREFIXES（\".dsha-\"）按 basename 前缀匹配 /root 下文件，或改为显式列出全部 15 个 /root/.dsha-* 路径；②增加按文件名拒绝：.env、.env.*、.credentials*、.bridge_token、.dsha-apikey、.npmrc（任意目录）；③与 D-SEC-07/21/22 共用 CredentialPaths；④改 BridgePathPolicyTest:57 为 denied==true，并增加 /root/.dsha-web.pid、/root/deepseek-harness/.env 断言；test-dsha-ui-regressions.py 改为行为断言。",
+        "acceptance": "./gradlew testDebugUnitTest 中 BridgePathPolicyTest 新用例通过（.dsha-* 与 .env 被拒）；设备审计 tools/device-policy-device-audit.py 新增 /app/export?path=/root/deepseek-harness/.env 返回拒绝且 Download/DSHA 无新文件。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-15",
+        "title": "桥路径拒绝表 /root/.dsha- 前缀条目失效，且工作区 .env 可经 /app/export 落公共目录",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P0",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/util/BridgePathPolicy.java",
+          "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "app/src/test/java/com/deepseekharness/app/util/BridgePathPolicyTest.java",
+          "app/src/test/java/com/deepseekharness/app/util/CredentialPathsTest.java",
+          "app/src/main/java/com/deepseekharness/app/util/BridgeFileSnapshot.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "25 actual-source isolated JVM tests PASS",
+          "current-source behavior assertions PASS",
+          "Bridge text read/list use anchored fs and source identity checks",
+          "Share/export private verified snapshots; original/preexisting destination/size cap actual-disk JVM tests PASS"
+        ],
+        "residual": [
+          "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。 Canonical guest-path authorization still follows app-selected mappings; same-UID plugin code is authorized code and is not isolated by bridge policy. System chooser/MediaStore device use not exercised."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-16",
+        "category": "安全与隐私",
+        "severity": "P0",
+        "evidence": "静态核实",
+        "title": "full 备份无条件把工作区 .env 与未脱敏 dsh-web.log 打进导出到 Download 的归档",
+        "where": "app/src/main/assets/backup-engine.py:27-32,320-337; BackupManager.java:155-161; backup/NativeConfigurationReset.java:21-24; core/ConfigStore.isBackupKey",
+        "recommendation": "backup-engine.py 增加 --include-key 参数（BackupManager 按 config.isBackupKey() 传入）；为假时跳过 .env 或复制时剔除 DEEPSEEK_API_KEY 等 *_KEY/TOKEN 行；dsh-web.log 默认不入备份（或仅在用户勾选诊断时、经脱敏后加入）。结合第六节 D-BAK-01 决策（自动备份不加密或用户自设密码），未加密的归档必须不含凭据。",
+        "acceptance": "Python 单测（tools/test-backup-engine.py）：构造含 DEEPSEEK_API_KEY 的 .env，--include-key=0 时 full 归档内 .dsha-workdir/.env 不存在或不含 key，且不含 dsh-web.log；=1 时按设计包含；设备审计：关闭开关做 full 备份后 tar -xOf 归档 | grep 测试 key 无命中。",
+        "depends_on": "D-PRIV-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-16",
+        "title": "full 备份无条件把工作区 .env 与未脱敏 dsh-web.log 打进导出到 Download 的归档",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P0",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/assets/backup-engine.py",
+          "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+          "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+          "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+          "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+          "tools/test-backup-engine.py"
+        ],
+        "evidenceReferences": [
+          "changes-G3.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Legacy transition default export omits whole workspace .env and raw dsh-web.log; explicit native API Key contract remains; originals retained",
+          "51 backup-engine tests completed: 36 PASS, 15 platform-specific skips"
+        ],
+        "residual": [
+          "Current project backup preserves user-selected project bytes; not claimed globally secret-free"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-21",
+        "category": "安全与隐私",
+        "severity": "P0",
+        "evidence": "静态核实",
+        "title": "v5 备份机器状态名单写错桥 token 文件名，.bridge_token 会作为普通设置进入备份",
+        "where": "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java:9-12; app/src/test/java/com/deepseekharness/app/backup/DataRootPolicyTest.java:11-12; backup/NativeDataLocations.java:64-70,147; backup/NativeBackupJobs.java:251; backup/NativeRestoreTargets.java:63-67; HttpShellService.java:181; assets/backup-engine.py:35-40",
+        "recommendation": "MACHINE 加入 \".bridge_token\"、\".anonymous-user-id\"（保留旧名兼容）；更好地改为引用共享 CredentialPaths 常量（与 BridgePathPolicy、SAF 共用，见 D-SEC-07/15）；DataRootPolicyTest 改为断言 \".bridge_token\" 与 \".anonymous-user-id\" 为 machine。",
+        "acceptance": "JVM 单测：DataRootPolicyTest 新断言通过；NativeDataLocations 测试夹具中 .dsh/.bridge_token 被标为 DEVICE_SPECIFIC_STATE 并不进入 sources 的可恢复项；设备审计：做一次无密码 v5 备份，解包确认无 .bridge_token。",
+        "depends_on": "D-SEC-15",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-21",
+        "title": "v5 备份机器状态名单写错桥 token 文件名，.bridge_token 会作为普通设置进入备份",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P0",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java",
+          "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+          "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "app/src/test/java/com/deepseekharness/app/backup/DataRootPolicyTest.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "25 actual-source isolated JVM tests PASS",
+          "current-source behavior assertions PASS"
+        ],
+        "residual": [
+          "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-22",
+        "category": "安全与隐私",
+        "severity": "P0",
+        "evidence": "静态核实",
+        "title": "系统 Auto Backup/设备迁移整目录纳入 user-data-v5/，STABLE 布局下凭据随之离机",
+        "where": "app/src/main/res/xml/data_extraction_rules.xml:5,16; app/src/main/res/xml-v28/backup_rules.xml:4; backup/UserDataLayout.java:10,40; backup/DataRootPolicy.java:13; res/values/ui_iteration.xml:60",
+        "recommendation": "data_extraction_rules.xml 与 backup_rules.xml 把 user-data-v5/ 改为与 legacy 相同的白名单（user-data-v5/dsh/sessions/ 等），或保留目录 include 并追加 <exclude> user-data-v5/dsh/.credentials.yaml、.env、.dsha-apikey、.bridge_token、.anonymous-user-id；由生成脚本从共享 CredentialPaths 产出排除项，避免两种布局再分叉。",
+        "acceptance": "静态门禁：解析两份 XML，断言凭据文件在两种布局下均被排除、STABLE 与 LEGACY include 集合对称；真机：adb shell bmgr backupnow 后用 local transport 检查备份内容无凭据（或 Android 12+ adb shell cmd backup 测试工具）。",
+        "depends_on": "D-SEC-21",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-22",
+        "title": "系统 Auto Backup/设备迁移整目录纳入 user-data-v5/，STABLE 布局下凭据随之离机",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P0",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/res/xml/data_extraction_rules.xml",
+          "app/src/main/res/xml-v28/backup_rules.xml",
+          "app/src/main/res/xml/backup_rules.xml",
+          "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "25 actual-source isolated JVM tests PASS",
+          "system XML allow/exclude checks PASS"
+        ],
+        "residual": [
+          "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-BAK-01",
+        "category": "备份、恢复与数据",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "自动备份内部随机密钥丢失后旧自动备份不可解密，仅抛错误码",
+        "where": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java:99-110",
+        "recommendation": "按用户决策 D-BAK-01：删除内部随机密码机制。自动副本改为不加密（存放在应用私有目录并在 UI 明示）或使用用户自设的备份密码；重构时同步处理 D-SEC-16/22 的凭据外泄面（不加密时自动副本默认不含 .credentials.yaml/API Key）。迁移：已有内部密钥加密的自动副本在密钥仍可用时提供一次性“转为新格式/导出”，并补 AUTOMATIC_KEY_MISSING 的中英文文案。",
+        "acceptance": "单测：删除 automatic-backup-key 后新建自动备份并可恢复；grep 'automatic-backup-key' 在 main 中仅剩迁移代码；UI 文案表含 AUTOMATIC_KEY_MISSING 映射（或该错误码不再存在）；自动副本内容检查不含凭据文件。",
+        "depends_on": "D-BUG-06",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-BAK-01",
+        "title": "自动备份内部随机密钥丢失后旧自动备份不可解密，仅抛错误码",
+        "sourceGroup": "G3",
+        "sourceSeverity": "P1",
+        "reviewStatus": "accepted_policy",
+        "status": "accepted_policy",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+          "app/src/main/java/com/deepseekharness/app/backup/PasswordFreeBackupExport.java",
+          "app/src/main/java/com/deepseekharness/app/backup/PortableBackupEnvelope.java",
+          "docs/audits/build154/POLICY.md"
+        ],
+        "evidenceReferences": [
+          "changes-G3.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Full source review disposition retained from review-G3.json; no policy reversal"
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "accepted_policy"
+      }
+    },
+    {
+      "source": {
+        "id": "D-BAK-03",
+        "category": "备份、恢复与数据",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "格式化会删除公共存储 Documents/dshdata 整个目录，与用户决策相反",
+        "where": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java:47-73,203-206; ui/ExtractActivity.java:191-192",
+        "recommendation": "按用户决策 D-BAK-03：格式化只删私有数据，移除 FactoryReset 流程中 eraseLegacyPublicDataBestEffort 调用（及 public eraseLegacyPublicData 入口若无其他调用方则删除），STAGE_PUBLIC 进度阶段一并去掉；ExtractActivity:191-192 中英文文案改为“Documents/dshdata 不会被删除”。",
+        "acceptance": "FactoryReset 单测（BackupFileSystem 夹具）：格式化后 Documents/dshdata 及其内容仍在；grep 'eraseLegacyPublicData' app/src/main 为 0；文案测试/截图确认新文案。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-BAK-03",
+        "title": "格式化会删除公共存储 Documents/dshdata 整个目录，与用户决策相反",
+        "sourceGroup": "G3",
+        "sourceSeverity": "P1",
+        "reviewStatus": "accepted_policy",
+        "status": "accepted_policy",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+          "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+          "docs/audits/build154/POLICY.md"
+        ],
+        "evidenceReferences": [
+          "changes-G3.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Full source review disposition retained from review-G3.json; no policy reversal"
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "accepted_policy"
+      }
+    },
+    {
+      "source": {
+        "id": "D-BAK-04",
+        "category": "备份、恢复与数据",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "保留区、事务归档与插件删除记录只增不减，无容量上限与用户清理入口",
+        "where": "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java:187,191; backup/HostOperationArchive.java; app/src/main/assets/plugin-transactions.py:78-103,128-132,209-216,405-408; assets/plugin-lifecycle.py:42-48; assets/plugin-manager.py:622; assets/rc1-migration.py:211-213,265-270",
+        "recommendation": "按用户决策 D-BAK-04：1) 为保留区、completed 归档、插件删除/历史/失败记录设置容量上限（总字节与条数，超限时 UI 提示，不自动删除用户数据）；2) 在设置/数据页增加手动清理入口：列出各类保留项与占用，经二次确认（可选先导出）后删除；删除走事务并保留最小审计记录；3) plugin-manager.py:622 文案改为“已删除（原件保留在回收区，可在数据页清理）”。",
+        "acceptance": "单测/脚本测：plugin-transactions 删除后新增 purge 命令可释放 completed/delete-* 并更新占用统计；instrumentation 测试覆盖清理入口二次确认；超出上限时 RetainedCatalogue 报告 OVER_LIMIT 状态。",
+        "depends_on": "D-DUP-07",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-BAK-04",
+        "title": "保留区、事务归档与插件删除记录只增不减，无容量上限与用户清理入口",
+        "sourceGroup": "G3",
+        "sourceSeverity": "P1",
+        "reviewStatus": "accepted_policy",
+        "status": "accepted_policy",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+          "app/src/main/assets/plugin-transactions.py",
+          "docs/audits/build154/POLICY.md"
+        ],
+        "evidenceReferences": [
+          "changes-G3.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Full source review disposition retained from review-G3.json; no policy reversal"
+        ],
+        "residual": [],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "accepted_policy"
+      }
+    },
+    {
+      "source": {
+        "id": "D-IO-02",
+        "category": "备份、恢复与数据",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "TarGzipExtractor 的 symlink/硬链接/chmod 失败被 catch Throwable 吞掉，解压不完整仍报成功；lastSkipped/lastSkipNote 是死字段",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java:31-33,172-192,252-255",
+        "recommendation": "统计每类跳过/失败（unsafeLink、symlinkFailed、hardlinkFailed、chmodFailed、unknownType），解压结束返回 ExtractReport；任一 symlinkFailed/hardlinkFailed/chmodFailed>0 视为失败（离线包是受信产物，不应出现）；unsafeLink 记录路径并失败闭合。删除 lastSkipped/lastSkipNote。",
+        "acceptance": "TarGzipExtractorTest：构造包含符号链接的 tar，在目标处预置同名文件使 symlink 失败，断言抛出带路径的异常；正常包 ExtractReport 全零；grep 门禁 lastSkipped 为 0。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-IO-02",
+        "title": "TarGzipExtractor 的 symlink/硬链接/chmod 失败被 catch Throwable 吞掉，解压不完整仍报成功；lastSkipped/lastSkipNote 是死字段",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/ArchiveFileBoundary.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "See review-G2.json evidence; production owner final ledger required",
+          "Link/mode failures contain path/type; unsafe parent, leaf and graph escape reject before link publication",
+          "Valid link indirection preserved"
+        ],
+        "residual": [
+          "对同目标已有等价链接可幂等成功，实际链接/模式失败必须带路径失败闭合； signed overlay不能无条件忽略EEXIST或跳过错误。",
+          "Host tests use actual disk for bytes and explicit Windows link-shape adapter; real Android syscalls not exercised."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-IO-03",
+        "category": "备份、恢复与数据",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "runtime 包仍大量用 java.io.File 直接读写，未走 backup 包的安全文件系统层",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java（8 处 FileOutputStream/Compat.write/append，28 处 delete/mkdirs）; runtime/RuntimeTools.java; runtime/WebProcessManager.java; util/Compat.java:37-50; backup/AndroidBackupFileSystem.java",
+        "recommendation": "把 BackupFileSystem/AndroidBackupFileSystem 提升为 util 层通用 SafeFileSystem；runtime 中对 rootfs 内路径的写入一律改用它（拒绝符号链接、原子写、目录 fsync），删除 Compat.write/append 或限定为仅写 App 私有且非 rootfs 的路径。先改写入点，再改删除点。",
+        "acceptance": "grep 门禁：app/src/main/java/.../runtime 中 'new FileOutputStream|Compat.write\\(|Compat.append\\(' 计数为 0；新增单测：rootfs 内目标为指向外部文件的符号链接时写入被拒绝且外部文件不变。",
+        "depends_on": "D-IO-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-IO-03",
+        "title": "runtime 包仍大量用 java.io.File 直接读写，未走 backup 包的安全文件系统层",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "app/src/main/java/com/deepseekharness/app/util/Compat.java",
+          "app/src/main/java/com/deepseekharness/app/backup/AndroidBackupFileSystem.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeAssetFiles.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "RuntimeAssetFilesTest: atomic real files/idempotence/directory preservation/lexical authority: 3 PASS"
+        ],
+        "residual": [
+          "Android descriptor-open parent guards preserved; Linux inode proof separate from Windows filesystem fixture."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-RES-02",
+        "category": "备份、恢复与数据",
+        "severity": "P1",
+        "evidence": "静态核实",
+        "title": "rc1 迁移 prepare 每次失败都新建 generation 并全量快照，失败不清理且无空间预检",
+        "where": "app/src/main/assets/rc1-migration.py:13,208-228,263-270; app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java:180-183",
+        "recommendation": "开始快照前用 os.statvfs 预估所需空间（源总大小 + 余量），不足直接以 MIGRATION_SPACE_INSUFFICIENT 失败而不复制；失败分支删除本代已复制的 snapshots（保留 prepare.json 作证据）；同一输入的失败代最多保留 1 个。按第六节 D-BAK-04 决策，将迁移保留区纳入容量上限与手动清理入口。",
+        "acceptance": "rc1 迁移脚本测试（Python unittest）：模拟第 N 个文件复制时 ENOSPC，断言本代 snapshot 目录被清空且只剩 prepare.json；连续 3 次失败后 generations 下失败代不超过 1 个；statvfs 返回不足时不产生任何复制。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-RES-02",
+        "title": "rc1 迁移 prepare 每次失败都新建 generation 并全量快照，失败不清理且无空间预检",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P1",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/assets/rc1-migration.py",
+          "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+          "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+          "tools/test-rc1-migration.py"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "21 tests successful; low-space zero snapshot, three identical failures no snapshot growth, changed input independent generation, ordinary complete fast path no scan"
+        ],
+        "residual": [
+          "2 symlink tests skipped by Windows privilege; source originals/corrupt/partial snapshots retained; full Linux proof still pending."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-IO-01",
+        "category": "备份、恢复与数据",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "原子写有多套实现，BackupFileSystem.atomic 之外约 10 个文件自写 tmp+rename 且不 fsync 父目录",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java:155-161; backup/BackupFileSystem.java:56-98; backup/AndroidBackupFileSystem.java:121; 另见 bridge/AdbBridge.java、core/ColdInstallDiagnostics.java、core/EnvironmentDataBackup.java、data/DownloadsExport.java、recovery/RecoveryRuntime.java、util/AdbWheelCache.java、util/MaintenanceTransaction.java、util/RuntimeUpdateTransaction.java、util/StartupHistoryStore.java",
+        "recommendation": "抽一个 util/AtomicFiles.write(File target, byte[] data)：写同目录唯一临时名→fsync 文件→rename→fsync 父目录→失败删临时文件；拒绝目标为符号链接。所有自写实现（含 writeMarker、MaintenanceTransaction、RuntimeUpdateTransaction、StartupHistoryStore）迁到它或 BackupFileSystem.atomic；对需要 previous 回退语义的事务记录用后者。",
+        "acceptance": "AtomicFilesTest 覆盖成功、rename 失败清理、目标为符号链接拒绝；grep 门禁：main 源集中 renameTo( 只允许出现在 AtomicFiles 与 AndroidBackupFileSystem。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-IO-01",
+        "title": "原子写有多套实现，BackupFileSystem.atomic 之外约 10 个文件自写 tmp+rename 且不 fsync 父目录",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/backup/BackupFileSystem.java",
+          "app/src/main/java/com/deepseekharness/app/backup/AndroidBackupFileSystem.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+          "app/src/main/java/com/deepseekharness/app/core/ColdInstallDiagnostics.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "app/src/main/assets/runtime-patches.json",
+          "app/src/main/java/com/deepseekharness/app/util/ManagedPatchChain.java"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "ManagedPatchChainTest + actual raw rc2 registry integration: 3 PASS; full module repair/idempotence/no partial fallback"
+        ],
+        "residual": [
+          "Retired recipes kept for historical evidence but not executed; final archive proof owned by root."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-IO-04",
+        "category": "备份、恢复与数据",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "DiagnosticLog 每条事件截断重写整个文件，崩溃处理器中断写入会丢失全部历史",
+        "where": "app/src/main/java/com/deepseekharness/app/core/DiagnosticLog.java:12-25,34-44; util/Compat.java:37-41; core/ColdInstallDiagnostics.java:31-36",
+        "recommendation": "改为追加写（O_APPEND，单行一次 write），超过上限时轮转为 diagnostic-events.1.txt（rename），读取时合并两份尾部；或与 ColdInstallDiagnostics 一样用 AtomicFile + 拒绝符号链接。崩溃路径只追加一行并 fsync。",
+        "acceptance": "DiagnosticLogTest：连续写 10000 条后文件大小不超过上限且最新条目在尾部；模拟写入中途抛异常后旧内容仍在；目标为符号链接时不写入。",
+        "depends_on": "D-IO-01",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-IO-04",
+        "title": "DiagnosticLog 每条事件截断重写整个文件，崩溃处理器中断写入会丢失全部历史",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "source_corrected_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/core/DiagnosticLog.java",
+          "app/src/main/java/com/deepseekharness/app/core/ColdInstallDiagnostics.java",
+          "app/src/main/java/com/deepseekharness/app/util/Compat.java"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "See review-G2.json evidence; production owner final ledger required"
+        ],
+        "residual": [
+          "有界追加/耐久轮换或安全AtomicFile，保留脱敏和旧失败；崩溃路径避免重写全部历史。"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "source_corrected_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-PRIV-02",
+        "category": "安全与隐私",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "SensitiveData.redact 依赖字段名/固定前缀，无前缀密钥漏脱敏且每次现编译正则",
+        "where": "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java:12-21; docs/1.2-upgrade-report.md:130-131,169-170",
+        "recommendation": "预编译 Pattern 为 static final；新增规则：AIza[0-9A-Za-z_-]{35}、eyJ[\\w-]+\\.[\\w-]+\\.[\\w-]+（JWT）、xox[abpr]-、AKIA[0-9A-Z]{16}，以及宿主已知秘密精确替换（当前 API key、桥 token、LAN token 由调用方注册到 redact 的已知值集合）；修正 docs/1.2-upgrade-report.md 的表述为“尽力脱敏”。",
+        "acceptance": "JVM 单测 SensitiveDataTest：覆盖 AIza、JWT、AKIA、无前缀已注册 key、URL 路径中的 key 均被替换；性能测试 10k 次调用耗时较现状下降；文档门禁不再出现“统一脱敏/NO_UNREDACTED_VALUES”绝对化表述（或改为条件说明）。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-PRIV-02",
+        "title": "SensitiveData.redact 依赖字段名/固定前缀，无前缀密钥漏脱敏且每次现编译正则",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java",
+          "docs/1.2-upgrade-report.md",
+          "app/src/test/java/com/deepseekharness/app/util/SensitiveDataTest.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "25 actual-source isolated JVM tests PASS",
+          "current-source behavior assertions PASS"
+        ],
+        "residual": [
+          "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。"
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-RES-01",
+        "category": "备份、恢复与数据",
+        "severity": "P2",
+        "evidence": "候选",
+        "title": "图片草稿 IndexedDB 记录只在本会话清空附件时删除，孤儿草稿会挤占 256MB 总配额",
+        "where": "app/src/main/assets/app-integration/client.js:2,7,47-60,61-98",
+        "recommendation": "启动或打开会话列表时，按当前存在的会话 id 清理 drafts 中的孤儿记录；每条记录加 updatedAt，超过 30 天的草稿删除；配额不足时先淘汰最旧的非当前会话草稿再重试一次写入。",
+        "acceptance": "在 tools 下已有的 Node 测试框架（如 overlay-bridge-test.mjs 同类）中用 fake-indexeddb 写测试：存在已删除会话的草稿时清理后不再计入配额；超过配额时淘汰最旧记录后新草稿写入成功。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-RES-01",
+        "title": "图片草稿 IndexedDB 记录只在本会话清空附件时删除，孤儿草稿会挤占 256MB 总配额",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "mitigated_with_residual",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/assets/app-integration/client.js"
+        ],
+        "evidenceReferences": [
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Final bounded disposition: Draft store bounded collection receipt retains documented quota/device limits."
+        ],
+        "residual": [
+          "Draft collection is bounded in host/browser fixtures; physical device quota and lifecycle cases remain unverified."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_with_residual"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-01",
+        "category": "安全与隐私",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "TarGzipExtractor 链接越界校验为纯文本归一，不解析已解出的链接链",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java:166,173-191,201-216,219-237,240-243; 调用方 AdbBridge.java:286, RecoveryRuntime.java:114, ProotBootstrap.java:1060,1374,1380,1410,1480,1489,1537, ManagedRuntimeAssets.java:114, RuntimeTools.java:409",
+        "recommendation": "在 TarGzipExtractor 中：①解析每个条目父目录时用 getCanonicalPath 逐级校验（或拒绝任何经过已解出符号链接的路径）；②writeFile 改为先 Files.deleteIfExists 再以 NOFOLLOW_LINKS/CREATE_NEW 打开；③符号链接延后到全部普通文件写完后再创建并复核（与 plugin-manager.py:188-256,369-373 语义一致）。同时在类注释标明“仅限可信输入”，删除或修正 tools/TarRepro.java。",
+        "acceptance": "新增 JVM 单测（app/src/test/.../TarGzipExtractorTest）：构造 'a→..' 后写 'a/x'、'p/q/r→../..' 链式、'y→.'+'x→y/..'、硬链接指向外部等 tar，断言 dest 外无文件且抛异常；./gradlew testDebugUnitTest 通过；AdbWheelBundleTest 仍通过。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-01",
+        "title": "TarGzipExtractor 链接越界校验为纯文本归一，不解析已解出的链接链",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "mitigated_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+          "app/src/main/java/com/deepseekharness/app/runtime/ArchiveFileBoundary.java",
+          "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "51 current-source JVM tests PASS",
+          "Actual generated cold asset sequence and repeated dsh extraction PASS with explicit filesystem shape fixture"
+        ],
+        "residual": [
+          "Android syscall/device extraction not run; future signed special types fail with path; hardlink assets normalize verified bytes and current shipped assets contain no hardlinks."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "mitigated_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-02",
+        "category": "安全与隐私",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "宿主按 rootfs 相对路径读写容器文件时跟随 guest 可控符号链接",
+        "where": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java:552-568,571-589,592-596(containerFile); 调用 PluginRepository.java:501,520; core/EnvironmentDataBackup.java:54; BackupManager.java:186; core/HarnessController.java:457",
+        "recommendation": "新增 ProotBootstrap.safeContainerFile：getCanonicalPath 必须位于 rootfs 规范路径内且目标不是符号链接；写入改为同目录临时文件+Os.rename（rename 不跟随目标链接），或用 Os.open(O_NOFOLLOW|O_CREAT|O_TRUNC)。上述 5 处统一改用；威胁模型（D-SEC-00）写明这是防误操作而非安全措施。",
+        "acceptance": "JVM/仪器测试：在 rootfs/root 预置 dsh-web.log→外部文件链接，执行截断与 push/pull，断言外部文件内容不变且操作报错或替换为普通文件；grep 'new File(proot.getRootfsDir()' 与 'Compat.write(new File(.*getRootfsDir' 无未经 safeContainerFile 的写入（可做成 tools 静态门禁）。",
+        "depends_on": "D-SEC-00",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-02",
+        "title": "宿主按 rootfs 相对路径读写容器文件时跟随 guest 可控符号链接",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "app/src/main/java/com/deepseekharness/app/core/EnvironmentDataBackup.java",
+          "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+          "app/src/main/java/com/deepseekharness/app/util/ContainerFileTransfers.java",
+          "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+          "app/src/test/java/com/deepseekharness/app/util/ContainerFileTransfersTest.java",
+          "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
+        ],
+        "evidenceReferences": [
+          "changes-container-transfer.json",
+          "final-disposition-gaps.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "8 meaningful transfer tests PASS on actual disk with explicit link-model adapter: STABLE plugin roundtrip/source preserved, platform alias and absolute guest links, granted public-storage mapping, escape/malformed path, safe dangling writes/failed reads, descriptor replacement/create failure, rename replacement race, streamed multi-MiB/domain change",
+          "2 existing GuestDataResolver tests PASS; full isolated JVM subset92 PASS",
+          "Current-source ProotBootstrap/GuestDataResolver/new boundary standalone Java17 compilation against existing actual dependencies PASS",
+          "RuntimeWorkPort keeps existing task barrier held through descriptors/verification/publication"
+        ],
+        "residual": [
+          "No phone/kernel matrix. Windows link behavior uses explicit link adapter; descriptor implementation Android syscalls are existing verified boundary. Same-UID code is authorized code, not an isolated attacker domain. A failed post-publication domain check keeps both copy and retained original rather than overwriting unknown state."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-SEC-08",
+        "category": "安全与隐私",
+        "severity": "P2",
+        "evidence": "静态核实",
+        "title": "旧版恢复从 .dsha-apikey 回填 Keystore 后不删除明文文件",
+        "where": "app/src/main/java/com/deepseekharness/app/BackupManager.java:112-114,287,315-327; 对照 backup/NativeRestoreTargets.java:118-131, backup/NativeDataLocations.java:65-68",
+        "recommendation": "syncApiKeyFromRootfs 在 saveApiKey 成功且 ConfigStore 读回一致后删除（先覆盖为空再 delete）rootfs/root/.dsh/.dsha-apikey；回填失败时也不保留到下一次（记录告警）。按第六节决策旧链路只保留只读恢复，删除逻辑放在该只读恢复转换步骤中；启动时一次性清理残留文件。",
+        "acceptance": "JVM/仪器测试：构造含 .dsha-apikey 的旧版归档恢复后断言 Keystore 有 key 且文件不存在；启动清理测试断言残留被删除；grep 'syncApiKeyFromRootfs' 调用点均在删除测试覆盖下。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-SEC-08",
+        "title": "旧版恢复从 .dsha-apikey 回填 Keystore 后不删除明文文件",
+        "sourceGroup": "G1",
+        "sourceSeverity": "P2",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+          "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+          "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+          "tools/test-backup-engine.py"
+        ],
+        "evidenceReferences": [
+          "changes-G1.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Removed both obsolete automatic active .dsha-apikey readbacks and the unused helper; nativeConfig import unchanged, explicit native file-key selection retained",
+          "3 current engine behavior/source-contract tests PASS: FULL never publishes raw historical key and archive/original previous tree preserved; partial valid restore preserves unselected key; out-of-scope key rejects; no candidate does not fabricate nativeConfig",
+          "Current-source production javac PASS with G2 public Context port"
+        ],
+        "residual": [
+          "Historical key-only archives require the existing explicit NativeRestoreTargets includeKey choice; unknown old active originals and input archives are not deleted or read into configuration. Android Keystore itself not exercised."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    },
+    {
+      "source": {
+        "id": "D-BAK-02",
+        "category": "备份、恢复与数据",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "环境重建峰值空间为估算值，未实测",
+        "where": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java:43,83,94,130-131; backup/EnvironmentRebuildTransaction.java",
+        "recommendation": "在重建流程各阶段记录 getUsableSpace 到诊断事件，用真机/模拟器跑一次典型数据量的重建取实测峰值，据此校准系数；预检失败文案给出所需与可用空间。",
+        "acceptance": "instrumentation 测试：重建过程每阶段写入 free-space 诊断记录；实测报告给出峰值与预检值的比值 ≤1。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-BAK-02",
+        "title": "环境重建峰值空间为估算值，未实测",
+        "sourceGroup": "G3",
+        "sourceSeverity": "P3",
+        "reviewStatus": "requires_device_evidence",
+        "status": "requires_device_evidence",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+        ],
+        "evidenceReferences": [
+          "changes-G3.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Full source review disposition retained from review-G3.json; no policy reversal"
+        ],
+        "residual": [
+          "No Android device operation in this round; host/source evidence cannot establish ROM/FS/runtime/model matrix or upgrade installation."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "requires_device_evidence"
+      }
+    },
+    {
+      "source": {
+        "id": "D-FS-01",
+        "category": "备份、恢复与数据",
+        "severity": "P3",
+        "evidence": "静态核实",
+        "title": "runtime-fs 降级发布的 .dsha-publish.lock 从不删除，且 rename 后不 fsync 父目录",
+        "where": "app/src/main/assets/runtime-fs/index.js:32-52,55-70",
+        "recommendation": "锁改为每目录一个固定文件（dirname(target)/.dsha-publish.lock），与注释一致；或在 rename 成功后删除锁文件（需注意并发者持有同一 inode 的竞态，固定单文件更简单）。rename 后打开父目录 fd 调用 fsync。",
+        "acceptance": "runtime-fs 的 Node 单测（createPublisher 已支持注入 renameNoReplace）：注入抛 ENOSYS 的实现，发布 100 个文件后目录中锁文件不超过 1 个；用 spy 断言父目录 fsync 被调用。",
+        "depends_on": "",
+        "duplicate_of": ""
+      },
+      "baseline": {
+        "id": "D-FS-01",
+        "title": "runtime-fs 降级发布的 .dsha-publish.lock 从不删除，且 rename 后不 fsync 父目录",
+        "sourceGroup": "G2",
+        "sourceSeverity": "P3",
+        "reviewStatus": "open",
+        "status": "implemented_software_verified",
+        "duplicate_of": "",
+        "canonicalDisposition": null,
+        "counterpartIds": [],
+        "files": [
+          "app/src/main/assets/runtime-fs/index.js",
+          "tools/test-runtime-publish-linux.mjs"
+        ],
+        "evidenceReferences": [
+          "changes-G2.json",
+          "coverage-G2.json",
+          "reviews.json"
+        ],
+        "checks": [
+          "Real Linux24.12.0/musl + locked native packages:9 assertions PASS:100 files/one lock,32 concurrent/singlewinner,constantinode,EEXIST/source,cancel,attachmentdirsymlink,locksymlinkreject,parentfsync"
+        ],
+        "residual": [
+          "Linux host evidence, not Android FUSE/device matrix; root final archive recopy."
+        ],
+        "verification": {
+          "finalSoftwareGate": "passed_for_executed_scope",
+          "finalApkAndRelease": "two_signed_local_apks_hash_matched",
+          "hostTests": "92_of_93_passed_with_explicit_linux_environment_gap",
+          "device": "not_performed_by_user_instruction",
+          "hostedCI": "not_executed",
+          "productionWebsite": "not_deployed",
+          "legalOrigin": "not_assessed_by_this_merger",
+          "build155SoftwareGate": "passed_for_executed_local_scope",
+          "build155Device": "not_performed_by_user_instruction",
+          "build155Host": "95_effective_passes_from_original_full_and_four_focused_receipts"
+        },
+        "build154Status": "implemented_software_verified"
+      }
+    }
+  ]
+}

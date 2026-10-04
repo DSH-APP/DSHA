@@ -1,0 +1,186 @@
+[
+  {
+    "zh": "%s 秒",
+    "en": "%s s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/Fmt.java"
+    ]
+  },
+  {
+    "zh": "%s 分 %s 秒",
+    "en": "%s min %s s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/Fmt.java"
+    ]
+  },
+  {
+    "zh": "%s 时 %s 分",
+    "en": "%s h %s min",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/Fmt.java"
+    ]
+  },
+  {
+    "zh": "npm 插件包 · %s",
+    "en": "npm plugin package · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/PluginSource.java"
+    ]
+  },
+  {
+    "zh": "插件压缩包 · %s",
+    "en": "Plugin archive · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/PluginSource.java"
+    ]
+  },
+  {
+    "zh": "%s · 默认分支",
+    "en": "%s · default branch",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/PluginSource.java"
+    ]
+  },
+  {
+    "zh": "%s\n分支/目录：%s",
+    "en": "%s\nBranch/directory: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/PluginSource.java"
+    ]
+  },
+  {
+    "zh": "短信查询不支持此选项：%s",
+    "en": "SMS query does not support this option: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/SmsQuery.java"
+    ]
+  },
+  {
+    "zh": "%s：未收到结果",
+    "en": "%s: no result received",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java"
+    ]
+  },
+  {
+    "zh": "%s：正常",
+    "en": "%s: ready",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java"
+    ]
+  },
+  {
+    "zh": "%s：失败（退出码 %s）",
+    "en": "%s: failed (exit code %s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java"
+    ]
+  },
+  {
+    "zh": "[关闭会话：取消 %s 条尚未发送的命令]\n",
+    "en": "[Closing session: cancelled %s commands that have not been sent]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ]
+  },
+  {
+    "zh": "[终端启动失败：%s；未发送的命令保留，重试后继续]\n",
+    "en": "[Terminal startup failed: %s; unsent commands are retained and will continue after retry]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ]
+  },
+  {
+    "zh": "[终端启动清理失败，保留环境占用：%s]\n",
+    "en": "[Terminal startup cleanup failed; environment protection retained: %s]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ]
+  },
+  {
+    "zh": "[无法核验终端本次进程身份，保留环境占用：%s]\n",
+    "en": "[Cannot verify this terminal process identity; environment protection retained: %s]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ]
+  },
+  {
+    "zh": "[%s；命令尚未发送，已保留。完成后请重试重启]\n",
+    "en": "[%s; the command has not been sent and is retained. Retry restarting after the operation finishes]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ]
+  },
+  {
+    "zh": "[发送结果不确定，未自动重发：%s；请检查执行结果。%s]\n",
+    "en": "[Send result is uncertain; no automatic resend: %s; check the execution result. %s]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ]
+  },
+  {
+    "zh": "[中止失败，未创建新会话：%s；待发命令保留，请再次点中止重试]\n",
+    "en": "[Stop failed; no new session was created: %s; pending commands are retained. Tap Stop again to retry]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ]
+  },
+  {
+    "zh": "[终端读取失败：%s]\n",
+    "en": "[Terminal read failed: %s]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ]
+  },
+  {
+    "zh": "[会话已就绪；中止会重启 shell，cd/export 状态随重启清除]\n",
+    "en": "[Session ready; stopping restarts the shell and clears its cd/export state]\n",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ]
+  },
+  {
+    "zh": "symlink 失败: %s -> %s: %s",
+    "en": "symlink failed: %s -> %s: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/Compat.java"
+    ]
+  },
+  {
+    "zh": "link 失败: %s -> %s: %s",
+    "en": "link failed: %s -> %s: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/Compat.java"
+    ]
+  },
+  {
+    "zh": "终端回收暂未确认，下次维护将重新核验：%s",
+    "en": "Terminal cleanup is not confirmed; the next maintenance operation will check again: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/PtySession.java"
+    ]
+  }
+]

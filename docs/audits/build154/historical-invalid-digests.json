@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "path": "docs/releases/v0.1.7-alpha1-build143.md",
+      "invalidRecordedValue": "52cfc874edd44fbee17e7e93ee0e10277be5f658728b1453940584ef9449120",
+      "status": "invalid-63-hex",
+      "originalArtifactEvidence": "not established; no guessed replacement"
+    },
+    {
+      "path": "docs/releases/v0.1.7-alpha2-pre-release.md",
+      "invalidRecordedValue": "3258884e654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18",
+      "status": "invalid-63-hex",
+      "originalArtifactEvidence": "not established; no guessed replacement"
+    }
+  ]
+}

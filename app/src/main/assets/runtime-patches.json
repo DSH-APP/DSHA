@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "dshVersion": "0.2.0-rc.2",
+  "active": [
+    {"asset":"composer-enter-patch.json","module":"@deepseek-ai/dsh-client-ui-conversation/lib/client.js"},
+    {"asset":"session-interaction-patch.json","module":"@deepseek-ai/dsh-client-ui-workspace/lib/client.js","markers":["DSHA_SESSION_INTERACTION_V2","dsha-session-open"]},
+    {"asset":"queue-agent-patch.json"},
+    {"asset":"queue-dock-patch.json"},
+    {"asset":"persona-compat-patch.json"},
+    {"asset":"subagent-navigation-patch.json"},
+    {"asset":"plugin-manager-policy-patch.json"},
+    {"asset":"plugin-manager-auto-enable-patch.json"},
+    {"asset":"office-fonts-patch.json"},
+    {"asset":"deepseek-messages-compat-patch.json"},
+    {"asset":"rc1-settings-migration-patch.json"},
+    {"asset":"language-patch.json"},
+    {"asset":"tooltip-interaction-patch.json","markers":["DSHA_TOOLTIP_DISMISS_RC2_V1"]},
+    {"asset":"tooltip-entry-patch.json"}
+  ],
+  "specialized": ["pdf-compat-patch.json","browser-bootstrap","client-combo-patch.json","lan-settings-persistence","workspace-directory-policy-patch.json"],
+  "retired": [
+    {"asset":"agent-preset-patch.json","reason":"Upstream owns read-only preset session headings; preserve known legacy input only."},
+    {"asset":"models-navigation-patch.json","reason":"Upstream owns model settings navigation; do not restore rc1 UI behavior."},
+    {"asset":"web-integration/tooltip-patch.json","reason":"Old 0.1.5 component replacement preserved as history. Current rc2 interaction/entry recipes retain the upstream Tooltip and add dismissal only."}
+  ]
+}

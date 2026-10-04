@@ -1,0 +1,316 @@
+{
+  "schema": 1,
+  "status": "COMPLETE_WITH_EXPLICIT_SCOPE_LIMITS",
+  "draftEvidenceSha256": "8bd9d5d4a0a067b283ac9a8d5abe8dd86ad43f41c7456b3acc70d672738ddb78",
+  "versionCode": 156,
+  "package": "com.dsh.client",
+  "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+  "flavors": {
+    "standard": {
+      "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+      "observations": {
+        "bounded-proroot-diagnostic": {
+          "result": "PASS",
+          "actual": "Saved proroot, fresh normal diagnostic runtimeMode=proroot / SMOKE_OK, exported through actual DSHA provider, later restored proot.",
+          "evidence": "lease-standard-proroot-saved-0866.png; lease-standard-proroot-smoke-detail-0870.png; standard-diagnostic/DSHA-diagnostic-20261004-092235.txt",
+          "limits": "Healthy controlled diagnostic only, not timeout/failure injection or other ROM matrix."
+        },
+        "document-provider-files": {
+          "result": "PASS",
+          "actual": "Normal SAF explicitly selected DSHA provider linux/ubuntu/root/DSHA156-SAF-owned and wrote new full diagnostic. Normal Simple a156 copied actual guest bytes; host complete SHA matched.",
+          "evidence": "lease-standard-diagnostic-saf-destination-0872.png through lease-standard-proroot-report-saved-0878.png; lease-final-standard-owned-saf-reports-copied-1008.png; standard-diagnostic/DSHA-diagnostic-20261004-092235.txt (40587 B, 9da1a7798e51fdf20052331873dc1d01ba54c11012035296aadbe3f68dd1dc38)",
+          "limits": "Provider r-mode/rename/delete not fully re-exercised. ExternalStorageProvider 1000-file backup separately verified and not substituted."
+        },
+        "existing-data-preserved": {
+          "result": "PASS",
+          "actual": "Low-to-Standard read-only snapshot 1153 entries/error0 preserved credential, new-session nodes, workspace registry and retained container; final c676 snapshot1225/error0 after owned plugin cleanup. After the final source-only installation/removal, exact9 known-file digest-only collection independently showed8 credential/profile/workspace/existing-session payloads and metadata unchanged; plugin-activation record retained type/mode/size but its SHA changed.",
+          "evidence": "docs/audits/build156/device-final-standard-owned-v5-fd-data-review.json (c276f9446cc98fb631bbd4357944d991f1250971a6fc05ff5c1162346efdbe53); standard-data-initial/low-to-standard-safe-data-review.json (2cb3117bacc46b161e4868d00dc1d661036b18735bfefdb728db5ec543abe7a1); final-owned-appscope-copy/dsha-acceptance-156/finalStandardC676AfterCleanup156.json; final-owned-cleanup.json; standard-source-only/exact-nine-file-after-result.json; docs/audits/build156/device-standard-source-switch-data-supplement.json (e3955e0e65302e5eec0dc094a7070ffb7e3c7bfdee601b53fcee0daed7e988b5)",
+          "limits": "Explicit excluded caches/history; metadata/hash scope. Original149 had no old conversation sample. Exact official welcome-marker proof applies, no unapproved config-body reads. Final activation record body was not copied/read, so its changed keys/content are unclassified; do not infer all9 equal or all configuration bytes unchanged."
+        },
+        "lan-background-requests": {
+          "result": "PASS",
+          "actual": "Actual RNDIS: unauth401/auth303 with cookie flags, 9 fresh TCP200 across foreground/Home and >274-second USB-powered screen-off delay; old cookie/token401 after same ordinary stop/start; final UI OFF saved and old LAN listener unreachable.",
+          "evidence": "docs/audits/build156/device-standard-lan-background-review.json; device-standard-lan-old-credential-review.json; final-device-state/network-off-observation-private.json; lease-final-standard-lan-off-save-confirmed-1017.png",
+          "limits": "Finite TCP/USB-powered observations, not Doze/continuous state/OEM matrix; after-run saved inline provenance explicitly recorded."
+        },
+        "microphone-origin-and-cancellation": {
+          "result": "PASS",
+          "actual": "Actual SystemWebView: B loaded under old one-time system prompt, old grant did not stream to B; fresh pure audio live then ended, video/mixed rejected; wrong-port child secure/API/policy alltrue then NotAllowed.",
+          "evidence": "docs/audits/build156/device-latest-standard-fixture-review.json",
+          "limits": "Healthy own-page fixture; no audio stored, camera and wrong-port not granted, no other engine/device matrix."
+        },
+        "native-language-follow-system": {
+          "result": "PASS",
+          "actual": "English then system/zh-CN native UI, same app-UID process rows and own Simple/PTY state retained; final system preference.",
+          "evidence": "lease-standard-language-english-0808.png; lease-standard-language-system-restored-0812.png; lease-final-standard-power-system-restored-0955.png; private language process snapshots/actions",
+          "limits": "One actual system locale, raw input/output unchanged; no broad language matrix."
+        },
+        "no-crash": {
+          "result": "PASS",
+          "actual": "Independent host review of actual app-UID crash buffer and own package exit-info: no new app Java/native crash or ANR markers across current overlays; historical September FATAL, installer exits and prior permission change remain separate. Final source-only ending snapshot12:15 independently classified no added main/permission/crash/ANR exit or current crash markers.",
+          "evidence": "final-device-state/app-crash-buffer-private.txt; final-device-state/app-exit-info-private.txt; final-device-state/package-private.txt; standard-return-final/receipt.json; docs/audits/build156/device-standard-exit-review.json (SHA256 7726e0dd70ea5ff6b8e2f6a0425835f5449d4876e4978564e0910182075cb8e5); docs/audits/build156/device-standard-after-source-supplement-review.json (f50a9047a9fccf051640737f3a54b127cda4529c8239d0224ddd9e1997a9d180)",
+          "limits": "Finite buffers/exit records. Final Standard had one isolated WebView OTHER_KILLS_BY_SYSTEM/status0 at11:44:40; recorded and not classified harmless or as zero exits. No universal no-crash/OEM claim. Source-only window added2 isolated WebView OTHER_SYSTEM/status0 exits at12:06/12:11, explicitly retained without harmlessness/zero-exit inference;2 oldest records aged out of finite16-record window, not claimed deleted."
+        },
+        "plugin-download-sources": {
+          "result": "PASS",
+          "actual": "On same current c676 Standard, actual source menu official→mirror→auto selection saved and displayed; exact reviewed official pinned5badb150 GitHub subdirectory link installed automatically without extra review, then actual browser initialization and native confirmed-loaded1.0.0. Only that owned package normally removed, required ordinary restart reached READY/clean client, auto retained.",
+          "evidence": "lease-standard-source-only-before-1025.png; options1027/official1028/mirror1029/auto1030; exact-pinned-input1032; actual-download-started1034; installed-auto1035; confirmed-loaded-current1040; normal-remove1041/1042; restart1044/cleanclient1045/finalready1049; standard-source-only/ending-private.json; frozen https-candidate-review/proposal.json; docs/audits/build156/device-standard-plugin-download-sources-review.json (SHA256 69b9e53d1df64ea5d8d2e8631414049f537d319925da9e61ce606c6901d9cad2)",
+          "limits": "Healthy pinned official GitHub package only, no dependencies/hooks/model call. GitHub HTTPS installation does not prove actual NPM mirror traffic or fallback/failure behavior. Initial1033 coordinate miss left parse button enabled; actual installation began with1034, not earlier."
+        },
+        "plugin-install-auto": {
+          "result": "PASS",
+          "actual": "Normal deletion and current-APK local SAF reimport of own v156 installed and enabled with no review confirmation and auto normal Web restart/READY.",
+          "evidence": "lease-standard-owned-plugin-delete-button-0855.png; normal import screenshots0858–0862/actions; lease-standard-reimport-new-web-ready-0862.png",
+          "limits": "Healthy dependency-free own fixture; no arbitrary dependency/hook/failure matrix."
+        },
+        "plugin-install-commit": {
+          "result": "PASS",
+          "actual": "Current Standard own reimport actually completed installed/enabled and new READY7.4s. Final owned packages were normally removed in app UI.",
+          "evidence": "normal import screenshots0858–0862/actions; lease-standard-reimport-new-web-ready-0862.png; lease-final-standard-fixture-normal-removed-0971.png",
+          "limits": "UI/healthy final loading evidence; fresh Standard journal was not independently collected. The earlier Low committed journal remains attributed to Low."
+        },
+        "plugins-visible": {
+          "result": "PASS",
+          "actual": "Actual native list showed both own packages confirmed-loaded; actual current SystemWebView own button/route worked before ordinary removals. Final actual client has no owned fixture button.",
+          "evidence": "lease-standard-owned-plugin-filtered-0854.png; docs/audits/build156/device-latest-standard-fixture-review.json; lease-final-standard-clean-web-visible-1023.png",
+          "limits": "The two healthy owned plugins only; final normal removals preserve originals/history under app contract."
+        },
+        "recovery-language-rotation": {
+          "result": "PASS",
+          "actual": "Independent SystemWebView recovery kept same unsent owned draft across portrait/landscape, English and native follow-system/zh-CN; same process rows; normalstop.",
+          "evidence": "lease-standard-recovery-own-draft-0912.png; landscape-0913/portrait-0914; english-draft-0918; same-draft-system-0921; normal-stopped-0922 (lease-standard-recovery-* private images/actions)",
+          "limits": "No model request, key, repair confirmation/write or injected fault. Same actual instance on this device."
+        },
+        "recovery-ready": {
+          "result": "PASS",
+          "actual": "Actual independent recovery preparation reached READY, opened its own SystemWebView workspace without model key, unsent draft only, then normalstop.",
+          "evidence": "lease-standard-recovery-ready-0905.png; lease-standard-recovery-web-loaded-0907.png; lease-standard-recovery-own-workspace-0910.png; lease-standard-recovery-normal-stopped-0922.png",
+          "limits": "Healthy independent preparation/browser scope, no external-model or repair-writing matrix."
+        },
+        "retained-history-pagination": {
+          "result": "PASS",
+          "actual": "Final naturally accumulated retained list actually showed 1–40/40 records, page1; original records were kept read-only.",
+          "evidence": "lease-final-standard-retained-actual-one-page-1006.png",
+          "limits": "Below50-record boundary, no nextpage behavior exercised or artificial records/faults created."
+        },
+        "screen-confirmation-revocation": {
+          "result": "PASS",
+          "actual": "Four current Standard actual native choices: two Allow then own-page trees, two Deny with no tree. Manual revoke and ordinary same-generation Stop/Start invalidated old grant; only DSHA accessibility was normally rebound, unrelated components preserved.",
+          "evidence": "docs/audits/build156/device-new-standard-screen-grant-review.json; final-a11y-restoration.json",
+          "limits": "Owned read-only requests only; target-changed transitions preserved, no HTTP approval shortcut or cross-app reads. Final DSHA a11y OFF."
+        },
+        "terminal-close-and-web-restart": {
+          "result": "PASS",
+          "actual": "Own Simple/PTY preserved language state, closed through normal UI; ordinary Web stop/start reached READY; final own collector terminal normally closed and main Web READY.",
+          "evidence": "lease-standard-both-terminals-normal-closed-0814.png; lease-standard-after-screen-generation-ready-0900.png; lease-final-standard-all-simple-closed-1021.png; lease-final-standard-final-native-ready-1024.png",
+          "limits": "Healthy finite identity/session observations; no force/fault injection."
+        },
+        "two-file-upload": {
+          "result": "PASS",
+          "actual": "Actual SystemWebView ClipData multi-select returned both own52/63-byte sentinels with full expected SHA and order.",
+          "evidence": "docs/audits/build156/device-latest-standard-fixture-review.json",
+          "limits": "Two small own files only, no arbitrary provider/large input matrix."
+        },
+        "upload-navigation-cancel": {
+          "result": "PASS",
+          "actual": "Actual B-ready08:52:18.394 preceded old real two-selected file return08:53:25.842 by ~67seconds; old request had no B file result, fresh B two-file request succeeded full SHA/order.",
+          "evidence": "docs/audits/build156/device-latest-standard-fixture-review.json",
+          "limits": "Old selected-result stale-navigation case, not null cancellation; original healthy1500ms fixture, no native hooks or fault."
+        },
+        "web-ready": {
+          "result": "PASS",
+          "actual": "Current c676 actual SystemWebView frontend/owned route verified earlier; same exact c676 returned after single Low retake and final normal proot authREADY/nativeREADY plus actual clean default-workspace client visible.",
+          "evidence": "docs/audits/build156/device-latest-standard-fixture-review.json; standard-return-final/receipt.json; lease-final-standard-clean-web-visible-1023.png; lease-final-standard-final-native-ready-1024.png",
+          "limits": "No model key/request; actual UI readiness only. Final main Web remains ready, Recovery and own terminals stopped."
+        }
+      }
+    },
+    "low": {
+      "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+      "observations": {
+        "bounded-proroot-diagnostic": {
+          "result": "PASS",
+          "actual": "Saved proroot in native configuration; fresh normal diagnostic completed runtimeMode=proroot / SMOKE_OK; restored proot.",
+          "evidence": "lease-low-proroot-saved-0684.png; lease-low-proroot-smoke-detail-0689.png; low-diagnostic/DSHA-diagnostic-20261004-064752.txt",
+          "limits": "Healthy controlled diagnostic only; no timeout/unknown-exit fault injection or full platform matrix."
+        },
+        "document-provider-files": {
+          "result": "PASS",
+          "actual": "Normal SAF explicitly selected DSHA provider and linux/ubuntu/root/DSHA156-SAF-owned; created/wrote full diagnostic, then normal Simple Python copied the actual guest bytes to owned app scope and full SHA was verified.",
+          "evidence": "lease-low-saf-provider-drawer-0693.png through lease-low-saf-owned-report-folder-0699.png; low-diagnostic/DSHA-diagnostic-20261004-064752.txt (35539 B, 9a1c70e6150f96e0ac642c97391ebaabc4a14598c1bf974dc69ac613a99cc9fd)",
+          "limits": "Provider r-mode, rename and delete were not fully re-exercised on this APK; external-storage FD backup is a separate provider."
+        },
+        "existing-data-preserved": {
+          "result": "PASS",
+          "actual": "Read-only /root metadata snapshot 1120 entries, zero errors; credential and retained container hashes unchanged; current welcome marker difference independently traced to the official producer.",
+          "evidence": "low-data/latest-low-safe-data-summary.json; low-data/bounded-historical-welcome-marker-proof.json",
+          "limits": "Metadata/hash bounded scope, explicit exclusions; no old conversation payload sample or complete modified-managed-tree semantic matrix."
+        },
+        "lan-background-requests": {
+          "result": "PASS",
+          "actual": "Actual RNDIS TCP listener: 401 unauthenticated, authenticated 303 with verified cookie policies, nine fresh TCP 200 responses including Home background and USB-powered screen-off; old cookie/token later both 401 after ordinary stop/start.",
+          "evidence": "docs/audits/build156/device-low-lan-background-review.json; device-low-lan-old-credential-review.json; device-low-lan-old-credential-provenance-review.json",
+          "limits": "Finite USB-powered background/screen-off; no Doze/continuous-state/OEM matrix. Old-credential executed source was captured after run, explicitly attributed."
+        },
+        "microphone-origin-and-cancellation": {
+          "result": "PASS",
+          "actual": "Actual Gecko old system prompt held while B loaded; granting old request did not stream to B, fresh B pure audio was live then immediately ended; video/mixed/wrong-port denied.",
+          "evidence": "docs/audits/build156/device-final-low-gecko-fixture-review.json",
+          "limits": "Wrong-port child secureContext/media API were true but Gecko lacked policy introspection; end-to-end refusal observed, native-versus-browser attribution remains unknown. No audio saved."
+        },
+        "native-language-follow-system": {
+          "result": "PASS",
+          "actual": "Native English then system/zh-CN; independent Simple/PTY states and app-UID process rows preserved through UI language recreation.",
+          "evidence": "lease-low-language-english-0673.png; lease-low-language-system-restored-0677.png; matching private process snapshots/actions",
+          "limits": "This system locale/device only; raw commands/output unchanged, no broad locale/device matrix."
+        },
+        "no-crash": {
+          "result": "PASS",
+          "actual": "Independent host review of actual app-UID crash buffer and own package exit-info: no new app Java/native crash or ANR markers across current overlays; historical September FATAL, installer exits and prior permission change remain separate.",
+          "evidence": "docs/audits/build156/device-low-exit-review.json; final-device-state/app-crash-buffer-private.txt; final-device-state/app-exit-info-private.txt; low-nav0-once/receipt.json; docs/audits/build156/device-standard-exit-review.json (SHA256 7726e0dd70ea5ff6b8e2f6a0425835f5449d4876e4978564e0910182075cb8e5)",
+          "limits": "Finite buffers/exit records. Final Standard had one isolated WebView OTHER_KILLS_BY_SYSTEM/status0 at11:44:40; recorded and not classified harmless or as zero exits. No universal no-crash/OEM claim."
+        },
+        "plugin-download-sources": {
+          "result": "PASS",
+          "actual": "Current Low native UI exposed official/mirror/automatic choices; selected mirror then restored automatic. Existing healthy pinned HTTPS package remained confirmed loaded.",
+          "evidence": "docs/audits/build156/device-low-plugin-maintenance-review.json; lease-low-plugin-source-options-0769.png; lease-low-source-mirror-selected-0770.png; lease-low-source-auto-restored-0771.png",
+          "limits": "Fresh HTTPS install occurred earlier on old Standard, not reused as a new-Low install pass; no actual NPM mirror/fallback/network-failure path triggered."
+        },
+        "plugin-install-auto": {
+          "result": "PASS",
+          "actual": "Normal removal of own v156 then actual local SAF reimport automatically installed and enabled, with no review confirmation; first visible own route loaded again.",
+          "evidence": "docs/audits/build156/device-low-plugin-maintenance-review.json; device-low-plugin-maintenance-post-import-addendum.json",
+          "limits": "Healthy own dependency-free fixture, not arbitrary external dependencies/hooks/failure matrix."
+        },
+        "plugin-install-commit": {
+          "result": "PASS",
+          "actual": "Current Low reimport showed installed/enabled and READY; exact owned operation later read through normal Simple with format2 plan.json and exact committed marker independently validated.",
+          "evidence": "docs/audits/build156/device-owned-plugin-journal-read-review.json; device-low-plugin-maintenance-review.json; standard-collected/journal/751bb1b0-4144-4006-a174-1dd3b4e765f4",
+          "limits": "Journal read occurred after Standard overlay but operation occurred on Low and is not counted as a Standard commit; format2 lacks newVersion and current whole tree was not hashed."
+        },
+        "plugins-visible": {
+          "result": "PASS",
+          "actual": "Actual native list confirmed own acceptance plugin and pinned decoration loaded; actual Gecko frontend had own156 button and route.",
+          "evidence": "docs/audits/build156/device-low-plugin-maintenance-review.json; device-low-plugin-maintenance-post-import-addendum.json",
+          "limits": "Visibility/loading of the two healthy owned packages, not every third-party plugin. Both removed normally at final cleanup."
+        },
+        "recovery-language-rotation": {
+          "result": "PASS",
+          "actual": "Independent Gecko recovery workspace kept same unsent owned draft across portrait/landscape, English and system/zh-CN; same app-UID process rows; ordinary stop.",
+          "evidence": "lease-low-recovery-owned-draft-0743.png; landscape-0744/portrait-0745; english-draft-0749; return-after-system-0755; normal-stopped-0757 (all lease-low-recovery-* private images/actions)",
+          "limits": "No model request, repair confirmation/write, key or fault injected; this independent instance/device only."
+        },
+        "recovery-ready": {
+          "result": "PASS",
+          "actual": "Actual independent preparation reached READY, opened its own Gecko workspace without a model key, accepted only an unsent owned draft, then normal stop.",
+          "evidence": "lease-low-recovery-ready-0723.png; lease-low-gecko-recovery-web-current-0726.png; lease-low-recovery-workspace-0729.png; lease-low-recovery-normal-stopped-0757.png",
+          "limits": "Healthy independent readiness only; no external model or repair write execution."
+        },
+        "retained-history-pagination": {
+          "result": "PASS",
+          "actual": "Actual retained list displayed 30 records/page1; an actual owned committed record detail was opened.",
+          "evidence": "lease-low-retained-list-0794.png; lease-low-latest-plugin-retained-details-0795.png",
+          "limits": "Fewer than the 50-record page boundary; next-page behavior not exercised and no history manufactured."
+        },
+        "screen-confirmation-revocation": {
+          "result": "PASS",
+          "actual": "Four actual native choices: two Allow followed by actual own-page trees after target-changed transition, two Deny without tree; manual revoke and ordinary Web stop/start invalidated the previous grant.",
+          "evidence": "docs/audits/build156/device-low-screen-grant-review.json",
+          "limits": "Only explicitly requested own DSHA read-only actions. First choice receipt lacks later helper fields, not backfilled; early timeout preserved as timeout."
+        },
+        "terminal-close-and-web-restart": {
+          "result": "PASS",
+          "actual": "Independent own Simple/PTY tabs retained state across language changes, both closed through normal UI; ordinary Web stop/start reached READY.",
+          "evidence": "lease-low-both-terminals-closed-0680.png; lease-low-main-ready-for-new-start-0760.png; lease-low-new-web-ready-0765.png; ordinary actions",
+          "limits": "No force stop or injected process failure; finite healthy identities/sessions."
+        },
+        "two-file-upload": {
+          "result": "PASS",
+          "actual": "Actual Gecko system ClipData selection returned the 52/63-byte owned files in order; page calculated full expected SHA-256 for both.",
+          "evidence": "docs/audits/build156/device-final-low-gecko-fixture-review.json; device-low-gecko-files-nav0-addendum.json",
+          "limits": "Two small own files only; no arbitrary URI, large upload or provider matrix."
+        },
+        "upload-navigation-cancel": {
+          "result": "PASS",
+          "actual": "One independently versioned healthy v157 files-nav0 attempt: B actually ready ~73 seconds before old real two-file confirmation; old selected-result delivered no B file callback; fresh B two-file request returned exact bytes/order.",
+          "evidence": "docs/audits/build156/device-low-gecko-files-nav0-addendum.json; low-nav0-collected/1640f575-64f1-4a70-8b1b-9e0e0f229c07; low-nav0-once/receipt.json",
+          "limits": "One zero-delay variant/attempt on same frozen Low APK; old1500ms partial report remains unchanged. This was an old selected result, not null cancellation."
+        },
+        "web-ready": {
+          "result": "PASS",
+          "actual": "Actual selected Gecko on Low, native authentication READY and actual own frontend/route; later single variant also reached native/frontend readiness, then ordinary stop before exact Standard return.",
+          "evidence": "lease-low-gecko-web-ready-0631.png; lease-low-fresh-reimport-route-ready-0788.png; lease-low-nav0-native-ready-0936.png; lease-low-nav0-fixture-a-0938.png",
+          "limits": "Authentication/actual frontend healthy scope; no external model request. Low was not left installed."
+        }
+      }
+    }
+  },
+  "scopeLimits": [
+    "One M2012K10C / Android 13 API 33 / 4096-byte-page device, USB powered.",
+    "No Android 6/7, minimum API 30, physical 16 KiB, other OEM or external-model matrix claim.",
+    "No original historical conversation sample existed in the captured before149 tree.",
+    "No production faults, force-stop, bare-PID kill, uninstall, clear-data or extra test APK.",
+    "Raw screenshots, identifiers, credentials and reports remain private."
+  ],
+  "restoration": {
+    "runtime": "proot",
+    "language": "system",
+    "webCore": "SystemWebView",
+    "lan": false,
+    "powerSaving": false,
+    "microphone": "ask/not granted",
+    "dshaAccessibility": false,
+    "otherAccessibilityComponentsPreserved": true,
+    "rootAdbAllFiles": "OFF, untouched",
+    "rotation": [
+      0,
+      0
+    ]
+  },
+  "cleanup": {
+    "ownedPluginsNormallyRemoved": 2,
+    "verifiedTempScriptsRemoved": 10,
+    "ownedDownloadAndResultCopiesRemovedAfterHostHashVerification": true,
+    "fakeProjectAndOutputRemovedAfterHostWholeByteVerification": true,
+    "userWorkspaceAndAppRetainedHistoryPreserved": true,
+    "ownedSourcePersistedGrantRevocationIndependentlyVerified": false
+  },
+  "fdV5": {
+    "scope": "Single current Standard normal native selected-project no-password v5 export.",
+    "evidence": "fd-native/DSHA-data-v5-9713a5e1-331b-4095-81c7-700b965b685f.tar.gz; native-birth-private.json; independent data review",
+    "files": 1000,
+    "bytes": 512000,
+    "fdBefore": [
+      160,
+      158
+    ],
+    "fdAfter": [
+      160,
+      160
+    ],
+    "sameBootAndKernelBirth": true,
+    "exact30Or60SecondSampling": false,
+    "actualPostDelayFromCompletionScreenshotSeconds": [
+      103.904,
+      204.622
+    ]
+  },
+  "finalInstalledFlavor": "standard",
+  "finalWeb": "native READY and actual clean SystemWebView default-workspace page",
+  "privateRawEvidencePublished": false,
+  "finalSourceOnlySupplement": {
+    "sameCurrentStandardApk": true,
+    "officialMirrorAutoUiSelection": true,
+    "healthyPinnedOfficialHttpsInstallAutoLoadAndNormalRemoval": true,
+    "autoRestored": true,
+    "npmNetworkFallbackNotExercised": true,
+    "exactNineFileReadonlyAfterCollection": true,
+    "twoTinyScriptsAndSingleOwnedResultRemovedAfterHostCopyHashMatch": true,
+    "noPriorFdEvidenceRetestedOrChanged": true,
+    "independentHostReviewsPending": false,
+    "independentExitSupplementSha256": "f50a9047a9fccf051640737f3a54b127cda4529c8239d0224ddd9e1997a9d180",
+    "independentDataSupplementSha256": "e3955e0e65302e5eec0dc094a7070ffb7e3c7bfdee601b53fcee0daed7e988b5",
+    "independentPluginSourceReviewSha256": "69b9e53d1df64ea5d8d2e8631414049f537d319925da9e61ce606c6901d9cad2"
+  },
+  "finalPrivateProofSha256": "8bd9d5d4a0a067b283ac9a8d5abe8dd86ad43f41c7456b3acc70d672738ddb78"
+}

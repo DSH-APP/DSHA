@@ -11,6 +11,14 @@ $bridgeSources = foreach ($bridgeName in $bridgeNames) {
     Join-Path $bridgeRoot "app/src/main/java/com/deepseekharness/app/util/$bridgeName.java"
     Join-Path $bridgeRoot "app/src/test/java/com/deepseekharness/app/util/${bridgeName}Test.java"
 }
+$bridgeSources += @(
+    (Join-Path $bridgeRoot 'app/src/main/java/com/deepseekharness/app/util/ProcessOutputCapture.java'),
+    (Join-Path $bridgeRoot 'app/src/main/java/com/deepseekharness/app/util/ProcessPipePoller.java'),
+    (Join-Path $bridgeRoot 'app/src/main/java/com/deepseekharness/app/util/UiText.java'),
+    (Join-Path $bridgeRoot 'app/src/main/java/com/deepseekharness/app/util/UiLanguagePreference.java'),
+    (Join-Path $bridgeRoot 'app/src/main/java/com/deepseekharness/app/util/SystemLanguage.java'),
+    (Join-Path $bridgeRoot 'app/build/generated/uiLanguage/com/deepseekharness/app/util/UiMessages.java')
+)
 # 只调用本地 JDK 与缓存 JUnit；不运行 Gradle、不下载依赖、不连接设备。
 & (Join-Path $ToolchainRoot 'jdk-17/bin/javac.exe') -encoding UTF-8 -source 17 -target 17 -classpath "$junit;$hamcrest" -d $bridgeOutput @bridgeSources
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

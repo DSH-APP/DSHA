@@ -4,7 +4,7 @@
      系统设置，等于没有这项能力）。隐私靠「按需拉取」保证 —— 服务自身不做任何
      持续记录：onAccessibilityEvent 里除了用户主动开启的配对码窗口，其余一律直接
      返回；读屏只在 agent 调用 /app/ui/dump 的那一刻发生，结果直接回给会话，
-     不落盘、不上传。
+     普通截图按请求保存到应用私有截图目录；MCP 截图内存返回，不独立自动上传。
      canPerformGestures 是点按与滑动的前提，没有它就得依赖 ADB 或 Shizuku。
      canTakeScreenshot 是 /app/ui/screenshot 截屏的前提：不声明会被系统直接拒绝
      （errorCode=ERROR_TAKE_SCREENSHOT_*），声明后 Android 11+ 才能 takeScreenshot。 -->

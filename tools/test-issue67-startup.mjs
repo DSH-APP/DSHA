@@ -1,10 +1,11 @@
+import {testRuntime} from './test-runtime-fixture.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 const root=path.resolve(import.meta.dirname,'..');
-const runtime=path.join(root,'app/build/rc2-20260911/locked-runtime/node_modules');
+const runtime=path.join(testRuntime('raw'),'node_modules');
 const {resolveBundleDir}=await import(pathToFileURL(path.join(runtime,'@deepseek-ai/dsh-app-boot/lib/index.js')).href);
 const base=path.join(root,'app/build/issue67-tests');fs.mkdirSync(base,{recursive:true});
 const fixture=fs.mkdtempSync(path.join(base,'run-'));

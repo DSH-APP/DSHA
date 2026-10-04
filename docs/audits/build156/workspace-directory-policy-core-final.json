@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "sourceFrozen": true,
+  "problem": "Real Standard156 proot first-use Web could not discover a default Workspace because the guest has no xdg-user-dir. Existing workspace registry is initialized but empty; no original Session rewrite is needed.",
+  "behavior": "Only undefined documentsDirectory, platform linux, exact DSHA_WORKSPACE_DOCUMENTS=/root/Documents, and actual/injected home=/root supply /root/Documents. Explicit values, other markers/HOME/platforms, official path validation, cancellation and existing workspace/Session gates retain upstream behavior.",
+  "files": [
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/util/WebLaunchCommand.java",
+      "sha256": "486fb063f0744b076dc7278a59b35ed05fe9b5e7e380e6bd025dff22ecdd313b"
+    },
+    {
+      "file": "app/src/test/java/com/deepseekharness/app/util/WebLaunchCommandTest.java",
+      "sha256": "280c18b3f152c7d510e3af91b72ae0ffc7d586a3711253adab19c30d4965dd1f"
+    },
+    {
+      "file": "app/src/main/assets/workspace-directory-policy-patch.json",
+      "sha256": "9667a40ff5706798843dd774be0423e78487707900ce1e9f9839079455c741c1"
+    },
+    {
+      "file": "tools/build-dsh-runtime.py",
+      "sha256": "aec054ae1202db8715508ce9235fbbe602379aabca1d3e00670bf90bd46aab15"
+    },
+    {
+      "file": "tools/test-workspace-directory-policy.mjs",
+      "sha256": "3a5b47df85ddee6c1e6f821e7570c52b96812b10ec8d188cd6b918d65962f673"
+    }
+  ],
+  "checks": [
+    {
+      "kind": "node",
+      "result": "PASS",
+      "count": 21,
+      "evidence": "app/build/workspace-policy-HcfSce/receipt.json",
+      "scope": "Actual locked rc2 builder/resolver/WorkspaceRegistry/DomainFacility/JsonStorageBackend. Linux facts and empty/existing Session lists are controlled peers; guest default path maps to an owned host fixture for real filesystem creation and durable reopen. No device, actual Session writes or APK generation.",
+      "testedModuleSha256": "9e0fc1934a3959eeb25b23eed285b03464b6538ede13f9fc844bf4b413d5d687",
+      "cases": [
+        "unmarked Linux retains xdg discovery",
+        "unmarked missing xdg remains a discovery failure",
+        "exact DSHA marker and Linux private HOME bypass xdg",
+        "the actual HOME decides fallback when no HOME fact is injected",
+        "an unrelated official config value preserves the DSHA directory default",
+        "foreign marker retains discovery",
+        "empty marker retains discovery",
+        "foreign HOME retains discovery",
+        "Windows keeps the upstream native discovery",
+        "macOS keeps the upstream native discovery",
+        "explicit custom Documents always wins",
+        "invalid explicit Documents rejects: \"\"",
+        "invalid explicit Documents rejects: \"relative/Documents\"",
+        "explicit null is not replaced with the private default",
+        "pre-cancelled DSHA request keeps the original cancellation",
+        "cancellation during upstream discovery still rejects",
+        "DSHA resolver feeds real recursive creation and durable workspace registration",
+        "existing live Session prevents default creation without changing the registry",
+        "existing persisted Session prevents default creation",
+        "cancelled DSHA initialization leaves the durable registry unchanged",
+        "explicit host directory creates and registers its own path"
+      ]
+    },
+    {
+      "kind": "JVM",
+      "result": "PASS",
+      "count": 2,
+      "evidence": "app/build/audit-build156/workspace-policy-jvm/receipt.json",
+      "scope": "Fresh javac of actual 3 pure production sources and actual WebLaunchCommandTest; JUnit4.13.2 on JDK17. No Gradle/Android/device.",
+      "changedDuringRun": []
+    },
+    {
+      "kind": "Java format",
+      "result": "PASS",
+      "files": 2,
+      "evidence": "app/build/java-format/core-build156-workspace-policy-format.json",
+      "scope": "Explicit two files only; GJF1.22.0/JDK17, no text rewrite required and exact tokens preserved."
+    },
+    {
+      "kind": "builder",
+      "result": "PASS",
+      "scope": "Actual patched_content matched the strict recipe and current input hash; missing/duplicate/already-patched anchor all rejected; unrelated module unchanged. No archive generation in this lane."
+    }
+  ],
+  "existingArchiveAtFreeze": {
+    "sha256": "1375e037904ee5447e5e81b1564e999cf4160b508c0f9fb321a9ac2369850733",
+    "matchesRecordedExistingBytes": true,
+    "rebuiltByLane": false
+  },
+  "deferredIntegratedChecks": [
+    "Root adds appropriate central runtime-patches registration; this lane did not edit central manifest.",
+    "Root rebuilds dsh-runtime archive/current managed fixture and runs registered node tools/test-workspace-directory-policy.mjs --verify-archive for exact packaged module, input hashes and archive SHA binding.",
+    "Root refreshes descriptor/source snapshot and runs final host, full two-flavor Gradle/Lint/signed APK gates; previous11360/APK evidence remains bound to its own bytes."
+  ],
+  "missingEvidence": [
+    {
+      "kind": "device",
+      "detail": "Verify the newly rebuilt same-signature formal APK creates/registers its private default Workspace on the actual proot device without xdg/ALLFILES and retains existing history/config. This lane used controlled Linux facts and an owned host path mapping, not a device execution claim."
+    }
+  ],
+  "excluded": [
+    "No phone/ADB, signing/version changes, archive/descriptor/APK generation, central manifest edits, public shared storage permission or directory writes, desktop XDG installation/command replacement, existing Session writes, Manager/Portable/AppOwner changes."
+  ]
+}

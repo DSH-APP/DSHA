@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "lane": "legacy",
+  "command": "git check-attr text eol; git hash-object --stdin --path=<path> (no -w)",
+  "passed": true,
+  "historySamples": [
+    {
+      "path": "tools/history/build156/unused-assets/environment-data.py",
+      "existing": true,
+      "text": "unset",
+      "eol": "unset",
+      "syntheticCrLfInputPreserved": true,
+      "scope": "actual attribute path plus synthetic no-write Git filter check"
+    },
+    {
+      "path": "tools/history/build156/java/core/EnvironmentDataBackup.java",
+      "existing": true,
+      "text": "unset",
+      "eol": "unset",
+      "syntheticCrLfInputPreserved": true,
+      "scope": "actual attribute path plus synthetic no-write Git filter check"
+    },
+    {
+      "path": "tools/history/documents/docs/stability-acceptance.md",
+      "existing": true,
+      "text": "unset",
+      "eol": "unset",
+      "syntheticCrLfInputPreserved": true,
+      "scope": "actual attribute path plus synthetic no-write Git filter check"
+    },
+    {
+      "path": "tools/history/engineering/resources/values/ui_strings.xml",
+      "existing": true,
+      "text": "unset",
+      "eol": "unset",
+      "syntheticCrLfInputPreserved": true,
+      "scope": "actual attribute path plus synthetic no-write Git filter check"
+    },
+    {
+      "path": "tools/history/build156/unused-assets/webui-polyfill.sh",
+      "existing": true,
+      "text": "unset",
+      "eol": "unset",
+      "syntheticCrLfInputPreserved": true,
+      "scope": "actual attribute path plus synthetic no-write Git filter check"
+    },
+    {
+      "path": "tools/history/original-license.txt",
+      "existing": false,
+      "text": "unset",
+      "eol": "unset",
+      "syntheticCrLfInputPreserved": true,
+      "scope": "actual attribute path plus synthetic no-write Git filter check"
+    },
+    {
+      "path": "tools/history/LICENSE",
+      "existing": false,
+      "text": "unset",
+      "eol": "unset",
+      "syntheticCrLfInputPreserved": true,
+      "scope": "actual attribute path plus synthetic no-write Git filter check"
+    }
+  ],
+  "activeTextControlNormalized": true,
+  "noHistoricalFileModified": true
+}

@@ -1,0 +1,23 @@
+{
+  "item": "D-ARCH-06",
+  "status": "implemented_with_device_verification_pending",
+  "files": [
+    "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+    "app/src/main/java/com/deepseekharness/app/util/BridgeRoutes.java",
+    "app/src/test/java/com/deepseekharness/app/util/BridgeRoutesTest.java",
+    "tools/test-bridge-routes.py",
+    "docs/audits/build155/bridge-findings.md",
+    "docs/audits/build155/changes-bridge.json"
+  ],
+  "checks": [
+    "py -3 tools/test-bridge-routes.py: 4 passed",
+    "JDK 17 JUnitCore BridgeRoutesTest: 3 passed",
+    "JDK 17 javac HttpShellService.java + BridgeRoutes.java against Android 37 and existing compiled dependencies: passed",
+    "git diff --check on owned modified files: passed"
+  ],
+  "blockedCheck": "Gradle :app:compileStandardDebugJavaWithJavac stopped before javac because prepareRuntimeDescriptor requires the current source descriptor update; the main build155 flow owns that update and full verification.",
+  "residual": [
+    "No Android device or live 3090 HTTP instrumentation was run in this subtask.",
+    "The endpoint action methods remain in HttpShellService; this change isolates route selection and dispatch, not the entire platform implementation."
+  ]
+}

@@ -1,0 +1,373 @@
+[
+  {
+    "zh": "打不开，请手动访问：%s",
+    "en": "Could not open. Visit manually: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"打不开，请手动访问：\") + url",
+    "after": "com.deepseekharness.app.util.UiText.format(\"打不开，请手动访问：%s\", url)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java"
+  },
+  {
+    "zh": "打不开 QQ，请手动搜索群号：%s",
+    "en": "Could not open QQ. Search for group number: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"打不开 QQ，请手动搜索群号：\") + QQ_GROUP",
+    "after": "com.deepseekharness.app.util.UiText.format(\"打不开 QQ，请手动搜索群号：%s\", QQ_GROUP)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java"
+  },
+  {
+    "zh": "找不到开发者选项时，到关于手机连续点按系统版本号。系统或厂商未提供无线调试时，填写端口无法启用它。\n\n通常让地址与端口留空即可自动发现。配对端口来自 6 位码弹窗，连接端口来自无线调试主页面，两者不能互换。\n\n首次准备依赖可能较久；配对码失效时请重新获取。自动读码需要屏幕操作权限，手动输入无需此权限。",
+    "en": "If Developer options is missing, tap the build number repeatedly in About phone. Entering a port cannot enable Wireless debugging if your Android version or manufacturer does not provide it.\n\nUsually, leave address and port blank for automatic discovery. The pairing port comes from the 6-digit-code dialog; the connection port comes from the main Wireless debugging page. They are not interchangeable.\n\nInitial dependency preparation may take time. Get a fresh code if yours expires. Auto-read requires screen-control permission; manual entry does not.",
+    "before": "com.deepseekharness.app.util.UiText.text(\n                                \"找不到开发者选项时，到关于手机连续点按系统版本号。系统或厂商未提供无线调试时，填写端口无法启用它。\\n\\n\")\n                            + com.deepseekharness.app.util.UiText.text(\n                                \"通常让地址与端口留空即可自动发现。配对端口来自 6 位码弹窗，连接端口来自无线调试主页面，两者不能互换。\\n\\n\")\n                            + com.deepseekharness.app.util.UiText.text(\n                                \"首次准备依赖可能较久；配对码失效时请重新获取。自动读码需要屏幕操作权限，手动输入无需此权限。\")",
+    "after": "com.deepseekharness.app.util.UiText.text(\"找不到开发者选项时，到关于手机连续点按系统版本号。系统或厂商未提供无线调试时，填写端口无法启用它。\\n\\n通常让地址与端口留空即可自动发现。配对端口来自 6 位码弹窗，连接端口来自无线调试主页面，两者不能互换。\\n\\n首次准备依赖可能较久；配对码失效时请重新获取。自动读码需要屏幕操作权限，手动输入无需此权限。\")",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+  },
+  {
+    "zh": "ADB 操作未完成：%s",
+    "en": "ADB operation incomplete: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"ADB 操作未完成：\")\n                          + SensitiveData.redact(String.valueOf(e))",
+    "after": "com.deepseekharness.app.util.UiText.format(\"ADB 操作未完成：%s\", SensitiveData.redact(String.valueOf(e)))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+  },
+  {
+    "zh": "连接已验证，ADB 设备命令可用。\n\n%s",
+    "en": "Connection verified. ADB device commands are available.\n\n%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"连接已验证，ADB 设备命令可用。\\n\\n\") + out",
+    "after": "com.deepseekharness.app.util.UiText.format(\"连接已验证，ADB 设备命令可用。\\n\\n%s\", out)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+  },
+  {
+    "zh": "配对已完成，连接尚未验证。请检查连接端口后点「验证已有连接」，无需再次配对。\n\n%s",
+    "en": "Pairing is complete, but the connection is not yet verified. Check the connection port and tap Verify connection. There is no need to pair again.\n\n%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\n                  \"配对已完成，连接尚未验证。请检查连接端口后点「验证已有连接」，无需再次配对。\\n\\n\")\n              + out",
+    "after": "com.deepseekharness.app.util.UiText.format(\"配对已完成，连接尚未验证。请检查连接端口后点「验证已有连接」，无需再次配对。\\n\\n%s\", out)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+  },
+  {
+    "zh": "LAN 开关生效失败: %s",
+    "en": "Could not apply LAN setting: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"LAN 开关生效失败: \") + t.getMessage()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"LAN 开关生效失败: %s\", t.getMessage())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+  },
+  {
+    "zh": "无法打开 Shizuku：%s",
+    "en": "Could not open Shizuku: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"无法打开 Shizuku：\") + e.getClass().getSimpleName()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"无法打开 Shizuku：%s\", e.getClass().getSimpleName())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+  },
+  {
+    "zh": "正在重连无线调试…%s",
+    "en": "Reconnecting to Wireless debugging…%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"正在重连无线调试…\")\n            + (detail.isEmpty() ? \"\" : \"\\n\" + detail)",
+    "after": "com.deepseekharness.app.util.UiText.format(\"正在重连无线调试…%s\", (detail.isEmpty() ? \"\" : \"\\n\" + detail))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+  },
+  {
+    "zh": "连接已验证 · 端口 %s%s",
+    "en": "Connection verified · Port %s%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"连接已验证 · 端口 \")\n            + port\n            + (detail.isEmpty() ? \"\" : \"\\n\" + detail)",
+    "after": "com.deepseekharness.app.util.UiText.format(\"连接已验证 · 端口 %s%s\", port, (detail.isEmpty() ? \"\" : \"\\n\" + detail))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+  },
+  {
+    "zh": "配对密钥已保存，连接尚未验证。%s",
+    "en": "Pairing key saved. Connection not yet verified.%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"配对密钥已保存，连接尚未验证。\")\n            + (detail.isEmpty() ? \"\" : \"\\n\" + detail)",
+    "after": "com.deepseekharness.app.util.UiText.format(\"配对密钥已保存，连接尚未验证。%s\", (detail.isEmpty() ? \"\" : \"\\n\" + detail))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+  },
+  {
+    "zh": "ADB 状态读取失败：%s",
+    "en": "Could not read ADB status: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"ADB 状态读取失败：\") + e.getMessage()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"ADB 状态读取失败：%s\", e.getMessage())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+  },
+  {
+    "zh": "打开设置失败：%s",
+    "en": "Could not open settings: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"打开设置失败：\") + e2.getMessage()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"打开设置失败：%s\", e2.getMessage())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+  },
+  {
+    "zh": "导出失败：%s",
+    "en": "Export failed: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"导出失败：\")\n                                + error.getClass().getSimpleName()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"导出失败：%s\", error.getClass().getSimpleName())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
+  },
+  {
+    "zh": "\n用户补充复现步骤：\n%s",
+    "en": "\nAdditional steps to reproduce:\n%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"\\n用户补充复现步骤：\\n\")\n            + (steps == null ? \"\" : steps.getText().toString())",
+    "after": "com.deepseekharness.app.util.UiText.format(\"\\n用户补充复现步骤：\\n%s\", (steps == null ? \"\" : steps.getText().toString()))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
+  },
+  {
+    "zh": " · 总耗时 %s 秒%s%s",
+    "en": " · Total time %s s%s%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\" · 总耗时 \")\n            + state.elapsedSeconds\n            + com.deepseekharness.app.util.UiText.text(\" 秒\")\n            + (state.busy()\n                ? com.deepseekharness.app.util.UiText.text(\" · 当前阶段 \")\n                    + state.stageSeconds\n                    + com.deepseekharness.app.util.UiText.text(\" 秒\")\n                : \"\")\n            + (state.cancelRequested && state.busy()\n                ? (state.cancellable\n                    ? com.deepseekharness.app.util.UiText.text(\"\\n正在取消检查…\")\n                    : com.deepseekharness.app.util.UiText.text(\"\\n等待当前修复到达安全点，随后停止\"))\n                : \"\")",
+    "after": "com.deepseekharness.app.util.UiText.format(\" · 总耗时 %s 秒%s%s\", state.elapsedSeconds, (state.busy()\n                ? com.deepseekharness.app.util.UiText.text(\" · 当前阶段 \")\n                    + state.stageSeconds\n                    + com.deepseekharness.app.util.UiText.text(\" 秒\")\n                : \"\"), (state.cancelRequested && state.busy()\n                ? (state.cancellable\n                    ? com.deepseekharness.app.util.UiText.text(\"\\n正在取消检查…\")\n                    : com.deepseekharness.app.util.UiText.text(\"\\n等待当前修复到达安全点，随后停止\"))\n                : \"\"))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+  },
+  {
+    "zh": " · 当前阶段 %s 秒",
+    "en": " · Current stage %s s",
+    "before": "com.deepseekharness.app.util.UiText.text(\" · 当前阶段 \")\n                    + state.stageSeconds\n                    + com.deepseekharness.app.util.UiText.text(\" 秒\")",
+    "after": "com.deepseekharness.app.util.UiText.format(\" · 当前阶段 %s 秒\", state.stageSeconds)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+  },
+  {
+    "zh": "会停止 Web 并中断正在执行的任务，完整备份并校验配置、会话和本地插件，再重建环境并恢复数据。\n\n备份失败不切换环境，后续失败回切旧环境；安全备份和旧环境会保留并占用额外空间。额外安装的系统软件留在旧环境中。",
+    "en": "Stop the Web service and interrupt running tasks. Back up and verify settings, conversations and local plugins, then rebuild the environment and restore data.\n\nIf backup fails, the environment is unchanged. If a later step fails, the old environment is restored. The safety backup and old environment use additional space. Extra system software remains in the old environment.",
+    "before": "com.deepseekharness.app.util.UiText.text(\n                        \"会停止 Web 并中断正在执行的任务，完整备份并校验配置、会话和本地插件，再重建环境并恢复数据。\\n\\n\")\n                    + com.deepseekharness.app.util.UiText.text(\n                        \"备份失败不切换环境，后续失败回切旧环境；安全备份和旧环境会保留并占用额外空间。额外安装的系统软件留在旧环境中。\")",
+    "after": "com.deepseekharness.app.util.UiText.text(\"会停止 Web 并中断正在执行的任务，完整备份并校验配置、会话和本地插件，再重建环境并恢复数据。\\n\\n备份失败不切换环境，后续失败回切旧环境；安全备份和旧环境会保留并占用额外空间。额外安装的系统软件留在旧环境中。\")",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+  },
+  {
+    "zh": "无法打开维护页，可到数据与备份页查看任务：%s",
+    "en": "Could not open maintenance. Check the task in Backup & data: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"无法打开维护页，可到数据与备份页查看任务：\")\n                            + SensitiveData.redact(String.valueOf(error))",
+    "after": "com.deepseekharness.app.util.UiText.format(\"无法打开维护页，可到数据与备份页查看任务：%s\", SensitiveData.redact(String.valueOf(error)))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+  },
+  {
+    "zh": "拉起保活服务失败: %s",
+    "en": "Could not start the keep-alive service: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"拉起保活服务失败: \") + t.getMessage()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"拉起保活服务失败: %s\", t.getMessage())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+  },
+  {
+    "zh": "\n\n本机 Web 地址（可长按复制）：\n%s",
+    "en": "\n\nLocal Web address (press and hold to copy):\n%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"\\n\\n本机 Web 地址（可长按复制）：\\n\")\n                        + localUrl",
+    "after": "com.deepseekharness.app.util.UiText.format(\"\\n\\n本机 Web 地址（可长按复制）：\\n%s\", localUrl)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+  },
+  {
+    "zh": "检测到 %s 项异常，查看插件与恢复选项",
+    "en": "Detected %s issues; check plugins and recovery options",
+    "before": "com.deepseekharness.app.util.UiText.text(\"检测到 \")\n                  + trace.issues.size()\n                  + com.deepseekharness.app.util.UiText.text(\" 项异常，查看插件与恢复选项\")",
+    "after": "com.deepseekharness.app.util.UiText.format(\"检测到 %s 项异常，查看插件与恢复选项\", trace.issues.size())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+  },
+  {
+    "zh": "失败 %s/3，%s，查看恢复选项",
+    "en": "Failed %s/3，%s; see recovery options",
+    "before": "com.deepseekharness.app.util.UiText.text(\"失败 \")\n                  + failures\n                  + \"/3，\"\n                  + controller.config().getWebFailureStage()\n                  + com.deepseekharness.app.util.UiText.text(\"，查看恢复选项\")",
+    "after": "com.deepseekharness.app.util.UiText.format(\"失败 %s/3，%s，查看恢复选项\", failures, controller.config().getWebFailureStage())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+  },
+  {
+    "zh": "复制失败：%s",
+    "en": "Copy failed: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"复制失败：\") + t.getMessage()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"复制失败：%s\", t.getMessage())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+  },
+  {
+    "zh": "发现新版本 %s · %s",
+    "en": "New version available: %s · %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"发现新版本 \")\n                    + release.version\n                    + \" · \"\n                    + com.deepseekharness.app.core.UpdateEngine.channelName(\n                        startupUpdates.channel())",
+    "after": "com.deepseekharness.app.util.UiText.format(\"发现新版本 %s · %s\", release.version, com.deepseekharness.app.core.UpdateEngine.channelName(\n                        startupUpdates.channel()))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+  },
+  {
+    "zh": "无法打开文件选择器，请检查系统文件应用：%s",
+    "en": "Unable to open the file picker. Check the system Files app: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"无法打开文件选择器，请检查系统文件应用：\")\n              + error.getClass().getSimpleName()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"无法打开文件选择器，请检查系统文件应用：%s\", error.getClass().getSimpleName())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+  },
+  {
+    "zh": "\n\n版本：%s%s%s%s%s%s",
+    "en": "\n\nVersion: %s%s%s%s%s%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"\\n\\n版本：\")\n                            + item.version\n                            + (item.location.isEmpty()\n                                ? \"\"\n                                : com.deepseekharness.app.util.UiText.text(\"\\n位置：\") + item.location)\n                            + (item.source.isEmpty()\n                                ? \"\"\n                                : com.deepseekharness.app.util.UiText.text(\"\\n来源：\") + item.source)\n                            + (item.latestVersion.isEmpty()\n                                ? \"\"\n                                : com.deepseekharness.app.util.UiText.text(\"\\n上次检查版本：\")\n                                    + item.latestVersion)\n                            + (item.updateMessage.isEmpty()\n                                ? \"\"\n                                : \"\\n\"\n                                    + com.deepseekharness.app.util.UiStateText.render(\n                                        item.updateMessage))\n                            + (item.rollbackVersion.isEmpty()\n                                ? \"\"\n                                : com.deepseekharness.app.util.UiText.text(\"\\n可回退：\")\n                                    + item.rollbackVersion)",
+    "after": "com.deepseekharness.app.util.UiText.format(\"\\n\\n版本：%s%s%s%s%s%s\", item.version, (item.location.isEmpty()\n                                ? \"\"\n                                : com.deepseekharness.app.util.UiText.text(\"\\n位置：\") + item.location), (item.source.isEmpty()\n                                ? \"\"\n                                : com.deepseekharness.app.util.UiText.text(\"\\n来源：\") + item.source), (item.latestVersion.isEmpty()\n                                ? \"\"\n                                : com.deepseekharness.app.util.UiText.text(\"\\n上次检查版本：\")\n                                    + item.latestVersion), (item.updateMessage.isEmpty()\n                                ? \"\"\n                                : \"\\n\"\n                                    + com.deepseekharness.app.util.UiStateText.render(\n                                        item.updateMessage)), (item.rollbackVersion.isEmpty()\n                                ? \"\"\n                                : com.deepseekharness.app.util.UiText.text(\"\\n可回退：\")\n                                    + item.rollbackVersion))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+  },
+  {
+    "zh": "\n位置：%s",
+    "en": "\nLocation: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"\\n位置：\") + item.location",
+    "after": "com.deepseekharness.app.util.UiText.format(\"\\n位置：%s\", item.location)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+  },
+  {
+    "zh": "\n来源：%s",
+    "en": "\nSource: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"\\n来源：\") + item.source",
+    "after": "com.deepseekharness.app.util.UiText.format(\"\\n来源：%s\", item.source)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+  },
+  {
+    "zh": "\n上次检查版本：%s",
+    "en": "\nLast checked version: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"\\n上次检查版本：\")\n                                    + item.latestVersion",
+    "after": "com.deepseekharness.app.util.UiText.format(\"\\n上次检查版本：%s\", item.latestVersion)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+  },
+  {
+    "zh": "\n可回退：%s",
+    "en": "\nRollback available: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"\\n可回退：\")\n                                    + item.rollbackVersion",
+    "after": "com.deepseekharness.app.util.UiText.format(\"\\n可回退：%s\", item.rollbackVersion)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+  },
+  {
+    "zh": "PTY 启动失败：%s",
+    "en": "PTY startup failed: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"PTY 启动失败：\") + safe",
+    "after": "com.deepseekharness.app.util.UiText.format(\"PTY 启动失败：%s\", safe)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+  },
+  {
+    "zh": "关闭失败，会话仍保留：%s",
+    "en": "Close failed; session retained: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"关闭失败，会话仍保留：\") + problem",
+    "after": "com.deepseekharness.app.util.UiText.format(\"关闭失败，会话仍保留：%s\", problem)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+  },
+  {
+    "zh": "保留记录无法读取，原件未改动。\n%s",
+    "en": "Retained records are unreadable. Originals are unchanged.\n%s",
+    "before": "UiText.text(\"保留记录无法读取，原件未改动。\") + \"\\n\" + BackupErrorCode.from(error)",
+    "after": "UiText.format(\"保留记录无法读取，原件未改动。\\n%s\", BackupErrorCode.from(error))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+  },
+  {
+    "zh": "关闭失败，会话仍保留：%s",
+    "en": "Close failed; session retained: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"关闭失败，会话仍保留：\") + problem",
+    "after": "com.deepseekharness.app.util.UiText.format(\"关闭失败，会话仍保留：%s\", problem)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/TerminalFragment.java"
+  },
+  {
+    "zh": "…（输出过长已截断）\n%s",
+    "en": "…(long output truncated)\n%s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"…（输出过长已截断）\\n\")\n                + buffer.substring(buffer.length() - 100000)",
+    "after": "com.deepseekharness.app.util.UiText.format(\"…（输出过长已截断）\\n%s\", buffer.substring(buffer.length() - 100000))",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/TerminalFragment.java"
+  },
+  {
+    "zh": "关闭终端 %s",
+    "en": "Close terminal %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"关闭终端 \") + tab.number",
+    "after": "com.deepseekharness.app.util.UiText.format(\"关闭终端 %s\", tab.number)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java"
+  },
+  {
+    "zh": "无法安装：%s；可重试",
+    "en": "Cannot install: %s; retry available",
+    "before": "com.deepseekharness.app.util.UiText.text(\"无法安装：\")\n            + error.getMessage()\n            + com.deepseekharness.app.util.UiText.text(\"；可重试\")",
+    "after": "com.deepseekharness.app.util.UiText.format(\"无法安装：%s；可重试\", error.getMessage())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java"
+  },
+  {
+    "zh": "正在下载 %s",
+    "en": "Downloading %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"正在下载 \") + name",
+    "after": "com.deepseekharness.app.util.UiText.format(\"正在下载 %s\", name)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+  },
+  {
+    "zh": "服务返回 HTTP %s",
+    "en": "Service returned HTTP %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"服务返回 HTTP \") + status",
+    "after": "com.deepseekharness.app.util.UiText.format(\"服务返回 HTTP %s\", status)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+  },
+  {
+    "zh": "正在下载 %s",
+    "en": "Downloading %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"正在下载 \") + name",
+    "after": "com.deepseekharness.app.util.UiText.format(\"正在下载 %s\", name)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+  },
+  {
+    "zh": "已保存：%s",
+    "en": "Saved: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"已保存：\") + name",
+    "after": "com.deepseekharness.app.util.UiText.format(\"已保存：%s\", name)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+  },
+  {
+    "zh": "文件处理失败：%s",
+    "en": "File processing failed: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"文件处理失败：\") + error.getMessage()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"文件处理失败：%s\", error.getMessage())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+  },
+  {
+    "zh": "标准版预览内核: %s",
+    "en": "Standard browser engine: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"标准版预览内核: \") + browserInfo",
+    "after": "com.deepseekharness.app.util.UiText.format(\"标准版预览内核: %s\", browserInfo)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+  },
+  {
+    "zh": "系统 WebView 初始化失败: %s",
+    "en": "System WebView initialization failed: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"系统 WebView 初始化失败: \")\n              + e.getClass().getSimpleName()",
+    "after": "com.deepseekharness.app.util.UiText.format(\"系统 WebView 初始化失败: %s\", e.getClass().getSimpleName())",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+  },
+  {
+    "zh": "请更新或启用 Android System WebView / Chrome，也可以使用系统浏览器进入对话。",
+    "en": "Update or enable Android System WebView / Chrome, You can also open the conversation in a system browser.",
+    "before": "com.deepseekharness.app.util.UiText.text(\"请更新或启用 Android System WebView / Chrome，\")\n              + com.deepseekharness.app.util.UiText.text(\"也可以使用系统浏览器进入对话。\")",
+    "after": "com.deepseekharness.app.util.UiText.text(\"请更新或启用 Android System WebView / Chrome，也可以使用系统浏览器进入对话。\")",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+  },
+  {
+    "zh": "\n上次未完成：%s",
+    "en": "\nPreviously incomplete: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"\\n上次未完成：\") + failure",
+    "after": "com.deepseekharness.app.util.UiText.format(\"\\n上次未完成：%s\", failure)",
+    "file": "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+  },
+  {
+    "zh": "⚠ 请求执行：%s",
+    "en": "⚠ Requested command: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"⚠ 请求执行：\") + collapse(cmd)",
+    "after": "com.deepseekharness.app.util.UiText.format(\"⚠ 请求执行：%s\", collapse(cmd))",
+    "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+  },
+  {
+    "zh": "悬浮条确认显示失败: %s",
+    "en": "Could not display overlay confirmation: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"悬浮条确认显示失败: \")\n                    + SensitiveData.redact(String.valueOf(e))",
+    "after": "com.deepseekharness.app.util.UiText.format(\"悬浮条确认显示失败: %s\", SensitiveData.redact(String.valueOf(e)))",
+    "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+  },
+  {
+    "zh": "悬浮条更新失败: %s",
+    "en": "Could not update overlay: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"悬浮条更新失败: \")\n                    + SensitiveData.redact(String.valueOf(e))",
+    "after": "com.deepseekharness.app.util.UiText.format(\"悬浮条更新失败: %s\", SensitiveData.redact(String.valueOf(e)))",
+    "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+  },
+  {
+    "zh": "悬浮条更新失败: %s",
+    "en": "Could not update overlay: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"悬浮条更新失败: \")\n                    + SensitiveData.redact(String.valueOf(e))",
+    "after": "com.deepseekharness.app.util.UiText.format(\"悬浮条更新失败: %s\", SensitiveData.redact(String.valueOf(e)))",
+    "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+  },
+  {
+    "zh": "悬浮条预览显示失败: %s",
+    "en": "Overlay preview failed: %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"悬浮条预览显示失败: \")\n                    + SensitiveData.redact(String.valueOf(error))",
+    "after": "com.deepseekharness.app.util.UiText.format(\"悬浮条预览显示失败: %s\", SensitiveData.redact(String.valueOf(error)))",
+    "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+  },
+  {
+    "zh": "悬浮条创建失败（权限被撤？）: %s",
+    "en": "Could not create overlay (permission may have been revoked): %s",
+    "before": "com.deepseekharness.app.util.UiText.text(\"悬浮条创建失败（权限被撤？）: \")\n              + SensitiveData.redact(String.valueOf(e))",
+    "after": "com.deepseekharness.app.util.UiText.format(\"悬浮条创建失败（权限被撤？）: %s\", SensitiveData.redact(String.valueOf(e)))",
+    "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+  }
+]

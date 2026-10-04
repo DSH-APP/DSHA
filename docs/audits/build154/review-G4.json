@@ -1,0 +1,1187 @@
+{
+  "group": "G4",
+  "items": [
+    {
+      "id": "D-CI-01",
+      "status": "open",
+      "severity": "P1",
+      "evidence": "静态核实",
+      "current": ".github/workflows 只有 star-history.yml。构建模板放在 scripts/ci/android-build.yml（GitHub 不会执行该路径），内容为 push main/arena/** 触发、装 platforms;android-34/build-tools 34.0.0、Gradle 8.5、只跑 :app:assembleDebug；而工程实际为 targetSdk 37（app/build.gradle:19）、Gradle wrapper 9.3.1、AGP 9.1.1。docs/接手指南.md:297-299 仍写 git tag 推送即触发 CI 自动构建发布，与事实不符。",
+      "recommendation": "在 .github/workflows 新建三条分离流水线（对应交付物 4）：fast（PR 触发：JVM 单测 run-unit-tests/gradle test、prepare-runtime-descriptor --check、tools 下 Node/Python 回归）、package（main/tag：完整 APK 资产检查，不需要私钥）、release（受保护环境手动触发、持有正式签名密钥）；SDK/Gradle 版本从 app/build.gradle 与 gradle-wrapper.properties 读取而非写死。删除 scripts/ci/android-build.yml 与 prepare-dsh-alpha-runtime.sh 等旧 CI 存档组件（D-LEGACY-01 决策：无部署方的死脚本删除），并改正 docs/接手指南.md:297-299 的发版说明。",
+      "files": [
+        {
+          "path": ".github/workflows/star-history.yml",
+          "sha256": "87b51a4c7af204b06d39caee8b9d76b093fa67fdbc24cd85c96b7867d7226b52"
+        },
+        {
+          "path": "scripts/ci/android-build.yml",
+          "sha256": "750a938ccd414d1e6f232b3b228a6863c4090d9313b35697b9c9df3fed556b3d"
+        },
+        {
+          "path": "scripts/prepare-dsh-alpha-runtime.sh",
+          "sha256": "2e1dd857cca254fa8ddea1c594344fa7f937b7a9db0fdcc06d49cc158a86610d"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-SUP-01",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "ci-make-offline-bundle.sh:136 与 offline-provision.sh:11-13/46-48 把 expected runtimeId/dshVersion/upstreamTag 写死为 dsh-v0.1.2-alpha.2（含固定 upstreamCommit），prepare-dsh-alpha-runtime.sh:10-11 同样；当前 runtime-descriptor.json:5 的 dshVersion 为 0.2.0-rc.2。三处版本身份各自硬编码，无单一来源。",
+      "recommendation": "先确认该离线包链路是否仍为发布路径（与 D-BUILD-02 同一条链）。若不再使用，按 D-LEGACY-01 决策删除 scripts/ci-make-offline-bundle.sh、offline-provision.sh、prepare-dsh-alpha-runtime.sh；若保留，改为从 app/src/main/assets/runtime-descriptor.json 读取 runtimeId/dshVersion/upstreamTag/upstreamCommit，不再写字面量。",
+      "files": [
+        {
+          "path": "scripts/ci-make-offline-bundle.sh",
+          "sha256": "1d906b85fbbdf4599f5305f499bf8b624e5b8cbc413cec87dad56746b1cf3f9f"
+        },
+        {
+          "path": "scripts/offline-provision.sh",
+          "sha256": "7d9805cf44270e43bd5fc371ddcc86b4ea992e319fc16ee9c3c1f47a87228692"
+        },
+        {
+          "path": "scripts/prepare-dsh-alpha-runtime.sh",
+          "sha256": "2e1dd857cca254fa8ddea1c594344fa7f937b7a9db0fdcc06d49cc158a86610d"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-CI-02",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "L180-181 以 DSHA_KEYSTORE 是否存在决定 signed；全部软件检查跑完后 L232 在 not signed 时 raise RuntimeError，被 L286-287 捕获为 INCOMPLETE_OR_FAILED，L291 返回 1。没有私钥的环境（PR CI、其他维护者）无法得到“软件检查通过”的成功退出码。",
+      "recommendation": "把 verify-stability.py 拆成独立阶段/子命令：--stage software（单测、资产、ELF、运行时核对，不需要密钥，成功返回 0 且 status=PASS_SOFTWARE）、--stage sign（仅在受保护 release 环境运行，校验证书 SHA-256 与 V1/V2 签名，L243-245 逻辑迁入）、--stage device（外部真机证据）。缺密钥时 software 阶段不得失败。签名本身的处置按第六节决策留到最后。",
+      "files": [
+        {
+          "path": "tools/verify-stability.py",
+          "sha256": "d4a9dcc84ef9ef1fe1deaafcc6c51b147f7354dd6d3860fdf4f885d45b437caa"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-SUP-02",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "ProotBootstrap.installBundledPnpm 在 L1534（比对标记）与 L1540（写标记）两处写死 \"10.34.5\"；plugin-dependencies.py:18、build-standard-runtime.py:22、verify-stability.py:226 又各自写一份；runtime-descriptor.json:142 只记录 pnpm-runtime.bin 的哈希，不含版本号。",
+      "recommendation": "以 tools/build-standard-runtime.py 的 PNPM_VERSION 为源，在构建时写入 runtime-descriptor.json（如 tools.pnpm.version）或生成 BuildConfig.PNPM_VERSION；ProotBootstrap 用该常量，plugin-dependencies.py 从描述符或环境读取，verify-stability.py 从同一来源比对。",
+      "files": [
+        {
+          "path": "app/src/main/assets/plugin-dependencies.py",
+          "sha256": "4c76ff23db11b1cc7752280bf25222b0e871c15ec5685b47003b13f94cd44310"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "sha256": "af7f6aa549b360cb7cb16b34c5dde3701bda83516c15f5e6b7b060a0d8dcc9f3"
+        },
+        {
+          "path": "tools/build-standard-runtime.py",
+          "sha256": "f5d1106fc70eba055428a51383501b5dddccc5cb61f32d88410134ba721b1cf9"
+        },
+        {
+          "path": "tools/verify-stability.py",
+          "sha256": "d4a9dcc84ef9ef1fe1deaafcc6c51b147f7354dd6d3860fdf4f885d45b437caa"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-01",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L23-24 先试 app/src/main/assets 再退回 src/main/assets，按 cwd 猜路径；L27-31 读 backup-engine.py 文本，用正则 ADB_ARCHIVE_SHA256 = '...' 与 \"*.whl\": \"<hash>\" 提取期望值作为测试契约。",
+      "recommendation": "把 ADB 归档与 wheel 哈希移到单独的数据文件（如 assets/adb-wheels.lock.json），backup-engine.py 与该测试都读取它；资产目录通过 Gradle 注入的系统属性（systemProperty 'dsha.assetsDir'）传入，不再依赖 cwd。",
+      "files": [
+        {
+          "path": "app/src/test/java/com/deepseekharness/app/runtime/AdbWheelBundleTest.java",
+          "sha256": "e9f5f94c99c2f0ea2fe36ed157e2ffee5b3f2b3544c14e773726ae60015a0c95"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-02",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "153已加入ColdInstallPlan/Packages真实边界单测；Tar提取、补丁契约、RuntimeTrial核心和Web停止适配仍应扩展可测试接口。禁止为覆盖率伪造平台调用。",
+      "recommendation": "153已加入ColdInstallPlan/Packages真实边界单测；Tar提取、补丁契约、RuntimeTrial核心和Web停止适配仍应扩展可测试接口。禁止为覆盖率伪造平台调用。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "sha256": "e1e272cfbe98cd39cbaf89851320ef0c93fc699fe11108eac6ddd0a5132b811f"
+        },
+        {
+          "path": "app/src/test/java/com/deepseekharness/app/runtime/AdbWheelBundleTest.java",
+          "sha256": "e9f5f94c99c2f0ea2fe36ed157e2ffee5b3f2b3544c14e773726ae60015a0c95"
+        },
+        {
+          "path": "tools/prepare-test-runtime.py",
+          "sha256": "f6fbf185c1f9904a99c422c9b7ab49bcb521c320fbf4c443a332ea25f6624b75"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-SUP-03",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "RuntimeTools.installManagedAssets 按 managed-runtime-inputs.json 把 adb-shell.py、device-shell-policy.py 安装到 root/.dsh/（内容哈希进 runtime-descriptor）；AdbBridge.injectOwned（L133-146）又把 SCRIPTS（adb-pair.py/adb-shell.py/adb-setup.sh/device-shell-policy.py）以 base64 覆盖写到同一 /root/.dsh/，并以手工常量 SCRIPT_VERSION=\"19\"（L35）写 script-version、在 L262-263 grep 脚本内的 # DSHA_ADB_SCRIPT_VERSION=19 判定是否最新。当前各处均为 19，一致。",
+      "recommendation": "以 managed-runtime-inputs.json 为唯一安装路径：AdbBridge.inject 改为调用 RuntimeTools 的受管安装（或只安装清单外的 adb-pair.py/adb-setup.sh），删除对 adb-shell.py/device-shell-policy.py 的 base64 覆盖；“是否最新”改为比对 runtime-descriptor.json 中的 sha256，删除手工 SCRIPT_VERSION 与脚本头注释版本号。",
+      "files": [
+        {
+          "path": "app/src/main/assets/adb-shell.py",
+          "sha256": "de41b0a3cf103cc4f6d99084f55ade2b59d7d5780dea07b03d63819acaccdbc0"
+        },
+        {
+          "path": "app/src/main/assets/dsha-device-shell.sh",
+          "sha256": "064947be2f41b4e1a627d7541846c35ee5e18c152845c416d249f5580fd8ca2b"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+          "sha256": "77fcef82f08ea05b65ced1965681fdb9cfa8a90b3dab08648045edbb0f702373"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "sha256": "e1e272cfbe98cd39cbaf89851320ef0c93fc699fe11108eac6ddd0a5132b811f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-03",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "默认 runner 为 Rc13Instrumentation（build.gradle:23）。L187、L211 以 versionCode=114 构造 Release；UpdateEngine.validatePackage:357 要求 APK 版本码 == release.versionCode 且 > BuildConfig.VERSION_CODE(150)，两者不可同时满足，L190 有效包校验必抛错；错误包“被拒绝”断言因此无区分力。core/OptimizationInstrumentation.java:65 已改为 info.versionCode。L139 硬编码验收机私有插件 dsh-infinite-gen-3。",
+      "recommendation": "L187/L211 改为读取 valid APK 的 PackageInfo.versionCode（同 OptimizationInstrumentation:65），并保证夹具 APK 版本码 > VERSION_CODE；L139 改为测试自己安装的合成插件或通过 instrumentation 参数传入插件名。",
+      "files": [
+        {
+          "path": "app/build.gradle",
+          "sha256": "4657fc4605db002f8009a9208ddbfa3f9ab8ee024d86a3e136f4f342cb5cab55"
+        },
+        {
+          "path": "app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+          "sha256": "d12bd2755bf96a3e315851685681bfd044da1d52c9d9d7b02750f87489761fa8"
+        },
+        {
+          "path": "app/src/androidTest/java/com/deepseekharness/app/core/OptimizationInstrumentation.java",
+          "sha256": "d1f6e14cba044d53a3ea2eabb211b731f58526dd9fc2fa03eaf97c3008a3b645"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+          "sha256": "2cd2ed0dc74bbd3ed808202df4b7f6816f2d92aa19872dfe364d120a5d1220f3"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-04",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L45 执行 SensitiveData.redact(value).substring(0, Math.min(180, value.length()))，长度取自脱敏前的 value；redact 把 token=xxx 等替换成更短的占位后，substring 超出脱敏结果长度抛 StringIndexOutOfBoundsException。",
+      "recommendation": "先脱敏再按脱敏结果长度截取：String safe = SensitiveData.redact(value); safe.substring(0, Math.min(180, safe.length()))。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/LanguageSettingsAudit.java",
+          "sha256": "cf773297584e85d1b046aea68deeabbee3a8a7161bd9a0d3a9d446ea71bdb55b"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java",
+          "sha256": "a100e640a13729c319f063a910edaab5284ec74c3366f2b768410a871fd54f49"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-05",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "L72 performClick R.id.config_save，执行 ConfigFragment.java:126 起的保存监听器（API Key 重新加密 L138、端口、运行时、DNS、LAN、悬浮窗等）；finally（L79）只恢复 KEY_BACKUP_KEY。L16 类注释称“发布构建中验证……只写模拟日志和可恢复的布尔偏好”，而该类只在 debug 源集且会写多项真实配置。",
+      "recommendation": "把保存逻辑抽成 ConfigFragment 可注入的 ConfigSaver，审计中替换为记录调用的假实现；或在 finally 中快照并恢复整个 SharedPreferences 与凭据存储。改正 L16 注释为“仅 debug，会写入配置”。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/InstallSettingsAudit.java",
+          "sha256": "412daab1d95aa00f324bc2e91b0fbafaae96dadcecd4f6d180c6a1d1c9fac362"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java",
+          "sha256": "3b9437692d95a6a685282707863170ec134ae91331860df6138ac39b3ed05b99"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-06",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "ConfigStore 构造（L22-24）会删除 backup_launch_count；L105 先构造 ConfigStore，L125 再读该键，oldCount 基本恒为 null；L120/L136/L368 的检查点保存与恢复因此无实际作用。L368 在 finally 中做 (Integer) 强转，若值类型不符抛 ClassCastException 会跳过后续 finish()。",
+      "recommendation": "删除 backup_launch_count 相关的读取、检查点字段与恢复语句（L120、L125、L136、L368）。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java",
+          "sha256": "7273cd229462512a41cfb14e1f94ddb72ccea400b5f1fa2c10177c2fe9d3b96b"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+          "sha256": "c837583016a334cb7bc4ea294a07976aa57f344bf1dd0cb9db54d403d1d98890"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-07",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "InstallAuditInstrumentation 的 fixture 模式（L121-123）在 L125 BuildConfig.DEBUG 检查之前返回，L197 文案为“PASS 非调试包”；但该类只在 debug 源集，唯一非 debug 插桩构建 device-backup-audit.init.gradle:33 只复制 LayoutAuditInstrumentation/LayoutPreviewActivity，且 L3-5 未设 DSHA_ENABLE_LEGACY_AUDIT=1 时直接抛错。L283 pending.begin 后 L289-290 的 check 失败会抛出，L292 rollback 不执行；L263 的 missing-environment-<UUID> 夹具目录从不删除。MultiTerminalLanguageAudit:17、StartupRecoveryAudit:16、UiMotionAudit:8 注释同样称“非调试”。",
+      "recommendation": "把“非调试包/非调试真机”文案改为“debug 包”；pending.begin 后用 try/finally 保证 rollback；夹具目录在 finally 中递归删除（限定 install-audit 前缀）。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/InstallAuditInstrumentation.java",
+          "sha256": "afd306c71be36da733b98d9d669af931c0a1e67ea6a756579fb40dacb6127beb"
+        },
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/MultiTerminalLanguageAudit.java",
+          "sha256": "61d361cfd7a2046381ebc42d82f29fbc375238eb5bfcc90cab39e97c1ba01cc9"
+        },
+        {
+          "path": "tools/device-backup-audit.init.gradle",
+          "sha256": "2282eb856cc737563c2168f8ffd3fb8824a3774e7085cfb4a77ed7c5aff9e36b"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-08",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "L34 先执行 BackupManager.runDataTask(c, EnvironmentMaintenance.update)（会停止用户 Web），之后 L36/L40/L41 复制 test-attachment-store.mjs、rc21-test-backup.py、rc21-test-personal.py；debug/assets 只有 web-state-fixture.html，test-attachment-store.mjs 只由 device-backup-audit.init.gradle:24 注入已停用的 deviceAudit 构建，rc21-test-*.py 全仓无生成者，复制必失败。运行前没有检查 Web/RuntimeTasks 是否空闲。",
+      "recommendation": "若该审计仍需保留：把三个脚本以 Gradle 任务复制进 src/debug/assets（从 tools/ 生成），资产存在性检查与 Web/任务空闲检查移到 L34 之前；否则按 D-LEGACY-01 删除 Rc21AttachmentAudit。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+          "sha256": "43f8c205a0151637ab079233f9d9f04c7473315062786f0d71b8b4d9b78b6f47"
+        },
+        {
+          "path": "tools/device-backup-audit.init.gradle",
+          "sha256": "2282eb856cc737563c2168f8ffd3fb8824a3774e7085cfb4a77ed7c5aff9e36b"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-09",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "register-builtin-plugins.py:57-66 的 DEFAULT_BUILTINS 共 8 个；PluginRepository.readItems:561-562 只按 BuiltinPlugins.internal 隐藏 dsh-base/dsh-web-app/dsh-app-integration，8 个中只有 dsh-app-integration 被隐藏，可见 builtin 为 7 个。UpgradeDeviceAudit:128 要求 ==4，PluginListAudit:34 builtins!=4 即失败，L37 文案“四项内置组件”；BuiltinPlugins.java:26 注释也写“只展示四个功能插件”。",
+      "recommendation": "断言改为与 register-builtin-plugins.py 的 DEFAULT_BUILTINS 减去 BuiltinPlugins.internal 后的集合逐项比对（而非计数），把该可见集合定义为单一常量供测试与 UI 使用；更新 BuiltinPlugins.java:26 注释与 PluginListAudit:37 文案。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java",
+          "sha256": "1938c926bcbfdc3a9d2d7c4f3df384ad905cba059be37c62077e5855ce6a75e8"
+        },
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/PluginListAudit.java",
+          "sha256": "de462cd10b6e0e8c3760d2ba258ee1ad87a0bbe6fd1652cc73c688b50d103c4a"
+        },
+        {
+          "path": "app/src/main/assets/register-builtin-plugins.py",
+          "sha256": "f44648db69bd7600233ba198e38f7308c0863aec460b51c512687a454db59ce8"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+          "sha256": "2963b468cb15b802efcea3630e34493729b881529ef1c3e9c77731694dfb747f"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java",
+          "sha256": "9aebedcb845df9d5cf1c022876232f3a752763bcce58fe735b7b22ead87d5cd8"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEBUG-01",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "MaintenanceFixture 以 maintenance-fixture-<UUID>- 为前缀（L606）建含完整 rootfs 的夹具（L69 要求 ≥3 GiB），L82/91/229 明示“fixture 原样保留”；Rc21RecoveryAudit 的 rc21-recovery-<UUID>（L19）在 finally（L74）只返回路径不删；StartupDiagnosticsAudit 写 startup-launch.png（L111，前台截图，可能含对话内容）与 startup-diagnostics-last.log（L126）。StorageMaintenance.CACHE（L10）只按固定目录名清理，不含这些前缀/文件。FixtureHarness.failBackup（L560，L581 读取）从未被置 true。",
+      "recommendation": "保留现场改为显式参数（如 -e keepFixture 1），默认在 finally 删除；StorageMaintenance.CACHE 增加 maintenance-fixture-、rc21-recovery- 前缀与 startup-launch.png/startup-diagnostics-last.log；删除 failBackup 字段与 L581 分支，或补一个使用它的失败用例。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/core/MaintenanceFixtureInstrumentation.java",
+          "sha256": "5f7039a339db83baa7d06c283cda5ab275a15bfa34c3a9846795b1e0739e61f6"
+        },
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/core/Rc21RecoveryAudit.java",
+          "sha256": "4f2851f2cae4f2c75571fe4720e60517b445ed6fc04e4771dda7bcbb9fb3c703"
+        },
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java",
+          "sha256": "cc2bc5c760311166600227f68a87f46b787602e2ab520c2657174d91aa22d0fc"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+          "sha256": "a9ba93c16e8969dc3b0c9dc54d183a4abbe28c1c35e7dd05bcb7f7aff27017c7"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-10",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "Fixture 以固定目录 cache/device-policy-audit 为根，L76 mkdirs 失败即抛“测试目录已存在或不可写”。Java finally（L64-67）只停 bridge、清偏好；宿主脚本 finally（L171-177）只删随机 tmp/Download 目录、移除 forward 并 touch done。全仓无删除 cache/device-policy-audit 的代码，token/ready/done 残留。若手工只删 ready 不删 done，L59 循环会立即视宿主已完成。",
+      "recommendation": "Fixture 改为 cache/device-policy-audit-<UUID>（路径通过 instrumentation 结果回传给宿主脚本），Java finally 递归删除；或宿主脚本 finally 以 run-as com.dsh.client rm -rf cache/device-policy-audit 收尾，并在启动时先删除旧 done。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/DevicePolicyAudit.java",
+          "sha256": "3f5ff2eb0a054ab68e899300df2a8dba6ead3d6661dcc0c120a176bd9fa6f828"
+        },
+        {
+          "path": "tools/device-policy-device-audit.py",
+          "sha256": "f5a8fc3ee29600bf9f8ce28cdbddbe5dfd8f427a7bd8f9602f6ccf78515d30a8"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-11",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "L17 注释称“不接触用户会话”；L41 只用 Intent extra url 指向本地夹具服务器，L89 启动用户 MainActivity。WebPreviewActivity.onCreate L187-188：HarnessController.getWebAuthUrl() 非空且不同于 extra 时，用真实鉴权地址替换 authUrl 并清空 cookie/restoreState。upload 模式（L49-65）用反射覆盖 authUrl/baseUrl，默认模式没有。",
+      "recommendation": "审计开始前要求 Web 未运行（检查 getWebAuthUrl() 为空，否则中止并提示），或像 upload 模式一样对所有模式统一注入夹具地址；更正 L17 注释。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/WebRegressionAudit.java",
+          "sha256": "0d8e6bcc1c37f7e994979cf59d82a855055bb25b94b09c8967ab8681bc6a723b"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+          "sha256": "52cb5b6e35f37a2d1ff9df11616a1f2ae25f5e06d494b2943c7d85463ff48352"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-12",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "MultiTerminalLanguageAudit:33 与 RuntimeStartupAudit:106 用 getDeclaredField(\"sessions\") 读 PtyTerminalFragment/TerminalFragment 的静态字段；终端标签已迁到 TerminalSessionOwner 的私有实例字段 pty/simple（L13-14），两个 Fragment 只剩 OWNER（PtyTerminalFragment:76）。反射必抛 NoSuchFieldException。",
+      "recommendation": "删除反射，改用 TerminalSessionOwner.shared().ptyTabs()/simpleTabs() 等公开只读访问（必要时给 TerminalSessionOwner 加 @VisibleForTesting 访问器）。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/runtime/RuntimeStartupAudit.java",
+          "sha256": "daa74ff983cb7eb51549d200f816199316a196dae2527a3065a6fd4f54244cd8"
+        },
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/MultiTerminalLanguageAudit.java",
+          "sha256": "61d361cfd7a2046381ebc42d82f29fbc375238eb5bfcc90cab39e97c1ba01cc9"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/TerminalSessionOwner.java",
+          "sha256": "00fe0725e49f60d8c2e97ed07716c86c673bd0d83397a7855f4195f086769902"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java",
+          "sha256": "fff3efa8c50bd4b43fb10757d9a5f988ece2084318911f114f11954dc0cca86d"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/TerminalFragment.java",
+          "sha256": "efa20c03474d1264d3352ed6c30777343506740d4d5ef8f945d5d1dd5faba9ee"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-13",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "四个审计用 ConfigStore.getUiLanguage()（L59-62：按系统解析后的 zh/en）作为原值，恢复时写回 ui_language。偏好原本为 \"system\" 时被写成显式语言。LogPanelAudit:86 用 LanguageController.select(language) 无条件写入，未设置时也会固化；其余三处只在原先存在键时写错。StartupRecoveryAudit:165-166 用原始 prefs 值恢复，是正确写法。",
+      "recommendation": "四处改为保存 prefs.getString(\"ui_language\", null) 原始值（或 ConfigStore.getUiLanguagePreference()），恢复时按原始值写回/删除；LogPanelAudit 同样区分键是否存在。可抽一个 PrefSnapshot 工具供各审计复用。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/LogPanelAudit.java",
+          "sha256": "25d6950431be525a8b0a0f079bd52e3b0caa61edf501aa3b8049a963f4a8c6d7"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+          "sha256": "c837583016a334cb7bc4ea294a07976aa57f344bf1dd0cb9db54d403d1d98890"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-14",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "L18 注释“假日志验证脱敏”；但 L53 用真实 Application 启动 DiagnosticActivity.downloadLogs，L61 断言真实下载完成；ErrorLogRepository 导出包含 linux/ubuntu/root/dsh-web.log 尾部（L105-106）到公共 Download/DSHA/，并写 dsha_log_exports.last_uri（L73）。finally（L88-91）只清 fakeBase 夹具。",
+      "recommendation": "导出目标改为可注入：审计中注入假日志源与 cacheDir 下的临时导出目录；或在 finally 中通过返回的 uri 删除导出文件并恢复 last_uri 原值；更正 L18 注释。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/UiPolishAudit.java",
+          "sha256": "6c0471fbb0a43e2e857e08b6acf103207eaee9cad765f45186a52e5797054a65"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java",
+          "sha256": "dee5475c9fb62ff89e6ec5ab77bc6bdaf922a2e5d15ec25bd3d4e303f450fdf5"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-15",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "L34-35 定位真实 .offline-extracted（ProotBootstrap.java:61 的就绪标记）并在 L46 改名为 .rc11-audit-ready-marker，仅在 L74 同进程 finally 改回。全仓只有本文件识别 .rc11-audit-ready-marker，主程序无自愈逻辑。",
+      "recommendation": "改用隔离的夹具 rootfs（与 InstallAuditInstrumentation 的 fixture 模式一致）测试恢复入口，不触碰真实标记；若必须使用真实环境，在主程序启动检查中加入“存在 .rc11-audit-ready-marker 且无 .offline-extracted 时改回”的自愈并记录日志。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/RecoveryEntryAudit.java",
+          "sha256": "4738882d38ea085d1c02a73fd49cd81c3e6bae66e9fb791479e32887137de0a2"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "sha256": "af7f6aa549b360cb7cb16b34c5dde3701bda83516c15f5e6b7b060a0d8dcc9f3"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-17",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "L48 读取 dsh-client-ui-sidebar-documentpreview/lib/client.js，L50 查找 'var _dsh_pdf_worker_default = '，L52 未找到即失败；生产补丁 pdf-compat-patch.json:3 的 module 是 lib/client.pdf.js。",
+      "recommendation": "L48 路径改为从 pdf-compat-patch.json 的 module 字段读取（避免再次漂移），即 lib/client.pdf.js。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/BrowserCompatibilityAudit.java",
+          "sha256": "a1a840c9082ffe925ed23d94a20b7c3528ca97b298a5fe6260fd97b354bd3a5f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-18",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "TabletEnvironmentAudit:22 copyAsset(\"tablet-tests/test-environment-data.py\")，Rc21AttachmentAudit:40-41 复制 rc21-test-backup.py/rc21-test-personal.py；find app/src 无 tablet-tests 目录与 rc21-test-*；debug/assets 只有 web-state-fixture.html；prepare-standard-assets.py:101-116 只复制 src/main/assets，没有任何步骤把 tools/test-environment-data.py 打包。",
+      "recommendation": "新增 Gradle 任务 prepareDebugTestAssets，把 tools/test-environment-data.py、tools/test-backup-engine.py 复制到 debug 构建的生成 assets（tablet-tests/、rc21-test-*.py），仅 debug 变体启用；或删除这些不再维护的审计模式。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+          "sha256": "43f8c205a0151637ab079233f9d9f04c7473315062786f0d71b8b4d9b78b6f47"
+        },
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+          "sha256": "571ea622953a0e4902226bf700bfe850e946683527ea6d4465898ebc0da56c63"
+        },
+        {
+          "path": "tools/prepare-standard-assets.py",
+          "sha256": "ceeec013da89864b5f371888b81d69d44612991807610c6ed264175f76f9594f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-19",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "两处 finish(failure?1:0, result)：成功回 0（=Activity.RESULT_CANCELED）、失败回 1（RESULT_FIRST_USER）；DevicePolicyAudit:76 等用 RESULT_OK/RESULT_CANCELED。现有脚本（run-backup-device-audit.py:85）按 result=PASS 文本判定，不读 INSTRUMENTATION_CODE。",
+      "recommendation": "统一改为 finish(ok ? Activity.RESULT_OK : Activity.RESULT_CANCELED, result)；同样检查其他 debug 插桩（InstallSettingsAudit:81、LogPanelAudit:86 等也用 1:0 字面量），一并修正或抽公共基类。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+          "sha256": "571ea622953a0e4902226bf700bfe850e946683527ea6d4465898ebc0da56c63"
+        },
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/ui/ConfigurationAuditInstrumentation.java",
+          "sha256": "b78ae100015d9a024fc0b499c41c4e4b36de11d457f7f45a5312504e97e7602d"
+        },
+        {
+          "path": "tools/run-backup-device-audit.py",
+          "sha256": "433f7721c7497dbedbaccfad0cd171ad4645458e84f67885139bc832a6398afe"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-20",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "terminalBirth（L169-170）在 BuildConfig.DEBUG 为 true 时抛“必须使用非调试版复测”；该类只在 debug 源集。唯一非调试插桩构建 deviceAudit 只复制 LayoutAuditInstrumentation/LayoutPreviewActivity（init.gradle:33），且未设 DSHA_ENABLE_LEGACY_AUDIT=1 时 L3-5 直接抛错。",
+      "recommendation": "把 PTY 出生身份检查改为可在 debug 包运行（若 debuggable 影响的只是 ptrace/run-as 行为，则在断言中区分）；或在新 CI 方案中提供受控的 release-signed 测试 APK 并把该模式迁入；否则删除该模式并更新 README。",
+      "files": [
+        {
+          "path": "app/src/debug/java/com/deepseekharness/app/runtime/RuntimeStartupAudit.java",
+          "sha256": "daa74ff983cb7eb51549d200f816199316a196dae2527a3065a6fd4f54244cd8"
+        },
+        {
+          "path": "tools/device-backup-audit.init.gradle",
+          "sha256": "2282eb856cc737563c2168f8ffd3fb8824a3774e7085cfb4a77ed7c5aff9e36b"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-21",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "selftest.py无当前部署入口，该假PASS属于死自检代码而非当前原生DiagnosticActivity；移除旧脚本或退役断言，同时保留执行侧DeviceShellPolicy测试。",
+      "recommendation": "selftest.py无当前部署入口，该假PASS属于死自检代码而非当前原生DiagnosticActivity；移除旧脚本或退役断言，同时保留执行侧DeviceShellPolicy测试。",
+      "files": [
+        {
+          "path": "app/src/main/assets/adb-shell.py",
+          "sha256": "de41b0a3cf103cc4f6d99084f55ade2b59d7d5780dea07b03d63819acaccdbc0"
+        },
+        {
+          "path": "app/src/main/assets/selftest.py",
+          "sha256": "e7bafe7566796e80ec37b74185e199b3c5e002c1187355f8080c23acd8e5dbaa"
+        },
+        {
+          "path": "tools/test-adb-flow.py",
+          "sha256": "7c109c6d828f6206424e89ea1170bfa95e55f5210b4cfd9a6f7dd3edcdde6cd5"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-BUILD-01",
+      "status": "open",
+      "severity": "P0",
+      "evidence": "静态核实",
+      "current": "当前153原始字节描述符通过；Git LF检出仍改变受管JS等输入。实际检测404份tracked文本含CRLF。二进制必须排除归一化；通过规范化实际文本后重新生成所有证明修复，不能只让哈希忽略换行。",
+      "recommendation": "当前153原始字节描述符通过；Git LF检出仍改变受管JS等输入。实际检测404份tracked文本含CRLF。二进制必须排除归一化；通过规范化实际文本后重新生成所有证明修复，不能只让哈希忽略换行。",
+      "files": [
+        {
+          "path": "app/build.gradle",
+          "sha256": "4657fc4605db002f8009a9208ddbfa3f9ab8ee024d86a3e136f4f342cb5cab55"
+        },
+        {
+          "path": "tools/prepare-runtime-descriptor.py",
+          "sha256": "70f1a098937f93bcb07fa9ad7417216c921704845b1d66bafc74eee66908ac25"
+        },
+        {
+          "path": "tools/prepare-standard-assets.py",
+          "sha256": "ceeec013da89864b5f371888b81d69d44612991807610c6ed264175f76f9594f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-22",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "当前FS实际使用atomic-publish；旧selftest未部署，按死资产处理，不能降级现行原子发布。",
+      "recommendation": "当前FS实际使用atomic-publish；旧selftest未部署，按死资产处理，不能降级现行原子发布。",
+      "files": [
+        {
+          "path": "app/src/main/assets/fs-write-patch.sh",
+          "sha256": "b9491cc67413b166cd419dfdff7f9a6fe47a0885281ba35c76c5ed665271e446"
+        },
+        {
+          "path": "app/src/main/assets/selftest.py",
+          "sha256": "e7bafe7566796e80ec37b74185e199b3c5e002c1187355f8080c23acd8e5dbaa"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "sha256": "af7f6aa549b360cb7cb16b34c5dde3701bda83516c15f5e6b7b060a0d8dcc9f3"
+        },
+        {
+          "path": "tools/build-dsh-runtime.py",
+          "sha256": "f15e89ceef0b00c6930146301d0417e34fef5118ffafac9239a7b64d0b6d2341"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-23",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "ProcessTerminationTest.ignoredGracefulSignalEscalatesOnlyForPassedProcess 的 unrelated 从未传给 stop()，assertTrue(unrelated.alive) 恒真；ShellQuoteTest.roundTripOnPluginLikeValue 只断言首尾为单引号，不验证转义与还原；StartupHistoryStoreTest L14 传入 reason \"token=secret-value\"，但不断言落盘内容已脱敏（主代码 StartupHistoryStore.java:32 有 redact）。",
+      "recommendation": "ProcessTermination：构造“同 UID 无关进程”并经与被停进程相同的选择路径传入，断言其不被 kill；ShellQuote：用 /bin/sh -c 'printf %s '+quoted 还原后 assertEquals 原值（或纯 Java 解析器）；StartupHistoryStore：读回记录文件断言不含 secret-value。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/StartupHistoryStore.java",
+          "sha256": "a381762a79866da771e9d2672878ef35f4dd2123ef5ca0ba91df4efb0618e06b"
+        },
+        {
+          "path": "app/src/test/java/com/deepseekharness/app/util/ProcessTerminationTest.java",
+          "sha256": "3507538338aaecb80209d662bfdd64d3f74effec8bb75fd7530d0436b70cca88"
+        },
+        {
+          "path": "app/src/test/java/com/deepseekharness/app/util/ShellQuoteTest.java",
+          "sha256": "86e60cd82e5fad8b55524487197d4fd08ba95202efaf9b72075637f20068d3f7"
+        },
+        {
+          "path": "app/src/test/java/com/deepseekharness/app/util/StartupHistoryStoreTest.java",
+          "sha256": "0084150f8ba12e7a45bdaf8c535620c4326d87d5d6ada8b6e12b36b97e2e58f7"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-24",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "153新Linux父别名夹具已经执行8边界证明，JVM测试FS仍伪device/mode；应读取实际unix属性并保留Windows可靠回退，再增故障注入FS，不能将宿主夹具宣传为Android验证。",
+      "recommendation": "153新Linux父别名夹具已经执行8边界证明，JVM测试FS仍伪device/mode；应读取实际unix属性并保留Windows可靠回退，再增故障注入FS，不能将宿主夹具宣传为Android验证。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/AndroidBackupFileSystem.java",
+          "sha256": "c3f0e05f3873580f5783819720cabe698b55ba0ccefde3fb374bb6829e17cb3d"
+        },
+        {
+          "path": "app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystem.java",
+          "sha256": "e7b7a8fa51d8ff207b0989fb2a5df6e25ae218782bf8fce62a352e0074bf669f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-BUILD-02",
+      "status": "open",
+      "severity": "P1",
+      "evidence": "静态核实",
+      "current": "ci-make-offline-bundle.sh:91-95 cp -a app/src/main/assets/{device-shell-guide,task-notifier,status-overlay,web-mobile}，这四个目录在 build150 不存在（实际为 assets/builtin-plugins/dsh-*，共 7 个目录）；脚本 set -euo pipefail，cp 失败即中止。provision-builtin-plugins.sh 只预置 4 个插件，不含 dsh-computer-use-android/dsh-auto-review/dsh-tool-vscreen/dsh-app-integration。唯一调用方是不会被 GitHub 执行的 scripts/ci/android-build.yml:34。",
+      "recommendation": "先确认 offline-rootfs.bin 当前由哪个脚本生成（tools/build-standard-runtime.py 等）。若此链路已被取代：按 D-LEGACY-01 删除 scripts/ci-make-offline-bundle.sh、provision-builtin-plugins.sh、offline-provision.sh、make-offline-bundle.sh、scripts/ci/；若仍在用：改为从 register-builtin-plugins.py DEFAULT_BUILTINS 与 assets/builtin-plugins/ 读取插件清单，不再写死目录名，并纳入 CI package 阶段实跑。",
+      "files": [
+        {
+          "path": "scripts/ci-make-offline-bundle.sh",
+          "sha256": "1d906b85fbbdf4599f5305f499bf8b624e5b8cbc413cec87dad56746b1cf3f9f"
+        },
+        {
+          "path": "scripts/ci/android-build.yml",
+          "sha256": "750a938ccd414d1e6f232b3b228a6863c4090d9313b35697b9c9df3fed556b3d"
+        },
+        {
+          "path": "scripts/provision-builtin-plugins.sh",
+          "sha256": "f4dae923012b25c4061aa773c814195b78f41bac744f51a5a05fb415914cf50f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-REPRO-01",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "build.ps1 默认 SDK 为 F:/DSHA/_toolchains/android-sdk，硬编码 NDK 26.3.11579264 的 prebuilt/windows-x86_64 与 clang.exe，输出直接覆盖 jniLibs 下的入库 .so；runtime-descriptor.json:13 只记录该 .so 的 sha256，没有任何检查从 session-launcher.c 重建并比对。tools/dns-compat-fixture.c 全仓无编译或注入引用。",
+      "recommendation": "把 build.ps1 改写为跨平台脚本（Python 或 sh，NDK 路径取 ANDROID_NDK_HOME，版本锁定 26.3.11579264），在 CI package 阶段于 Linux 重建 libdsha-session.so 并与入库文件比对 sha256（必要时加 -ffile-prefix-map 等确保可复现）；dns-compat-fixture.c 增加同类构建脚本并接入 test-dns-compat，或删除。",
+      "files": [
+        {
+          "path": "tools/native-session/build.ps1",
+          "sha256": "ead15e76a6454ccffd43d5b6005dfe2dd79ee45bfef463827de34fad59813ef0"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-26",
+      "status": "open",
+      "severity": "P1",
+      "evidence": "静态核实",
+      "current": "L191 只收集 src/test/java 下 *Test.java；src/test 中的 JvmBackupFileSystem.java 与 ConfigResetCrashProcess/ConfigurationCrashProcess/EnvironmentCrashProcess/HostRuntimeCrashProcess/HostTransactionCrashProcess 共 6 个辅助类不参与编译，被多个测试引用（如 AutomaticBackupPrunerTest:13），全量运行时 javac cannot find symbol，L145-149 die。失败路径不清理临时目录（L215 rmtree 只在成功末尾执行）。",
+      "recommendation": "L191 改为收集 src/test/java 下全部 *.java 编译，只把 *Test.java 作为待运行类；用 try/finally（或 tempfile.TemporaryDirectory）保证清理。长期以 gradle testDebugUnitTest 为准，run-unit-tests.py 仅作无 AGP 环境的后备。",
+      "files": [
+        {
+          "path": "app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystem.java",
+          "sha256": "e7b7a8fa51d8ff207b0989fb2a5df6e25ae218782bf8fce62a352e0074bf669f"
+        },
+        {
+          "path": "tools/run-unit-tests.py",
+          "sha256": "1dacf632a4865aaed1c00890877424c08642f2fa1d7b3a7a67c3ea85a8a6c41b"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-27",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "agent-preset-patch明确retiredFor rc2；上游已接管入口，禁止重新套用rc1补丁。清理调用与死测试时必须保留历史格式证据的可读兼容。",
+      "recommendation": "agent-preset-patch明确retiredFor rc2；上游已接管入口，禁止重新套用rc1补丁。清理调用与死测试时必须保留历史格式证据的可读兼容。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "sha256": "e1e272cfbe98cd39cbaf89851320ef0c93fc699fe11108eac6ddd0a5132b811f"
+        },
+        {
+          "path": "tools/test-agent-preset-switch.mjs",
+          "sha256": "ae7be7a37984487351cda5ee47d07606c0ff525c544b5c8e15325799aaf32a41"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-28",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L6 fs.mkdtempSync(path.resolve('app/build/alpha1-016-intake/observer-fixture-'))，未先创建父目录（mkdtemp 不递归），干净检出必然 ENOENT；临时目录不清理。test-alpha2-upgrade.mjs 依赖 app/build/release136 下旧运行时。两者无调用方。",
+      "recommendation": "按 D-ARCH-07/D-LEGACY-01 决策（只支持 build147 起升级）删除 test-alpha1-startup.mjs 与 test-alpha2-upgrade.mjs；若 startup-observer 仍需覆盖，在新测试中用 os.tmpdir() mkdtemp 并 finally 删除。",
+      "files": [
+        {
+          "path": "tools/test-alpha1-startup.mjs",
+          "sha256": "5049709b1857b5fca0075925dd8cef39080448152dbf6f0ff3fa9656f8926974"
+        },
+        {
+          "path": "tools/test-alpha2-upgrade.mjs",
+          "sha256": "7faa6e155a6ce1e52331485274945cf307f2de38bb553564457f1c73cda14924"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-29",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L9 ADB 固定为 F:\\DSHA\\_toolchains\\android-sdk\\platform-tools\\adb.exe；L12/L22 在 com.dsh.client 的真实 files/linux/ubuntu/root/.dsha-opt-{backup|plugin}-check 建目录，L28-34 push 到 /data/local/tmp/dsha-opt-* 再复制进去；全文件（51 行）无任何 rm/清理。",
+      "recommendation": "ADB 改为 shutil.which('adb') 或 --adb/ANDROID_HOME 参数；夹具目录加随机后缀并在 try/finally 中删除 OWNED 目录与 /data/local/tmp/dsha-opt-* 文件；若已被其他门禁取代则删除该脚本。",
+      "files": [
+        {
+          "path": "tools/test-backup-device.py",
+          "sha256": "22e493dfd991df623e09089487c171d21c60085750adf304946b0f308809e0a1"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-30",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "test-conversation-materialized.mjs:7 默认 app/build/locked-dsh-runtime-rc1；test-chat-render-performance.mjs:6 直读 test-runtimes/current.json 的 raw，且 L46-49 errors 恒为空数组、无性能阈值断言；二者均不经 testRuntime（test-runtime-fixture.mjs:8-20 会校验 dsh 版本与 proof 指纹）。同型：test-issue67-startup.mjs:7 硬编码 app/build/rc2-20260911/locked-runtime，且被 verify-stability.py:206 无参调用——门禁实际在 0.1.x 旧运行时上验证 persona 补丁（dshVersion=0.2.0-rc.2）；test-queue-steer、test-plugin-states、test-profile-settings-cli、rc1-browser-fixture 等同样绕过。",
+      "recommendation": "所有 Node 测试统一通过 testRuntime(kind) 获取运行时目录，删除硬编码历史路径与直读 current.json；test-chat-render-performance 增加耗时阈值断言并收集真实 console/page 错误到 errors；verify-stability.py:206 为 issue67 显式传 DSHA_TEST_RUNTIME 或由 testRuntime 选择。",
+      "files": [
+        {
+          "path": "tools/test-chat-render-performance.mjs",
+          "sha256": "060808f8ab9413c66242c8ab03ca8b9f3c1a32e06c08f21aa45b81f048e7f612"
+        },
+        {
+          "path": "tools/test-conversation-materialized.mjs",
+          "sha256": "09bcf469730b6b0aa114c8ca567a64cab8953ccb2c71fc874d2946727ded9503"
+        },
+        {
+          "path": "tools/test-issue67-startup.mjs",
+          "sha256": "a5acca25dc98f23387d655abfa2e94fcd96b0a6cb8bc12bd2ea7374400ce9e15"
+        },
+        {
+          "path": "tools/test-plugin-states.mjs",
+          "sha256": "d8980d7aa8aa61fc9a6083c353d075726fb77dcb9ac5405a32d232be2112b5eb"
+        },
+        {
+          "path": "tools/test-profile-settings-cli.mjs",
+          "sha256": "fef6ec38d17076bbeb1e7ba8218a2f6032bc35ba2987080cfcd2b029eddd5b0b"
+        },
+        {
+          "path": "tools/test-queue-steer.mjs",
+          "sha256": "51e56692595eacf19d5a6a0ff425ffb397d59631c74716bb3238001bd2c2a32c"
+        },
+        {
+          "path": "tools/test-runtime-fixture.mjs",
+          "sha256": "8b31272043f4a774b2c486b4f0428c0a651267fea06873e0c8e81f5eaa1a9050"
+        },
+        {
+          "path": "tools/verify-stability.py",
+          "sha256": "d4a9dcc84ef9ef1fe1deaafcc6c51b147f7354dd6d3860fdf4f885d45b437caa"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-31",
+      "status": "open",
+      "severity": "P1",
+      "evidence": "静态核实",
+      "current": "本轮抽查 test-mobile-delete、test-mobile-gesture-guard、test-notification-actions、test-office-fonts、test-pdf-compat、test-device-shell-policy、overlay-bridge-test、test-queue-steer：grep 源码（排除 docs/audits）除自身外零引用；verify-stability.py、verify-plugin-upgrade-gate.py、run-unit-tests.py、app/build.gradle 均不调用。其中包含设备命令策略（短信/系统目录保护）、DNS 回落、应急恢复资产等安全/可用性关键回归。",
+      "recommendation": "建立单一测试清单（如 tools/test-manifest.json：名称、命令、所需夹具、阶段 fast/package/device），由一个聚合入口（tools/run-host-tests.py）执行并在 CI fast 阶段运行；每个测试先修到可在干净检出通过（依赖 D-TEST-30/36/39 等），确无价值或依赖已退役版本的按 D-LEGACY-01 删除。新增门禁：tools/ 下 test-*.{py,mjs} 必须出现在清单中，否则 CI 失败。",
+      "files": [
+        {
+          "path": "tools/test-mobile-delete.mjs",
+          "sha256": "825eb6df466ca18a3a53694d2d197e8a034b233e0568c864d91b2a322231e626"
+        },
+        {
+          "path": "tools/verify-plugin-upgrade-gate.py",
+          "sha256": "5fd8d0fb3e87bba852b91fa8f098517b1ef7da003470eaa2b5d46eb0f541a4ff"
+        },
+        {
+          "path": "tools/verify-stability.py",
+          "sha256": "d4a9dcc84ef9ef1fe1deaafcc6c51b147f7354dd6d3860fdf4f885d45b437caa"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-32",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L31 fs.mkdtempSync(path.resolve('app/build/native-plugin-policy-'))，未先确保 app/build 存在；L52-55 finally 只恢复环境变量，不删 sdk/profile 临时目录。同批 test-plugin-resolution-order.mjs:54-56 有清理。",
+      "recommendation": "改为 fs.mkdtempSync(path.join(os.tmpdir(), 'native-plugin-policy-'))，在 finally 中 fs.rmSync(directory, {recursive:true, force:true})。",
+      "files": [
+        {
+          "path": "tools/test-native-plugin-manager.mjs",
+          "sha256": "6fea7ccad772e3ee93deb942f83678218b344fe727316fbe740d889cc249a65d"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-33",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "setUp（L62）把根目录设为 ROOT/app/build/round2-audit/b/plugin-transaction-tests/<uuid>；tearDown（L65-66）为 pass，注释称刻意保留强杀日志与合成文件。每个子测试留下一棵插件树、事务目录与子进程日志。",
+      "recommendation": "夹具改到 tempfile.mkdtemp()，默认在 tearDown 删除；仅在测试失败或设置 DSHA_KEEP_FIXTURES=1 时保留并打印路径；去掉 round2-audit 历史命名。",
+      "files": [
+        {
+          "path": "tools/test-plugin-transactions.py",
+          "sha256": "0197fba7531da95b60d882b91e1c07c56a2a52574d2d66cf0bc12a49c31b0905"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-35",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "用例1（L53）与用例3（L73-74）的目标为 /dsha_unit_ws_test_<时间戳>，直接在宿主真实根目录创建（L59/L79 用 rmtree 清理）；非 root 主机在 L74 os.makedirs 抛 PermissionError，root 主机在中途失败时污染 /。L87 以 os.path.isdir(\"relative\") 判断相对路径未创建，依赖当前 cwd。被测 ensure_workspace_dirs（restore-merge.py:1069-1075）对任意绝对路径 makedirs（只要求以 / 开头），这一边界没有测试覆盖。",
+      "recommendation": "ensure_workspace_dirs 增加可注入的 root 前缀（生产传 rootfs 根，测试传 tempdir），并限制只在允许的工作区前缀（如 /root/ 或 Documents 映射）下创建，越界路径拒绝；测试改为在 tempdir 内验证，并新增越界路径（/etc/x、/root/../etc）被拒的用例；L87 改为检查 tempdir 内的相对路径。",
+      "files": [
+        {
+          "path": "app/src/main/assets/restore-merge.py",
+          "sha256": "0fe3d18a01fbe133c9c166aba52f38022fbcd60db6ddd3381e3c6961d185c4d7"
+        },
+        {
+          "path": "tools/test-restore-merge-wsdir.py",
+          "sha256": "4c884a94b13ea730aca444b9bfb5b579da614ca14fab025ff81a144299b60162"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-36",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L8 environment=kind==='raw'?'DSHA_TEST_RUNTIME':'DSHA_TEST_RUNTIME'，两支相同。testRuntime('managed')（test-office-fonts.mjs:3、test-native-plugin-manager.mjs:8）会读取为 raw 设定的 DSHA_TEST_RUNTIME。有 proof 文件时 L21 以“wrong fixture kind”报错；无 proof 且 DSHA_ALLOW_UNVERIFIED_RUNTIME=1 时（L15-17）直接返回错误类型的目录。",
+      "recommendation": "非 raw 分支改为 'DSHA_TEST_MANAGED_RUNTIME'（或按 kind 生成 DSHA_TEST_<KIND>_RUNTIME），并同步文档/门禁脚本中的环境变量。",
+      "files": [
+        {
+          "path": "tools/test-native-plugin-manager.mjs",
+          "sha256": "6fea7ccad772e3ee93deb942f83678218b344fe727316fbe740d889cc249a65d"
+        },
+        {
+          "path": "tools/test-office-fonts.mjs",
+          "sha256": "ed0b4032a4d9cc69c462868828836a1295745780ccff1f4f862e9d922759fb2d"
+        },
+        {
+          "path": "tools/test-runtime-fixture.mjs",
+          "sha256": "8b31272043f4a774b2c486b4f0428c0a651267fea06873e0c8e81f5eaa1a9050"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-37",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "旧额外审计APK入口被显式门禁禁止；本轮不启用、不生成。可删除危险构建入口但保留有价值历史源码/报告。",
+      "recommendation": "旧额外审计APK入口被显式门禁禁止；本轮不启用、不生成。可删除危险构建入口但保留有价值历史源码/报告。",
+      "files": [
+        {
+          "path": "tools/device-backup-audit.init.gradle",
+          "sha256": "2282eb856cc737563c2168f8ffd3fb8824a3774e7085cfb4a77ed7c5aff9e36b"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-38",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L10 ADB 固定为 F:\\DSHA\\...\\adb.exe，无参数覆盖；L16 用 assert 校验 id（python -O 下失效），id 随后拼入 run-as 内层 sh 命令（L31 cat folder+id.json）；未传 --script 且未 --finish 时 L21 args.script.read_text 抛 AttributeError；所有调用共用单一 command.json，并发会互相覆盖。",
+      "recommendation": "id 校验改为 if not re.fullmatch(...): parser.error(...)；--script 与 --finish 用 argparse 互斥组且必选其一；ADB 取 shutil.which('adb') 或 --adb；拼接处统一 shlex.quote；command.json 按 id 命名。若该调试入口已无使用方，按 D-LEGACY-01 删除。",
+      "files": [
+        {
+          "path": "tools/control-functional-audit.py",
+          "sha256": "92965eb1b339d81b028307880ca208acbd86f0b2b7c0e1529ff85522eda2a691"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-39",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "脚本实测",
+      "current": "153实际运行32项、1项失败，旧SystemLanguage源码文字断言漂移；现行UiLanguagePreferenceTest已有真实锁存/并发边界测试，因此应修测试入口和错误断言，不能为迎合旧断言回退生产锁存实现。",
+      "recommendation": "把 SystemLanguage 早期锁存改为 JVM 单测（调用 initializeFromSystemTag 后改 Locale.setDefault，断言 tag() 不变）；DshaApp 调用顺序可保留源码断言但改用正则匹配 initialize\\(；resetTokenAfterRestore 断言替换为对恢复流程的行为测试（D-BUG-03 修复时一并加）。修好后接入 D-TEST-31 的测试清单。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+          "sha256": "07c4901a4c48db555b19826b24b2f246d903a8e6cea7ce9c84b7117f19b0b86c"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/DshaApp.java",
+          "sha256": "136d2c4168bce6afc9f30bd990c7ca81321bfe7f2ec92c2906ce35531c4f37db"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/SystemLanguage.java",
+          "sha256": "71148124c42f5ddf8b6ccf1a91ab9e27d779de9ea5b3e1e09de23e2a860322aa"
+        },
+        {
+          "path": "tools/test-dsha-ui-regressions.py",
+          "sha256": "5b1e3b8570ce9135e00b9c0a344f6e0f7844c91ea57a8ad70c6d781774ad8996"
+        }
+      ],
+      "tests": [
+        "g4-repro-results.json"
+      ],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-TEST-41",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "脚本实测",
+      "current": "verify-dsh-upgrade-apk.py 有 35 处、verify-recovery-apk.py 有 16 处 assert 语句承担全部校验（如 verify-recovery-apk.py:22-28 的 overlay 数量/路径/哈希）。调用方 verify-stability.py:239/257 与 verify-plugin-upgrade-gate.py:139-140 用 -B 不带 -O；但 verify-plugin-upgrade-gate.py:22 复制 os.environ，PYTHONOPTIMIZE 会被继承。",
+      "recommendation": "把 assert cond, code 统一替换为 require(cond, code)（失败 raise SystemExit/自定义异常）；调用方子进程环境中显式删除 PYTHONOPTIMIZE；同类改动覆盖 tools 下其他门禁脚本（可加 lint：tools/verify-*.py 禁止 assert 语句）。",
+      "files": [
+        {
+          "path": "tools/verify-dsh-upgrade-apk.py",
+          "sha256": "ff51ceae3017a007065ac2b29efbb41c835884562b0d2bcbf16da846324d3483"
+        },
+        {
+          "path": "tools/verify-plugin-upgrade-gate.py",
+          "sha256": "5fd8d0fb3e87bba852b91fa8f098517b1ef7da003470eaa2b5d46eb0f541a4ff"
+        },
+        {
+          "path": "tools/verify-recovery-apk.py",
+          "sha256": "65023df6de98748b734280f4352de271384baac128ecc9e0b88e054eb8f211a8"
+        },
+        {
+          "path": "tools/verify-stability.py",
+          "sha256": "d4a9dcc84ef9ef1fe1deaafcc6c51b147f7354dd6d3860fdf4f885d45b437caa"
+        }
+      ],
+      "tests": [
+        "g4-repro-results.json"
+      ],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    }
+  ]
+}

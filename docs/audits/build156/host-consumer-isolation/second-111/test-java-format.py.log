@@ -1,0 +1,13 @@
+test_cached_jar_corruption_and_offline_miss_fail_closed (__main__.JavaFormatTests.test_cached_jar_corruption_and_offline_miss_fail_closed) ... ok
+test_changed_selector_uses_actual_git_staged_unstaged_and_untracked_files (__main__.JavaFormatTests.test_changed_selector_uses_actual_git_staged_unstaged_and_untracked_files) ... ok
+test_check_write_check_and_actual_compiled_behavior (__main__.JavaFormatTests.test_check_write_check_and_actual_compiled_behavior) ... ok
+test_history_upstream_and_traversal_are_refused_without_mutation (__main__.JavaFormatTests.test_history_upstream_and_traversal_are_refused_without_mutation) ... ok
+test_invalid_second_file_does_not_partially_write_first (__main__.JavaFormatTests.test_invalid_second_file_does_not_partially_write_first) ... ok
+test_lexer_detects_operator_literal_identifier_and_unicode_changes (__main__.JavaFormatTests.test_lexer_detects_operator_literal_identifier_and_unicode_changes) ... ok
+test_no_implicit_whole_tree_selection_and_duplicate_refusal (__main__.JavaFormatTests.test_no_implicit_whole_tree_selection_and_duplicate_refusal) ... ok
+test_symlink_or_junction_refused_even_for_an_in_project_target (__main__.JavaFormatTests.test_symlink_or_junction_refused_even_for_an_in_project_target) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 7.359s
+
+OK

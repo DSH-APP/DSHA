@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "version": "2.4",
+  "artifacts": [
+    {
+      "path": "app/build/backup-dependencies/snakeyaml-2.4.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/yaml/snakeyaml/2.4/snakeyaml-2.4.jar",
+      "bytes": 339825,
+      "sha256": "ef779af5d29a9dde8cc70ce0341f5c6f7735e23edff9685ceaa9d35359b7bb7f",
+      "sha512": "1573717e2c47868515cbed5265a6f77ebec23a0b5c6376ac18b9f5c2335beb65d4c68d2073d50143d59a60141980be8db1e493a85d7c78106cdb94a52e8361d2",
+      "sha1": "e0666b825b796f85521f02360e77f4c92c5a7a07",
+      "verifiedPublishedDigests": [
+        "sha1"
+      ]
+    },
+    {
+      "path": "app/build/backup-dependencies/snakeyaml-2.4-sources.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/yaml/snakeyaml/2.4/snakeyaml-2.4-sources.jar",
+      "bytes": 209871,
+      "sha256": "0a3c537e86cbb13a9a31ab138c13cee0b2c2cedc17dba38e0dc1f24a2053d8af",
+      "sha512": "0dc9d75b85fdd4fc34be6f201612beb705bd9708bbd86b2c627ee41028c826a36809c71429d03c46902c09274181de74007b4121c0c2045741dd1561abbae9b6",
+      "sha1": "57156e2c0fc25e1aecce6ea754fa9aefc8eda671",
+      "verifiedPublishedDigests": [
+        "sha1"
+      ]
+    },
+    {
+      "path": "app/build/backup-dependencies/snakeyaml-2.4.pom",
+      "url": "https://repo.maven.apache.org/maven2/org/yaml/snakeyaml/2.4/snakeyaml-2.4.pom",
+      "bytes": 22161,
+      "sha256": "e154a3231cd6cde68aabf274fd18964d49a9c1a5f5e9ed3bf471e9ae7bdf08e6",
+      "sha512": "489f3c94c74435bc59a845283f77303072f94aa35c544de24e6c5587174d728e612e148d86e5cdc65a0d3f8d849f609bfbe50d1145d3b6ce0a6a2c8b93e7753a",
+      "sha1": "e6484ae6e9ec28020772eb823676a72517019542",
+      "verifiedPublishedDigests": [
+        "sha1"
+      ]
+    }
+  ],
+  "runtimeClassFileMajors": [
+    52
+  ],
+  "compatibilityScope": "Java8 classfile targeted. Android23 compatibility must be checked through the selected SafeConstructor data-only path and release D8/runtime evidence; no physical device claim."
+}

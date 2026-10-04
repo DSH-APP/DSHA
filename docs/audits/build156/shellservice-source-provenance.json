@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "path": "app/src/main/java/com/deepseekharness/app/ShellService.java",
+  "checkedCommand": "git log --follow --format=%H%x09%ad%x09%s --date=iso -- app/src/main/java/com/deepseekharness/app/ShellService.java",
+  "availableGitHistory": [
+    {
+      "commit": "5f984e4029a5223bcb37dc7d6d290268d2449609",
+      "committedAt": "2026-09-28 21:17:37 +0800",
+      "subject": "fix: 汇总 rc2 可靠性与插件下载修订并准备正式发布",
+      "blobSha256": "5b941e0b7a326a57040b5df88e5785fb07bdf852332426817cdf1114700f786e",
+      "cfrHeaderPresent": true
+    },
+    {
+      "commit": "dca04aed7c1a1468827a953bfd6295fc3ca44170",
+      "committedAt": "2026-09-12 18:10:00 +0800",
+      "subject": "feat: 发布 0.1.5-rc2 正式版，统一界面并完善兼容与恢复",
+      "blobSha256": "20b445398d9891853b6cead536e4b68bc189531d90930984f8282634143926f7",
+      "cfrHeaderPresent": true
+    },
+    {
+      "commit": "b87a8f28bb572a0859a8ac882f1a9cf47831aba3",
+      "committedAt": "2026-09-10 13:13:13 +0800",
+      "subject": "feat: 发布 0.1.5-rc1 正式版，升级运行时并整合预览改进",
+      "blobSha256": "9232210f315f5f097eaede28db6732553b01a43c77a2c02edfe9b77ad30d5ccb",
+      "cfrHeaderPresent": true
+    },
+    {
+      "commit": "bbb3abce042127778b41b699608311ea61cf4df4",
+      "committedAt": "2026-09-08 02:51:07 +0800",
+      "subject": "feat: 发布 rc1.4 预览版，修复安装备份与运行可靠性",
+      "blobSha256": "ad1c799b0da721052c8bdd18daeddf4887ed63f0730070cfcb7486d3cffada08",
+      "cfrHeaderPresent": true
+    },
+    {
+      "commit": "ae40f3ec7d57146c31ecdf5168c1b3b707771ad1",
+      "committedAt": "2026-09-03 23:27:22 +0800",
+      "subject": "type: 重构版 v1.2.0-rc1（dsh 0.1.2-rc.1、覆盖安装修复、LAN、无障碍截图；插件市场等功能暂未开发）",
+      "blobSha256": "5c24303dbf0d8705b5f01ec44f24b37929a3b1ff1af6ae66d24660f83742a529",
+      "cfrHeaderPresent": true
+    },
+    {
+      "commit": "972f9868ea49e86289ae0c736afe5cb354d3a671",
+      "committedAt": "2026-09-01 13:41:05 +0800",
+      "subject": "release(alpha2): 发布 1.2.0-alpha.2 vc104",
+      "blobSha256": "4edebf6952d8473abb584fc2ee7404973f0466e27056fcb5d5b7515ccc8ccfa9",
+      "cfrHeaderPresent": false
+    },
+    {
+      "commit": "f65cf75276d51939bdf695386018bdacc272a9a4",
+      "committedAt": "2026-08-21 02:15:14 +0000",
+      "subject": "fix: 深挖修复一批隐藏 bug（确认机制/串行/注入/依赖自愈）",
+      "blobSha256": "ce14f427bb717b5a8e5544f12185e29c8f25d6319149933382e84029ed9b2475",
+      "cfrHeaderPresent": false
+    },
+    {
+      "commit": "79fc775411fab222efe9163ef4df51c01e5a2335",
+      "committedAt": "2026-08-19 15:42:26 +0000",
+      "subject": "fix: 整体健壮性优化——超时/防死锁/通知ID冲突/权限回调/会话泄漏",
+      "blobSha256": "4d867aae9b3638453bb14ebc2a62e69ba931d30b4e037e426d3852b9ef1dfa3f",
+      "cfrHeaderPresent": false
+    },
+    {
+      "commit": "c7bde50aab6adb28a45f8a5491d00e008c3b0db7",
+      "committedAt": "2026-08-18 08:59:27 +0000",
+      "subject": "v1.1.0-fixed49 全量源码：RC6强制/移动端UI原生适配/ADB通知配对/UI重构/插件管理/局域网/构建自愈",
+      "blobSha256": "6dae34068cf2cf29870d83c6e837ce4f5407ed3268decb504c672d40419826c1",
+      "cfrHeaderPresent": false
+    },
+    {
+      "commit": "a3a0b00321402f20fc4efc91d3f9c83d3ecd01d4",
+      "committedAt": "2026-08-14 16:51:04 +0000",
+      "subject": "v0.2.0: 分步安装 + 多源测速自选 + 直连源码构建 + MT文件提供器",
+      "blobSha256": "6dae34068cf2cf29870d83c6e837ce4f5407ed3268decb504c672d40419826c1",
+      "cfrHeaderPresent": false
+    }
+  ],
+  "currentSha256": "8854f96205f877b747b9d607992db7a4b9ab86100675dc6c0335163eed245659",
+  "earliestAvailablePathCommit": "a3a0b00321402f20fc4efc91d3f9c83d3ecd01d4",
+  "currentHeaderPreserved": true,
+  "externalOriginalOrigin": "unknown",
+  "redistributionRights": "not_determined",
+  "limitation": "Available repository commits establish local history only. They do not identify the original external decompilation object, original author or a complete license grant."
+}

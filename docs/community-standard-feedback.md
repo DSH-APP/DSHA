@@ -1,5 +1,8 @@
 # 对 dsh-community-standard v0.15 的反馈（DSHA 视角）
 
+> 历史草稿：下方设备、Gecko 与 Android 8+ 描述对应编写时范围，不代表 build154。
+> 当前 Standard 使用系统 WebView/API30+，Low 使用兼容运行时与 Gecko/API23+；实际验证范围见当前交付报告。
+
 > 待发送到 [omdsh-dev/community](https://github.com/omdsh-dev/community) issue。
 > 状态：草稿，未发送。
 

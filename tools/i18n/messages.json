@@ -7879,6 +7879,7 @@
     "zh": "Web PID 文件异常，未终止任何进程",
     "en": "Invalid Web PID file; no process terminated",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -7887,6 +7888,7 @@
     "zh": "Web PID 无效，未终止任何进程",
     "en": "Invalid Web PID; no process terminated",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -7903,6 +7905,7 @@
     "zh": "Web 启动脚本仍在退出，已保留容器启动器",
     "en": "Web startup script is still exiting; container launcher preserved",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -7991,6 +7994,7 @@
     "zh": "Web 身份记录异常，原环境保留",
     "en": "Web process identity record error; original environment preserved",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -8015,6 +8019,7 @@
     "zh": "Web 进程身份已变化，未终止其他进程，请重试",
     "en": "Web process identity changed. Other processes were not terminated. Retry.",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -9979,6 +9984,7 @@
     "zh": "停止等待被中断，请检查 Web 状态",
     "en": "Stop wait interrupted. Check Web status.",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -10060,6 +10066,7 @@
     "zh": "内核进程身份无法解析",
     "en": "Could not parse kernel process identity",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -11383,6 +11390,7 @@
     "zh": "已请求停止，Web 尚未退出；稍后可重试，未强杀容器启动器",
     "en": "Stop requested, but Web has not exited. Retry later; the container launcher was not forcibly killed.",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -12360,6 +12368,7 @@
     "zh": "无法写入停止标记，尚未停止 Web",
     "en": "Could not write stop marker; Web has not been stopped",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -15713,6 +15722,7 @@
     "zh": "进程信息超过核验上限",
     "en": "Process information exceeds the verification limit",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -15721,6 +15731,7 @@
     "zh": "进程命令行暂不可读",
     "en": "Process command line temporarily unreadable",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -15729,6 +15740,7 @@
     "zh": "进程核验被中断",
     "en": "Process verification interrupted",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
       "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
     ]
   },
@@ -17410,7 +17422,8 @@
     "en": "Configuration reset; conversations and native credentials retained. Original configuration:\n%s",
     "uiFormat": true,
     "files": [
-      "app/src/main/java/com/deepseekharness/app/core/HarnessController.java"
+      "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+      "app/src/main/java/com/deepseekharness/app/core/HostConfigService.java"
     ]
   },
   {
@@ -24086,8 +24099,8 @@
   },
   {
     "id": "ui2_ws2_0",
-    "zh": "保存在本机，可手动加密导出。",
-    "en": "Stored locally, with encrypted exports.",
+    "zh": "保存在本机，可手动导出。",
+    "en": "Stored locally, with manual exports.",
     "files": [
       "app/src/main/res/values/ui_iteration.xml"
     ]
@@ -24174,8 +24187,8 @@
   },
   {
     "id": "ui2_data_sub",
-    "zh": "加密导出、恢复与文件共享。",
-    "en": "Encrypted exports, recovery and file sharing.",
+    "zh": "导出、恢复与文件共享。",
+    "en": "Exports, recovery and file sharing.",
     "files": [
       "app/src/main/res/values/ui_iteration.xml"
     ]
@@ -24910,5 +24923,3973 @@
       "app/src/main/assets/plugin-network.py"
     ],
     "uiFormat": true
+  },
+  {
+    "id": "issues84_theme_0",
+    "zh": "当前跟随系统，点击切换白天；长按跟随系统",
+    "en": "Following system. Tap for light mode; hold to follow system",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_1",
+    "zh": "当前白天模式，点击切换黑夜；长按跟随系统",
+    "en": "Light mode. Tap for dark mode; hold to follow system",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_2",
+    "zh": "当前黑夜模式，点击切换跟随系统；长按跟随系统",
+    "en": "Dark mode. Tap to follow system; hold to follow system",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_3",
+    "zh": "已跟随系统主题",
+    "en": "Following the system theme",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_4",
+    "zh": "已切换白天模式",
+    "en": "Light mode selected",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "issues84_theme_5",
+    "zh": "已切换黑夜模式",
+    "en": "Dark mode selected",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_0",
+    "zh": "不透明度 %s · 行数 %s · 字号 %s",
+    "en": "Opacity %s · Lines %s · Text size %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build154_g1ui_1",
+    "zh": "不透明度：%s",
+    "en": "Opacity: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build154_g1ui_2",
+    "zh": "文字大小：%s",
+    "en": "Text size: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build154_g1ui_3",
+    "zh": "欢迎介绍：第 %s 页，共 %s 页",
+    "en": "Introduction page %s of %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WelcomeActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build154_g1ui_4",
+    "zh": "%s 行",
+    "en": "%s lines",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build154_g1ui_5",
+    "zh": "1 行",
+    "en": "1 line",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_6",
+    "zh": "%s 秒",
+    "en": "%s seconds",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java",
+      "app/src/main/java/com/deepseekharness/app/util/Fmt.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build154_g1ui_7",
+    "zh": "%s 秒（当前）",
+    "en": "%s seconds (current)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build154_g1ui_8",
+    "zh": "网页提示（%s）",
+    "en": "Web alert (%s)",
+    "files": [
+      "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build154_g1ui_9",
+    "zh": "网页确认（%s）",
+    "en": "Web confirmation (%s)",
+    "files": [
+      "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build154_g1ui_10",
+    "zh": "大小未知",
+    "en": "Unknown size",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_11",
+    "zh": "时间未知",
+    "en": "Unknown time",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_12",
+    "zh": "输入新的 API Key；留空保持原记录",
+    "en": "New API key; leave blank to keep the saved record",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_13",
+    "zh": "API Key 已保存；这里不会回显密钥。",
+    "en": "An API key is saved; its value is not shown here.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_14",
+    "zh": "尚未保存 API Key。",
+    "en": "No API key has been saved.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_15",
+    "zh": "移除本机 API Key 记录",
+    "en": "Remove the saved API key",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_16",
+    "zh": "移除本机 API Key 记录？",
+    "en": "Remove the saved API key?",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_17",
+    "zh": "凭据已变化，请重新确认。",
+    "en": "The credential changed. Confirm again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_18",
+    "zh": "密钥保存后读取未通过，请重试。",
+    "en": "API key readback failed. Retry.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_19",
+    "zh": "已复制连接地址，请只分享给可信设备",
+    "en": "Connection address copied. Share only with trusted devices",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_20",
+    "zh": "报告已复制，请在公开分享前查看内容",
+    "en": "Report copied. Review its content before public sharing",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_21",
+    "zh": "本机有可用的 API Key。",
+    "en": "An API key is available on this device.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ]
+  },
+  {
+    "id": "build154_g1ui_22",
+    "zh": "本机尚无可用 API Key，请在配置页填写或明确选择恢复历史凭据。",
+    "en": "No API key is currently available. Enter one in Configuration or explicitly choose historical credential restore.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ]
+  },
+  {
+    "id": "build154_flow_0",
+    "zh": "上传失败：%s",
+    "en": "Upload failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+      "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+    ]
+  },
+  {
+    "id": "build154_flow_1",
+    "zh": "当前内核缺少：%s。\n更新 Android System WebView / Chrome 后重试，或在浏览器中打开。",
+    "en": "The current engine lacks: %s.\nUpdate Android System WebView / Chrome and retry, or open in a browser.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+    ]
+  },
+  {
+    "id": "build154_flow_2",
+    "zh": "服务可能仍在启动或已退出。请稍后重试，持续失败时返回启动页查看日志。\n错误代码：%s",
+    "en": "The service may still be starting or may have exited. Retry later; if it keeps failing, check the startup log.\nError code: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+    ]
+  },
+  {
+    "id": "build154_flow_3",
+    "zh": "HTTP %s。请返回启动页重新进入对话，或稍后重试。",
+    "en": "HTTP %s. Reopen the conversation from the startup page, or retry later.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+    ]
+  },
+  {
+    "id": "build154_flow_4",
+    "zh": "请确认服务仍在运行，点击重试。错误代码：%s",
+    "en": "Check that the service is still running, then retry. Error code: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+    ]
+  },
+  {
+    "id": "build154_flow_5",
+    "zh": "下载失败：HTTP %s",
+    "en": "Download failed: HTTP %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+    ]
+  },
+  {
+    "id": "build154_flow_6",
+    "zh": "可尝试在系统浏览器打开。错误：%s",
+    "en": "Try opening in the system browser. Error: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+    ]
+  },
+  {
+    "id": "build154_flow_7",
+    "zh": "配置保存未完成：%s",
+    "en": "Settings were not fully saved: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "build154_pluginformat_0",
+    "zh": "\n可更新：%s",
+    "en": "\nUpdate available: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "id": "build154_pluginformat_1",
+    "zh": "更多操作：%s",
+    "en": "More actions: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_0",
+    "zh": "1. 停止正式 Web 与终端并核验进程身份；无法确认退出即停止。\n2. 重新读取中断维护记录，按唯一已识别事务执行原有恢复/回切接口；多份冲突或损坏记录保持原样。\n3. 当前没有待恢复事务时只核验状态，不猜测要覆盖哪份数据。\n4. 原件、失败候选与维护记录继续保留；已提交事务不得覆盖后来的对话或配置。\n5. 完成后仍须重试正式 Web 并验证实际可用；本次确认不代表网页已恢复。",
+    "en": "1. Stop normal Web and terminals and verify their process identities; stop if exit is unconfirmed.\n2. Re-read interrupted maintenance records and recover only the uniquely identified transaction. Preserve conflicting or damaged records.\n3. With no pending transaction, check status only; do not guess which data to overwrite.\n4. Retain originals, failed candidates and journals. Committed transactions cannot overwrite later conversations or settings.\n5. Retry normal Web and verify it works. This confirmation does not itself prove page recovery.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_1",
+    "zh": "1. 停止正式 Web 与终端，取得原有数据维护屏障。\n2. 从当前签名 APK 准备运行时；同一基础环境执行受管更新，基础环境确需重建时先由宿主保护个人数据。\n3. 先校验候选，再执行隔离启动、存储和网页连接试验；未通过即按原事务保留现场或回切。\n4. 对话、配置、插件原件按现有事务保护；不会从应急模型下载程序或执行其代码。\n5. 当前原件及回切记录保存在应用私有 host-runtime-operations / host-environment-operations；成功后仍须核验正式 Web。",
+    "en": "1. Stop normal Web and terminals and acquire the existing maintenance barrier.\n2. Prepare runtime assets from this signed APK. Use a managed update for the same base; protect personal data before a necessary base rebuild.\n3. Verify the candidate, then run isolated startup, storage and browser-connection checks. Preserve or roll back a failed trial.\n4. Existing transactions protect conversation, configuration and plugin originals. Do not download or execute emergency-model code.\n5. Originals and rollback records stay in private host-runtime-operations / host-environment-operations. Verify normal Web after success.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_2",
+    "zh": "1. 停止正式 Web 与终端，取得原有数据维护屏障。\n2. 仅从当前签名 APK 的受管 DSH/Node 依赖树恢复缺失或损坏的 CLI 依赖；不接受包名、版本、路径或命令参数。\n3. 按现有运行时事务校验摘要、隔离启动、存储、网页连接和插件加载；任何检查失败均保留原件并回切。\n4. 不执行 npm 生命周期脚本，不从应急模型下载代码，不直接修改用户 node_modules。\n5. 完成后仍须重试正式 Web，并以诊断结果确认 CLI 已就绪。",
+    "en": "1. Stop normal Web and terminals and acquire the existing maintenance barrier.\n2. Restore missing or damaged CLI dependencies only from the managed DSH/Node tree in this signed APK. No package, version, path or command parameters are accepted.\n3. Verify digests, isolated startup, storage, browser connectivity and plugin loading through the existing runtime transaction. Preserve originals and roll back failed checks.\n4. Do not run npm lifecycle scripts, download model-supplied code or directly modify user node_modules.\n5. Retry normal Web and verify CLI readiness in diagnostics.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_3",
+    "zh": "profiles/web/package.json → 官方基础 bundles：dsh-base + dsh-web-app\nprofiles/web/cordis.patch.yml → []\n旧插件构成与设置保存在配置快照；既有会话与凭据保持原位。",
+    "en": "Save old composition/settings, create basic Web profile; retain conversations and credentials.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_4",
+    "zh": "cordis.patch.yml → []\n对全部 Profile 的全局覆盖生效；原文保存在配置快照。",
+    "en": "Clears global overrides for every profile; original retained in snapshot.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_5",
+    "zh": "按原事务恢复中断维护，保留原件。",
+    "en": "Recover the recorded transaction and retain originals.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_6",
+    "zh": "从当前签名 APK 重建受管运行时，完成隔离试运行。",
+    "en": "Rebuild from this signed APK and run the isolated trial.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_7",
+    "zh": "从当前签名 APK 恢复受管 CLI/Node 依赖并完成隔离试运行；不执行任意 shell。",
+    "en": "Restore managed CLI/Node dependencies from this signed APK and run the isolated trial; no arbitrary shell is executed.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_8",
+    "zh": "宿主直接保留原件并创建基础配置，无需先启动损坏 DSH。已存在的插件源码保留，恢复使用须审阅。",
+    "en": "Host retains originals and creates base configuration without starting broken DSH; plugin source retained for review.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build154_recovery_9",
+    "zh": "只应用经当前 DSH schema 验证的普通设置；插件构成与凭据不由此入口修改。",
+    "en": "Apply only current-schema declarative settings; preserve plugin composition and credentials.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java"
+    ]
+  },
+  {
+    "id": "build156_ui_03c24ac15406",
+    "zh": "su：%s\n尚未验证 root 授权",
+    "en": "su: %s\nRoot authorization has not been verified",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_e329cacc3385",
+    "zh": "su：%s\nroot 通道已响应 · 设备命令仍受策略保护",
+    "en": "su: %s\nRoot channel responded; device commands remain protected by policy",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_ac3ea74b8c48",
+    "zh": "su：%s\nroot 授权或执行超时，请在 root 管理器查看 DSHA 授权",
+    "en": "su: %s\nRoot authorization or execution timed out. Check DSHA authorization in your root manager",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_ed7f3743b687",
+    "zh": "su：%s\nroot 授权或执行失败：%s",
+    "en": "su: %s\nRoot authorization or execution failed: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_4b95c3b48bb2",
+    "zh": "上次保存：%s（点按查看）",
+    "en": "Last saved: %s (tap to view)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_112ce05e3f70",
+    "zh": "已保存：Download/DSHA/%s\n点按此处查看日志",
+    "en": "Saved: Download/DSHA/%s\nTap here to view the log",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_51993246de55",
+    "zh": "已保存到所选位置：%s\n点按此处查看日志",
+    "en": "Saved to the selected location: %s\nTap here to view the log",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_a361e84bd02d",
+    "zh": "保存失败：%s\n可点「另存为」选择位置后重试。",
+    "en": "Save failed: %s\nChoose a location with Save as and retry.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_3c032dc388fa",
+    "zh": "正在%s，完成后再保存配置",
+    "en": "%s is in progress. Save settings after it finishes",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_643ed07db498",
+    "zh": "启动中…（%s）",
+    "en": "Starting… (%s)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_43f288fb6529",
+    "zh": "Web 鉴权失败，请点「进入」重试（%s）",
+    "en": "Web authentication failed. Tap Enter to retry (%s)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_e667da78b4d0",
+    "zh": "无法打开 Web 页面，请重试（%s）",
+    "en": "Unable to open the Web page. Retry (%s)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_11532a5068fe",
+    "zh": "局域网地址：%s\n点按查看或复制连接链接；流量未加密，请只在可信网络使用。",
+    "en": "LAN address: %s\nTap to view or copy the connection link. Traffic is unencrypted; use trusted networks.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_02a9b748a050",
+    "zh": "此链接包含访问凭据。局域网使用 HTTP，流量未加密，请只在可信网络使用并只分享给可信设备。\n\n%s",
+    "en": "This link contains access credentials. LAN access uses HTTP with unencrypted traffic. Use trusted networks and share only with trusted devices.\n\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_8e63f2492b8f",
+    "zh": "局域网连接链接",
+    "en": "LAN connection link",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_cafb535e7554",
+    "zh": "复制连接链接",
+    "en": "Copy connection link",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_ac545c188a71",
+    "zh": "连接已变化，请重新查看链接。",
+    "en": "The connection changed. View the link again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_00112fa60f70",
+    "zh": "下载源：%s",
+    "en": "Download source: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_5ad3f25c6750",
+    "zh": "已识别：%s",
+    "en": "Recognized: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_7b01444d1fcd",
+    "zh": "更新至 %s",
+    "en": "Update to %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_7b13fef3c475",
+    "zh": "回退至 %s",
+    "en": "Roll back to %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_33fd3161f343",
+    "zh": "备份任务进行中：%s · %s 项",
+    "en": "Backup in progress: %s · %s entries",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_8ffe7cb7a9dc",
+    "zh": "原生授权即时生效；%s",
+    "en": "Native authorization applies immediately; %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_29aaf75d8f8a",
+    "zh": "%s · 本阶段 %s 秒 · 总计 %s 秒\n%s",
+    "en": "%s · Stage %s seconds · Total %s seconds\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_9e7973ee5cfe",
+    "zh": "%s\n兼容内核 Gecko 143",
+    "en": "%s\nCompatibility engine: Gecko 143",
+    "files": [
+      "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_2d1a1a4339c5",
+    "zh": "终端启动失败：%s",
+    "en": "Terminal failed to start: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_d567c72699c9",
+    "zh": "会话已结束（退出码 %s）",
+    "en": "Session ended (exit code %s)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_187a137d2aa9",
+    "zh": "终端 %s",
+    "en": "Terminal %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_1f5470c82f13",
+    "zh": "终端 %s · 关闭中…",
+    "en": "Terminal %s · Closing…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_5e63cd0f9d8a",
+    "zh": "切换到终端 %s",
+    "en": "Switch to terminal %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_ff0e14faf4b0",
+    "zh": "请在插件管理中查看 %s 的安装和启用状态",
+    "en": "View the installation and enabled state of %s in plugin management",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginInstallActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_863a6f418934",
+    "zh": "下载并解析插件包后自动安装、启用。\n\n%s",
+    "en": "The plugin installs and enables automatically after download and validation.\n\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginInstallActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_74e8fd9be9e0",
+    "zh": "已显示 %s–%s / %s 条 · 第 %s 页",
+    "en": "Showing %s–%s / %s records · Page %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_0e8f96d9dc9d",
+    "zh": "Profile：%s\n请选择需要恢复的字段；未选字段保持当前值。\n%s",
+    "en": "Profile: %s\nSelect fields to restore. Unselected fields retain their current values.\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_0cf11b649796",
+    "zh": "已选择项目目录：%s",
+    "en": "Selected project folders: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_a0a18a738cb7",
+    "zh": "%s\n%s 项 · %s%s%s",
+    "en": "%s\n%s entries · %s%s%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_e32b54092981",
+    "zh": "%s\n\n版本：%s\n位置：%s\n来源：%s",
+    "en": "%s\n\nVersion: %s\nLocation: %s\nSource: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_9e14419dae4d",
+    "zh": "禁用 %s",
+    "en": "Disable %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_903ea2eef1bb",
+    "zh": "启用 %s",
+    "en": "Enable %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_19ad2582c70c",
+    "zh": "已释放 %s",
+    "en": "Freed %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_8bd36aab90bc",
+    "zh": "还没有可重新导出的私有验证副本。\n%s",
+    "en": "No private verified copies are available yet.\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_d045a6d58749",
+    "zh": "尚未确认 Web 退出；进程身份无法核验，保留运行屏障。请查看诊断后重试停止。",
+    "en": "Web exit is unconfirmed and process identity cannot be verified. The execution barrier remains. Inspect diagnostics and retry stopping.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_0f31f993dbac",
+    "zh": "强制结束本次 Web？",
+    "en": "Force stop this Web process?",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_f150d6e93e4e",
+    "zh": "普通停止尚未确认 Web 退出。本次已核验进程属于 DSHA；强制结束可能中断正在写入的对话或文件。\n\n确认后只结束这次已核验的 Web 进程；身份或状态变化会拒绝执行。取消会保留现场与运行屏障。",
+    "en": "Normal stopping has not confirmed Web exit. This process was verified as belonging to DSHA. Force stopping may interrupt conversation or file writes.\n\nConfirmation applies only to this verified Web process. Identity or state changes reject the operation. Cancel keeps the process state and execution barrier.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_7210d42aa69e",
+    "zh": "强制结束",
+    "en": "Force stop",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_0072553a13aa",
+    "zh": "Web 状态或进程身份已变化，本次强制结束未执行。请重新停止后确认。",
+    "en": "Web state or process identity changed. Force stopping was not performed. Stop again and confirm.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_ec22bb3f8e33",
+    "zh": "正在强制结束本次已核验的 Web…",
+    "en": "Force stopping this verified Web process…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "zh": "3090 桥绑定失败：%s",
+    "en": "3090 bridge bind failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_47d69c75b9b6"
+  },
+  {
+    "zh": "设备桥端口 3090 被占用，设备工具暂不可用；Web 可独立启动。关闭占用端口的其他实例后重试：%s",
+    "en": "Device bridge port 3090 is in use. Device tools are temporarily unavailable; Web can still start. Close the other instance using this port and retry: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_ba9004195558"
+  },
+  {
+    "zh": "3090 的 IPv6 附加监听不可用：%s",
+    "en": "Additional IPv6 listener on 3090 unavailable: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_1c384b2594de"
+  },
+  {
+    "zh": "在【%s】里：%s  # 这类应用涉及支付或隐私，每次都需要你确认",
+    "en": "In [%s]: %s  # Payment or privacy-sensitive apps require confirmation every time",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_4b20ec4b72e7"
+  },
+  {
+    "zh": "%s  # 本次 DSH 运行期间有效，可在设备能力授权中随时撤销",
+    "en": "%s  # Valid for this DSH run. Revoke anytime in Device permissions",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_5d7c148763ae"
+  },
+  {
+    "zh": "点击「%s」",
+    "en": "Tap “%s”",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_7173fc7a842d"
+  },
+  {
+    "zh": "点击坐标 (%s,%s)",
+    "en": "Tap coordinates (%s,%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_26c31fb4c92a"
+  },
+  {
+    "zh": "在输入框里填入「%s」",
+    "en": "Type into the input field: “%s”",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_56a3800f5557"
+  },
+  {
+    "zh": "按下系统按键 %s",
+    "en": "Press system key %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_8cf99c7af509"
+  },
+  {
+    "zh": "滑动屏幕 (%s,%s)→(%s,%s)",
+    "en": "Swipe screen (%s,%s)→(%s,%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_dfa775f4ea49"
+  },
+  {
+    "zh": "BRIDGE_PROTOCOL=%s\nBRIDGE_AUTH=header-x-token\nAPP_VERSION=%s\nAPP_CODE=%s\nHINT=端点清单见 /app/help；判版本请用 >= 而不是 ==\n",
+    "en": "BRIDGE_PROTOCOL=%s\nBRIDGE_AUTH=header-x-token\nAPP_VERSION=%s\nAPP_CODE=%s\nHINT=See /app/help for endpoints; compare versions using >= rather than ==\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_2e39c95b00f5"
+  },
+  {
+    "zh": "DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=%s）\n凭据由宿主写入 /root/.dsh/.bridge_headers；使用 curl -H @/root/.dsh/.bridge_headers，不把 token 写进 URL 或命令参数。\n带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\n\n== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\n读屏  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → 每行「[序号] \"文字\" 可点击 中心=(x,y) 区域=l,t,r,b」\n点按  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=设置\" -H @/root/.dsh/.bridge_headers\n      → 优先按文字点：控件位置随滚动/动画变，文字不变。没有文字才用 ?x=&y=\n输入  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=内容\" -H @/root/.dsh/.bridge_headers\n      → 填到当前焦点框；没有焦点先 tap 一下输入框\n按键  /app/ui/key?name=back  （back/home/recents/notifications/quicksettings/lock）\n滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n截屏  /app/ui/screenshot   → 存 PNG 到应用截图目录并返回路径（不回 base64）\n节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n\n== 独立虚拟屏（Android 11+；每次输入必须带最新 frameSeq）==\n/app/vscreen/create?orientation=portrait|landscape  创建虚拟屏\n/app/vscreen/status  查询 displayId、尺寸和 frameSeq\n/app/vscreen/launch?package=com.example.app  启动已安装应用\n/app/vscreen/see  获取最新预览；tap/swipe/type/key 必须携带该 frameSeq\n/app/vscreen/close  关闭并回收虚拟屏\n\n== 设备与应用 ==\n/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n/app/launch?pkg=com.tencent.mm  启动应用\n/app/clip                       读剪贴板（需 App 在前台，系统限制）\n/app/clip + text=…              写剪贴板\n/app/readfile?path=/…          读取绝对路径的目录或文本，仍受 Android 权限限制；凭据区（.dsh/.ssh/.android）不可读\n设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n\n== 与用户交互 ==\n/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n/app/notify?title=… + text=…      通知栏\n/app/toast + text=…               App 内提示\n/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n/app/share（text= 或 path=）      分享到其它应用\n/app/open?url=https://…           打开链接\n/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA；凭据区不可导出\n建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n产出报告用 /app/export，别只留在容器里。\n\n== 传感器与位置（默认关闭，需用户在配置页勾选）==\n/app/location（加 fresh=1 强制重新定位，可能等数秒）\n/app/sensors 列表 · /app/sensor?name=light 读值\n（light 环境光 lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation 姿态四元数 / steps 开机后步数）\n/app/torch?on=1 手电\n这三类返回 DISABLED（用户没开该能力）或 NO_PERMISSION（没授系统权限）时，\n照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n\n== 元信息 ==\n/app/version                          桥协议版本 + App 版本（特性检测用）\n/app/help                             本清单\n\n== 插件状态 ==\n/app/plugins                          读回上次上报的加载状态\n/app/plugins?loaded=a,b&failed=c      上报（插件侧用）\n\n== 设备 shell（自动选择 root / Shizuku / ADB）==\n/root/dsh-bin/adb-shell \"命令\"        用 id 核验实际身份\n包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n短信只允许当前 Android 用户的 content query --uri content://sms，默认关闭；设置 → 设备能力授权可开启或撤销。\n短信预授权可能返回正文及验证码；不允许发送、修改或删除，Android 仍可拒绝访问。Shizuku 不执行此敏感查询。\n仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n设置 → 设备能力授权中连接可用通道，别反复试同一条命令。\n不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n\n== root（--su）==\n已启用并经 root 管理器授权的 su 可直接执行，无需 ADB 配对；其次使用 Shizuku，再使用 ADB。\n--su 仅在明确需要 root 时使用，须先在设备能力授权页允许；同一设备保护策略始终生效。\n[EXECUTION_UNKNOWN] 表示命令可能已执行，先核对实际状态，不能切换通道或自动重放。\n",
+    "en": "DSHA 3090 bridge endpoints (BRIDGE_PROTOCOL=%s）\nThe host writes credentials to /root/.dsh/.bridge_headers. Use curl -H @/root/.dsh/.bridge_headers; keep tokens out of URLs and command arguments.\nFor parameters containing Chinese text or spaces, use -G --data-urlencode instead of encoding the URL manually.\n\n== Screen control (accessibility service; no ADB/Shizuku required) ==\nRead screen  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → Each line: [index] \"text\" clickable center=(x,y) bounds=l,t,r,b\nTap  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=Settings\" -H @/root/.dsh/.bridge_headers\n      → Prefer tapping by text: positions change with scrolling and animation. Use ?x=&y= only when no text is available.\nInput  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=content\" -H @/root/.dsh/.bridge_headers\n      → Types into the focused field. Tap an input field first if none is focused.\nKey  /app/ui/key?name=back  (back/home/recents/notifications/quicksettings/lock)\nSwipe  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\nScreenshot  /app/ui/screenshot   → save a PNG in the app's screenshot folder and return its path (not base64)\nAfter each tap or input, dump the screen again before deciding the next step. Do not tap repeatedly from memory.\n\n== Independent virtual display (Android 11+; each input requires the latest frameSeq) ==\n/app/vscreen/create?orientation=portrait|landscape  Create a virtual display\n/app/vscreen/status  Query displayId, size and frameSeq\n/app/vscreen/launch?package=com.example.app  Launch an installed application\n/app/vscreen/see  Get the latest preview; tap/swipe/type/key must include its frameSeq\n/app/vscreen/close  Close and release the virtual display\n\n== Device & apps ==\n/app/device                     Model / Android / battery / network / display / storage / memory\n/app/apps                       Installed apps, separated into user and system apps; filter with q/limit/user=1\n/app/launch?pkg=com.tencent.mm  Launch app\n/app/clip                       Read clipboard (app must be in foreground; Android restriction)\n/app/clip + text=…              Write clipboard\n/app/readfile?path=/…          Read a directory or text at an absolute path, subject to Android permissions; credential directories (.dsh/.ssh/.android) cannot be read\nUse the protected device shell below for device file writes. Ordinary Download files are writable; DCIM/Pictures/Android/data/obb remain read-only.\n\n== User interaction ==\n/app/ask?options=Continue|Cancel + q=…  Ask in a blocking dialog (up to three options)\n/app/notify?title=… + text=…      Notification\n/app/toast + text=…               In-app toast\n/app/vibrate?ms=300               Vibrate (notify the user after a long task)\n/app/share (text= or path=)      Share to another app\n/app/open?url=https://…           Open URL\n/app/export?path=/root/report.md  Export an artifact to Download/DSHA; credential directories cannot be exported\nUse /app/ask when a decision is needed, and notify or vibrate when a long task finishes.\nUse /app/export to deliver reports; do not leave them only in the container.\n\n== Sensors & location (off by default; enable in Configuration) ==\n/app/location (fresh=1 forces a new fix; may take a few seconds)\n/app/sensors lists sensors · /app/sensor?name=light reads a value\n(light: ambient lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation quaternion / steps since boot)\n/app/torch?on=1 Flashlight\nWhen these APIs return DISABLED (feature off) or NO_PERMISSION (system permission missing),\nTell the user exactly where to enable it. Do not retry; retrying cannot turn the setting on.\n\n== Metadata ==\n/app/version                          Bridge protocol + app version (feature detection)\n/app/help                             This endpoint list\n\n== Plugin status ==\n/app/plugins                          Read last reported loading status\n/app/plugins?loaded=a,b&failed=c      Report status (for plugins)\n\n== Device shell (selects root / Shizuku / ADB automatically) ==\n/root/dsh-bin/adb-shell \"command\"        Use id to verify the actual identity\nIf the wrapper is missing: python3 /root/.dsh/adb-shell.py \"command\"\nSMS queries only allow content query --uri content://sms for the current Android user. Off by default; enable or revoke in Device permissions.\nPreauthorized SMS queries may return message bodies and verification codes. Sending, editing and deleting are blocked; Android may still deny access. Shizuku does not run this sensitive query.\nOnly recognized single commands are allowed, including directory reads and ordinary file operations on explicit paths. Scripts, pipes, redirects and unknown commands are blocked.\nRoot and system directories are read-only. Block devices/partitions, SELinux changes, system setting writes, mounts and firmware flashing are blocked.\nRefresh the complete user/system app list before stopping processes. Ordinary user apps may be stopped; system apps and essential processes are protected.\nUse the full package name with am force-stop / killall / pkill -x. A positive PID with kill is checked against its UID before stopping by package name.\nPolicy blocks return [POLICY_BLOCKED]/126. Root and legacy confirmation switches cannot override them. Do not use another interpreter or the UI to bypass a block.\nIf a connection or pairing error occurs, first check whether the app-level APIs above can perform the task. Only if a shell is essential, ask the user to open\nSettings → Device permissions to connect an available channel. Do not keep retrying the same command.\nDo not use /root/dsh-bin/adb or bare adb; those are guarded wrappers and will fail.\n\n== root（--su）==\nWhen su is enabled and authorized by the root manager, commands run directly without ADB pairing. Otherwise, Shizuku is used before ADB.\nUse --su only when root is explicitly required and enabled in Device permissions. The same device protection policy always applies.\n[EXECUTION_UNKNOWN] means the command may have executed. Verify the actual state before proceeding; do not switch connections or replay automatically.\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_6b2953a232b9"
+  },
+  {
+    "zh": "插件加载失败：%s",
+    "en": "Plugin loading failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_d0dc55438699"
+  },
+  {
+    "zh": "FORBIDDEN: 路径无法解析（%s）",
+    "en": "FORBIDDEN: Could not resolve path (%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_cee35ef50d7f"
+  },
+  {
+    "zh": "NOT_FOUND_OR_NO_PERMISSION: 路径不存在或 Android 未授予读取权限：%s",
+    "en": "NOT_FOUND_OR_NO_PERMISSION: Path does not exist or Android denied read access: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_6f77ca629d12"
+  },
+  {
+    "zh": "[APP_LIST_UNAVAILABLE] Android 未提供完整应用清单；设备停止操作会通过 ADB/Shizuku 重新读取。可用设备命令分别查询 pm list packages -U -3 和 pm list packages -U -s。原因：%s",
+    "en": "[APP_LIST_UNAVAILABLE] Android did not provide a complete app list. Device stop operations will fetch it again through ADB/Shizuku.Use supported device commands to query pm list packages -U -3 and pm list packages -U -s separately. Reason: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_49dfab182439"
+  },
+  {
+    "zh": "OK: 已打开 %s",
+    "en": "OK: Opened %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_dd1c80f3a147"
+  },
+  {
+    "zh": "OK: 震动 %sms",
+    "en": "OK: Vibrating %sms",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_693965993292"
+  },
+  {
+    "zh": "模型试图在设备上执行：\n%s\n\n是否允许？",
+    "en": "The model wants to run on the device:\n%s\n\nAllow this?",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_31a1f65340f4"
+  },
+  {
+    "zh": "确认弹窗弹出失败，仍可从通知确认：%s",
+    "en": "Could not show confirmation dialog; confirmation remains available from the notification: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_6e7346d737f6"
+  },
+  {
+    "zh": "无前台界面且通知权限被拒，确认必然超时拒绝：%s",
+    "en": "No foreground page and notification permission denied; confirmation will time out and be denied: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_00e1e79010e0"
+  },
+  {
+    "zh": "模型试图执行：%s",
+    "en": "The model wants to run: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_468411753d7e"
+  },
+  {
+    "zh": "[ERR] 读屏失败：%s",
+    "en": "[ERR] Screen read failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_2dacad461d94"
+  },
+  {
+    "zh": "[ERR] 屏幕上找不到可点击的「%s」（先用 dump 看看实际文字）",
+    "en": "[ERR] No clickable text found on screen: “%s” (use dump to inspect the actual text first)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_f156b45f0299"
+  },
+  {
+    "zh": "OK 已点击「%s」",
+    "en": "OK Tapped “%s”",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_6401fb413b99"
+  },
+  {
+    "zh": "[ERR] 点击失败：%s",
+    "en": "[ERR] Tap failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_6b90df978e84"
+  },
+  {
+    "zh": "OK 已输入 %s 个字符",
+    "en": "OK Entered %s characters",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_b451ff432b6a"
+  },
+  {
+    "zh": "[ERR] 输入失败：%s",
+    "en": "[ERR] Input failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_9399f8a76f80"
+  },
+  {
+    "zh": "[ERR] 不认识的按键「%s」（可用：back/home/recents/notifications/quicksettings/lock）",
+    "en": "[ERR] Unknown key “%s” (available: back/home/recents/notifications/quicksettings/lock)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_698c4fa88fa9"
+  },
+  {
+    "zh": "OK 已发送 %s",
+    "en": "OK Sent %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_f6c7e9cc82d7"
+  },
+  {
+    "zh": "[ERR] 系统拒绝了 %s",
+    "en": "[ERR] Android denied %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_90b26c552952"
+  },
+  {
+    "zh": "[ERR] 按键失败：%s",
+    "en": "[ERR] Key press failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_becfcdbc7194"
+  },
+  {
+    "zh": "[ERR] 手势未被接受（%s）",
+    "en": "[ERR] Gesture not accepted (%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_760e5addbf06"
+  },
+  {
+    "zh": "[ERR] 手势超时（%s）",
+    "en": "[ERR] Gesture timed out (%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_a11d175e609e"
+  },
+  {
+    "zh": "OK 已%s",
+    "en": "OK %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_bc99ad47bc65"
+  },
+  {
+    "zh": "[ERR] 手势被取消（%s，可能被其它手势打断）",
+    "en": "[ERR] Gesture canceled (%s, possibly interrupted by another gesture)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_361cbec085c0"
+  },
+  {
+    "zh": "[ERR] 手势失败：%s",
+    "en": "[ERR] Gesture failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_fad51a538ddf"
+  },
+  {
+    "zh": "[ERR] 截屏需要 Android 11 及以上（当前 API %s）",
+    "en": "[ERR] Screenshots require Android 11+ (current API %s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_fa4953869f8f"
+  },
+  {
+    "zh": "[ERR] 保存截屏失败：%s",
+    "en": "[ERR] Could not save screenshot: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_8c9afdc5c62d"
+  },
+  {
+    "zh": "[ERR] 截屏失败：%s",
+    "en": "[ERR] Screenshot failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_4d19fd414486"
+  },
+  {
+    "zh": "[ERR] 建不了目录 %s",
+    "en": "[ERR] Could not create directory %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_15334f885418"
+  },
+  {
+    "zh": "OK 截屏已保存：%s（%sx%s）",
+    "en": "OK Screenshot saved: %s(%sx%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_6ecf1c33fed9"
+  },
+  {
+    "zh": "[ERR] 写截屏文件失败：%s",
+    "en": "[ERR] Could not write screenshot file: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_91fa78a28abb"
+  },
+  {
+    "zh": "LAN 代理已启动：0.0.0.0:%s -> 127.0.0.1:%s",
+    "en": "LAN proxy started: 0.0.0.0:%s -> 127.0.0.1:%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/LanProxyService.java"
+    ],
+    "id": "build156_d1da9750dbcf"
+  },
+  {
+    "zh": "接收连接失败：%s",
+    "en": "Could not accept connection: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/LanProxyService.java"
+    ],
+    "id": "build156_30301968b328"
+  },
+  {
+    "zh": "LAN 代理绑定失败：%s",
+    "en": "LAN proxy bind failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/LanProxyService.java"
+    ],
+    "id": "build156_ced8b809645f"
+  },
+  {
+    "zh": "连接来自 %s",
+    "en": "Connection from %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/LanProxyService.java"
+    ],
+    "id": "build156_07854ff2bfe5"
+  },
+  {
+    "zh": "SCRIPTS_FAILED: ADB 脚本更新未完成\n%s",
+    "en": "SCRIPTS_FAILED: ADB script update is incomplete\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_be2b58db46ea"
+  },
+  {
+    "zh": "GLIBC_PY_INSTALL_FAIL: 无法安装 Ubuntu Python3，请先修复基础环境\n%s",
+    "en": "GLIBC_PY_INSTALL_FAIL: Could not install Ubuntu Python3. Repair the base environment first.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_5a1b1de59bd9"
+  },
+  {
+    "zh": "SETUP_FAILED: 安装后验证未通过，请检查以下输出\n%s",
+    "en": "SETUP_FAILED: Post-installation verification failed. Check the output below.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_13d60905c16c"
+  },
+  {
+    "zh": "WHEELS_INJECT_FAIL: %s；已有缓存原样保留，未用 APK 覆盖",
+    "en": "WHEELS_INJECT_FAIL: %s; existing cache preserved and not overwritten by the APK",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_95872d2e5ae8"
+  },
+  {
+    "zh": "WRITE_SECURE_SETTINGS 授权结果: %s",
+    "en": "WRITE_SECURE_SETTINGS authorization result: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_4b3667c51ed4"
+  },
+  {
+    "zh": "KEEPALIVE_WARN: 连接已验证，但自动恢复授权未完成；重启后可能需手动打开无线调试\n%s",
+    "en": "KEEPALIVE_WARN: Connection verified, but automatic recovery is not authorized. You may need to enable Wireless debugging manually after restart.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_eff0dc19c0fd"
+  },
+  {
+    "zh": "WRITE_SECURE_SETTINGS 授权失败: %s",
+    "en": "WRITE_SECURE_SETTINGS authorization failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_13f4f21a491b"
+  },
+  {
+    "zh": "端口发现未启动（错误 %s），可手动填写端口",
+    "en": "Port discovery did not start (error %s), enter the port manually if needed",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_1bf0363a0151"
+  },
+  {
+    "zh": "一个服务解析失败（错误 %s），继续查找本机端口…",
+    "en": "A service could not be resolved (error %s), continuing to search for the local port…",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_9d7f6d943cfa"
+  },
+  {
+    "zh": "端口发现失败：%s",
+    "en": "Port discovery failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ],
+    "id": "build156_e1e72de5660c"
+  },
+  {
+    "zh": "NOT_FOUND: %s（该应用没有启动入口或未安装）",
+    "en": "NOT_FOUND: %s(app has no launch activity or is not installed)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ],
+    "id": "build156_7d4c94122ef9"
+  },
+  {
+    "zh": "OK: 已启动 %s",
+    "en": "OK: Launched %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ],
+    "id": "build156_8b6a000ecc21"
+  },
+  {
+    "zh": "OK: 已写入剪贴板（%s 字）",
+    "en": "OK: Clipboard updated (%s characters)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ],
+    "id": "build156_380ead832eca"
+  },
+  {
+    "zh": "%s…（已截断）",
+    "en": "%s…(truncated)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ],
+    "id": "build156_48888886af2b"
+  },
+  {
+    "zh": "ERROR: 剪贴板操作失败：%s",
+    "en": "ERROR: Clipboard operation failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ],
+    "id": "build156_40a0458cfdf1"
+  },
+  {
+    "zh": "%s主线程尚未执行，已取消本次剪贴板操作；可重试",
+    "en": "%sThe main thread had not started this clipboard operation, so it was canceled. You can retry.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ],
+    "id": "build156_17e586ccee09"
+  },
+  {
+    "zh": "禁止设备分区、SELinux、系统属性、挂载或刷机操作：%s",
+    "en": "Partition, SELinux, system property, mount and firmware operations are blocked: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java"
+    ],
+    "id": "build156_6e69b9da20f4"
+  },
+  {
+    "zh": "不认识的命令不执行：%s",
+    "en": "Unrecognized command blocked: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java"
+    ],
+    "id": "build156_0738e5f3616c"
+  },
+  {
+    "zh": "受保护目录只读：%s",
+    "en": "Protected directory is read-only: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java"
+    ],
+    "id": "build156_587964946ec1"
+  },
+  {
+    "zh": "系统、关键或未识别应用不可结束：%s",
+    "en": "System, essential or unidentified apps cannot be stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java"
+    ],
+    "id": "build156_262eaded6b64"
+  },
+  {
+    "zh": "系统关键进程或归属不明的 PID 不可结束：%s",
+    "en": "Essential system processes or PIDs with unknown ownership cannot be stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java"
+    ],
+    "id": "build156_3cc44078a50c"
+  },
+  {
+    "zh": "启动敏感应用：%s",
+    "en": "Launch sensitive application: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ],
+    "id": "build156_11cbc1e59a7d"
+  },
+  {
+    "zh": "操作独立虚拟屏：%s",
+    "en": "Operate independent virtual display: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_5b615366c237"
+  },
+  {
+    "zh": "点按 (%d,%d)",
+    "en": "Tap (%d,%d)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_32563ad6a59f"
+  },
+  {
+    "zh": "滑动 (%d,%d)→(%d,%d)",
+    "en": "Swipe (%d,%d)→(%d,%d)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_9f174a86a00f"
+  },
+  {
+    "zh": "[ERR] 无障碍服务未开启。请让用户在 DSHA「设置 → 设备能力授权」点「设置屏幕操作」，或到系统设置 → 无障碍 → DSHA 配对助手 打开。",
+    "en": "[ERR] Accessibility is off. Ask the user to open DSHA Settings → Device permissions → Screen control, or enable DSHA Pairing Assistant in Android Settings → Accessibility.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_d5da3de79724"
+  },
+  {
+    "zh": "[ERR] 截屏被系统拒绝（错误码 %d，太频繁了，隔一秒再试）",
+    "en": "[ERR] Screenshot rejected by the system (error %d; too frequent, wait a second before retrying)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_15b73b85a746"
+  },
+  {
+    "zh": "[ERR] 截屏被系统拒绝（错误码 %d）",
+    "en": "[ERR] Screenshot rejected by the system (error %d)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ],
+    "id": "build156_db4253e25186"
+  },
+  {
+    "zh": "显示 %d 个；Android 返回 %d 个可见应用。系统可能限制可见范围；结束应用前会另行核对完整清单。",
+    "en": "Showing %d apps; Android returned %d visible apps. The system may restrict visibility; the complete inventory is checked again before stopping an app.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ],
+    "id": "build156_495fd58f7071"
+  },
+  {
+    "zh": "检查%s失败：%s；保留此通道上次结果，可重试检查或继续使用已下载包",
+    "en": "Checking %s failed: %s; this channel's previous result is retained. Retry the check or use the downloaded package",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_df5baf1459d5"
+  },
+  {
+    "zh": "检查%s失败：%s；可重新检查",
+    "en": "Checking %s failed: %s; retry the check",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_af240eb27b83"
+  },
+  {
+    "zh": "正在检查%s更新…",
+    "en": "Checking for %s updates…",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_8fb32916b6cc"
+  },
+  {
+    "zh": "发现新版本 %s",
+    "en": "New version found: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_40951b018bb0"
+  },
+  {
+    "zh": "此通道暂无适合当前设备的更新；当前版本码 %s",
+    "en": "This channel has no update compatible with this device; current version code %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_27feea79601c"
+  },
+  {
+    "zh": "下载尚未开始：%s；请在更新页重试",
+    "en": "Download did not start: %s; retry on the update page",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_9462f02584ff"
+  },
+  {
+    "zh": "下载暂停：%s；可继续下载",
+    "en": "Download paused: %s; you can resume it",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_d1e6a9e39759"
+  },
+  {
+    "zh": "%s\n已保留 %s 及已有下载文件，但无法确认查询来源；请联网重新检查，确认当前通道后才能下载/安装",
+    "en": "%s\nRetained %s and its existing downloads, but the check channel is unknown; check online and confirm the current channel before downloading or installing",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_edd79ba77945"
+  },
+  {
+    "zh": "%s\n候选来源：%s",
+    "en": "%s\nCandidate channel: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_4eb255f0ddaf"
+  },
+  {
+    "zh": "%s\n已保留 %s（来源：%s），与当前%s不匹配；切回来源通道或重新检查后才能下载/安装",
+    "en": "%s\nRetained %s (source: %s), which does not match the current %s; switch back to its channel or check again before downloading or installing",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_81ee7efd5622"
+  },
+  {
+    "zh": "%s；保存任务状态失败，下次需要重新检查",
+    "en": "%s; saving the task state failed; check again next time",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_d991c09c1250"
+  },
+  {
+    "zh": "安装前校验失败：%s",
+    "en": "Pre-install validation failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_5c72b57882fb"
+  },
+  {
+    "zh": "安装前校验失败：%s；请重试",
+    "en": "Pre-install validation failed: %s; retry",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateRepository.java"
+    ],
+    "id": "build156_3f4626726564"
+  },
+  {
+    "zh": "安装包不是正式非调试版本",
+    "en": "The package is not a non-debug release",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+    ],
+    "id": "build156_9a1651cb3fb2"
+  },
+  {
+    "zh": "前台服务未获系统允许：%s",
+    "en": "The system did not allow the foreground service: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+    ],
+    "id": "build156_63248adc5dda"
+  },
+  {
+    "zh": "onStartCommand startForeground 失败：%s",
+    "en": "onStartCommand startForeground failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+    ],
+    "id": "build156_ef1c6a1feb2e"
+  },
+  {
+    "zh": "[保活] 取锁失败（不致命）：%s",
+    "en": "[Keepalive] Power lease unavailable (nonfatal): %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+    ],
+    "id": "build156_942ed9b80217"
+  },
+  {
+    "zh": "备份成功，归档与导出文件已校验。\n%s",
+    "en": "Backup succeeded; the archive and exported file were verified.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/BackupTask.java"
+    ],
+    "id": "build156_9b79d6f0ee0f"
+  },
+  {
+    "zh": "确认恢复将停止 Web，并中断正在执行的任务。\n\n%s",
+    "en": "Confirming restore will stop Web and interrupt running tasks.\n\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/BackupTask.java"
+    ],
+    "id": "build156_da5c83962e8e"
+  },
+  {
+    "zh": "正在%s，完成后可重新生成报告。",
+    "en": "%s is in progress; regenerate the report when it finishes.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ],
+    "id": "build156_5649dcef75af"
+  },
+  {
+    "zh": "修复失败：%s\n",
+    "en": "Repair failed: %s\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ],
+    "id": "build156_cbbaf081fd15"
+  },
+  {
+    "zh": "诊断未完成：%s",
+    "en": "Diagnostics incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ],
+    "id": "build156_f0364a3aef58"
+  },
+  {
+    "zh": "无法开始诊断：%s",
+    "en": "Cannot start diagnostics: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ],
+    "id": "build156_5b31a7634516"
+  },
+  {
+    "zh": "\n建议操作\n证书或 npm 异常：点击「修复证书与 npm」。\n文件选择无返回：到插件页使用「其他文件选择器」。\n第三方插件导致启动失败：使用启动页的安全启动，再逐个恢复插件。\n存储不足：清理下载目录后重试，避免重新解压整个环境。\n\n隐私范围：未读取 API 配置、对话、终端命令或系统完整日志；没有自动上传此报告。可在下面补充复现步骤后复制或导出。\n",
+    "en": "\nSuggested actions\nCertificate or npm errors: select “Repair certificates and npm”.\nFile picker returns nothing: use “Other file picker” on the Plugins page.\nA third-party plugin prevents startup: use Safe startup, then restore plugins one at a time.\nLow storage: clear the downloads directory and retry; avoid extracting the entire environment again.\n\nPrivacy scope: this report did not read API settings, conversations, terminal commands, or complete system logs, and was not uploaded automatically. Add reproduction steps below before copying or exporting it.\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ],
+    "id": "build156_a7acca016e25"
+  },
+  {
+    "zh": "无法启动安装任务：%s",
+    "en": "Cannot start the installation task: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/InstallRepository.java"
+    ],
+    "id": "build156_d40d5ec0a1d9"
+  },
+  {
+    "zh": "任务异常：%s",
+    "en": "Task exception: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/InstallRepository.java"
+    ],
+    "id": "build156_97fe912a3e5f"
+  },
+  {
+    "zh": "任务失败：%s",
+    "en": "Task failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/InstallRepository.java"
+    ],
+    "id": "build156_f86ab028d6a4"
+  },
+  {
+    "zh": "无法确认后台进程退出，保留环境保护：%s",
+    "en": "Cannot confirm the background process exited; environment protection remains: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/RuntimeTasks.java"
+    ],
+    "id": "build156_10712725a864"
+  },
+  {
+    "zh": "正在%s，请稍后再打开终端或发送命令",
+    "en": "%s is in progress; open the terminal or send commands after it finishes.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/SimpleTerminalBackend.java"
+    ],
+    "id": "build156_f51e8ad1d9f9"
+  },
+  {
+    "zh": "正在执行环境任务，请稍后再打开终端或发送命令",
+    "en": "An environment task is in progress; open the terminal or send commands after it finishes.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/SimpleTerminalBackend.java"
+    ],
+    "id": "build156_af45b4eb07cf"
+  },
+  {
+    "zh": "终端尚未停止，保留会话与环境保护：%s",
+    "en": "The terminal has not stopped; its session and environment protection remain: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/TerminalSessionOwner.java"
+    ],
+    "id": "build156_a7f05ffe62a1"
+  },
+  {
+    "zh": "最近启动失败\n%s\n%s\n\n%s\n\n=== 进程输出 ===\n",
+    "en": "Latest startup failure\n%s\n%s\n\n%s\n\n=== Process output ===\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java"
+    ],
+    "id": "build156_4cc5b69cc172"
+  },
+  {
+    "zh": "部分旧环境待清理：%s",
+    "en": "Some older environments still need cleanup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ],
+    "id": "build156_9038976bb616"
+  },
+  {
+    "zh": "插件注册失败：%s",
+    "en": "Plugin registration failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ],
+    "id": "build156_989226d5e8ad"
+  },
+  {
+    "zh": "内置插件未完整注册，请先修复环境：%s",
+    "en": "Built-in plugins were not fully registered; repair the environment first: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ],
+    "id": "build156_57a25b6dd816"
+  },
+  {
+    "zh": "rc1 迁移快照未完成，已阻止导入；原件保留。请检查存储权限和空间后重试：%s",
+    "en": "rc1 snapshots are incomplete; import is blocked and originals are retained. Check storage access and space, then retry: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ],
+    "id": "build156_83c42ac735b1"
+  },
+  {
+    "zh": "本次配置快照暂不可用：%s",
+    "en": "Configuration snapshot unavailable for this start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ],
+    "id": "build156_265dfcd34881"
+  },
+  {
+    "zh": "运行方式：%s",
+    "en": "Runtime mode: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_13ea2f742af7"
+  },
+  {
+    "zh": "启动未完成：%s",
+    "en": "Startup incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_4f061e831125"
+  },
+  {
+    "zh": "启动排队失败：%s",
+    "en": "Cannot queue startup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_a975f0b0057c"
+  },
+  {
+    "zh": "本次实际运行方式：%s",
+    "en": "Runtime mode used for this start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_6035204dc6c5"
+  },
+  {
+    "zh": "3090 桥启动失败：%s",
+    "en": "Bridge 3090 failed to start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_0614862d7f33"
+  },
+  {
+    "zh": "启动失败：%s",
+    "en": "Startup failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_5c6b21fc1bd8"
+  },
+  {
+    "zh": "兼容重试失败：%s",
+    "en": "Compatibility retry failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_cf98dc446f30"
+  },
+  {
+    "zh": "停止旧 Web 失败：%s",
+    "en": "Failed to stop the previous Web process: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_71a466f133ba"
+  },
+  {
+    "zh": "停用插件失败：%s",
+    "en": "Failed to disable the plugin: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_ddbbf22d6811"
+  },
+  {
+    "zh": "dsh web 进程已创建 → 127.0.0.1:%s（等待鉴权链接…）",
+    "en": "The dsh web process was created → 127.0.0.1:%s (waiting for its authentication link…)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_51183396b5fa"
+  },
+  {
+    "zh": "%s 进程退出，退出码 %s（鉴权后）",
+    "en": "%s process exited with code %s (after authentication)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_8859b407a382"
+  },
+  {
+    "zh": "%s 进程退出，退出码 %s（鉴权前）",
+    "en": "%s process exited with code %s (before authentication)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_24bbced666dc"
+  },
+  {
+    "zh": "首选 Web 端口已占用：%s",
+    "en": "Preferred Web port is in use: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_67a51805ba3c"
+  },
+  {
+    "zh": "实际 Web 端口：%s",
+    "en": "Active Web port: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ],
+    "id": "build156_92b19eb2dde1"
+  },
+  {
+    "zh": "上次任务因进程退出而中断，未自动重试。请先处理未完成的维护或重新选择备份。\n%s",
+    "en": "The previous task was interrupted when the process exited and was not retried automatically. Resolve unfinished maintenance or select the backup again.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/BackupTaskState.java"
+    ],
+    "id": "build156_a56b9916a234"
+  },
+  {
+    "zh": "Web 鉴权链接已失效（HTTP %s），请重新启动服务后进入",
+    "en": "Web authentication link expired (HTTP %s); restart the service before opening it.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ],
+    "id": "build156_c2c8b0608796"
+  },
+  {
+    "zh": "Web 服务尚未就绪（HTTP %s），请稍后重试",
+    "en": "The Web service is not ready (HTTP %s); retry later.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ],
+    "id": "build156_cde36a971a15"
+  },
+  {
+    "zh": "Web 鉴权响应异常（HTTP %s），请查看启动日志",
+    "en": "Unexpected Web authentication response (HTTP %s); review the startup log.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ],
+    "id": "build156_2eb00ee3bbae"
+  },
+  {
+    "zh": "Web 未接受登录凭据（HTTP %s），请重试或重新启动服务",
+    "en": "Web did not accept the login credential (HTTP %s); retry or restart the service.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ],
+    "id": "build156_b419e2e55ed3"
+  },
+  {
+    "zh": "Web 页面尚不可用（HTTP %s），请查看启动日志",
+    "en": "The Web page is unavailable (HTTP %s); review the startup log.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ],
+    "id": "build156_2b7676f6a8c0"
+  },
+  {
+    "zh": "缺少备份支持脚本：%s",
+    "en": "Missing backup support script: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ],
+    "id": "build156_f5ab1bf02b03"
+  },
+  {
+    "zh": "%s\n%s\n文件数：%d\n解压内容：%s\n来自版本：%s%s%s\n\n恢复会先停止 Web。当前数据会保留为 .pre-restore-*，恢复失败自动回滚；完成后可手动启动 Web。",
+    "en": "%s\n%s\nFiles: %d\nExtracted contents: %s\nSource version: %s%s%s\n\nRestore stops Web first. Current data is retained as .pre-restore-* and restore failures roll back. Start Web manually afterward.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ],
+    "id": "build156_052933d0e874"
+  },
+  {
+    "zh": "%s\n文件数：%d",
+    "en": "%s\nFiles: %d",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ],
+    "id": "build156_6658e2ff8c74"
+  },
+  {
+    "zh": "恢复完成：%s%s%s",
+    "en": "Restore complete: %s%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ],
+    "id": "build156_7eb85fe16922"
+  },
+  {
+    "zh": "文件不存在或软链接目标已失效：%s",
+    "en": "File is missing or its symbolic-link target is no longer valid: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java"
+    ],
+    "id": "build156_86d5c82db4bf"
+  },
+  {
+    "zh": "文件不存在：%s",
+    "en": "File does not exist: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java"
+    ],
+    "id": "build156_bb8db052c7b1"
+  },
+  {
+    "zh": "运行时更新未完成，原运行时及个人数据已保留：\n%s\n%s",
+    "en": "Runtime update did not complete; the previous runtime and personal data were retained:\n%s\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_db1589f1fa5b"
+  },
+  {
+    "zh": "\n部分旧运行时待下次清理：%s",
+    "en": "\nSome old runtimes await a later cleanup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_b71b1d74f991"
+  },
+  {
+    "zh": "dsh 与内置插件更新完成；Ubuntu、个人目录、会话、配置和第三方插件保持原位。%s",
+    "en": "dsh and built-in plugins updated; Ubuntu, personal folders, sessions, configuration and third-party plugins stayed in place.%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_540fcfd1c130"
+  },
+  {
+    "zh": "正在解压内置环境… %s",
+    "en": "Extracting the bundled environment… %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_894f5c725b37"
+  },
+  {
+    "zh": "环境重建未完成，原件及宿主数据副本已保留：\n%s\n%s",
+    "en": "Environment rebuild did not complete; originals and host data snapshots were retained:\n%s\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_91ad8df2aca7"
+  },
+  {
+    "zh": "可用空间不足：本阶段预计需要 %s，当前可用 %s。原环境保持原位，请释放空间后重试。",
+    "en": "Insufficient free space: this stage is estimated to need %s; %s is available. The previous environment stays in place. Free some space and retry.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_029bc63e7945"
+  },
+  {
+    "zh": "新环境第 %d 步检查失败：%s",
+    "en": "New environment step %d verification failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_6920b90c43e5"
+  },
+  {
+    "zh": "新环境运行校验失败，将保留并回切原环境。\n%s",
+    "en": "New environment runtime verification failed; the previous environment will be retained and restored.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_36e93a1b6fae"
+  },
+  {
+    "zh": "待清理目录不属于本应用：%s",
+    "en": "Directory selected for cleanup does not belong to this app: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_651f7b8304d1"
+  },
+  {
+    "zh": "无法读取待清理目录：%s",
+    "en": "Cannot read the directory selected for cleanup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_cbd0e28ee705"
+  },
+  {
+    "zh": "无法清理旧文件：%s",
+    "en": "Cannot remove the old file: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_f6a415824eaf"
+  },
+  {
+    "zh": "中断的运行时更新已回切；个人目录、会话和配置保持原位。\n%s",
+    "en": "Interrupted runtime update rolled back; personal folders, sessions and configuration stayed in place.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_2f972f9688fc"
+  },
+  {
+    "zh": "中断的维护已回滚；安全备份、旧环境及失败的新环境均已保留。\n%s",
+    "en": "Interrupted maintenance rolled back; the safety backup and both environment trees were retained.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_8389851f6cf9"
+  },
+  {
+    "zh": "WHEELS_CACHE_READY: 补齐 %d 个，原版已在位 %d 个，保留修改版 %d 个，保留额外 wheel %d 个%s%s",
+    "en": "WHEELS_CACHE_READY: Added %d, bundled originals %d, modified files retained %d, extra wheels retained %d%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_518dc4527907"
+  },
+  {
+    "zh": "WHEELS_JAVA_EXTRACTED: 已校验并安装 %d 个 wheel，源缓存全部保留",
+    "en": "WHEELS_JAVA_EXTRACTED: Verified and installed %d wheels; all source caches retained",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_784bb5195092"
+  },
+  {
+    "zh": "文件大小无效：%s",
+    "en": "Invalid file size: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_08289d258d52"
+  },
+  {
+    "zh": "条目路径冲突：%s",
+    "en": "Entry path conflict: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_015717ec1f41"
+  },
+  {
+    "zh": "CRC/长度校验失败：%s",
+    "en": "CRC/length verification failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_a5ac5fbd6482"
+  },
+  {
+    "zh": "与 %s 的文件冲突：%s；请选择需要使用的版本",
+    "en": "File conflicts with %s: %s; select the version you need",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_52296b9c4590"
+  },
+  {
+    "zh": "WHEELS_CACHE_INVALID: %s：%s。源缓存已保留，未用 APK 覆盖。请先备份该文件并移出 wheels 目录，再重试补缺；自定义 wheel 请提供有效版本。",
+    "en": "WHEELS_CACHE_INVALID: %s: %s. The source cache was retained. Back up this file and move it out of the wheels directory before retrying. Provide a valid version for a custom wheel.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_f30b3be04f28"
+  },
+  {
+    "zh": "无法发布 Python 文件：%s",
+    "en": "Cannot publish the Python file: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_8641c5b908b1"
+  },
+  {
+    "zh": "目录是符号链接，已保留且未写入：%s",
+    "en": "The directory is a symbolic link; retained without writing: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_cb38e781227b"
+  },
+  {
+    "zh": "目录位置已有其他条目，已保留：%s",
+    "en": "Another entry occupies the directory location; retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_6c2f9f4cced0"
+  },
+  {
+    "zh": "临时目录清理失败：%s",
+    "en": "Temporary directory cleanup failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ],
+    "id": "build156_58b2641d3dd6"
+  },
+  {
+    "zh": "维护路径不在预期私有目录：%s",
+    "en": "Maintenance path is outside the expected private directory: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/MaintenanceTransaction.java"
+    ],
+    "id": "build156_b1d2d353b872"
+  },
+  {
+    "zh": "维护阶段已存在：%s",
+    "en": "Maintenance stage already exists: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/MaintenanceTransaction.java"
+    ],
+    "id": "build156_5592ef345c44"
+  },
+  {
+    "zh": "运行时维护路径不安全：%s",
+    "en": "Unsafe runtime maintenance path: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/RuntimeUpdateTransaction.java"
+    ],
+    "id": "build156_8be0bfe8c4c9"
+  },
+  {
+    "zh": "运行时阶段已存在：%s",
+    "en": "Runtime stage already exists: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/RuntimeUpdateTransaction.java"
+    ],
+    "id": "build156_15692361bbde"
+  },
+  {
+    "zh": "新运行时缺少文件：%s",
+    "en": "New runtime is missing a file: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/RuntimeUpdateTransaction.java"
+    ],
+    "id": "build156_902ae5527a51"
+  },
+  {
+    "zh": "%s 分 %s 秒",
+    "en": "%s min %s s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/Fmt.java"
+    ],
+    "id": "build156_1a44477ef110"
+  },
+  {
+    "zh": "%s 时 %s 分",
+    "en": "%s h %s min",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/Fmt.java"
+    ],
+    "id": "build156_39052ebfe40c"
+  },
+  {
+    "zh": "npm 插件包 · %s",
+    "en": "npm plugin package · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/PluginSource.java"
+    ],
+    "id": "build156_e6aa5e5530cd"
+  },
+  {
+    "zh": "插件压缩包 · %s",
+    "en": "Plugin archive · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/PluginSource.java"
+    ],
+    "id": "build156_f104c369bfc5"
+  },
+  {
+    "zh": "%s · 默认分支",
+    "en": "%s · default branch",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/PluginSource.java"
+    ],
+    "id": "build156_174a88dc5cce"
+  },
+  {
+    "zh": "%s\n分支/目录：%s",
+    "en": "%s\nBranch/directory: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/PluginSource.java"
+    ],
+    "id": "build156_24f7dfd20d6c"
+  },
+  {
+    "zh": "短信查询不支持此选项：%s",
+    "en": "SMS query does not support this option: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/SmsQuery.java"
+    ],
+    "id": "build156_5e42e1147a76"
+  },
+  {
+    "zh": "%s：未收到结果",
+    "en": "%s: no result received",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java"
+    ],
+    "id": "build156_148aebe09416"
+  },
+  {
+    "zh": "%s：正常",
+    "en": "%s: ready",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java"
+    ],
+    "id": "build156_bc651d666b6a"
+  },
+  {
+    "zh": "%s：失败（退出码 %s）",
+    "en": "%s: failed (exit code %s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java",
+      "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java"
+    ],
+    "id": "build156_d36472c24cb1"
+  },
+  {
+    "zh": "[关闭会话：取消 %s 条尚未发送的命令]\n",
+    "en": "[Closing session: cancelled %s commands that have not been sent]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ],
+    "id": "build156_7c51ee9251d4"
+  },
+  {
+    "zh": "[终端启动失败：%s；未发送的命令保留，重试后继续]\n",
+    "en": "[Terminal startup failed: %s; unsent commands are retained and will continue after retry]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ],
+    "id": "build156_f8fae1cfba2d"
+  },
+  {
+    "zh": "[终端启动清理失败，保留环境占用：%s]\n",
+    "en": "[Terminal startup cleanup failed; environment protection retained: %s]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ],
+    "id": "build156_09c724c078e3"
+  },
+  {
+    "zh": "[无法核验终端本次进程身份，保留环境占用：%s]\n",
+    "en": "[Cannot verify this terminal process identity; environment protection retained: %s]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ],
+    "id": "build156_a9596a5c5f77"
+  },
+  {
+    "zh": "[%s；命令尚未发送，已保留。完成后请重试重启]\n",
+    "en": "[%s; the command has not been sent and is retained. Retry restarting after the operation finishes]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ],
+    "id": "build156_d6b27c649a9c"
+  },
+  {
+    "zh": "[发送结果不确定，未自动重发：%s；请检查执行结果。%s]\n",
+    "en": "[Send result is uncertain; no automatic resend: %s; check the execution result. %s]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ],
+    "id": "build156_788e5db60c86"
+  },
+  {
+    "zh": "[中止失败，未创建新会话：%s；待发命令保留，请再次点中止重试]\n",
+    "en": "[Stop failed; no new session was created: %s; pending commands are retained. Tap Stop again to retry]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ],
+    "id": "build156_7b0adfe7223a"
+  },
+  {
+    "zh": "[终端读取失败：%s]\n",
+    "en": "[Terminal read failed: %s]\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/TerminalSession.java"
+    ],
+    "id": "build156_ffdff85f4778"
+  },
+  {
+    "zh": "symlink 失败: %s -> %s: %s",
+    "en": "symlink failed: %s -> %s: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/Compat.java"
+    ],
+    "id": "build156_7777737603a6"
+  },
+  {
+    "zh": "link 失败: %s -> %s: %s",
+    "en": "link failed: %s -> %s: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/Compat.java"
+    ],
+    "id": "build156_1607916d1392"
+  },
+  {
+    "zh": "终端回收暂未确认，下次维护将重新核验：%s",
+    "en": "Terminal cleanup is not confirmed; the next maintenance operation will check again: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/PtySession.java"
+    ],
+    "id": "build156_7acb01587865"
+  },
+  {
+    "zh": "\n已准备内容 SHA-256：%s",
+    "en": "\nPrepared contents SHA-256: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
+    ],
+    "id": "build156_06a87c2f726b"
+  },
+  {
+    "zh": "自动开无线调试失败: %s",
+    "en": "Could not enable wireless debugging automatically: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BootReceiver.java"
+    ],
+    "id": "build156_86d194dadc40"
+  },
+  {
+    "zh": "后台暂不能启动 ADB 保活: %s",
+    "en": "ADB keep-alive cannot start in the background yet: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_1ec8da46675e"
+  },
+  {
+    "zh": "ADB 保活启动失败: %s",
+    "en": "ADB keep-alive failed to start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_b7d9a54c8ebd"
+  },
+  {
+    "zh": "3090 桥启动失败: %s",
+    "en": "Bridge on port 3090 failed to start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_059f77a18b47"
+  },
+  {
+    "zh": "Shizuku 绑定失败: %s",
+    "en": "Could not bind Shizuku: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_05e2a1fbdab5"
+  },
+  {
+    "zh": "网络监听注册失败: %s",
+    "en": "Could not register the network listener: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_dda7a985ed41"
+  },
+  {
+    "zh": "屏幕广播注册失败: %s",
+    "en": "Could not register screen broadcasts: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_51332a8dc16f"
+  },
+  {
+    "zh": "保活探测异常: %s",
+    "en": "Keep-alive probe error: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_5133e58ed983"
+  },
+  {
+    "zh": "保活探测未完成：%s",
+    "en": "Keep-alive probe did not complete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_7f18280e275e"
+  },
+  {
+    "zh": "设备确认桥未就绪：%s",
+    "en": "Device confirmation bridge is not ready: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_9341602dfb50"
+  },
+  {
+    "zh": "ADB 准备失败：%s",
+    "en": "ADB preparation failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_1875fe44f340"
+  },
+  {
+    "zh": "触发原因：%s",
+    "en": "Triggered by: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_b06c5c63856c"
+  },
+  {
+    "zh": "重连端口 %s",
+    "en": "Reconnecting on port %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_8f682ebd9abd"
+  },
+  {
+    "zh": "无线调试连接尚未验证；请检查连接端口或重新配对。%s",
+    "en": "The wireless debugging connection has not been verified. Check the connection port or pair again. %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_3093cc3581f2"
+  },
+  {
+    "zh": "无线调试似乎已关闭（失败 %s 次）",
+    "en": "Wireless debugging appears to be disabled (%s failed attempts)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ],
+    "id": "build156_54ba06c79f9e"
+  },
+  {
+    "zh": "已授权，连接失败：%s。点击下方重试。",
+    "en": "Authorized, but the connection failed: %s. Retry below.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
+    ],
+    "id": "build156_bd1219c851a1"
+  },
+  {
+    "zh": "[EXECUTION_UNKNOWN] 设备命令结果未确认，不会自动重试：%s\n[EXIT=125]",
+    "en": "[EXECUTION_UNKNOWN] Device command result is unconfirmed; it will not be retried automatically: %s\n[EXIT=125]",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
+    ],
+    "id": "build156_1e42ba559edb"
+  },
+  {
+    "zh": "[EXECUTION_UNKNOWN] 虚拟屏启动结果未确认，不会自动重试：%s\n[EXIT=125]",
+    "en": "[EXECUTION_UNKNOWN] Virtual screen startup result is unconfirmed; it will not be retried automatically: %s\n[EXIT=125]",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
+    ],
+    "id": "build156_dcfbf247c930"
+  },
+  {
+    "zh": "位置 %s",
+    "en": "Location %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceSense.java"
+    ],
+    "id": "build156_67315cf229b4"
+  },
+  {
+    "zh": "传感器/手电 %s",
+    "en": "Sensors/flashlight %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceSense.java"
+    ],
+    "id": "build156_e5d3ae6ecdd8"
+  },
+  {
+    "zh": "BAD_KEY 支持的名字：light accel gyro magnet pressure proximity humidity temperature gravity rotation steps",
+    "en": "BAD_KEY Supported names: light accel gyro magnet pressure proximity humidity temperature gravity rotation steps",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceSense.java"
+    ],
+    "id": "build156_38b6d10c46f1"
+  },
+  {
+    "zh": "运行工具准备失败：%s",
+    "en": "Runtime tools could not be prepared: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java"
+    ],
+    "id": "build156_a57e229657cc"
+  },
+  {
+    "zh": "推文件进容器失败: %s",
+    "en": "Could not copy the file into the container: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java"
+    ],
+    "id": "build156_8cf09de2b1ae"
+  },
+  {
+    "zh": "从容器取文件失败: %s",
+    "en": "Could not copy the file out of the container: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java"
+    ],
+    "id": "build156_1d46c9d082ad"
+  },
+  {
+    "zh": "Ubuntu Python 安装失败: %s",
+    "en": "Ubuntu Python installation failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java",
+      "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+      "app/src/main/java/com/deepseekharness/app/runtime/RootfsInstaller.java"
+    ],
+    "id": "build156_0ed020770414"
+  },
+  {
+    "zh": "离线 pnpm 安装失败: %s",
+    "en": "Bundled pnpm installation failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java",
+      "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+      "app/src/main/java/com/deepseekharness/app/runtime/RootfsInstaller.java"
+    ],
+    "id": "build156_294723cb9f97"
+  },
+  {
+    "zh": "停止隔离检查进程未完成：%s",
+    "en": "The isolated trial process has not stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
+    ],
+    "id": "build156_13af05e415ce"
+  },
+  {
+    "zh": "停止 Web 未完成：%s",
+    "en": "Web has not stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
+      "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
+    ],
+    "id": "build156_f89c9c79b73e"
+  },
+  {
+    "zh": "PDF 兼容适配未应用，原文件保留：%s",
+    "en": "PDF compatibility was not applied; the original file is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+    ],
+    "id": "build156_749a0be0a271"
+  },
+  {
+    "zh": "网页脚本拼接优化未应用，原文件保留：%s",
+    "en": "Script combination was not applied; the original file is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+    ],
+    "id": "build156_6ee2075b4885"
+  },
+  {
+    "zh": "检查未完成：%s",
+    "en": "The check did not finish: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallTask.java"
+    ],
+    "id": "build156_baa9e7cefa26"
+  },
+  {
+    "zh": "proroot 运行时缺 %s",
+    "en": "The proroot runtime is missing %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java"
+    ],
+    "id": "build156_f1894ebd0c33"
+  },
+  {
+    "zh": "内置 npm 文件缺失：%s-cli.js",
+    "en": "Bundled npm file is missing: %s-cli.js",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+    ],
+    "id": "build156_60de6286b1f3"
+  },
+  {
+    "zh": "缺 %s 个运行时文件（%s 等）",
+    "en": "Missing %s runtime files (including %s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java"
+    ],
+    "id": "build156_5792eb47d86b"
+  },
+  {
+    "zh": "ERROR: 命令执行超时（%s 秒），已请求停止本次进程",
+    "en": "ERROR: Command timed out after %s seconds; stopping has been requested",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestCommandOutput.java"
+    ],
+    "id": "build156_44b35ba5fdfb"
+  },
+  {
+    "zh": "基础工具安装失败（退出码 %s），请查看上方软件源/网络输出",
+    "en": "Basic tools installation failed (exit code %s); check the repository and network output above",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/BasicToolsInstaller.java"
+    ],
+    "id": "build156_3417a03f41ad"
+  },
+  {
+    "zh": "退出码 %s：\n%s",
+    "en": "Exit code %s:\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java"
+    ],
+    "id": "build156_6ed598d7471d"
+  },
+  {
+    "zh": "无法查询终端会话（errno=%s），请稍后重试",
+    "en": "Could not query the terminal session (errno=%s); try again later",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/TerminalProcessCloser.java"
+    ],
+    "id": "build156_0d8592cf9f16"
+  },
+  {
+    "zh": "命令超时（%s 秒），当前步骤未完成，请重新检查",
+    "en": "Command timed out after %s seconds; this step is incomplete and needs to be checked again",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallProcess.java"
+    ],
+    "id": "build156_dcb2e79898dc"
+  },
+  {
+    "zh": "跳过 · %s：%s",
+    "en": "Skipped · %s: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallTask.java"
+    ],
+    "id": "build156_2116ba3ba241"
+  },
+  {
+    "zh": "已读取离线包 %s MiB",
+    "en": "Read %s MiB from the bundled archive",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ],
+    "id": "build156_2248fb44a1b4"
+  },
+  {
+    "zh": "已按需修复 %s 步，并通过复验",
+    "en": "Repaired %s steps as needed and verified them again",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ],
+    "id": "build156_a73386ae2077"
+  },
+  {
+    "zh": "检查第 %s 步：%s",
+    "en": "Checking step %s: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ],
+    "id": "build156_32e539538879"
+  },
+  {
+    "zh": "%s：通过",
+    "en": "%s: passed",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ],
+    "id": "build156_1f009bf80299"
+  },
+  {
+    "zh": "容器探测退出码 %s，检查未完整执行",
+    "en": "Container probe exited with code %s; the checks did not finish",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ],
+    "id": "build156_dec327fcd67e"
+  },
+  {
+    "zh": "检查 Web 进程失败（PID %s，errno=%s）",
+    "en": "Could not inspect the Web process (PID %s, errno=%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
+      "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
+    ],
+    "id": "build156_bda45c7b5bb4"
+  },
+  {
+    "zh": "无法核验本应用进程（PID %s）：%s",
+    "en": "Could not verify this app process (PID %s): %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
+    ],
+    "id": "build156_32dfce1e5868"
+  },
+  {
+    "zh": "打不开，请手动访问：%s",
+    "en": "Could not open. Visit manually: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java"
+    ],
+    "id": "build156_f00d2b410a6b"
+  },
+  {
+    "zh": "打不开 QQ，请手动搜索群号：%s",
+    "en": "Could not open QQ. Search for group number: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java"
+    ],
+    "id": "build156_0b17616a749c"
+  },
+  {
+    "zh": "找不到开发者选项时，到关于手机连续点按系统版本号。系统或厂商未提供无线调试时，填写端口无法启用它。\n\n通常让地址与端口留空即可自动发现。配对端口来自 6 位码弹窗，连接端口来自无线调试主页面，两者不能互换。\n\n首次准备依赖可能较久；配对码失效时请重新获取。自动读码需要屏幕操作权限，手动输入无需此权限。",
+    "en": "If Developer options is missing, tap the build number repeatedly in About phone. Entering a port cannot enable Wireless debugging if your Android version or manufacturer does not provide it.\n\nUsually, leave address and port blank for automatic discovery. The pairing port comes from the 6-digit-code dialog; the connection port comes from the main Wireless debugging page. They are not interchangeable.\n\nInitial dependency preparation may take time. Get a fresh code if yours expires. Auto-read requires screen-control permission; manual entry does not.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ],
+    "id": "build156_23ca30c5d0f8"
+  },
+  {
+    "zh": "ADB 操作未完成：%s",
+    "en": "ADB operation incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ],
+    "id": "build156_5be844e30efb"
+  },
+  {
+    "zh": "连接已验证，ADB 设备命令可用。\n\n%s",
+    "en": "Connection verified. ADB device commands are available.\n\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ],
+    "id": "build156_a3eb7e097909"
+  },
+  {
+    "zh": "配对已完成，连接尚未验证。请检查连接端口后点「验证已有连接」，无需再次配对。\n\n%s",
+    "en": "Pairing is complete, but the connection is not yet verified. Check the connection port and tap Verify connection. There is no need to pair again.\n\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ],
+    "id": "build156_7beaacb6d539"
+  },
+  {
+    "zh": "LAN 开关生效失败: %s",
+    "en": "Could not apply LAN setting: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ],
+    "id": "build156_14c622757e2b"
+  },
+  {
+    "zh": "无法打开 Shizuku：%s",
+    "en": "Could not open Shizuku: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "id": "build156_aab09d6b77fd"
+  },
+  {
+    "zh": "正在重连无线调试…%s",
+    "en": "Reconnecting to Wireless debugging…%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "id": "build156_91aa37e5aa21"
+  },
+  {
+    "zh": "连接已验证 · 端口 %s%s",
+    "en": "Connection verified · Port %s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "id": "build156_820a98974494"
+  },
+  {
+    "zh": "配对密钥已保存，连接尚未验证。%s",
+    "en": "Pairing key saved. Connection not yet verified.%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "id": "build156_5648805cc9c8"
+  },
+  {
+    "zh": "ADB 状态读取失败：%s",
+    "en": "Could not read ADB status: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "id": "build156_7d1d3f48f9ff"
+  },
+  {
+    "zh": "打开设置失败：%s",
+    "en": "Could not open settings: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "id": "build156_2498e84b52c4"
+  },
+  {
+    "zh": "导出失败：%s",
+    "en": "Export failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
+    ],
+    "id": "build156_d5190a05ba2f"
+  },
+  {
+    "zh": "\n用户补充复现步骤：\n%s",
+    "en": "\nAdditional steps to reproduce:\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
+    ],
+    "id": "build156_91dad78ed903"
+  },
+  {
+    "zh": " · 总耗时 %s 秒%s%s",
+    "en": " · Total time %s s%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ],
+    "id": "build156_20d37b4adab3"
+  },
+  {
+    "zh": " · 当前阶段 %s 秒",
+    "en": " · Current stage %s s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ],
+    "id": "build156_01dc3d0945b6"
+  },
+  {
+    "zh": "会停止 Web 并中断正在执行的任务，完整备份并校验配置、会话和本地插件，再重建环境并恢复数据。\n\n备份失败不切换环境，后续失败回切旧环境；安全备份和旧环境会保留并占用额外空间。额外安装的系统软件留在旧环境中。",
+    "en": "Stop the Web service and interrupt running tasks. Back up and verify settings, conversations and local plugins, then rebuild the environment and restore data.\n\nIf backup fails, the environment is unchanged. If a later step fails, the old environment is restored. The safety backup and old environment use additional space. Extra system software remains in the old environment.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ],
+    "id": "build156_9646e2cf05f0"
+  },
+  {
+    "zh": "无法打开维护页，可到数据与备份页查看任务：%s",
+    "en": "Could not open maintenance. Check the task in Backup & data: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ],
+    "id": "build156_96c3721ec953"
+  },
+  {
+    "zh": "拉起保活服务失败: %s",
+    "en": "Could not start the keep-alive service: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "id": "build156_07cf24bd94ff"
+  },
+  {
+    "zh": "\n\n本机 Web 地址（可长按复制）：\n%s",
+    "en": "\n\nLocal Web address (press and hold to copy):\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "id": "build156_c3124c33e284"
+  },
+  {
+    "zh": "检测到 %s 项异常，查看插件与恢复选项",
+    "en": "Detected %s issues; check plugins and recovery options",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "id": "build156_6752ff194fff"
+  },
+  {
+    "zh": "失败 %s/3，%s，查看恢复选项",
+    "en": "Failed %s/3, %s; see recovery options",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "id": "build156_b745d4e915d0"
+  },
+  {
+    "zh": "复制失败：%s",
+    "en": "Copy failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "id": "build156_93058baaf274"
+  },
+  {
+    "zh": "发现新版本 %s · %s",
+    "en": "New version available: %s · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ],
+    "id": "build156_7135134adbbb"
+  },
+  {
+    "zh": "无法打开文件选择器，请检查系统文件应用：%s",
+    "en": "Unable to open the file picker. Check the system Files app: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "id": "build156_3c6a01034f60"
+  },
+  {
+    "zh": "\n\n版本：%s%s%s%s%s%s",
+    "en": "\n\nVersion: %s%s%s%s%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "id": "build156_23382696e1f9"
+  },
+  {
+    "zh": "\n位置：%s",
+    "en": "\nLocation: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "id": "build156_7ed25651485e"
+  },
+  {
+    "zh": "\n来源：%s",
+    "en": "\nSource: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "id": "build156_5f9263bf4ff1"
+  },
+  {
+    "zh": "\n上次检查版本：%s",
+    "en": "\nLast checked version: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "id": "build156_f0f4c3231d5d"
+  },
+  {
+    "zh": "\n可回退：%s",
+    "en": "\nRollback available: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "id": "build156_1870de250c30"
+  },
+  {
+    "zh": "PTY 启动失败：%s",
+    "en": "PTY startup failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+    ],
+    "id": "build156_37ea35f3dcc0"
+  },
+  {
+    "zh": "关闭失败，会话仍保留：%s",
+    "en": "Close failed; session retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+    ],
+    "id": "build156_085d2875ce3a"
+  },
+  {
+    "zh": "保留记录无法读取，原件未改动。\n%s",
+    "en": "Retained records are unreadable. Originals are unchanged.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+    ],
+    "id": "build156_9a15bd325692"
+  },
+  {
+    "zh": "…（输出过长已截断）\n%s",
+    "en": "…(long output truncated)\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalFragment.java"
+    ],
+    "id": "build156_9b6ea04ad353"
+  },
+  {
+    "zh": "关闭终端 %s",
+    "en": "Close terminal %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java"
+    ],
+    "id": "build156_be7b94af09b7"
+  },
+  {
+    "zh": "无法安装：%s；可重试",
+    "en": "Cannot install: %s; retry available",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java"
+    ],
+    "id": "build156_3308ca34a13f"
+  },
+  {
+    "zh": "正在下载 %s",
+    "en": "Downloading %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+    ],
+    "id": "build156_e000d492eef4"
+  },
+  {
+    "zh": "服务返回 HTTP %s",
+    "en": "Service returned HTTP %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+    ],
+    "id": "build156_a5f08973a805"
+  },
+  {
+    "zh": "已保存：%s",
+    "en": "Saved: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+    ],
+    "id": "build156_c5e73322015b"
+  },
+  {
+    "zh": "标准版预览内核: %s",
+    "en": "Standard browser engine: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+    ],
+    "id": "build156_f751f2164f61"
+  },
+  {
+    "zh": "系统 WebView 初始化失败: %s",
+    "en": "System WebView initialization failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+    ],
+    "id": "build156_1a8c4267d698"
+  },
+  {
+    "zh": "请更新或启用 Android System WebView / Chrome，也可以使用系统浏览器进入对话。",
+    "en": "Update or enable Android System WebView / Chrome. You can also open the conversation in a system browser.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+    ],
+    "id": "build156_133dcd9a604e"
+  },
+  {
+    "zh": "\n上次未完成：%s",
+    "en": "\nPreviously incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ],
+    "id": "build156_dd7ffc7f5ffa"
+  },
+  {
+    "zh": "⚠ 请求执行：%s",
+    "en": "⚠ Requested command: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ],
+    "id": "build156_19759c699842"
+  },
+  {
+    "zh": "悬浮条确认显示失败: %s",
+    "en": "Could not display overlay confirmation: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ],
+    "id": "build156_c028b04fe1cf"
+  },
+  {
+    "zh": "悬浮条更新失败: %s",
+    "en": "Could not update overlay: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ],
+    "id": "build156_634d2d6b6e08"
+  },
+  {
+    "zh": "悬浮条预览显示失败: %s",
+    "en": "Overlay preview failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ],
+    "id": "build156_a1d5fc4a010b"
+  },
+  {
+    "zh": "悬浮条创建失败（权限被撤？）: %s",
+    "en": "Could not create overlay (permission may have been revoked): %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ],
+    "id": "build156_e6cf4903a4bd"
+  },
+  {
+    "id": "build156_40ae91a8e461",
+    "zh": "%s · 总耗时 %s 秒%s%s",
+    "en": "%s · Total time %s seconds%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ]
+  },
+  {
+    "id": "build156_74964260b8a6",
+    "zh": "%s\n\n版本：%s%s%s%s%s%s",
+    "en": "%s\n\nVersion: %s%s%s%s%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "id": "build156_fa978bf38891",
+    "zh": "%s · 点击查看进度",
+    "en": "%s · View progress",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "build156_a82d9939e663",
+    "zh": "%s，%s，点击查看详情",
+    "en": "%s, %s. Tap for details",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ]
+  },
+  {
+    "zh": "内置插件脚本执行失败: %s",
+    "en": "The bundled plugin helper failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java"
+    ],
+    "id": "build156_a6b587d7127b"
+  },
+  {
+    "zh": "rc1 数据迁移保护失败：%s",
+    "en": "Legacy migration protection failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java"
+    ],
+    "id": "build156_47b4e3a13206"
+  },
+  {
+    "zh": "插件管理脚本执行失败: %s",
+    "en": "The plugin manager failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java"
+    ],
+    "id": "build156_99d2025475ae"
+  },
+  {
+    "zh": "proot 路径: %s\nnativeLibDir: %s\nruntimeMode: %s\nrootfs exec: %s\n",
+    "en": "proot path: %s\nnativeLibDir: %s\nruntimeMode: %s\nrootfs exec: %s\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java"
+    ],
+    "id": "build156_ac606a0a219a"
+  },
+  {
+    "zh": "命令执行超时（%s 秒），已请求停止本次进程",
+    "en": "Command timed out after %s seconds; stopping has been requested",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java"
+    ],
+    "id": "build156_f67a0fcd263a"
+  },
+  {
+    "zh": "安装步骤失败（%s）：%s",
+    "en": "Installation stage failed (%s): %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallFailure.java"
+    ],
+    "id": "build156_7c95225bace9"
+  },
+  {
+    "zh": "QQ群 %s · 问题反馈",
+    "en": "QQ group %s · Issue tracker",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AboutFragment.java"
+    ],
+    "id": "build156_27cfe83bd275"
+  },
+  {
+    "zh": "无法打开浏览器，请在浏览器中访问 %s",
+    "en": "Could not open the browser. Visit %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "id": "build156_6b6c3a3e5975"
+  },
+  {
+    "zh": "Web 根目录是链接，未终止任何进程",
+    "en": "The Web root is a link; no process was stopped.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_9240b1616e85"
+  },
+  {
+    "zh": "Web 根目录不属于本应用，未终止任何进程",
+    "en": "The Web root is not owned by this app; no process was stopped.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_7eb97a220045"
+  },
+  {
+    "zh": "Web 根目录权限无法确认：%s",
+    "en": "Cannot confirm Web root access: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_fbe839bca9a0"
+  },
+  {
+    "zh": "Web 记录不属于本应用，未终止任何进程",
+    "en": "The Web record is not owned by this app; no process was stopped.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_9e832612606d"
+  },
+  {
+    "zh": "Web 记录权限无法确认：%s",
+    "en": "Cannot confirm Web record access: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_e22c0759409a"
+  },
+  {
+    "zh": "无法核验本应用进程：%s",
+    "en": "Cannot verify this app process: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_d07d814d2182"
+  },
+  {
+    "zh": "Web 旧记录隔离目录异常，原环境保留",
+    "en": "The old Web record quarantine is invalid; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_35d5d06caf1c"
+  },
+  {
+    "zh": "无法隔离旧 Web 记录，原环境保留",
+    "en": "Cannot quarantine the old Web record; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_b8afc23ff036"
+  },
+  {
+    "zh": "无法隔离旧 Web 身份记录，原环境保留",
+    "en": "Cannot quarantine the old Web identity record; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_4683cd9b49e5"
+  },
+  {
+    "zh": "Web 身份记录暂未保存：%s",
+    "en": "The Web identity record could not be saved: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_cb82912c08e1"
+  },
+  {
+    "zh": "Web 进程身份尚未确认，原环境保留：%s",
+    "en": "The Web process identity is unconfirmed; the environment is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_96fb292066c9"
+  },
+  {
+    "zh": "隔离验证进程身份已变化，原现场保留",
+    "en": "The isolated trial process identity changed; its original state is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_3d7e775dd391"
+  },
+  {
+    "zh": "系统拒绝终止本次 Web，原环境保留",
+    "en": "The system denied stopping this Web process; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_c21ec59cfbfc"
+  },
+  {
+    "zh": "Web 退出尚未确认，原环境保留：%s",
+    "en": "Web exit is unconfirmed; the environment is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_e92fd5260037"
+  },
+  {
+    "zh": "隔离验证停止未完成：%s",
+    "en": "The isolated trial stop is incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_ceceab6f7ae5"
+  },
+  {
+    "zh": "隔离验证进程退出尚未确认，原现场保留",
+    "en": "The isolated trial process exit is unconfirmed; its original state is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_6e5eca964d40"
+  },
+  {
+    "zh": "本应用仍有未退出的 Web，原环境保留",
+    "en": "This app still has a running Web process; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_56ab382259e4"
+  },
+  {
+    "zh": "本应用进程清单尚未确认，原环境保留：%s",
+    "en": "This app process list is unconfirmed; the environment is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_847c9e223dad"
+  },
+  {
+    "zh": "无法核验本次 Web 停止候选，未终止任何进程：%s",
+    "en": "Cannot verify this Web stop candidate; no process was stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_2aac5e0f3179"
+  },
+  {
+    "zh": "请先完成普通停止；只有退出尚未确认时才能准备强制停止候选",
+    "en": "Complete the normal stop first; a force-stop candidate is available only while exit remains unconfirmed.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_ccf601aa0343"
+  },
+  {
+    "zh": "Web 停止请求已变化，请重新检查当前状态",
+    "en": "The Web stop request changed; check the current state again.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_dba2d3f9f95a"
+  },
+  {
+    "zh": "Web 身份记录无效，原环境保留",
+    "en": "The Web identity record is invalid; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_fde437ced4f1"
+  },
+  {
+    "zh": "隔离验证进程不可读取，原现场保留",
+    "en": "The isolated trial process is unreadable; its original state is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_982cf35420d2"
+  },
+  {
+    "zh": "已知 Web 启动器未能确认退出",
+    "en": "The known Web launcher has not been confirmed to exit.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ],
+    "id": "build156_d343d0af604d"
+  },
+  {
+    "zh": "未完成的操作：%s\n最后记录阶段：%s\n\n%s\n\n原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。",
+    "en": "Incomplete operation: %s\nLast recorded stage: %s\n\n%s\n\nOriginal state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or enter the limited interface to export readable copies.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+    ],
+    "id": "build156_choose_ea901bcfbcae"
+  },
+  {
+    "zh": "最近手动备份：%s\n%s",
+    "en": "Latest manual backup: %s\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ],
+    "id": "build156_choose_37d1a8e0770a"
+  },
+  {
+    "zh": "\n最近自动副本：%s",
+    "en": "\nLatest automatic copy: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ],
+    "id": "build156_choose_8f9ebfb52663"
+  },
+  {
+    "zh": "发现已有备份：\n%s\n\n先核验内容和实际范围，确认后才会恢复。",
+    "en": "A backup was found:\n%s\n\nIts contents and actual scope are verified before you confirm a restore.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ],
+    "id": "build156_choose_777bbf8413a3"
+  },
+  {
+    "zh": "\n另有 %s 个备份无法自动读取，可手动选择。",
+    "en": "\n%s other backups cannot be read automatically; you can choose one manually.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ],
+    "id": "build156_choose_b8a938935c99"
+  },
+  {
+    "zh": "%s 将从加载路径移除；原件保留在数据页的保留区。对话、其他插件和外部源码目录保留。",
+    "en": "%s will be removed from the loading path. Originals remain in the retained data area. Conversations, other plugins and external source folders are preserved.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "id": "build156_choose_9eb6b7e9f029"
+  },
+  {
+    "zh": "应急网页无法加载：%s",
+    "en": "Cannot load the emergency page: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java"
+    ],
+    "id": "build156_choose_abc7a31243b0"
+  },
+  {
+    "zh": "DSHA v%s · MIT 许可",
+    "en": "DSHA v%s · MIT License",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ],
+    "id": "build156_choose_97a3cc5301c1"
+  },
+  {
+    "zh": "跟随系统 · %s",
+    "en": "Follow system · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ],
+    "id": "build156_choose_d68bf5c61611"
+  },
+  {
+    "zh": "\n已安全清理 %s 项 · %s",
+    "en": "\nSafely removed %s items · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/BackupTask.java"
+    ],
+    "id": "build156_choose_5a583092be6b"
+  },
+  {
+    "zh": "Web 端口被占用：%s",
+    "en": "Web port in use: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java"
+    ],
+    "id": "build156_choose_fd7e1693d7d8"
+  },
+  {
+    "zh": "插件已卸载，可重试启动：%s",
+    "en": "Plugin removed. You can retry startup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupRepairs.java"
+    ],
+    "id": "build156_choose_1124f35bbb2f"
+  },
+  {
+    "zh": "%s 项 · %s",
+    "en": "%s entries · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java"
+    ],
+    "id": "build156_choose_69caa2800be3"
+  },
+  {
+    "zh": "旧环境清理暂缓，原件保留：%s",
+    "en": "Old environment cleanup was deferred; originals retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_choose_ec4423d4f837"
+  },
+  {
+    "zh": "\n旧事务归档暂缓，原件保留：%s",
+    "en": "\nOld transaction archival deferred; originals retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ],
+    "id": "build156_choose_4e012a4dc7b0"
+  },
+  {
+    "zh": "检查离线安装运行方式：%s",
+    "en": "Checking cold-install runtime: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java"
+    ],
+    "id": "build156_choose_db186d691971"
+  },
+  {
+    "zh": "使用已验证方式安装离线工具：%s",
+    "en": "Installing offline tools with verified runtime: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java"
+    ],
+    "id": "build156_choose_016794436e33"
+  },
+  {
+    "zh": "离线工具尚未安装完成；已保留解压文件、安装现场和诊断：\n%s",
+    "en": "Offline tools are incomplete; extracted files, installation state and diagnostics are retained:\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java"
+    ],
+    "id": "build156_choose_9ed0d586b415"
+  },
+  {
+    "zh": "隔离检查插件无法启动，详细原因：\n%s",
+    "en": "The isolated verification plugin could not start. Details:\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java"
+    ],
+    "id": "build156_choose_bd22ff8cd6b6"
+  },
+  {
+    "zh": "%s\n错误代码：%s",
+    "en": "%s\nError code: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/MaintenanceErrorText.java"
+    ],
+    "id": "build156_choose_94ba3a9acee2"
+  },
+  {
+    "zh": "应急 DSH 未就绪：%s",
+    "en": "Recovery DSH is not ready: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java"
+    ],
+    "id": "build156_choose_872f4f5cbcee"
+  },
+  {
+    "zh": "应急进程退出尚未确认：%s",
+    "en": "Recovery process exit is unconfirmed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java"
+    ],
+    "id": "build156_choose_6058d6c16472"
+  },
+  {
+    "zh": "正在校验应急安装包 (%s/%s)…",
+    "en": "Verifying recovery archive (%s/%s)…",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
+    ],
+    "id": "build156_choose_9a354ac95baf"
+  },
+  {
+    "zh": "正在准备应急环境 (%s/%s)…",
+    "en": "Preparing recovery runtime (%s/%s)…",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
+    ],
+    "id": "build156_choose_632be0073369"
+  },
+  {
+    "zh": "已保留的应急运行时约 %s；应急会话约 %s。原件保留，未自动删除。",
+    "en": "Retained recovery runtimes: approximately %s; recovery sessions: approximately %s. Originals are retained; no automatic deletion was performed.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
+    ],
+    "id": "build156_choose_318a0c9b301e"
+  },
+  {
+    "zh": "正在核验应急文件 (%s/%s)…",
+    "en": "Verifying recovery files (%s/%s)…",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
+    ],
+    "id": "build156_choose_57827e0ae00a"
   }
 ]

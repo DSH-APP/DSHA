@@ -1,0 +1,2985 @@
+{
+  "schema": 2,
+  "requestedStage": "all",
+  "selectedStages": [
+    "fast",
+    "linux",
+    "runtime",
+    "windows"
+  ],
+  "status": "PASS_FOR_SELECTED_STAGES",
+  "tests": [
+    {
+      "path": "tools/overlay-bridge-test.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\overlay-bridge-test.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\overlay-bridge-test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.094,
+      "logSha256": "cde909ca05888bfe5c7debc35814c4456c29bc051916b75d915d5a40d1576598"
+    },
+    {
+      "path": "tools/test-adb-flow-audit.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-adb-flow-audit.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-adb-flow-audit.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.172,
+      "logSha256": "3ccfc16d15f0df7daabd6909e55081d77f1ef24f08d7b2355ac527ae6ef40c9c"
+    },
+    {
+      "path": "tools/test-adb-flow.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-adb-flow.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-adb-flow.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.187,
+      "logSha256": "aa2d903b9dc97e77b20b44240f0ce88fd5116e045219f1b120856e51d4d994dc"
+    },
+    {
+      "path": "tools/test-adb-vscreen-bridge.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-adb-vscreen-bridge.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-adb-vscreen-bridge.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.156,
+      "logSha256": "90fc4aafdf6c8bcf3558fbd88a5f5b7e4a2d99f947fa4c61f2eeddde29831b47"
+    },
+    {
+      "path": "tools/test-aidl-shim.ps1",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-aidl-shim.ps1.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+        "-NoProfile",
+        "-File",
+        "F:\\DSHA_RESTART\\tools\\test-aidl-shim.ps1"
+      ],
+      "exitCode": 0,
+      "seconds": 2.687,
+      "logSha256": "7f2261f7d6f067e3fe4e4d9a3faafa83c1891d70f6e3432029dd28850624e199"
+    },
+    {
+      "path": "tools/test-android-computer-use.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-android-computer-use.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-android-computer-use.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.141,
+      "logSha256": "2bcb55dc484f41d9007fa15d0a401427f5c1b902c4b7af2a46e2b2fd837edfc1"
+    },
+    {
+      "path": "tools/test-app-activity.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-app-activity.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-app-activity.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.094,
+      "logSha256": "73db5ae2106cb8bcdfdf3b4ecdcb08990f7c0cae43d978acec6b9794821def97"
+    },
+    {
+      "path": "tools/test-architecture-boundaries.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-architecture-boundaries.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-architecture-boundaries.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.094,
+      "logSha256": "a9d2155ae07e410a24db922f748c04bd020b93e2658b332ce7087f26bc2c36f4"
+    },
+    {
+      "path": "tools/test-asset-deployment.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-asset-deployment.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-asset-deployment.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.516,
+      "logSha256": "359c2485027d1856b4cc8eb0d2f1b5fbabc9d064988cd07836ac89a6b1c586a8"
+    },
+    {
+      "path": "tools/test-attachment-store.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-attachment-store.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-attachment-store.mjs",
+        "/DSHA_RESTART/app/build/audit-build156/host-workspace-final/host-test-hbjrvcdd"
+      ],
+      "exitCode": 0,
+      "seconds": 50.172,
+      "logSha256": "6a939a2242a26a596bb04fc3fe00d9b51f7674e76cf692b9398461e9724aeadf"
+    },
+    {
+      "path": "tools/test-backup-engine.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-backup-engine.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-backup-engine.py"
+      ],
+      "exitCode": 0,
+      "seconds": 5.547,
+      "logSha256": "ef415b3f289ebd27123cfba3924f5dbcfa1662fe0c40fddd4b998dcc14f2e686"
+    },
+    {
+      "path": "tools/test-bridge-logic.ps1",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-logic.ps1.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+        "-NoProfile",
+        "-File",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-logic.ps1",
+        "-ToolchainRoot",
+        "F:\\DSHA\\_toolchains"
+      ],
+      "exitCode": 0,
+      "seconds": 5.781,
+      "logSha256": "4ebe01885e23c3169c4729a053127c566052f14a5f43d335159a59f06e9de0be"
+    },
+    {
+      "path": "tools/test-bridge-routes.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-routes.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-routes.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.282,
+      "logSha256": "d5eac78a61a345f659720067a989c0a6e5aed7e0263c044c1e6bbb45f1c655b7"
+    },
+    {
+      "path": "tools/test-bridge-token-compat.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-token-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-token-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.093,
+      "logSha256": "cdd39598035aa905e38f00344cd3ea91ae424df5d4127d75211e812abbb848a2"
+    },
+    {
+      "path": "tools/test-browser-compat.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-browser-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-browser-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.047,
+      "logSha256": "4f540504ba6c231bd9c2d2d7b50ca51f7d100f6feb38ca770e95202c83cce250"
+    },
+    {
+      "path": "tools/test-browser-stream-resume.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-browser-stream-resume.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-browser-stream-resume.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 7.219,
+      "logSha256": "09d8929a6f763c4f75e48cb09714cb6c79c529e34da0a2a8d8072b66a1712add"
+    },
+    {
+      "path": "tools/test-chat-render-performance.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-chat-render-performance.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-chat-render-performance.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 8.125,
+      "logSha256": "22506eb4ee67d61fd52861b46dd11eaed6e37ee71f7a8ba677e7ea1ed335828c"
+    },
+    {
+      "path": "tools/test-ci-package.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-ci-package.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-ci-package.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.656,
+      "logSha256": "be8c354a91f17f49348f46e41ffacb42e08c67f1a40664330808d3bc877f6151"
+    },
+    {
+      "path": "tools/test-client-combo-cache.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-client-combo-cache.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-client-combo-cache.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.5,
+      "logSha256": "e42c04d59591a3b78c136838a7c6d0b5689824ff3cff19b0d446f16ec8e75c94"
+    },
+    {
+      "path": "tools/test-composer-enter.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-composer-enter.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-composer-enter.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.36,
+      "logSha256": "50a27d19052fba9a951bba9995e981221ad71871362c7e03729da5bc96fc12fb"
+    },
+    {
+      "path": "tools/test-conversation-materialized.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-conversation-materialized.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-conversation-materialized.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 7.0,
+      "logSha256": "fc3619855b2df2aec9b7e4008650012127431f6c8ffabc0ce10160565190c7cb"
+    },
+    {
+      "path": "tools/test-conversation-stop.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-conversation-stop.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-conversation-stop.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.468,
+      "logSha256": "e46ca4e7af3acab15b17ad39e71d956da16af35ef288f86c1b36d329a98d0242"
+    },
+    {
+      "path": "tools/test-credential-paths.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-credential-paths.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-credential-paths.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.094,
+      "logSha256": "4a203f958ef9d765ff1f89816631e1bdf553b4acf1d56449f1d10ad92bb46ff3"
+    },
+    {
+      "path": "tools/test-deepseek-messages-compat.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-deepseek-messages-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-deepseek-messages-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 7.984,
+      "logSha256": "6e58fe1c26f645a55fa254c0713594b9c09d4141941373a867fe2c6aeed82c0b"
+    },
+    {
+      "path": "tools/test-device-script-selection.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-device-script-selection.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-device-script-selection.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.172,
+      "logSha256": "8b7df4f4a25fc5466cbead22af349eaa2c77bbc2812f1d213484be4860bb161a"
+    },
+    {
+      "path": "tools/test-device-shell-policy.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-device-shell-policy.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-device-shell-policy.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.078,
+      "logSha256": "8349d0bb046c25e4ce2b51f203513754ec64eafeac8eea3a6349cd92c3b9925c"
+    },
+    {
+      "path": "tools/test-dns-compat.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-dns-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-dns-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.062,
+      "logSha256": "a19c69a829dc94b3c6a9d65bf20376746a8a1b23914ad3b83a7897c0f39e70cb"
+    },
+    {
+      "path": "tools/test-dsh-builtins.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-dsh-builtins.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-dsh-builtins.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 3.61,
+      "logSha256": "91c6ba1b9751171b91cfb78827faac519f47c206a2df1ee75faf27ccc7183b8e"
+    },
+    {
+      "path": "tools/test-dsh-sessions.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-dsh-sessions.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-dsh-sessions.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.843,
+      "logSha256": "5b91066fb49388e8676a570f978abf94437dd16165db3cb2afb5a49775baa142"
+    },
+    {
+      "path": "tools/test-dsha-ui-regressions.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-dsha-ui-regressions.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-dsha-ui-regressions.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.141,
+      "logSha256": "4c176368391d785b56d35f0d025cdefa895545a0bcf39a25c0ee616f9ace86ea"
+    },
+    {
+      "path": "tools/test-generated-asset-directory.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-generated-asset-directory.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-generated-asset-directory.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.437,
+      "logSha256": "aa762a84e47fb853984d50e49be9164e564a28bf827d10aa5f1c85bc4db106c9"
+    },
+    {
+      "path": "tools/test-issue67-startup.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-issue67-startup.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-issue67-startup.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.453,
+      "logSha256": "279dfe1452b08413c3c2d509ad824e48d111bee0005f16314dc7e0b7dfba7f42"
+    },
+    {
+      "path": "tools/test-legacy-preset-convert.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-legacy-preset-convert.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-legacy-preset-convert.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.938,
+      "logSha256": "59cf4fc41106a5d7d338408fcdca7852b593e6860218c44f9cd460478228a8b6"
+    },
+    {
+      "path": "tools/test-lexical-claim-compat.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-lexical-claim-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-lexical-claim-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 4.11,
+      "logSha256": "ce62df948aa204eec1b70851c705445f8685f5aca49af95f5641200902234e54"
+    },
+    {
+      "path": "tools/test-mobile-auth.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-auth.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-auth.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.093,
+      "logSha256": "5ca81826b2f32aa19b6856e15ce7f7b10ac36e9cf0dc7e01ff82470de90a7dc3"
+    },
+    {
+      "path": "tools/test-mobile-delete.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-delete.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-delete.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.797,
+      "logSha256": "6d388ed5e191f449be98e98f6b67ad75ed7682252b41924eca9cf46acd919e94"
+    },
+    {
+      "path": "tools/test-mobile-gesture-guard.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-gesture-guard.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-gesture-guard.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.047,
+      "logSha256": "4f0adca7ffa334877d36045a92bc0c20af893c2ad390ddbada78de9adbcb0792"
+    },
+    {
+      "path": "tools/test-mobile-modal-behavior.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-modal-behavior.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-modal-behavior.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 4.75,
+      "logSha256": "ed1f331e6c65dd2d4b1b0086b2afff846a4ffd8c1cf644970337d41a212e2104"
+    },
+    {
+      "path": "tools/test-mobile-server-patches.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-server-patches.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-server-patches.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.094,
+      "logSha256": "358817b15be8c6febd6abd45100b7807fb94ed50c4d79b6b6d4fbe9f23366b88"
+    },
+    {
+      "path": "tools/test-mobile-server-streams.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-server-streams.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-server-streams.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.766,
+      "logSha256": "9016e79bfc9feb86fe8f4d75c7617bc808d10dedebc22ea0fcd68236d06385d9"
+    },
+    {
+      "path": "tools/test-mobile-update.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-update.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-update.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.063,
+      "logSha256": "a885e2c6a0397cfe9295a8893d88350714eef3027539756bea4b92b148bd158a"
+    },
+    {
+      "path": "tools/test-native-plugin-manager.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-native-plugin-manager.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-native-plugin-manager.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 12.515,
+      "logSha256": "52de44688cd6c6a9d8fd0b18e971ff3daabb930ba1ba5c00c9fba954a79ab2ab"
+    },
+    {
+      "path": "tools/test-notification-actions.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-notification-actions.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-notification-actions.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.047,
+      "logSha256": "7a1bb35efbfca8f796856ae02c2a772ce4979286d452c740f625aac4f740efb4"
+    },
+    {
+      "path": "tools/test-office-fonts.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-office-fonts.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-office-fonts.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 9.593,
+      "logSha256": "4724dfe113d3e1e89b54fce207eb4ff537e03833eff814302bc4736c9e6e49ba"
+    },
+    {
+      "path": "tools/test-pdf-compat.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-pdf-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-pdf-compat.mjs",
+        "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw\\node_modules"
+      ],
+      "exitCode": 0,
+      "seconds": 3.625,
+      "logSha256": "42e8ae4baf14e19314b4bec63198ff966881b2bd085f60a2cf1c1a16c6275400"
+    },
+    {
+      "path": "tools/test-plugin-dependencies.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-dependencies.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-dependencies.py"
+      ],
+      "exitCode": 0,
+      "seconds": 12.813,
+      "logSha256": "1bf75ad8766418bd3c0db1b02e5fc8afd4e93e7f8272244aa987ff01e9ddd571"
+    },
+    {
+      "path": "tools/test-plugin-discovery.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-discovery.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-discovery.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.515,
+      "logSha256": "2634dbe7bee0e5f4f0bc634fff01647a99865443909c6f03752855056aa070e4"
+    },
+    {
+      "path": "tools/test-plugin-downloads.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-downloads.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-downloads.py"
+      ],
+      "exitCode": 0,
+      "seconds": 4.438,
+      "logSha256": "a83e52bff3f326c350c34ea34ad152d033ead9d781c0beb596ff073135e7fdc3"
+    },
+    {
+      "path": "tools/test-plugin-resolution-order.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-resolution-order.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-resolution-order.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.578,
+      "logSha256": "5e2bcc690955adf1047981e474e6944eb839032ad05b474539d58a3e446d5c8d"
+    },
+    {
+      "path": "tools/test-plugin-review.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-review.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-review.py"
+      ],
+      "exitCode": 0,
+      "seconds": 2.797,
+      "logSha256": "d75ac3f24fbd5712e1f5c8bcead2743f7fd4de4a6ec02c785b1d8a39897d84ca"
+    },
+    {
+      "path": "tools/test-plugin-semver.cjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-semver.cjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-semver.cjs",
+        "F:\\DSHA_RESTART\\app\\build\\semver-reference\\package"
+      ],
+      "exitCode": 0,
+      "seconds": 0.562,
+      "logSha256": "858ec085836aa1198a33a369808d9af70a4ab916fec15b5f4ed6ff3d64f9ce49"
+    },
+    {
+      "path": "tools/test-plugin-states.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-states.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-states.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.187,
+      "logSha256": "4b851f3fb1e6656b106c1df9ee545a925afebfa14213f4873036c7eb29b997e5"
+    },
+    {
+      "path": "tools/test-plugin-transactions.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-transactions.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-transactions.py"
+      ],
+      "exitCode": 0,
+      "seconds": 7.594,
+      "logSha256": "736146ffb382fb82c05a6f5b8ca363e2cfcafc36af9b2ac3b22fe3817d20f044"
+    },
+    {
+      "path": "tools/test-profile-settings-cli.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-profile-settings-cli.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-profile-settings-cli.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 17.875,
+      "logSha256": "bb334d3069c8a39e19f7ef0e8acfa33c560f90f729acd0359d8a0ef986d92df3"
+    },
+    {
+      "path": "tools/test-profile-settings-review.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-profile-settings-review.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-profile-settings-review.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.203,
+      "logSha256": "ad52e08ce84900a7429366a423eba9b492ffaa79be416076761f0df59d55ba35"
+    },
+    {
+      "path": "tools/test-proot-runtime-libs.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-proot-runtime-libs.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-proot-runtime-libs.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.063,
+      "logSha256": "e5bcbfaf1f54ea5f07b4e47f2f9ea7ed7e8cde0fab96804556f9f4d6cb48c23a"
+    },
+    {
+      "path": "tools/test-queue-steer.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-queue-steer.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-queue-steer.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.219,
+      "logSha256": "e2c479972383a0f64fc125d0af549212801d2474b2751fd5ed27d3392dc8e4c7"
+    },
+    {
+      "path": "tools/test-rc1-browser-behavior.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-rc1-browser-behavior.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-rc1-browser-behavior.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 4.328,
+      "logSha256": "7ee709c2c2e2f3eb4172ef6c7b8a2ba124b62852edae176bf6a7196242c1cac6"
+    },
+    {
+      "path": "tools/test-rc1-migration.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-rc1-migration.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-rc1-migration.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.969,
+      "logSha256": "8596dcea44ae384bc8d551cb80b718d21b881ea909abd4841d9fb53f4dc3e662"
+    },
+    {
+      "path": "tools/test-rc1-settings-migration.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-rc1-settings-migration.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-rc1-settings-migration.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.984,
+      "logSha256": "4f81051c5e315ff3f07440d0b01ed66ea0a33b4b335c615870346c2dec2d0058"
+    },
+    {
+      "path": "tools/test-recovery-agent.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-agent.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-recovery-agent.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 3.563,
+      "logSha256": "0572bcb41f97fae0d5db5a3ddcf655dd2ed5c986ef25a1b44dd1bef873c4e6a4"
+    },
+    {
+      "path": "tools/test-recovery-apk-assets.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-apk-assets.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-recovery-apk-assets.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.109,
+      "logSha256": "7eccf522e5c2296070de7a9bba11c2be28999d469116e2462b66d4230a243102"
+    },
+    {
+      "path": "tools/test-recovery-assets.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-assets.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-recovery-assets.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.296,
+      "logSha256": "efc846e0cc7578b0312fe300afd4b8194b23fd6d379a20c96e6cda69095647b5"
+    },
+    {
+      "path": "tools/test-recovery-browser-overlay.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-browser-overlay.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-recovery-browser-overlay.mjs",
+        "F:\\DSHA_RESTART\\app\\build\\generated\\recoveryAssets"
+      ],
+      "exitCode": 0,
+      "seconds": 0.125,
+      "logSha256": "18ea4ff3431a9559f03806a997f47fa65f324495696a476fb2835d6e1336f75e"
+    },
+    {
+      "path": "tools/test-recovery-profile-boot.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-profile-boot.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-recovery-profile-boot.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 17.032,
+      "logSha256": "b3c4a414e21cd650f51b1f6789736a655e158efff0e86086679a74db8e26f24a"
+    },
+    {
+      "path": "tools/test-release-acceptance.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-release-acceptance.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-release-acceptance.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.11,
+      "logSha256": "22a3c0954cbd6c9c25617cbb7dfc182ec42d8b35de3bc2acff11b0d9c8df9acd"
+    },
+    {
+      "path": "tools/test-release-evidence.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-release-evidence.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-release-evidence.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.141,
+      "logSha256": "714f29415a01b3dc098655f670ededa6a83a69a59d0cc42dd4e2d8bb8d9b4148"
+    },
+    {
+      "path": "tools/test-release-names.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-release-names.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-release-names.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.109,
+      "logSha256": "9c173a7729103f4810f7b4ae1450cc4a56a7b62939fe886c062caaa6e9bd34fc"
+    },
+    {
+      "path": "tools/test-runtime-descriptor-inputs.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-descriptor-inputs.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-descriptor-inputs.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.641,
+      "logSha256": "d6ab67fa3b9ba722c0069e267c6d2a59bad6bdf614489d77e0a99c74dbe1701a"
+    },
+    {
+      "path": "tools/test-runtime-input-contract.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-input-contract.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-input-contract.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.421,
+      "logSha256": "b4e4bf715be83287a674e0b0348ca16887dfbacd2fe15ec335c95615d8c95d8c"
+    },
+    {
+      "path": "tools/test-runtime-proof.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-proof.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-proof.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.641,
+      "logSha256": "fc0b4963f1c5de3de48e10ed0709f3e88f013071c72ad2c73d31f31ac3fbe31c"
+    },
+    {
+      "path": "tools/test-runtime-publish-linux.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-publish-linux.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "wsl.exe",
+        "-d",
+        "docker-desktop",
+        "--",
+        "env",
+        "LD_LIBRARY_PATH=/mnt/host/f/DSHA_RESTART/app/build/audit-build154/linux-host",
+        "TMPDIR=/dev/shm",
+        "/mnt/host/f/DSHA_RESTART/app/build/audit-build154/linux-host/node",
+        "/mnt/host/f/DSHA_RESTART/tools/test-runtime-publish-linux.mjs",
+        "/mnt/host/f/DSHA_RESTART/app/build/audit-build154/linux-host/node_modules/dsha-runtime-fs/index.js"
+      ],
+      "exitCode": 0,
+      "seconds": 4.438,
+      "logSha256": "771f51aff4fa05b0a08121cbf93a3d07190f5a239ebd87723ca8c82eb224ba42"
+    },
+    {
+      "path": "tools/test-runtime-publish.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-publish.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-publish.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.344,
+      "logSha256": "f34d627aa506ab2f454be5c960d0517144080a41373bcf9cb3be16363f7c8543"
+    },
+    {
+      "path": "tools/test-runtime-trial.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-trial.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-trial.mjs",
+        "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw\\node_modules",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build156\\host-workspace-final\\host-test-p0ldebfe"
+      ],
+      "exitCode": 0,
+      "seconds": 9.281,
+      "logSha256": "9235d7d0d4ae1be9aa4bde65b8ef9817cc553d606636f1eecb1b50bfe1b0fa48"
+    },
+    {
+      "path": "tools/test-session-interaction.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-session-interaction.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-session-interaction.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.281,
+      "logSha256": "c86a119f0ecb5a1d343cc7d1ac90cf9ae5ea490486a581d6ba4fc7019d161639"
+    },
+    {
+      "path": "tools/test-source-text.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-source-text.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-source-text.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.234,
+      "logSha256": "1c2eb67f26c69697cc5674598632accf47d9db6af89cc1bbbd5e2a65e1da7ddf"
+    },
+    {
+      "path": "tools/test-startup-diagnostics.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-startup-diagnostics.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-startup-diagnostics.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.265,
+      "logSha256": "b8b2c9c6dcd3f8e762ac6de49721216ddc227d8cb78c29b36e7095f6bbc3e59a"
+    },
+    {
+      "path": "tools/test-startup-page-relay.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-startup-page-relay.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-startup-page-relay.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.047,
+      "logSha256": "2e8ab9207aafd1365f7ed5916a9a1581628dcd050a11d2d7728cfbdf4be761fc"
+    },
+    {
+      "path": "tools/test-storage-json-proroot-dirent.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-storage-json-proroot-dirent.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-storage-json-proroot-dirent.mjs",
+        "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d\\node_modules\\@deepseek-ai\\dsh-storage-json\\lib\\index.js"
+      ],
+      "exitCode": 0,
+      "seconds": 6.312,
+      "logSha256": "faed3cf298cc589397e896ac13b6d8204e5f58f3847a3288d02185302e799b7d"
+    },
+    {
+      "path": "tools/test-subagent-touch.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-subagent-touch.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-subagent-touch.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.469,
+      "logSha256": "bcf6a5fc89749838fe1479f4281422905f918ced549e6f2b67e9880322c0f731"
+    },
+    {
+      "path": "tools/test-ui-boundaries154.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-ui-boundaries154.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-ui-boundaries154.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.093,
+      "logSha256": "c660c811f40747fc6b588448afeb78ec33ca207233c07f90d7fced8196669cbc"
+    },
+    {
+      "path": "tools/test-ui-colors.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-ui-colors.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-ui-colors.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.079,
+      "logSha256": "145f02a3851eb4094f4130132bfd83a437541b96e2cff36086cf074e1e8ee476"
+    },
+    {
+      "path": "tools/test-ui-language.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-ui-language.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-ui-language.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.172,
+      "logSha256": "268ff0e23a745da292ce5ea192b3c65477dffe9a95c64756c50061ed95fccf21"
+    },
+    {
+      "path": "tools/test-update-flow.ps1",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-update-flow.ps1.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+        "-NoProfile",
+        "-File",
+        "F:\\DSHA_RESTART\\tools\\test-update-flow.ps1",
+        "-Sdk",
+        "F:\\DSHA\\_toolchains\\android-sdk",
+        "-Cache",
+        "F:\\DSHA\\_toolchains\\gradle-user-home\\caches",
+        "-Jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "-Flavor",
+        "standard"
+      ],
+      "exitCode": 0,
+      "seconds": 5.563,
+      "logSha256": "d99cb754b5b285859754ac752ec3f9cb0f5ef83574eebe4eb29e57345fde0e02"
+    },
+    {
+      "path": "tools/test-verification-require.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-verification-require.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-verification-require.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.187,
+      "logSha256": "266b6cae1e9d038a2479744bd2d68283bd6a2ca21b8dd3a82764fa8ad7b0cd5c"
+    },
+    {
+      "path": "tools/test-vscreen.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-vscreen.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-vscreen.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.047,
+      "logSha256": "6faeaeb8034a8b1f7d6452fca303f76815586834036e9952b23fccf507b09a68"
+    },
+    {
+      "path": "tools/test-web-compat.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-web-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-web-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.109,
+      "logSha256": "c70e47f298b9719fdef418236dd7ac60205b7b70103d3d64626460586b83aae7"
+    },
+    {
+      "path": "tools/test-web-drafts.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-web-drafts.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-web-drafts.mjs",
+        "--unit-only"
+      ],
+      "exitCode": 0,
+      "seconds": 0.078,
+      "logSha256": "e3bdf9a0d5848b7ad7eb21ef5d899fb2b90f8a6e5d0d7424f6d310d7543e63bc"
+    },
+    {
+      "path": "tools/test-web-ui-host-fixtures.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-web-ui-host-fixtures.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-web-ui-host-fixtures.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.593,
+      "logSha256": "6e7dfb72c844af8bf0be9f6c91a7ff6c551af488fffdca22c99dbb5d7694094a"
+    },
+    {
+      "path": "tools/test-workflow-compat-alias.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-workflow-compat-alias.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-workflow-compat-alias.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.328,
+      "logSha256": "1dba804cd88456280e5f024cc324e14816d409b8a5ec20509245b803a494af78"
+    },
+    {
+      "path": "tools/test-vscreen-manager-http.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-vscreen-manager-http.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-vscreen-manager-http.py",
+        "--jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "--sdk",
+        "F:\\DSHA\\_toolchains\\android-sdk",
+        "--gradle-home",
+        "F:\\DSHA\\_toolchains\\gradle-user-home"
+      ],
+      "exitCode": 0,
+      "seconds": 15.172,
+      "logSha256": "903d3995e5d5c9d0b69baf80772e6701e5d8e65afffb589421096e256b2be11a"
+    },
+    {
+      "path": "tools/test-format-java-tree.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-format-java-tree.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-format-java-tree.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.312,
+      "logSha256": "a0e8f996ec957211feffe3b5dea084a1eb1b3be0e5d2e48462e454285835641b"
+    },
+    {
+      "path": "tools/test-low-preview-capability.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-low-preview-capability.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-low-preview-capability.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.047,
+      "logSha256": "1437aea07556af77489b6d9f3a692ebfde1a83082884c2e38b3dfc3b67a0fbcb"
+    },
+    {
+      "path": "tools/test-runtime-stop-recovery.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-stop-recovery.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-stop-recovery.py",
+        "--jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "--sdk",
+        "F:\\DSHA\\_toolchains\\android-sdk",
+        "--gradle-home",
+        "F:\\DSHA\\_toolchains\\gradle-user-home",
+        "--flavor",
+        "standard"
+      ],
+      "exitCode": 0,
+      "seconds": 5.531,
+      "logSha256": "25d5eb492a33132f644ab96ac631a000c36bd301a45e8f75fc432b9a6736a12a"
+    },
+    {
+      "path": "tools/test-credential-yaml-projection.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-credential-yaml-projection.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-credential-yaml-projection.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 10.734,
+      "logSha256": "c0e7d3bdfd980d3a9cb691030710ba4b82f952b998be64caf01aad839ee0437c"
+    },
+    {
+      "path": "tools/test-native-session-handshake.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-native-session-handshake.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-native-session-handshake.py",
+        "--linux-host",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build154\\linux-host",
+        "--native-inputs",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build156\\linux-native",
+        "--wsl-distro",
+        "docker-desktop",
+        "--linux-tempdir",
+        "/dev/shm",
+        "--work-directory",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build156\\host-workspace-final\\host-test-vr81bf4y"
+      ],
+      "exitCode": 0,
+      "seconds": 14.094,
+      "logSha256": "d806a7643a9cb45489bf1820bf23e8d4452f8713db414667901c319ce4928291"
+    },
+    {
+      "path": "tools/test-web-browser-fixture.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-web-browser-fixture.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-web-browser-fixture.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.828,
+      "logSha256": "aee873735f7bbda09380972feb5b6edb6cb44f0995d6ddf7923f3c5b4687eb15"
+    },
+    {
+      "path": "tools/test-retired-audit-contract.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-retired-audit-contract.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-retired-audit-contract.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.188,
+      "logSha256": "e271d3ef95d279c0860c9cc6aa39e6e3439350cc800fab3b298466335c63d7eb"
+    },
+    {
+      "path": "tools/test-bridge-files.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-files.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-files.py",
+        "--jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "--gradle-home",
+        "F:\\DSHA\\_toolchains\\gradle-user-home"
+      ],
+      "exitCode": 0,
+      "seconds": 2.235,
+      "logSha256": "be51f3c7be5ed566e69b82b662a5bf5dec456240c538ef5e2135c5917582265f"
+    },
+    {
+      "path": "tools/test-bridge-token-transport.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-token-transport.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-token-transport.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.063,
+      "logSha256": "8c8294c107ce94ce88611e87bc6517020fa7c95929b0b1d02353650668aa07b1"
+    },
+    {
+      "path": "tools/test-runtime-session.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-session.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-session.py"
+      ],
+      "exitCode": 0,
+      "seconds": 6.015,
+      "logSha256": "0ac7317f2e038303fc6e73f2886a4eda43f650b8c97567df6dadb2e01d5fcd70"
+    },
+    {
+      "path": "tools/test-core-boundaries.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-core-boundaries.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-core-boundaries.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.391,
+      "logSha256": "a323fa03680d70d7d12242819b3c7db68daa37e72ed142fc13806af5e3a48d5e"
+    },
+    {
+      "path": "tools/test-ui-i18n.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-ui-i18n.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-ui-i18n.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.125,
+      "logSha256": "d9ed743d4a81869adffc2da090e618519204446a5c2891dbc5ff5a9f5b4c0be1"
+    },
+    {
+      "path": "tools/test-rc2-tooltips.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-rc2-tooltips.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-rc2-tooltips.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 8.344,
+      "logSha256": "bf47324350da0c42cdd518f0f9462bf580b8e7429d53355d288de09990015e9c"
+    },
+    {
+      "path": "tools/test-third-party-notices.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-third-party-notices.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-third-party-notices.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.125,
+      "logSha256": "fd4d1504333c3cc9807b6d0b123e46a5bf9ecdc339b04fa5560b49b02bd5d965"
+    },
+    {
+      "path": "tools/test-native-session-build.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-native-session-build.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-native-session-build.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.157,
+      "logSha256": "d6bf4d4cd6f6e69b9190f43eb10c548946e2122c1575d525c9dfa6db0e8d6d9e"
+    },
+    {
+      "path": "tools/test-runtime-descriptor-source.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-descriptor-source.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-descriptor-source.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.188,
+      "logSha256": "915e774d76c2250e90175eafe2a43ff0277e297c1836a06d4c44a504aaf873ec"
+    },
+    {
+      "path": "tools/test-host-test-runner.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-host-test-runner.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-host-test-runner.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.641,
+      "logSha256": "783e5e9c9705a2a75820ff4df45352ebef3630293a4fab4babbfa4a8f6908b6c"
+    },
+    {
+      "path": "tools/test-unit-test-runner.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-unit-test-runner.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-unit-test-runner.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.219,
+      "logSha256": "7be2383d8a849c1fffc620d4b830248e0dcf59552834094563ed987a1fca8db6"
+    },
+    {
+      "path": "tools/test-native-device-policy.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-native-device-policy.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-native-device-policy.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.375,
+      "logSha256": "7a77a4c7715be73f897f93e555107ed2d2a42810203b26c86f1224ac25bb5b91"
+    },
+    {
+      "path": "tools/test-java-format.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-java-format.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-java-format.py"
+      ],
+      "exitCode": 0,
+      "seconds": 7.203,
+      "logSha256": "033dcd90b77292f835a71b5d8d0dab91f2c0262eefe86f188a838e995e9106aa"
+    },
+    {
+      "path": "tools/test-workspace-directory-policy.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-workspace-final\\test-workspace-directory-policy.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+          "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+          "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "F:\\DSHA_RESTART\\tools\\test-workspace-directory-policy.mjs",
+        "--verify-archive"
+      ],
+      "exitCode": 0,
+      "seconds": 14.563,
+      "logSha256": "8293c2355cab9feb0a3e65c9a8fdbb7734a6a8dd1bd66d0e6aa793777069ddbb"
+    }
+  ],
+  "excluded": [
+    {
+      "path": "tools/test-alpha1-startup.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-alpha2-upgrade.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-dns-compat-device.mjs",
+      "stage": "device",
+      "reason": "需要真实设备或ADB；本轮不运行"
+    },
+    {
+      "path": "tools/test-documents-parent.ps1",
+      "stage": "device",
+      "reason": "需要真实设备或ADB；本轮不运行"
+    },
+    {
+      "path": "tools/test-environment-data.py",
+      "stage": "history",
+      "reason": "Historical Python v1 original only; current NativeEnvironmentRebuild/MaintenanceDataSnapshot has separate JVM proof"
+    },
+    {
+      "path": "tools/test-gecko-model-navigation.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-restore-merge-plugins.py",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-restore-merge-wsdir.py",
+      "stage": "history",
+      "reason": "Retired guest restore-merge implementation, temp-only historical fixture; cannot prove current NativeBackup boundary"
+    },
+    {
+      "path": "tools/test-runtime-fixture.mjs",
+      "stage": "support",
+      "reason": "Runtime selection/proof helper, imported by real tests; not an independent test"
+    },
+    {
+      "path": "tools/test-startup-checkpoints.py",
+      "stage": "history",
+      "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence"
+    },
+    {
+      "path": "tools/test-startup-recovery.py",
+      "stage": "history",
+      "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence"
+    }
+  ],
+  "runtimeFixtureVerification": [
+    {
+      "kind": "raw",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+      "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+      "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1",
+      "status": "PASS_FINAL_COMPLETE_BYTE_RECHECK"
+    },
+    {
+      "kind": "managed",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+      "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+      "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f",
+      "status": "PASS_FINAL_COMPLETE_BYTE_RECHECK"
+    }
+  ],
+  "failures": []
+}

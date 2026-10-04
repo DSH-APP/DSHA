@@ -1,0 +1,10 @@
+[
+  {
+    "zh": "%s\n错误代码：%s",
+    "en": "%s\nError code: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/MaintenanceErrorText.java"
+    ]
+  }
+]

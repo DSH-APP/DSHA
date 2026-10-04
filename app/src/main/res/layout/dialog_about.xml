@@ -12,7 +12,7 @@
             <LinearLayout android:id="@+id/about_github" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="72dp" android:layout_marginTop="20dp" android:padding="12dp" android:orientation="horizontal" android:gravity="center_vertical" android:background="@drawable/bg_polished_action" android:clickable="true" android:focusable="true">
                 <ImageView android:layout_width="36dp" android:layout_height="36dp" android:padding="8dp" android:background="@drawable/bg_logo" android:src="@drawable/ic_ui_link" android:importantForAccessibility="no" app:tint="@color/primary" />
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GitHub" android:textStyle="bold" style="@style/DshaText.Body" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_brand_github" android:textStyle="bold" style="@style/DshaText.Body" />
                     <TextView android:id="@+id/about_repository" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" style="@style/DshaText.Caption" />
                 </LinearLayout>
                 <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_recovery_right" android:importantForAccessibility="no" app:tint="@color/text_muted" />

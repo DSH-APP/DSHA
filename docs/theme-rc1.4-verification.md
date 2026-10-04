@@ -1,5 +1,8 @@
 # rc1.4 同版本主题修复验收
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 此页记录最初带设置主题卡片的修复。按用户后续要求，该卡片及选择弹窗已移除，仅保留右上角日夜切换；当前安装包与摘要见[最新调整记录](theme-toolbar-only-rc1.4.md)。本页文件已保留到 `release/history/rc1.4-before-toolbar-only-20260907`。
 
 用户反馈的截图是 rc1.3 更新页，默认按钮呈现黑底深色文字。本次将修复并入 rc1.4，版本名、版本码 113、签名及环境版本 9 均保持不变。

@@ -1,0 +1,134 @@
+{
+  "group": "UI",
+  "items": [
+    {
+      "id": "D-SEC-13",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WebPageScripts.java",
+        "app/src/main/java/com/deepseekharness/app/util/StartupPageGate.java",
+        "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+        "app/src/main/assets/web-integration/startup.js",
+        "app/src/main/assets/web-integration/startup-relay.js",
+        "tools/test-startup-diagnostics.mjs",
+        "tools/test-startup-page-relay.mjs",
+        "app/src/test/java/com/deepseekharness/app/util/StartupPageGateTest.java",
+        "app/src/main/assets/web-integration/manifest.json"
+      ],
+      "checks": [
+        "Current-view/client source binding, current controller generation and current-document JS proof; duplicate sequence/terminal event guard",
+        "Real startup.js fixture covers preexisting failed DOM without DOCUMENT_START, old unbound observer replacement, loader throw/rejection and ready; Gecko real relay early queue/current-port stamp PASS",
+        "4 pure gate behavior cases PASS; Standard/Low current-source javac against actual Android37/Gecko143 dependencies PASS",
+        "Gecko bundled extension version 1.9 triggers source refresh on APK update; original same-origin policy retained"
+      ],
+      "residual": "Same-origin nonce/sourceURL is a provenance/replay aid, not isolation from authorized same-origin or same-UID plugin code. No real WebView/Gecko/device kernel matrix exercised."
+    },
+    {
+      "id": "D-NET-01",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/AndroidManifest.xml",
+        "app/src/main/res/xml/network_security_config.xml",
+        "tools/test-ui-boundaries154.py"
+      ],
+      "checks": [
+        "Known official update domains deny platform cleartext; localhost/IPv4/IPv6 and API23 compatibility retained in explicit NSC",
+        "Actual updater HTTPS and redirect execution tests PASS; XML/manifest static scope test PASS",
+        "Actual callers: native models/auth/runtime/bridge/download traffic is loopback-bound; external provider networking is guest Node. WebView third-party/user HTTP ability intentionally retained"
+      ],
+      "residual": "Base cleartext remains true by current functional authorization. NSC is not a guest Node, Gecko, raw-socket or system-browser firewall. Platform enforcement/device matrix not run."
+    },
+    {
+      "id": "D-I18N-03",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/UiText.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+        "app/src/test/java/com/deepseekharness/app/util/UiTextTest.java"
+      ],
+      "checks": [
+        "Actual external HTTP notification text and title remain original even when matching app keys; appToast already preserves raw input",
+        "Pairing code/device probe/Gecko prompt/dynamic third-party description now raw; native prompt title labels current source separately",
+        "Raw text equal to a translation key and language-independent READY/UNAUTHORIZED/LOADED identifiers tests PASS"
+      ],
+      "residual": "Application-owned labels still use catalog; audit was targeted at cited external-content sinks, not every future caller. No real dialog/screen evidence."
+    },
+    {
+      "id": "D-A11Y-01",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WelcomeActivity.java",
+        "app/src/main/res/layout/activity_adb_pair.xml",
+        "app/src/main/res/layout/fragment_config.xml",
+        "app/src/main/res/layout/fragment_launch.xml",
+        "app/src/main/res/layout/welcome_page2.xml",
+        "app/src/main/res/layout/welcome_page3.xml",
+        "tools/test-ui-boundaries154.py"
+      ],
+      "checks": [
+        "SeekBar labelFor/contentDescription plus ViewCompat stateDescription reports real alpha/font values",
+        "Decorative dots hidden from accessibility; intro-page parent description; explicit input labelFor for real fields; decorative state dot and polite text",
+        "Six static welcome rows lose ripple/chevron;4 XML/resource contract tests PASS and current-source javac PASS"
+      ],
+      "residual": "TalkBack, alternate accessibility clients, short-screen/font and device actual focus walk not exercised; no universal accessibility conformance claim."
+    },
+    {
+      "id": "D-I18N-02",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java",
+        "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRepairBroker.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "tools/i18n/messages.json",
+        "app/src/main/res/values/audit154_ui.xml",
+        "app/src/main/res/values-en/audit154_ui.xml",
+        "app/src/main/res/layout/welcome_page1.xml",
+        "app/src/main/res/layout/welcome_page2.xml",
+        "app/src/main/res/layout/welcome_page3.xml",
+        "app/src/main/res/layout/fragment_device_grants.xml"
+      ],
+      "checks": [
+        "Unknown backup size/time localized; recovery complete plans/descriptions localized while action/id/status/source content remain unchanged",
+        "Welcome/device section labels use paired zh/en resources; new templates and first-batch strings added to catalog",
+        "Generated isolated current catalog 3133/3133 nonempty; UiText English-catalog and raw-argument tests PASS"
+      ],
+      "residual": "The broad original 927-string scan includes logs/protocol/data and is not treated as 927 user-facing defects. This batch does not claim every user-facing source has been audited by real English screenshots."
+    },
+    {
+      "id": "D-I18N-01",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/UiText.java",
+        "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WelcomeActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "tools/i18n/messages.json",
+        "app/src/test/java/com/deepseekharness/app/util/UiTextTest.java",
+        "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+      ],
+      "checks": [
+        "UiText.format translates complete templates and keeps arguments literal; %s uiFormat templates allow UiStateText rerender",
+        "Updated overlay counts/state, browser/Gecko errors/upload, save-config failure, welcome page labels and plugin update/actions use complete templates",
+        "Complete-template English syntax and untranslated inserted user key fixture PASS; current source compilation PASS"
+      ],
+      "residual": "Intentional staged conversion of modified flows. Remaining app-owned fragmented strings require later targeted conversion; protocol constants/raw model or user content were not mechanically converted."
+    }
+  ],
+  "checks": {
+    "jvm_total": 82,
+    "ui_added_jvm": 10,
+    "resource_static": 4,
+    "startup_script": "PASS",
+    "gecko_relay": "PASS",
+    "production_javac": "PASS",
+    "device_operations": false
+  }
+}

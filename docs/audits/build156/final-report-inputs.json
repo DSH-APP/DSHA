@@ -1,0 +1,2261 @@
+{
+  "schemaVersion": 1,
+  "status": "ACTUAL_LOCAL_BUILD156_DELIVERY_PASS_INPUTS_FROZEN_BEFORE_SOURCE_ZIP",
+  "preparedAtUtc": "2026-10-04T04:41:13.409914+00:00",
+  "build": 156,
+  "softwareFrozen": true,
+  "operationScope": {
+    "filesWritten": [
+      "docs/audits/build156/final-report-inputs.json",
+      "docs/audits/build156/CONTINUE.md",
+      "docs/releases/v0.2.7-build156-20261003.md"
+    ],
+    "historicalOriginalsPreserved": [
+      {
+        "originalPath": "docs/audits/build156/final-report-inputs.json",
+        "retainedSource": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/final-report-inputs.json",
+        "sha256": "5bc5e51813d1b66b86872c990f3401ec6167b97771edd23afb6f5b16d4b1aa64",
+        "bytes": 52853,
+        "scope": "exact pre-refresh bytes; historical, not current candidate proof"
+      },
+      {
+        "originalPath": "docs/releases/v0.2.7-build156-20261003.md",
+        "retainedSource": "app/build/audit-build156/history/before-accessibility-status/docs/releases/v0.2.7-build156-20261003.md",
+        "sha256": "bf3a50b4228365411d22883ff6efcda2cfd7b45bfb8cbe9b77faecb90cf11fbf",
+        "bytes": 1018,
+        "scope": "exact pre-refresh bytes; historical, not current candidate proof"
+      },
+      {
+        "originalPath": "docs/audits/build156/final-report-inputs.json",
+        "retainedSource": "app/build/audit-build156/history/before-final-report-current-refresh/docs/audits/build156/final-report-inputs.json",
+        "sha256": "55753d3738c3718d07d9264eae73f996843a4f32faa2860aaaa21c3b57602e68",
+        "bytes": 75718,
+        "scope": "exact pre-current-summary-refresh bytes; historical only"
+      },
+      {
+        "originalPath": "docs/audits/build156/CONTINUE.md",
+        "retainedSource": "app/build/audit-build156/history/before-final-report-current-refresh/docs/audits/build156/CONTINUE.md",
+        "sha256": "f3e4447ca89d53b1b0e0640459a02e531f3e85619f700b80f74d93e5e368d384",
+        "bytes": 43043,
+        "scope": "exact pre-current-summary-refresh bytes; historical only"
+      },
+      {
+        "originalPath": "docs/releases/v0.2.7-build156-20261003.md",
+        "retainedSource": "app/build/audit-build156/history/before-final-report-current-refresh/docs/releases/v0.2.7-build156-20261003.md",
+        "sha256": "a32e3f1ba646c9eb160be174bda7efd1123251f24e31a8bebe98970933304cc0",
+        "bytes": 9229,
+        "scope": "exact pre-current-summary-refresh bytes; historical only"
+      }
+    ],
+    "readOnlyEvidenceReview": true,
+    "softwareInputsModified": false,
+    "phoneOperated": false,
+    "deliveryRun": false,
+    "websiteRun": false,
+    "zipRun": false,
+    "finalizerRun": false,
+    "historicalAlpha2Correction": "append-only public correction plus exact retained pre-correction bytes; build154 original invalid-digest ledger unchanged",
+    "finalStepsExecuted": false,
+    "candidateWebsiteBuildAnd28TestsRun": true,
+    "docsSoftwareFinalFlagRun": true,
+    "softwareTestsRerun": false,
+    "currentSummaryRefreshOnly": false,
+    "priorCompletedStepsScope": "Root previously ran the actual candidate website28/doc --final steps. This refresh reads their frozen receipts and does not execute them.",
+    "finalDocumentUpdate": "Only these three documents updated after actual Root delivery receipt. No software/phone/build/test/delivery/ZIP/finalizer action by this lane."
+  },
+  "completedSoftware": {
+    "softwareReceipt": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+      "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+      "bytes": 125149
+    },
+    "status": "PASS_WITH_EXPLICIT_DEVICE_GAPS",
+    "startedAt": "2026-10-03T21:22:42.131989+00:00",
+    "finishedAt": "2026-10-03T22:00:09.155824+00:00",
+    "sourceSnapshot": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+      "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222",
+      "bytes": 202368
+    },
+    "sourceInputCount": 1507,
+    "junit": {
+      "Standard": {
+        "tests": 1195,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 4,
+        "passed": 1191
+      },
+      "Low": {
+        "tests": 1195,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 4,
+        "passed": 1191
+      }
+    },
+    "commands": {
+      "checks": 35,
+      "logsActualShaMatched": 35
+    },
+    "commandLogs": [
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/java-version.log",
+        "sha256": "2c05c59b13a701146c37d79936303eb8080cd353e096756dfab1cd833a306423",
+        "bytes": 196
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/node-version.log",
+        "sha256": "b447734bea5971cc4beed4007192e4cf2e07a9f04fdaff5d9df3bb307e61987e",
+        "bytes": 10
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/gradle-version.log",
+        "sha256": "b7b1a4580f6918d1aa834cd9e545b86d22b9bcae1c9121445cfb4f77f2a9807d",
+        "bytes": 552
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/gradle-verification.log",
+        "sha256": "f13759fe8e128beb9313aa40be6dae88a4b10e320eee0b8ade0d5ba042aca47d",
+        "bytes": 11607
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/startup-observer.log",
+        "sha256": "b8b2c9c6dcd3f8e762ac6de49721216ddc227d8cb78c29b36e7095f6bbc3e59a",
+        "bytes": 128
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/issue67.log",
+        "sha256": "279dfe1452b08413c3c2d509ad824e48d111bee0005f16314dc7e0b7dfba7f42",
+        "bytes": 168
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/runtime-input-contract.log",
+        "sha256": "f8ee979cbb7a92e2c14b05b3c37707a3aa93c52cc49cb43eefeef70a5d167c7b",
+        "bytes": 111
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/architecture-boundaries.log",
+        "sha256": "a9d2155ae07e410a24db922f748c04bd020b93e2658b332ce7087f26bc2c36f4",
+        "bytes": 127
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/plugin-downloads.log",
+        "sha256": "2c7ecbbfd0d9382402ff1e7ef46e960aa1924d8daa4d89758a45e73cb69297f3",
+        "bytes": 3763
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/release-acceptance-contract.log",
+        "sha256": "babea1c5f4e7a3542708dab1647cdd4bc3032959a3c39e22d4c853bc9c24f459",
+        "bytes": 117
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/release-evidence-contract.log",
+        "sha256": "ac05895ff58314d1d1486fe42ea8eec775fa3621260c3a0645c65c78212f0a1e",
+        "bytes": 108
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/adb-flow.log",
+        "sha256": "e66d332d84bada45aa640cbcafce817912f6f62373e39c78beb8317d6329c7f0",
+        "bytes": 3952
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/adb-vscreen-bridge.log",
+        "sha256": "6c802186dd6e482e95696b7a98c903c5058122218524733087a6f5fe397b439f",
+        "bytes": 645
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/third-party-notices.log",
+        "sha256": "a04a5c2a52d9adfa6a9c57db3ad3d87a1ece13c0dc7af6e23f863f7bb4136e5d",
+        "bytes": 140
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/pnpm-version.log",
+        "sha256": "a82028df3ca327b7e19f23fbc0121aec7763353c7dc0c816422db7f52f6365bc",
+        "bytes": 8
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/plugin-discovery.log",
+        "sha256": "1cc814c8afafdefe43965b4a85632da07de0a689995ada80bf133b0d5af36fa9",
+        "bytes": 4323
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/plugin-dependencies.log",
+        "sha256": "3bcf450de5494a81f8901c30bbe95cadd4bc245ffcbe60cbf11f64ead316b68f",
+        "bytes": 3293
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/plugin-transactions.log",
+        "sha256": "53839d0d63d770e49559b44d2a0936b4341baa2bebcfd1925ef6b783cf73492a",
+        "bytes": 2344
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/plugin-review.log",
+        "sha256": "2640a4da587fe40906960669b699d2f134cb5138b63ea885e7f7932d42df2118",
+        "bytes": 3302
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/apk-assets.log",
+        "sha256": "129b1ccb9b0a3806e8f6c3d36a2a5cb0d8d8ac9f44415418bdb7355773272221",
+        "bytes": 3355
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/third-party-apk.log",
+        "sha256": "9e5969f2fda9550a48aaf7eb815bd69df9c8d8d7d2929528ccd33e8d4054ebad",
+        "bytes": 67
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/standard-elf.log",
+        "sha256": "9a6b94638711e64dc70b18f83eecd11c3fd881b421e66b8bb38aa09d86b775b6",
+        "bytes": 557
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/standard-signature.log",
+        "sha256": "46f2c5d0705085e04d09099ca213365eaa6c4ff4ee9e9631bfa0ba6a97daa957",
+        "bytes": 10742
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/standard-manifest.log",
+        "sha256": "77ebdb65dd2b1138d608acaa21c0451845a20a2addcc8599c0ea6f50c5fef784",
+        "bytes": 6303
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/low-elf.log",
+        "sha256": "e2eb913dea34b6241c784f406b2b9629d6578178ea519f76fca682fd47b3cd5a",
+        "bytes": 557
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/low-signature.log",
+        "sha256": "a3a620f29bef0257106ff61a7c059ef427eecbd70fc35ceb696989530d7bef56",
+        "bytes": 11772
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/low-manifest.log",
+        "sha256": "169b0cf481793ea4e754d25e6abd3aeef49e3c950232fac41e74cddf1aa571f0",
+        "bytes": 6685
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/plugin-upgrade-gate.log",
+        "sha256": "c27cea9974053aa62e06f36d90cbcdd9d43011a080a6974740eb9484cfe4f8a0",
+        "bytes": 46561
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/recovery-apk.log",
+        "sha256": "5c97284a6d5396d97ec56e8321f93648808be5d023155726bfd11eb9807da34c",
+        "bytes": 759
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/recovery-browser-overlay.log",
+        "sha256": "18ea4ff3431a9559f03806a997f47fa65f324495696a476fb2835d6e1336f75e",
+        "bytes": 110
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/web-ui-host-fixtures.log",
+        "sha256": "6e7dfb72c844af8bf0be9f6c91a7ff6c551af488fffdca22c99dbb5d7694094a",
+        "bytes": 179
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/recovery-profile-boot.log",
+        "sha256": "b3c4a414e21cd650f51b1f6789736a655e158efff0e86086679a74db8e26f24a",
+        "bytes": 142
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/mobile-modal.log",
+        "sha256": "ed1f331e6c65dd2d4b1b0086b2afff846a4ffd8c1cf644970337d41a212e2104",
+        "bytes": 1819
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/mobile-auth.log",
+        "sha256": "c9f71c2c8ff975eb108ee19d0b81d3de12f41692fead2529a1d6312a791e8872",
+        "bytes": 1456
+      },
+      {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/mobile-update.log",
+        "sha256": "8864f10b0f22392cf87307d87d6ef200735c338244aba5d128fd406b9ba2462c",
+        "bytes": 419
+      }
+    ],
+    "apks": [
+      {
+        "flavor": "standard",
+        "package": "com.dsh.client",
+        "versionCode": 156,
+        "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+        "minSdk": 30,
+        "abi": [
+          "arm64-v8a"
+        ],
+        "size": 397302610,
+        "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+        "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+      },
+      {
+        "flavor": "low",
+        "package": "com.dsh.client",
+        "versionCode": 156,
+        "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+        "minSdk": 23,
+        "abi": [
+          "arm64-v8a"
+        ],
+        "size": 473097048,
+        "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+        "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+      }
+    ],
+    "scope": "Actual5e2d complete software/JVM/signed APK/ELF/assets/plugin/recovery gates; not full device/delivery acceptance"
+  },
+  "completedHost": {
+    "receipt": {
+      "path": "docs/audits/build156/host-current-composite.json",
+      "sha256": "c9c339a0efcb2475e63309b6581932c8bc152f909ca610cbafe170a246a4120b",
+      "bytes": 1980
+    },
+    "status": "PASS_COMPLETE_ACTIVE_HOST_MANIFEST",
+    "tests": 112,
+    "originalSuccessfulExecution": {
+      "path": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "sha256": "bac509ddbf6934757a2cd2ea0e313316891013eb11b48de10279c263716fb984"
+    },
+    "affectedActualRerun": {
+      "path": "docs/audits/build156/host-connected-label-delta-evidence/affected-host-manifest.json",
+      "sha256": "6a4121452eb94eba5a647e93c26e07e0ea99a2286c05f52f8b5e6c24e0124839"
+    },
+    "entriesActuallyRerunAfterSourceDelta": 5,
+    "unchangedSelectedInputEntriesReused": 107,
+    "additionalFullTreeSourceGates": 2,
+    "inputImpactReview": {
+      "path": "docs/audits/build156/host-connected-label-delta-evidence/host112-input-impact.json",
+      "sha256": "cd42a4df8515fd2bf4436b7cbccb60f3505581822974adb134d0a82ba5d84ed7"
+    },
+    "affectedCheckAndAdditionalSourceGateReceipt": {
+      "path": "docs/audits/build156/host-connected-label-delta-evidence/receipt.json",
+      "sha256": "5fbbc6c502a6acd539765416de40a2cab4688acf8b9c46927f7a8aa9f669325e"
+    },
+    "activeStageCounts": {
+      "fast": 44,
+      "runtime": 63,
+      "windows": 3,
+      "linux": 2
+    },
+    "rawManagedEndByteProofs": "Both actual full byte end proofs are checked by the readonly host validator; this preparation performs no new fixture execution.",
+    "current5e2dBinding": true,
+    "scope": "112 declared entry points: original successful execution retained; five readers of the sole changed Java source actually rerun. Not a new112-entry run.",
+    "limitations": "The source-reader review is not dynamic all-I/O tracing; no old compiled classpath byte equality or full device matrix is inferred."
+  },
+  "completedSupplyChain": {
+    "receipt": {
+      "path": "docs/audits/build156/final-build-supply-chain.json",
+      "sha256": "0e8e022d49e86841ab496633e32b40093162f88de190faab284db12d0340fa80",
+      "bytes": 7000
+    },
+    "status": "PASS_CURRENT_LOCAL_SOURCE_AND_TWO_APKS",
+    "linkedReceipts": [
+      {
+        "path": "docs/audits/build156/final-supply-input-checks.json",
+        "sha256": "952f60d44ece1bd35536fda0c5852b3060d8c2a25e97af84dfc96eec421c3880",
+        "bytes": 3914
+      },
+      {
+        "path": "docs/audits/build156/final-apk-supply-checks.json",
+        "sha256": "4f7361be8931535c0037e3c50a5df814b49bbc7146f07be2f939c4749210d348",
+        "bytes": 69878
+      }
+    ],
+    "boundSoftwareReceipt": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+      "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+      "status": "PASS_WITH_EXPLICIT_DEVICE_GAPS",
+      "sameActualApkDigests": true,
+      "junit": {
+        "Standard": {
+          "tests": 1195,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 4
+        },
+        "Low": {
+          "tests": 1195,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 4
+        }
+      },
+      "validatedCommandLogs": 35,
+      "rawSourceSnapshot": {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+        "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+      },
+      "currentSourceStillMatchesSnapshot": true,
+      "singleSourceDiffFrom281": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+          "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+          "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a"
+        }
+      ]
+    },
+    "runtimeId": "fdd8fc14ce4d00ada7948a570db4588c2fb088a8ade389c74f6555b553b470a2",
+    "dshArchiveSha256": "3ddafc8f83fec8f13b9dfec7d51686af1d1aa82771e8dd0a65efb913d03b7bbb",
+    "nativeSourceBinding": {
+      "actualMembers": 38,
+      "standardMembers": 12,
+      "lowMembers": 26,
+      "lockedGeckoAarSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+      "originToMergedExact": true,
+      "strippedToApkExact": true,
+      "packagingChangesRecorded": true,
+      "changedBySymbolStrippingMembers": 12
+    },
+    "current5e2dBinding": true,
+    "scope": {
+      "sourceEditedByLaneForThisRevalidation": false,
+      "supplyVerifierSigningPerformed": false,
+      "supplyVerifierGradleExecuted": false,
+      "softwareValidationRunPerformedByLane": true,
+      "softwareVerifierGradleExecuted": true,
+      "softwareVerifierUsedExistingFormalE7E3Key": true,
+      "newKeyGenerated": false,
+      "debugOrAuditApkGenerated": false,
+      "releaseCopied": false,
+      "phoneOperatedByLane": false,
+      "hostedCI": "not_executed",
+      "protectedReleaseEnvironment": "not_inspected",
+      "originalExternalCodeAndBinaryRights": "Unproven original provenance/revision and rights remain unknown",
+      "deviceAcceptance": "Separate actual current c676/37aa Root device evidence required; preserved old 5aeb/f8c8 device evidence does not validate these new APK bytes"
+    }
+  },
+  "completedLintClassification": {
+    "classification": {
+      "path": "docs/audits/build156/release-lint-classification.json",
+      "sha256": "f0c8053a9efded42e39a61b1da4201d0ecc379468edea89c76d35b36079054da",
+      "bytes": 1126973
+    },
+    "independentReceipt": {
+      "path": "docs/audits/build156/release-lint-classification-receipt.json",
+      "sha256": "ee2af3fae22d1e992767d71fb01fb4e513a99342a821343626d188fe46503e7e",
+      "bytes": 9324
+    },
+    "status": "PASS_EXACT_CURRENT_LINT_CLASSIFICATION",
+    "run": "5e2d5521-beb5-4775-b87e-85a074b4aade",
+    "boundSoftwareReceipt": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+      "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+      "status": "PASS_WITH_EXPLICIT_DEVICE_GAPS"
+    },
+    "sourceSnapshot": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+      "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+    },
+    "cacheContract": {
+      "path": "docs/audits/build156/release-lint-analysis-cache-contract.json",
+      "sha256": "a27392b65a7ba7cf62a81f36215c55a815bebba088d93da3c196bee2d2348c70",
+      "bytes": 157463
+    },
+    "cacheReused": true,
+    "timestampsFresh": false,
+    "issueRowsVerified": 374,
+    "allLocationMappingsVerified": 394,
+    "xmls": [
+      {
+        "flavor": "standard",
+        "path": "app/build/reports/lint-results-standardRelease.xml",
+        "sha256": "f24312fc42738733c73814bea0e83d972e82fd8f5fc35727b2d9727c93a9f188",
+        "bytes": 263401
+      },
+      {
+        "flavor": "low",
+        "path": "app/build/reports/lint-results-lowRelease.xml",
+        "sha256": "3c4b2373795b1292930e688e81097e09ffef6091cb297460e1e97f6c4db097a0",
+        "bytes": 197523
+      }
+    ],
+    "counts": {
+      "standard": {
+        "warnings": 222,
+        "errors": 0,
+        "fatal": 0,
+        "allIssues": 222
+      },
+      "low": {
+        "warnings": 152,
+        "errors": 0,
+        "fatal": 0,
+        "allIssues": 152
+      }
+    },
+    "softwareActionRequired": [],
+    "unknownReviewRequired": [
+      {
+        "flavor": "standard",
+        "issueIndex": 204,
+        "id": "Autofill",
+        "message": "Missing `autofillHints` attribute"
+      },
+      {
+        "flavor": "standard",
+        "issueIndex": 205,
+        "id": "Autofill",
+        "message": "Missing `autofillHints` attribute"
+      },
+      {
+        "flavor": "standard",
+        "issueIndex": 206,
+        "id": "Autofill",
+        "message": "Missing `autofillHints` attribute"
+      },
+      {
+        "flavor": "standard",
+        "issueIndex": 207,
+        "id": "Autofill",
+        "message": "Missing `autofillHints` attribute"
+      },
+      {
+        "flavor": "standard",
+        "issueIndex": 208,
+        "id": "Autofill",
+        "message": "Missing `autofillHints` attribute"
+      }
+    ],
+    "current5e2dBinding": true,
+    "readonlyLocationTrace": {
+      "status": "PASS_READONLY_RECOMPUTED_CURRENT_LOCATION_TRACE",
+      "contract": {
+        "path": "docs/audits/build156/release-lint-analysis-cache-contract.json",
+        "sha256": "a27392b65a7ba7cf62a81f36215c55a815bebba088d93da3c196bee2d2348c70",
+        "bytes": 157463
+      },
+      "currentSnapshot": {
+        "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+        "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222",
+        "bytes": 202368
+      },
+      "priorSnapshot": {
+        "path": "app/build/stability-acceptance/281e14af-8e44-40bc-93b8-7095838cef42/source-sha256.json",
+        "sha256": "21874dcb53fe1356721711928ceb294e43cd69f168de2367438a372e5fb387c2",
+        "bytes": 202368
+      },
+      "sourceDelta": [
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+      ],
+      "actualAnalyzeAndCachedReportTaskLines": [
+        "> Task :app:lintAnalyzeStandardRelease",
+        "> Task :app:lintReportStandardRelease UP-TO-DATE",
+        "> Task :app:lintStandardRelease",
+        "> Task :app:lintAnalyzeLowRelease",
+        "> Task :app:lintReportLowRelease UP-TO-DATE",
+        "> Task :app:lintLowRelease"
+      ],
+      "cacheReused": true,
+      "timestampsFresh": false,
+      "warningIssues": 374,
+      "locationsRecomputedAndMatched": 394,
+      "changedFileWarningLocationsBeforeChangedMethod": 9,
+      "changedMethodStartLine": 563,
+      "unknownAutofillReviewEntriesRetained": 5,
+      "limits": "Actual analysis and exact unchanged XML/location excerpts justify scoped cache reuse; no fresh timestamp, warning elimination, universal cache waiver or device acceptance is claimed."
+    },
+    "scope": "Actual two-flavor analysis execution, explicitly cached identical report XML, complete current source binding and374 issues/394 source locations. Warnings are classified, not eliminated; uncertain Autofill5 retained."
+  },
+  "styleInput": {
+    "receipt": {
+      "path": "docs/audits/build156/java-format-current-style.json",
+      "sha256": "8f47f0efc62a0893fad930618ddb8ea836ab414588bb8f3d2be36f81356bc442",
+      "bytes": 355246
+    },
+    "status": "PASS_CURRENT_STYLE",
+    "files": 785,
+    "verified": 785,
+    "statusSourceProof": {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "sha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "javaTokenSha256": "e19ec74a7439b1bdc994b9d431b492ab194eb35b93e63d71ee9dfaca04222bca",
+      "receipt": "app/build/java-format/bridge156-a11y-status-check.json",
+      "receiptSha256": "2286bff5178a109e56743109baf8c0669d819bd325ebeb16872d50010f80b71c"
+    },
+    "scope": "Current785 composite and frozen bridge status proof bind5e2d source; this docs refresh did not run formatter"
+  },
+  "scriptReadOnlyReview": [
+    {
+      "path": "docs/audits/build156/website-final.py",
+      "sha256": "8cd913a5dfd4b7edb93f9b5d0c8c3d8cc08111dd46db6904b11c5d458f8e06f5",
+      "bytes": 4021,
+      "review": "read-only source/AST only",
+      "executedByThisPreparation": false
+    },
+    {
+      "path": "docs/audits/build156/write-docs-review.py",
+      "sha256": "7a53a824e1431b5c1d4249b665f90d70f48e8735c862a2e7c844b969aeee32b8",
+      "bytes": 21555,
+      "review": "read-only source/AST only",
+      "executedByThisPreparation": false
+    },
+    {
+      "path": "docs/audits/build156/merge-ledger.py",
+      "sha256": "deb832dfe2c4711f05bdfbee9e1c6a8c09815b3f81b68e86b89a5d474690821b",
+      "bytes": 13039,
+      "review": "read-only source/AST only",
+      "executedByThisPreparation": false
+    },
+    {
+      "path": "docs/audits/build156/freeze-project.py",
+      "sha256": "ec9ec1ccc2d5ba08326188f9ff5ffdc968c6732fe9791400eb5c5a8ac72198dd",
+      "bytes": 21970,
+      "review": "read-only source/AST only",
+      "executedByThisPreparation": false
+    },
+    {
+      "path": "docs/audits/build156/finalize-ledger.py",
+      "sha256": "a3fe2d3953bc6d9616f41df844846fded41717a3851edca928342059588c812b",
+      "bytes": 45258,
+      "review": "read-only source/AST only",
+      "executedByThisPreparation": false
+    }
+  ],
+  "deliveryAndReportPending": {
+    "status": "ACTUAL_FORMAL_LOCAL_DELIVERY_DONE_SOURCE_ZIP_AND_DETACHED_SEAL_PENDING",
+    "releaseStill155": false,
+    "releaseVersionCode": 156,
+    "releaseReplacedWithCurrentCandidates": true,
+    "actual156WebsiteDone": true,
+    "deliveredWebsiteByteMatch": {
+      "path": "docs/audits/build156/release-website-current-byte-match.json",
+      "sha256": "5ffb8764150bdfe31561df8b2d8efb3ef52f63e6d870bb2d4cb26bd01b292541",
+      "bytes": 3369
+    },
+    "projectZipFrozenByThisPreparation": false,
+    "finalLedgerWrittenByThisPreparation": false,
+    "noHostedPublication": true,
+    "noServerDeployment": true,
+    "deviceLeaseReturned": true,
+    "sourceZipOutputDirectory": "release/build156-source",
+    "sourceZip": "release/build156-source/build156-complete-project-source.zip",
+    "sourceZipReceipt": "release/build156-source/complete-project-source-receipt.json",
+    "flow": [
+      "Freeze the persistent sourceZIP exactly once after these included docs are frozen.",
+      "Root finalizer explicitly uses persistent source receipt and only admissible actual device/delivery evidence.",
+      "Root binds resulting ZIP/ledger/remaining real SHA only in detached final report; do not rewrite included inputs or CONTINUE after ZIP."
+    ]
+  },
+  "progressInterpretation": {
+    "rootWorkloadEstimateAbout80Percent": "historical communication only",
+    "acceptanceRate": null,
+    "mustNotInfer38or236ClosureFromEstimate": true,
+    "currentSoftwareClosedIds": 236,
+    "remainingOriginalAuditSoftwareFixes": 0,
+    "selectedDeviceTagsAccepted": {
+      "standard": 19,
+      "low": 19
+    },
+    "scope": "Counts identify original audit dispositions and reviewed selected behavior labels, not a universal test completeness percentage or architecture score."
+  },
+  "preserveLimits": [
+    "Earlier owner checks/no-device statements retain their historical input and scope",
+    "Full platform/model/power-loss/legal source matrix remains evidence-limited",
+    "Unknown source/binary authorization is not proved by signed software or this input preparation",
+    "Historical alpha2 complete SHA recovered via formal origin-bound proof; only matching alpha1 original remains missing, old errors/warnings preserved"
+  ],
+  "finalizerInputPathsWhenActuallyReady": {
+    "software": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+    "host": "docs/audits/build156/host-current-composite.json",
+    "style": "docs/audits/build156/java-format-current-style.json",
+    "lint": "docs/audits/build156/release-lint-classification.json",
+    "website": "docs/audits/build156/website-build-check.json",
+    "project": "release/build156-source/complete-project-source-receipt.json",
+    "device": "Actual Root-delivered receipt chain exists; Root selects the actual admissible delivery/device receipt for optional --device. No partial-review placeholder."
+  },
+  "sourceDeltaFromPreviousSoftware": {
+    "previousSoftwareReceipt": {
+      "path": "app/build/stability-acceptance/281e14af-8e44-40bc-93b8-7095838cef42/manifest.json",
+      "sha256": "bf028e270a30c6959ec816d9ca8f7b0bbaa63c423e64a609114574ec66156779",
+      "bytes": 125179
+    },
+    "previousSnapshot": {
+      "path": "app/build/stability-acceptance/281e14af-8e44-40bc-93b8-7095838cef42/source-sha256.json",
+      "sha256": "21874dcb53fe1356721711928ceb294e43cd69f168de2367438a372e5fb387c2",
+      "bytes": 202368
+    },
+    "currentSnapshot": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+      "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222",
+      "bytes": 202368
+    },
+    "files": [
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+        "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+        "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a"
+      }
+    ],
+    "meaning": "DeviceGrantsFragment presents actual service binding status; bridge proof frozen; no other observed software-source delta"
+  },
+  "previousCandidateObservations": {
+    "status": "HISTORICAL_5AEB_OBSERVATIONS_SUPERSEDED_ONLY_WHERE_CURRENT_BOUND_PROOFS_EXIST",
+    "authority": "Latest trusted Root coordination message; private detailed event/byte evidence remains Root-owned, not independently collected by this preparation",
+    "deviceScope": "One Android13/API33/4KiB device; no full Android6/7/16KiB/OEM/Root/FUSE/model matrix inference",
+    "candidateSha256ByFlavor": {
+      "standard": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b",
+      "low": "f8c83d78ae4b2fe3c94295e2d5f3a262caddc5a5ac07f91e739c2ac1959875ed"
+    },
+    "standardPartialObserved": [
+      {
+        "observation": "default-workspace-repair",
+        "status": "ROOT_REPORTED_ACTUAL_OBSERVATION_ONLY_NOT_FULL19_CLOSURE",
+        "candidateSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b"
+      },
+      {
+        "observation": "owned-fixture-real-SAF-install-auto-enable",
+        "status": "ROOT_REPORTED_ACTUAL_OBSERVATION_ONLY_NOT_FULL19_CLOSURE",
+        "candidateSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b"
+      },
+      {
+        "observation": "two-file-real-upload-byte-match",
+        "status": "ROOT_REPORTED_ACTUAL_OBSERVATION_ONLY_NOT_FULL19_CLOSURE",
+        "candidateSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b"
+      },
+      {
+        "observation": "pure-audio-stream-obtained-and-immediately-stopped",
+        "status": "ROOT_REPORTED_ACTUAL_OBSERVATION_ONLY_NOT_FULL19_CLOSURE",
+        "candidateSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b"
+      },
+      {
+        "observation": "camera-and-mixed-request-denied",
+        "status": "ROOT_REPORTED_ACTUAL_OBSERVATION_ONLY_NOT_FULL19_CLOSURE",
+        "candidateSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b"
+      },
+      {
+        "observation": "wrong-port-child-actually-loaded-then-denied",
+        "status": "ROOT_REPORTED_ACTUAL_OBSERVATION_ONLY_NOT_FULL19_CLOSURE",
+        "candidateSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b"
+      }
+    ],
+    "notYetPass": [
+      {
+        "case": "upload-navigation-cancel",
+        "detail": "A→B old file-result timeline is being retrieved/verified; no PASS yet"
+      }
+    ],
+    "lowInstalled": false,
+    "low19Completed": false,
+    "standard19Completed": false,
+    "requiredBehaviorsByFlavor": {
+      "standard": [
+        "bounded-proroot-diagnostic",
+        "document-provider-files",
+        "existing-data-preserved",
+        "lan-background-requests",
+        "microphone-origin-and-cancellation",
+        "native-language-follow-system",
+        "no-crash",
+        "plugin-download-sources",
+        "plugin-install-auto",
+        "plugin-install-commit",
+        "plugins-visible",
+        "recovery-language-rotation",
+        "recovery-ready",
+        "retained-history-pagination",
+        "screen-confirmation-revocation",
+        "terminal-close-and-web-restart",
+        "two-file-upload",
+        "upload-navigation-cancel",
+        "web-ready"
+      ],
+      "low": [
+        "bounded-proroot-diagnostic",
+        "document-provider-files",
+        "existing-data-preserved",
+        "lan-background-requests",
+        "microphone-origin-and-cancellation",
+        "native-language-follow-system",
+        "no-crash",
+        "plugin-download-sources",
+        "plugin-install-auto",
+        "plugin-install-commit",
+        "plugins-visible",
+        "recovery-language-rotation",
+        "recovery-ready",
+        "retained-history-pagination",
+        "screen-confirmation-revocation",
+        "terminal-close-and-web-restart",
+        "two-file-upload",
+        "upload-navigation-cancel",
+        "web-ready"
+      ]
+    },
+    "requiredCountPerFlavor": 19,
+    "plannedSlotsTotal": 38,
+    "completedAcceptanceSlotsNotCalculated": true,
+    "selectionContractSha256": "c09f18349440402727593e0b17b61db85a9eddb6c4c9a3ea8613ad40596fb769",
+    "baseline148SelectionProvenance": {
+      "receiptSha256": "cfe1115b86a9e199e0d8da276e469c872dd66a0e9e19cf56bec0fd908c36f2d4",
+      "sourceSha256": "1a9222159a68a1757de1cc3158afbc2644a2e34781a65aecc142e23c914ad006"
+    },
+    "historicalLimits": [
+      "No old workspace/session sample for universal history-preservation verification",
+      "23 retained-history records cross-page remains pending in earlier Root checkpoints; do not fabricate samples",
+      "Old ea08 recovery checks do not substitute current candidate evidence"
+    ],
+    "finalSettingsRestoreToVerify": [
+      "original proot runtime",
+      "LAN off",
+      "power saving off",
+      "DSHA accessibility off while retaining original other accessibility services"
+    ],
+    "privacy": "No token/serial/private transcript/raw screenshot copied into this JSON",
+    "scope": "Historical checkpoint kept for original5aeb/f8c bytes. Its then-pending values are not current device status; newer current bound public reviews are separate.",
+    "preservedCurrentInputRecord": {
+      "originalPath": "docs/audits/build156/final-report-inputs.json",
+      "retainedSource": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/final-report-inputs.json",
+      "sha256": "5bc5e51813d1b66b86872c990f3401ec6167b97771edd23afb6f5b16d4b1aa64",
+      "bytes": 52853,
+      "scope": "exact pre-refresh bytes; historical, not current candidate proof"
+    }
+  },
+  "historicalDigestEvidenceProgress": {
+    "id": "D-DOC-19",
+    "status": "ALPHA2_RECOVERED_ALPHA1_ORIGINAL_STILL_UNMATCHED",
+    "proof": {
+      "path": "docs/audits/build156/historical-alpha2-digest-recovery.json",
+      "sha256": "9c9071f42e7a04e384eaec30b2238e4631c7d531acb32c2e9a44765a448991db",
+      "bytes": 3857
+    },
+    "beforeDocument": {
+      "path": "docs/audits/build156/historical-alpha2-document-before.json",
+      "sha256": "3e0d12a0cfd3a2898adb675fae0765657100fd454de555654a724a72e3bd77a3",
+      "bytes": 757
+    },
+    "recoveredAlpha2Sha256": "3258884ae654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18",
+    "officialSidecarUrl": "https://github.com/DSH-APP/DSHA/releases/download/v0.1.7-alpha2/dsha-0.1.7-alpha2.apk.sha256",
+    "officialReleaseUrl": "https://github.com/DSH-APP/DSHA/releases/tag/v0.1.7-alpha2",
+    "officialArtifactId": 583817993,
+    "officialSidecarId": 583817997,
+    "original63HexValuesPreserved": true,
+    "alpha1Remaining": [
+      {
+        "document": "docs/releases/v0.1.7-alpha1-build143.md",
+        "reason": "The available version143 Standard artifact has a different complete digest from the invalid historical alpha1 record. It is not substituted for that original candidate."
+      }
+    ],
+    "scope": "Historical alpha2 actual bytes and official metadata recovered; no current APK/build-source mutation or wholeD-DOC19 closure"
+  },
+  "processReport": {
+    "path": "docs/releases/v0.2.7-build156-20261003.md",
+    "status": "ACTUAL_LOCAL_DELIVERY_FINAL_REPORT_DETACHED_POST_ZIP_BINDING",
+    "detachedMutableAfterSourceZip": true,
+    "sha256BindingPolicy": "No current or final SHA is declared for this mutable detached path inside included source docs. Final real SHA will be bound outside the ZIP by Root.",
+    "historicalWorkInProgressOriginals": [
+      {
+        "originalPath": "docs/releases/v0.2.7-build156-20261003.md",
+        "retainedSource": "app/build/audit-build156/history/before-accessibility-status/docs/releases/v0.2.7-build156-20261003.md",
+        "sha256": "bf3a50b4228365411d22883ff6efcda2cfd7b45bfb8cbe9b77faecb90cf11fbf",
+        "bytes": 1018,
+        "scope": "exact pre-refresh bytes; historical, not current candidate proof"
+      },
+      {
+        "originalPath": "docs/releases/v0.2.7-build156-20261003.md",
+        "retainedSource": "app/build/audit-build156/history/before-final-report-current-refresh/docs/releases/v0.2.7-build156-20261003.md",
+        "sha256": "a32e3f1ba646c9eb160be174bda7efd1123251f24e31a8bebe98970933304cc0",
+        "bytes": 9229,
+        "scope": "exact pre-current-summary-refresh bytes; historical only"
+      }
+    ]
+  },
+  "completedCandidateWebsite": {
+    "receipt": {
+      "path": "docs/audits/build156/website-build-check.json",
+      "sha256": "06df796916ca93793ce4dd93b7003289e1cce799a2500114b2788702281197f7",
+      "bytes": 27197
+    },
+    "status": "PASS_ACTUAL_SIGNED156_LOCAL_CANDIDATE_WEBSITE_AT_ORIGINAL_RUN",
+    "tests": 28,
+    "pages": 21,
+    "candidateOnly": true,
+    "formalDeliveryCompleted": false,
+    "deviceAcceptanceCompleted": false,
+    "realReleaseUntouched": [
+      {
+        "path": "release/dsha-0.2.0-rc2.apk",
+        "sha256": "8edffe0fb42e2d5476d14eba49b224c419889364f2ad21ebbbc42dd6c93659d2",
+        "bytes": 396931069
+      },
+      {
+        "path": "release/dsha-0.2.0-rc2.apk.sha256",
+        "sha256": "9a8532a3c6d8bfe8f612ff45cd759f5fb8d5e1dad1ba16c441bcf55a6da392d3",
+        "bytes": 85
+      },
+      {
+        "path": "release/dsha-0.2.0-rc2low.apk",
+        "sha256": "dbc781a633600bd408778ca3ecc1fc0fe590df136d4f241c5e776e6391145990",
+        "bytes": 473045030
+      },
+      {
+        "path": "release/dsha-0.2.0-rc2low.apk.sha256",
+        "sha256": "d08c870db8c71fdbc019af9fa9fbc74fe9f34f0c0ebf35d85a00185e13d62c26",
+        "bytes": 88
+      }
+    ],
+    "softwareReceipt": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+      "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+      "bytes": 125149
+    },
+    "sourceSnapshot": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+      "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222",
+      "bytes": 202368
+    },
+    "stagedSourceBindings": [
+      {
+        "source": {
+          "path": "app/build.gradle",
+          "sha256": "c11f70b7bd33c8ef548f172b844bdbebe3ae7df554b092066a973788f3d94adb",
+          "bytes": 20599
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/build.gradle",
+          "sha256": "c11f70b7bd33c8ef548f172b844bdbebe3ae7df554b092066a973788f3d94adb",
+          "bytes": 20599
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/java/com/deepseekharness/app/util/Constants.java",
+          "sha256": "ed7ee6df32544c12460388ba9f5bc0f5e992584b0a762034a4e22c7a33cb69a2",
+          "bytes": 3928
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/java/com/deepseekharness/app/util/Constants.java",
+          "sha256": "ed7ee6df32544c12460388ba9f5bc0f5e992584b0a762034a4e22c7a33cb69a2",
+          "bytes": 3928
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "tools/dsh-runtime/package.json",
+          "sha256": "4885ec233c3786b2ce17c396f64b3e922d3202b8a50a67a60e199c7d9e130b61",
+          "bytes": 7065
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/tools/dsh-runtime/package.json",
+          "sha256": "4885ec233c3786b2ce17c396f64b3e922d3202b8a50a67a60e199c7d9e130b61",
+          "bytes": 7065
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/assets/runtime-descriptor.json",
+          "sha256": "7c4c678fe309ff8a8939ce1c1d61c2dba39cbeb128da2c01bd4af91c5d38a38f",
+          "bytes": 40111
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/runtime-descriptor.json",
+          "sha256": "7c4c678fe309ff8a8939ce1c1d61c2dba39cbeb128da2c01bd4af91c5d38a38f",
+          "bytes": 40111
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/assets/builtin-plugins.json",
+          "sha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304",
+          "bytes": 1234
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins.json",
+          "sha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304",
+          "bytes": 1234
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "LICENSE",
+          "sha256": "e0ddc2f4a383d900a26e3148a19c256e9dbe06585a274307509e9714636be0b1",
+          "bytes": 1074
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/LICENSE",
+          "sha256": "e0ddc2f4a383d900a26e3148a19c256e9dbe06585a274307509e9714636be0b1",
+          "bytes": 1074
+        },
+        "binding": "explicit current repository MIT license, outside APK software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+          "sha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+          "bytes": 74374
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+          "sha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+          "bytes": 74374
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/res/mipmap-mdpi/ic_launcher.png",
+          "sha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+          "bytes": 6104
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+          "sha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+          "bytes": 6104
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "agent-skills/device-shell/SKILL.md",
+          "sha256": "247a04d6ad0fe6ed15925e7e5e8e1467ddce268ab37e4a5f5486a5feb8bce125",
+          "bytes": 1794
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/agent-skills/device-shell/SKILL.md",
+          "sha256": "247a04d6ad0fe6ed15925e7e5e8e1467ddce268ab37e4a5f5486a5feb8bce125",
+          "bytes": 1794
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "agent-skills/screen-ocr-operator/SKILL.md",
+          "sha256": "9435e0dff26b8199e16eb12ac434f2bfc6db1af73ccd7ba40d96a62b8772f8e7",
+          "bytes": 1570
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/agent-skills/screen-ocr-operator/SKILL.md",
+          "sha256": "9435e0dff26b8199e16eb12ac434f2bfc6db1af73ccd7ba40d96a62b8772f8e7",
+          "bytes": 1570
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json",
+          "sha256": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f",
+          "bytes": 550
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json",
+          "sha256": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f",
+          "bytes": 550
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/assets/builtin-plugins/dsh-task-notifier/package.json",
+          "sha256": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820",
+          "bytes": 347
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-task-notifier/package.json",
+          "sha256": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820",
+          "bytes": 347
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/assets/builtin-plugins/dsh-status-overlay/package.json",
+          "sha256": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15",
+          "bytes": 539
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-status-overlay/package.json",
+          "sha256": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15",
+          "bytes": 539
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+          "sha256": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f",
+          "bytes": 3539
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+          "sha256": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f",
+          "bytes": 3539
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json",
+          "sha256": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d",
+          "bytes": 531
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json",
+          "sha256": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d",
+          "bytes": 531
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/assets/builtin-plugins/dsh-auto-review/package.json",
+          "sha256": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573",
+          "bytes": 503
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-auto-review/package.json",
+          "sha256": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573",
+          "bytes": 503
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      },
+      {
+        "source": {
+          "path": "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/package.json",
+          "sha256": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa",
+          "bytes": 396
+        },
+        "staged": {
+          "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-tool-vscreen/package.json",
+          "sha256": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa",
+          "bytes": 396
+        },
+        "binding": "actual5e2d software sourceSnapshot"
+      }
+    ],
+    "manifestSha256": "5aade95dc81a0d4d1c0411ab4bed6997bd8852680c6f4f4a5eba6a791953b0ca",
+    "previousGeneratedMetadataPreserved": {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/previous-generated-manifest-b3cc62df339e3cfed7e9c62c321d0abf747e29cc76d02b67282b6397e68b7ece.json",
+      "sha256": "b3cc62df339e3cfed7e9c62c321d0abf747e29cc76d02b67282b6397e68b7ece",
+      "bytes": 5123
+    },
+    "scope": "actual signed156 candidates, local-only website with staged exact current source; NOT device acceptance, actual release delivery, GitHub publication or server deployment",
+    "finalizerReadOnlySchemaAdapterCompatible": true,
+    "fullFinalizerExecuted": false,
+    "artifactHashes": [
+      {
+        "flavor": "standard",
+        "filename": "dsha-0.2.0-rc2.apk",
+        "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a"
+      },
+      {
+        "flavor": "low",
+        "filename": "dsha-0.2.0-rc2low.apk",
+        "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3"
+      }
+    ],
+    "testCount": 28,
+    "hostedDeploymentPerformed": false,
+    "historicalRunScope": "The original website run preceded formal delivery; its candidateOnly/realReleaseUntouched fields stay true for that time. New delivered byte equality is a separate receipt, not a rerun.",
+    "realReleaseUntouchedScope": "These copied fields are original website-run observations only; current release bytes differ after actual delivery. The original155 four files remain preserved under the actual before-formal-delivery receipt linked from completedFormalLocalDelivery."
+  },
+  "docsFourSoftwareClosure": {
+    "review": {
+      "path": "docs/audits/build156/review-docs.json",
+      "sha256": "052ecf0e4f7cb3aa95ff53146c228ac3bf410f91fc40d92b83305321756d83f3",
+      "bytes": 32834
+    },
+    "matrix": {
+      "path": "docs/audits/build156/classification-draft.json",
+      "sha256": "55c3bf159c3f64c55d5c420a437eb18d494a7dc86a626773aa223e6e319800de",
+      "bytes": 559695
+    },
+    "sourceCoverage": 236,
+    "reviewCoverage": 236,
+    "remainingSoftwareIds": [],
+    "scope": "All current candidate software/doc actions reviewed; no claim all device/external evidence closed",
+    "items": {
+      "D-DOC-06": {
+        "currentOwnerDisposition": "fixed_current_source",
+        "staticPrerequisites": {
+          "zh": {
+            "notes": {
+              "path": "docs/releases/build156-changes.zh.md",
+              "sha256": "fcded08112320747d4fa631b5756365eefe11ca18a9edd061bab9b4e71e5af82",
+              "bytes": 938
+            },
+            "raw": {
+              "path": "app/src/main/res/raw/changelog.md",
+              "sha256": "fcded08112320747d4fa631b5756365eefe11ca18a9edd061bab9b4e71e5af82",
+              "bytes": 938
+            },
+            "sameBytes": true,
+            "scope": "static current byte comparison; generate-changelog --check not executed"
+          },
+          "en": {
+            "notes": {
+              "path": "docs/releases/build156-changes.en.md",
+              "sha256": "a41a732f0d5fcd091596627866de75013423cca1aee49be46f947cc9facd6da7",
+              "bytes": 1111
+            },
+            "raw": {
+              "path": "app/src/main/res/raw-en/changelog.md",
+              "sha256": "a41a732f0d5fcd091596627866de75013423cca1aee49be46f947cc9facd6da7",
+              "bytes": 1111
+            },
+            "sameBytes": true,
+            "scope": "static current byte comparison; generate-changelog --check not executed"
+          }
+        },
+        "closure": "Actual --final docs script succeeded on current raw/header/source and staged actual156 candidate website; phone/release delivery remains separate",
+        "softwareClosureExecuted": true,
+        "formalDeliveryClosureClaim": false
+      },
+      "D-DOC-10": {
+        "currentOwnerDisposition": "fixed_current_source",
+        "staticHeaderChecks": {
+          "README.md": {
+            "ref": {
+              "path": "README.md",
+              "sha256": "8bd74911ac722ccf03e8912608065bfb8a1d75c3ea8ff84626f848abe84700f4",
+              "bytes": 22795
+            },
+            "containsBuild156InCurrentHeader": true
+          },
+          "README.en.md": {
+            "ref": {
+              "path": "README.en.md",
+              "sha256": "279ba1819566bdcbedb69b8987fa85a23d644eef4d03693b5d920c35bfab55db",
+              "bytes": 24911
+            },
+            "containsBuild156InCurrentHeader": true
+          },
+          "AGENTS.md": {
+            "ref": {
+              "path": "AGENTS.md",
+              "sha256": "7a3d814f61c6da0d8c47e50aa767cacf4c18955e020ce21a5f4fdf253dc8b9bd",
+              "bytes": 36547
+            },
+            "containsBuild156InCurrentHeader": true
+          }
+        },
+        "closure": "Actual --final docs script succeeded on current raw/header/source and staged actual156 candidate website; phone/release delivery remains separate",
+        "softwareClosureExecuted": true,
+        "formalDeliveryClosureClaim": false
+      },
+      "D-DOC-12": {
+        "currentOwnerDisposition": "fixed_current_source",
+        "staleExactRulesStillFound": [],
+        "closure": "Actual --final docs script succeeded on current raw/header/source and staged actual156 candidate website; phone/release delivery remains separate",
+        "softwareClosureExecuted": true,
+        "formalDeliveryClosureClaim": false
+      },
+      "D-DOC-25": {
+        "currentOwnerDisposition": "fixed_current_source",
+        "currentPublicManifestVersionCode": 156,
+        "currentPublicManifest": {
+          "path": "app/build/release-manifest.json",
+          "sha256": "5aade95dc81a0d4d1c0411ab4bed6997bd8852680c6f4f4a5eba6a791953b0ca",
+          "bytes": 4970
+        },
+        "actual156WebsiteReceiptPresent": true,
+        "closure": "Actual --final docs script succeeded on current raw/header/source and staged actual156 candidate website; phone/release delivery remains separate",
+        "softwareClosureExecuted": true,
+        "formalDeliveryClosureClaim": false
+      }
+    },
+    "pendingFormalDelivery": false,
+    "formalDeliveryOutcome": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/delivery-c936ac13-f3bc-4087-8270-fc5d0e0596e2.json",
+      "sha256": "a15287bcc213fe05aef204c32b0a83ca34f266f77064213cb192ad135adf2f34",
+      "bytes": 125795
+    }
+  },
+  "completedOwnerReview": {
+    "classification": {
+      "path": "docs/audits/build156/classification-draft.json",
+      "sha256": "55c3bf159c3f64c55d5c420a437eb18d494a7dc86a626773aa223e6e319800de",
+      "bytes": 559695
+    },
+    "coverage": 236,
+    "reviewCoverage": 236,
+    "remainingSoftwareIds": [],
+    "statusCounts": {
+      "verified_no_remaining_software_change": 111,
+      "fixed_current_source": 94,
+      "external_evidence_missing": 3,
+      "required_contract": 19,
+      "duplicate": 4,
+      "device_evidence_missing": 1,
+      "not_applicable": 4
+    },
+    "scope": "All236 original audit IDs have current owner dispositions and zero remaining software fixes. This does not mean architecture debt is zero, all device cases passed or external evidence gaps closed.",
+    "primaryEvidenceMissingRows": [
+      {
+        "id": "D-PROV-01",
+        "owner": "build",
+        "currentDisposition": "external_evidence_missing",
+        "missingEvidence": [
+          {
+            "kind": "external",
+            "detail": "Original external code source/license grant or independently reviewed replacement provenance"
+          }
+        ]
+      },
+      {
+        "id": "D-BAK-02",
+        "owner": "data",
+        "currentDisposition": "device_evidence_missing",
+        "missingEvidence": [
+          {
+            "kind": "device",
+            "detail": "Observed free-space delta includes unrelated filesystem activity. No Android physical peak-space ratio/capacity calibration was measured; no <=1 ratio claim."
+          }
+        ]
+      },
+      {
+        "id": "D-DOC-19",
+        "owner": "docs",
+        "currentDisposition": "external_evidence_missing",
+        "missingEvidence": [
+          {
+            "kind": "external",
+            "detail": "仅alpha1旧63位记录的对应原件/官方旁证仍未匹配；本地另一版本143候选不能代替该原件。alpha2已追回，未补猜"
+          }
+        ]
+      },
+      {
+        "id": "D-DOC-20",
+        "owner": "docs",
+        "currentDisposition": "external_evidence_missing",
+        "missingEvidence": [
+          {
+            "kind": "external",
+            "detail": "没有本轮Hosted Linux发布job/受保护环境/仓库保护的真实运行回执；本地软件和tmpfs不代替该证据"
+          }
+        ]
+      }
+    ],
+    "primaryEvidenceMissingCount": 4,
+    "historicalEvidenceScopeSets": {
+      "deviceIds": 111,
+      "externalIds": 17,
+      "overlap": 1,
+      "union": 127,
+      "scope": "Original item-level historical/matrix evidence markers are overlapping sets, kept without blanket erasure by one API33 phone run. These are not111unfixed software bugs or111new delivery blockers; primary dispositions identify four evidence-only gaps."
+    }
+  },
+  "presealReadOnlyValidation": {
+    "receipt": {
+      "path": "docs/audits/build156/preseal-receipt-validation.json",
+      "sha256": "6e1fd9ad1cb1674b68756c9772235cb7b3c2fc03814323b9697273a92ba8dd46",
+      "bytes": 109120
+    },
+    "status": "PASS_READONLY_PRESEAL_RECEIPTS_AND_SOURCE_SELECTOR_PENDING_ZIP_DEVICE_DELIVERY",
+    "validators": [
+      "validate_software",
+      "validate_host",
+      "validate_style",
+      "validate_lint",
+      "validate_website"
+    ],
+    "scope": "Previously executed read-only receipt/current-byte checks; no software rerun or delivery assertion."
+  },
+  "sourceArchiveSelectionReady": {
+    "proof": {
+      "path": "docs/audits/build156/public-retired-source-allowlist-proof.json",
+      "sha256": "d2680cf0d1aa1f26b64ad67c6c3c3b74bf6b455171432c380de9c18b9dfe6233",
+      "bytes": 34540
+    },
+    "selector": {
+      "path": "docs/audits/build156/freeze-project.py",
+      "sha256": "ec9ec1ccc2d5ba08326188f9ff5ffdc968c6732fe9791400eb5c5a8ac72198dd",
+      "bytes": 21970
+    },
+    "publicRetiredSourceFixtures": 27,
+    "bytes": 215974,
+    "selectionSelfTests": 5,
+    "zipFrozen": false,
+    "scope": "Corrected exact27-public-fixture selector is ready; Root will freeze once. Future archive/receipt hashes are not invented in this included input file.",
+    "outputDirectory": "release/build156-source",
+    "archivePath": "release/build156-source/build156-complete-project-source.zip",
+    "receiptPath": "release/build156-source/complete-project-source-receipt.json"
+  },
+  "currentFrozenPublicDeviceEvidence": {
+    "status": "CURRENT_CANDIDATE_BOUNDED_REVIEWS_SUPPLEMENTED_BY_ACTUAL_ROOT_DELIVERY",
+    "reviews": [
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-latest-standard-fixture-review.json",
+          "sha256": "ed86ce2f0c43be515270b7057aa5c3417a14daf79f0a23c74d53f93db40b60ae",
+          "bytes": 30740
+        },
+        "artifactScope": {
+          "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+          "apkBytes": 397302610,
+          "packageName": "com.dsh.client",
+          "versionCode": 156,
+          "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+          "flavor": "standard",
+          "minSdk": 30,
+          "targetSdk": 37,
+          "debuggable": false,
+          "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+          "androidRelease": 13,
+          "engine": "system WebView per final Standard artifact and operator",
+          "deviceOperator": "runtime exclusive lease",
+          "overlayAt": "2026-10-04T08:15:52.766285+08:00",
+          "fixture": "dsh-acceptance-156 0.0.156",
+          "originalNavigationDelayMs": 1500,
+          "fixtureTgzSha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+          "variant0_0_157Installed": false,
+          "topOrigin": "http://127.0.0.1:3080",
+          "firstSelectedEventAt": "2026-10-04T08:43:57.596+08:00",
+          "lastSelectedEventAt": "2026-10-04T08:55:05.396+08:00",
+          "bindingLimit": "Correlated preflight/successful overlay/post-install metadata and operator run. The owned JSONL has no APK/engine metadata event; exact WebView provider/binary version is not independently identified by it."
+        },
+        "summary": {
+          "events": 25,
+          "ownedRuns": 1,
+          "pages": 4,
+          "requestIds": 6,
+          "audioNavigationScenariosSupported": 1,
+          "filesNavigationScenariosSupported": 1,
+          "freshAudioLiveThenEnded": 1,
+          "videoRejections": 1,
+          "mixedRejections": 1,
+          "differentPortAudioRejections": 1,
+          "successfulTwoFileBatches": 1,
+          "verifiedFileObjects": 2,
+          "requestedCasesReviewed": 7,
+          "requestedCasesSupported": 7,
+          "requestedCaseMissingEvidenceCount": 0,
+          "observedFailureMarkers": 0,
+          "currentStandardRequestedFixtureScope": "pass_observed",
+          "overallMicrophoneStatus": "partial_device_coverage",
+          "overallDeviceMatrixStatus": "partial_device_coverage"
+        },
+        "limits": [
+          "This is the final c676 Standard Android13 WebView run; old5aeb Standard reports retain their old artifact binding and are not rewritten.",
+          "Seven requested fixture cases are observed; no general microphone, all-origin, all-cancel, WebView-version, Android6/7, Gecko or full device-matrix PASS is claimed.",
+          "Low Gecko files-nav-before-old-result and native wrong-origin attribution gaps remain in the separate Low report; current Standard results do not close them.",
+          "No sound samples are recorded. Fresh files are only the two fixed owned sentinels; provider failures, limits, duplicate URIs and descriptor endurance remain outside this run.",
+          "Independent Low historical commit-marker reading after this overlay is reported separately and is not counted as a new Standard installation transaction."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-new-standard-screen-grant-review.json",
+          "sha256": "a1c0cdcac8ed6cceb418b1e81832bdf2a35bd02477d40109ca6a033f5faaf704",
+          "bytes": 28984
+        },
+        "artifactScope": {
+          "flavor": "standard",
+          "packageName": "com.dsh.client",
+          "versionCode": 156,
+          "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+          "minSdk": 30,
+          "targetSdk": 37,
+          "debuggable": false,
+          "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+          "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+          "androidReleaseReportedByOperator": 13,
+          "deviceOperator": "runtime under parent-authorized exclusive device lease",
+          "lastUpdateTime": "2026-10-04T08:15:50+08:00",
+          "bindingBasis": "Exact APK preflight/supply ledger and successful overlay plus post-install package metadata; no installed APK byte-pull performed by reviewer.",
+          "testTarget": "own DSHA native UI only",
+          "routePath": "/app/ui/dump",
+          "authorizationMethod": "Explicit root-authorized runtime operator Allow/Deny through bounded native read-only dialog input tap; no HTTP confirmation API.",
+          "oldStandard5aebEvidenceUsedForThisCandidate": false,
+          "browserEngineProofFromThisScreenChain": false
+        },
+        "summary": {
+          "status": "pass_observed_bounded_new_standard_screen_chain",
+          "nativeAllowSelections": 2,
+          "positiveOwnDshaTreeReceipts": 2,
+          "nativeDenyReceiptsWithoutTree": 2,
+          "manualRevocationRequiresNewNativeConfirmation": true,
+          "ordinaryWebStopStartRequiresNewNativeConfirmation": true,
+          "firstAllowTargetChangedReceiptsRetained": 2,
+          "allFourNativeChoicesHaveSelectedAtPendingAndAfterEvidence": true,
+          "referencePromptCropMatches": 4,
+          "enabledServiceListsSameBytesBeforeAndAfterOrdinaryRebind": true,
+          "overallDeviceMatrixStatus": "partial_device_coverage"
+        },
+        "limits": [
+          "Only new Standard c676 on this reported Android 13 phone and own DSHA native app are covered. It is separate from old Standard 5aeb observations and does not inherit them.",
+          "The enabled-but-disconnected period follows the actual microphone permission change. Ordinary DSHA-only rebind plus real own-tree positive reads shows restored accessibility availability; this reviewer does not independently OCR the connected/waiting label pixels.",
+          "Native UI meanings/read-only reference semantics and authorization come from the root/runtime operator. The reviewer verifies private RGB hashes, source fingerprints, safe response markers, geometry and action times without executing the helper.",
+          "All 4 cases have selectedAt and pending-reader receipts. Source guard before native tap is not an atomic proof of every possible concurrency race.",
+          "No numeric Web generation or crafted stale-generation client parameter is persisted. New-prompt/deny after operator-observed ordinary Stop/Start is behavioral revocation evidence.",
+          "No sensitive-app/virtual-display/async-screenshot callback matrix, Android6/7/16KiB or universal browser/device matrix is claimed.",
+          "HTTP status lines are not saved by these dump envelopes; refusals are checked at result level. The separate old-LAN credential extension uses actual HTTP statuses."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-final-low-gecko-fixture-review.json",
+          "sha256": "aba78cf6ab4802e74fceeb7492d706a230077eaf11b7112c43a4051c4618085d",
+          "bytes": 30207
+        },
+        "artifactScope": {
+          "deviceOperator": "runtime exclusive lease",
+          "artifact": "new official Low build156 retake",
+          "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "apkBytes": 473097048,
+          "packageName": "com.dsh.client",
+          "versionCode": 156,
+          "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+          "minSdk": 23,
+          "targetSdk": 37,
+          "debuggable": false,
+          "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+          "androidRelease": 13,
+          "engine": "Gecko explicitly selected, saved, then reopened by device operator",
+          "engineSelectionAt": "2026-10-04T06:17:07.637903+08:00",
+          "engineSaveConfirmationAt": "2026-10-04T06:17:22.443461+08:00",
+          "authenticatedWebUiReadyScreenshotAt": "2026-10-04T06:20:44.067247+08:00",
+          "fixture": "dsh-acceptance-156 0.0.156",
+          "fixtureEntry": "/a156",
+          "fixtureTgzSha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+          "topOrigin": "http://127.0.0.1:3080",
+          "overlayAt": "2026-10-04T06:14:39.173661+08:00",
+          "firstSelectedEventAt": "2026-10-04T06:20:44.188+08:00",
+          "lastSelectedEventAt": "2026-10-04T06:36:34.080+08:00",
+          "bindingLimit": "APK preflight, successful overlay, post-install package metadata, and explicit Gecko selection/save/reopen are correlated with the device operator run. Owned JSONL has no APK/engine metadata row, and the exact engine binary version is not independently measured by it."
+        },
+        "summary": {
+          "ownedRuns": 1,
+          "events": 25,
+          "pages": 4,
+          "requestIds": 6,
+          "successfulTwoFileBatches": 1,
+          "verifiedFileObjects": 2,
+          "freshAudioLiveThenEnded": 1,
+          "audioNavigationScenariosSupported": 1,
+          "videoRejections": 1,
+          "mixedRejections": 1,
+          "differentPortRejectionsObserved": 1,
+          "differentPortNativeAttributionGap": 1,
+          "filesNavigationEvidenceGap": 1,
+          "requestedCasesReviewed": 7,
+          "casesSupported": 5,
+          "casesWithMissingEvidence": 2,
+          "observedFailureMarkers": 0,
+          "overallMicrophoneStatus": "partial_device_coverage",
+          "overallDeviceMatrixStatus": "partial_device_coverage"
+        },
+        "limits": [
+          "This report covers only the new Low APK digest and one observed Android 13 Gecko run. minSdk 23 is not Android 6/7 runtime acceptance.",
+          "Audio live-to-ended and one pending-system-grant A-to-B case are supported; recorded sound quality, all cancel permutations, all origins and the full device matrix are not claimed.",
+          "Different-port Web API rejection is observed, but absence of Gecko policy API leaves native origin attribution missing.",
+          "The files-nav timer did not establish B while the old picker was pending. Fresh B two-file success does not close that old callback evidence gap.",
+          "Old Standard logs present in the collection are explicitly excluded; the prior Standard report retains its original APK binding."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-low-screen-grant-review.json",
+          "sha256": "993223bd2d24072afbbb90bae081eca634c0b22c98f86168e685494b76432f65",
+          "bytes": 29726
+        },
+        "artifactScope": {
+          "flavor": "low",
+          "packageName": "com.dsh.client",
+          "versionCode": 156,
+          "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+          "minSdk": 23,
+          "targetSdk": 37,
+          "debuggable": false,
+          "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+          "androidReleaseReportedByOperator": 13,
+          "lastUpdateTime": "2026-10-04T06:14:37+08:00",
+          "deviceOperator": "runtime holding parent-authorized exclusive device lease",
+          "bindingBasis": "Root/build preflight identifies the exact signed APK; successful overlay receipt and post-install package metadata establish this Low package/version. The digest is not obtained by pulling installed APK bytes in this review.",
+          "testTarget": "own DSHA native application only",
+          "routePath": "/app/ui/dump",
+          "authorizationMethod": "Root-authorized runtime operator explicitly selected native Allow/Deny for this bounded read-only request; no HTTP confirmation API.",
+          "browserEngineProofFromThisScreenChain": false
+        },
+        "summary": {
+          "status": "pass_observed_bounded_low_screen_chain",
+          "nativeAllowSelections": 2,
+          "positiveOwnDshaTreeReceipts": 2,
+          "manualRevokeThenNativeDenyRefusal": true,
+          "ordinaryWebStopStartThenNativeDenyRefusal": true,
+          "nativeDenyReceiptsWithoutTree": 2,
+          "firstAllowTargetChangedReceiptsRetained": 2,
+          "referencePromptCropMatches": 4,
+          "laterReceiptsWithSelectedAtAndPendingReaderEvidence": 3,
+          "firstReceiptMissingFieldsNotBackfilled": true,
+          "overallDeviceMatrixStatus": "partial_device_coverage"
+        },
+        "limits": [
+          "Acceptance is limited to this new Low37aa installation, own DSHA app, two actual native Allows followed by own-tree reads, one manual revoke/Deny and one ordinary formal Web stop/start/Deny.",
+          "No numeric Web generation or client-carried stale-generation parameter is persisted by these dump envelopes. This is behavioral evidence of new native confirmation after the operator-observed new run.",
+          "The explicit operator permission to run the bounded native helper is supplied by root/runtime. This read-only audit checks its source and saved evidence; it neither invokes the helper nor grants any wider approval policy.",
+          "The helper source checks pending state before the native tap; it is not an atomic proof of every possible concurrent callback/race or other dialog scenario.",
+          "Reference dialog intent/actual UI action meanings come from the prior root/runtime visual observation. This reviewer compares private pixels by SHA without displaying images or independently reading the entire screenshot.",
+          "No sensitive-app matrix, asynchronous screenshot cancellation, virtual-screen hardware capability, Low Android6/7, full browser-engine matrix or all callbacks is declared verified.",
+          "LAN old-credential rejection at07:32 belongs to the earlier formal stop/start sequence, not this 07:42 screen-test restart. Prior reports and timing-limited original files are preserved."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-low-plugin-maintenance-review.json",
+          "sha256": "d4d5734a972703298cd75d63e3e7ef2f33ddee45da9b7aa21c5121b0413e3927",
+          "bytes": 17496
+        },
+        "artifactScope": {
+          "deviceOperator": "runtime exclusive device lease",
+          "flavor": "low",
+          "packageName": "com.dsh.client",
+          "versionCode": 156,
+          "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+          "debuggable": false,
+          "androidRelease": 13,
+          "engine": "Native plugin maintenance screens; prior explicitly selected Gecko run is separately reported.",
+          "overlayAt": "2026-10-04T06:14:39.173661+08:00",
+          "maintenanceEvidenceStartAt": "2026-10-04T07:43:59.873318+08:00",
+          "maintenanceEvidenceEndAt": "2026-10-04T07:59:29.639127+08:00",
+          "subjectPlugin": "dsh-acceptance-156",
+          "subjectVersion": "0.0.156",
+          "expectedFrozenTgzSha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+          "expectedFrozenTgzBytes": 9687
+        },
+        "summary": {
+          "downloadSourceUiOptionsVisible": 3,
+          "mirrorSelectionUiObserved": true,
+          "autoSelectionRestoredUiObserved": true,
+          "initialOwnedPluginConfirmedLoadedVisible": true,
+          "initialOfficialTemplateConfirmedLoadedVisible": true,
+          "exactOwnedDeleteConfirmationVisible": true,
+          "loadingEntryRemovalAndOriginalRetentionReportedByUi": true,
+          "localSafPackageSelectionVisible": true,
+          "localParseToAutomaticInstallEnableUiObserved": true,
+          "manualInstallReviewApprovalActionsBetweenPickAndSuccess": 0,
+          "postImportNativeReadyVisible": true,
+          "nativeReadyElapsedSecondsDisplayed": 9.0,
+          "currentDeviceJournalIndependentlyRead": false,
+          "currentRetainedOriginalTreeIndependentlyHashed": false,
+          "npmMirrorNetworkFallbackTestedByThisEvidence": false
+        },
+        "limits": [
+          "Visible success and source control flow support automatic install/enable, but current device commit journal, installed candidate digest and retained-original bytes are not independently checked in this UI-only review.",
+          "Mirror choice is a UI check; no actual npm mirror failure/fallback or unlocked dependencies/hooks installation is exercised by this healthy dependency-free local package.",
+          "The initial confirmed-loaded snapshot cannot be promoted to a fresh post-reimport plugin digest/handshake proof. Native READY is recorded separately.",
+          "The previous 25-event Low media/file record remains in its earlier collection and is not relabeled as post-reimport or new Standard evidence.",
+          "Raw screenshots remain private; 0785 contains a dynamic authentication URL and must not be published without redaction. No credentials, authentication URL value or device serial appears in this public report."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-low-plugin-maintenance-post-import-addendum.json",
+          "sha256": "df18413c81fc72d906a3c467aa60863d64e8fbb2406f4fdeb7c6181f7e69e9d2",
+          "bytes": 3960
+        },
+        "artifactScope": {
+          "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "flavor": "low",
+          "androidRelease": 13,
+          "engine": "previously selected/saved Gecko, now opened again after healthy local import",
+          "plugin": "dsh-acceptance-156 0.0.156",
+          "expectedFrozenTgzSha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+          "deviceOperator": "runtime lease",
+          "reviewerDeviceCommands": 0
+        },
+        "summary": {
+          "postImportFrontendAndOwnEntryVisible": true,
+          "freshSameOriginOwnedRouteReady": true,
+          "modelCredentialRequiredForFixture": false,
+          "summary": "After the earlier local import success and native READY, screenshot0787 shows the real frontend with the own 156 acceptance button and an empty optional model-key prompt. Subsequent recorded clicks dismiss configuration and open the own entry. Screenshot0788 shows a newly loaded A page at 127.0.0.1:3080 with the enabled test button and no result. This adds actual post-reimport frontend/owned-route visibility beyond the prior native READY snapshot.",
+          "frontendAt": "2026-10-04T08:04:50.605883+08:00",
+          "freshPageAt": "2026-10-04T08:05:45.020904+08:00"
+        },
+        "limits": [
+          "These are two actual visible UI captures and action metadata, not newly collected plugin JSONL or independently parsed current transaction journal.",
+          "They do not prove exact candidate/content/retained-tree digest or PID/startup birth identity.",
+          "The earlier 25-event Low media/files record is not relabeled as post-reimport or Standard, and its files-nav/policy-attribution gaps remain.",
+          "No APK or source change, variant0.0.157 installation, or new device operation by reviewer is part of this addendum."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-low-lan-background-review.json",
+          "sha256": "4810af4cb3ace9d26edb6452f5869638bfb381aa002b2987b17826d54873d452",
+          "bytes": 12361
+        },
+        "artifactScope": {
+          "flavor": "low",
+          "packageName": "com.dsh.client",
+          "versionCode": 156,
+          "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+          "minSdk": 23,
+          "targetSdk": 37,
+          "debuggable": false,
+          "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+          "androidReleaseReportedByOperator": 13,
+          "lastUpdateTime": "2026-10-04T06:14:37+08:00",
+          "deviceOperator": "runtime holding parent-authorized exclusive device lease",
+          "bindingBasis": "Root/build preflight identifies the exact signed APK; successful overlay receipt and post-install package metadata establish this Low package/version. The digest is not obtained by pulling installed APK bytes in this review.",
+          "transport": "Actual phone USB RNDIS IPv4 TCP to native LAN endpoint; no adb forward for these LAN requests.",
+          "powerAndDuration": "USB powered, short Home-background and screen-off intervals.",
+          "browserEngineEstablishedByTheseReceipts": false
+        },
+        "summary": {
+          "status": "pass_observed_bounded_low_scenario",
+          "unauthenticatedStatus": 401,
+          "authenticateStatus": 303,
+          "cookieHttpOnly": true,
+          "cookieSameSiteStrict": true,
+          "cookieMaxAgeSeconds": 43200,
+          "redirectToRoot": true,
+          "initFresh200Responses": 3,
+          "backgroundFresh200Responses": 3,
+          "screenOffFresh200Responses": 3,
+          "allNineAuthenticatedBodiesSameDigestAndSize": true,
+          "authenticatedBodyBytes": 158137,
+          "authenticatedBodySha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+          "firstScreenOffRequestAfterAsleepSampleSeconds": 70.664,
+          "overallDozeOemDeviceMatrix": "not_established"
+        },
+        "limits": [
+          "These are actual LAN TCP observations supplied by the runtime device operator for this Low37aa installation, not loopback forwarding or simulated socket results. The reviewer checks preserved receipts and collector source; it does not send packets to the phone.",
+          "Home/background and native-copy UI meanings come from the operator. Private screenshots are not reproduced or independently visually inspected by this reviewer.",
+          "The Asleep file is one power-manager state sample. It plus later successful requests does not prove continuous sleep, deep Doze, battery-powered behavior, overnight endurance or arbitrary OEM restrictions.",
+          "HTTP root bytes and cookie rejection/login/success show availability and authentication for these requests. Other methods, WebSocket/pump behavior, all network conditions and every endpoint are outside this run.",
+          "No browser-engine proof or full Low/Gecko/Android6/7/16KiB matrix is added from a Low filename or manifest. This phone is reported Android13.",
+          "The separate exit/crash review describes finite captured logs; LAN availability does not mean a universal no-crash guarantee."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-low-lan-old-credential-review.json",
+          "sha256": "2d691fe833b51c52a394d45b171074830e863960092161d2df49fdac1b8621ab",
+          "bytes": 10300
+        },
+        "artifactScope": {
+          "flavor": "low",
+          "packageName": "com.dsh.client",
+          "versionCode": 156,
+          "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+          "minSdk": 23,
+          "targetSdk": 37,
+          "debuggable": false,
+          "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+          "androidReleaseReportedByOperator": 13,
+          "lastUpdateTime": "2026-10-04T06:14:37+08:00",
+          "deviceOperator": "runtime holding parent-authorized exclusive device lease",
+          "bindingBasis": "Root/build preflight identifies the exact signed APK; successful overlay receipt and post-install package metadata establish this Low package/version. The digest is not obtained by pulling installed APK bytes in this review.",
+          "transport": "Actual RNDIS TCP to the phone LAN endpoint; separate fresh HTTPConnection requests, no adb forwarding, as reported by runtime operator.",
+          "formalRunSequence": "First Low formal Web started around 06:17; ordinary native UI Stop around 06:56; independent recovery interlude then stopped around 07:28; formal native Start around 07:29–07:30; old-cookie/old-token tests at 07:32.",
+          "sequenceTimeAttribution": "Operator-supplied normal UI meanings, bounded by preserved screenshot/action timestamps. No numeric Web generation is persisted."
+        },
+        "summary": {
+          "status": "pass_observed_bounded_old_credential_rejection",
+          "priorSamePrivateTokenAccepted": true,
+          "priorSamePrivateCookieAccepted": true,
+          "oldCookieAfterFormalRestartStatus": 401,
+          "oldTokenAfterFormalRestartStatus": 401,
+          "oldCookieResponseBytes": 30,
+          "oldTokenResponseBytes": 30,
+          "freshRequests": 2,
+          "credentialValuesRemainPrivate": true,
+          "sameRestartAsLater0742ScreenTest": false,
+          "newCredentialLoginAfterThisRestartTestedHere": false,
+          "allNetworkMatrixEstablished": false
+        },
+        "limits": [
+          "Both recorded old credentials returned401 on separate fresh RNDIS connections after the earlier ordinary formal-Web stop/start. This does not establish a login or current-cookie positive test after that restart.",
+          "The07:32 old-credential test is independent of the 07:42 stop/start used by the later screen-grant test. The report preserves the two distinct run sequences.",
+          "Snapshot phase/status/size/time, artifact hashes and chronology are independently checked. Request construction/old-private-input continuity are the authorized device operator's execution evidence; raw cookie/token/URL or original inline command bytes are not published.",
+          "This proves the two observed old credentials were rejected in this case, not every cookie/token lifetime, time boundary, concurrent request or network/device configuration.",
+          "The earlier Low background/screen-off report and screen report remain unchanged. No extra software or device matrix PASS is inferred from these two negative requests."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-low-lan-old-credential-provenance-review.json",
+          "sha256": "bc74db46c7ceacdf20e952538322e8de2b11a81d9a71dcfcf5ceb33617c675c5",
+          "bytes": 3681
+        },
+        "artifactScope": {
+          "flavor": "low",
+          "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "scenario": "Old native LAN token and cookie rejection after earlier ordinary formal-Web stop/start, separate from the 07:42 screen chain."
+        },
+        "summary": {},
+        "limits": [
+          "This adds a fingerprinted after-run explanatory source snapshot with explicit operator provenance. It does not retroactively prove that this saved.py path or its newline-wrapped bytes were present at the original invocation.",
+          "Observed401 statuses remain supported by the original unchanged receipt; construction and historical execution binding remain the device operator evidence plus this matching code/provenance.",
+          "No network request, phone command or approval operation was run to create this addendum. No wider credential/device matrix is added."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-low-exit-review.json",
+          "sha256": "fef1ab967a312e6debd60e86d5660222ed7510ee06f9c512dccaa35ddbfde84d",
+          "bytes": 14035
+        },
+        "artifactScope": {
+          "flavor": "low",
+          "packageName": "com.dsh.client",
+          "versionCode": 156,
+          "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+          "minSdk": 23,
+          "targetSdk": 37,
+          "debuggable": false,
+          "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+          "androidReleaseReportedByOperator": 13,
+          "lastUpdateTime": "2026-10-04T06:14:37+08:00",
+          "deviceOperator": "runtime holding parent-authorized exclusive device lease",
+          "bindingBasis": "Root/build preflight identifies the exact signed APK; successful overlay receipt and post-install package metadata establish this Low package/version. The digest is not obtained by pulling installed APK bytes in this review."
+        },
+        "summary": {
+          "status": "no_new_failure_marker_in_these_finite_snapshots",
+          "historicalOwnJavaFatalEvents": 2,
+          "currentLowPeriodJavaFatalEventsObserved": 0,
+          "exitRecords": 16,
+          "ownMainExitRecords": 7,
+          "webviewIsolatedChildExitRecords": 9,
+          "historicalAndCurrentInstallOrOverlayMainExits": 6,
+          "priorPermissionChangeMainExits": 1,
+          "currentLowOverlayTransitionExits": 1,
+          "postOverlayRunningPeriodExitsObserved": 0,
+          "crashNativeCrashOrAnrExitReasonRecordsObserved": 0,
+          "universalNoCrashGuarantee": false
+        },
+        "limits": [],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      },
+      {
+        "receipt": {
+          "path": "docs/audits/build156/device-owned-plugin-journal-read-review.json",
+          "sha256": "d2cf7b5cc9bff332b8d553a05774c129224e246c9fc52a589bafa5cd24e5f12c",
+          "bytes": 4878
+        },
+        "artifactScope": {},
+        "summary": {},
+        "limits": [
+          "This independently confirms the exact named format2 plan and committed terminal marker. It does not independently re-run the transaction or verify current filesystem switch/payload tree.",
+          "Format2 plan does not contain NEW version. The0.0.156 current-owned package/index checks are separately captured by the strict collector; they do not retrofit a new-version field into the historical plan.",
+          "Shared activation/manifest/sources bodies, old/new payloads, other operations/profile/credentials were not copied or reviewed. Retained UI full scope remains unknown.",
+          "The operation was already visible on Low before the Standard overlay. Reading it later on Standard is not a new Standard commit.",
+          "The exact deletion-operation UUID was not independently collected; deletion has bounded UI evidence separately."
+        ],
+        "scope": "Frozen public bounded review only; not a final19-case device receipt or new device action by this preparation."
+      }
+    ],
+    "standardFixtureRequestedCasesSupported": 7,
+    "standardFixtureRequestedCasesTotal": 7,
+    "lowOriginalFixtureCasesSupported": 5,
+    "lowOriginalFixtureRequestedCasesTotal": 7,
+    "lowOriginalFixtureGaps": [
+      "Old picker result returning to an already loaded B not established in the original1500ms-timer Low run.",
+      "Native different-port microphone-denial attribution not established because Gecko policy probe is unavailable."
+    ],
+    "notADeviceMatrixPass": true,
+    "oldStandard5aebAndEa08EvidenceRetainsOriginalBinding": true,
+    "lowFilesNavZeroDelayAddendum": {
+      "path": "docs/audits/build156/device-low-gecko-files-nav0-addendum.json",
+      "sha256": "9d0ab8a4ae70d79b9951e21653f47c50cdee074c8ede8fd4b31bb42093176655",
+      "bytes": 11163
+    },
+    "limitsAfterFinalSupplements": [
+      "Original Low1500ms partial report unchanged; one v157 zero-delay selected-result case independently supports stale file suppression and fresh B bytes.",
+      "Gecko native-versus-browser wrong-origin denial attribution remains unknown.",
+      "Current two-flavor DSHA Provider create/write and full guest-byte readback do not claim complete Provider r-mode/rename/delete.",
+      "Healthy HTTPS download/source UI and single-page history do not imply live npm mirror fallback or device>50pagination."
+    ]
+  },
+  "currentContinue": {
+    "path": "docs/audits/build156/CONTINUE.md",
+    "sha256": "2c69c6c41fae5f0946d1e1fb51e9086cce2653753f1dd7f482900d71e1459b23",
+    "bytes": 4834
+  },
+  "completedFormalLocalDelivery": {
+    "receipt": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/delivery-c936ac13-f3bc-4087-8270-fc5d0e0596e2.json",
+      "sha256": "a15287bcc213fe05aef204c32b0a83ca34f266f77064213cb192ad135adf2f34",
+      "bytes": 125795
+    },
+    "status": "PASS_FOR_EXECUTED_SCOPE",
+    "deliveredAt": "2026-10-04T04:35:22.092064+00:00",
+    "sourceSoftwareReceipt": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+      "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+      "bytes": 125149
+    },
+    "sourceSnapshot": {
+      "path": "F:\\DSHA_RESTART\\app\\build\\stability-acceptance\\5e2d5521-beb5-4775-b87e-85a074b4aade\\source-sha256.json",
+      "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+    },
+    "actualReleaseFiles": [
+      {
+        "flavor": "standard",
+        "release": {
+          "path": "release/dsha-0.2.0-rc2.apk",
+          "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+          "bytes": 397302610
+        },
+        "sidecar": {
+          "path": "release/dsha-0.2.0-rc2.apk.sha256",
+          "sha256": "7cf2c6746261be072bb13cf8e79e33a783fa998fe45efc6100c13f51b30f9363",
+          "bytes": 85
+        },
+        "website": {
+          "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2.apk",
+          "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+          "bytes": 397302610
+        },
+        "websiteSidecar": {
+          "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2.apk.sha256",
+          "sha256": "7cf2c6746261be072bb13cf8e79e33a783fa998fe45efc6100c13f51b30f9363",
+          "bytes": 85
+        },
+        "allBytesMatched": true
+      },
+      {
+        "flavor": "low",
+        "release": {
+          "path": "release/dsha-0.2.0-rc2low.apk",
+          "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "bytes": 473097048
+        },
+        "sidecar": {
+          "path": "release/dsha-0.2.0-rc2low.apk.sha256",
+          "sha256": "9d0e8784764bed11f621616c00017ad7ceaa2dcb942f61257f96a6b553bebf1c",
+          "bytes": 88
+        },
+        "website": {
+          "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2low.apk",
+          "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "bytes": 473097048
+        },
+        "websiteSidecar": {
+          "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2low.apk.sha256",
+          "sha256": "9d0e8784764bed11f621616c00017ad7ceaa2dcb942f61257f96a6b553bebf1c",
+          "bytes": 88
+        },
+        "allBytesMatched": true
+      }
+    ],
+    "previous155ReleasePreserved": {
+      "path": "app/build/audit-build156/history/before-formal-delivery/receipt.json",
+      "sha256": "b5c7dd124786c60761eceddf0c30a0bbd774b10547cc308af24e66cadf0817d2",
+      "bytes": 1233
+    },
+    "scope": "Actual existing verify-stability --deliver-from executed by Root after item-wise review and original validators; two normal release APKs/sidecars replaced. Finite non-destructive device scope only; no hosted publication or deployment."
+  },
+  "completedDeviceAcceptance": {
+    "status": "ROOT_REVIEWED_PASS_FOR_EXECUTED_SCOPE",
+    "rootReview": {
+      "path": "docs/audits/build156/device-root-acceptance-review.json",
+      "sha256": "cfb12ffdb84db0b334d1c514f820745b85af5868d8c1c5a85361d1ad30980ea1",
+      "bytes": 2723
+    },
+    "publicScopeSummary": {
+      "path": "docs/audits/build156/device-latest-two-flavor-scope-summary.json",
+      "sha256": "489b1b43bb0b3284631b8f6c9499af95a51242b4e91541caf7cf5291b229b393",
+      "bytes": 28266
+    },
+    "declaredAndAcceptedTagsPerFlavor": {
+      "standard": 19,
+      "low": 19
+    },
+    "originalContractValidatorsExecuted": true,
+    "privateReviewedProofSha256": "8bd9d5d4a0a067b283ac9a8d5abe8dd86ad43f41c7456b3acc70d672738ddb78",
+    "rawPrivateEvidencePublished": false,
+    "acceptedScope": "Existing19behavior labels perflavor reviewed against real finite observations and explicit limits; this is not a universal matrix or38new independent test executions.",
+    "restoration": {
+      "runtime": "proot",
+      "language": "system",
+      "webCore": "SystemWebView",
+      "lan": false,
+      "powerSaving": false,
+      "microphone": "ask/not granted",
+      "dshaAccessibility": false,
+      "otherAccessibilityComponentsPreserved": true,
+      "rootAdbAllFiles": "OFF, untouched",
+      "rotation": [
+        0,
+        0
+      ]
+    },
+    "cleanup": {
+      "ownedPluginsNormallyRemoved": 2,
+      "verifiedTempScriptsRemoved": 10,
+      "ownedDownloadAndResultCopiesRemovedAfterHostHashVerification": true,
+      "fakeProjectAndOutputRemovedAfterHostWholeByteVerification": true,
+      "userWorkspaceAndAppRetainedHistoryPreserved": true,
+      "ownedSourcePersistedGrantRevocationIndependentlyVerified": false
+    },
+    "finalInstalledFlavor": "standard",
+    "finalWeb": "native READY and actual clean SystemWebView default-workspace page",
+    "ownedV5Fd": {
+      "scope": "Single current Standard normal native selected-project no-password v5 export.",
+      "evidence": "fd-native/DSHA-data-v5-9713a5e1-331b-4095-81c7-700b965b685f.tar.gz; native-birth-private.json; independent data review",
+      "files": 1000,
+      "bytes": 512000,
+      "fdBefore": [
+        160,
+        158
+      ],
+      "fdAfter": [
+        160,
+        160
+      ],
+      "sameBootAndKernelBirth": true,
+      "exact30Or60SecondSampling": false,
+      "actualPostDelayFromCompletionScreenshotSeconds": [
+        103.904,
+        204.622
+      ]
+    },
+    "finalSupplements": [
+      {
+        "path": "docs/audits/build156/device-final-standard-owned-v5-fd-data-review.json",
+        "sha256": "c276f9446cc98fb631bbd4357944d991f1250971a6fc05ff5c1162346efdbe53",
+        "bytes": 13530
+      },
+      {
+        "path": "docs/audits/build156/device-standard-source-switch-data-supplement.json",
+        "sha256": "e3955e0e65302e5eec0dc094a7070ffb7e3c7bfdee601b53fcee0daed7e988b5",
+        "bytes": 7989
+      },
+      {
+        "path": "docs/audits/build156/device-standard-after-source-supplement-review.json",
+        "sha256": "f50a9047a9fccf051640737f3a54b127cda4529c8239d0224ddd9e1997a9d180",
+        "bytes": 6457
+      },
+      {
+        "path": "docs/audits/build156/device-standard-plugin-download-sources-review.json",
+        "sha256": "69b9e53d1df64ea5d8d2e8631414049f537d319925da9e61ce606c6901d9cad2",
+        "bytes": 8418
+      }
+    ],
+    "retainedLimits": [
+      "Retained-history single pages: Low30 and Standard40; no nextpage above50.",
+      "Own DSHA provider actual create/write and full guest-byte readback; current r-mode/rename/delete not fully re-exercised.",
+      "Source selector and healthy pinned HTTPS installation; no live NPM mirror/failure fallback matrix.",
+      "Final known file supplement: eight unchanged; plugin-activation runtime record SHA changed, body semantics not inferred.",
+      "Three isolated WebView system exits retained; no universal no-exit/no-crash claim.",
+      "Four owned diagnostic reports retained and deletion of the precise owned source SAF persistent grant was not independently confirmed.",
+      "Original149 had no old conversation sample; no Android6/7/physical16KiB/OEM/Root/Shizuku/full FUSE/model matrix.",
+      "One M2012K10C / Android 13 API 33 / 4096-byte-page device, USB powered.",
+      "No Android 6/7, minimum API 30, physical 16 KiB, other OEM or external-model matrix claim.",
+      "No original historical conversation sample existed in the captured before149 tree.",
+      "No production faults, force-stop, bare-PID kill, uninstall, clear-data or extra test APK.",
+      "Raw screenshots, identifiers, credentials and reports remain private."
+    ]
+  },
+  "deviceEvidenceHistoryInterpretation": "Old ea08/5aeb and earlier partial reviews retain their original APK and event scopes. Current c676/37aa public summary and actual Root delivery supplement only the recorded finite behaviors. No old proof is retagged.",
+  "completedDataAndFdObservation": {
+    "receipt": {
+      "path": "docs/audits/build156/device-final-standard-owned-v5-fd-data-review.json",
+      "sha256": "c276f9446cc98fb631bbd4357944d991f1250971a6fc05ff5c1162346efdbe53",
+      "bytes": 13530
+    },
+    "actualNativeExport": {
+      "result": "PASS",
+      "preparationChannel": "Host exclusive mkdir/xb/full512000-byte readback, then authorized ADBshell creation/push of one new own source; app allFiles remainedOFF. ADB preparation was not the backup mechanism.",
+      "backupPath": "Ordinary native UI, one systemDocumentsProvider SAF project source, siblingoutput target; normalexport with no password, no rescue or restore.",
+      "nativeApiKeySelection": "Default excluded; all verified records belong only to the fake projects root.",
+      "outerArchiveBytes": 92697,
+      "outerArchiveSha256": "b772981abd78d84a20450cd0b1635999e8f7262646561ff35690caa2a3943b7a",
+      "gzipCrcAndTarMembersVerified": true,
+      "plainDshadataVersion": 5,
+      "completeArchiveFooterVerified": true,
+      "declaredAndPayloadRootsMatchExactly": true,
+      "logicalRoots": 1,
+      "scope": "projects",
+      "files": 1000,
+      "directories": 1,
+      "allFileBytesExactlyVerified": true,
+      "fileBytesEach": 512,
+      "payloadBytes": 512000,
+      "sourceAggregateSha256": "b51108f6ee6c7da14150fb945f0c9e9a66e173082e6c48bb9ed0d1d95d3443e4",
+      "sourceConsistency": "EXTERNAL_CHECKED",
+      "retainedPhysicalHostCopy": true,
+      "nativeUiItemCount": 1001
+    },
+    "nativeFdObservation": {
+      "result": "POST_FD_COUNTS_WITHIN_RECORDED_BASELINE_RANGE",
+      "baseline1": {
+        "sourceType": "actual complete SAF-exported native DiagnosticRepository report",
+        "fds": 160,
+        "threads": 50,
+        "privateEvidenceSha256": "fe3d177b5e00455181ed76c40ec425a610e30e25e6c7daba67a80e99b08c69e3"
+      },
+      "otherSamples": [
+        {
+          "sample": "baseline2",
+          "sourceType": "actual original native-card screenshot visually read by host assistant",
+          "capturedAt": "2026-10-04T11:06:22.597654+08:00",
+          "fds": 158,
+          "threads": 50,
+          "privateScreenshotSha256": "6c2cf0d72026143d9dfcd49794b83b0318ece91d0d93c3420426387687e8f09f",
+          "hostPidMatchesSameVerifiedProcess": true
+        },
+        {
+          "sample": "postFirst",
+          "sourceType": "actual original native-card screenshot visually read by host assistant",
+          "capturedAt": "2026-10-04T11:16:04.904986+08:00",
+          "fds": 160,
+          "threads": 61,
+          "privateScreenshotSha256": "3e8c85b0da53d6a1d22d28bac580650be3fb966558c3fab02d33fc466493c699",
+          "hostPidMatchesSameVerifiedProcess": true,
+          "secondsAfterRecordedExportCompletionObservation": 103.903814
+        },
+        {
+          "sample": "postSecond",
+          "sourceType": "actual original native-card screenshot visually read by host assistant",
+          "capturedAt": "2026-10-04T11:17:45.623083+08:00",
+          "fds": 160,
+          "threads": 61,
+          "privateScreenshotSha256": "256692b645ae71b3c09d6c72930e7a36c43592714da8699b4c3bd1b6aaefe300",
+          "hostPidMatchesSameVerifiedProcess": true,
+          "secondsAfterRecordedExportCompletionObservation": 204.621911
+        }
+      ],
+      "baselineObservedFdRange": [
+        158,
+        160
+      ],
+      "postObservedFdRange": [
+        160,
+        160
+      ],
+      "threadsObservedBefore": 50,
+      "threadsObservedAfter": 61,
+      "sameRecordedNativePid": true,
+      "sameKernelBirthAndBootIndependentlyVerified": true,
+      "identitySource": "Four actual private before/after/proc stat andboot files parsed; validfield22/startTicks andbootUUID matched each other andthe native report/screenshots. Not inferred from file existence.",
+      "nativeDiagnosticPidOnlyBoundary": "The native card itself exposes PID,not birth. This particular run has independent paired kernel receipts; PID-only samples without them remain limited.",
+      "exportCompletionObservedAt": "2026-10-04T11:14:21.001172+08:00",
+      "timing": "Postlabels do not imply exact30/60second schedules. Actual screenshots were~103.904/~204.622seconds after the recordedcompletion observation.",
+      "claim": "One1000-file export shows no workload-proportional native FD growth andpost counts at recordedbaseline maximum. This is an observation,not a universal zero-leak or descriptor-target audit.",
+      "guestOrBrowserChildFdCountsUsed": false,
+      "rawPidBootStartTicksEmitted": false
+    },
+    "finalDataSnapshot": {
+      "result": "NO_NEW_SUBSTANTIVE_ANOMALY_IN_RECORDED_SCOPE",
+      "captureSha256": "3bfd6aeaa3bc0f9f0b8955a7f0836e641c1c66d0453fa5d86a126e09e6ba5e06",
+      "capturedAtEpoch": 1791085117.979014,
+      "records": 1225,
+      "errors": 0,
+      "sameFourExclusionRulesAsOriginal149": true,
+      "original149Comparison": {
+        "same": 996,
+        "changed": 47,
+        "added": 182,
+        "removedFromSamePath": 1,
+        "onlyOriginalPathRemoval": "known operational stoppedmarker"
+      },
+      "currentC676InitialComparison": {
+        "same": 1117,
+        "changed": 10,
+        "added": 98,
+        "removedFromSamePath": 26,
+        "changedKnownOperationalOrPluginMetadataPaths": [
+          ".dsh/plugin-activations.json",
+          ".dsh/plugin-sources.json",
+          ".dsh/profiles/web/package.json",
+          ".dsh/repair-builtin.log",
+          ".dsha-web-activity.json",
+          ".dsha-web.identity",
+          ".dsha-web.pid",
+          ".dsha-web.pid.stale",
+          "dsh-lan.log",
+          "dsh-web.log"
+        ]
+      },
+      "credentialDocumentFullRecordedMetadataUnchanged": true,
+      "webPackageAndPluginSourcesFullRecordedMetadataExactlyEqual149AfterOwnPluginRemoval": true,
+      "profilePatch": "Same approved343B bytes; bounded2source-derived welcomeNoticeVersion candidates yield1unique149whole-byte SHA match,proving all otherbytes unchanged. Earlierfailed probes remain preserved.",
+      "existingFiveAcceptanceSessionRecordsUnchangedFromInitialC676": true,
+      "workspaceRegistryWholeRecordedBodyUnchangedFromInitialC676": true,
+      "currentWorkspaceCount": 1,
+      "currentNewAcceptanceSessionCount": 1,
+      "original149OldSessionSamples": 0,
+      "eighteenFilesRemovedFromCurrentOwnLoadPathsRetainedUnderCompletedDeleteRecords": true,
+      "removedFileRetentionProof": "Recordedtype/mode/size/payloadSHA matches; directories andlinks without hashes are not claimed to prove targetcontents.",
+      "limits": "Metadata reviewofcapturedscope,notnew fullaudit of182additions or47changedrecords. Does not infer unavailablepersonal bodies."
+    },
+    "cleanup": {
+      "at": "2026-10-04T11:33:01.671075+08:00",
+      "hostArchiveVerifiedBeforeOwnCorpusDeletion": true,
+      "ownCorpusAndOutputOnlyDeletedAfterExactOwnershipMembersNoLinksChecks": true,
+      "hostPhysicalArchiveAndPrivateEvidenceRetained": true,
+      "nativeProjectSelectionEmptyObservedAfterNormalBack": true,
+      "persistedReadGrantStatus": "not independently confirmed revoked; no broad grant reset",
+      "permissionStateAuthority": "Runtime recordednormalrestore; data lane didnot operatepermissions or independentlyrecheck allsettings.",
+      "captureBoundary": "Finalrootmetadata is at its recordedcapturetime. Subsequent auxiliary/appscope own-file cleanup is runtime-owned separately; no claim thatlateruser datawas recaptured."
+    },
+    "laterNineFileSupplement": {
+      "path": "docs/audits/build156/device-standard-source-switch-data-supplement.json",
+      "sha256": "e3955e0e65302e5eec0dc094a7070ffb7e3c7bfdee601b53fcee0daed7e988b5",
+      "bytes": 7989
+    },
+    "laterExitSupplement": {
+      "path": "docs/audits/build156/device-standard-after-source-supplement-review.json",
+      "sha256": "f50a9047a9fccf051640737f3a54b127cda4529c8239d0224ddd9e1997a9d180",
+      "bytes": 6457
+    },
+    "limits": [
+      "Only one currentStandard nondebug officialAPK ononeactualdevice; no Android6/7,otherOEM or FUSE/power-loss matrix claim.",
+      "Backupsourcewas SAF; native staging/read/write paths used AndroidBackupFileSystem AutoClose ownership. Doesnot separately prove FileBackupSource host-source traversal or restore/rollback.",
+      "Original149 capturedno oldworkspace/session sample. Newacceptance sessionunchanged doesnot prove fullhistorical chatretention.",
+      "Directorysymlinktargets,four excludedcache/history categories andnativeKeystore/preferences outside/root were not content-covered.",
+      "PersistedSAF readgrant revocation not independently confirmed; no broadgrant reset or fullwipe.",
+      "No model request,faultinjection,user-originaldelete,restoreoverwrite,temporaryAPK,phoneoperation orproductionchange by data lane."
+    ],
+    "laterSourceOperationDidNotRepeatFdOrV5": true
+  },
+  "completedWebsiteDeliveredByteMatch": {
+    "receipt": {
+      "path": "docs/audits/build156/release-website-current-byte-match.json",
+      "sha256": "5ffb8764150bdfe31561df8b2d8efb3ef52f63e6d870bb2d4cb26bd01b292541",
+      "bytes": 3369
+    },
+    "status": "PASS_ACTUAL_RELEASE_AND_TESTED_WEBSITE_BYTE_MATCH",
+    "originalWebsiteReceiptUnchanged": {
+      "path": "docs/audits/build156/website-build-check.json",
+      "sha256": "06df796916ca93793ce4dd93b7003289e1cce799a2500114b2788702281197f7",
+      "bytes": 27197
+    },
+    "metadata": {
+      "path": "app/build/release-manifest.json",
+      "sha256": "5aade95dc81a0d4d1c0411ab4bed6997bd8852680c6f4f4a5eba6a791953b0ca",
+      "bytes": 4970
+    },
+    "websiteTestsRerun": false,
+    "originalCandidateOnlyFactsUnchanged": true,
+    "scope": "The already-built/tested actual156 candidate site and unchanged generated metadata now match the actual delivered release bytes. Historical candidateOnly/realReleaseUntouched fields describe the earlier website run and were not rewritten. This is an exact-byte comparison, not a new website test or online publication.",
+    "onlineDeploymentPerformed": false
+  },
+  "detachedFinalArtifacts": [
+    {
+      "path": "docs/releases/v0.2.7-build156-20261003.md",
+      "scope": "Written or finalized after sourceZIP; actual resulting SHA bound only by detached delivery/report chain, not presumed in this included input file."
+    },
+    {
+      "path": "docs/audits/build156/execution-ledger-final.json",
+      "scope": "Written or finalized after sourceZIP; actual resulting SHA bound only by detached delivery/report chain, not presumed in this included input file."
+    },
+    {
+      "path": "docs/releases/build156-remaining-work-20261003.md",
+      "scope": "Written or finalized after sourceZIP; actual resulting SHA bound only by detached delivery/report chain, not presumed in this included input file."
+    }
+  ],
+  "formalLocalDeliveryIsOnlinePublication": false,
+  "includedDocsFrozenBeforeSourceZip": true
+}

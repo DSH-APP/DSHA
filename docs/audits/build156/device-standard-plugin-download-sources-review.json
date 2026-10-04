@@ -1,0 +1,192 @@
+{
+  "schema": "standard-plugin-download-sources-device-review-v1",
+  "reviewedAt": "2026-10-04T12:31:06+08:00",
+  "conclusion": "No substantive contradiction in this actual current Standard flow. Source selector and healthy pinned GitHub install/load/normal removal independently supported.",
+  "scope": {
+    "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+    "package": "com.dsh.client",
+    "versionCode": 156,
+    "flavor": "standard",
+    "androidRelease": 13,
+    "engine": "operator actual SystemWebView",
+    "reviewerDeviceCommands": 0,
+    "softwareChanges": 0,
+    "oldReportsRewritten": 0
+  },
+  "observed": {
+    "sourceSelector": "official→npmmirror→auto visibly selected; auto remains afterward",
+    "approvedLinkEnteredExactly": true,
+    "coordinateMiss1033Excluded": true,
+    "effectiveParseActionIndex": 1755,
+    "actualValidationExtraction1034": true,
+    "automaticInstalledEnabled1035": true,
+    "extraReviewOrCommitApprovalBetweenParseAndSuccess": false,
+    "nativeReady1036": true,
+    "pendingLoad1037ThenActualClient1039": true,
+    "confirmedLoaded1_0_0_1040": true,
+    "onlyNamedTemplateRemoval1041_1042": true,
+    "visiblePluginCountAfterRemoval": 7,
+    "normalRestartReady1044AndCleanClient1045": true
+  },
+  "frozenProposal": {
+    "path": "app/build/audit-build156/https-candidate-review/proposal.json",
+    "sha256": "b20a299a8a1405000a4948d5f60b54234d9e1abc75c08a4ff3e001f367f5f908",
+    "package": "@local/my-decoration",
+    "version": "1.0.0",
+    "commit": "5badb15009ae1756c3afe0ae0cef1faafc290ccc",
+    "exactPublicInput": "https://github.com/deepseek-ai/deepseek-harness/tree/5badb15009ae1756c3afe0ae0cef1faafc290ccc/packages/preset/agent-preset/skills/cordis-plugin-development/templates/decoration",
+    "reviewedMemberCount": 6,
+    "dependenciesAndScriptsEmpty": true,
+    "hostReviewedArchiveSha256": "0478b54f647d2d12d5dc76c0efbb0397522937fe84a230e706d29ffd3b0e266f",
+    "hostDigestIsNotDeviceArchiveDigest": true
+  },
+  "sourceEvidence": {
+    "operatorActionsPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "b90cfb08c2b58ec67183fd67beaa982680f7eb5b2c3ae69be7da8bb227d2f119",
+      "bytes": 255165,
+      "records": 1798,
+      "lastIndex": 1797,
+      "lastTime": "2026-10-04T12:12:34.900905+08:00",
+      "recipe": "SHA256 of first 255165 bytes; later append excluded, raw args/input text not published."
+    },
+    "screenshots": [
+      {
+        "id": "1027",
+        "privateFile": "lease-standard-source-only-options-1027.png",
+        "sha256": "96c1984757776c331b51398835ef2430fbffeca422c29d4af23835f238a75f2b",
+        "time": "2026-10-04T11:57:48.717776+08:00",
+        "actionIndex": 1739,
+        "inspection": "full"
+      },
+      {
+        "id": "1028",
+        "privateFile": "lease-standard-source-official-selected-1028.png",
+        "sha256": "0008c20547caeee9857b8c606b9589318f2968d1a46be6cb0aa3d86676a2521a",
+        "time": "2026-10-04T11:58:38.026239+08:00",
+        "actionIndex": 1741,
+        "inspection": "full"
+      },
+      {
+        "id": "1029",
+        "privateFile": "lease-standard-source-mirror-selected-1029.png",
+        "sha256": "6c6fa320ee7f1c0bb16136308b665337ad6de106db8ba1207783360be2f7a2f4",
+        "time": "2026-10-04T11:58:39.867244+08:00",
+        "actionIndex": 1744,
+        "inspection": "full"
+      },
+      {
+        "id": "1030",
+        "privateFile": "lease-standard-source-auto-restored-1030.png",
+        "sha256": "8c992abf9ff389ae6df9aefef2bb3ee355ec57723bc4cd394fb3e7c46175c2ea",
+        "time": "2026-10-04T11:58:41.818754+08:00",
+        "actionIndex": 1747,
+        "inspection": "full"
+      },
+      {
+        "id": "1032",
+        "privateFile": "lease-standard-https-exact-pinned-input-1032.png",
+        "sha256": "663135812ec10c6692d8101df3c39d376f9c81a2c9aa3c61b45b4c9de61891a7",
+        "time": "2026-10-04T12:00:23.536407+08:00",
+        "actionIndex": 1752,
+        "inspection": "full"
+      },
+      {
+        "id": "1034",
+        "privateFile": "lease-standard-https-actual-download-started-1034.png",
+        "sha256": "2a7c1df1bfda0013c27ee3efa750dae1bc1c4fb970f6359c3a440ba3e5aa8c14",
+        "time": "2026-10-04T12:01:21.834959+08:00",
+        "actionIndex": 1756,
+        "inspection": "full"
+      },
+      {
+        "id": "1035",
+        "privateFile": "lease-standard-https-installed-auto-1035.png",
+        "sha256": "fe7220740f84a534c1c6d4c01486fb6aa3d803b5eaef9d0353915f2fe2de3a39",
+        "time": "2026-10-04T12:02:55.220926+08:00",
+        "actionIndex": 1757,
+        "inspection": "full"
+      },
+      {
+        "id": "1036",
+        "privateFile": "lease-standard-https-restarted-native-1036.png",
+        "sha256": "11523a59172c0e9a2218539fc5a3ed1cc0613966d9c8fecb863034004850117d",
+        "time": "2026-10-04T12:02:56.378766+08:00",
+        "actionIndex": 1759,
+        "inspection": "top1400px, sensitive bottom excluded"
+      },
+      {
+        "id": "1037",
+        "privateFile": "lease-standard-https-current-loaded-visible-1037.png",
+        "sha256": "0de2569888702b82fe5a3409e0b653f3213d731d388ce41f484232c973160162",
+        "time": "2026-10-04T12:04:25.460574+08:00",
+        "actionIndex": 1762,
+        "inspection": "full"
+      },
+      {
+        "id": "1039",
+        "privateFile": "lease-standard-https-client-ready-visible-1039.png",
+        "sha256": "675ababd3138e55f47b4d5355071cbaf21b30993ee1a41e02f06028ebdc9b5c3",
+        "time": "2026-10-04T12:06:09.461579+08:00",
+        "actionIndex": 1767,
+        "inspection": "full"
+      },
+      {
+        "id": "1040",
+        "privateFile": "lease-standard-https-confirmed-loaded-current-1040.png",
+        "sha256": "5a8917174952804494e4a5cdceb475fbe192bbdf9183d6bb5f637366b6e8c77f",
+        "time": "2026-10-04T12:06:15.235104+08:00",
+        "actionIndex": 1771,
+        "inspection": "full"
+      },
+      {
+        "id": "1041",
+        "privateFile": "lease-standard-https-normal-remove-prompt-1041.png",
+        "sha256": "5ccbebf1ed5b2fab86ecae48cd79aa02784b486a4778a47ce0425eb62b55ea69",
+        "time": "2026-10-04T12:08:03.032799+08:00",
+        "actionIndex": 1773,
+        "inspection": "full"
+      },
+      {
+        "id": "1042",
+        "privateFile": "lease-standard-https-normally-removed-current-1042.png",
+        "sha256": "dabc081ab46165a268832e63d1b4193b4e3ab84dee5d6d96234b7337724db9e9",
+        "time": "2026-10-04T12:09:07.534875+08:00",
+        "actionIndex": 1775,
+        "inspection": "full"
+      },
+      {
+        "id": "1044",
+        "privateFile": "lease-standard-https-normal-restart-after-remove-1044.png",
+        "sha256": "c227a37c07a2ebeb9e8b2d7cf5619a142c391d13068fcf47fae60bd3865aab2f",
+        "time": "2026-10-04T12:10:24.733262+08:00",
+        "actionIndex": 1781,
+        "inspection": "top1400px, sensitive bottom excluded"
+      },
+      {
+        "id": "1045",
+        "privateFile": "lease-standard-source-only-clean-client-after-remove-1045.png",
+        "sha256": "821aa26dab3b02c751af41abce51c4c76a8f37858685cdcb65d5c0aff0c83564",
+        "time": "2026-10-04T12:11:30.931104+08:00",
+        "actionIndex": 1784,
+        "inspection": "full"
+      }
+    ]
+  },
+  "checks": {
+    "method": "Read-only actual image/action review;15 original hashes matched; exact frozen public URL input match; same final APK/no intervening overlay; actual successful parse→client-confirmed load→exact named remove/normal restart ordering.",
+    "exitCode": 0,
+    "independentReview": "complete"
+  },
+  "limits": [
+    "Github HTTPS healthy download/install is covered. Source selection does not cover npm official/mirror transfer or mirror failure/fallback; those live network paths remain uncovered.",
+    "No new device downloaded archive/member byte hashes or current installation/deletion journals were acquired in this UI-only review; host proposal hashes remain source-review evidence.",
+    "Removal and original retention are visible native results; full filesystem/credential equality belongs to the separate data exact9-file review.",
+    "No media/FD/APK/a156 re-test or old-proof rewrite. No model-service or full device-matrix completion is claimed."
+  ],
+  "privacy": {
+    "rawPrivatePixelsOrActionBodiesPublished": false,
+    "authOrCredentialValuesOrDeviceSerialPublished": false,
+    "nativeReadyBottomExcludedDuringInspection": true
+  }
+}

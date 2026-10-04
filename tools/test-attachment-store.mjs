@@ -3,7 +3,9 @@ import { mkdtemp,mkdir,writeFile,readFile,rm,link,symlink,lstat,readdir,chmod,st
 import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
-const nm=process.env.DSHA_TEST_NODE_MODULES||'/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules';
+import {testRuntime,requireNativeHost} from './test-runtime-fixture.mjs';
+const runtime=testRuntime('managed');requireNativeHost(runtime);
+const nm=join(runtime,'node_modules');
 const {LocalAttachmentStore,saveImageFile,readImageFile}=await import(pathToFileURL(join(nm,'@deepseek-ai/dsh-attachment-local/lib/index.js')));
 const sharp=createRequire(join(nm,'../package.json'))('sharp');
 const parent=process.argv[2];assert.ok(parent&&parent.startsWith('/'),'必须提供隔离测试目录');await mkdir(parent,{recursive:true});

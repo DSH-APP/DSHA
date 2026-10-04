@@ -1,5 +1,8 @@
 # DSHA 1.5-alpha.1 真机验收
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 日期：2026-09-09。设备：Redmi M2012K10C，Android 13 / API 33，ARM64，4 KB 页。标准版与 low 共用包名，按顺序覆盖安装；原有数据通过生产维护事务迁移。
 
 ## 实际发现与修复

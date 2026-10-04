@@ -1,0 +1,9 @@
+test_argfile_rejects_control_characters (__main__.UnitRunnerTest.test_argfile_rejects_control_characters) ... ok
+test_every_helper_is_compiled_and_whitespace_paths_reach_java_intact (__main__.UnitRunnerTest.test_every_helper_is_compiled_and_whitespace_paths_reach_java_intact) ... ok
+test_locked_backup_dependency_uses_only_exact_version_and_checks_real_bytes (__main__.UnitRunnerTest.test_locked_backup_dependency_uses_only_exact_version_and_checks_real_bytes) ... ok
+test_real_compile_failure_cleans_main_temporary_directory (__main__.UnitRunnerTest.test_real_compile_failure_cleans_main_temporary_directory) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.226s
+
+OK

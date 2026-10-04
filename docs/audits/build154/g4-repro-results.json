@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "baseline": 153,
+  "scope": "isolated host/source probes; no device or APK file modified",
+  "checks": [
+    {
+      "id": "D-TEST-39",
+      "observed": "32 tests, 1 failure: obsolete source text assertion for system language latch. Existing UiLanguagePreferenceTest already exercises current latching behavior.",
+      "log": "app/build/audit-build154/ui-regressions-before.log",
+      "sha256": {
+        "app/build/audit-build154/ui-regressions-before.log": "c0caf6f2109559850180e91026a7e11120cc7df423222c958e38c7986b3d5494"
+      }
+    },
+    {
+      "id": "D-TEST-41",
+      "observed": "Monkeypatch only ZIP version read to 9. Normal verifier exits 1, same verifier under -O exits 0 and returns environment=9; real signed APK bytes unchanged.",
+      "logs": [
+        "app/build/audit-build154/normal-verifier-before.log",
+        "app/build/audit-build154/optimized-verifier-before.log"
+      ],
+      "sha256": {
+        "app/build/audit-build154/normal-verifier-before.log": "d5887409f4b67b97dd004f633805a896e55a64d168a27df68e95cccc125084b6",
+        "app/build/audit-build154/optimized-verifier-before.log": "fa71807882860f788af16db2b77a705f43e9d8248250fd9ff904a618a055d5fe"
+      }
+    },
+    {
+      "id": "D-ARCH-01",
+      "observed": "347 main Java classes, HarnessController995, HttpShellService1707, ProotBootstrap1609 lines; static import graph has a broad SCC, fully-qualified edges not counted.",
+      "log": "app/build/audit-build154/architecture-before.json",
+      "sha256": {
+        "app/build/audit-build154/architecture-before.json": "9a68fd4dde1b135fff7d8b3b16725674bc30c02ab1a4488077e19e24245eb6c8"
+      }
+    }
+  ]
+}

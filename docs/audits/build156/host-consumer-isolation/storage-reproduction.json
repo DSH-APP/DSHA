@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "DIAGNOSIS_ONLY",
+  "originalHostReceiptUnavailable": "Original host-final private metadata was removed by mandatory final cleanup. These are new observed before/after diagnostics of the actual authorized consumer.",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.EXE",
+    "F:\\DSHA_RESTART\\tools\\test-storage-json-proroot-dirent.mjs",
+    "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129\\node_modules\\@deepseek-ai\\dsh-storage-json\\lib\\index.js"
+  ],
+  "startedUtc": "2026-10-03T15:37:35.149904+00:00",
+  "exitCode": 0,
+  "seconds": 4.781,
+  "narbDisableNativeCache": "1",
+  "logSha256": "faed3cf298cc589397e896ac13b6d8204e5f58f3847a3288d02185302e799b7d",
+  "diffs": {
+    "raw": {
+      "rootChanged": false,
+      "changedMemberCount": 0,
+      "records": []
+    },
+    "managed": {
+      "rootChanged": false,
+      "changedMemberCount": 1,
+      "records": [
+        {
+          "member": "node_modules/@deepseek-ai/dsh-storage-json/lib",
+          "fields": {
+            "mtimeNs": {
+              "before": "1791041267255186200",
+              "after": "1791041855231918000"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "completeByteRechecks": [
+    {
+      "kind": "raw",
+      "status": "PASS_COMPLETE_CURRENT_BYTES",
+      "entries": 32880,
+      "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1",
+      "seconds": 14.344
+    },
+    {
+      "kind": "managed",
+      "status": "PASS_COMPLETE_CURRENT_BYTES",
+      "entries": 32889,
+      "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912",
+      "seconds": 14.14
+    }
+  ]
+}

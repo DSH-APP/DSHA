@@ -1,0 +1,8 @@
+[
+  {
+    "zh": "\n已准备内容 SHA-256：%s",
+    "en": "\nPrepared contents SHA-256: %s",
+    "uiFormat": true,
+    "files": ["app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"]
+  }
+]

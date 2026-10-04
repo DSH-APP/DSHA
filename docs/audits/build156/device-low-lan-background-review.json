@@ -1,0 +1,275 @@
+{
+  "schema": "dsha-device-lan-background-review-v1",
+  "reviewedAt": "2026-10-04T06:59:53+08:00",
+  "reviewMode": "host_only_read_existing_private_evidence",
+  "softwareChanged": false,
+  "deviceCommandsByReviewer": 0,
+  "scope": {
+    "flavor": "low",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+    "minSdk": 23,
+    "targetSdk": 37,
+    "debuggable": false,
+    "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+    "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "androidReleaseReportedByOperator": 13,
+    "lastUpdateTime": "2026-10-04T06:14:37+08:00",
+    "deviceOperator": "runtime holding parent-authorized exclusive device lease",
+    "bindingBasis": "Root/build preflight identifies the exact signed APK; successful overlay receipt and post-install package metadata establish this Low package/version. The digest is not obtained by pulling installed APK bytes in this review.",
+    "transport": "Actual phone USB RNDIS IPv4 TCP to native LAN endpoint; no adb forward for these LAN requests.",
+    "powerAndDuration": "USB powered, short Home-background and screen-off intervals.",
+    "browserEngineEstablishedByTheseReceipts": false
+  },
+  "summary": {
+    "status": "pass_observed_bounded_low_scenario",
+    "unauthenticatedStatus": 401,
+    "authenticateStatus": 303,
+    "cookieHttpOnly": true,
+    "cookieSameSiteStrict": true,
+    "cookieMaxAgeSeconds": 43200,
+    "redirectToRoot": true,
+    "initFresh200Responses": 3,
+    "backgroundFresh200Responses": 3,
+    "screenOffFresh200Responses": 3,
+    "allNineAuthenticatedBodiesSameDigestAndSize": true,
+    "authenticatedBodyBytes": 158137,
+    "authenticatedBodySha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+    "firstScreenOffRequestAfterAsleepSampleSeconds": 70.664,
+    "overallDozeOemDeviceMatrix": "not_established"
+  },
+  "sourceEvidence": {
+    "packageBinding": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/apk-preflight.json",
+        "sha256": "2b2582536a4e74a2ca46118c108d895fa13549baeb5b1f2c31a32c7ab5b56cdc",
+        "bytes": 905
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-install.txt",
+        "sha256": "c4aa470acafcf8576c15b0f0b5ae7e852d1ec5413372d0e6a9272e788e1306d3",
+        "bytes": 38
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-package-after.txt",
+        "sha256": "2036a4198d3f59e2b75f2d5b145ac9c7ba2264a5d0ae5f80437d2bc46c3a97fc",
+        "bytes": 13588
+      },
+      {
+        "path": "docs/audits/build156/final-apk-supply-checks.json",
+        "sha256": "4f7361be8931535c0037e3c50a5df814b49bbc7146f07be2f939c4749210d348",
+        "bytes": 69878
+      }
+    ],
+    "networkCollector": {
+      "path": "app/build/audit-build156/device-private/latest-lan.py",
+      "sha256": "2178753d2121c2e5d365f1eec63f66f4ed0099d8a2fc2dabab69e42cc3cc4077",
+      "bytes": 2487,
+      "requestFunctionCreatesNewHTTPConnectionPerCall": true,
+      "successfulRequestsFullyReadAndClose": true,
+      "operatorRunCommands": [
+        "python app/build/audit-build156/device-private/latest-lan.py low init",
+        "python app/build/audit-build156/device-private/latest-lan.py low background",
+        "python app/build/audit-build156/device-private/latest-lan.py low screenoff"
+      ],
+      "commandsReportedBy": "runtime device operator; reviewer did not run them"
+    },
+    "lanStages": [
+      {
+        "stage": "init",
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-lan-init.json",
+        "sha256": "ebb84eefb26614a4a53513c7e369539336bb63416838dcc3be010fa1fcee446d",
+        "bytes": 1663,
+        "freshConnectionsDeclared": true,
+        "rows": [
+          {
+            "phase": "unauthenticated",
+            "time": "2026-10-04T06:53:27.448305+08:00",
+            "status": 401,
+            "bytes": 30,
+            "sha256": "0693073d6ff347fa0e41bdc48e7ad257e6408724df0d0e4611e02b563470b48b",
+            "seconds": 0.016
+          },
+          {
+            "phase": "authenticate",
+            "time": "2026-10-04T06:53:27.471496+08:00",
+            "status": 303,
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "seconds": 0.031,
+            "cookiePolicy": {
+              "HttpOnly": true,
+              "SameSite=Strict": true,
+              "Max-Age=43200": true
+            },
+            "redirectToRoot": true
+          },
+          {
+            "phase": "init",
+            "request": 0,
+            "time": "2026-10-04T06:53:27.547802+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+            "seconds": 0.063
+          },
+          {
+            "phase": "init",
+            "request": 1,
+            "time": "2026-10-04T06:53:32.626011+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+            "seconds": 0.078
+          },
+          {
+            "phase": "init",
+            "request": 2,
+            "time": "2026-10-04T06:53:37.754820+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+            "seconds": 0.125
+          }
+        ]
+      },
+      {
+        "stage": "background",
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-lan-background.json",
+        "sha256": "899a9cb089e57da2cf71983e0cc5a523ea8e1bbde47e2d673455bcb49723c46c",
+        "bytes": 1023,
+        "freshConnectionsDeclared": true,
+        "rows": [
+          {
+            "phase": "background",
+            "request": 0,
+            "time": "2026-10-04T06:53:44.804964+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+            "seconds": 0.093
+          },
+          {
+            "phase": "background",
+            "request": 1,
+            "time": "2026-10-04T06:53:49.826510+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+            "seconds": 0.016
+          },
+          {
+            "phase": "background",
+            "request": 2,
+            "time": "2026-10-04T06:53:54.865487+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+            "seconds": 0.047
+          }
+        ]
+      },
+      {
+        "stage": "screenoff",
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-lan-screenoff.json",
+        "sha256": "0208903d73c88cb8e4785ece501da948d02081c551c405b7a67047ae3e7e8f80",
+        "bytes": 1020,
+        "freshConnectionsDeclared": true,
+        "rows": [
+          {
+            "phase": "screenoff",
+            "request": 0,
+            "time": "2026-10-04T06:55:14.277049+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+            "seconds": 0.125
+          },
+          {
+            "phase": "screenoff",
+            "request": 1,
+            "time": "2026-10-04T06:55:19.321580+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+            "seconds": 0.047
+          },
+          {
+            "phase": "screenoff",
+            "request": 2,
+            "time": "2026-10-04T06:55:24.366482+08:00",
+            "status": 200,
+            "bytes": 158137,
+            "sha256": "d6135730f736ae16880c95290182e316c855285c3d6acd0399d9bc8fe2a10219",
+            "seconds": 0.047
+          }
+        ]
+      }
+    ],
+    "screenOffState": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-screenoff-state.json",
+      "sha256": "3cf06fa3659b7af09b2bb5f46e9e441f27fc95e694ada20410054f772316ce16",
+      "bytes": 79,
+      "sampleTime": "2026-10-04T06:54:03.613+08:00",
+      "wakefulness": "Asleep",
+      "firstRequestAfterSampleSeconds": 70.664,
+      "lastRequestAfterSampleSeconds": 80.753,
+      "continuousSleepOrDozeEstablished": false
+    },
+    "nativeCopyChainScreenshot": {
+      "path": "app/build/audit-build156/device-private/lease-low-lan-dialog-actual-0713.png",
+      "sha256": "a098766cc3f40a4efa5379638ac6580aa1b51fa3cd59b222ff5725b6f623cab8",
+      "bytes": 299865,
+      "operatorActionIndex0Based": 908,
+      "operatorTime": "2026-10-04T06:52:45.836887+08:00",
+      "privatePixelsOmitted": true,
+      "visuallyReviewedByThisReviewer": false,
+      "observationBasis": "Runtime device operator reports this native dialog/copy chain; reviewer checks screenshot digest/action binding and parses native clipboard URL shape privately."
+    },
+    "operatorActionsStablePrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "records": 909,
+      "bytes": 128465,
+      "sha256": "9d86d5bdefcd85571415dc854615531e4e865f71ddc7acbbdf699b25ed1d525a",
+      "lastIndex0Based": 908,
+      "lastTime": "2026-10-04T06:52:45.836887+08:00",
+      "hashRecipe": "SHA256 of the exact complete JSONL byte prefix through the native LAN copy dialog screenshot. Later appends are outside this digest. Raw command arguments omitted."
+    },
+    "nativeLinkShapeCheckedPrivately": {
+      "httpScheme": true,
+      "privateIpv4Host": true,
+      "explicitPort": true,
+      "singleNonemptyTokenQuery": true,
+      "credentialValuesPathsAndDigestsPublished": false
+    }
+  },
+  "checks": [
+    {
+      "command": "PowerShell $reviewScript | python -: exact preflight/supply/install/package binding; all three LAN JSON stages/statuses/policy flags/body digests and 5-second intervals; Asleep timestamp delay; collector AST new-connection/read/close; native screenshot/action digest; private native URL shape only",
+      "exitCode": 0,
+      "lanHttpRows": 11,
+      "authenticatedFreshSuccesses": 9,
+      "hardwareRequestsRunByReviewer": 0,
+      "productionTestsBuildsOrChanges": 0
+    }
+  ],
+  "interpretationLimits": [
+    "These are actual LAN TCP observations supplied by the runtime device operator for this Low37aa installation, not loopback forwarding or simulated socket results. The reviewer checks preserved receipts and collector source; it does not send packets to the phone.",
+    "Home/background and native-copy UI meanings come from the operator. Private screenshots are not reproduced or independently visually inspected by this reviewer.",
+    "The Asleep file is one power-manager state sample. It plus later successful requests does not prove continuous sleep, deep Doze, battery-powered behavior, overnight endurance or arbitrary OEM restrictions.",
+    "HTTP root bytes and cookie rejection/login/success show availability and authentication for these requests. Other methods, WebSocket/pump behavior, all network conditions and every endpoint are outside this run.",
+    "No browser-engine proof or full Low/Gecko/Android6/7/16KiB matrix is added from a Low filename or manifest. This phone is reported Android13.",
+    "The separate exit/crash review describes finite captured logs; LAN availability does not mean a universal no-crash guarantee."
+  ],
+  "privacy": {
+    "lanUrlHostAndTokenPublished": false,
+    "cookiePublished": false,
+    "credentialFileDigestsPublished": false,
+    "deviceSerialPublished": false,
+    "rawHtmlPublished": false,
+    "screenshotPixelsPublished": false,
+    "operatorCommandArgumentsPublished": false,
+    "privateCredentialFilesCopiedToPublicReport": false
+  }
+}

@@ -1,0 +1,818 @@
+{
+  "schema": 1,
+  "group": "G3",
+  "baselineBuild": 153,
+  "items": [
+    {
+      "id": "D-DUP-01",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-DUP-02",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/WebPidIdentity.java",
+        "app/src/main/java/com/deepseekharness/app/util/ProcessIdentity.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-DUP-03",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-PATCH-01",
+      "status": "transferred",
+      "files": [
+        "app/src/main/assets/agent-preset-patch.json",
+        "app/src/main/assets/models-navigation-patch.json",
+        "app/src/main/assets/web-integration/tooltip-patch.json",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-DUP-04",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-PATCH-02",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "tools/prepare-test-runtime.py"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-PATCH-03",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-DUP-05",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-DUP-06",
+      "status": "implemented",
+      "files": [
+        "app/src/main/assets/credential-paths.json",
+        "app/src/main/assets/backup-engine.py",
+        "app/src/main/java/com/deepseekharness/app/util/BackupScope.java",
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+        "tools/test-backup-engine.py",
+        "app/src/test/java/com/deepseekharness/app/util/BackupScopeTest.java"
+      ],
+      "checks": [
+        "Java/Python both consume G1 credential-paths schema1; legacy and host scope semantics remain separate",
+        "Generated credential JSON/Java --check PASS",
+        "BackupScopeTest PASS; old dead hot-entry table removed",
+        "51 backup-engine tests: 36 PASS, 15 platform-specific skips; exact/prefix token filtering and current machine state preservation; explicit user project .env and same-name trash kept"
+      ],
+      "residual": [
+        "Root must register signed credential identity asset and final source-wide gates"
+      ]
+    },
+    {
+      "id": "D-DUP-07",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/TransactionMarkers.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CompletedHistory.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostPendingTransactions.java",
+        "app/src/main/java/com/deepseekharness/app/backup/RestoreStaging.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostOperationArchive.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "app/src/main/java/com/deepseekharness/app/backup/EnvironmentRebuildTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ManagedRuntimeTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostDataTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ConfigurationSnapshots.java"
+      ],
+      "checks": [
+        "24 host JUnit PASS including actual isolated child-process crash/rollback and 1000-history proof fixture"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-LEGACY-01",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyBackupImporter.java",
+        "docs/audits/build154/G3-backup-callgraph.md"
+      ],
+      "checks": [
+        "Current ordinary UI host callgraph and actual synthetic legacy v0-v4/AEAD/envelope/scope/source preservation evidence documented; no unverified compatibility deletion"
+      ],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-DUP-09",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/PrivateRoots.java",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostOperationArchive.java",
+        "app/src/main/java/com/deepseekharness/app/backup/EnvironmentRebuildTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ManagedRuntimeTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ConfigurationSnapshots.java"
+      ],
+      "checks": [
+        "PrivateRootsTest PASS within latest 46-test host batch; exact root privacy without document namespace changes"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-PRESET-01",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+        "app/src/main/assets/legacy-preset-convert.cjs",
+        "tools/test-legacy-preset-convert.mjs"
+      ],
+      "checks": [
+        "node tools/test-legacy-preset-convert.mjs PASS: valid block/flow, prompts, tagged data no eval, invalid root/duplicate/id rejects"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-DUP-10",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G1; G3 does not claim complete"
+      ],
+      "owner": "G1"
+    },
+    {
+      "id": "D-BAK-01",
+      "status": "accepted_policy",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PasswordFreeBackupExport.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PortableBackupEnvelope.java"
+      ],
+      "checks": [
+        "Full source review disposition retained from review-G3.json; no policy reversal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-DUP-11",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BackupScopes.java",
+        "app/src/main/java/com/deepseekharness/app/backup/BackupArchive.java",
+        "app/src/main/java/com/deepseekharness/app/backup/VerifiedBackupCopy.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java"
+      ],
+      "checks": [
+        "BackupScopesTest PASS; archive and verified-copy scope identity"
+      ],
+      "residual": [
+        "G1 NativeDataLocations now uses BackupScopes.ALL; root final source-wide gate remaining"
+      ]
+    },
+    {
+      "id": "D-DUP-12",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/NpmPackageName.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativePluginGraph.java",
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyBackupImporter.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java"
+      ],
+      "checks": [
+        "NpmPackageNameTest PASS including scoped/legacy case/length/path ambiguity"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-BAK-02",
+      "status": "requires_device_evidence",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+      ],
+      "checks": [
+        "Full source review disposition retained from review-G3.json; no policy reversal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-BAK-03",
+      "status": "accepted_policy",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+      ],
+      "checks": [
+        "Full source review disposition retained from review-G3.json; no policy reversal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-DUP-08",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/SystemPluginProjection.java",
+        "app/src/main/java/com/deepseekharness/app/backup/SystemPluginState.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java"
+      ],
+      "checks": [
+        "26 host JUnit PASS: shared system projection, disabled priority, original declarations, plugin graph"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-PLUG-01",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/GuestPaths.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java"
+      ],
+      "checks": [
+        "15 host JUnit PASS: managed dependencies, relative command links and outside-root refusal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-BAK-04",
+      "status": "accepted_policy",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+        "app/src/main/assets/plugin-transactions.py"
+      ],
+      "checks": [
+        "Full source review disposition retained from review-G3.json; no policy reversal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-BUG-01",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/util/Ids.java"
+      ],
+      "checks": [
+        "IdsTest and historical completed fallback verification PASS"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-DUP-13",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/Ids.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/backup/VerifiedBackupCopy.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostOperationArchive.java",
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ConfigurationSnapshots.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeConfigurationReset.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ManagedRuntimeTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/backup/EnvironmentRebuildTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostPendingTransactions.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java"
+      ],
+      "checks": [
+        "IdsTest PASS; full 8-4-4-4-12 UUID accepted; malformed fallback removed"
+      ],
+      "residual": [
+        "G1/G2 migrate their own UUID callers; root repository negative gate"
+      ]
+    },
+    {
+      "id": "D-BUG-02",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G1; G3 does not claim complete"
+      ],
+      "owner": "G1"
+    },
+    {
+      "id": "D-BUG-03",
+      "status": "implemented",
+      "files": [
+        "app/src/main/assets/backup-engine.py",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+      ],
+      "checks": [
+        "51 backup-engine tests completed: 36 PASS, 15 platform-specific skips; current bridge token rotates only after committed restore",
+        "Archive-supplied bridge header/token/safety state never becomes active; actual current records preserved; explicit fixture PASS"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-DUP-14",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/GuestPaths.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CurrentManagedPackages.java",
+        "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+        "app/src/main/java/com/deepseekharness/app/backup/MaintenanceDataSnapshot.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeConfigurationReset.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java"
+      ],
+      "checks": [
+        "GuestPathsTest and PluginRestoreGraphTest PASS including actual managed dependency/.bin guest paths and out-of-root refusal"
+      ],
+      "residual": [
+        "G1/G2 own remaining runtime/data-root callers; historical guest mapping strings are preserved"
+      ]
+    },
+    {
+      "id": "D-DUP-15",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostMaintenancePending.java"
+      ],
+      "checks": [
+        "HostMaintenancePendingTest PASS in 46-test batch; includes cold-install and unified recoverable weights"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-LEGACY-02",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BackupTaskKinds.java",
+        "app/src/main/java/com/deepseekharness/app/util/UiStateText.java",
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+      ],
+      "checks": [
+        "BackupTaskKindsTest PASS in 26-test batch; old Chinese/English persisted aliases normalized"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-DUP-16",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BuiltinPluginRegistry.java",
+        "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java",
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+        "app/src/main/assets/builtin-plugins.json",
+        "app/src/main/assets/register-builtin-plugins.py",
+        "tools/generate-builtin-plugins.py"
+      ],
+      "checks": [
+        "BuiltinPluginsTest PASS; generator output verify; environment import list now generated SIGNED/entrypoint"
+      ],
+      "residual": [
+        "Root/G2 build/assets/website consumers and descriptor registration; production asset gate still required"
+      ]
+    },
+    {
+      "id": "D-DUP-17",
+      "status": "already_fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+      ],
+      "checks": [
+        "Full source review disposition retained from review-G3.json; no policy reversal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-DUP-18",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "app/src/main/assets/plugin-manager.py"
+      ],
+      "checks": [
+        "menu and card share one typed-action delete confirmation; full Android source compile left to root"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-BUG-04",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G1; G3 does not claim complete"
+      ],
+      "owner": "G1"
+    },
+    {
+      "id": "D-BUG-05",
+      "status": "already_fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java",
+        "app/src/main/java/com/deepseekharness/app/util/BackupFileNames.java"
+      ],
+      "checks": [
+        "Full source review disposition retained from review-G3.json; no policy reversal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-DUP-19",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+        "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+        "app/src/main/java/com/deepseekharness/app/recovery/RecoveryService.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by root; G3 does not claim complete"
+      ],
+      "owner": "root"
+    },
+    {
+      "id": "D-DUP-20",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/InstallProcess.java",
+        "app/src/main/java/com/deepseekharness/app/util/BoundedProcessRunner.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-COMPAT-01",
+      "status": "transferred",
+      "files": [
+        "app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by root; G3 does not claim complete"
+      ],
+      "owner": "root"
+    },
+    {
+      "id": "D-DUP-21",
+      "status": "transferred",
+      "files": [
+        "website/src/skills/device-shell/SKILL.md",
+        "agent-skills/device-shell/SKILL.md",
+        "website/data/catalog.mjs"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by root; G3 does not claim complete"
+      ],
+      "owner": "root"
+    },
+    {
+      "id": "D-DUP-22",
+      "status": "transferred",
+      "files": [
+        "app/src/debug/assets/web-state-fixture.html",
+        "app/src/androidTest/assets/web-state-fixture.html"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by root; G3 does not claim complete"
+      ],
+      "owner": "root"
+    },
+    {
+      "id": "D-BUG-06",
+      "status": "implemented",
+      "files": [
+        "app/src/main/assets/backup-engine.py",
+        "app/src/main/assets/credential-yaml-filter.cjs",
+        "tools/test-backup-engine.py"
+      ],
+      "checks": [
+        "51 backup-engine tests completed: 36 PASS, 15 platform-specific skips; flow, indentation, escaped keys and unsupported aliases exercised"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-PLUG-02",
+      "status": "implemented",
+      "files": [
+        "app/src/main/assets/register-builtin-plugins.py",
+        "app/src/main/assets/plugin-manager.py",
+        "tools/test-plugin-discovery.py"
+      ],
+      "checks": [
+        "22 discovery tests completed with 4 platform-specific skips; missing signed builtin still registers healthy peers then reports partial; bounded lock wait"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-BUG-07",
+      "status": "not_applicable",
+      "files": [
+        "app/src/main/assets/heal-sessions.py",
+        "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+      ],
+      "checks": [
+        "Full source review disposition retained from review-G3.json; no policy reversal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-BUG-08",
+      "status": "transferred",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by next mobile agent via root; G3 does not claim complete"
+      ],
+      "owner": "next mobile agent via root"
+    },
+    {
+      "id": "D-PLUG-03",
+      "status": "in_progress",
+      "files": [
+        "app/src/main/assets/backup-engine.py",
+        "tools/test-backup-engine.py"
+      ],
+      "checks": [
+        "legacy exporter/restorer only excludes sessions/.sessions-trash; mobile live teardown and purge delegated separately"
+      ],
+      "residual": [
+        "mobile delete-session public rc2 teardown, actual idle/flush and no automatic unknown trash purge transferred to next mobile agent"
+      ]
+    },
+    {
+      "id": "D-PLUG-04",
+      "status": "implemented",
+      "files": [
+        "app/src/main/assets/plugin-lifecycle.py",
+        "tools/test-plugin-review.py"
+      ],
+      "checks": [
+        "20 plugin-review tests completed: 19 PASS, 1 existing Linux/Android skip; one invalid plugin does not erase good receipts"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-PLUG-05",
+      "status": "implemented",
+      "files": [
+        "app/src/main/assets/plugin-dependencies.py",
+        "app/src/main/assets/plugin-lifecycle.py",
+        "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+        "tools/test-plugin-dependencies.py"
+      ],
+      "checks": [
+        "10 dependency tests completed with 1 platform-specific skip using actual pnpm and local registry; author claims distinguished from actual tree/lock and execution"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-PATCH-04",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/WebPageScripts.java",
+        "tools/smoke-dsh-runtime.mjs",
+        "tools/test-gecko-model-navigation.mjs"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by root; G3 does not claim complete"
+      ],
+      "owner": "root"
+    },
+    {
+      "id": "D-BUG-09",
+      "status": "implemented",
+      "files": [
+        "app/src/main/assets/plugin-manager.py",
+        "tools/test-plugin-review.py"
+      ],
+      "checks": [
+        "empty CLI regression PASS within plugin-review batch"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-COMPAT-02",
+      "status": "not_applicable",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+        "tools/test-mobile-update.mjs"
+      ],
+      "checks": [
+        "Full source review disposition retained from review-G3.json; no policy reversal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-BUG-10",
+      "status": "not_applicable",
+      "files": [
+        "app/src/main/assets/selftest.py",
+        "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+      ],
+      "checks": [
+        "Full source review disposition retained from review-G3.json; no policy reversal"
+      ],
+      "residual": []
+    },
+    {
+      "id": "D-BUG-11",
+      "status": "transferred",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/RuntimeTrialOutputPolicy.java"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by G2; G3 does not claim complete"
+      ],
+      "owner": "G2"
+    },
+    {
+      "id": "D-BUG-12",
+      "status": "transferred",
+      "files": [
+        "scripts/fix-corrupt-session.py",
+        "scripts/fix-corrupt-session.py"
+      ],
+      "checks": [],
+      "residual": [
+        "Implementation and verification reported by root; G3 does not claim complete"
+      ],
+      "owner": "root"
+    },
+    {
+      "id": "D-SEC-16",
+      "status": "implemented",
+      "files": [
+        "app/src/main/assets/backup-engine.py",
+        "tools/test-backup-engine.py"
+      ],
+      "checks": [
+        "Legacy transition default export omits whole workspace .env and raw dsh-web.log; explicit native API Key contract remains; originals retained",
+        "51 backup-engine tests completed: 36 PASS, 15 platform-specific skips"
+      ],
+      "residual": [
+        "Current project backup preserves user-selected project bytes; not claimed globally secret-free"
+      ]
+    },
+    {
+      "id": "D-SEC-18",
+      "status": "implemented",
+      "files": [
+        "app/src/main/assets/plugin-manager.py",
+        "tools/test-plugin-review.py"
+      ],
+      "checks": [
+        "20 plugin-review tests: 19 PASS, 1 existing platform skip",
+        "Actual Windows junction outside package fails export and preserves source; actual shared dependency group exports only bound packages and portable relative .bin targets; runtime-provided source-only export retained"
+      ],
+      "residual": [
+        "Live mutation is bounded by end-of-export graph rehash; device filesystem behavior not tested"
+      ]
+    }
+  ],
+  "statusCounts": {
+    "transferred": 21,
+    "implemented": 23,
+    "accepted_policy": 3,
+    "requires_device_evidence": 1,
+    "already_fixed": 2,
+    "not_applicable": 3,
+    "in_progress": 1
+  },
+  "integrations": [
+    {
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/HostMaintenancePending.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PrivateRoots.java",
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+      ],
+      "current": "Cold install journal registered in read-only gate; recovery under existing native stop fence reaps proven exits then refuses remaining work/guest; no guessed candidate publication; browserProbe injected into three trial calls",
+      "checks": [
+        "HostMaintenancePendingTest/PrivateRootsTest PASS; ColdInstallTransaction actual failures owned and tested by G2"
+      ]
+    }
+  ],
+  "validation": [
+    "15 host JUnit PASS (GuestPaths/Ids/Scopes/Names/PluginRestoreGraph)",
+    "26 host JUnit PASS (task kinds/builtin/system projection/preferences/graph)",
+    "24 host JUnit PASS (markers/history/private/legacy/host/config transactions with real isolated crash fixtures)",
+    "46 latest host JUnit PASS (pending/private/legacy/scopes/crypto/envelope/passwordfree/archive); fixed-vector resource explicitly on classpath",
+    "Python backup-engine 51 total, 36 PASS/15 platform-specific skips",
+    "Python plugin-review 20 total, 19 PASS/1 platform-specific skip",
+    "Python discovery 22 total, 18 PASS/4 platform-specific skips",
+    "Python dependencies 10 total, 9 PASS/1 platform-specific skip",
+    "Node legacy preset AST conversion fixtures PASS"
+  ],
+  "limitations": [
+    "No phone/no APK build/no full Gradle run by G3; root runs final source-wide gates",
+    "No historical original data or user projects deleted; independent fixtures only",
+    "Test counts are separate batches and overlap; do not sum into unique total"
+  ],
+  "handoff": {
+    "owner": "root to next mobile agent",
+    "remaining": [
+      "D-BUG-08",
+      "D-PLUG-03"
+    ],
+    "productionFiles": [
+      "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+      "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js",
+      "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/index.js",
+      "tools/apply-mobile-client-patches.mjs"
+    ],
+    "evidence": "docs/audits/build154/g3-repro-results.json",
+    "constraints": [
+      "Real rc2 public session API; cancel+idle+flush then removal; no automatic purge of unknown trash",
+      "Preserve actual Node response overload callbacks, byte streaming/backpressure, content-encoding semantics; no SSE buffering",
+      "G1 native and G3 legacy sessions trash exclusions already implemented; root records patch/input fingerprints"
+    ]
+  }
+}

@@ -8,22 +8,44 @@ import com.deepseekharness.app.util.UiThemePreference;
 
 /** 统一保存和应用外观选择；Activity 重建由 AppCompat 处理。 */
 public final class ThemeController {
-    private ThemeController() { }
-    public static void apply(Context context) {
-        String mode = new ConfigStore(context).getUiTheme();
-        int night = UiThemePreference.DARK.equals(mode) ? AppCompatDelegate.MODE_NIGHT_YES
-                : UiThemePreference.LIGHT.equals(mode) ? AppCompatDelegate.MODE_NIGHT_NO
+  private ThemeController() {}
+
+  public static void apply(Context context) {
+    String mode = new ConfigStore(context).getUiTheme();
+    int night =
+        UiThemePreference.DARK.equals(mode)
+            ? AppCompatDelegate.MODE_NIGHT_YES
+            : UiThemePreference.LIGHT.equals(mode)
+                ? AppCompatDelegate.MODE_NIGHT_NO
                 : AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
-        AppCompatDelegate.setDefaultNightMode(night);
-    }
-    public static void select(Context context, String mode) {
-        new ConfigStore(context).setUiTheme(mode);
-        apply(context);
-    }
-    public static boolean isDark(Context context) {
-        return (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-    }
-    public static void toggle(Context context) {
-        select(context, isDark(context) ? UiThemePreference.LIGHT : UiThemePreference.DARK);
-    }
+    AppCompatDelegate.setDefaultNightMode(night);
+  }
+
+  public static void select(Context context, String mode) {
+    new ConfigStore(context).setUiTheme(mode);
+    apply(context);
+  }
+
+  public static boolean isDark(Context context) {
+    return (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+        == Configuration.UI_MODE_NIGHT_YES;
+  }
+
+  public static String preference(Context context) {
+    return new ConfigStore(context).getUiTheme();
+  }
+
+  public static String cycle(Context context) {
+    String next = UiThemePreference.next(preference(context));
+    select(context, next);
+    return next;
+  }
+
+  public static void followSystem(Context context) {
+    select(context, UiThemePreference.SYSTEM);
+  }
+
+  public static void toggle(Context context) {
+    select(context, isDark(context) ? UiThemePreference.LIGHT : UiThemePreference.DARK);
+  }
 }

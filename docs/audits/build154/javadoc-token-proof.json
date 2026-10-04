@@ -1,0 +1,29 @@
+[
+  {
+    "file": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+    "beforeSha256": "8016fd00fc8620098ee641bb1fa2c1b7d649df3d7586a64ad523528518bef853",
+    "afterSha256": "d2a7d709a6006d663dd4eeae4c4ddbdf30b5ee43f2a0481680535db5b49a1949",
+    "exactJavaTokenSha256": "725d1cd09caa265c7c7a56d37047f135e9798fffd0ee8f03b629ac8ed49b118c",
+    "emptyLineCleanupExactTokenSha256": "725d1cd09caa265c7c7a56d37047f135e9798fffd0ee8f03b629ac8ed49b118c",
+    "finalObservedSourceSha256": "1ef2fbd959a4b81a4b54807db5f20f2692c7c6f3cc78ab9354e89b609144fbad",
+    "otherOwnerTokensChangedAfterCommentStage": false
+  },
+  {
+    "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+    "beforeSha256": "6dcb708afb7ea3d1213feba0904146ea6c832636e8dbec66dff824ee5006cb88",
+    "afterSha256": "398af5f87a615220a9a442fc59f7068d27cc0050fd287bb6f45d7e6c4374fb10",
+    "exactJavaTokenSha256": "1407fe6778dd61837df94335654d55a641eaddd67fea0dd70f687a1d6c49bafd",
+    "emptyLineCleanupExactTokenSha256": "edce93b941169b5d6fa7158c501959d831f292fb72dbff3672d355044ef8be09",
+    "finalObservedSourceSha256": "db7b373c0fc1630242a0fca774cfb2da7706bbc0eba5b8e4ad017276f7fc1d6c",
+    "otherOwnerTokensChangedAfterCommentStage": true
+  },
+  {
+    "file": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+    "beforeSha256": "904a195c6d1ab0a0ec4917ea65aaee1a36a081fa124436f6de0b17fc8a8b95c4",
+    "afterSha256": "236abfbec37c20a18ba590006653fa0122deef65d230bb02c608db631ea88ff4",
+    "exactJavaTokenSha256": "c5bed70d6192b7224b4592b1eed1c7896472a908806e792dfee482ee06cc56fc",
+    "emptyLineCleanupExactTokenSha256": "c5bed70d6192b7224b4592b1eed1c7896472a908806e792dfee482ee06cc56fc",
+    "finalObservedSourceSha256": "bc048bb4074bcd9110630fd1cf8ecf9ba4511ec070fccd5fd082e43e467e7f02",
+    "otherOwnerTokensChangedAfterCommentStage": false
+  }
+]

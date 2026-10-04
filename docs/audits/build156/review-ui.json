@@ -1,0 +1,1302 @@
+{
+  "schema": 1,
+  "lane": "ui",
+  "build": 156,
+  "baselineBuild": 155,
+  "reviewBasis": "README.md, AGENTS.md, module-map, engineering-standard, ADR0001, current source and current actual local receipts; external audit recommendations do not override current open plugin/shell and password-free backup contract",
+  "scope": {
+    "physicalAndroid": "not_performed_by_ui_lane; root separately handles newly authorized actual-device acceptance",
+    "adbOrDeviceGui": "not_used",
+    "additionalAuditOrDebugApk": "not_created",
+    "gradleSigningRelease": "root_integration_only",
+    "uploads": "not_performed"
+  },
+  "items": [
+    {
+      "id": "D-BUG-01",
+      "title": "NativeBackupJobs.loadLastState 的 UUID 正则少一组，指针缺失时永远找不到历史任务",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/util/Ids.java"
+      ],
+      "checks": [
+        {
+          "command": "Current source review against assignment-ui.json",
+          "result": "Actual production callers and current policy checked; old cited locations are not treated as current behavior",
+          "scope": "source inspection",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 tests, JDK 17 and actual current source; fresh generated UiMessages, all 415 registered templates round-trip raw Unicode, percent syntax, integer slots and newlines",
+          "receipt": "app/build/audit-build156/ui/jvm-result.txt",
+          "scope": "pure JVM; no Android device execution"
+        }
+      ],
+      "residual": [
+        "Actual Android ViewModel/job record fallback is owned and tested by data lane; this UI lane did not execute Android context."
+      ],
+      "changed": false,
+      "finding": "Completed-directory scan calls strict Ids.uuid; records are selected by persisted update evidence, not UUID order.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android ViewModel/job record fallback is owned and tested by data lane; this UI lane did not execute Android context."
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-02",
+      "title": "/app/share?path= 用 file:// Uri 跨应用分享，targetSdk 37 下必然抛 FileUriExposedException",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgeFileSnapshot.java",
+        "app/src/main/res/xml/update_file_paths.xml"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-bridge-files.py",
+          "result": "PASS 71 actual-source JVM/IO/UI formatting cases, as reported by bridge lane",
+          "scope": "JVM/host; no chooser/device",
+          "executor": "bridge"
+        }
+      ],
+      "residual": [
+        "No Android chooser/share-recipient evidence in this run."
+      ],
+      "changed": true,
+      "finding": "Sharing publishes a private snapshot through FileProvider content URI, ClipData and read grant.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No Android chooser/share-recipient evidence in this run."
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-03",
+      "title": "生产恢复路径不重置 3090 桥 token，旧备份带回的 .bridge_token 原样覆盖",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java"
+      ],
+      "checks": [
+        {
+          "command": "Current source review against assignment-ui.json",
+          "result": "Actual production callers and current policy checked; old cited locations are not treated as current behavior",
+          "scope": "source inspection",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-ui-boundaries154.py",
+          "result": "PASS 4 source/resource contract tests; labels, decorative dots, static welcome rows and paired captions",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-dsha-ui-regressions.py",
+          "result": "PASS 32 source/resource regressions; resolved Chinese resource retains discoverable Language caption",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "Root/data lane final restore fixture owns runtime verification; no Android token handshake matrix here."
+      ],
+      "changed": true,
+      "finding": "Current restore retains machine exclusions and passes actual context to bridge token rotation. Old archive/local records do not confer current-device authority.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Root/data lane final restore fixture owns runtime verification; no Android token handshake matrix here."
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-04",
+      "title": "虚拟屏预览单指手势在 streaming 模式下可能被注入两次",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/TouchGestureDispatch.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java",
+        "app/src/test/java/com/deepseekharness/app/util/TouchGestureDispatchTest.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 tests, JDK 17 and actual current source; fresh generated UiMessages, all 415 registered templates round-trip raw Unicode, percent syntax, integer slots and newlines",
+          "receipt": "app/build/audit-build156/ui/jvm-result.txt",
+          "scope": "pure JVM; no Android device execution"
+        },
+        {
+          "command": "python -B tools/test-bridge-files.py",
+          "result": "PASS 71 actual-source JVM/IO/UI formatting cases, as reported by bridge lane",
+          "scope": "JVM/host; no chooser/device",
+          "executor": "bridge"
+        }
+      ],
+      "residual": [
+        "No physical preview-button click evidence."
+      ],
+      "changed": false,
+      "finding": "A gesture owns one stream/discrete route. Streamed UP cannot replay a discrete tap; cancellation and unknown stream outcome retain no replay semantics.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No physical preview-button click evidence."
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-06",
+      "title": "凭据剔除只认两空格缩进块样式，flow 样式或其他缩进时浏览器会话密钥进入备份且无告警",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/CredentialProjection.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CredentialFileBackupSource.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/test/java/com/deepseekharness/app/backup/CredentialProjectionTest.java",
+        "tools/test-credential-yaml-projection.mjs",
+        "app/src/main/assets/backup-engine.py"
+      ],
+      "checks": [
+        {
+          "command": "Read current projection/export/selected-restore source and CredentialProjectionTest (7 tests)",
+          "result": "Actual HostSnapshot payload, old-v5 inspect/buildCandidates, selected/unselected/cancelled candidate, unchanged source/archive and raw hash drift cases verified in current test source",
+          "scope": "independent UI-lane read-only review"
+        },
+        {
+          "command": "Verify current SHA-256 against data-final-tests/receipt.json, data-sdk/receipt.json and credential-yaml-projection-evidence.json",
+          "result": "All 5 critical projection/integration source fingerprints match the bound receipts; projection 2875499dc695307e09e9aab462489344ecb7f7a68895065f3fc0b228fe884333 and SnakeYAML 2.4 jar ef779af5d29a9dde8cc70ce0341f5c6f7735e23edff9685ceaa9d35359b7bb7f match",
+          "scope": "independent UI-lane byte comparison"
+        },
+        {
+          "command": "F:/DSHA/_toolchains/jdk-17/bin/javac.exe @app/build/audit-build156/data-final-tests/compile.args; data-final-tests JUnit receipt",
+          "result": "Receipt compileExitCode=0/testExitCode=0; actual junit.log OK (72 tests), including 7 CredentialProjection tests",
+          "scope": "data-lane actual Windows host receipt, independently read"
+        },
+        {
+          "command": "tools/test-credential-yaml-projection.mjs bound differential receipt",
+          "result": "30 actual locked rc2 cases: 9 current preserved, 1 known legacy flat preserved, 20 unknown/duplicate/alias/tag/type/number/budget/encoding inputs safely rejected; official Node writer/parser and source-module hashes recorded",
+          "scope": "data-lane pinned Node/Java differential receipt, independently read"
+        },
+        {
+          "command": "F:/DSHA/_toolchains/jdk-17/bin/javac.exe @app/build/audit-build156/data-sdk/compile.args",
+          "result": "Current projection and production NativeDataLocations/NativeRestoreTargets/NativeBackupJobs SHA-bound SDK compile receipt exitCode=0",
+          "scope": "Android37/AndroidX compile only, no Android execution"
+        }
+      ],
+      "residual": [
+        "Actual Android SAF/provider offsets, FUSE races, Keystore and browser-session/signing-secret rotation remain untested in this no-device run. The 72-test/30-case receipts prove the stated current host/source scope, not physical Android execution."
+      ],
+      "changed": true,
+      "finding": "Native v5 now projects the actual single credential source with bounded YAML 1.2 core AST admission and machine-record removal; raw and projected digests bind reopen/verify. Selected old-v5 credential candidates are projected before activation, while unselected/current original files stay unchanged. Unknown input fails closed and is not exported as raw credentials.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android SAF/provider offsets, FUSE races, Keystore and browser-session/signing-secret rotation remain untested in this no-device run. The 72-test/30-case receipts prove the stated current host/source scope, not physical Android execution."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-final-tests/junit.log",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json"
+      ]
+    },
+    {
+      "id": "D-A11Y-01",
+      "title": "无障碍缺口：SeekBar 无标签、空文本分页圆点、未关联 labelFor、符号状态点、看似可点的不可点行",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WelcomeActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/DshaSelectView.java",
+        "app/src/main/java/com/deepseekharness/app/ui/DragHandleView.java",
+        "app/src/main/res/layout/activity_adb_pair.xml",
+        "app/src/main/res/layout/fragment_config.xml",
+        "app/src/main/res/layout/fragment_launch.xml",
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-ui-boundaries154.py",
+          "result": "PASS 4 source/resource contract tests; labels, decorative dots, static welcome rows and paired captions",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-dsha-ui-regressions.py",
+          "result": "PASS 32 source/resource regressions; resolved Chinese resource retains discoverable Language caption",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        },
+        {
+          "command": "Read bridge-a11y-bound-status-fix.json/currentDeviceGrants source and completed5e2 manifest/sourceSnapshot",
+          "result": "PASS actual8d900 source,YES plus actualconnected readiness,waitingmuted fullpair reuse;1195 tests/flavor0fail0error4skip and current785style proof. Earlier layout checks retained with original scope.",
+          "executor": "ui/read_only_existing_bridge_and_build_receipts",
+          "receipt": "docs/audits/build156/bridge-a11y-bound-status-fix.json",
+          "softwareReceipt": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+          "scope": "new status-text source/regr evidence only; physical behavior pending"
+        }
+      ],
+      "residual": [
+        "TalkBack, real short-screen/font-1.3/night/day walkthrough not performed by user instruction. Existing Spinner parent performClick opens its own second menu; custom click sends accessibility event and selected state without opening two menus. Root final Lint must classify this explicit contract."
+      ],
+      "changed": true,
+      "finding": "Labeled seekbars/state descriptions and decorative dots are retained. Inputs use explicit labels without duplicate hints. Drag/tap controls provide real super performClick and 48dp keyboard/accessibility target; drag cannot trigger the click action.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "TalkBack, real short-screen/font-1.3/night/day walkthrough not performed by user instruction. Existing Spinner parent performClick opens its own second menu; custom click sends accessibility event and selected state without opening two menus. Root final Lint must classify this explicit contract."
+        }
+      ],
+      "deferredIntegratedChecks": [
+        "Root final Release Lint must classify the preserved AppCompatSpinner parent-menu/custom-accessibility click contract; no device result is implied."
+      ],
+      "additionalSubFindings": [
+        {
+          "id": "device_grants_actual_connected_status",
+          "scope": "Actual enabled/connected status text revision, separate from the existing label/SeekBar/drag layout work.",
+          "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+          "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+          "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+          "bridgeProof": {
+            "path": "docs/audits/build156/bridge-a11y-bound-status-fix.json",
+            "sha256": "69fc474b35fdc9da044163b2f51a14ef0dca1e09ad4770e0c02cd89c4d7ec1df"
+          },
+          "behavior": "YES setting plus connected() is available; YES without actual binding is waiting with muted color. Existing full zh/en reused;NO/UNKNOWN retained. No permission grant/rebind/service-lifecycle change.",
+          "semanticChange": true,
+          "semanticTokensEquivalentToPrior": false,
+          "styleProof": "docs/audits/build156/java-format-accessibility-status-current.json",
+          "softwareValidation": {
+            "manifest": {
+              "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+              "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+              "status": "PASS_WITH_EXPLICIT_DEVICE_GAPS"
+            },
+            "sourceSnapshot": {
+              "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+              "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+            },
+            "junit": {
+              "Standard": {
+                "tests": 1195,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 4
+              },
+              "Low": {
+                "tests": 1195,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 4
+              }
+            },
+            "scope": "Both flavors compiled and each1195 JUnit/0fail/0error/4skip; software regression scope, not a claimed dedicated physical ready/waiting behavior test."
+          },
+          "missingEvidence": [
+            {
+              "kind": "device",
+              "detail": "Root still must verify this exact new formalAPK enabled-but-unbound waiting, actualconnected readiness andNO/UNKNOWN on device. Prior5aeb physical evidence does not establish this new source behavior. ExistingTalkBack/shortscreen/font1.3/night/day gaps remain."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-05",
+      "title": "导出到 Download 时 MIME 只区分 .txt/.zip，其余一律标为 application/gzip",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BackupFileNames.java",
+        "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-bridge-files.py",
+          "result": "PASS 71 actual-source JVM/IO/UI formatting cases, as reported by bridge lane",
+          "scope": "JVM/host; no chooser/device",
+          "executor": "bridge"
+        }
+      ],
+      "residual": [
+        "No device MediaStore/chooser verification."
+      ],
+      "changed": true,
+      "finding": "Download/share use one MIME resolver; PNG/JSON and normal image/PDF/archive types are explicit, unknown data is octet-stream.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No device MediaStore/chooser verification."
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-08",
+      "title": "dsh-web-mobile 压缩补丁在延迟态丢弃 write 回调，并把 JSON 分块全部扣到 end",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "tools/mobile-server/compress.js",
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-mobile-server-streams.mjs",
+          "result": "PASS 33 real socket/callback/stream/scope/cancel cases reported by plugins lane",
+          "scope": "Node host; no phone",
+          "executor": "plugins"
+        },
+        {
+          "command": "python -B tools/test-plugin-review.py",
+          "result": "19 PASS, 1 Windows symlink assumption skip; empty CLI error covered",
+          "scope": "isolated host",
+          "executor": "plugins"
+        }
+      ],
+      "residual": [
+        "No Android network/device compression matrix."
+      ],
+      "changed": true,
+      "finding": "Scoped product patch preserves write callbacks, bypasses event/NDJSON/chunked streams and preserves cancellation. Final plugins-lane 33 socket cases supersede earlier 28 count.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No Android network/device compression matrix."
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-12",
+      "title": "fix-corrupt-session.py 只解压首帧后单帧写回，会静默丢掉后续事件",
+      "currentDisposition": "not_applicable",
+      "files": [
+        "tools/history/build156/unused-assets",
+        "docs/audits/build156/retired-asset-sources.json"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-asset-deployment.py",
+          "result": "PASS 11 reported by legacy lane; retired heal/selftest/fix scripts have no production deployment",
+          "scope": "source/deployment",
+          "executor": "legacy"
+        },
+        {
+          "command": "python -B tools/verify-asset-deployment.py",
+          "result": "PASS 214 declared source members at legacy check; root final asset inventory must be regenerated",
+          "scope": "source/deployment at execution time",
+          "executor": "legacy"
+        }
+      ],
+      "residual": [
+        "Historical bytes are intentionally retained as source evidence; they are not production repair logic."
+      ],
+      "changed": true,
+      "finding": "Obsolete corrupt-session rewrite is retired from production; current native/runtime recovery does not invoke it.",
+      "missingEvidence": []
+    },
+    {
+      "id": "D-CFG-01",
+      "title": "沙箱档位无界面入口，两条导入路径缺省值不一致（'default' 疑似非法）",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java",
+        "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+        "app/src/main/java/com/deepseekharness/app/util/PermissionMode.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 tests, JDK 17 and actual current source; fresh generated UiMessages, all 415 registered templates round-trip raw Unicode, percent syntax, integer slots and newlines",
+          "receipt": "app/build/audit-build156/ui/jvm-result.txt",
+          "scope": "pure JVM; no Android device execution"
+        },
+        {
+          "command": "Current source review against assignment-ui.json",
+          "result": "Actual production callers and current policy checked; old cited locations are not treated as current behavior",
+          "scope": "source inspection",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "No device UI-to-process environment observation."
+      ],
+      "changed": false,
+      "finding": "All three permission modes have a real configuration choice; invalid/default input normalizes to danger-full-access, preserving the current open policy.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No device UI-to-process environment observation."
+        }
+      ]
+    },
+    {
+      "id": "D-COMPAT-01",
+      "title": "Low 线 Gecko 回退阈值 Chrome<118 无来源注释；ES 兼容垫片已补齐但版本不符时静默跳过注入",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-low-preview-capability.mjs",
+          "result": "PASS exact Java-embedded capability probe missing APIs and module support; Low selection has no UA threshold",
+          "scope": "local source/host",
+          "executor": "ui"
+        },
+        {
+          "command": "node tools/test-startup-diagnostics.mjs",
+          "result": "PASS actual startup observer import/throw/factory/apply/rejection/ready paths",
+          "scope": "Node production-script fixture",
+          "executor": "ui"
+        },
+        {
+          "command": "node tools/test-startup-page-relay.mjs",
+          "result": "PASS current-port nonce stamp, buffered failure, malformed event and invalid locale",
+          "scope": "Node production-script fixture",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 tests, JDK 17 and actual current source; fresh generated UiMessages, all 415 registered templates round-trip raw Unicode, percent syntax, integer slots and newlines",
+          "receipt": "app/build/audit-build156/ui/jvm-result.txt",
+          "scope": "pure JVM; no Android device execution"
+        }
+      ],
+      "residual": [
+        "No real old WebView/Gecko provider or Android 6/7 matrix. Runtime patch integrity checks owned by runtime/root."
+      ],
+      "changed": false,
+      "finding": "Actual required page capabilities select fallback; missing/mismatched compatibility recipe must diagnose/fail, not silently claim compatibility.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No real old WebView/Gecko provider or Android 6/7 matrix. Runtime patch integrity checks owned by runtime/root."
+        }
+      ]
+    },
+    {
+      "id": "D-COMPAT-02",
+      "title": "dsh-web-mobile 的 peerDependencies 上限 <0.2.0，与宿主 0.2.0-rc.2 不符，测试还把它锁死",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+        "tools/test-plugin-semver.cjs"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/prepare-semver-reference.py --check",
+          "result": "PASS pinned semver 7.8.1 reference byte proof",
+          "scope": "source/npm reference",
+          "executor": "plugins"
+        },
+        {
+          "command": "node tools/test-plugin-semver.cjs app/build/semver-reference/package",
+          "result": "PASS 11 cases and 2496 npm differential assertions",
+          "scope": "Node host",
+          "executor": "plugins"
+        }
+      ],
+      "residual": [],
+      "changed": false,
+      "finding": "Current built-in peer ranges include locked 0.2.0-rc.2; prerelease is evaluated by pinned real npm semver.",
+      "missingEvidence": []
+    },
+    {
+      "id": "D-I18N-01",
+      "title": "大量文案以 UiText.text 片段加数字拼接，无法整句翻译与处理复数",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "tools/i18n/messages.json",
+        "tools/check-ui-i18n.py",
+        "tools/i18n/ui-source-baseline.json",
+        "tools/prepare-ui-languages.py",
+        "app/src/main/java/com/deepseekharness/app/util/UiMessageFormat.java",
+        "app/src/main/java/com/deepseekharness/app/util/UiStateText.java",
+        "app/src/main/res/values/build156_ui.xml",
+        "app/src/main/res/values-en/build156_ui.xml",
+        "tools/test-ui-i18n.py",
+        "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/prepare-ui-languages.py --output app/build/audit-build156/ui/generated",
+          "result": "PASS 3528/3528 EN; 441 strict full templates",
+          "exitCode": 0,
+          "scope": "current source/host; no Android device execution",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 JDK17 tests, including all441 templates bidirectionally with raw Unicode/percent/newline arguments",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/ui-lint-template-proof/jvm-result-current.txt",
+          "scope": "current source/host; no Android device execution",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/check-ui-i18n.py --report docs/audits/build156/ui-i18n-choose-final.json",
+          "result": "PASS 0 new, 1 protected external-source debt, 8 exact complete-paragraph nonfindings, 0 stale declarations, 23 reviewed dynamic text arguments",
+          "exitCode": 0,
+          "scope": "current source/host; no Android device execution",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-ui-i18n.py",
+          "result": "PASS 9 scanner/signature/occurrence/raw/qualified-call/format cases",
+          "exitCode": 0,
+          "scope": "current source/host; no Android device execution",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "ShellService.java is protected external decompiled source; its single signature is an explicit provenance restriction, not an allowed offset for future product defects. No whole-screen English/device proof."
+      ],
+      "changed": true,
+      "finding": "Application-owned text and choose fragments use complete registered templates. The final26 include six UI pages and cross-owner labels; nine reviewed complete paragraph joins resolve to eight active exact declarations and one absorbed footer. Renderer preserves raw parameters; plural resources remain real Android plurals.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "ShellService.java is protected external decompiled source; its single signature is an explicit provenance restriction, not an allowed offset for future product defects. No whole-screen English/device proof."
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-01",
+      "title": "错误日志导出声称未读对话文件，但附带 dsh-web.log 尾部 256KiB 且仅正则脱敏",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java",
+        "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
+      ],
+      "checks": [
+        {
+          "command": "Current source review against assignment-ui.json",
+          "result": "Actual production callers and current policy checked; old cited locations are not treated as current behavior",
+          "scope": "source inspection",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 tests, JDK 17 and actual current source; fresh generated UiMessages, all 415 registered templates round-trip raw Unicode, percent syntax, integer slots and newlines",
+          "receipt": "app/build/audit-build156/ui/jvm-result.txt",
+          "scope": "pure JVM; no Android device execution"
+        }
+      ],
+      "residual": [
+        "This lane did not instantiate Android collect(Context) or inspect private real-device logs. Source confirms default export excludes every raw log/process/plugin/conversation body; source evidence is not labeled device evidence."
+      ],
+      "changed": true,
+      "finding": "Default report contains only bounded states, enum/whitelisted categories and counts; no dsh-web.log tail. Cached export notifications are complete templates and render at display boundary.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "This lane did not instantiate Android collect(Context) or inspect private real-device logs. Source confirms default export excludes every raw log/process/plugin/conversation body; source evidence is not labeled device evidence."
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-04",
+      "title": "无障碍说明承诺“不落盘”，但截屏 PNG 长期写入外部私有目录无清理",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-en/ui_strings.xml"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-android-computer-use.mjs",
+          "result": "PASS production call/secondary-user/PNG fixture as reported by bridge lane",
+          "scope": "host; no actual screenshot",
+          "executor": "bridge"
+        }
+      ],
+      "residual": [
+        "No real screenshot/cache cleanup/permission lifecycle evidence."
+      ],
+      "changed": false,
+      "finding": "Default MCP screenshot stays memory-only; file-mode temporary cache and truthful documentation are maintained by bridge owner.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No real screenshot/cache cleanup/permission lifecycle evidence."
+        }
+      ]
+    },
+    {
+      "id": "D-ROOT-01",
+      "title": "su 可执行文件只查 4 个硬编码路径",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/RootShell.java",
+        "app/src/main/java/com/deepseekharness/app/util/RootShellCandidates.java",
+        "app/src/test/java/com/deepseekharness/app/util/RootShellCandidatesTest.java",
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 tests, JDK 17 and actual current source; fresh generated UiMessages, all 415 registered templates round-trip raw Unicode, percent syntax, integer slots and newlines",
+          "receipt": "app/build/audit-build156/ui/jvm-result.txt",
+          "scope": "pure JVM; no Android device execution"
+        }
+      ],
+      "residual": [
+        "KernelSU/APatch/Magisk authorization and uid=0 results require actual devices; none operated. App-controlled PATH remains intentionally untrusted."
+      ],
+      "changed": true,
+      "finding": "Fixed trusted candidates include KernelSU/APatch. Android caller verifies root UID, regular type, non-writable group/world mode and executability. Status stores semantic result and displays current-language actual su path; id verification output remains raw.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "KernelSU/APatch/Magisk authorization and uid=0 results require actual devices; none operated. App-controlled PATH remains intentionally untrusted."
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-11",
+      "title": "配置页把解密后的 API key 明文填入 EditText 且未关闭实例状态保存",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java",
+        "app/src/main/res/layout/fragment_config.xml"
+      ],
+      "checks": [
+        {
+          "command": "Current source review against assignment-ui.json",
+          "result": "Actual production callers and current policy checked; old cited locations are not treated as current behavior",
+          "scope": "source inspection",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-ui-boundaries154.py",
+          "result": "PASS 4 source/resource contract tests; labels, decorative dots, static welcome rows and paired captions",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-dsha-ui-regressions.py",
+          "result": "PASS 32 source/resource regressions; resolved Chinese resource retains discoverable Language caption",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "No Android savedInstanceState/rotation instrumentation."
+      ],
+      "changed": true,
+      "finding": "API field stays empty with saveEnabled=false; blank preserves saved/unreadable record, replacement saves and reads back before other changes, removal has explicit native confirmation.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No Android savedInstanceState/rotation instrumentation."
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-17",
+      "title": "阅读位置记录把含查询串的 URL 写入 localStorage，可能持久化 ?token=",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/app-integration/client.js",
+        "tools/test-web-drafts.mjs"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-web-drafts.mjs --unit-only",
+          "result": "PASS 9; 1 explicit Chromium skip; actual installReadingPosition migrates old query/hash and saves pathname only",
+          "scope": "Node VM; excludes browser/device storage matrix",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "Fast run excludes real browser IndexedDB; data lane owns full real-Chromium storage proof. No Android first-frame URL/localStorage evidence."
+      ],
+      "changed": false,
+      "finding": "Reading identity stores pathname and explicit session ID only; legacy query/hash are removed. Current browser auth navigates the clean service endpoint after token exchange.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Fast run excludes real browser IndexedDB; data lane owns full real-Chromium storage proof. No Android first-frame URL/localStorage evidence."
+        }
+      ]
+    },
+    {
+      "id": "D-STYLE-01",
+      "title": "大量源码多语句压缩在一行，未接入 formatter，难以审查",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "tools/format-java.py",
+        "tools/java-format.lock.json",
+        "tools/java-format-files.json"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/format-java.py --write/--check --files <46 explicit owned files> --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --offline",
+          "result": "PASS google-java-format 1.22.0, current exact-token guard; 46 explicit files, final 0 differences",
+          "scope": "current selected Java sources",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/format-java.py --check --files app/src/main/java/com/deepseekharness/app/OverlayController.java --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --offline --report app/build/java-format/ui-overlay-break-strategy156.json",
+          "result": "PASS 1 file, 0 differences; exact token guard",
+          "exitCode": 0,
+          "scope": "explicit current7 Java files only",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/format-java.py --check --files app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java app/src/main/java/com/deepseekharness/app/ui/MainActivity.java app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --offline --report app/build/java-format/ui-choose-final156-check.json",
+          "result": "PASS 6 files, 0 differences; exact token guard",
+          "exitCode": 0,
+          "scope": "explicit current7 Java files only",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "The UI lane performed explicit point formatting, not a new whole-tree rewrite."
+      ],
+      "changed": true,
+      "finding": "Owned changed Java files are individually formatted with pinned JDK17 tool/token verification; external original/history remain protected.",
+      "missingEvidence": [],
+      "deferredIntegratedChecks": [
+        "Root must add new owned classes to complete adoption inventory and run final source gate; no whole-tree rewrite was performed by this lane."
+      ]
+    },
+    {
+      "id": "D-BRAND-01",
+      "title": "对外仓库地址/域名/群号分散硬编码，且两处指向迁移前旧仓库",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/Constants.java",
+        "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java",
+        "app/src/main/java/com/deepseekharness/app/ui/AboutFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/CommunityActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "Current source review against assignment-ui.json",
+          "result": "Actual production callers and current policy checked; old cited locations are not treated as current behavior",
+          "scope": "source inspection",
+          "executor": "ui"
+        },
+        {
+          "command": "rg -n 975836806/github.com/DSH-APP/https://dsha.cc/qiannianhuanxiang app/src/main/java/com/deepseekharness/app/ui -g *.java",
+          "result": "UI repository/site links and group descriptions route through canonical immutable constants; existing group constant retained",
+          "scope": "local source/host",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "Security host allowlists remain explicit fixed trust rules; changing branding cannot silently trust a configured host. Website/build-origin rules are verified by build/docs owners; historical attribution remains."
+      ],
+      "changed": true,
+      "finding": "App-owned repository/site/group displays use current canonical facts; trust policy is deliberately distinct from user-visible branding.",
+      "missingEvidence": []
+    },
+    {
+      "id": "D-BUG-07",
+      "title": "heal-sessions 只补 source 时不计入 fixed，修复不写回（脚本无调用方）",
+      "currentDisposition": "not_applicable",
+      "files": [
+        "tools/history/build156/unused-assets",
+        "docs/audits/build156/retired-asset-sources.json"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-asset-deployment.py",
+          "result": "PASS 11 reported by legacy lane; retired heal/selftest/fix scripts have no production deployment",
+          "scope": "source/deployment",
+          "executor": "legacy"
+        },
+        {
+          "command": "python -B tools/verify-asset-deployment.py",
+          "result": "PASS 214 declared source members at legacy check; root final asset inventory must be regenerated",
+          "scope": "source/deployment at execution time",
+          "executor": "legacy"
+        }
+      ],
+      "residual": [
+        "Historical source retained, production callers removed."
+      ],
+      "changed": true,
+      "finding": "Unused heal-sessions/heal-pnpm repair scripts no longer deploy or execute; their internal old counting logic is not the active repair path.",
+      "missingEvidence": []
+    },
+    {
+      "id": "D-BUG-09",
+      "title": "plugin-manager.py 无参数调用时抛 IndexError，没有返回“不支持的插件操作”",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/plugin-manager.py",
+        "tools/test-plugin-review.py"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-mobile-server-streams.mjs",
+          "result": "PASS 33 real socket/callback/stream/scope/cancel cases reported by plugins lane",
+          "scope": "Node host; no phone",
+          "executor": "plugins"
+        },
+        {
+          "command": "python -B tools/test-plugin-review.py",
+          "result": "19 PASS, 1 Windows symlink assumption skip; empty CLI error covered",
+          "scope": "isolated host",
+          "executor": "plugins"
+        }
+      ],
+      "residual": [],
+      "changed": false,
+      "finding": "Empty CLI dispatch produces stable PLUGIN_RESULT error before any plugin filesystem operation.",
+      "missingEvidence": []
+    },
+    {
+      "id": "D-BUG-10",
+      "title": "selftest.py 读日志只取前 400KB 再截尾，大日志时检查的是旧内容",
+      "currentDisposition": "not_applicable",
+      "files": [
+        "tools/history/engineering/assets/selftest.py",
+        "tools/asset-deployment.json"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-asset-deployment.py",
+          "result": "PASS 11 reported by legacy lane; retired heal/selftest/fix scripts have no production deployment",
+          "scope": "source/deployment",
+          "executor": "legacy"
+        },
+        {
+          "command": "python -B tools/verify-asset-deployment.py",
+          "result": "PASS 214 declared source members at legacy check; root final asset inventory must be regenerated",
+          "scope": "source/deployment at execution time",
+          "executor": "legacy"
+        }
+      ],
+      "residual": [
+        "Original source is historical reference only."
+      ],
+      "changed": false,
+      "finding": "selftest.py is not an active production asset/entry; native startup/diagnostics replace the old log reader.",
+      "missingEvidence": []
+    },
+    {
+      "id": "D-BUG-11",
+      "title": "试运行自有插件失败判定用无锚定子串，可能被其他插件的错误行误触发",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/RuntimeTrialOutputPolicy.java",
+        "app/src/test/java/com/deepseekharness/app/util/RuntimeTrialOutputPolicyTest.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 tests, JDK 17 and actual current source; fresh generated UiMessages, all 415 registered templates round-trip raw Unicode, percent syntax, integer slots and newlines",
+          "receipt": "app/build/audit-build156/ui/jvm-result.txt",
+          "scope": "pure JVM; no Android device execution"
+        }
+      ],
+      "residual": [],
+      "changed": false,
+      "finding": "Owned loader-entry matching is anchored and ANSI-aware; an unrelated plugin merely mentioning the check name cannot become the check failure.",
+      "missingEvidence": []
+    },
+    {
+      "id": "D-I18N-02",
+      "title": "中文字面量未经 UiText 直接展示，另有布局 XML 内硬编码英文",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "tools/check-ui-i18n.py",
+        "tools/i18n/ui-source-baseline.json",
+        "app/src/main/res/layout",
+        "app/src/main/res/values/build156_ui.xml",
+        "app/src/main/res/values-en/build156_ui.xml"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/check-ui-i18n.py",
+          "result": "PASS 0 direct Chinese literal sinks, 0 literal XML text/hint/contentDescription; exact protected source concatenation remains",
+          "scope": "local source/host",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-ui-boundaries154.py",
+          "result": "PASS 4 source/resource contract tests; labels, decorative dots, static welcome rows and paired captions",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-dsha-ui-regressions.py",
+          "result": "PASS 32 source/resource regressions; resolved Chinese resource retains discoverable Language caption",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "Inventory is production-source lexical evidence; it does not claim real English screenshots of every future/dynamic/plugin screen."
+      ],
+      "changed": true,
+      "finding": "Hardcoded UI text, brand labels, welcome counter and language caption are real resources; obsolete duplicate input hint resources are removed and labels state blank-input behavior.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Inventory is production-source lexical evidence; it does not claim real English screenshots of every future/dynamic/plugin screen."
+        }
+      ]
+    },
+    {
+      "id": "D-I18N-03",
+      "title": "把用户输入、设备命令输出和网页提示文本交给 UiText.text 当翻译键查表",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+        "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginInstallActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 JDK17 tests, including all441 templates bidirectionally with raw Unicode/percent/newline arguments",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/ui-lint-template-proof/jvm-result-current.txt",
+          "scope": "pure JVM; no Android device execution",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-ui-boundaries154.py",
+          "result": "PASS 4 source/resource contract tests; labels, decorative dots, static welcome rows and paired captions",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B tools/test-dsha-ui-regressions.py",
+          "result": "PASS 32 source/resource regressions; resolved Chinese resource retains discoverable Language caption",
+          "scope": "source/resource XML",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "No physical dialog/pairing output evidence; dynamic argument classification is source-specific rather than a blanket variable ban."
+      ],
+      "changed": true,
+      "finding": "Pairing code, device/terminal output and web prompt are raw. Shizuku/start callbacks render app-owned cached states; immutable plugin-preview getter renders freshly and external fields remain raw. Install labels are already-localized switch values, Main theme messages are three closed own keys, and link parse errors are one fixed own error.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No physical dialog/pairing output evidence; dynamic argument classification is source-specific rather than a blanket variable ban."
+        }
+      ]
+    },
+    {
+      "id": "D-NET-02",
+      "title": "resolv.conf 缺 nameserver 时硬编码追加 8.8.8.8 与 223.5.5.5，两处重复且无配置",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ResolverConfig.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java"
+      ],
+      "checks": [
+        {
+          "command": "Current source review against assignment-ui.json",
+          "result": "Actual production callers and current policy checked; old cited locations are not treated as current behavior",
+          "scope": "source inspection",
+          "executor": "ui"
+        }
+      ],
+      "residual": [
+        "Runtime lane owns DNS JVM fixtures; real VPN/private DNS/network transitions not executed by this UI lane."
+      ],
+      "changed": false,
+      "finding": "Current Android DNS is preferred; temporary lookup loss retains managed nameservers. One explicit fallback is documented, user resolver options remain intact.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Runtime lane owns DNS JVM fixtures; real VPN/private DNS/network transitions not executed by this UI lane."
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-13",
+      "title": "页面任意脚本可伪造启动致命事件，触发跳转启动恢复页",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/StartupPageGate.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+        "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+        "app/src/main/assets/web-integration/startup.js",
+        "app/src/main/assets/web-integration/startup-relay.js"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-startup-diagnostics.mjs",
+          "result": "PASS actual startup observer import/throw/factory/apply/rejection/ready paths",
+          "scope": "Node production-script fixture",
+          "executor": "ui"
+        },
+        {
+          "command": "node tools/test-startup-page-relay.mjs",
+          "result": "PASS current-port nonce stamp, buffered failure, malformed event and invalid locale",
+          "scope": "Node production-script fixture",
+          "executor": "ui"
+        },
+        {
+          "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+          "result": "PASS 46 tests, JDK 17 and actual current source; fresh generated UiMessages, all 415 registered templates round-trip raw Unicode, percent syntax, integer slots and newlines",
+          "receipt": "app/build/audit-build156/ui/jvm-result.txt",
+          "scope": "pure JVM; no Android device execution"
+        }
+      ],
+      "residual": [
+        "Nonce/provenance is not isolation from authorized same-origin/same-UID plugin code. No real WebView/Gecko console spoof/device matrix."
+      ],
+      "changed": false,
+      "finding": "Only current owner/generation/origin/document/provenance/sequence events are accepted; ready/terminal event blocks replay. Raw arbitrary console lines cannot directly invoke the guarded startup event.",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Nonce/provenance is not isolation from authorized same-origin/same-UID plugin code. No real WebView/Gecko console spoof/device matrix."
+        }
+      ]
+    }
+  ],
+  "findings": [
+    "Product-owned text/choose label fragments were repaired across owners; source-specific independent complete-paragraph joins are declared separately with exact SHA/signature/occurrences. All441 whole templates now round-trip raw Unicode/percent/newline parameters; real first canonical items/entries collision is preserved and only new wording normalized.",
+    "Root discovery, API key privacy, labeled controls, real drag/tap clicks, content boundaries and explicit current-candidate force stop are current-source changes, with hardware evidence kept separate.",
+    "The native v5 credential YAML gap was closed only after independent current-source and SHA-bound receipt review: 72 JVM tests, 30 pinned rc2 differential cases and production SDK compilation; real SAF/Android/Keystore evidence remains explicitly missing."
+  ],
+  "additionalChanges": [
+    {
+      "ids": [
+        "D-RT-13"
+      ],
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+      ],
+      "finding": "Ordinary stop failure can offer native confirmation. Candidate is prepared off main thread once, retained only in that dialog and passed unchanged to owner forceStop API; cancellation sends no signal and unknown identity retains barrier."
+    },
+    {
+      "ids": [
+        "D-SEC-05"
+      ],
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
+        "app/src/main/res/values/build156_ui.xml",
+        "app/src/main/res/values-en/build156_ui.xml"
+      ],
+      "finding": "Default LAN display contains service URL only. Explicit reveal/copy dialog describes unencrypted HTTP/credential scope and rechecks live generation/service/token before sensitive-clipboard copy."
+    },
+    {
+      "ids": [
+        "D-ARCH-02",
+        "D-API-07"
+      ],
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginNavigation.java"
+      ],
+      "finding": "Application-owned PluginRepository instance revisions replace static counter/WeakHashMap UI cache. CHECK follows source updatability, separately from deletion authority; isolated debug page gets an explicit private repository hook."
+    },
+    {
+      "ids": [
+        "D-LIC-01",
+        "D-LIC-02"
+      ],
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/AboutFragment.java"
+      ],
+      "finding": "Assets/licenses text selection shows actual bundled full texts with bounded background read/current-view binding and scrollable CardSheet."
+    },
+    {
+      "ids": [
+        "D-API-02",
+        "D-API-06"
+      ],
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+      ],
+      "finding": "Page invalidation uses typed PageChanged; storage error callback verifies Activity lifetime; backup data predicate consumes a File root, with no UI reflection boundary."
+    },
+    {
+      "ids": [
+        "D-DUP-13"
+      ],
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
+      ],
+      "finding": "Orphaned upload sessions use shared strict Ids.uuid rather than another handwritten regex."
+    }
+  ],
+  "sourceFingerprints": {
+    "app/src/debug/java/com/deepseekharness/app/ui/FragmentEntrySelfTest.java": "ceae471a3e5b5fe8246b96cc571548d435cc7598598ad0169304363df5f4961c",
+    "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java": "0fd4c70f7ac3ff9ea850804fa2e85d0e4abc5b2126cb10bb20bb64242f44a40a",
+    "app/src/main/java/com/deepseekharness/app/OverlayController.java": "4d886a65e9bc0a3d91e38efbcc838e87dfb396f038d1fcf0f90b0e559649e30c",
+    "app/src/main/java/com/deepseekharness/app/RootShell.java": "adbef8398db4a308a29a7ed957449c831bc835425bacd1dbe8c985977fb50d13",
+    "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java": "ec64004228272fe805cc0c48d232c45d7c18ce1ace5ab4eb04924e45c108b5fb",
+    "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java": "4798001b3700171286b44fafead47a843051552e41483dc2c79cea136e33b148",
+    "app/src/main/java/com/deepseekharness/app/ui/AboutFragment.java": "8a3f87f5f938559a1fd38b1e8e69345eb3088bfa7f21a5f23e7bf2dc8a653c4e",
+    "app/src/main/java/com/deepseekharness/app/ui/AccessibilitySetupActivity.java": "598be8494df895e11c7ff4823c7eeba2f652aaefed71be705a144b2560048e4f",
+    "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java": "7f3500f7af214f9916f18e898f34d5122377d1deccf7e0ee29b5669a51a04e77",
+    "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63",
+    "app/src/main/java/com/deepseekharness/app/ui/CommunityActivity.java": "32fea9a8502c803e9bba805cf76e4b8224d8049fbf8339309238abfe5a59480a",
+    "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java": "4b7444bf929819f80c074081095d5f51c9b8129d697d00c59aaa78d64f407c1b",
+    "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java": "29cd14527406fa15cb2cca9f5284946af510e103e19aaa44b1e586f6920f6f95",
+    "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java": "5f1af1d3aff66fc26ef9edc68e3a4c9bdb329a8507a5dc31cd88f5881956b90b",
+    "app/src/main/java/com/deepseekharness/app/ui/DragHandleView.java": "d81669ef7ff702b31f66db4604df21ae878ee385906f7d1dff8cdf357cd62dbf",
+    "app/src/main/java/com/deepseekharness/app/ui/DshaSelectView.java": "b5a41af3db376a638317fb8ac9e9ee41e3c77db801fbbdf13f1d6f279e1ff1a3",
+    "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java": "9b8ca430bd150fdb3624642b0e950488fa99b7fd95473465bb4c5bb3ad37b9dc",
+    "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java": "6284b9a6ba441c488b1328f26b86db37a4b630134367834c31663f43fc6ccebf",
+    "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java": "239ae83116725925fc35becfe7a8157404a2b022213626ca158dfaed79838620",
+    "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java": "ac98c3bdd61be79bfa49fbe9e49a3550e7428371d68c2e425521f7dff198e3d9",
+    "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java": "0e314852ecea67aabab4b917bea096506585e4d56c35776ff57322a18fbf5d54",
+    "app/src/main/java/com/deepseekharness/app/ui/PluginInstallActivity.java": "b4fec5c2725c11eaa705219f77afdee0d948803551c5c969e1e86f7e0dcdb834",
+    "app/src/main/java/com/deepseekharness/app/ui/PluginNavigation.java": "ba903af7d466bbbb9cdfbd85897ecee9942c6e0a5c134b058b3ecf65a9902b8a",
+    "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java": "b44d63c31b6278ccd47eb2600d64f42b0a4292b9a5880ee32b289501849ac8a9",
+    "app/src/main/java/com/deepseekharness/app/ui/RecoveryActivity.java": "d951a2a5211a16296314c52cd29f64ab7a33b9baad514081d861ff7e70f10209",
+    "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java": "af71f640dc63e2d4b9cffb02cceac9064f60df1783b6ff9b9dd952e4a0836678",
+    "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java": "f63ae7181a0754941eac50565e32fcebb6afbf10d514dff4a016c26fc0daa358",
+    "app/src/main/java/com/deepseekharness/app/ui/StartupRecoveryActivity.java": "401715fc21083c4ef2905c1772a095d2a223068e5cb7cef2c5cd26f6f92dbb8d",
+    "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java": "2bfb0c1eba48bd5ea6bb5ce5fa3a7f2990091f1da6ba47ff60eb13530f8fbb45",
+    "app/src/main/java/com/deepseekharness/app/ui/TerminalFragment.java": "aa34cda8de6bfea897341d3993c9b92dfcfec5e9079ac496f229478842daa720",
+    "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java": "057cae44c14cea1c4f9f3d64f7ab20673a61c068e6e1cf2fcaa88f0bf0daa3bb",
+    "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java": "27eab634f0ddfd8b62c22fefbf088b83da822fc8355bf6b4e83def2edee1b145",
+    "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java": "f704e1cc1248122ae801381c396ec54787444e9d202ca1ec6ab5109801ea83e5",
+    "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818",
+    "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java": "935ab0eeac035fc676b81d65e5a21a8026b4dcf2fa0d98c472a1dbdfbbba5b27",
+    "app/src/main/java/com/deepseekharness/app/ui/WelcomeActivity.java": "2085fc61ff76ab999501b490183c1b7a34ef9352eeb1ab52516546edd3fab284",
+    "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java": "1960ed57eafb409b66c13dffab5ac9ec3624649e17b9c92641154836acfa72c1",
+    "app/src/main/java/com/deepseekharness/app/util/Constants.java": "ed7ee6df32544c12460388ba9f5bc0f5e992584b0a762034a4e22c7a33cb69a2",
+    "app/src/main/java/com/deepseekharness/app/util/RootShellCandidates.java": "a706e2b7820cf0d2c1df0584b9447f54f6240c9fac4cfed486f6e80af76cf352",
+    "app/src/main/java/com/deepseekharness/app/util/UiMessageFormat.java": "a7f402693069bd5599e170eab66da2be2db17e8628856c7b99ae017baafda327",
+    "app/src/main/java/com/deepseekharness/app/util/UiStateText.java": "6b89454421892f264cb33e8729636b36d736e43560b4f456439ec40b948b2f4a",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java": "f76d3cc9744edf5cf6ec2b287d8bb703356ac8300e14358016f125bfa65020f6",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java": "9aa7ef90c5b359b3ec6cc3209636f8e7c608785a493ef999a664b5ea3a081c1a",
+    "app/src/test/java/com/deepseekharness/app/util/RootShellCandidatesTest.java": "b03eea782b95aec28dce22985fe88e5cd6fcbfe6f0c4e921b1e191ddaa160291",
+    "app/src/test/java/com/deepseekharness/app/util/UiMessageFormatTest.java": "02b836298ed347178be4ccd908d25f800f7ce9436222c32d07d0130e0ac5e0fa",
+    "app/src/test/java/com/deepseekharness/app/util/UiStateTextTest.java": "9b331719208b847eff33e83d651a06c01bfdba12d3cc059bb949b4159d5840fa"
+  },
+  "productionFrozen": true,
+  "catalogue": {
+    "entries": 3528,
+    "formats": 441,
+    "sha256": "5321c9a7aa5a6705ca8f2ff2c96b1245a63986fb60da98f379f93c8f931b7320",
+    "rawArgumentContract": "%s strings/%d integers/%% literal; current-source matching specificity",
+    "finalTypedStopContribution": {
+      "entries": 38,
+      "dynamic": 11,
+      "static": 27,
+      "canonicalEnglish": "Existing same-key phrases retained after reading 14 synonym proposals; final contribution complete"
+    },
+    "finalChooseContribution": {
+      "entries": 26,
+      "templates": 26,
+      "canonicalOverride": "New items count word normalized to pre-existing entries after actual441-template raw-newline failure; proof preserved."
+    }
+  },
+  "catalogueFinalChecks": [
+    {
+      "command": "python -B tools/prepare-ui-languages.py --output app/build/audit-build156/ui/generated",
+      "result": "PASS 3528/3528 EN; 441 strict full templates",
+      "exitCode": 0
+    },
+    {
+      "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+      "result": "PASS 46 JDK17 tests, including all441 templates bidirectionally with raw Unicode/percent/newline arguments",
+      "exitCode": 0,
+      "receipt": "docs/audits/build156/ui-lint-template-proof/jvm-result-current.txt"
+    },
+    {
+      "command": "python -B tools/check-ui-i18n.py --report docs/audits/build156/ui-i18n-choose-final.json",
+      "result": "PASS 0 new, 1 protected external-source debt, 8 exact complete-paragraph nonfindings, 0 stale declarations, 23 reviewed dynamic text arguments",
+      "exitCode": 0
+    },
+    {
+      "command": "python -B tools/test-ui-i18n.py",
+      "result": "PASS 9 scanner/signature/occurrence/raw/qualified-call/format cases",
+      "exitCode": 0
+    }
+  ],
+  "deferredIntegratedChecks": [
+    "Root full Standard/Low release compilation, all-unit and Release Lint/APK asset/signing gates",
+    "Final explicit formatter/launcher input inventory for new helpers"
+  ],
+  "evidenceSchema": {
+    "deviceGapItems": [
+      "D-A11Y-01",
+      "D-BUG-01",
+      "D-BUG-02",
+      "D-BUG-03",
+      "D-BUG-04",
+      "D-BUG-05",
+      "D-BUG-06",
+      "D-BUG-08",
+      "D-CFG-01",
+      "D-COMPAT-01",
+      "D-I18N-01",
+      "D-I18N-02",
+      "D-I18N-03",
+      "D-NET-02",
+      "D-PRIV-01",
+      "D-PRIV-04",
+      "D-ROOT-01",
+      "D-SEC-11",
+      "D-SEC-13",
+      "D-SEC-17"
+    ],
+    "externalGapItems": [],
+    "interpretation": "Each device detail preserves the full original scoped evidence note. Protected external-source/trust/historical contracts are not invented as missing online or legal evidence; those are reviewed by their actual build/docs owners. Root final Gradle/Lint/APK/formatter/launcher inventory checks remain deferred integration, not device proof."
+  },
+  "finalAuthorizedLintFollowup": {
+    "evidence": "docs/audits/build156/ui-lint-followup-evidence.json",
+    "frozenSources": {
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java": "235d626350be8e5e3b853f82f95273390f0ec12df8e443906a0f2562deb28880",
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java": "8a6eee859a814625892a0d2010476aee49ab56a192e24a23343a3840bf418442",
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java": "5cc5aac37ecc354e43262186045ef4b41b365b682c44c9fd3a01a1a8c0ea56c4",
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java": "def20c9021d465cc289b9555d6dc7dfa62dab6f851cb340fc5996c66edd9f431",
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java": "203b75e42a6855c129ee71646aef806a95079207feca572d89f47e15088528a4"
+    },
+    "frozenInputSources": {
+      "tools/check-ui-i18n.py": "cd9a2ab12be7be074b8a11343b7be8d29b318b5895d735f59049321adba17aa9",
+      "tools/test-ui-i18n.py": "c13fe6c38008710fdb123512deaf5e03f2c7eb2323b16be9ca6fd356a3f392a8",
+      "tools/i18n/ui-source-baseline.json": "ea8bfce055d6d6d5776efd0ccc6847805c918648b46db3705604e620f28e6f74",
+      "tools/i18n/messages.json": "78e499bc41d6b5e0c185ee81595a49cd8c4f8ad173c0278b07df9683fd63019f"
+    },
+    "scope": "Only authorized Overlay2 constant symbols, six UI text consumers, scanner/tests and catalog/baseline. Other lane sources are represented by their own receipts. No Gradle, signing, phone/ADB, GUI or additional APK executed by UI lane.",
+    "evidenceSha256": "efd224840a4e6efaf82bb51bfe40a0d3f80811ff50cfabd5df3e52239af641a1"
+  },
+  "sourceFingerprintsRole": "Preserved prior UI46 freeze. Later root-authorized UI7 changes are fingerprinted by finalAuthorizedLintFollowup; final complete source guard belongs to root integrated receipt.",
+  "finalPasswordFreeStaticText": {
+    "evidence": "docs/audits/build156/password-free-subtitle/receipt.json",
+    "files": {
+      "app/src/main/res/values/ui_iteration.xml": "cb64564e214fe75e0b9fec673326cc2c20de5cc5b5327f5712b3c549153b9330",
+      "app/src/main/res/values-en/ui_iteration.xml": "3ff497bd741aa243d405ba4ea70aa5ed636f449637ae85d7b501f460fc323a47",
+      "tools/i18n/messages.json": "5321c9a7aa5a6705ca8f2ff2c96b1245a63986fb60da98f379f93c8f931b7320"
+    },
+    "scope": "Only3 authorized static UI text inputs; no archive, runtime descriptor, managed inputs, version, Gradle, phone or extra APK changes. Root will rebuild/revalidate production APK.",
+    "onlyMessageIds": [
+      "ui2_data_sub",
+      "ui2_ws2_0"
+    ]
+  }
+}

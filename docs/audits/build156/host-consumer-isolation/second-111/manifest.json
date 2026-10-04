@@ -1,0 +1,2602 @@
+{
+  "schema": 2,
+  "requestedStage": "all",
+  "selectedStages": [
+    "fast",
+    "linux",
+    "runtime",
+    "windows"
+  ],
+  "status": "FAILED",
+  "tests": [
+    {
+      "path": "tools/overlay-bridge-test.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-final\\overlay-bridge-test.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\overlay-bridge-test.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.109,
+      "logSha256": "cde909ca05888bfe5c7debc35814c4456c29bc051916b75d915d5a40d1576598"
+    },
+    {
+      "path": "tools/test-adb-flow-audit.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-final\\test-adb-flow-audit.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-adb-flow-audit.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.172,
+      "logSha256": "3ccfc16d15f0df7daabd6909e55081d77f1ef24f08d7b2355ac527ae6ef40c9c"
+    },
+    {
+      "path": "tools/test-adb-flow.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-final\\test-adb-flow.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-adb-flow.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.219,
+      "logSha256": "c9b8d27f47715c2766c63f050776a7d134525cd9a7879f189a7b82ace568bc64"
+    },
+    {
+      "path": "tools/test-adb-vscreen-bridge.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-final\\test-adb-vscreen-bridge.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-adb-vscreen-bridge.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.188,
+      "logSha256": "6c802186dd6e482e95696b7a98c903c5058122218524733087a6f5fe397b439f"
+    },
+    {
+      "path": "tools/test-aidl-shim.ps1",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-final\\test-aidl-shim.ps1.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+        "-NoProfile",
+        "-File",
+        "F:\\DSHA_RESTART\\tools\\test-aidl-shim.ps1"
+      ],
+      "exitCode": 0,
+      "seconds": 2.89,
+      "logSha256": "5f91390f663c1fe6b6e1db094a1bdbae8747c6c3ef03629f5e0fe0244686d9b6"
+    },
+    {
+      "path": "tools/test-android-computer-use.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-final\\test-android-computer-use.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-android-computer-use.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.125,
+      "logSha256": "2bcb55dc484f41d9007fa15d0a401427f5c1b902c4b7af2a46e2b2fd837edfc1"
+    },
+    {
+      "path": "tools/test-app-activity.mjs",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-final\\test-app-activity.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-app-activity.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.109,
+      "logSha256": "62bc7bf848abc03acdf0b45bbad92952454b8ebbcfd6a39d4d5d4a3554e8460b"
+    },
+    {
+      "path": "tools/test-architecture-boundaries.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-final\\test-architecture-boundaries.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-architecture-boundaries.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.11,
+      "logSha256": "a9d2155ae07e410a24db922f748c04bd020b93e2658b332ce7087f26bc2c36f4"
+    },
+    {
+      "path": "tools/test-asset-deployment.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-final\\test-asset-deployment.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-asset-deployment.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.625,
+      "logSha256": "bff3cd0a820952be7c09e56fd38084894e3735ac2712bf2292cd72ff90ea78ed"
+    },
+    {
+      "path": "tools/test-attachment-store.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-attachment-store.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-attachment-store.mjs",
+        "/DSHA_RESTART/app/build/audit-build156/host-final/host-test-ve7lsh5h"
+      ],
+      "exitCode": 0,
+      "seconds": 426.75,
+      "logSha256": "079551fb5871e83eb317bd15b3044b9ea75a9dc6d11261be2a25dbee4d7b2b54",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-backup-engine.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-backup-engine.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-backup-engine.py"
+      ],
+      "exitCode": 0,
+      "seconds": 5.188,
+      "logSha256": "e700a0aa65ee725de750c322f260d7006af47fa7e0060608a10bca9490e893a0",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-bridge-logic.ps1",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-bridge-logic.ps1.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+        "-NoProfile",
+        "-File",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-logic.ps1",
+        "-ToolchainRoot",
+        "F:\\DSHA\\_toolchains"
+      ],
+      "exitCode": 0,
+      "seconds": 5.688,
+      "logSha256": "1437669df3405f2587767d44c93ec2bcd02e9a0380bc421225061feef58ec1c6",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-bridge-routes.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-bridge-routes.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-routes.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.296,
+      "logSha256": "9147ea3976656a9fc90f3f1fb6ba2db7f0870a7b48fac01c2b0ab3fed99c8f1c",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-bridge-token-compat.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-bridge-token-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-token-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.079,
+      "logSha256": "cdd39598035aa905e38f00344cd3ea91ae424df5d4127d75211e812abbb848a2",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-browser-compat.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-browser-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-browser-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.046,
+      "logSha256": "4f540504ba6c231bd9c2d2d7b50ca51f7d100f6feb38ca770e95202c83cce250",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-browser-stream-resume.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-browser-stream-resume.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-browser-stream-resume.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 7.0,
+      "logSha256": "cad585754e077b66c64c452d773e1f833a7f4fa24613415a5fae16380826b72e",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-chat-render-performance.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-chat-render-performance.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-chat-render-performance.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 8.109,
+      "logSha256": "6f89dd9374284ee8c7b64ae5b81474e3568c00dd7c6cb78b816191fd2e89edbe",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-ci-package.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-ci-package.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-ci-package.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.782,
+      "logSha256": "6c6116e87f4a7df9128080c0a368b804fab162c765aa9e3dd77b1b9e7089c5fd",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-client-combo-cache.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-client-combo-cache.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-client-combo-cache.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 5.547,
+      "logSha256": "e42c04d59591a3b78c136838a7c6d0b5689824ff3cff19b0d446f16ec8e75c94",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-composer-enter.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-composer-enter.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-composer-enter.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 5.469,
+      "logSha256": "61faf3bffa9ccbaa33600436e1752aaead60957eac4dd2221aeab88203470282",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-conversation-materialized.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-conversation-materialized.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-conversation-materialized.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 6.062,
+      "logSha256": "fc3619855b2df2aec9b7e4008650012127431f6c8ffabc0ce10160565190c7cb",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-conversation-stop.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-conversation-stop.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-conversation-stop.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 5.547,
+      "logSha256": "75b64189715df1c54e23a0a84d94f2ee5311deb976318980add3bbcd20920226",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-credential-paths.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-credential-paths.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-credential-paths.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.109,
+      "logSha256": "4a203f958ef9d765ff1f89816631e1bdf553b4acf1d56449f1d10ad92bb46ff3",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-deepseek-messages-compat.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-deepseek-messages-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-deepseek-messages-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 7.359,
+      "logSha256": "675d4dcf6a42188334211831a410d1233cbaa09f601ae6b50dc6371ff84d91f2",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-device-script-selection.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-device-script-selection.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-device-script-selection.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.187,
+      "logSha256": "6a72fe0c569c3db0e735dd86494c63711b7d9ad9d5ea8ecc14da95e125488f87",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-device-shell-policy.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-device-shell-policy.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-device-shell-policy.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.094,
+      "logSha256": "8349d0bb046c25e4ce2b51f203513754ec64eafeac8eea3a6349cd92c3b9925c",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-dns-compat.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-dns-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-dns-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.079,
+      "logSha256": "f2784ecf483132a6241c0b5975259cde19a3fefc2ffff3ebdba7f369fb6cfdcb",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-dsh-builtins.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-dsh-builtins.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.468,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-dsh-sessions.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-dsh-sessions.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.516,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-dsha-ui-regressions.py",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-dsha-ui-regressions.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-dsha-ui-regressions.py"
+      ],
+      "exitCode": 1,
+      "seconds": 0.156,
+      "logSha256": "a9abc4a30661478320ae210048f32afba2e0b995fc8fe931b620286c9e8cbef1"
+    },
+    {
+      "path": "tools/test-generated-asset-directory.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-generated-asset-directory.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-generated-asset-directory.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.547,
+      "logSha256": "48d0e2c5e83a810a63f903bf5e529720f827ea501d49420fc2f051e94a0a7298",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-issue67-startup.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-issue67-startup.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.563,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-legacy-preset-convert.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-legacy-preset-convert.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.485,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-lexical-claim-compat.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-lexical-claim-compat.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.625,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-mobile-auth.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-mobile-auth.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-auth.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.109,
+      "logSha256": "13815bdd207721a11b695947071a84619be385f5dbd3b66a2733971623071e8b",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-mobile-delete.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-mobile-delete.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.469,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-mobile-gesture-guard.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-mobile-gesture-guard.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-gesture-guard.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.062,
+      "logSha256": "4f0adca7ffa334877d36045a92bc0c20af893c2ad390ddbada78de9adbcb0792",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-mobile-modal-behavior.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-mobile-modal-behavior.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.469,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-mobile-server-patches.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-mobile-server-patches.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-server-patches.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.11,
+      "logSha256": "dc58dc9bb4bc32955fc41795db9689b254ee57d012acf928f22f3ffc382fc07f",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-mobile-server-streams.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-mobile-server-streams.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-server-streams.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.796,
+      "logSha256": "420ee6886115848865a17b50b9e92ae768c4ed09621d8df01f01d6412bc1e9f3",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-mobile-update.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-mobile-update.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-mobile-update.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.078,
+      "logSha256": "860c86d1a860adac002b86ca430ce0f22babce05cf3b775bd6c4afe607cf0377",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-native-plugin-manager.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-native-plugin-manager.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.453,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-notification-actions.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-notification-actions.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-notification-actions.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.047,
+      "logSha256": "7a1bb35efbfca8f796856ae02c2a772ce4979286d452c740f625aac4f740efb4",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-office-fonts.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-office-fonts.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.469,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-pdf-compat.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-pdf-compat.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.438,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-plugin-dependencies.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-plugin-dependencies.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-dependencies.py"
+      ],
+      "exitCode": 0,
+      "seconds": 13.484,
+      "logSha256": "6c3d1b3c67b4747853ceb6e61a8a9953dea25ffd90c68cd13bf52d82a09e3b48",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-plugin-discovery.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-plugin-discovery.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-discovery.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.656,
+      "logSha256": "b71ca7bba745b7ef0d5fb5c8ab801f8c586737a5f858215c0019c13d817db63b",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-plugin-downloads.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-plugin-downloads.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-downloads.py"
+      ],
+      "exitCode": 0,
+      "seconds": 4.359,
+      "logSha256": "ad2a5db819bda00ca884debd53715a46de530aff313c2fed67f157f3240324c6",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-plugin-resolution-order.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-plugin-resolution-order.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.437,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-plugin-review.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-plugin-review.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-review.py"
+      ],
+      "exitCode": 0,
+      "seconds": 3.109,
+      "logSha256": "03f9bcde1641096fe3245f9eaa43bbbb967f5ef52cd6a4db1b0feca25a4a171e",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-plugin-semver.cjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-plugin-semver.cjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-semver.cjs",
+        "F:\\DSHA_RESTART\\app\\build\\semver-reference\\package"
+      ],
+      "exitCode": 0,
+      "seconds": 0.579,
+      "logSha256": "858ec085836aa1198a33a369808d9af70a4ab916fec15b5f4ed6ff3d64f9ce49",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-plugin-states.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-plugin-states.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.453,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-plugin-transactions.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-plugin-transactions.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-plugin-transactions.py"
+      ],
+      "exitCode": 0,
+      "seconds": 8.344,
+      "logSha256": "fc0253e77348702a6059fa5a95b74aa3b9c91ececee2715005e36e1c718dfa03",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-profile-settings-cli.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-profile-settings-cli.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.438,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-profile-settings-review.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-profile-settings-review.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.515,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-proot-runtime-libs.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-proot-runtime-libs.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-proot-runtime-libs.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.063,
+      "logSha256": "e5bcbfaf1f54ea5f07b4e47f2f9ea7ed7e8cde0fab96804556f9f4d6cb48c23a",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-queue-steer.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-queue-steer.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.5,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-rc1-browser-behavior.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-rc1-browser-behavior.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.453,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-rc1-migration.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-rc1-migration.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-rc1-migration.py"
+      ],
+      "exitCode": 0,
+      "seconds": 2.078,
+      "logSha256": "7d8daff24b37b54226f34d4b42a1c8f3fb043c103f19a7f94bb7beb4c4e7d967",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-rc1-settings-migration.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-rc1-settings-migration.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.469,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-recovery-agent.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-recovery-agent.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.437,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-recovery-apk-assets.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-recovery-apk-assets.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-recovery-apk-assets.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.125,
+      "logSha256": "13389c1703f24d9d5e7581658cf3b80ecd3cd13df746e8f6f31a05758359a8eb",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-recovery-assets.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-recovery-assets.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-recovery-assets.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.328,
+      "logSha256": "1041853fb3f8efafd11a47a5136088a13b2a8441712bf897d6d8c441ceda9178",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-recovery-browser-overlay.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-recovery-browser-overlay.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-recovery-browser-overlay.mjs",
+        "F:\\DSHA_RESTART\\app\\build\\generated\\recoveryAssets"
+      ],
+      "exitCode": 0,
+      "seconds": 0.141,
+      "logSha256": "18ea4ff3431a9559f03806a997f47fa65f324495696a476fb2835d6e1336f75e",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-recovery-profile-boot.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-recovery-profile-boot.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.531,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-release-acceptance.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-release-acceptance.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-release-acceptance.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.14,
+      "logSha256": "dbeb64400a62fc5f7dbe1006dbc2ee905dccffa7f559c813c75d2cfd571f892c",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-release-evidence.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-release-evidence.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-release-evidence.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.157,
+      "logSha256": "58cef839c86be5536ccf415d5737a03e32f6795649aa55399acb8458b5cade67",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-release-names.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-release-names.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-release-names.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.125,
+      "logSha256": "9c173a7729103f4810f7b4ae1450cc4a56a7b62939fe886c062caaa6e9bd34fc",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-runtime-descriptor-inputs.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-runtime-descriptor-inputs.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-descriptor-inputs.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.718,
+      "logSha256": "7c8d2625bbf176c8ee83aef2b0ca0661a448c3987b0255180f830770834c7a60",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-runtime-input-contract.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-runtime-input-contract.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-input-contract.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.5,
+      "logSha256": "704d0e428977fe6e9a2339c2fa2be6186ef9af35184a5b31106231013d8a01dc",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-runtime-proof.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-runtime-proof.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-proof.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.875,
+      "logSha256": "43198f48f5a06840ca8786a47c3d29cd1f35e721afffc58e1559232dc0b86ba5",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-runtime-publish-linux.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-runtime-publish-linux.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "wsl.exe",
+        "-d",
+        "docker-desktop",
+        "--",
+        "env",
+        "LD_LIBRARY_PATH=/mnt/host/f/DSHA_RESTART/app/build/audit-build154/linux-host",
+        "TMPDIR=/dev/shm",
+        "/mnt/host/f/DSHA_RESTART/app/build/audit-build154/linux-host/node",
+        "/mnt/host/f/DSHA_RESTART/tools/test-runtime-publish-linux.mjs",
+        "/mnt/host/f/DSHA_RESTART/app/build/audit-build154/linux-host/node_modules/dsha-runtime-fs/index.js"
+      ],
+      "exitCode": 0,
+      "seconds": 4.75,
+      "logSha256": "771f51aff4fa05b0a08121cbf93a3d07190f5a239ebd87723ca8c82eb224ba42",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-runtime-publish.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-runtime-publish.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.438,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-runtime-trial.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-runtime-trial.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.453,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-session-interaction.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-session-interaction.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.468,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-source-text.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-source-text.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-source-text.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.266,
+      "logSha256": "95358a50c599f39bd92d6a45d9659a20de51d4b5219865b31ad694b0c63c85d6",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-startup-diagnostics.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-startup-diagnostics.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-startup-diagnostics.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.297,
+      "logSha256": "b8b2c9c6dcd3f8e762ac6de49721216ddc227d8cb78c29b36e7095f6bbc3e59a",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-startup-page-relay.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-startup-page-relay.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-startup-page-relay.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.062,
+      "logSha256": "2e8ab9207aafd1365f7ed5916a9a1581628dcd050a11d2d7728cfbdf4be761fc",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-storage-json-proroot-dirent.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-storage-json-proroot-dirent.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-storage-json-proroot-dirent.mjs",
+        "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129\\node_modules\\@deepseek-ai\\dsh-storage-json\\lib\\index.js"
+      ],
+      "exitCode": 0,
+      "seconds": 2.594,
+      "logSha256": "faed3cf298cc589397e896ac13b6d8204e5f58f3847a3288d02185302e799b7d",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-subagent-touch.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-subagent-touch.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.453,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-ui-boundaries154.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-ui-boundaries154.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-ui-boundaries154.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.109,
+      "logSha256": "638d287c0b0a39696192d173099f90dfd19c0b1b2df974802576f431e7c9eb0b",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-ui-colors.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-ui-colors.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-ui-colors.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.11,
+      "logSha256": "145f02a3851eb4094f4130132bfd83a437541b96e2cff36086cf074e1e8ee476",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-ui-language.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-ui-language.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.468,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-update-flow.ps1",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-update-flow.ps1.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+        "-NoProfile",
+        "-File",
+        "F:\\DSHA_RESTART\\tools\\test-update-flow.ps1",
+        "-Sdk",
+        "F:\\DSHA\\_toolchains\\android-sdk",
+        "-Cache",
+        "F:\\DSHA\\_toolchains\\gradle-user-home\\caches",
+        "-Jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "-Flavor",
+        "standard"
+      ],
+      "exitCode": 0,
+      "seconds": 3.844,
+      "logSha256": "e293b0f0b72e1daa32f95e6ceaf086f162e5c96bb1886d87e85b95bd498d0204",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-verification-require.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-verification-require.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-verification-require.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.203,
+      "logSha256": "7655c67a79cd7df755292fba7d1f757be37bf85f9aba6b1b3107e9cd48266026",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-vscreen.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-vscreen.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-vscreen.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.063,
+      "logSha256": "6faeaeb8034a8b1f7d6452fca303f76815586834036e9952b23fccf507b09a68",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-web-compat.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-web-compat.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-web-compat.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.125,
+      "logSha256": "dc641d998ee3d9dc30a5d25ebd4b054f4699b94a97fd539518cd830f0accb104",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-web-drafts.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-web-drafts.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-web-drafts.mjs",
+        "--unit-only"
+      ],
+      "exitCode": 0,
+      "seconds": 0.093,
+      "logSha256": "687e13aff68718a67545084b4e2445bad43099117c5bed4a257ff2ca235ab84c",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-web-ui-host-fixtures.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-web-ui-host-fixtures.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-web-ui-host-fixtures.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.735,
+      "logSha256": "6e7dfb72c844af8bf0be9f6c91a7ff6c551af488fffdca22c99dbb5d7694094a",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-workflow-compat-alias.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-workflow-compat-alias.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.469,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-vscreen-manager-http.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-vscreen-manager-http.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-vscreen-manager-http.py",
+        "--jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "--sdk",
+        "F:\\DSHA\\_toolchains\\android-sdk",
+        "--gradle-home",
+        "F:\\DSHA\\_toolchains\\gradle-user-home"
+      ],
+      "exitCode": 0,
+      "seconds": 12.125,
+      "logSha256": "278bdc713e129704b627a586514ed9bbe6a2f933c2abfc30edf9c6f634ec419b",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-format-java-tree.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-format-java-tree.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-format-java-tree.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.328,
+      "logSha256": "19ebe34e12ffb8d5911f1d092266e149a5b2edf0a3b16e8a24f783258ed64566",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-low-preview-capability.mjs",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-low-preview-capability.mjs.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-low-preview-capability.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 0.047,
+      "logSha256": "1437aea07556af77489b6d9f3a692ebfde1a83082884c2e38b3dfc3b67a0fbcb",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-runtime-stop-recovery.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-runtime-stop-recovery.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-stop-recovery.py",
+        "--jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "--sdk",
+        "F:\\DSHA\\_toolchains\\android-sdk",
+        "--gradle-home",
+        "F:\\DSHA\\_toolchains\\gradle-user-home",
+        "--flavor",
+        "standard"
+      ],
+      "exitCode": 0,
+      "seconds": 5.954,
+      "logSha256": "7f07768bd605f1a29418f56a1c4f170e7ac67a680c2ebbcd1092ee26e2262e95",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-credential-yaml-projection.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-credential-yaml-projection.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.437,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-native-session-handshake.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-native-session-handshake.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-native-session-handshake.py",
+        "--linux-host",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build154\\linux-host",
+        "--native-inputs",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build156\\linux-native",
+        "--wsl-distro",
+        "docker-desktop",
+        "--linux-tempdir",
+        "/dev/shm",
+        "--work-directory",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build156\\host-final\\host-test-notmtdhp"
+      ],
+      "exitCode": 0,
+      "seconds": 13.391,
+      "logSha256": "4773cabd23501821a9936983a1553f45e0d15f847483f46517ac8dd1b184804a",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-web-browser-fixture.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-web-browser-fixture.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-web-browser-fixture.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.968,
+      "logSha256": "aee873735f7bbda09380972feb5b6edb6cb44f0995d6ddf7923f3c5b4687eb15",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-retired-audit-contract.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-retired-audit-contract.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-retired-audit-contract.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.235,
+      "logSha256": "633ca7a4da59c5d140aedfa2614b02cb07156127d8fab086ed5ea187dbfcacb2",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-bridge-files.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-bridge-files.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-files.py",
+        "--jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "--gradle-home",
+        "F:\\DSHA\\_toolchains\\gradle-user-home"
+      ],
+      "exitCode": 0,
+      "seconds": 2.469,
+      "logSha256": "e3a04299fa01dab28a8f68dc5f9a06bfb6c3cc1bebbc7adb4d689913c94f7402",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-bridge-token-transport.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-bridge-token-transport.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-bridge-token-transport.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.047,
+      "logSha256": "8c8294c107ce94ce88611e87bc6517020fa7c95929b0b1d02353650668aa07b1",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-runtime-session.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-runtime-session.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-session.py"
+      ],
+      "exitCode": 0,
+      "seconds": 6.453,
+      "logSha256": "1207dc84fa0723c934e62997216bac36dc936e4a490c26a69fa0a15c24a13e01",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-core-boundaries.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-core-boundaries.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-core-boundaries.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.406,
+      "logSha256": "1cb1cfc39d54d18a4820f1fd11db9f10e203a92c7b45003eb7d4da90acb45c76",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-ui-i18n.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-ui-i18n.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-ui-i18n.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.109,
+      "logSha256": "ea27b6d70a8c9558f0aac22313a5df2e4deea31e3188906d80bae6ced4ccbb6e",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-rc2-tooltips.mjs",
+      "status": "FAILED",
+      "log": "app\\build\\audit-build156\\host-final\\test-rc2-tooltips.mjs.log",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED",
+      "errorType": "ValueError",
+      "seconds": 2.484,
+      "logSha256": "4abaa3d39766225289494a8766a5c69fd6bd49aa7efc68ca1341d97237c6c8a9"
+    },
+    {
+      "path": "tools/test-third-party-notices.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-third-party-notices.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-third-party-notices.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.141,
+      "logSha256": "fd4d1504333c3cc9807b6d0b123e46a5bf9ecdc339b04fa5560b49b02bd5d965",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-native-session-build.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-native-session-build.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-native-session-build.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.187,
+      "logSha256": "b2906ad861e26f4b7a56ee69c54295a25f108ab02b992ec676f34cf85d260c69",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-runtime-descriptor-source.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-runtime-descriptor-source.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-runtime-descriptor-source.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.219,
+      "logSha256": "a763389cce284615e5c86edf020b9095fc0594db7fe93a2a83c3ca8de25008cd",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-host-test-runner.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-host-test-runner.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-host-test-runner.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.719,
+      "logSha256": "da986db86b1c1f970811bf0e65ee3f2bd318f30febb7a4dcffe87782382e5f89",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-unit-test-runner.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-unit-test-runner.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-unit-test-runner.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.39,
+      "logSha256": "e4f3c6ae4c94ee077d021fe2e2ed1e806f5a71db8df7cb6be378b51cd1ad98cb",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-native-device-policy.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-native-device-policy.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-native-device-policy.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.328,
+      "logSha256": "0fd1fe8c1edd6664510c72bb8fc8b06c74f587bf79d6a6853bb6261ca0d43246",
+      "childExitStatus": "PASS"
+    },
+    {
+      "path": "tools/test-java-format.py",
+      "status": "FAILED_FIXTURE_INVALIDATED",
+      "log": "app\\build\\audit-build156\\host-final\\test-java-format.py.log",
+      "fixtureBindings": [
+        {
+          "kind": "raw",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+          "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+          "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1"
+        },
+        {
+          "kind": "managed",
+          "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+          "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+          "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912"
+        }
+      ],
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-java-format.py"
+      ],
+      "exitCode": 0,
+      "seconds": 7.5,
+      "logSha256": "a3f352862ff9c6d54e3061316856b3f053ada9360771cb318bf364668ba713d0",
+      "childExitStatus": "PASS"
+    }
+  ],
+  "excluded": [
+    {
+      "path": "tools/test-alpha1-startup.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-alpha2-upgrade.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-dns-compat-device.mjs",
+      "stage": "device",
+      "reason": "需要真实设备或ADB；本轮不运行"
+    },
+    {
+      "path": "tools/test-documents-parent.ps1",
+      "stage": "device",
+      "reason": "需要真实设备或ADB；本轮不运行"
+    },
+    {
+      "path": "tools/test-environment-data.py",
+      "stage": "history",
+      "reason": "Historical Python v1 original only; current NativeEnvironmentRebuild/MaintenanceDataSnapshot has separate JVM proof"
+    },
+    {
+      "path": "tools/test-gecko-model-navigation.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-restore-merge-plugins.py",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-restore-merge-wsdir.py",
+      "stage": "history",
+      "reason": "Retired guest restore-merge implementation, temp-only historical fixture; cannot prove current NativeBackup boundary"
+    },
+    {
+      "path": "tools/test-runtime-fixture.mjs",
+      "stage": "support",
+      "reason": "Runtime selection/proof helper, imported by real tests; not an independent test"
+    },
+    {
+      "path": "tools/test-startup-checkpoints.py",
+      "stage": "history",
+      "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence"
+    },
+    {
+      "path": "tools/test-startup-recovery.py",
+      "stage": "history",
+      "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence"
+    }
+  ],
+  "runtimeFixtureVerification": [
+    {
+      "kind": "raw",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+      "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+      "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1",
+      "status": "FAILED",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED"
+    },
+    {
+      "kind": "managed",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+      "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+      "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912",
+      "status": "FAILED",
+      "error": "TEST_FIXTURE_SESSION_METADATA_CHANGED"
+    }
+  ],
+  "failures": [
+    "tools/test-dsh-builtins.mjs",
+    "tools/test-dsh-sessions.mjs",
+    "tools/test-dsha-ui-regressions.py",
+    "tools/test-issue67-startup.mjs",
+    "tools/test-legacy-preset-convert.mjs",
+    "tools/test-lexical-claim-compat.mjs",
+    "tools/test-mobile-delete.mjs",
+    "tools/test-mobile-modal-behavior.mjs",
+    "tools/test-native-plugin-manager.mjs",
+    "tools/test-office-fonts.mjs",
+    "tools/test-pdf-compat.mjs",
+    "tools/test-plugin-resolution-order.mjs",
+    "tools/test-plugin-states.mjs",
+    "tools/test-profile-settings-cli.mjs",
+    "tools/test-profile-settings-review.mjs",
+    "tools/test-queue-steer.mjs",
+    "tools/test-rc1-browser-behavior.mjs",
+    "tools/test-rc1-settings-migration.mjs",
+    "tools/test-recovery-agent.mjs",
+    "tools/test-recovery-profile-boot.mjs",
+    "tools/test-runtime-publish.mjs",
+    "tools/test-runtime-trial.mjs",
+    "tools/test-session-interaction.mjs",
+    "tools/test-subagent-touch.mjs",
+    "tools/test-ui-language.mjs",
+    "tools/test-workflow-compat-alias.mjs",
+    "tools/test-credential-yaml-projection.mjs",
+    "tools/test-rc2-tooltips.mjs",
+    "runtime-fixture-final-verification"
+  ]
+}

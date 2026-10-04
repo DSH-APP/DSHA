@@ -6,7 +6,7 @@
   <string name="ui134_candidate">查看候选版本</string>
   <string name="ui134_candidate_sub">更新记录、大小与安装方式</string>
   <string name="ui134_changelog">本版本更新记录</string>
-  <string name="ui134_changelog_sub">0.1.7-rc2 · 定时任务、插件与长对话修复</string>
+  <string name="ui134_changelog_sub">0.2.0-rc2 · 插件安装后自动启用</string>
   <string name="ui134_check_ready">准备检查</string>
   <string name="ui134_results">检查结果</string>
   <string name="ui134_start_records">启动记录</string>
@@ -14,10 +14,6 @@
   <string name="ui134_recent_startups_sub">阶段、实际错误与退出码</string>
   <string name="ui134_startup_recovery">启动故障处理</string>
   <string name="ui134_startup_recovery_sub">查看问题与恢复方式</string>
-  <string name="ui134_host">配对地址</string>
-  <string name="ui134_auto_host">留空自动发现本机地址</string>
-  <string name="ui134_pair_port">配对端口</string>
-  <string name="ui134_auto_port">六位码弹窗的端口，可自动发现</string>
   <string name="ui134_disconnect">断开 ADB 连接</string>
   <string name="ui134_root_hint">已 Root 的手机：开启开关，在 Magisk / KernelSU 等管理器允许 DSHA，再点验证。未 Root 可用下方通道。</string>
   <string name="ui134_shizuku_hint">先在 Shizuku 管理器启动服务，再返回授权。手机重启后通常需要重新启动服务。</string>

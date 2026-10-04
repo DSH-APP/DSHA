@@ -1,0 +1,1328 @@
+{
+  "schemaVersion": 1,
+  "lane": "runtime",
+  "phase": "current_source_verified_pending_root_final_release_gates",
+  "baselineBuild": 155,
+  "targetBuild": 156,
+  "scope": "Current source and isolated host/SDK/kernel fixtures; no phone, extra audit APK, Gradle, version/sign/upload/release mutation by this lane",
+  "items": [
+    {
+      "id": "D-RT-06",
+      "currentDisposition": "duplicate",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/BoundedGuestSessions.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        }
+      ],
+      "softwareChanges": [
+        "逐条清理已证明结束记录，畸形记录原位保留；firstPending返回具体ID，取消立即抛出。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "canonical D-RT-18；移动畸形记录不能证明未知guest退出。"
+      ],
+      "changed": true,
+      "duplicateOf": "D-RT-18"
+    },
+    {
+      "id": "D-RT-13",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/WebRecordedStop.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebForceStop.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebStopDiagnostic.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebStopException.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebStopCoordinator.java",
+        "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "current WebRecordedStopTest + TrialRecoveryTest in runtime verify-runtime.py",
+          "exitCode": 0,
+          "result": "11 recorded-stop and 9 actual pending-trial-recovery algorithm cases passed inside the 54-test selector",
+          "scope": "Production delegates with explicit I/O/stop confirmation; Android Os, file descriptor and UI taps are separate"
+        },
+        {
+          "command": "core lane current SDK/JDK verification",
+          "exitCode": 0,
+          "result": "116 JUnit tests passed, including WebHealthProbe, StartupDiagnostics and RuntimeHostPorts",
+          "artifacts": [
+            "app/build/audit-build156/core-jvm/receipt.json"
+          ],
+          "scope": "Cross-lane actual receipt; final integrated build remains root-owned"
+        }
+      ],
+      "softwareChanges": [
+        "新增确认前不可变候选；同manager/UID、PID出生、代次、记录及命令双读一致后才SIGKILL。",
+        "正式普通停止仍只SIGTERM；ForceStopRequest经同代队列/停止协调，UI明确选择与确认，取消不调用强制。",
+        "主停止结果保留全部类型化事实，显示通过应用注入端口即时渲染。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "发信号不是退出证明；unknown/EPERM/复用/缺记录保留屏障。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-18",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/BoundedGuestSessions.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/TerminalProcessCloser.java",
+        "app/src/main/java/com/deepseekharness/app/util/MaintenanceGate.java",
+        "app/src/main/java/com/deepseekharness/app/core/MaintenanceCoordinator.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostMaintenancePending.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "current WebRecordedStopTest + TrialRecoveryTest in runtime verify-runtime.py",
+          "exitCode": 0,
+          "result": "11 recorded-stop and 9 actual pending-trial-recovery algorithm cases passed inside the 54-test selector",
+          "scope": "Production delegates with explicit I/O/stop confirmation; Android Os, file descriptor and UI taps are separate"
+        }
+      ],
+      "softwareChanges": [
+        "修正单条坏记录阻断后续可证明结束记录的清理；最后汇总具体ID并仍保留坏记录。",
+        "firstPending明确返回具体ID，等待取消不会继续清理其它记录。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "拒绝仅靠quarantine、LEADER_REUSED或factoryReset确认绕过未知进程屏障；实际会话未证明为空时保留原件和独立应急只读出口。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-19",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+        "app/src/main/java/com/deepseekharness/app/recovery/RecoveryStoragePlan.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RecoveryToolchain.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PrivateRoots.java"
+      ],
+      "checks": [
+        {
+          "command": "root RecoveryPublicationTest/current recovery tests",
+          "exitCode": 0,
+          "result": "11 current JVM cases passed",
+          "scope": "Capsule publication/storage records; no phone recovery process fixture"
+        },
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        }
+      ],
+      "softwareChanges": [
+        "由root修RecoveryRuntime/RecoveryStoragePlan的原子持久记录与父目录同步；已关闭实例/可证明候选有清理策略。",
+        "旧链数据维护工具从cache迁到安全files随机独立根，准备失败可安全清理；未确认进程仍保留。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "独立应急运行根、临时维护工具根与正式rootfs依赖分离；运行权限/厂商行为未实机覆盖。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-20",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/UserDataBindings.java",
+        "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-bridge-files.py (bridge lane)",
+          "exitCode": 0,
+          "result": "67 current host checks passed",
+          "scope": "File/bind and typed bridge/gesture/fence checks; real Android virtual screen and resource-backed HTTP manager fixture were not exercised"
+        },
+        {
+          "command": "data lane final current-source JDK verification",
+          "exitCode": 0,
+          "result": "72/72 final cases passed; HostSnapshotTest 7 and ScheduledBackupOwnerTest 5 separately passed in current-source groups",
+          "artifacts": [
+            "app/build/audit-build156/data-final-tests/receipt.json",
+            "app/build/audit-build156/data-jvm-current/receipt.json"
+          ],
+          "scope": "Windows host/source behavior; Android JobScheduler, provider/OEM and long-storage throughput remain separate"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "token/status由同一实际UserDataLayout.current根安全写入；原生APIKey是KeyVault密文偏好，当前无guest apikey.env writer，历史凭据路径仅作读取合同。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-ARCH-04",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestScriptQueue.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestCommandOutput.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/Rc1MigrationCache.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeNativeFiles.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHardlinks.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/TerminalRuntime.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RecoveryToolchain.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RootfsReadiness.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeInstallationState.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeAssetText.java",
+        "app/src/main/java/com/deepseekharness/app/util/ProcessBirthHandshake.java",
+        "app/src/main/java/com/deepseekharness/app/util/TrialWaitBudget.java",
+        "app/src/main/java/com/deepseekharness/app/util/DeviceScriptProof.java",
+        "app/src/main/java/com/deepseekharness/app/util/PrivilegedContextFailure.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebForceStop.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebStopDiagnostic.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebStopException.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "python app/build/audit-build156/runtime/verify-existing.py",
+          "exitCode": 0,
+          "result": "18 selectors / 97 JUnit tests passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/existing-receipt.json",
+            "app/build/audit-build156/runtime/existing-javac.log",
+            "app/build/audit-build156/runtime/existing-junit.log"
+          ],
+          "scope": "Named current Java/file-boundary sources and real JVM filesystem/LinkFs fixtures, before the test lane added two extra Tar cases"
+        }
+      ],
+      "softwareChanges": [
+        "ProotBootstrap实拆后496行，公开API留兼容门面；启动、原生依赖、已安装状态、传输、插件脚本、维护工具和PTY均由实际协作者执行。",
+        "应用Owner的RuntimeHostPorts实例贯穿；FIFO脚本lease只在登记/交接持monitor，runner仍原线程且执行时不持锁。",
+        "DNS Binder查询提前到RuntimeTools资产锁外；受管文件准备仍顺序核验。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "未执行assembleDebug/审计APK或真机冒烟；最终正式flavor编译/Lint/APK门禁由root完成。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-HEUR-01",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java",
+        "app/src/main/java/com/deepseekharness/app/core/DiagnosticLog.java",
+        "app/src/main/java/com/deepseekharness/app/util/PluginFailureOwner.java"
+      ],
+      "checks": [
+        {
+          "command": "core lane current SDK/JDK verification",
+          "exitCode": 0,
+          "result": "116 JUnit tests passed, including WebHealthProbe, StartupDiagnostics and RuntimeHostPorts",
+          "artifacts": [
+            "app/build/audit-build156/core-jvm/receipt.json"
+          ],
+          "scope": "Cross-lane actual receipt; final integrated build remains root-owned"
+        }
+      ],
+      "softwareChanges": [
+        "core实际StartupDiagnostics改clock/event/FS端口；只有严格结构事件成为issue，关键词仅相关输出，不整文件重写。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "1000真实结构事件预算与stale代次行为为主机证据，不等所有插件错误内容覆盖。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-HEUR-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/WebProcSel.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/WebRecordedStop.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-existing.py",
+          "exitCode": 0,
+          "result": "18 selectors / 97 JUnit tests passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/existing-receipt.json",
+            "app/build/audit-build156/runtime/existing-javac.log",
+            "app/build/audit-build156/runtime/existing-junit.log"
+          ],
+          "scope": "Named current Java/file-boundary sources and real JVM filesystem/LinkFs fixtures, before the test lane added two extra Tar cases"
+        },
+        {
+          "command": "current WebRecordedStopTest + TrialRecoveryTest in runtime verify-runtime.py",
+          "exitCode": 0,
+          "result": "11 recorded-stop and 9 actual pending-trial-recovery algorithm cases passed inside the 54-test selector",
+          "scope": "Production delegates with explicit I/O/stop confirmation; Android Os, file descriptor and UI taps are separate"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "精确Node/dsh argv及受管pre-exec shell只用于保守屏障；信号目标仍需出生/UID/记录和maySignalWeb。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-PERF-01",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/HostSnapshot.java"
+      ],
+      "checks": [
+        {
+          "command": "data lane final current-source JDK verification",
+          "exitCode": 0,
+          "result": "72/72 final cases passed; HostSnapshotTest 7 and ScheduledBackupOwnerTest 5 separately passed in current-source groups",
+          "artifacts": [
+            "app/build/audit-build156/data-final-tests/receipt.json",
+            "app/build/audit-build156/data-jvm-current/receipt.json"
+          ],
+          "scope": "Windows host/source behavior; Android JobScheduler, provider/OEM and long-storage throughput remain separate"
+        }
+      ],
+      "softwareChanges": [
+        "capture流中计算SHA，消除额外capture重读哈希；保留最终原源内容复核。",
+        "data本轮修InterruptedIOException在rescue与最终复核不降为PARTIAL。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "完整性所需暂存、写归档和最终原源读取保留；没有大设备容量/吞吐基准。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-PERF-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-bridge-files.py (bridge lane)",
+          "exitCode": 0,
+          "result": "67 current host checks passed",
+          "scope": "File/bind and typed bridge/gesture/fence checks; real Android virtual screen and resource-backed HTTP manager fixture were not exercised"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "Manager LOCK只snapshot，远程/平台调用在锁外，动作有独立有序队列；资源未生成的真实manager HTTP工具未计PASS。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-PERF-03",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+        "tools/mobile-server/compress.js",
+        "tools/mobile-server/index.js"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-mobile-server-streams.mjs (plugins lane)",
+          "exitCode": 0,
+          "result": "34 actual HTTP/stream tests passed",
+          "scope": "Async bounded compression, carrier scope, saturation/cancellation/end callbacks and 17 MiB pass-through"
+        }
+      ],
+      "softwareChanges": [
+        "plugins将压缩改最多2个async质量4worker，>=1MiB/饱和/流式响应原样交原生，按实际服务carrier过滤。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "实际HTTP行为通过；Android长会话/热/CPU性能未测。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-PERF-04",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java",
+        "app/src/main/assets/plugin-network.py",
+        "app/src/main/assets/plugin-dependencies.py"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "python -B tools/test-plugin-downloads.py (plugins lane)",
+          "exitCode": 0,
+          "result": "22 current owned-package/progress/idle/overall/cancellation/hook-no-replay checks passed",
+          "scope": "Guest package commands; manager outer total budget checked separately in GuestPluginScriptsTest"
+        }
+      ],
+      "softwareChanges": [
+        "guest每包命令900秒整体/120秒idle已有真实验证；外层manager从600秒提升3,000,000ms，容纳npm pack重试、pnpm安装和核验，不截断第二阶段。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "整体预算分层；依赖/hooks开放策略保持，写入未知不换源重放。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-PLAT-01",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/PrivilegedPackageContext.java",
+        "app/src/main/java/com/deepseekharness/app/util/PrivilegedContextFailure.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        }
+      ],
+      "softwareChanges": [
+        "隐藏API失败经有界脱敏SDK/root-cause诊断，原失败闭合/主Looper/单次初始化保持。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "API29/33/35真实app_process与OEM反射可用性没有模拟成完成。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-PLAT-02",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/IsolatedInstallProcess.java",
+        "app/src/main/java/com/deepseekharness/app/util/ProcessBirthHandshake.java",
+        "app/src/main/java/com/deepseekharness/app/util/IsolatedCommand.java",
+        "app/src/main/java/com/deepseekharness/app/util/ProcessIdentity.java",
+        "app/src/main/java/com/deepseekharness/app/util/Compat.java",
+        "tools/native-session/session-launcher.c",
+        "app/src/main/jniLibs/arm64-v8a/libdsha-session.so"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "python tools/native-session/build.py --ndk F:/DSHA/_toolchains/android-sdk/ndk/26.3.11579264 --output app/src/main/jniLibs/arm64-v8a/libdsha-session.so; same --check",
+          "exitCode": 0,
+          "result": "Android API 23 arm64 rebuilt; --check byte-identical SHA256 12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5; LOAD alignment 0x4000 with GNU_RELRO",
+          "scope": "Built bytes and ELF layout, not Android 6/7 or 16 KiB device execution"
+        },
+        {
+          "command": "root Linux native current-source probe via WSL Node / test-session.mjs",
+          "exitCode": 0,
+          "result": "Actual Linux self PID/parent/group/session/birth, pre-confirmation no guest, explicit guest start, checked cleanup and usage 125 passed",
+          "artifacts": [
+            "app/build/audit-build156/linux-native/compile-receipt.json",
+            "app/build/audit-build156/linux-native/behavior-receipt.json"
+          ],
+          "scope": "Source/compiler/package/binary fingerprints; Linux x86_64 kernel behavior, not Android arm64/ROM"
+        }
+      ],
+      "softwareChanges": [
+        "受控IsolatedInstallProcess由签名native leader自读stat，通过PID/亲子/session/birth再核验后持久记录并放行DSHA_START，摆脱该入口ART字符串PID识别。",
+        "API23 arm64及实际Linux源进程握手均有新证据。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "Compat.ownedProcess仍唯一调用androidPid，供直接Java Process的destroy/requestGracefulStop的受限兜底；失败仅对象请求停止/返回false并保屏障。PTY原fork握手未改。Android ROM/API矩阵仍缺。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-01",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/WebHealthProbe.java",
+        "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+      ],
+      "checks": [
+        {
+          "command": "core lane current SDK/JDK verification",
+          "exitCode": 0,
+          "result": "116 JUnit tests passed, including WebHealthProbe, StartupDiagnostics and RuntimeHostPorts",
+          "artifacts": [
+            "app/build/audit-build156/core-jvm/receipt.json"
+          ],
+          "scope": "Cross-lane actual receipt; final integrated build remains root-owned"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "TCP-only不会成为ready或重启候选；实际HTTP/cookie健康状态和monotonic退避受owner/starting守卫。模型服务矩阵未覆盖。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-RT-03",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/UserDataBindings.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/LaunchSpec.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-existing.py",
+          "exitCode": 0,
+          "result": "18 selectors / 97 JUnit tests passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/existing-receipt.json",
+            "app/build/audit-build156/runtime/existing-javac.log",
+            "app/build/audit-build156/runtime/existing-junit.log"
+          ],
+          "scope": "Named current Java/file-boundary sources and real JVM filesystem/LinkFs fixtures, before the test lane added two extra Tar cases"
+        },
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "filesDomain显式传入；rootfs不在实际files/linux/ubuntu时拒绝且不创建状态。独立运行根明确null域。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-RT-04",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestScripts.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/BasicToolsInstaller.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/main/java/com/deepseekharness/app/util/DeviceScriptProof.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "python app/build/audit-build156/runtime/verify-script-input.py",
+          "exitCode": 0,
+          "result": "2 current-source JUnit cases passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/script-input-receipt.json",
+            "app/build/audit-build156/runtime/script-input-junit.log"
+          ],
+          "scope": "Actual bounded >128KiB stdin/close/limit behavior; fixed INSTALL argument under 512 bytes"
+        }
+      ],
+      "softwareChanges": [
+        "当前大脚本通过有界stdin，argv只放固定短命令；原子安装设备脚本/包装器改完整签名字节证明而非注释版本。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "普通安装stdin保持/dev/null，显式管道入口由调用方立即写入并关闭。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-07",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+        "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "python app/build/audit-build156/runtime/verify-existing.py",
+          "exitCode": 0,
+          "result": "18 selectors / 97 JUnit tests passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/existing-receipt.json",
+            "app/build/audit-build156/runtime/existing-javac.log",
+            "app/build/audit-build156/runtime/existing-junit.log"
+          ],
+          "scope": "Named current Java/file-boundary sources and real JVM filesystem/LinkFs fixtures, before the test lane added two extra Tar cases"
+        }
+      ],
+      "softwareChanges": [
+        "漏bind诊断现在明确走本App的实例ports，不依赖全局服务注册。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "实际Android共享存储授权与FUSE可见性未测；跳过不改用户数据范围。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-08",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeNativeFiles.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeLauncher.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "python app/build/audit-build156/runtime/verify-existing.py",
+          "exitCode": 0,
+          "result": "18 selectors / 97 JUnit tests passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/existing-receipt.json",
+            "app/build/audit-build156/runtime/existing-javac.log",
+            "app/build/audit-build156/runtime/existing-junit.log"
+          ],
+          "scope": "Named current Java/file-boundary sources and real JVM filesystem/LinkFs fixtures, before the test lane added two extra Tar cases"
+        }
+      ],
+      "softwareChanges": [
+        "native依赖准备归RuntimeNativeFiles且所有使用前验证；Proot自身持loader/依赖/env校验，失败传播。Launcher单一路径使用同一不可变spec及实例ports。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "bind定义不可变，缺native库无静默继续；实际loader设备执行不由SDK代替。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-10",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/IsolatedInstallProcess.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/BoundedGuestLifetime.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        }
+      ],
+      "softwareChanges": [
+        "poll只观察，exitValue/isAlive不置closed或删status；关闭路径持退出证明后清理。",
+        "waitFor(timeout)单调预算和最高100ms退避，不用10ms永久忙轮询。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "foreground完成仍不等完整guest退出，BoundedGuestLifetime继续close/uncertain/保留lease。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-11",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/TrialRecovery.java",
+        "app/src/main/java/com/deepseekharness/app/util/TrialWaitBudget.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "current WebRecordedStopTest + TrialRecoveryTest in runtime verify-runtime.py",
+          "exitCode": 0,
+          "result": "11 recorded-stop and 9 actual pending-trial-recovery algorithm cases passed inside the 54-test selector",
+          "scope": "Production delegates with explicit I/O/stop confirmation; Android Os, file descriptor and UI taps are separate"
+        }
+      ],
+      "softwareChanges": [
+        "维护trial阶段预算STARTING10分/AUTH2分/RENDER5分/SETTINGS10分，超时走现有失败记录/停止清理。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "普通Web鉴权无限等待、60秒仅提示保持；试运行超时不触发fallback，不假设guest已退出。Android renderer软提示/取消按钮未设备验证。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-15",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BundledRootfsAsset.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+        "tools/runtime_input_contract.py"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "当前包只定位assets/offline-rootfs.bin；历史备份另有读者。最终APK唯一条目/SHA门禁由root正式打包检查。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-RT-16",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ColdBundleTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ColdBundleExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ColdInstallTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "data lane final current-source JDK verification",
+          "exitCode": 0,
+          "result": "72/72 final cases passed; HostSnapshotTest 7 and ScheduledBackupOwnerTest 5 separately passed in current-source groups",
+          "artifacts": [
+            "app/build/audit-build156/data-final-tests/receipt.json",
+            "app/build/audit-build156/data-jvm-current/receipt.json"
+          ],
+          "scope": "Windows host/source behavior; Android JobScheduler, provider/OEM and long-storage throughput remain separate"
+        }
+      ],
+      "softwareChanges": [
+        "实际冷安装交易/候选/发布/运行方式回切继续由ColdBundleTransaction执行；Owner实例端口代替shared。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "候选失败不会发布非空正式root；已启动而退出未知的现场必须保留，不能自动删。Android冷解压杀进程重开未实测。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-17",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        {
+          "command": "rg uninstall()/void uninstall in current ProotBootstrap",
+          "exitCode": 1,
+          "result": "0 matches",
+          "scope": "Current source structural check"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "清空/重建继续走HostDataTransaction/FactoryReset，不恢复危险死入口。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-SEC-09",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/LaunchSpec.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeLauncher.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebProcessSession.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebLaunchCommand.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        },
+        {
+          "command": "core lane current SDK/JDK verification",
+          "exitCode": 0,
+          "result": "116 JUnit tests passed, including WebHealthProbe, StartupDiagnostics and RuntimeHostPorts",
+          "artifacts": [
+            "app/build/audit-build156/core-jvm/receipt.json"
+          ],
+          "scope": "Cross-lane actual receipt; final integrated build remains root-owned"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "LaunchSpec环境不可变，真实RuntimeLauncherTest key不在argv/spec诊断；APIKey在环境或专用管道。真实模型调用与/proc设备检查未做。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-CONC-01",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackupService.java",
+        "app/src/main/java/com/deepseekharness/app/util/ScheduledBackupOwner.java"
+      ],
+      "checks": [
+        {
+          "command": "data lane final current-source JDK verification",
+          "exitCode": 0,
+          "result": "72/72 final cases passed; HostSnapshotTest 7 and ScheduledBackupOwnerTest 5 separately passed in current-source groups",
+          "artifacts": [
+            "app/build/audit-build156/data-final-tests/receipt.json",
+            "app/build/audit-build156/data-jvm-current/receipt.json"
+          ],
+          "scope": "Windows host/source behavior; Android JobScheduler, provider/OEM and long-storage throughput remain separate"
+        }
+      ],
+      "softwareChanges": [
+        "data把worker限制为prepare secret/producer，main接收ticket后精确注册jobId，停止仅取消本代任务。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "5 ownership cases通过；Android JobScheduler/OEM时序未测。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-CONC-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-bridge-files.py (bridge lane)",
+          "exitCode": 0,
+          "result": "67 current host checks passed",
+          "scope": "File/bind and typed bridge/gesture/fence checks; real Android virtual screen and resource-backed HTTP manager fixture were not exercised"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "Foreground/Overlay公开入口转main且assert，Previews交main；独立app_process Core同步RPC/显式ImageReader handler是另一个合同，没有机械把RPC搬main。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-RT-05",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+        "app/src/main/java/com/deepseekharness/app/util/DiagnosticFailures.java",
+        "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+      ],
+      "checks": [
+        {
+          "command": "core lane current SDK/JDK verification",
+          "exitCode": 0,
+          "result": "116 JUnit tests passed, including WebHealthProbe, StartupDiagnostics and RuntimeHostPorts",
+          "artifacts": [
+            "app/build/audit-build156/core-jvm/receipt.json"
+          ],
+          "scope": "Cross-lane actual receipt; final integrated build remains root-owned"
+        },
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        }
+      ],
+      "softwareChanges": [
+        "实例AppOwner ports保首个和最近8条有界/脱敏/不可变失败；显示失败不改选择状态。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "真实Provider平台失败/OEM运行没有设备覆盖。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-09",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/BasicToolsInstaller.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallStage.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallFailure.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-existing.py",
+          "exitCode": 0,
+          "result": "18 selectors / 97 JUnit tests passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/existing-receipt.json",
+            "app/build/audit-build156/runtime/existing-javac.log",
+            "app/build/audit-build156/runtime/existing-junit.log"
+          ],
+          "scope": "Named current Java/file-boundary sources and real JVM filesystem/LinkFs fixtures, before the test lane added two extra Tar cases"
+        },
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        }
+      ],
+      "softwareChanges": [
+        "BasicToolsInstaller余下stage/ok魔数改InstallStage.id，历史1–6 API读取保留。",
+        "InstallFailure/安装进度与错误均完整UiText.format模板，错误代码及原原因不互相折叠。"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "UI最终catalog/root Release Lint整合待本轮正式门禁；未把异常类名当用户主文案。"
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-RT-12",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+        "app/src/main/java/com/deepseekharness/app/util/BoundedOutputDrain.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-existing.py",
+          "exitCode": 0,
+          "result": "18 selectors / 97 JUnit tests passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/existing-receipt.json",
+            "app/build/audit-build156/runtime/existing-javac.log",
+            "app/build/audit-build156/runtime/existing-junit.log"
+          ],
+          "scope": "Named current Java/file-boundary sources and real JVM filesystem/LinkFs fixtures, before the test lane added two extra Tar cases"
+        },
+        {
+          "command": "python app/build/audit-build156/runtime/verify-runtime.py --skip-format",
+          "exitCode": 0,
+          "result": "16 selectors / 54 JUnit tests passed; Android 37 SDK fresh source compilation passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/receipt.json",
+            "app/build/audit-build156/runtime/javac.log",
+            "app/build/audit-build156/runtime/junit.log"
+          ],
+          "scope": "Current named production/support/test source SHA256 checked before and after; no Android device or Gradle claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "每轮最多256KiB排空并留有界脱敏tail；持续高输出仍有独立trial预算/取消，失败现场保留。"
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-RT-14",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/AndroidGroups.java",
+        "app/src/main/java/com/deepseekharness/app/util/AndroidGroupMap.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/runtime/verify-existing.py",
+          "exitCode": 0,
+          "result": "18 selectors / 97 JUnit tests passed",
+          "artifacts": [
+            "app/build/audit-build156/runtime/existing-receipt.json",
+            "app/build/audit-build156/runtime/existing-javac.log",
+            "app/build/audit-build156/runtime/existing-junit.log"
+          ],
+          "scope": "Named current Java/file-boundary sources and real JVM filesystem/LinkFs fixtures, before the test lane added two extra Tar cases"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone/ADB/extra debug or audit APK was used by user instruction. Android 6/7, vendor /proc restrictions, 16 KiB hardware and native UI actions are not claimed."
+        }
+      ],
+      "residual": [
+        "AndroidGroupMap按实际uid/补充gid生成，未硬编码a428；可选准备失败有诊断。真实ROM组可见性未测。"
+      ],
+      "changed": false
+    }
+  ],
+  "newHelpers": [
+    "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/GuestScriptQueue.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/GuestCommandOutput.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/Rc1MigrationCache.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeNativeFiles.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHardlinks.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/TerminalRuntime.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/RecoveryToolchain.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/RootfsReadiness.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeInstallationState.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeAssetText.java",
+    "app/src/main/java/com/deepseekharness/app/util/ProcessBirthHandshake.java",
+    "app/src/main/java/com/deepseekharness/app/util/TrialWaitBudget.java",
+    "app/src/main/java/com/deepseekharness/app/util/DeviceScriptProof.java",
+    "app/src/main/java/com/deepseekharness/app/util/PrivilegedContextFailure.java",
+    "app/src/main/java/com/deepseekharness/app/util/WebForceStop.java",
+    "app/src/main/java/com/deepseekharness/app/util/WebStopDiagnostic.java",
+    "app/src/main/java/com/deepseekharness/app/util/WebStopException.java"
+  ],
+  "borrowedHelpers": [
+    "app/src/main/java/com/deepseekharness/app/runtime/TrialRecovery.java",
+    "app/src/main/java/com/deepseekharness/app/runtime/WebRecordedStop.java"
+  ],
+  "additionalActualRepairs": [
+    "D-API-01 affiliated typed stop facts and late App-owned description port, complete errors list",
+    "D-IO-03/D-SEC-02 actual container transfer boundary preserved",
+    "D-LEGACY-01 native bounded checkpoint reuse wired and tested",
+    "D-SUP-03 signed whole ADB script/wrapper byte proof",
+    "runtime i18n whole-template contribution33"
+  ],
+  "finalBoundaryEvidence": {
+    "prootBootstrapLines": 496,
+    "managerAndRecordedStopUiTextReferences": 0,
+    "runtimeCoreUiImports": 0,
+    "runtimeSharedPortsReferences": 0,
+    "nativeArm64Sha256": "12ace2a08056105a663f0ebc492e568d8322a6b252550a16bc05668ed9a58ed5"
+  },
+  "softwareRemaining": [],
+  "verificationRemaining": [
+    "Root final complete Standard/Low unit tests, Release Lint, descriptor/assets and signed APK/ELF gates",
+    "No physical device/overlay installation/app_process/OEM/FUSE/16KiB/native confirmation taps by user instruction"
+  ],
+  "currentSourceReceipts": [
+    "app/build/audit-build156/runtime/receipt.json",
+    "app/build/audit-build156/runtime/existing-receipt.json",
+    "app/build/audit-build156/linux-native/behavior-receipt.json",
+    "app/build/audit-build156/runtime/choose-receipt.json"
+  ],
+  "followupTemplateChecks": [
+    {
+      "command": "python app/build/audit-build156/runtime/verify-choose.py",
+      "exitCode": 0,
+      "result": "4 remaining choose-fragment templates fixed; 2 current production source files Android 37 narrow compilation passed",
+      "artifacts": [
+        "app/build/audit-build156/runtime/choose-receipt.json",
+        "app/build/audit-build156/runtime/choose-javac.log",
+        "app/build/java-format/runtime156-choose.json",
+        "docs/audits/build156/contribution-choose-runtime.json"
+      ],
+      "scope": "Complete display expressions only; original mode, redacted reason and redacted output parameters retained. No flow/stop/generation/budget change and no final release claim"
+    }
+  ],
+  "finalFrozenSourcesAfterChoose": {
+    "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java": "c386b374b49c300343dcce070306565460a2274a8039693b31a83acd77ab06fc",
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java": "d33f32ed9aaa40be0b9481af7350088f34e9a2dba3d298b247bef1384b516936"
+  }
+}

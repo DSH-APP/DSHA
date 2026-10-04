@@ -1,0 +1,38 @@
+{
+  "id": "device_a11y_bound_status",
+  "phase": "post_281_minimal_device_ui_fix",
+  "sourceFrozen": true,
+  "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+  "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+  "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+  "scope": "Only DeviceGrantsFragment.refreshA11yStatus and its adjacent responsibility comment. No permissions, settings writes, rebind strategy, service lifecycle or other production file changed.",
+  "softwareChanges": [
+    "YES is an enabled switch; actual DshaAccessibilityService.connected() now distinguishes ready from enabled-but-unbound.",
+    "Ready/waiting messages use identical preexisting complete Chinese/English pairs from AccessibilitySetupActivity; no new translation catalogue entry.",
+    "NO and UNKNOWN labels remain unchanged. Pending uses text_muted, ready primary, NO/UNKNOWN original error color."
+  ],
+  "checks": [
+    {
+      "command": "python tools/format-java.py --check --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java --report app/build/java-format/bridge156-a11y-status-check.json",
+      "result": "PASS pinned GJF single-file syntax/token/format check, zero formatting differences",
+      "scope": "format_and_token_fingerprint"
+    },
+    {
+      "command": "Python source inspection of only refreshA11yStatus and preexisting AccessibilitySetupActivity complete language pairs",
+      "result": "PASS YES+actual connection gating, exact complete language-pair reuse, unchanged NO/UNKNOWN, no permission/rebind writes, pending non-ready color",
+      "scope": "narrow_source_structure_only"
+    }
+  ],
+  "privateEvidenceReview": {
+    "files": [
+      "app/build/audit-build156/device-private/final-standard-crash-buffer-private.txt",
+      "app/build/audit-build156/device-private/final-standard-exit-info-private.txt"
+    ],
+    "observedExit": "2026-10-04 04:48:09.857 com.dsh.client pid7389 reason8 PERMISSION CHANGE status0",
+    "crashBuffer": "254 lines, five historical FATAL events dated09-27/09-29/10-02; zero10-04 lines. Not evidence of a new DSHA Java fatal at the permission-reset time; finite buffer cannot prove universal absence."
+  },
+  "deferredIntegratedChecks": [
+    "Build owner must rerun complete software and package verification for this new source. The previous281/5aeb/f8c8 artifacts and checks remain historical, not this fix validation.",
+    "Root must install the newly verified formal APK and verify enabled-but-disconnected waiting, connected readiness, NO/UNKNOWN and screen authorization on the device. No phone/ADB/Gradle/APK/build was performed by this lane."
+  ]
+}

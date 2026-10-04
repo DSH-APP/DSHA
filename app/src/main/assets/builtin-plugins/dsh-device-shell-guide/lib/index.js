@@ -12,8 +12,8 @@ const PROMPT = [
   '  例：查设备状态用 /app/device 而不是 dumpsys battery；启动应用用 /app/launch 而不是 am start。',
 
   '■ 完整端点清单（读屏 / 点按 / 输入 / 截屏 / 通知 / 剪贴板 / 传感器 / 导出文件 …）：',
-  '  T=$(cat /root/.dsh/.bridge_token)',
-  '  curl -s "http://127.0.0.1:3090/app/help?token=$T"',
+  '  # Credentials are sent by header file; do not place them in URLs or argv.',
+  '  curl -s -H @/root/.dsh/.bridge_headers "http://127.0.0.1:3090/app/help"',
   '  → 要用设备能力时查这一次，里面有每个端点的参数和写法。',
   '    清单刻意没写在这里 —— 它有十几 KB，写进提示词就是每一轮都替你付一次上下文。',
   '  ⚠ /app/help 与 /app/version 只有较新的 App 才有（老版本会把未知路径当 shell 命令处理，',

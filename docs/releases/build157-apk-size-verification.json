@@ -1,0 +1,245 @@
+{
+  "schema": 1,
+  "build": 157,
+  "status": "PASS_FOR_EXECUTED_SCOPE",
+  "recordedAt": "2026-10-04T19:03:58.282197+08:00",
+  "version": "0.2.8-20261004.1719-dsh0.2.0-rc.2",
+  "reason": "Whole122692272-byte recovery archive duplication was removed after deliberately qualifying and pinning the already-verified current three-file rc2 patch set for independent recovery.",
+  "runtimeArchiveComparison": {
+    "archives": [
+      {
+        "path": "tools/recovery-runtime/archives/recovery-dsh-runtime.bin",
+        "bytes": 122692272,
+        "sha256": "d8acb0467e5d909ed39454fa63be837ec5548e3a256d76c00687b3ddbf6e8857"
+      },
+      {
+        "path": "app/src/main/assets/dsh-runtime.bin",
+        "bytes": 122692708,
+        "sha256": "3ddafc8f83fec8f13b9dfec7d51686af1d1aa82771e8dd0a65efb913d03b7bbb"
+      }
+    ],
+    "oldMembers": 13986,
+    "newMembers": 13986,
+    "differences": [
+      {
+        "path": "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai/dsh-api-workspace-controller/lib/index.js",
+        "before": {
+          "type": "0",
+          "size": 36901,
+          "mode": 420,
+          "link": "",
+          "uid": 0,
+          "gid": 0,
+          "sha256": "8a6e3b407ff9a445358cee97183452c3ca391d8ff10dab53f5416fd4ad37ead5"
+        },
+        "after": {
+          "type": "0",
+          "size": 37137,
+          "mode": 420,
+          "link": "",
+          "uid": 0,
+          "gid": 0,
+          "sha256": "9e0fc1934a3959eeb25b23eed285b03464b6538ede13f9fc844bf4b413d5d687"
+        }
+      },
+      {
+        "path": "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/dsha-client-combo-cache/package.json",
+        "before": {
+          "type": "0",
+          "size": 92,
+          "mode": 420,
+          "link": "",
+          "uid": 0,
+          "gid": 0,
+          "sha256": "63e67f4219562187f3ffd74e7af88ac77ae573f35c625973209a654b3ea76173"
+        },
+        "after": {
+          "type": "0",
+          "size": 108,
+          "mode": 420,
+          "link": "",
+          "uid": 0,
+          "gid": 0,
+          "sha256": "1e172bf5348e5dc8694b0b6b46b764ecd8327ef172216e1577c25cdeb5a9cc0d"
+        }
+      },
+      {
+        "path": "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/dsha-runtime-fs/index.js",
+        "before": {
+          "type": "0",
+          "size": 3818,
+          "mode": 420,
+          "link": "",
+          "uid": 0,
+          "gid": 0,
+          "sha256": "ea0880b3f6f3eea3427294476b931aa948a0c2efc780a37e802ed48fbf584473"
+        },
+        "after": {
+          "type": "0",
+          "size": 4655,
+          "mode": 420,
+          "link": "",
+          "uid": 0,
+          "gid": 0,
+          "sha256": "7aa2e88bbd4e081d134e71418a481f6f830e5504d99961c91bdf3f2dbab2809d"
+        }
+      }
+    ]
+  },
+  "formalRuntimeIdUnchanged": "fdd8fc14ce4d00ada7948a570db4588c2fb088a8ade389c74f6555b553b470a2",
+  "recoveryRuntimeId": "8b6a95a624fe523defef94272dd20acbef4dd2fbef103da989b6a669180a459f",
+  "independentExtractionHomeAndPinRetained": true,
+  "futureFormalChangesDoNotAutoUpdateRecoveryPin": true,
+  "duplicateRecoveryArchiveAbsentInBothApks": true,
+  "apks": [
+    {
+      "flavor": "standard",
+      "artifact": {
+        "path": "release/dsha-0.2.0-rc2.apk",
+        "bytes": 274609878,
+        "sha256": "a5a770482a45481a0d07ac0e20e4b581bf5fbc7208e24de7d9837867ee41d828"
+      },
+      "previousBuild156Bytes": 397302610,
+      "savedBytes": 122692732,
+      "savedPercent": 30.88
+    },
+    {
+      "flavor": "low",
+      "artifact": {
+        "path": "release/dsha-0.2.0-rc2low.apk",
+        "bytes": 350404300,
+        "sha256": "040b70dccf69ad7e64c1f22e7e9f568a33630d919a73c0d4beca495dd60881ae"
+      },
+      "previousBuild156Bytes": 473097048,
+      "savedBytes": 122692748,
+      "savedPercent": 25.93
+    }
+  ],
+  "software": {
+    "path": "app/build/stability-acceptance/befda4aa-4189-43d4-bd62-41c3b48f7cdc/manifest.json",
+    "bytes": 23962,
+    "sha256": "6cb0b0175313ae86434774eed94e911ff299e2d9295fba8a734c10de03df5a4f"
+  },
+  "delivery": {
+    "path": "app/build/stability-acceptance/befda4aa-4189-43d4-bd62-41c3b48f7cdc/delivery-20381ec3-a374-4242-b977-efdc2ea081cb.json",
+    "bytes": 24581,
+    "sha256": "82410928ed72aabd6809db08fcc33d77fab9feb0d79dd665cad2b62ad13c95ae"
+  },
+  "junit": {
+    "Standard": {
+      "tests": 1195,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "Low": {
+      "tests": 1195,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    }
+  },
+  "commands": 35,
+  "device": {
+    "deviceClass": "Android13/API33/4KiB",
+    "checksPerFlavor": 5,
+    "firstInstallTimePreserved": true,
+    "nonDestructive": true,
+    "browserEngine": "Existing SystemWebView preference retained in both flavors; Gecko bytes statically checked, no new Gecko-specific physical claims",
+    "dataCapture": {
+      "low": {
+        "beforeEntries": 1250,
+        "afterEntries": 1250,
+        "same": 1247,
+        "changed": 3,
+        "added": 0,
+        "removed": 0,
+        "errors": 0,
+        "changedBasenames": [
+          "repair-builtin.log",
+          ".dsha-web-activity.json",
+          ".dsha-web.pid.stale"
+        ],
+        "currentDayCrashMarkers": 0,
+        "recentExitRecords": [
+          {
+            "time": "2026-10-04 18:15:07.735",
+            "reasonCode": 10,
+            "reason": "USER REQUESTED",
+            "main": true
+          }
+        ],
+        "knownRuntimeChangesOnly": true
+      },
+      "standard": {
+        "beforeEntries": 1250,
+        "afterEntries": 1250,
+        "same": 1247,
+        "changed": 3,
+        "added": 0,
+        "removed": 0,
+        "errors": 0,
+        "changedBasenames": [
+          "repair-builtin.log",
+          ".dsha-web-activity.json",
+          ".dsha-web.pid.stale"
+        ],
+        "currentDayCrashMarkers": 0,
+        "recentExitRecords": [
+          {
+            "time": "2026-10-04 18:48:55.221",
+            "reasonCode": 13,
+            "reason": "OTHER KILLS BY SYSTEM",
+            "main": false
+          },
+          {
+            "time": "2026-10-04 18:41:31.274",
+            "reasonCode": 13,
+            "reason": "OTHER KILLS BY SYSTEM",
+            "main": false
+          },
+          {
+            "time": "2026-10-04 18:35:14.682",
+            "reasonCode": 10,
+            "reason": "USER REQUESTED",
+            "main": false
+          },
+          {
+            "time": "2026-10-04 18:35:14.452",
+            "reasonCode": 10,
+            "reason": "USER REQUESTED",
+            "main": true
+          },
+          {
+            "time": "2026-10-04 18:35:14.450",
+            "reasonCode": 10,
+            "reason": "USER REQUESTED",
+            "main": false
+          },
+          {
+            "time": "2026-10-04 18:35:14.449",
+            "reasonCode": 10,
+            "reason": "USER REQUESTED",
+            "main": false
+          },
+          {
+            "time": "2026-10-04 18:15:07.735",
+            "reasonCode": 10,
+            "reason": "USER REQUESTED",
+            "main": true
+          }
+        ],
+        "knownRuntimeChangesOnly": true
+      }
+    },
+    "recoveryReadiness": "Low fresh independent preparation and Standard independent startup both native authenticated/tool-checked READY and actual browser DOM; no key/model/repair-write requests",
+    "recoveryOnboardingLimit": "Empty-key onboarding was visible; Low later-configure dismissal was not established, not promoted to model-conversation pass",
+    "finalMain": "Standard157 native READY, mainWeb running as before; own terminals stopped; RecoveryService record absent",
+    "temporaryFilesCleaned": true
+  },
+  "fullPlatformModelMatrixCompleted": false,
+  "githubUploaded": false,
+  "websiteDeployed": false,
+  "sourceArchive": "release/build157-source/build157-complete-project-source.zip",
+  "priorBuild156RecordsUnmodified": true
+}

@@ -1,0 +1,287 @@
+{
+  "schema": 1,
+  "scope": "lexical candidates, not blanket defects",
+  "count": 35,
+  "items": [
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+      "signature": "UiText.choose(\" 项 · \",\" items · \")+",
+      "line": 129,
+      "sourceSha256": "ef101b8330544a9ed86a54c95ca4ffb8a50111d1133c902772ab29c8d90f78b6",
+      "excerpt": "125:             this, 9031, view, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);\n126:     String text =\n127:         nativeJob.busy\n128:             ? nativeJob.entries\n129:                 + UiText.choose(\" 项 · \", \" items · \")\n130:                 + com.deepseekharness.app.util.Fmt.bytes(nativeJob.bytes)\n131:             : UiText.choose(\"正在保护数据并验证运行环境\", \"Protecting data and verifying the runtime\");\n132:     return publish(text, action, open);\n133:   }\n134: \n135:   private boolean publish(String text, PendingIntent cancel, PendingIntent open) {\n136:     Notification.Builder notification =\n137:         Build.VERSION.SDK_INT >= 26\n138:             ? new Notification.Builder(this, CHANNEL)\n139:             : new Notification.Builder(this);\n140:     notification\n141:         .setSmallIcon(R.mipmap.ic_launcher)"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在尝试清理旧版 Documents/dshdata；手动导出的备份与其他个人目录会保留…\",\"Attempting to remove legacy Documents/dshdata; exported backups and other personal folders stay untouched…\")+",
+      "line": 404,
+      "sourceSha256": "6e33429a649e68ef8f7da6704449bbbdbce726d34df5b6620639abe1f5b83a21",
+      "excerpt": "400:             : com.deepseekharness.app.util.UiText.choose(\n401:                     \"\\n已安全清理 \" + entries + \" 项 · \", \"\\nSafely removed \" + entries + \" items · \")\n402:                 + com.deepseekharness.app.util.Fmt.bytes(bytes);\n403:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PUBLIC.equals(stage))\n404:       return com.deepseekharness.app.util.UiText.choose(\n405:               \"正在尝试清理旧版 Documents/dshdata；手动导出的备份与其他个人目录会保留…\",\n406:               \"Attempting to remove legacy Documents/dshdata; exported backups and other personal folders stay untouched…\")\n407:           + count;\n408:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_RUNTIME.equals(stage))\n409:       return com.deepseekharness.app.util.UiText.choose(\n410:               \"正在清除运行环境、会话和插件…\", \"Removing the runtime, conversations, and plugins…\")\n411:           + count;\n412:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PRIVATE.equals(stage))\n413:       return com.deepseekharness.app.util.UiText.choose(\n414:               \"正在清除本机备份和应用私有文件…\", \"Removing local backups and private app files…\")\n415:           + count;\n416:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在清除运行环境、会话和插件…\",\"Removing the runtime, conversations, and plugins…\")+",
+      "line": 409,
+      "sourceSha256": "6e33429a649e68ef8f7da6704449bbbdbce726d34df5b6620639abe1f5b83a21",
+      "excerpt": "405:               \"正在尝试清理旧版 Documents/dshdata；手动导出的备份与其他个人目录会保留…\",\n406:               \"Attempting to remove legacy Documents/dshdata; exported backups and other personal folders stay untouched…\")\n407:           + count;\n408:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_RUNTIME.equals(stage))\n409:       return com.deepseekharness.app.util.UiText.choose(\n410:               \"正在清除运行环境、会话和插件…\", \"Removing the runtime, conversations, and plugins…\")\n411:           + count;\n412:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PRIVATE.equals(stage))\n413:       return com.deepseekharness.app.util.UiText.choose(\n414:               \"正在清除本机备份和应用私有文件…\", \"Removing local backups and private app files…\")\n415:           + count;\n416:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))\n417:       return com.deepseekharness.app.util.UiText.choose(\n418:               \"正在清理缓存和临时文件…\", \"Clearing caches and temporary files…\")\n419:           + count;\n420:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n421:       return com.deepseekharness.app.util.UiText.choose("
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在清除本机备份和应用私有文件…\",\"Removing local backups and private app files…\")+",
+      "line": 413,
+      "sourceSha256": "6e33429a649e68ef8f7da6704449bbbdbce726d34df5b6620639abe1f5b83a21",
+      "excerpt": "409:       return com.deepseekharness.app.util.UiText.choose(\n410:               \"正在清除运行环境、会话和插件…\", \"Removing the runtime, conversations, and plugins…\")\n411:           + count;\n412:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_PRIVATE.equals(stage))\n413:       return com.deepseekharness.app.util.UiText.choose(\n414:               \"正在清除本机备份和应用私有文件…\", \"Removing local backups and private app files…\")\n415:           + count;\n416:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))\n417:       return com.deepseekharness.app.util.UiText.choose(\n418:               \"正在清理缓存和临时文件…\", \"Clearing caches and temporary files…\")\n419:           + count;\n420:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n421:       return com.deepseekharness.app.util.UiText.choose(\n422:               \"正在重置设置、设备授权和 API Key…\", \"Resetting settings, device grants, and the API key…\")\n423:           + count;\n424:     return com.deepseekharness.app.util.UiText.choose(\n425:             \"格式化完成，正在返回欢迎页…\", \"Formatting is complete. Returning to welcome…\")"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在清理缓存和临时文件…\",\"Clearing caches and temporary files…\")+",
+      "line": 417,
+      "sourceSha256": "6e33429a649e68ef8f7da6704449bbbdbce726d34df5b6620639abe1f5b83a21",
+      "excerpt": "413:       return com.deepseekharness.app.util.UiText.choose(\n414:               \"正在清除本机备份和应用私有文件…\", \"Removing local backups and private app files…\")\n415:           + count;\n416:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_CACHE.equals(stage))\n417:       return com.deepseekharness.app.util.UiText.choose(\n418:               \"正在清理缓存和临时文件…\", \"Clearing caches and temporary files…\")\n419:           + count;\n420:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n421:       return com.deepseekharness.app.util.UiText.choose(\n422:               \"正在重置设置、设备授权和 API Key…\", \"Resetting settings, device grants, and the API key…\")\n423:           + count;\n424:     return com.deepseekharness.app.util.UiText.choose(\n425:             \"格式化完成，正在返回欢迎页…\", \"Formatting is complete. Returning to welcome…\")\n426:         + count;\n427:   }\n428: \n429:   private static boolean isFactoryReset(BackupTaskState.Snapshot snapshot) {"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"正在重置设置、设备授权和 API Key…\",\"Resetting settings, device grants, and the API key…\")+",
+      "line": 421,
+      "sourceSha256": "6e33429a649e68ef8f7da6704449bbbdbce726d34df5b6620639abe1f5b83a21",
+      "excerpt": "417:       return com.deepseekharness.app.util.UiText.choose(\n418:               \"正在清理缓存和临时文件…\", \"Clearing caches and temporary files…\")\n419:           + count;\n420:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n421:       return com.deepseekharness.app.util.UiText.choose(\n422:               \"正在重置设置、设备授权和 API Key…\", \"Resetting settings, device grants, and the API key…\")\n423:           + count;\n424:     return com.deepseekharness.app.util.UiText.choose(\n425:             \"格式化完成，正在返回欢迎页…\", \"Formatting is complete. Returning to welcome…\")\n426:         + count;\n427:   }\n428: \n429:   private static boolean isFactoryReset(BackupTaskState.Snapshot snapshot) {\n430:     return com.deepseekharness.app.util.BackupTaskKinds.is(FACTORY_RESET_KIND, snapshot.kind);\n431:   }\n432: \n433:   public boolean isFactoryReset(long id) {"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "signature": "UiText.choose(\"格式化完成，正在返回欢迎页…\",\"Formatting is complete. Returning to welcome…\")+",
+      "line": 424,
+      "sourceSha256": "6e33429a649e68ef8f7da6704449bbbdbce726d34df5b6620639abe1f5b83a21",
+      "excerpt": "420:     if (com.deepseekharness.app.backup.FactoryReset.STAGE_SETTINGS.equals(stage))\n421:       return com.deepseekharness.app.util.UiText.choose(\n422:               \"正在重置设置、设备授权和 API Key…\", \"Resetting settings, device grants, and the API key…\")\n423:           + count;\n424:     return com.deepseekharness.app.util.UiText.choose(\n425:             \"格式化完成，正在返回欢迎页…\", \"Formatting is complete. Returning to welcome…\")\n426:         + count;\n427:   }\n428: \n429:   private static boolean isFactoryReset(BackupTaskState.Snapshot snapshot) {\n430:     return com.deepseekharness.app.util.BackupTaskKinds.is(FACTORY_RESET_KIND, snapshot.kind);\n431:   }\n432: \n433:   public boolean isFactoryReset(long id) {\n434:     BackupTaskState.Snapshot snapshot = state.snapshot();\n435:     return id != 0 && snapshot.id == id && isFactoryReset(snapshot);\n436:   }"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+      "signature": "UiText.choose(\"旧环境清理暂缓，原件保留：\",\"Old environment cleanup was deferred; originals retained: \")+",
+      "line": 257,
+      "sourceSha256": "a98f16d85f3bd2b8301b38e1aadf8bd11620e55402af21c8129676f78cc66d44",
+      "excerpt": "253:                 \"旧 Ubuntu 系统已清理，个人数据验证副本与事务记录保留。\",\n254:                 \"The old Ubuntu system was cleaned. Verified personal-data copies and transaction records remain.\");\n255:       } catch (IOException retained) {\n256:         cleanup =\n257:             com.deepseekharness.app.util.UiText.choose(\n258:                     \"旧环境清理暂缓，原件保留：\", \"Old environment cleanup was deferred; originals retained: \")\n259:                 + com.deepseekharness.app.backup.NativeBackupJobs.code(retained);\n260:       }\n261:       try {\n262:         com.deepseekharness.app.backup.EnvironmentRebuildTransaction.archiveCompleted(fs, files);\n263:       } catch (IOException retained) {\n264:         cleanup +=\n265:             com.deepseekharness.app.util.UiText.choose(\n266:                     \"\\n旧事务归档暂缓，原件保留：\", \"\\nOld transaction archival deferred; originals retained: \")\n267:                 + com.deepseekharness.app.backup.NativeBackupJobs.code(retained);\n268:       }\n269:       space.sample(Stage.RETIRED_CLEANUP, 0);"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+      "signature": "UiText.choose(\"\\n旧事务归档暂缓，原件保留：\",\"\\nOld transaction archival deferred; originals retained: \")+",
+      "line": 265,
+      "sourceSha256": "a98f16d85f3bd2b8301b38e1aadf8bd11620e55402af21c8129676f78cc66d44",
+      "excerpt": "261:       try {\n262:         com.deepseekharness.app.backup.EnvironmentRebuildTransaction.archiveCompleted(fs, files);\n263:       } catch (IOException retained) {\n264:         cleanup +=\n265:             com.deepseekharness.app.util.UiText.choose(\n266:                     \"\\n旧事务归档暂缓，原件保留：\", \"\\nOld transaction archival deferred; originals retained: \")\n267:                 + com.deepseekharness.app.backup.NativeBackupJobs.code(retained);\n268:       }\n269:       space.sample(Stage.RETIRED_CLEANUP, 0);\n270:       return com.deepseekharness.app.util.UiText.choose(\n271:               \"环境重建完成，数据逐文件核验与运行试验通过。\\n\",\n272:               \"Environment rebuilt; data verification and the runtime trial passed.\\n\")\n273:           + cleanup;\n274:     } catch (Exception failure) {\n275:       space.sample(Stage.FAILED, 0);\n276:       if (began && !RuntimeTasks.hasOtherTasks())\n277:         try {"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+      "signature": "UiText.choose(\"环境重建完成，数据逐文件核验与运行试验通过。\\n\",\"Environment rebuilt; data verification and the runtime trial passed.\\n\")+",
+      "line": 270,
+      "sourceSha256": "a98f16d85f3bd2b8301b38e1aadf8bd11620e55402af21c8129676f78cc66d44",
+      "excerpt": "266:                     \"\\n旧事务归档暂缓，原件保留：\", \"\\nOld transaction archival deferred; originals retained: \")\n267:                 + com.deepseekharness.app.backup.NativeBackupJobs.code(retained);\n268:       }\n269:       space.sample(Stage.RETIRED_CLEANUP, 0);\n270:       return com.deepseekharness.app.util.UiText.choose(\n271:               \"环境重建完成，数据逐文件核验与运行试验通过。\\n\",\n272:               \"Environment rebuilt; data verification and the runtime trial passed.\\n\")\n273:           + cleanup;\n274:     } catch (Exception failure) {\n275:       space.sample(Stage.FAILED, 0);\n276:       if (began && !RuntimeTasks.hasOtherTasks())\n277:         try {\n278:           transaction.rollback();\n279:           space.sample(Stage.ROLLED_BACK, 0);\n280:         } catch (Exception retained) {\n281:           failure.addSuppressed(retained);\n282:         }"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java",
+      "signature": "UiText.choose(\"Web 端口被占用：\",\"Web port in use: \")+",
+      "line": 246,
+      "sourceSha256": "0b02a459795feb31a20ce5e56d0b6f77eb6638127e3b9f1a2f0699f23547301d",
+      "excerpt": "242:   public String failureReason() {\n243:     for (String detail : snapshot().issues.values()) {\n244:       int port = com.deepseekharness.app.util.WebPortPolicy.conflictPort(detail);\n245:       if (port > 0)\n246:         return com.deepseekharness.app.util.UiText.choose(\"Web 端口被占用：\", \"Web port in use: \") + port;\n247:     }\n248:     return com.deepseekharness.app.util.UiText.choose(\n249:         \"启动配置或插件加载失败\", \"Startup configuration or plugin loading failed\");\n250:   }\n251: \n252:   public String historyError() {\n253:     return historyError;\n254:   }\n255: \n256:   private synchronized void persistHistory(boolean force) {\n257:     if (recordId.isEmpty()) return;\n258:     long now = now();"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/StartupRepairs.java",
+      "signature": "UiText.choose(\"插件已卸载，可重试启动：\",\"Plugin removed. You can retry startup: \")+",
+      "line": 128,
+      "sourceSha256": "b9a627d98e9d7c88d8581a70c08a5b79db05c233aa417743627fcf8ed8dbc48f",
+      "excerpt": "124:     }\n125:     if (!found) throw new IOException(\"RECOVERY_PLUGIN\");\n126:     checkpoint(c, new JSONObject().put(\"command\", \"before\"));\n127:     result(pluginCommand(c, \"delete \" + ShellQuote.arg(name)), \"PLUGIN_RESULT: \");\n128:     return UiText.choose(\"插件已卸载，可重试启动：\", \"Plugin removed. You can retry startup: \") + name;\n129:   }\n130: \n131:   public static void healthy(Context context, HarnessController c, long generation) {\n132:     if (pending(context)\n133:         || c.getWebGeneration() != generation\n134:         || !c.startupDiagnostics().snapshot().browserReady) return;\n135:     PluginActivationHooks.healthy(c, generation, c.startupDiagnostics().recordId());\n136:     EnvironmentTaskGate.Lease lease = EnvironmentTaskGate.tryAcquire(\"启动配置快照\");\n137:     if (lease == null) return;\n138:     try (lease) {\n139:       lease.run(\n140:           () -> {"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java",
+      "signature": "UiText.choose(\"独立应急 DSH 已就绪；正式环境保持原状。\",\"Independent recovery DSH is ready. The main environment is preserved.\")+",
+      "line": 319,
+      "sourceSha256": "e0b429576787d1be52b3cb4caf3f7e7350b7bcb2fbf31e68dc7c8ab02d59ae28",
+      "excerpt": "315:               publish(\n316:                   generation,\n317:                   id,\n318:                   \"READY\",\n319:                   UiText.choose(\n320:                           \"独立应急 DSH 已就绪；正式环境保持原状。\",\n321:                           \"Independent recovery DSH is ready. The main environment is preserved.\")\n322:                       + credentialNotice,\n323:                   \"\",\n324:                   auth.authUrl,\n325:                   exchange.cookie,\n326:                   auth.loopbackBaseUrl,\n327:                   credentialAvailable);\n328:             }\n329:           }\n330:         }\n331:         if (exchange == null && SystemClock.elapsedRealtime() - started > 60_000)"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java",
+      "signature": "UiText.choose(\"应急 DSH 未就绪：\",\"Recovery DSH is not ready: \")+",
+      "line": 391,
+      "sourceSha256": "e0b429576787d1be52b3cb4caf3f7e7350b7bcb2fbf31e68dc7c8ab02d59ae28",
+      "excerpt": "387:         publish(\n388:             generation,\n389:             id,\n390:             \"FAILED\",\n391:             UiText.choose(\"应急 DSH 未就绪：\", \"Recovery DSH is not ready: \") + failure,\n392:             errorCode(failure),\n393:             \"\",\n394:             \"\",\n395:             \"\");\n396:       else\n397:         publish(\n398:             generation,\n399:             id,\n400:             \"STOPPED\",\n401:             UiText.choose(\n402:                 \"应急 DSH 已停止，应急会话及诊断原件已保留。\",\n403:                 \"Recovery DSH stopped. Its session and original diagnostics are preserved.\"),"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java",
+      "signature": "UiText.choose(\"应急进程退出尚未确认：\",\"Recovery process exit is unconfirmed: \")+",
+      "line": 413,
+      "sourceSha256": "e0b429576787d1be52b3cb4caf3f7e7350b7bcb2fbf31e68dc7c8ab02d59ae28",
+      "excerpt": "409:       publish(\n410:           generation,\n411:           id,\n412:           \"STOP_UNCONFIRMED\",\n413:           UiText.choose(\"应急进程退出尚未确认：\", \"Recovery process exit is unconfirmed: \")\n414:               + SensitiveData.redact(stopping.getMessage()),\n415:           \"RECOVERY_PROCESS_UNCONFIRMED\",\n416:           \"\",\n417:           \"\",\n418:           \"\");\n419:     } finally {\n420:       if (runtime != null)\n421:         try {\n422:           runtime.recordOutcome(snapshot.state, snapshot.detail);\n423:         } catch (IOException recording) {\n424:           android.util.Log.w(\n425:               \"DSHA\", \"RECOVERY_OUTCOME_UNAVAILABLE: \" + recording.getClass().getSimpleName());"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "signature": "UiText.choose(\"正在校验应急安装包\",\"Verifying recovery archive\")+",
+      "line": 158,
+      "sourceSha256": "71822a775df6bc0c5b00dc900a1e355eb559e4e42c05914008b4ae1469a5ac3a",
+      "excerpt": "154:         String name = archive.getString(\"asset\"), expected = archive.getString(\"sha256\");\n155:         String source = archiveSources.get(name);\n156:         if (source == null) throw new IOException(\"RECOVERY_ARCHIVE_SOURCE_MISSING\");\n157:         progress.accept(\n158:             UiText.choose(\"正在校验应急安装包\", \"Verifying recovery archive\")\n159:                 + \" (\"\n160:                 + (i + 1)\n161:                 + \"/\"\n162:                 + archives.length()\n163:                 + \")…\");\n164:         try (InputStream input = context.getAssets().open(source)) {\n165:           verifyDigest(input, expected);\n166:         }\n167:         progress.accept(\n168:             UiText.choose(\"正在准备应急环境\", \"Preparing recovery runtime\")\n169:                 + \" (\"\n170:                 + (i + 1)"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "signature": "UiText.choose(\"正在准备应急环境\",\"Preparing recovery runtime\")+",
+      "line": 168,
+      "sourceSha256": "71822a775df6bc0c5b00dc900a1e355eb559e4e42c05914008b4ae1469a5ac3a",
+      "excerpt": "164:         try (InputStream input = context.getAssets().open(source)) {\n165:           verifyDigest(input, expected);\n166:         }\n167:         progress.accept(\n168:             UiText.choose(\"正在准备应急环境\", \"Preparing recovery runtime\")\n169:                 + \" (\"\n170:                 + (i + 1)\n171:                 + \"/\"\n172:                 + archives.length()\n173:                 + \")…\");\n174:         try (InputStream input = context.getAssets().open(source)) {\n175:           TarGzipExtractor.extractAuto(new CheckedInput(input), candidate, 0);\n176:         }\n177:       }\n178:       applyBrowserOverlay(candidate);\n179:       verifyRoot(candidate);\n180:       check();"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "signature": "UiText.choose(\"已保留的应急运行时约 \",\"Retained recovery runtimes: approximately \")+",
+      "line": 220,
+      "sourceSha256": "71822a775df6bc0c5b00dc900a1e355eb559e4e42c05914008b4ae1469a5ac3a",
+      "excerpt": "216:         value ->\n217:             value instanceof Number\n218:                 ? com.deepseekharness.app.util.Fmt.bytes(((Number) value).longValue())\n219:                 : UiText.choose(\"未知\", \"unknown\");\n220:     return UiText.choose(\"已保留的应急运行时约 \", \"Retained recovery runtimes: approximately \")\n221:         + size.apply(usage.get(\"recovery-capsules\"))\n222:         + UiText.choose(\"；应急会话约 \", \"; recovery sessions: approximately \")\n223:         + size.apply(usage.get(\"recovery-sessions\"))\n224:         + UiText.choose(\n225:             \"。原件保留，未自动删除。\", \". Originals are retained; no automatic deletion was performed.\");\n226:   }\n227: \n228:   /** 存储映射独立于运行时身份；相同归档在 APK 只存一份，解压目标仍完全独立。 */\n229:   private Map<String, String> readArchiveSources() throws IOException {\n230:     try {\n231:       JSONObject locations =\n232:           new JSONObject("
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "signature": "UiText.choose(\"；应急会话约 \",\"; recovery sessions: approximately \")+",
+      "line": 222,
+      "sourceSha256": "71822a775df6bc0c5b00dc900a1e355eb559e4e42c05914008b4ae1469a5ac3a",
+      "excerpt": "218:                 ? com.deepseekharness.app.util.Fmt.bytes(((Number) value).longValue())\n219:                 : UiText.choose(\"未知\", \"unknown\");\n220:     return UiText.choose(\"已保留的应急运行时约 \", \"Retained recovery runtimes: approximately \")\n221:         + size.apply(usage.get(\"recovery-capsules\"))\n222:         + UiText.choose(\"；应急会话约 \", \"; recovery sessions: approximately \")\n223:         + size.apply(usage.get(\"recovery-sessions\"))\n224:         + UiText.choose(\n225:             \"。原件保留，未自动删除。\", \". Originals are retained; no automatic deletion was performed.\");\n226:   }\n227: \n228:   /** 存储映射独立于运行时身份；相同归档在 APK 只存一份，解压目标仍完全独立。 */\n229:   private Map<String, String> readArchiveSources() throws IOException {\n230:     try {\n231:       JSONObject locations =\n232:           new JSONObject(\n233:               new String(asset(\"recovery-asset-locations.json\", 8192), StandardCharsets.UTF_8));\n234:       if (locations.getInt(\"schema\") != 1 || !runtimeId.equals(locations.getString(\"runtimeId\")))"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "signature": "+UiText.choose(\"。原件保留，未自动删除。\",\". Originals are retained; no automatic deletion was performed.\")",
+      "line": 224,
+      "sourceSha256": "71822a775df6bc0c5b00dc900a1e355eb559e4e42c05914008b4ae1469a5ac3a",
+      "excerpt": "220:     return UiText.choose(\"已保留的应急运行时约 \", \"Retained recovery runtimes: approximately \")\n221:         + size.apply(usage.get(\"recovery-capsules\"))\n222:         + UiText.choose(\"；应急会话约 \", \"; recovery sessions: approximately \")\n223:         + size.apply(usage.get(\"recovery-sessions\"))\n224:         + UiText.choose(\n225:             \"。原件保留，未自动删除。\", \". Originals are retained; no automatic deletion was performed.\");\n226:   }\n227: \n228:   /** 存储映射独立于运行时身份；相同归档在 APK 只存一份，解压目标仍完全独立。 */\n229:   private Map<String, String> readArchiveSources() throws IOException {\n230:     try {\n231:       JSONObject locations =\n232:           new JSONObject(\n233:               new String(asset(\"recovery-asset-locations.json\", 8192), StandardCharsets.UTF_8));\n234:       if (locations.getInt(\"schema\") != 1 || !runtimeId.equals(locations.getString(\"runtimeId\")))\n235:         throw new IOException(\"RECOVERY_ARCHIVE_SOURCE_ID\");\n236:       JSONArray pinned = descriptor.getJSONArray(\"archives\"),"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "signature": "UiText.choose(\"正在核验应急文件\",\"Verifying recovery files\")+",
+      "line": 283,
+      "sourceSha256": "71822a775df6bc0c5b00dc900a1e355eb559e4e42c05914008b4ae1469a5ac3a",
+      "excerpt": "279:           verifyDigest(input, row.getString(\"sha256\"));\n280:         }\n281:         if (i % 512 == 0)\n282:           progress.accept(\n283:               UiText.choose(\"正在核验应急文件\", \"Verifying recovery files\")\n284:                   + \" (\"\n285:                   + i\n286:                   + \"/\"\n287:                   + proof.length()\n288:                   + \")…\");\n289:       }\n290:       JSONArray links = descriptor.optJSONArray(\"links\");\n291:       if (links != null)\n292:         for (int i = 0; i < links.length(); i++) {\n293:           check();\n294:           JSONObject row = links.getJSONObject(i);\n295:           String name = safeRelative(row.getString(\"path\")), target = row.getString(\"target\");"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java",
+      "signature": "UiText.choose(\"检查离线安装运行方式：\",\"Checking cold-install runtime: \")+",
+      "line": 67,
+      "sourceSha256": "be41a7dd61fb67f28436f3977ffd7a3f07ba2fffee06c4f1be667962de80a9d5",
+      "excerpt": "63:                 String command;\n64:                 if (probe) {\n65:                   boot.extractionStage(\n66:                       progress,\n67:                       com.deepseekharness.app.util.UiText.choose(\n68:                               \"检查离线安装运行方式：\", \"Checking cold-install runtime: \")\n69:                           + mode.name());\n70:                   command =\n71:                       com.deepseekharness.app.util.ColdInstallPlan.probeCommand(\n72:                           \"/root/.dsha-cold-probe-\" + java.util.UUID.randomUUID());\n73:                 } else {\n74:                   if (!frozen.equals(packageFingerprint(boot, fs, hostRoot, slot)))\n75:                     throw new IOException(\"COLD_PACKAGE_CHANGED\");\n76:                   boot.extractionStage(\n77:                       progress,\n78:                       com.deepseekharness.app.util.UiText.choose(\n79:                               \"使用已验证方式安装离线工具：\", \"Installing offline tools with verified runtime: \")"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java",
+      "signature": "UiText.choose(\"使用已验证方式安装离线工具：\",\"Installing offline tools with verified runtime: \")+",
+      "line": 78,
+      "sourceSha256": "be41a7dd61fb67f28436f3977ffd7a3f07ba2fffee06c4f1be667962de80a9d5",
+      "excerpt": "74:                   if (!frozen.equals(packageFingerprint(boot, fs, hostRoot, slot)))\n75:                     throw new IOException(\"COLD_PACKAGE_CHANGED\");\n76:                   boot.extractionStage(\n77:                       progress,\n78:                       com.deepseekharness.app.util.UiText.choose(\n79:                               \"使用已验证方式安装离线工具：\", \"Installing offline tools with verified runtime: \")\n80:                           + mode.name());\n81:                   boot.hostPorts()\n82:                       .record(\n83:                           \"PACKAGE_INSTALL_BEGIN\",\n84:                           \"runtime=\"\n85:                               + mode.runtime\n86:                               + \" prootNoSeccomp=\"\n87:                               + mode.noSeccomp\n88:                               + \" packageSlotSha256=\"\n89:                               + frozen);\n90:                   command = com.deepseekharness.app.util.ColdInstallPlan.installCommand(guest);"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/ColdToolsInstaller.java",
+      "signature": "UiText.choose(\"离线工具尚未安装完成；已保留解压文件、安装现场和诊断：\\n\",\"Offline tools are incomplete; extracted files, installation state and diagnostics are retained:\\n\")+",
+      "line": 117,
+      "sourceSha256": "be41a7dd61fb67f28436f3977ffd7a3f07ba2fffee06c4f1be667962de80a9d5",
+      "excerpt": "113:       Thread.currentThread().interrupt();\n114:       throw new IOException(com.deepseekharness.app.util.UiText.text(\"离线基础工具安装被中断\"), error);\n115:     } catch (IOException failed) {\n116:       throw new IOException(\n117:           com.deepseekharness.app.util.UiText.choose(\n118:                   \"离线工具尚未安装完成；已保留解压文件、安装现场和诊断：\\n\",\n119:                   \"Offline tools are incomplete; extracted files, installation state and diagnostics are retained:\\n\")\n120:               + SensitiveData.redact(String.valueOf(failed.getMessage())),\n121:           failed);\n122:     }\n123:   }\n124: \n125:   private static String packageFingerprint(\n126:       ProotBootstrap boot,\n127:       com.deepseekharness.app.backup.BackupFileSystem fs,\n128:       com.deepseekharness.app.util.ColdInstallPackages.HostRoot host,\n129:       String slot)"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+      "signature": "UiText.choose(\"隔离检查插件无法启动，详细原因：\\n\",\"The isolated verification plugin could not start. Details:\\n\")+",
+      "line": 402,
+      "sourceSha256": "74dc9ecce25dcc68e68327cb5fb278975968a43f1c7c6b71e7542356b598e1e6",
+      "excerpt": "398:             // 可选 loader 项失败不能抢先把健康运行时误判为失败；只有本轮自有\n399:             // 检查插件无法导入/应用时才立即停止，并保留脱敏后的真实原因。\n400:             if (RuntimeTrialOutputPolicy.ownedPluginFailure(text))\n401:               throw new IOException(\n402:                   UiText.choose(\n403:                           \"隔离检查插件无法启动，详细原因：\\n\",\n404:                           \"The isolated verification plugin could not start. Details:\\n\")\n405:                       + SensitiveData.redact(text),\n406:                   new IOException(\"TRIAL_PLUGIN_FAILED\"));\n407:           } else {\n408:             if (line.size() >= 65536) throw new IOException(\"TRIAL_OUTPUT_LIMIT\");\n409:             line.write(bytes[i]);\n410:           }\n411:         }\n412:       }\n413:     }\n414:   }"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+      "signature": "UiText.choose(\"未完成的操作：\",\"Incomplete operation: \")+",
+      "line": 254,
+      "sourceSha256": "d235a5894a6fb250bbacab9786026d6481a9d3b4cfdb9442c9d5862320cac1c7",
+      "excerpt": "250:             && (s.status == BackupTaskState.Status.FAILED\n251:                 || s.status == BackupTaskState.Status.INTERRUPTED);\n252:     if (failed)\n253:       detail.setText(\n254:           com.deepseekharness.app.util.UiText.choose(\"未完成的操作：\", \"Incomplete operation: \")\n255:               + com.deepseekharness.app.util.UiStateText.render(s.kind)\n256:               + \"\\n\"\n257:               + com.deepseekharness.app.util.UiText.choose(\"最后记录阶段：\", \"Last recorded stage: \")\n258:               + (s.lastStage.isEmpty()\n259:                   ? com.deepseekharness.app.util.UiText.choose(\n260:                       \"旧记录未提供；请查看维护日志\", \"Not available in the old record; inspect maintenance logs\")\n261:                   : com.deepseekharness.app.util.UiStateText.render(s.lastStage))\n262:               + \"\\n\\n\"\n263:               + com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail)\n264:               + \"\\n\\n\"\n265:               + com.deepseekharness.app.util.UiText.choose(\n266:                   \"原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。\","
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+      "signature": "UiText.choose(\"最后记录阶段：\",\"Last recorded stage: \")+",
+      "line": 257,
+      "sourceSha256": "d235a5894a6fb250bbacab9786026d6481a9d3b4cfdb9442c9d5862320cac1c7",
+      "excerpt": "253:       detail.setText(\n254:           com.deepseekharness.app.util.UiText.choose(\"未完成的操作：\", \"Incomplete operation: \")\n255:               + com.deepseekharness.app.util.UiStateText.render(s.kind)\n256:               + \"\\n\"\n257:               + com.deepseekharness.app.util.UiText.choose(\"最后记录阶段：\", \"Last recorded stage: \")\n258:               + (s.lastStage.isEmpty()\n259:                   ? com.deepseekharness.app.util.UiText.choose(\n260:                       \"旧记录未提供；请查看维护日志\", \"Not available in the old record; inspect maintenance logs\")\n261:                   : com.deepseekharness.app.util.UiStateText.render(s.lastStage))\n262:               + \"\\n\\n\"\n263:               + com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail)\n264:               + \"\\n\\n\"\n265:               + com.deepseekharness.app.util.UiText.choose(\n266:                   \"原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。\",\n267:                   \"Original state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or enter the limited interface to export readable copies.\"));\n268:     boolean incomplete =\n269:         mine && s.status == BackupTaskState.Status.SUCCEEDED && !ready && !formatTask;"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+      "signature": "+UiText.choose(\"原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。\",\"Original state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or enter the limited interface to export readable copies.\")",
+      "line": 265,
+      "sourceSha256": "d235a5894a6fb250bbacab9786026d6481a9d3b4cfdb9442c9d5862320cac1c7",
+      "excerpt": "261:                   : com.deepseekharness.app.util.UiStateText.render(s.lastStage))\n262:               + \"\\n\\n\"\n263:               + com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail)\n264:               + \"\\n\\n\"\n265:               + com.deepseekharness.app.util.UiText.choose(\n266:                   \"原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。\",\n267:                   \"Original state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or enter the limited interface to export readable copies.\"));\n268:     boolean incomplete =\n269:         mine && s.status == BackupTaskState.Status.SUCCEEDED && !ready && !formatTask;\n270:     error.setVisibility(failed || incomplete || automaticDeclined ? View.VISIBLE : View.GONE);\n271:     error.setText(\n272:         incomplete\n273:             ? com.deepseekharness.app.util.UiText.choose(\n274:                 \"维护步骤已结束，但环境就绪检查未通过。已停止自动跳转，请查看原因或进入受限主界面。\",\n275:                 \"Maintenance ended, but readiness checks did not pass. Automatic navigation stopped. Review the reason or enter the limited interface.\")\n276:             : automaticDeclined\n277:                 ? com.deepseekharness.app.util.UiText.choose("
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "signature": "+UiText.choose(\" 将从加载路径移除；原件保留在数据页的保留区。对话、其他插件和外部源码目录保留。\",\" will be removed from the loading path. Originals remain in the retained data area. Conversations, other plugins and external source folders are preserved.\")",
+      "line": 784,
+      "sourceSha256": "0e314852ecea67aabab4b917bea096506585e4d56c35776ff57322a18fbf5d54",
+      "excerpt": "780:     new DshaDialogBuilder(requireContext())\n781:         .setTitle(com.deepseekharness.app.util.UiText.choose(\"删除插件？\", \"Delete plugin?\"))\n782:         .setMessage(\n783:             item.name\n784:                 + com.deepseekharness.app.util.UiText.choose(\n785:                     \" 将从加载路径移除；原件保留在数据页的保留区。对话、其他插件和外部源码目录保留。\",\n786:                     \" will be removed from the loading path. Originals remain in the retained data area. Conversations, other plugins and external source folders are preserved.\"))\n787:         .setNegativeButton(com.deepseekharness.app.util.UiText.choose(\"取消\", \"Cancel\"), null)\n788:         .setPositiveButton(\n789:             com.deepseekharness.app.util.UiText.choose(\"删除\", \"Delete\"),\n790:             (dialog, which) -> {\n791:               if (!repository.isBusy()) repository.delete(item);\n792:             })\n793:         .show();\n794:   }\n795: \n796:   private void toast(String message) {"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java",
+      "signature": "UiText.choose(\"应急网页无法加载：\",\"Cannot load the emergency page: \")+",
+      "line": 138,
+      "sourceSha256": "8fd7a736e9e168732fe7ed97eb58bcc6c96dcc263f65e3079cb5dabbd9e7cab9",
+      "excerpt": "134:       retained.browser.syncLanguage(\n135:           new com.deepseekharness.app.core.ConfigStore(this).getUiLanguage());\n136:     } catch (RuntimeException | LinkageError error) {\n137:       showError(\n138:           UiText.choose(\"应急网页无法加载：\", \"Cannot load the emergency page: \")\n139:               + error.getClass().getSimpleName());\n140:     }\n141:   }\n142: \n143:   private void showError(String text) {\n144:     runOnUiThread(\n145:         () -> {\n146:           status.setText(com.deepseekharness.app.util.SensitiveData.redact(text));\n147:           status.setVisibility(View.VISIBLE);\n148:         });\n149:   }\n150: "
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java",
+      "signature": "+UiText.choose(\" · MIT 许可\",\" · MIT License\")",
+      "line": 105,
+      "sourceSha256": "f63ae7181a0754941eac50565e32fcebb6afbf10d514dff4a016c26fc0daa358",
+      "excerpt": "101:     ver.setText(\n102:         com.deepseekharness.app.util.UiText.text(\n103:             \"DSHA v\"\n104:                 + version\n105:                 + com.deepseekharness.app.util.UiText.choose(\" · MIT 许可\", \" · MIT License\")));\n106:     TextView updateSub = v.findViewById(R.id.settings_update_sub);\n107:     updateSub.setText(com.deepseekharness.app.util.UiText.text(\"稳定版与预览版更新\"));\n108: \n109:     v.findViewById(R.id.settings_about)\n110:         .setOnClickListener(\n111:             x ->\n112:                 UiMotion.page(requireContext(), getParentFragmentManager().beginTransaction())\n113:                     .replace(R.id.fragment_container, new AboutFragment())\n114:                     .addToBackStack(\"settings\")\n115:                     .commit());\n116:     v.findViewById(R.id.settings_update).setOnClickListener(x -> checkUpdate());\n117:     v.findViewById(R.id.settings_selftest).setOnClickListener(x -> runSelftest());"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java",
+      "signature": "UiText.choose(\"跟随系统 · \",\"Follow system · \")+",
+      "line": 144,
+      "sourceSha256": "f63ae7181a0754941eac50565e32fcebb6afbf10d514dff4a016c26fc0daa358",
+      "excerpt": "140:             ? com.deepseekharness.app.util.UiText.choose(\"English\", \"English\")\n141:             : com.deepseekharness.app.util.UiText.choose(\"简体中文\", \"Simplified Chinese\");\n142:     String summary =\n143:         followSystem\n144:             ? com.deepseekharness.app.util.UiText.choose(\"跟随系统 · \", \"Follow system · \")\n145:                 + currentLabel\n146:             : currentLabel;\n147:     LinearLayout appearance = v.findViewById(R.id.settings_appearance);\n148:     TextView languageSummary = v.findViewById(R.id.settings_language);\n149:     languageSummary.setText(summary);\n150:     View.OnClickListener openLanguageDialog =\n151:         x ->\n152:             new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())\n153:                 .setTitle(\n154:                     com.deepseekharness.app.util.UiText.choose(\n155:                         \"界面语言 / Interface language\", \"Interface language\"))\n156:                 .setSingleChoiceItems("
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+      "signature": "UiText.choose(\"最近手动备份：\",\"Latest manual backup: \")+",
+      "line": 115,
+      "sourceSha256": "1960ed57eafb409b66c13dffab5ac9ec3624649e17b9c92641154836acfa72c1",
+      "excerpt": "111:     String success =\n112:         time == 0\n113:             ? com.deepseekharness.app.util.UiText.choose(\n114:                 \"还没有手动导出备份\", \"No manually exported backup yet\")\n115:             : com.deepseekharness.app.util.UiText.choose(\"最近手动备份：\", \"Latest manual backup: \")\n116:                 + java.text.DateFormat.getDateTimeInstance().format(new java.util.Date(time))\n117:                 + \"\\n\"\n118:                 + controller.config().getLastBackupName();\n119:     long automatic =\n120:         com.deepseekharness.app.backup.AutomaticBackups.prefs(requireContext()).getLong(\"last\", 0);\n121:     if (automatic > 0)\n122:       success +=\n123:           \"\\n\"\n124:               + com.deepseekharness.app.util.UiText.choose(\"最近自动副本：\", \"Latest automatic copy: \")\n125:               + java.text.DateFormat.getDateTimeInstance().format(new java.util.Date(automatic));\n126:     String failure = controller.config().getLastBackupError();\n127:     com.deepseekharness.app.util.BackupTaskState.Snapshot s = task.snapshot();"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+      "signature": "UiText.choose(\"最近自动副本：\",\"Latest automatic copy: \")+",
+      "line": 124,
+      "sourceSha256": "1960ed57eafb409b66c13dffab5ac9ec3624649e17b9c92641154836acfa72c1",
+      "excerpt": "120:         com.deepseekharness.app.backup.AutomaticBackups.prefs(requireContext()).getLong(\"last\", 0);\n121:     if (automatic > 0)\n122:       success +=\n123:           \"\\n\"\n124:               + com.deepseekharness.app.util.UiText.choose(\"最近自动副本：\", \"Latest automatic copy: \")\n125:               + java.text.DateFormat.getDateTimeInstance().format(new java.util.Date(automatic));\n126:     String failure = controller.config().getLastBackupError();\n127:     com.deepseekharness.app.util.BackupTaskState.Snapshot s = task.snapshot();\n128:     EnvironmentUiStatus.Snapshot environment = EnvironmentUiStatus.get(requireContext());\n129:     boolean busy = task.busy(), pending = environment.recovery;\n130:     ((TextView) view.findViewById(R.id.workspace_backup_status))\n131:         .setText(\n132:             success\n133:                 + (failure.isEmpty()\n134:                     ? \"\"\n135:                     : com.deepseekharness.app.util.UiText.format(\"\\n上次未完成：%s\", failure))\n136:                 + (s.id == 0"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/util/MaintenanceErrorText.java",
+      "signature": "UiText.choose(\"错误代码：\",\"Error code: \")+",
+      "line": 66,
+      "sourceSha256": "ac05691798ff02975ab05b89edacc428da8ed2a4ca8b40dc09a0cf53c1465cc4",
+      "excerpt": "62:                   \"The operation was cancelled. If commit had started, the system will converge to a consistent state first.\");\n63:           default -> \"\";\n64:         };\n65:     if (message.isEmpty()) return UiStateText.render(value);\n66:     return message + \"\\n\" + UiText.choose(\"错误代码：\", \"Error code: \") + code;\n67:   }\n68: }"
+    }
+  ]
+}

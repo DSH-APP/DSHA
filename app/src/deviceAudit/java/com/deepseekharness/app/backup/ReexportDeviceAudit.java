@@ -7,7 +7,7 @@ import com.deepseekharness.app.core.HarnessController;
 import java.io.*;
 import java.util.*;
 
-/** 使用前面工作流创建的私有副本；整体移开测试 Linux 后复验，不读取原用户安装。 */
+/** 历史隔离安装验收源码；本轮仅维护 tar.gz/无密码断言，未生成或运行审计 APK。 */
 public final class ReexportDeviceAudit extends Instrumentation {
     private final List<Map<String,Object>> tests=new ArrayList<>();private NativeBackupJobs jobs;
     private void check(boolean value,String message)throws IOException{if(!value)throw new IOException(message);}
@@ -20,7 +20,7 @@ public final class ReexportDeviceAudit extends Instrumentation {
             var context=getTargetContext();DeviceAuditSupport.requireIsolated(context);screen=DeviceAuditSupport.open(this,DeviceAuditActivity.class);
             runOnMainSync(()->jobs=NativeBackupJobs.get(context));controller=HarnessController.get(context);File files=context.getFilesDir().getCanonicalFile(),operations=new File(files,"host-backup-operations");
             var copies=jobs.verifiedCopies();VerifiedBackupCopy source=null;
-            for(var item:copies.valid)if(item.scope.equals("projects")&&item.result(true).equals("COMPLETE")){
+            for(var item:copies.valid)if(item.scope.equals("projects")&&item.result(true).equals("COMPLETE")&&!item.passwordProtected(fs)){
                 try{item.verify(fs,new BackupControl(null));source=item;break;}catch(IOException retained){ /* 上轮故障夹具保留；选择仍通过摘要的原件。 */ }
             }
             check(source!=null,"RUN_WORKFLOW_FIRST");source.verify(fs,new BackupControl(null));
@@ -29,7 +29,9 @@ public final class ReexportDeviceAudit extends Instrumentation {
             BackupManager.runDataTask(controller,()->{fs.move(origin,retained);return null;});check(!linux.exists(),"TEST_LINUX_STILL_PRESENT");
             var destination=AuditDocumentProvider.create(context,targets,"pipe");check(jobs.reexport(source.id,destination,AuditDocumentProvider.document(destination).name),"REEXPORT_REJECTED:"+jobs.state().error);
             var state=waitFor();check(state.result.equals("COMPLETE"),state.stage+":"+state.error+":"+state.result);
-            try(InputStream input=new FileInputStream(AuditDocumentProvider.document(destination).file)){check(source.sha256.equals(BackupArchive.digest(input,new BackupControl(null))),"REEXPORTED_BYTES_CHANGED");}
+            File payload=new File(targets,"reexported-payload");
+            check(PortableBackupEnvelope.unwrapIfPresent(fs,AuditDocumentProvider.document(destination).file,payload,new BackupControl(null)),"REEXPORT_NOT_TAR_ENVELOPE");
+            try(InputStream input=fs.read(payload,fs.stat(payload))){Map<String,Object> metadata=BackupArchive.read(input,null,new BackupControl(null));check("UNENCRYPTED".equals(metadata.get("sensitivePolicy"))&&"projects".equals(metadata.get("requestedScope"))&&BackupJson.number(metadata,"entries")==source.entries,"REEXPORT_PROTECTION_OR_SCOPE_CHANGED");}
             check(new com.deepseekharness.app.core.ConfigStore(context).getLastBackupUri().equals(destination.toString()),"REEXPORT_CATALOG_NOT_UPDATED");
             passed("verified_copy_reexports_without_linux_or_original_password");
             String latest=BackupTree.digest(fs,new File(files,"host-backup-catalogue/latest.json"),new BackupControl(null));

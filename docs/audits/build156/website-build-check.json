@@ -1,0 +1,652 @@
+{
+  "schemaVersion": 1,
+  "scope": "actual signed156 candidates, local-only website with staged exact current source; NOT device acceptance, actual release delivery, GitHub publication or server deployment",
+  "artifactVersionCode": 156,
+  "version": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+  "softwareReceipt": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+    "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+    "bytes": 125149
+  },
+  "sourceSnapshot": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+    "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222",
+    "bytes": 202368
+  },
+  "manifestSha256": "5aade95dc81a0d4d1c0411ab4bed6997bd8852680c6f4f4a5eba6a791953b0ca",
+  "stagedManifest": {
+    "path": "app/build/audit-build156/docs-website-candidate-5e2d/actual-candidate-release-manifest.json",
+    "sha256": "5aade95dc81a0d4d1c0411ab4bed6997bd8852680c6f4f4a5eba6a791953b0ca",
+    "bytes": 4970
+  },
+  "manifestGeneration": {
+    "originalGenerator": {
+      "path": "tools/generate-release-manifest.py",
+      "sha256": "28dd674601ac716c5cd386c00223af52aabf3e52860bb25d03e66d42acb14617",
+      "bytes": 7838
+    },
+    "exitCode": 0,
+    "log": {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/manifest-generation.log",
+      "sha256": "dfbc061122ceb34173d1fc8b4fab8f84251ae251d19c7bb95ec1e4fcfc10550e",
+      "bytes": 181
+    },
+    "previousGeneratedMetadataPreserved": {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/previous-generated-manifest-b3cc62df339e3cfed7e9c62c321d0abf747e29cc76d02b67282b6397e68b7ece.json",
+      "sha256": "b3cc62df339e3cfed7e9c62c321d0abf747e29cc76d02b67282b6397e68b7ece",
+      "bytes": 5123
+    },
+    "notesScope": "current declared release prose outside APK sourceSnapshot"
+  },
+  "artifactHashes": [
+    {
+      "flavor": "standard",
+      "filename": "dsha-0.2.0-rc2.apk",
+      "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a"
+    },
+    {
+      "flavor": "low",
+      "filename": "dsha-0.2.0-rc2low.apk",
+      "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3"
+    }
+  ],
+  "candidateStagedArtifacts": [
+    {
+      "flavor": "standard",
+      "filename": "dsha-0.2.0-rc2.apk",
+      "originalCandidate": {
+        "path": "app/build/outputs/apk/standard/release/app-standard-release.apk",
+        "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+        "bytes": 397302610
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/release/dsha-0.2.0-rc2.apk",
+        "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+        "bytes": 397302610
+      },
+      "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a"
+    },
+    {
+      "flavor": "low",
+      "filename": "dsha-0.2.0-rc2low.apk",
+      "originalCandidate": {
+        "path": "app/build/outputs/apk/low/release/app-low-release.apk",
+        "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+        "bytes": 473097048
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/release/dsha-0.2.0-rc2low.apk",
+        "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+        "bytes": 473097048
+      },
+      "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3"
+    }
+  ],
+  "sourceBindings": [
+    {
+      "source": {
+        "path": "app/build.gradle",
+        "sha256": "c11f70b7bd33c8ef548f172b844bdbebe3ae7df554b092066a973788f3d94adb",
+        "bytes": 20599
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/build.gradle",
+        "sha256": "c11f70b7bd33c8ef548f172b844bdbebe3ae7df554b092066a973788f3d94adb",
+        "bytes": 20599
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/java/com/deepseekharness/app/util/Constants.java",
+        "sha256": "ed7ee6df32544c12460388ba9f5bc0f5e992584b0a762034a4e22c7a33cb69a2",
+        "bytes": 3928
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/java/com/deepseekharness/app/util/Constants.java",
+        "sha256": "ed7ee6df32544c12460388ba9f5bc0f5e992584b0a762034a4e22c7a33cb69a2",
+        "bytes": 3928
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "tools/dsh-runtime/package.json",
+        "sha256": "4885ec233c3786b2ce17c396f64b3e922d3202b8a50a67a60e199c7d9e130b61",
+        "bytes": 7065
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/tools/dsh-runtime/package.json",
+        "sha256": "4885ec233c3786b2ce17c396f64b3e922d3202b8a50a67a60e199c7d9e130b61",
+        "bytes": 7065
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/assets/runtime-descriptor.json",
+        "sha256": "7c4c678fe309ff8a8939ce1c1d61c2dba39cbeb128da2c01bd4af91c5d38a38f",
+        "bytes": 40111
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/runtime-descriptor.json",
+        "sha256": "7c4c678fe309ff8a8939ce1c1d61c2dba39cbeb128da2c01bd4af91c5d38a38f",
+        "bytes": 40111
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/assets/builtin-plugins.json",
+        "sha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304",
+        "bytes": 1234
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins.json",
+        "sha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304",
+        "bytes": 1234
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "LICENSE",
+        "sha256": "e0ddc2f4a383d900a26e3148a19c256e9dbe06585a274307509e9714636be0b1",
+        "bytes": 1074
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/LICENSE",
+        "sha256": "e0ddc2f4a383d900a26e3148a19c256e9dbe06585a274307509e9714636be0b1",
+        "bytes": 1074
+      },
+      "binding": "explicit current repository MIT license, outside APK software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+        "sha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+        "bytes": 74374
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+        "sha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+        "bytes": 74374
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/res/mipmap-mdpi/ic_launcher.png",
+        "sha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+        "bytes": 6104
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+        "sha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+        "bytes": 6104
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "agent-skills/device-shell/SKILL.md",
+        "sha256": "247a04d6ad0fe6ed15925e7e5e8e1467ddce268ab37e4a5f5486a5feb8bce125",
+        "bytes": 1794
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/agent-skills/device-shell/SKILL.md",
+        "sha256": "247a04d6ad0fe6ed15925e7e5e8e1467ddce268ab37e4a5f5486a5feb8bce125",
+        "bytes": 1794
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "agent-skills/screen-ocr-operator/SKILL.md",
+        "sha256": "9435e0dff26b8199e16eb12ac434f2bfc6db1af73ccd7ba40d96a62b8772f8e7",
+        "bytes": 1570
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/agent-skills/screen-ocr-operator/SKILL.md",
+        "sha256": "9435e0dff26b8199e16eb12ac434f2bfc6db1af73ccd7ba40d96a62b8772f8e7",
+        "bytes": 1570
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json",
+        "sha256": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f",
+        "bytes": 550
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json",
+        "sha256": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f",
+        "bytes": 550
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/assets/builtin-plugins/dsh-task-notifier/package.json",
+        "sha256": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820",
+        "bytes": 347
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-task-notifier/package.json",
+        "sha256": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820",
+        "bytes": 347
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/assets/builtin-plugins/dsh-status-overlay/package.json",
+        "sha256": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15",
+        "bytes": 539
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-status-overlay/package.json",
+        "sha256": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15",
+        "bytes": 539
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+        "sha256": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f",
+        "bytes": 3539
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+        "sha256": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f",
+        "bytes": 3539
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json",
+        "sha256": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d",
+        "bytes": 531
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json",
+        "sha256": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d",
+        "bytes": 531
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/assets/builtin-plugins/dsh-auto-review/package.json",
+        "sha256": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573",
+        "bytes": 503
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-auto-review/package.json",
+        "sha256": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573",
+        "bytes": 503
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    },
+    {
+      "source": {
+        "path": "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/package.json",
+        "sha256": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa",
+        "bytes": 396
+      },
+      "staged": {
+        "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-tool-vscreen/package.json",
+        "sha256": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa",
+        "bytes": 396
+      },
+      "binding": "actual5e2d software sourceSnapshot"
+    }
+  ],
+  "inputFingerprints": [
+    {
+      "path": "LICENSE",
+      "sha256": "e0ddc2f4a383d900a26e3148a19c256e9dbe06585a274307509e9714636be0b1"
+    },
+    {
+      "path": "agent-skills/device-shell/SKILL.md",
+      "sha256": "247a04d6ad0fe6ed15925e7e5e8e1467ddce268ab37e4a5f5486a5feb8bce125"
+    },
+    {
+      "path": "agent-skills/screen-ocr-operator/SKILL.md",
+      "sha256": "9435e0dff26b8199e16eb12ac434f2bfc6db1af73ccd7ba40d96a62b8772f8e7"
+    },
+    {
+      "path": "app/build.gradle",
+      "sha256": "c11f70b7bd33c8ef548f172b844bdbebe3ae7df554b092066a973788f3d94adb"
+    },
+    {
+      "path": "app/build/release-manifest.json",
+      "sha256": "5aade95dc81a0d4d1c0411ab4bed6997bd8852680c6f4f4a5eba6a791953b0ca"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins.json",
+      "sha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-auto-review/package.json",
+      "sha256": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json",
+      "sha256": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json",
+      "sha256": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-status-overlay/package.json",
+      "sha256": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-task-notifier/package.json",
+      "sha256": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/package.json",
+      "sha256": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+      "sha256": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f"
+    },
+    {
+      "path": "app/src/main/assets/runtime-descriptor.json",
+      "sha256": "7c4c678fe309ff8a8939ce1c1d61c2dba39cbeb128da2c01bd4af91c5d38a38f"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/Constants.java",
+      "sha256": "ed7ee6df32544c12460388ba9f5bc0f5e992584b0a762034a4e22c7a33cb69a2"
+    },
+    {
+      "path": "app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "sha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "path": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "sha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "path": "docs/releases/build156-changes.zh.md",
+      "sha256": "fcded08112320747d4fa631b5756365eefe11ca18a9edd061bab9b4e71e5af82"
+    },
+    {
+      "path": "tools/dsh-runtime/package.json",
+      "sha256": "4885ec233c3786b2ce17c396f64b3e922d3202b8a50a67a60e199c7d9e130b61"
+    },
+    {
+      "path": "website/.gitignore",
+      "sha256": "49ed0a23a8a775809279a934597c58282e70a3ea435ed12352835b7c220d6653"
+    },
+    {
+      "path": "website/README.md",
+      "sha256": "2c8cbdb4b698678be73c8a2647b1d48b301f616f50f54a93e932275ee660cb3c"
+    },
+    {
+      "path": "website/data/catalog.mjs",
+      "sha256": "02f24610766e6a3ca1cfa9b9ec3c22626df4ac76b1a48f5bf0ee3b7aa64ef91e"
+    },
+    {
+      "path": "website/deploy/PUBLISHING.md",
+      "sha256": "31ebb775a96537f239b5d4566a5dd34db96ffa935465aa531bda4027f34fce6e"
+    },
+    {
+      "path": "website/deploy/nginx-dsha-https.conf",
+      "sha256": "932012e93f9eddafb6a57d68a3488c4b51e164f453fcc61b231cd1c677d11cce"
+    },
+    {
+      "path": "website/deploy/update-web-release.sh",
+      "sha256": "ef07526dadb1d97fd204900ec034b66070ee3496e2efe1a2d2569838720b1edd"
+    },
+    {
+      "path": "website/package-lock.json",
+      "sha256": "d3342553f14dd5b512527ca8b57c2bdc0e9741eea451646574e42064fb17e0b3"
+    },
+    {
+      "path": "website/package.json",
+      "sha256": "0066f6b28c7e6d989c86005704bd836fe2d92c7def97a6b0415f5caef76480a4"
+    },
+    {
+      "path": "website/scripts/build.mjs",
+      "sha256": "ed461aaaa85556f310620ca99fe976f02e970101c3d202b0d78dd0e9cd6f0710"
+    },
+    {
+      "path": "website/scripts/http-check.mjs",
+      "sha256": "fce345b7fd9420c22a17761956ef61b94e2de3fbbe0ad6cb32df4c6ddd7c4dd1"
+    },
+    {
+      "path": "website/scripts/install-page.mjs",
+      "sha256": "3328eeecfbe17559e2e83218ebb717a48774269f92a1c6afe58eda01a9577061"
+    },
+    {
+      "path": "website/scripts/interactions.test.mjs",
+      "sha256": "b9a073c5641b096bea115c9d7d95694c225cf087519534f01095ef3d32a5ad89"
+    },
+    {
+      "path": "website/scripts/package.mjs",
+      "sha256": "af1ff09308e01b1329798cbfa7a4d0b573418923043f0027f2fb3dcc9c027ad8"
+    },
+    {
+      "path": "website/scripts/release-input.mjs",
+      "sha256": "58ed00c4e9223f234a408d16157e33982ba68b2d186d27b2ebdcc2dca1d4ca14"
+    },
+    {
+      "path": "website/scripts/serve.mjs",
+      "sha256": "57322de6ffd1effac3b401ff2f757da73893bbd9b415903cbcbf8e3f276a020d"
+    },
+    {
+      "path": "website/scripts/site.test.mjs",
+      "sha256": "c8bef584e1f78c99bf774576c536a5be74a1a7d5c0ce94352dd193675089c664"
+    },
+    {
+      "path": "website/scripts/verify-copy.mjs",
+      "sha256": "f4830ec483a1853048f845e6b5f54a6405eb1a7d880f34dda0322503e8fb8606"
+    },
+    {
+      "path": "website/src/app.js",
+      "sha256": "3f0ff251e971e2dcab3f326be1cd16543cc3e968cbb990f117e4823c440990b5"
+    },
+    {
+      "path": "website/src/community/dsh-session-health.png",
+      "sha256": "be9e4326879c221016b58cdbda6a63c6843696018318e5f4bf3c334a132aeebb"
+    },
+    {
+      "path": "website/src/community/dsh-subagent-model-picker.png",
+      "sha256": "edc53332b0afaaade3bc78e7ca24e323b416ca75ed9dc6ebb03619f41f6f7d44"
+    },
+    {
+      "path": "website/src/install.js",
+      "sha256": "0bf52a4b13e3bafa530d2081ac4801407f00a474e5c7d1eadfb7c2e37da576dc"
+    },
+    {
+      "path": "website/src/packages/dsh-any-background-0.2.8.tgz",
+      "sha256": "a90f02cbebfdae0c6fff428038df9096f0d6ad3bc94538c4266eb7bd700d7a7e"
+    },
+    {
+      "path": "website/src/packages/dsh-batch-tool-calls-1.0.0.tgz",
+      "sha256": "da52f28308abed7faae3d4ba69f2bf44cf58f5595a1e5167681d45d2cbccadc4"
+    },
+    {
+      "path": "website/src/packages/dsh-peak-chip-4.1.8.tgz",
+      "sha256": "437d649065fd1f47d334981ad6587425c21607c49f0d1620a5c57be05875d406"
+    },
+    {
+      "path": "website/src/qrcode-LICENSE.txt",
+      "sha256": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c"
+    },
+    {
+      "path": "website/src/skills/device-shell/SKILL.md",
+      "sha256": "aa4c1d8305b14dd6742dc64ca308b642af6c433997cb56e709500d6c72fc6542"
+    },
+    {
+      "path": "website/src/skills/screen-ocr-operator/SKILL.md",
+      "sha256": "d6b8eda76751da17cdad0c32632424ca623cd3945c9643eb39bacdff4615f93f"
+    },
+    {
+      "path": "website/src/styles.css",
+      "sha256": "5494309cb6bbd22ccd4b5c307b887fdf4a31db1541e254af868b666ec7819d68"
+    },
+    {
+      "path": "website/src/theme.js",
+      "sha256": "8aab4ab7ad87de1abe78638718c2b97f6b81978fc7b209dbce8a35f03addee4c"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/build.gradle",
+      "sha256": "c11f70b7bd33c8ef548f172b844bdbebe3ae7df554b092066a973788f3d94adb"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/java/com/deepseekharness/app/util/Constants.java",
+      "sha256": "ed7ee6df32544c12460388ba9f5bc0f5e992584b0a762034a4e22c7a33cb69a2"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/tools/dsh-runtime/package.json",
+      "sha256": "4885ec233c3786b2ce17c396f64b3e922d3202b8a50a67a60e199c7d9e130b61"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/runtime-descriptor.json",
+      "sha256": "7c4c678fe309ff8a8939ce1c1d61c2dba39cbeb128da2c01bd4af91c5d38a38f"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins.json",
+      "sha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/LICENSE",
+      "sha256": "e0ddc2f4a383d900a26e3148a19c256e9dbe06585a274307509e9714636be0b1"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "sha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "sha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/agent-skills/device-shell/SKILL.md",
+      "sha256": "247a04d6ad0fe6ed15925e7e5e8e1467ddce268ab37e4a5f5486a5feb8bce125"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/agent-skills/screen-ocr-operator/SKILL.md",
+      "sha256": "9435e0dff26b8199e16eb12ac434f2bfc6db1af73ccd7ba40d96a62b8772f8e7"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json",
+      "sha256": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-task-notifier/package.json",
+      "sha256": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-status-overlay/package.json",
+      "sha256": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+      "sha256": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json",
+      "sha256": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-auto-review/package.json",
+      "sha256": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/exact-candidate-source/app/src/main/assets/builtin-plugins/dsh-tool-vscreen/package.json",
+      "sha256": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa"
+    },
+    {
+      "path": "app/build/audit-build156/docs-website-candidate-5e2d/actual-candidate-release-manifest.json",
+      "sha256": "5aade95dc81a0d4d1c0411ab4bed6997bd8852680c6f4f4a5eba6a791953b0ca"
+    }
+  ],
+  "checks": [
+    {
+      "command": [
+        "scripts/build.mjs"
+      ],
+      "cwd": "website",
+      "exitCode": 0,
+      "log": "app/build/audit-build156/docs-website-candidate-5e2d/check-1.log",
+      "logSha256": "8ffba68c67a1f2a35d192853f4c3366c593da5054de67f851dbdc05a57e030c0"
+    },
+    {
+      "command": [
+        "--test",
+        "scripts/site.test.mjs",
+        "scripts/interactions.test.mjs"
+      ],
+      "cwd": "website",
+      "exitCode": 0,
+      "log": "app/build/audit-build156/docs-website-candidate-5e2d/check-2.log",
+      "logSha256": "b18b8358d0a809ec59f2d39c88339454cc269bee97ac3854b71d59a944b7d98e"
+    }
+  ],
+  "testCount": 28,
+  "downloadProofs": [
+    {
+      "flavor": "standard",
+      "file": {
+        "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2.apk",
+        "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+        "bytes": 397302610
+      },
+      "sidecar": {
+        "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2.apk.sha256",
+        "sha256": "7cf2c6746261be072bb13cf8e79e33a783fa998fe45efc6100c13f51b30f9363",
+        "bytes": 85
+      }
+    },
+    {
+      "flavor": "low",
+      "file": {
+        "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2low.apk",
+        "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+        "bytes": 473097048
+      },
+      "sidecar": {
+        "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2low.apk.sha256",
+        "sha256": "9d0e8784764bed11f621616c00017ad7ceaa2dcb942f61257f96a6b553bebf1c",
+        "bytes": 88
+      }
+    }
+  ],
+  "realReleaseUntouched": [
+    {
+      "path": "release/dsha-0.2.0-rc2.apk",
+      "sha256": "8edffe0fb42e2d5476d14eba49b224c419889364f2ad21ebbbc42dd6c93659d2",
+      "bytes": 396931069
+    },
+    {
+      "path": "release/dsha-0.2.0-rc2.apk.sha256",
+      "sha256": "9a8532a3c6d8bfe8f612ff45cd759f5fb8d5e1dad1ba16c441bcf55a6da392d3",
+      "bytes": 85
+    },
+    {
+      "path": "release/dsha-0.2.0-rc2low.apk",
+      "sha256": "dbc781a633600bd408778ca3ecc1fc0fe590df136d4f241c5e776e6391145990",
+      "bytes": 473045030
+    },
+    {
+      "path": "release/dsha-0.2.0-rc2low.apk.sha256",
+      "sha256": "d08c870db8c71fdbc019af9fa9fbc74fe9f34f0c0ebf35d85a00185e13d62c26",
+      "bytes": 88
+    }
+  ],
+  "candidateOnly": true,
+  "formalDeliveryCompleted": false,
+  "deviceAcceptanceCompleted": false,
+  "hostedDeploymentPerformed": false,
+  "result": "PASS"
+}

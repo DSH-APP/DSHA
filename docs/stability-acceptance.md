@@ -1,5 +1,8 @@
 # DSHA build 131 稳定性验收
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 基线是 `main` 的 `dca04aed7c1a1468827a953bfd6295fc3ca44170` **加原有 build 130 未提交修改**，不是公开仓库该提交本身。开始时保存了 170 个已有变更文件、二进制补丁及逐文件摘要：`app/build/stability-20260914/baseline*`。build 130 的两份发布 APK 与其交付记录一致，原件继续保留。本轮版本为 `0.1.5-rc2.1` / `0.1.5-rc2.1low`、versionCode 131，dsh `0.1.5-rc.2`、Ubuntu base 10、包名和历史证书不变。
 
 本轮只做本地交付；没有 git 提交、推送、上传、修改 Release，也没有卸载或覆盖手机正式 `com.dsh.client`。审计包不是交付 APK。
@@ -53,9 +56,9 @@ LAN 总头 64 KiB、请求行与字段各 16 KiB、最多 100 字段。本地设
 本机准确软件入口（原密钥只通过已有环境变量引用，不写入报告）：
 
 ```powershell
-$env:GRADLE_USER_HOME='F:/DSHA/_toolchains/gradle-user-home'
+$env:GRADLE_USER_HOME='<gradle-user-home>'
 # DSHA_KEYSTORE 指向已授权历史签名材料；不要改成另一把密钥。
-& 'C:/Users/18768/AppData/Local/Programs/Python/Python311/python.exe' -B tools/verify-stability.py --node 'C:/Program Files/nodejs/node.exe'
+& '<python>' -B tools/verify-stability.py --node '<node>'
 ```
 
 该入口执行两版 `test*DebugUnitTest`、`lint*Release`、`assemble*Release`，Node `test-startup-diagnostics.mjs` / `test-issue67-startup.mjs`，Python `test-plugin-{discovery,dependencies,transactions,review}.py`，以及两个实际 APK 的 `verify-dsh-upgrade-apk.py`、`audit-standard-apk.py`、apksigner 和 aapt。完整 argv、退出码及日志在机器清单。

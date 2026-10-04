@@ -20,369 +20,492 @@ import com.deepseekharness.app.util.SensitiveData;
  * 前台保活服务：让 dsh Web UI 在后台稳定常驻。
  *  - startForeground 常驻通知，降低被系统回收概率；
  *  - START_STICKY 被杀后由系统重启；
- *  - 看门狗：TCP 探测 WebUI 端口，连续失联自动重启（带冷却防风暴）；
+ *  - 看门狗：本轮端口、官方鉴权和 HTTP 就绪分层检查；仅连续连接拒绝可提交受控重启；
  *  - WakeLock/WifiLock 息屏保活（熄屏后 node 不被冻结、局域网桥不断）。
  *
- * 适配重启项目（精简版 HarnessController：startWeb(Consumer) / stopWeb / isWebRunning）。
+ * Lifecycle and generation come from the application's HarnessController; this service owns only
+ * the foreground notification, health polling and platform power leases.
  */
 public class HarnessService extends Service {
 
-    public static final String ACTION_START = "com.deepseekharness.app.START";
-    public static final String ACTION_STOP = "com.deepseekharness.app.STOP";
+  public static final String ACTION_START = "com.deepseekharness.app.START";
+  public static final String ACTION_STOP = "com.deepseekharness.app.STOP";
 
-    private static final String CHANNEL_ID = "dsh_harness_channel";
-    private static final int NOTIF_ID = 1001;
+  private static final String CHANNEL_ID = "dsh_harness_channel";
+  private static final int NOTIF_ID = com.deepseekharness.app.util.NotificationIds.HARNESS;
 
-    private HarnessController c;
-    private volatile HttpShellService.Lease shellHttp;
+  private HarnessController c;
+  private volatile HttpShellService.Lease shellHttp;
 
-    // ================= WebUI 监听保活 =================
-    private Thread keepAliveThread;
-    private volatile boolean keepAliveRunning;
-    private final java.util.concurrent.atomic.AtomicLong lastRestartAt =
-            new java.util.concurrent.atomic.AtomicLong(0);
-    private static final long KEEPALIVE_INTERVAL_MS = 15000L;
-    private static final long RESTART_COOLDOWN_MS = 120000L;
-    private static final int KEEPALIVE_MAX_FAIL = 3;
+  // ================= WebUI 监听保活 =================
+  private Thread keepAliveThread;
+  private volatile boolean keepAliveRunning;
+  private final java.util.concurrent.atomic.AtomicLong lastRestartAt =
+      new java.util.concurrent.atomic.AtomicLong(0);
+  private static final long KEEPALIVE_INTERVAL_MS = 15000L;
+  private static final long RESTART_COOLDOWN_MS = 120000L;
+  private static final int KEEPALIVE_MAX_FAIL = 3;
 
-    /** 息屏保活用的两把锁。 */
-    private android.os.PowerManager.WakeLock wakeLock;
-    private android.net.wifi.WifiManager.WifiLock wifiLock;
-    private static volatile HarnessService activeService;
-    private final com.deepseekharness.app.util.PowerPolicy powerPolicy = new com.deepseekharness.app.util.PowerPolicy();
-    private String notificationState = "";
-    private boolean receiverRegistered;
-    private final android.content.BroadcastReceiver screenReceiver = new android.content.BroadcastReceiver() {
-        @Override public void onReceive(Context context, Intent intent) { refreshLocks(); }
-    };
-    public static void refreshPowerMode() {
-        HarnessService service = activeService;
-        if (service != null) service.refreshLocks();
+  /** 息屏保活用的两把锁。 */
+  private android.os.PowerManager.WakeLock wakeLock;
+
+  private android.net.wifi.WifiManager.WifiLock wifiLock;
+  private final com.deepseekharness.app.util.PowerPolicy powerPolicy =
+      new com.deepseekharness.app.util.PowerPolicy();
+  private String notificationState = "";
+  private boolean receiverRegistered;
+  private final android.content.BroadcastReceiver screenReceiver =
+      new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+          refreshLocks();
+        }
+      };
+
+  public static void refreshPowerMode(Context context) {
+    HarnessService service = DshaApp.from(context).harnessService().current();
+    if (service != null) service.refreshLocks();
+  }
+
+  /** 保留配置页入口；LAN 与本机对话共用同一个前台运行服务。 */
+  public static void ensureLanForeground(Context context) {
+    if (!HarnessController.get(context).config().isLanMode()) return;
+    ensureRuntimeForeground(context);
+  }
+
+  /** 仅在可见界面调用：已启动的 Web 恢复前台服务，不启动新请求或重启 Node。 */
+  public static void ensureRuntimeForeground(Context context) {
+    HarnessController controller = HarnessController.get(context);
+    if (controller.isUserStopped()
+        || controller.isStopping()
+        || controller.isRestartBlocked()
+        || (!controller.isStarting() && controller.getWebAuthUrl().isEmpty())) return;
+    HarnessService service = DshaApp.from(context).harnessService().current();
+    try {
+      if (service != null && service.keepAliveHealthy()) {
+        service.showForegroundNotification();
+        service.refreshLocks();
+      } else {
+        androidx.core.content.ContextCompat.startForegroundService(
+            context.getApplicationContext(),
+            new Intent(context.getApplicationContext(), HarnessService.class)
+                .setAction(ACTION_START));
+      }
+    } catch (RuntimeException error) {
+      com.deepseekharness.app.core.DiagnosticLog.record(
+          context,
+          "RUNTIME_BACKGROUND_SERVICE",
+          "Background service unavailable: " + error.getClass().getSimpleName());
     }
+  }
 
-    /** 仅在可见界面调用：LAN 已启用时补齐后台服务，而非只启动监听线程。 */
-    public static void ensureLanForeground(Context context) {
-        HarnessController controller = HarnessController.get(context);
-        if (!controller.config().isLanMode() || controller.isUserStopped() || controller.isRestartBlocked()
-                || (!controller.isStarting() && controller.getWebAuthUrl().isEmpty())) return;
-        HarnessService service = activeService;
-        try {
-            if (service != null && service.keepAliveRunning) {
-                service.showForegroundNotification();
-                service.refreshLocks();
-            } else {
-                androidx.core.content.ContextCompat.startForegroundService(context.getApplicationContext(),
-                        new Intent(context.getApplicationContext(), HarnessService.class).setAction(ACTION_START));
-            }
-        } catch (RuntimeException error) {
-            com.deepseekharness.app.core.DiagnosticLog.record(context, "LAN_BACKGROUND_SERVICE",
-                    "Background service unavailable: " + error.getClass().getSimpleName());
-        }
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    c = HarnessController.get(this);
+    DshaApp.from(this).harnessService().attach(this);
+    android.content.IntentFilter screen = new android.content.IntentFilter(Intent.ACTION_SCREEN_ON);
+    screen.addAction(Intent.ACTION_SCREEN_OFF);
+    androidx.core.content.ContextCompat.registerReceiver(
+        this, screenReceiver, screen, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
+    receiverRegistered = true;
+    createChannel();
+    try {
+      showForegroundNotification();
+    } catch (RuntimeException error) {
+      android.util.Log.w(
+          "DSHA",
+          com.deepseekharness.app.util.UiText.format(
+              "前台服务未获系统允许：%s", error.getClass().getSimpleName()));
+      stopSelf();
+      return;
     }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        c = HarnessController.get(this);
-        activeService = this;
-        android.content.IntentFilter screen = new android.content.IntentFilter(Intent.ACTION_SCREEN_ON);
-        screen.addAction(Intent.ACTION_SCREEN_OFF);
-        androidx.core.content.ContextCompat.registerReceiver(this, screenReceiver, screen,
-                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
-        receiverRegistered = true;
-        createChannel();
-        try {
-            showForegroundNotification();
-        } catch (RuntimeException error) {
-            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("前台服务未获系统允许: ") + error.getClass().getSimpleName());
-            stopSelf();
-            return;
-        }
-        // 3090 桥（agent 调设备能力）随前台服务拉起；跨实例互斥，重复启动安全
-        try {
-            shellHttp = HttpShellService.acquire(this);
-        } catch (Throwable ignored) {
-        }
+    // 3090 桥（agent 调设备能力）随前台服务拉起；跨实例互斥，重复启动安全
+    try {
+      shellHttp = HttpShellService.acquire(this);
+    } catch (Throwable ignored) {
     }
+  }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        // Android 8+ 硬性契约：startForegroundService() 拉起的服务必须在 5 秒内 startForeground，
-        // 否则被强杀。每次 onStartCommand 无条件先立通知（幂等）。
-        try {
-            showForegroundNotification();
-        } catch (Throwable e) {
-            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("onStartCommand startForeground 失败: ")
-                    + SensitiveData.redact(String.valueOf(e)));
-            stopSelf();
-            return START_NOT_STICKY;
-        }
-        if (intent != null && ACTION_STOP.equals(intent.getAction())) {
-            stopWebAndSelf();
-            return START_NOT_STICKY;
-        }
-        if (!keepAliveRunning) startKeepAlive();
-        else refreshLocks();
-        return START_STICKY;
+  @Override
+  public int onStartCommand(Intent intent, int flags, int startId) {
+    // Android 8+ 硬性契约：startForegroundService() 拉起的服务必须在 5 秒内 startForeground，
+    // 否则被强杀。每次 onStartCommand 无条件先立通知（幂等）。
+    try {
+      showForegroundNotification();
+    } catch (Throwable e) {
+      android.util.Log.w(
+          "DSHA",
+          com.deepseekharness.app.util.UiText.format(
+              "onStartCommand startForeground 失败：%s", SensitiveData.redact(String.valueOf(e))));
+      stopSelf();
+      return START_NOT_STICKY;
     }
-
-    private void stopWebAndSelf() {
-        stopKeepAlive();
-        try {
-            c.stopWeb(msg -> { });
-        } catch (Throwable ignored) {
-        }
-        try {
-            if (shellHttp != null) { shellHttp.close(); shellHttp = null; }
-        } catch (Throwable ignored) {
-        }
-        // ADB 保活属于用户单独启用的需求；停止 Web 不撤销设备服务的 lease。
-        stopForeground(true);
-        stopSelf();
+    if (intent != null && ACTION_STOP.equals(intent.getAction())) {
+      stopWebAndSelf();
+      return START_NOT_STICKY;
     }
-
-    // ================= 息屏保活 =================
-
-    private synchronized void acquireLocks(boolean needWifi) {
-        try {
-            android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
-            if (pm != null && (wakeLock == null || !wakeLock.isHeld())) {
-                wakeLock = pm.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "DSHA:web");
-                wakeLock.setReferenceCounted(false);
-            }
-            if (wakeLock != null) wakeLock.acquire(600_000);
-            android.net.wifi.WifiManager wm = (android.net.wifi.WifiManager)
-                    getApplicationContext().getSystemService(WIFI_SERVICE);
-            if (needWifi && wm != null && (wifiLock == null || !wifiLock.isHeld())) {
-                wifiLock = wm.createWifiLock(
-                        android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "DSHA:wifi");
-                wifiLock.setReferenceCounted(false);
-                wifiLock.acquire();
-            }
-            if (!needWifi && wifiLock != null) {
-                if (wifiLock.isHeld()) wifiLock.release();
-                wifiLock = null;
-            }
-        } catch (Throwable t) {
-            android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("[保活] 取锁失败（不致命）: ")
-                    + SensitiveData.redact(String.valueOf(t)));
-        }
+    // A visible Activity may have queued START just before the user stopped
+    // the runtime. Recheck at delivery; a late intent must not restore the
+    // stopped notification/bridge. Sticky recovery keeps its existing path.
+    if (intent != null
+        && ACTION_START.equals(intent.getAction())
+        && (c.isUserStopped()
+            || c.isStopping()
+            || c.isRestartBlocked()
+            || (!c.isStarting() && c.getWebAuthUrl().isEmpty()))) {
+      stopKeepAlive();
+      if (shellHttp != null) {
+        shellHttp.close();
+        shellHttp = null;
+      }
+      stopForeground(true);
+      stopSelfResult(startId);
+      return START_NOT_STICKY;
     }
+    if (!keepAliveHealthy()) startKeepAlive();
+    else refreshLocks();
+    return START_STICKY;
+  }
 
-    private synchronized void refreshLocks() {
-        if (!keepAliveRunning) return;
-        com.deepseekharness.app.core.RuntimeTasks.renew();
-        boolean eco = c.config().isEcoMode(), starting = c.isStarting();
-        boolean active = starting || (!c.isUserStopped() && !c.isRestartBlocked()
-                && (c.canAutoRestart() || !c.getWebAuthUrl().isEmpty()));
-        boolean lan = c.config().isLanMode(), work = com.deepseekharness.app.core.RuntimeTasks.isBusy();
-        android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
-        // LAN 需要随时接收远端请求；不读取页面空闲文件决定是否允许休眠。
-        boolean idle = !lan && knownWebIdle();
-        boolean keep = powerPolicy.keepCpu(eco, active, starting, pm == null || pm.isInteractive(),
-                lan, work, idle, android.os.SystemClock.elapsedRealtime());
-        if (keep) acquireLocks(!eco || lan || work || !idle); else releaseLocks();
-        String state = c.isRestartBlocked() ? com.deepseekharness.app.util.UiText.text("连续失败，自动重启已暂停；点此查看恢复选项")
-                : !active ? com.deepseekharness.app.util.UiText.text("Web 已停止") : !eco ? com.deepseekharness.app.util.UiText.text("持续运行 · 后台保活已开启")
-                : keep ? com.deepseekharness.app.util.UiText.text("省电模式 · 有任务或状态待确认，继续保活") : com.deepseekharness.app.util.UiText.text("省电模式 · 已空闲，允许系统休眠");
-        if (!state.equals(notificationState)) {
-            notificationState = state;
-            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            try { if (nm != null) nm.notify(NOTIF_ID, buildNotification(com.deepseekharness.app.util.UiText.text("DSHA 后台服务"), state)); }
-            catch (RuntimeException ignored) { }
-        }
+  private void stopWebAndSelf() {
+    stopKeepAlive();
+    try {
+      c.stopWeb(msg -> {});
+    } catch (Throwable ignored) {
     }
-
-    private boolean knownWebIdle() {
-        if (c.getWebAuthUrl().isEmpty()) return false;
-        try {
-            java.io.File file = new java.io.File(c.proot().getRootfsDir(), "root/.dsha-web-activity.json");
-            if (file.length() > 2048) return false;
-            org.json.JSONObject status = new org.json.JSONObject(new String(
-                    com.deepseekharness.app.util.Compat.readAllBytes(file), java.nio.charset.StandardCharsets.UTF_8));
-            long age = System.currentTimeMillis() - status.getLong("at");
-            return status.getLong("generation") == c.getWebGeneration() && age >= 0 && age <= 30_000
-                    && status.getBoolean("idle");
-        } catch (Exception error) { return false; }
+    try {
+      if (shellHttp != null) {
+        shellHttp.close();
+        shellHttp = null;
+      }
+    } catch (Throwable ignored) {
     }
+    // ADB 保活属于用户单独启用的需求；停止 Web 不撤销设备服务的 lease。
+    stopForeground(true);
+    stopSelf();
+  }
 
-    private synchronized void releaseLocks() {
-        try {
-            if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
-        } catch (Throwable ignored) {
-        }
-        try {
-            if (wifiLock != null && wifiLock.isHeld()) wifiLock.release();
-        } catch (Throwable ignored) {
-        }
-        wakeLock = null;
+  // ================= 息屏保活 =================
+
+  private synchronized void acquireLocks(boolean needWifi) {
+    try {
+      android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
+      if (pm != null && (wakeLock == null || !wakeLock.isHeld())) {
+        wakeLock = pm.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "DSHA:web");
+        wakeLock.setReferenceCounted(false);
+      }
+      if (wakeLock != null) wakeLock.acquire(600_000);
+      android.net.wifi.WifiManager wm =
+          (android.net.wifi.WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+      if (needWifi && wm != null && (wifiLock == null || !wifiLock.isHeld())) {
+        wifiLock =
+            wm.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "DSHA:wifi");
+        wifiLock.setReferenceCounted(false);
+        wifiLock.acquire();
+      }
+      if (!needWifi && wifiLock != null) {
+        if (wifiLock.isHeld()) wifiLock.release();
         wifiLock = null;
+      }
+    } catch (Throwable t) {
+      android.util.Log.w(
+          "DSHA",
+          com.deepseekharness.app.util.UiText.format(
+              "[保活] 取锁失败（不致命）：%s", SensitiveData.redact(String.valueOf(t))));
     }
+  }
 
-    // ================= 看门狗 =================
+  private synchronized void refreshLocks() {
+    if (!keepAliveRunning) return;
+    com.deepseekharness.app.core.RuntimeTasks.renew();
+    boolean eco = c.config().isEcoMode(), starting = c.isStarting();
+    boolean active =
+        starting
+            || (!c.isUserStopped()
+                && !c.isRestartBlocked()
+                && (c.canAutoRestart() || !c.getWebAuthUrl().isEmpty()));
+    boolean lan = c.config().isLanMode(), work = com.deepseekharness.app.core.RuntimeTasks.isBusy();
+    android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
+    // LAN 需要随时接收远端请求；不读取页面空闲文件决定是否允许休眠。
+    boolean idle = !lan && knownWebIdle();
+    boolean keep =
+        powerPolicy.keepCpu(
+            eco,
+            active,
+            starting,
+            pm == null || pm.isInteractive(),
+            lan,
+            work,
+            idle,
+            android.os.SystemClock.elapsedRealtime());
+    if (keep) acquireLocks(!eco || lan || work || !idle);
+    else releaseLocks();
+    String state =
+        c.isRestartBlocked()
+            ? com.deepseekharness.app.util.UiText.text("连续失败，自动重启已暂停；点此查看恢复选项")
+            : !active
+                ? com.deepseekharness.app.util.UiText.text("Web 已停止")
+                : !eco
+                    ? com.deepseekharness.app.util.UiText.text("持续运行 · 后台保活已开启")
+                    : keep
+                        ? com.deepseekharness.app.util.UiText.text("省电模式 · 有任务或状态待确认，继续保活")
+                        : com.deepseekharness.app.util.UiText.text("省电模式 · 已空闲，允许系统休眠");
+    if (!state.equals(notificationState)) {
+      notificationState = state;
+      NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+      try {
+        if (nm != null)
+          nm.notify(
+              NOTIF_ID,
+              buildNotification(com.deepseekharness.app.util.UiText.text("DSHA 后台服务"), state));
+      } catch (RuntimeException ignored) {
+      }
+    }
+  }
 
-    private void startKeepAlive() {
-        stopKeepAlive();
-        keepAliveRunning = true;
-        refreshLocks();
-        keepAliveThread = new Thread(() -> {
-            int fail = 0;
-            while (keepAliveRunning && !Thread.currentThread().isInterrupted()) {
+  private boolean knownWebIdle() {
+    if (c.getWebAuthUrl().isEmpty()) return false;
+    try {
+      java.io.File file =
+          new java.io.File(c.proot().getRootfsDir(), "root/.dsha-web-activity.json");
+      if (file.length() > 2048) return false;
+      org.json.JSONObject status =
+          new org.json.JSONObject(
+              new String(
+                  com.deepseekharness.app.util.Compat.readAllBytes(file),
+                  java.nio.charset.StandardCharsets.UTF_8));
+      long age = System.currentTimeMillis() - status.getLong("at");
+      return status.getLong("generation") == c.getWebGeneration()
+          && age >= 0
+          && age <= 30_000
+          && status.getBoolean("idle");
+    } catch (Exception error) {
+      return false;
+    }
+  }
+
+  private synchronized void releaseLocks() {
+    try {
+      if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
+    } catch (Throwable ignored) {
+    }
+    try {
+      if (wifiLock != null && wifiLock.isHeld()) wifiLock.release();
+    } catch (Throwable ignored) {
+    }
+    wakeLock = null;
+    wifiLock = null;
+  }
+
+  // ================= 看门狗 =================
+
+  private synchronized boolean keepAliveHealthy() {
+    return keepAliveRunning
+        && keepAliveThread != null
+        && keepAliveThread.isAlive()
+        && !keepAliveThread.isInterrupted();
+  }
+
+  private void startKeepAlive() {
+    stopKeepAlive();
+    keepAliveRunning = true;
+    refreshLocks();
+    keepAliveThread =
+        new Thread(
+            () -> {
+              int fail = 0;
+              while (keepAliveRunning && !Thread.currentThread().isInterrupted()) {
                 try {
-                    Thread.sleep(KEEPALIVE_INTERVAL_MS);
+                  Thread.sleep(KEEPALIVE_INTERVAL_MS);
                 } catch (InterruptedException e) {
-                    break;
+                  break;
                 }
                 if (!keepAliveRunning) break;
                 HttpShellService.Lease bridge = shellHttp;
-                try { if (bridge != null) bridge.ensureStarted(); }
-                catch (RuntimeException error) {
-                    com.deepseekharness.app.core.DiagnosticLog.record(this,"BRIDGE_KEEPALIVE",error.getClass().getSimpleName());
+                try {
+                  if (bridge != null) bridge.ensureStarted();
+                } catch (RuntimeException error) {
+                  com.deepseekharness.app.core.DiagnosticLog.record(
+                      this, "BRIDGE_KEEPALIVE", error.getClass().getSimpleName());
                 }
                 refreshLocks();
                 ensureLanListening();
                 if (!c.canAutoRestart()) {
-                    fail = 0;
-                    continue;
+                  fail = 0;
+                  continue;
                 }
                 long generation = c.getWebGeneration();
                 // 顺手守着 ADB 设备桥（普通后台服务被回收时拉回来）
                 try {
-                    if (DeviceBridgeService.isAdbEnabled(HarnessService.this)
-                            && !DeviceBridgeService.isRunning()) {
-                        DeviceBridgeService.apply(HarnessService.this);
-                    }
+                  if (DeviceBridgeService.isAdbEnabled(HarnessService.this)
+                      && !DeviceBridgeService.isRunning()) {
+                    DeviceBridgeService.apply(HarnessService.this);
+                  }
                 } catch (Throwable ignored) {
                 }
-                if (!c.getWebAuthUrl().isEmpty() && isWebUp()) {
-                    c.reportWebHealth(generation, true);
-                    fail = 0;
-                    continue;
+                com.deepseekharness.app.util.WebHealthProbe.Result health =
+                    com.deepseekharness.app.util.WebHealthProbe.probe(
+                        c.getWebAuthUrl(),
+                        c.getWebPort(),
+                        () ->
+                            keepAliveRunning
+                                && !Thread.currentThread().isInterrupted()
+                                && generation == c.getWebGeneration()
+                                && c.canAutoRestart(),
+                        3000);
+                if (health.state == com.deepseekharness.app.util.WebHealthProbe.State.STALE) {
+                  fail = 0;
+                  continue;
+                }
+                if (health.healthy()) {
+                  c.reportWebHealth(generation, true);
+                  fail = 0;
+                  continue;
                 }
                 c.reportWebHealth(generation, false);
-                // TCP 探测期间可能发生手动启停，不能沿用旧探测结果。
-                if (!keepAliveRunning || Thread.currentThread().isInterrupted()
-                        || generation != c.getWebGeneration() || !c.canAutoRestart()) {
-                    fail = 0;
-                    continue;
+                // 探测期间可能发生手动启停，不能沿用旧探测结果。
+                if (!keepAliveRunning
+                    || Thread.currentThread().isInterrupted()
+                    || generation != c.getWebGeneration()
+                    || !c.canAutoRestart()) {
+                  fail = 0;
+                  continue;
+                }
+                if (!health.restartCandidate()) {
+                  fail = 0;
+                  com.deepseekharness.app.core.DiagnosticLog.record(
+                      this, "WEB_HEALTH", health.state.name());
+                  continue;
                 }
                 fail++;
                 if (fail < KEEPALIVE_MAX_FAIL) continue;
                 fail = 0;
                 long now = android.os.SystemClock.elapsedRealtime();
-                if (lastRestartAt.get() != 0 && now - lastRestartAt.get() < RESTART_COOLDOWN_MS) continue;
+                if (lastRestartAt.get() != 0 && now - lastRestartAt.get() < RESTART_COOLDOWN_MS)
+                  continue;
                 // Controller 在等待鉴权期间始终保持启动门控；等待时间过长不会触发自动重启。
-                if (c.restartWebAutomatically(generation, msg -> { })) {
-                    lastRestartAt.set(now);
-                    android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.text("[保活] WebUI 连续失联，已提交自动重启"));
+                if (c.restartWebAutomatically(generation, msg -> {})) {
+                  lastRestartAt.set(now);
+                  android.util.Log.w(
+                      "DSHA", com.deepseekharness.app.util.UiText.text("[保活] WebUI 连续失联，已提交自动重启"));
                 }
-            }
-        }, "dsha-keepalive");
-        keepAliveThread.setDaemon(true);
-        keepAliveThread.start();
+              }
+            },
+            "dsha-keepalive");
+    keepAliveThread.setDaemon(true);
+    keepAliveThread.start();
+  }
+
+  private synchronized void stopKeepAlive() {
+    keepAliveRunning = false;
+    releaseLocks();
+    if (keepAliveThread != null) {
+      keepAliveThread.interrupt();
+      keepAliveThread = null;
     }
+  }
 
-    private synchronized void stopKeepAlive() {
-        keepAliveRunning = false;
-        releaseLocks();
-        if (keepAliveThread != null) {
-            keepAliveThread.interrupt();
-            keepAliveThread = null;
-        }
+  /** 与 Web 前台服务同寿命，后台监听失败也可恢复，不依赖重新打开页面。 */
+  private void ensureLanListening() {
+    long generation = c.getWebGeneration();
+    if (!keepAliveRunning
+        || !c.config().isLanMode()
+        || c.isUserStopped()
+        || c.isRestartBlocked()
+        || !LanProxyService.hasDshAuth(generation)
+        || LanProxyService.isBound()) return;
+    try {
+      LanProxyService.start(
+          c.proot().getRootfsDir().getAbsolutePath(), this, c.getWebPort(), generation);
+    } catch (RuntimeException error) {
+      com.deepseekharness.app.core.DiagnosticLog.record(
+          this, "LAN_LISTENER_RETRY", error.getClass().getSimpleName());
     }
+  }
 
-    /** TCP 探测 127.0.0.1:<port> 是否可达（proot 与宿主共享网络栈） */
-    /** 与 Web 前台服务同寿命，后台监听失败也可恢复，不依赖重新打开页面。 */
-    private void ensureLanListening() {
-        long generation = c.getWebGeneration();
-        if (!keepAliveRunning || !c.config().isLanMode() || c.isUserStopped() || c.isRestartBlocked()
-                || !LanProxyService.hasDshAuth(generation) || LanProxyService.isBound()) return;
-        try {
-            LanProxyService.start(c.proot().getRootfsDir().getAbsolutePath(), this, c.getWebPort(), generation);
-        } catch (RuntimeException error) {
-            com.deepseekharness.app.core.DiagnosticLog.record(this,"LAN_LISTENER_RETRY",error.getClass().getSimpleName());
-        }
+  @Override
+  public void onDestroy() {
+    DshaApp.from(this).harnessService().release(this);
+    if (receiverRegistered) {
+      unregisterReceiver(screenReceiver);
+      receiverRegistered = false;
     }
-
-    private boolean isWebUp() {
-        int port;
-        try {
-            port = c.getWebPort();
-        } catch (Exception e) {
-            return false;
-        }
-        try (java.net.Socket s = new java.net.Socket()) {
-            s.connect(new java.net.InetSocketAddress("127.0.0.1", port), 3000);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    stopKeepAlive();
+    if (shellHttp != null) {
+      try {
+        shellHttp.close();
+        shellHttp = null;
+      } catch (Throwable ignored) {
+      }
     }
+    super.onDestroy();
+  }
 
-    @Override
-    public void onDestroy() {
-        if (activeService == this) activeService = null;
-        if (receiverRegistered) { unregisterReceiver(screenReceiver); receiverRegistered = false; }
-        stopKeepAlive();
-        if (shellHttp != null) {
-            try {
-                shellHttp.close(); shellHttp = null;
-            } catch (Throwable ignored) {
-            }
-        }
-        super.onDestroy();
+  @Nullable
+  @Override
+  public IBinder onBind(Intent intent) {
+    return null;
+  }
+
+  private void showForegroundNotification() {
+    Notification notification =
+        buildNotification(
+            com.deepseekharness.app.util.UiText.text("DSHA运行中"),
+            com.deepseekharness.app.util.UiText.text("Web UI 正在后台保持运行"));
+    if (Build.VERSION.SDK_INT >= 34) {
+      int type = android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
+      if (c.config().isLanMode())
+        type |= android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+      startForeground(NOTIF_ID, notification, type);
+    } else startForeground(NOTIF_ID, notification);
+  }
+
+  // ================= 通知 =================
+
+  private void createChannel() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      NotificationChannel ch =
+          new NotificationChannel(
+              CHANNEL_ID,
+              com.deepseekharness.app.util.UiText.text("DSHA后台服务"),
+              NotificationManager.IMPORTANCE_LOW);
+      ch.setDescription(
+          com.deepseekharness.app.util.UiText.text("保持 DeepSeek Harness Web UI 后台运行"));
+      NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+      if (nm != null) nm.createNotificationChannel(ch);
     }
+  }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+  private Notification buildNotification(String title, String text) {
+    // 正文点击必须是一个真正的 Activity PendingIntent。显式复用已有任务并带上
+    // open_launch，避免用户已经停在设置/终端页时点击通知看起来「没有反应」。
+    // 停止按钮继续使用独立的 Service PendingIntent，不能与正文共用 requestCode。
+    Intent intent =
+        new Intent(this, com.deepseekharness.app.ui.MainActivity.class)
+            .addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra("open_launch", true);
+    PendingIntent pi =
+        PendingIntent.getActivity(
+            this,
+            NOTIF_ID,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    Intent stop = new Intent(this, HarnessService.class).setAction(ACTION_STOP);
+    PendingIntent stopPi =
+        PendingIntent.getService(
+            this, 1, stop, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-    private void showForegroundNotification() {
-        Notification notification = buildNotification(com.deepseekharness.app.util.UiText.text("DSHA运行中"), com.deepseekharness.app.util.UiText.text("Web UI 正在后台保持运行"));
-        if (Build.VERSION.SDK_INT >= 34) {
-            int type = android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
-            if (c.config().isLanMode()) type |= android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
-            startForeground(NOTIF_ID, notification,
-                    type);
-        } else startForeground(NOTIF_ID, notification);
-    }
-
-    // ================= 通知 =================
-
-    private void createChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel ch = new NotificationChannel(
-                    CHANNEL_ID, com.deepseekharness.app.util.UiText.text("DSHA后台服务"), NotificationManager.IMPORTANCE_LOW);
-            ch.setDescription(com.deepseekharness.app.util.UiText.text("保持 DeepSeek Harness Web UI 后台运行"));
-            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (nm != null) nm.createNotificationChannel(ch);
-        }
-    }
-
-    private Notification buildNotification(String title, String text) {
-        // 正文点击必须是一个真正的 Activity PendingIntent。显式复用已有任务并带上
-        // open_launch，避免用户已经停在设置/终端页时点击通知看起来「没有反应」。
-        // 停止按钮继续使用独立的 Service PendingIntent，不能与正文共用 requestCode。
-        Intent intent = new Intent(this, com.deepseekharness.app.ui.MainActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                        | Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .putExtra("open_launch", true);
-        PendingIntent pi = PendingIntent.getActivity(this, NOTIF_ID, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        Intent stop = new Intent(this, HarnessService.class).setAction(ACTION_STOP);
-        PendingIntent stopPi = PendingIntent.getService(this, 1, stop,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_menu_manage)
-                .setContentTitle(title)
-                .setContentText(text)
-                .setContentIntent(pi)
-                .setOngoing(true)
-                .addAction(0, com.deepseekharness.app.util.UiText.text("停止"), stopPi)
-                .build();
-    }
+    return new NotificationCompat.Builder(this, CHANNEL_ID)
+        .setSmallIcon(android.R.drawable.ic_menu_manage)
+        .setContentTitle(title)
+        .setContentText(text)
+        .setContentIntent(pi)
+        .setOngoing(true)
+        .addAction(0, com.deepseekharness.app.util.UiText.text("停止"), stopPi)
+        .build();
+  }
 }

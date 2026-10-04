@@ -1,0 +1,2 @@
+FILESYSTEM {"type":0,"bsize":4096,"frsize":4096,"blocks":234147327,"bfree":201738989,"bavail":201738989,"files":0,"ffree":0} NATIVE_LINK hardlink LINKED_HOME false
+ATTACHMENT_AUDIT_PASS checks=11

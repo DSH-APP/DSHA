@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "path": "docs/stability-acceptance.md",
+      "retainedSource": "tools/history/documents/build155-public/docs/stability-acceptance.md",
+      "sha256": "b9c7a8e516bb670f92c1569da4ebf16b6f5cbfdfd256344cda86ea1f2008c6c8",
+      "bytes": 20120,
+      "publicSha256": "b103ca2b10666b381a8dae8bfc661d3c1ee1c202eac51ee2e6fecec5aa9bf67a",
+      "scope": "public path redaction only; original historical evidence unchanged"
+    },
+    {
+      "path": "docs/audits/2026-09-27-round2-architecture/final-assessment.md",
+      "retainedSource": "tools/history/documents/build155-public/docs/audits/2026-09-27-round2-architecture/final-assessment.md",
+      "sha256": "0df0ecdb8a3976d703f231d4539a269f16d1f0cf30ada8780ad0b715635e3b53",
+      "bytes": 12249,
+      "publicSha256": "645945304f322c459b1473de82edb935a326b14cb088148b89cf94b6e195b532",
+      "scope": "public path redaction only; original historical evidence unchanged"
+    },
+    {
+      "path": "docs/evidence/rc1.4-functional/release-build.log",
+      "retainedSource": "tools/history/documents/build155-public/docs/evidence/rc1.4-functional/release-build.log",
+      "sha256": "53f2603ab0c3957f98dc18bc082075f6755e3098d58eb07d228742401e0741b8",
+      "bytes": 11563,
+      "publicSha256": "5daf3ee91672c5bac4f79f6b1d0403abe05da09e72bb252128e8ae73e85a4450",
+      "scope": "public path redaction only; original historical evidence unchanged"
+    }
+  ]
+}

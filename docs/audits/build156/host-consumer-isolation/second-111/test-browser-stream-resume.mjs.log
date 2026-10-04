@@ -1,0 +1,14 @@
+✔ foreground replaces a dead-but-OPEN carrier and rebaselines actual rc2 output without prompt replay (176.8982ms)
+✔ foreground manual reset exits rc2 offline wait when Android missed the online callback (76.7105ms)
+✔ native resume received while hidden remains pending until the later visible callback (156.1145ms)
+✔ background/disposal cannot trigger a recovery or resend a user action (169.8967ms)
+✔ Gecko native-port foreground message reaches the actual page Connection reset (139.8866ms)
+✔ stream recovery preserves one pending unary admission and its later acknowledgement (78.0167ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 801.7151

@@ -1,6 +1,7 @@
 'use strict';
 // MCP 只桥接已存在的 Android 设备接口；不暴露 shell、凭据读取或任意文件访问。
-const fs=require('node:fs/promises'),path=require('node:path');
+const fs=require('node:fs/promises');
+const MAX_SCREENSHOT_BYTES=16*1024*1024;
 const definitions=[
   ['android_get_state','读取当前 Android 页面结构。操作前读取，操作后再次验证。','/app/ui/dump',{}],
   ['android_screenshot','截取当前屏幕并返回图片。需要系统截屏能力和 DSHA 授权。','/app/ui/screenshot',{}],
@@ -12,23 +13,37 @@ const definitions=[
 const tools=definitions.map(([name,description,,properties])=>({name,description,inputSchema:{type:'object',properties,required:Object.keys(properties),additionalProperties:false}}));
 function validate(def,args){if(!args||typeof args!=='object'||Array.isArray(args))throw Error('INVALID_ARGUMENTS');const fields=def[3];if(Object.keys(args).some(k=>!Object.hasOwn(fields,k)))throw Error('UNKNOWN_ARGUMENT');for(const [key,rule]of Object.entries(fields)){const v=args[key];if(rule.type==='integer'&&(!Number.isInteger(v)||v<rule.minimum||rule.maximum!==undefined&&v>rule.maximum))throw Error('INVALID_'+key);if(rule.type==='string'&&(typeof v!=='string'||rule.maxLength&&v.length>rule.maxLength||rule.enum&&!rule.enum.includes(v)))throw Error('INVALID_'+key);}}
 // 只识别桥返回的错误前缀；读屏正文可能包含终端日志里的 [ERR] 等普通文字。
-function bridgeFailed(result){return /^\s*(?:\[ERR\]|\[?(?:POLICY_BLOCKED|EXECUTION_UNKNOWN|NO_PERMISSION|DISABLED)\b)/.test(result);}
-// /sdcard 与 /storage/emulated/0 在 proot 中是两个独立挂载别名；各自校验同一允许目录。
-function screenshotTarget(result){const match=result.match(/\/(?:storage\/emulated\/[0-9]+|sdcard)\/(?:Download\/DSHA|Android\/data\/com\.dsh\.client\/files\/Pictures\/DSHA)\/screen-[a-zA-Z0-9-]+\.png/);if(!match)return null;
-  return {file:match[0],base:path.dirname(match[0])};}
-async function call(name,args,signal){const def=definitions.find(t=>t[0]===name);if(!def)throw Error('UNKNOWN_TOOL');validate(def,args);
-  const token=(await fs.readFile('/root/.dsh/.bridge_token','utf8')).trim();if(!token)throw Error('BRIDGE_NOT_READY');
-  const url=new URL('http://127.0.0.1:3090'+def[2]);url.searchParams.set('token',token);for(const [k,v]of Object.entries(args))url.searchParams.set(k,String(v));
-  const response=await fetch(url,{signal});if(!response.ok)throw Error('BRIDGE_HTTP_'+response.status);
-  const raw=await response.text();let result=raw;try{const parsed=JSON.parse(raw);result=typeof parsed.result==='string'?parsed.result:raw;}catch{}
+function bridgeFailed(result){return /^\s*(?:\[ERR\]|\[?(?:POLICY_BLOCKED|EXECUTION_UNKNOWN|NO_PERMISSION|DISABLED|UNAUTHORIZED)\b)/.test(result);}
+// Native capture returns the freshly generated PNG directly: the guest does not
+// necessarily mount the current Android user's /storage/emulated/<id> directory.
+function screenshotContent(result){let shot;try{shot=JSON.parse(result);}catch{throw Error('SCREENSHOT_RESPONSE_INVALID');}
+  if(shot?.kind!=='dsha-screenshot-v1'||shot.mimeType!=='image/png'||typeof shot.data!=='string')throw Error('SCREENSHOT_RESPONSE_INVALID');
+  if(shot.data.length>Math.ceil(MAX_SCREENSHOT_BYTES/3)*4)throw Error('SCREENSHOT_TOO_LARGE');
+  const png=Buffer.from(shot.data,'base64');
+  if(png.toString('base64')!==shot.data)throw Error('SCREENSHOT_RESPONSE_INVALID');
+  if(png.length>MAX_SCREENSHOT_BYTES)throw Error('SCREENSHOT_TOO_LARGE');
+  if(png.length<8||!png.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))throw Error('SCREENSHOT_RESPONSE_INVALID');
+  const text=typeof shot.path==='string'?'Screenshot saved: '+shot.path:'Android screenshot';
+  return [{type:'text',text},{type:'image',mimeType:'image/png',data:shot.data}];
+}
+async function call(name,args,signal,dependencies={fs,fetch:globalThis.fetch}){const def=definitions.find(t=>t[0]===name);if(!def)throw Error('UNKNOWN_TOOL');validate(def,args);
+  const token=(await dependencies.fs.readFile('/root/.dsh/.bridge_token','utf8')).trim();if(!token)throw Error('BRIDGE_NOT_READY');
+  const url=new URL('http://127.0.0.1:3090'+def[2]);for(const [k,v]of Object.entries(args))url.searchParams.set(k,String(v));
+  if(name==='android_screenshot')url.searchParams.set('format','mcp');
+  const response=await dependencies.fetch(url,{signal,headers:{'X-Token':token}});if(!response.ok)throw Error('BRIDGE_HTTP_'+response.status);
+  const raw=await readBridgeResponse(response,name==='android_screenshot'?24*1024*1024:2*1024*1024);let result=raw;try{const parsed=JSON.parse(raw);result=typeof parsed.result==='string'?parsed.result:raw;}catch{}
   const failed=bridgeFailed(result);
-  const content=[{type:'text',text:result}];
-  if(name==='android_screenshot'&&!failed){const target=screenshotTarget(result);if(target){
-    const base=await fs.realpath(target.base),file=await fs.realpath(target.file);
-    if(path.dirname(file)!==base)throw Error('SCREENSHOT_PATH_REJECTED');const stat=await fs.stat(file);if(!stat.isFile()||stat.size>16*1024*1024)throw Error('SCREENSHOT_TOO_LARGE');
-    content.push({type:'image',mimeType:'image/png',data:(await fs.readFile(file)).toString('base64')});
-  }}
+  const content=name==='android_screenshot'&&!failed?screenshotContent(result):[{type:'text',text:result}];
   return {content,isError:failed};
+}
+async function readBridgeResponse(response,limit){
+  const advertised=Number(response.headers.get('content-length'));
+  if(Number.isFinite(advertised)&&advertised>limit){await response.body?.cancel();throw Error('BRIDGE_RESPONSE_TOO_LARGE');}
+  if(!response.body) return '';
+  const reader=response.body.getReader(),parts=[];let size=0;
+  try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>limit){await reader.cancel();throw Error('BRIDGE_RESPONSE_TOO_LARGE');}parts.push(value);}}
+  finally{reader.releaseLock();}
+  return Buffer.concat(parts,size).toString('utf8');
 }
 function startServer(){
 const active=new Map(),cancelled=new Set();let buffer='',queue=Promise.resolve(),ended=false,pending=0;
@@ -48,4 +63,4 @@ process.stdin.on('end',()=>{ended=true;for(const controller of active.values())c
 process.stdout.on('error',error=>{if(error.code==='EPIPE')process.exit(0);});
 }
 if(require.main===module)startServer();
-module.exports={validate,definitions,tools,bridgeFailed,screenshotTarget};
+module.exports={validate,definitions,tools,bridgeFailed,screenshotContent,readBridgeResponse,call};

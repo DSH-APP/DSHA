@@ -1,0 +1,556 @@
+{
+  "schemaVersion": 1,
+  "lane": "plugins",
+  "phase": "current_source_review_complete_pending_root_integrated_build",
+  "baselineBuild": 155,
+  "targetBuild": 156,
+  "scope": "13 exact assigned IDs, isolated host fixtures only. No phone/ADB/Gradle/debug-audit APK/upload/release replacement.",
+  "findings": [
+    "Current user plugin policy retained: automatic validated commit/enable, hooks/pnpmfile and shell remain open.",
+    "Migrated tooltip interaction to real rc2 after proving scroll remained a user-visible gap; old full component replacement is historical.",
+    "Replaced <=1MiB synchronous compression with at most two async quality-4 workers, native pass-through on saturation/large/streaming bodies and actual carrier scoping.",
+    "Legacy migration now preserves raw preset YAML, strictly compares dual settings inputs, and publishes a bounded reusable checkpoint only from complete same-generation committed evidence."
+  ],
+  "tooltipInputs": {
+    "module": "@deepseek-ai/dsh-web-frontend/dist/assets/index-5SrrfWpU.js",
+    "moduleSha256": "af3ff948cf3f132edbddebea93e2f9f02233b390a94bd4c9842182300be811bb",
+    "entry": "@deepseek-ai/dsh-web-frontend/dist/index.html",
+    "entrySha256": "2146ac6dd90f5b6f3896d79e6b9a933eaecb6d90525a18f8fabfc364016a5da5"
+  },
+  "items": [
+    {
+      "id": "D-SEC-10",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginInstallActivity.java",
+        "app/src/main/assets/plugin-dependencies.py",
+        "app/src/main/assets/plugin-manager-auto-enable-patch.json",
+        "docs/adr/0001-build154-boundaries.md"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-plugin-dependencies.py",
+          "exitCode": 0,
+          "result": "10 tests: 9 passed, 1 Windows symlink skip",
+          "scope": "Actual pinned pnpm/local registry; author claims, actual locks/tree, hooks, rollback and cancellation"
+        },
+        {
+          "command": "python -B tools/test-plugin-transactions.py",
+          "exitCode": 0,
+          "result": "12 tests: 10 passed, 2 explicit Linux/Android crash-link skips",
+          "scope": "Owned transaction directories, recovery and preservation of later committed changes"
+        },
+        {
+          "command": "python -B tools/test-plugin-review.py",
+          "exitCode": 0,
+          "result": "20 tests: 19 passed, 1 Linux/Android restored-link skip",
+          "scope": "Activation retry/load receipts, missing dependency continuation, source identity and export boundaries"
+        },
+        {
+          "command": "python -B tools/test-plugin-downloads.py",
+          "exitCode": 0,
+          "result": "22 tests passed",
+          "scope": "Actual owned package children, progress/idle/overall budgets, cancellation and no hook replay"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No Android deep-link or browser tap was performed by user instruction; host checks do not claim that device path."
+        }
+      ],
+      "residual": [
+        "Current user contract authorizes validated links/local archives/updates to commit and enable automatically and allows hooks/pnpmfile/shell. The attachment's external-confirmation recommendation is not adopted; user-disabled and safe-mode intent remain."
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-PATCH-01",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/assets/runtime-patches.json",
+        "app/src/main/assets/tooltip-interaction-patch.json",
+        "app/src/main/assets/tooltip-entry-patch.json",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "tools/prepare-test-runtime.py",
+        "tools/history/root-build156/app/src/main/assets/web-integration/tooltip-patch.json",
+        "tools/history/root-build156/tools/test-tooltips.mjs"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-rc2-tooltips.mjs",
+          "exitCode": 0,
+          "result": "PASS actual rc2 Tooltip/React; touch/click, hover, keyboard, disabled, pinned outside-close/Escape, scroll/blur/visibility, non-swallowing Escape, delayed leave/unmount",
+          "scope": "Verified raw rc2 frontend; exact current recipe and cache-entry anchors; Playwright Chromium"
+        },
+        {
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File docs/audits/build156/run-plugins-junit.ps1",
+          "exitCode": 0,
+          "result": "JUnit 4.13.2: 15 tests passed using JDK 17",
+          "scope": "Current Java patch chains, every active real rc2 module/HTML, deliberate missing-anchor rejection, guest targets and restore graph"
+        },
+        {
+          "command": "python -B tools/test-runtime-proof.py",
+          "exitCode": 0,
+          "result": "15 tests: 14 passed, 1 Linux native file/link skip",
+          "scope": "Producer content proof, exact membership, active order and rejection of version-mismatched specialized recipes"
+        },
+        {
+          "command": "python -B tools/verify-asset-deployment.py",
+          "exitCode": 0,
+          "result": "PASS explicit APK deployment: 214 current source files plus generated/external contracts",
+          "scope": "Source deployment membership; does not claim a rebuilt/signed APK"
+        }
+      ],
+      "softwareChanges": [
+        "Old tooltip special consumer and 0.1.5 recipe are explicitly retired; exact original assets/test remain outside APK.",
+        "Real rc2 Tooltip retained its touch/click, keyboard and pinned behavior but still left stale tips on scroll. Two current-version exact recipes add dismissal only and refresh the index URL.",
+        "Version-mismatched specialized recipes now fail producer preparation rather than becoming an implicit not-applicable receipt."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android/WebView/Gecko touch rendering and vendor behavior remain untested in this no-phone round."
+        }
+      ],
+      "residual": [],
+      "changed": true
+    },
+    {
+      "id": "D-PATCH-02",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/assets/runtime-patches.json",
+        "app/src/main/java/com/deepseekharness/app/util/ManagedPatchChain.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "tools/prepare-test-runtime.py",
+        "tools/test-runtime-proof.py",
+        "app/src/test/java/com/deepseekharness/app/util/ManagedPatchRegistryIntegrationTest.java"
+      ],
+      "checks": [
+        {
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File docs/audits/build156/run-plugins-junit.ps1",
+          "exitCode": 0,
+          "result": "JUnit 4.13.2: 15 tests passed using JDK 17",
+          "scope": "Current Java patch chains, every active real rc2 module/HTML, deliberate missing-anchor rejection, guest targets and restore graph"
+        },
+        {
+          "command": "python -B tools/test-runtime-proof.py",
+          "exitCode": 0,
+          "result": "15 tests: 14 passed, 1 Linux native file/link skip",
+          "scope": "Producer content proof, exact membership, active order and rejection of version-mismatched specialized recipes"
+        },
+        {
+          "command": "python -B tools/test-runtime-input-contract.py",
+          "exitCode": 0,
+          "result": "8 tests passed",
+          "scope": "Manifest input/path contract; no generated descriptor refresh"
+        }
+      ],
+      "softwareChanges": [
+        "Producer rejects active/specialized/retired overlap, duplicate specialized entries and version mismatch.",
+        "Real rc2 Java integration now asserts each active recipe version and proves deliberately broken anchors fail without a partial canonical publication."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "build",
+          "detail": "Root owns final archive/descriptor regeneration and full signed APK gates; lane did not rebuild them."
+        }
+      ],
+      "residual": [],
+      "changed": true
+    },
+    {
+      "id": "D-PLUG-01",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CurrentManagedPackages.java",
+        "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+        "app/src/main/java/com/deepseekharness/app/util/GuestPaths.java"
+      ],
+      "checks": [
+        {
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File docs/audits/build156/run-plugins-junit.ps1",
+          "exitCode": 0,
+          "result": "JUnit 4.13.2: 15 tests passed using JDK 17",
+          "scope": "Current Java patch chains, every active real rc2 module/HTML, deliberate missing-anchor rejection, guest targets and restore graph"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Host LinkFs/JVM proves exact guest target and outside-root rejection; real Android/proot links were not exercised."
+        }
+      ],
+      "residual": [],
+      "changed": false
+    },
+    {
+      "id": "D-PATCH-03",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java",
+        "app/src/main/java/com/deepseekharness/app/util/ExactTextPatch.java"
+      ],
+      "checks": [
+        {
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File docs/audits/build156/run-plugins-junit.ps1",
+          "exitCode": 0,
+          "result": "JUnit 4.13.2: 15 tests passed using JDK 17",
+          "scope": "Current Java patch chains, every active real rc2 module/HTML, deliberate missing-anchor rejection, guest targets and restore graph"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Current source has one LAN ExactTextPatch recipe. Old InstallProbe patchScript/String.replace implementations are absent; file/session publication uses the separate shared runtime-fs contract. This lane does not claim a phone cold-install."
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-PLUG-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/register-builtin-plugins.py",
+        "app/src/main/assets/plugin-manager.py",
+        "tools/test-plugin-discovery.py",
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-plugin-discovery.py",
+          "exitCode": 0,
+          "result": "23 tests: 19 passed, 4 explicit Windows/Linux link/runtime skips",
+          "scope": "Isolated plugin discovery, partial registration, disabled intent, bounded lock and source/update capability"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "platform",
+          "detail": "Windows host budget/partial-registration fixtures pass; an actual Linux flock holder and Android quarantine filesystem were not exercised."
+        }
+      ],
+      "residual": [
+        "Missing signed entities are removed from load declarations and healthy siblings are still registered; the partial result retains the signed-runtime startup gate. Existing unknown quarantine originals are retained; no automatic deletion was added."
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-PLUG-03",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/mobile-server/delete-session.js",
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js",
+        "app/src/main/assets/credential-paths.json",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-mobile-delete.mjs",
+          "exitCode": 0,
+          "result": "15 tests passed",
+          "scope": "Actual locked rc2 Agents/SessionPersistence; cancel, idle, durable flush, exact public disposal, race refusal and retained trash"
+        },
+        {
+          "command": "node tools/test-mobile-server-patches.mjs",
+          "exitCode": 0,
+          "result": "3 tests passed",
+          "scope": "Fixed a094288883b343e848d7f9cf302d73ad8ed4794b upstream fingerprints, canonical idempotence and input drift rejection"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No destructive deletion or backup of production phone sessions was performed."
+        }
+      ],
+      "residual": [
+        "Deletion uses only captured public rc2 AgentHandles and proven idle/flush/dispose. Uncaptured live/config-created agents refuse deletion with 409 until their owner stops them; original trash remains protected.",
+        "Session archive exclusion is narrowly sessions/.sessions-trash through the shared credential/session manifest; v5 archive execution belongs to the data lane."
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-PLUG-04",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/plugin-lifecycle.py",
+        "tools/test-plugin-review.py"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-plugin-review.py",
+          "exitCode": 0,
+          "result": "20 tests: 19 passed, 1 Linux/Android restored-link skip",
+          "scope": "Activation retry/load receipts, missing dependency continuation, source identity and export boundaries"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No production Android startup was attempted; receipt continuation was executed in isolated host state."
+        }
+      ],
+      "residual": [],
+      "changed": false
+    },
+    {
+      "id": "D-PLUG-05",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/plugin-dependencies.py",
+        "app/src/main/assets/plugin-lifecycle.py",
+        "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-plugin-dependencies.py",
+          "exitCode": 0,
+          "result": "10 tests: 9 passed, 1 Windows symlink skip",
+          "scope": "Actual pinned pnpm/local registry; author claims, actual locks/tree, hooks, rollback and cancellation"
+        },
+        {
+          "command": "python -B tools/test-plugin-review.py",
+          "exitCode": 0,
+          "result": "20 tests: 19 passed, 1 Linux/Android restored-link skip",
+          "scope": "Activation retry/load receipts, missing dependency continuation, source identity and export boundaries"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "platform",
+          "detail": "One Windows symlink identity test skipped; locally computed evidence and authorClaims separation passed."
+        }
+      ],
+      "residual": [],
+      "changed": false
+    },
+    {
+      "id": "D-SEC-18",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/plugin-manager.py",
+        "app/src/main/assets/backup-plugin-graph.py",
+        "tools/test-plugin-review.py"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-plugin-review.py",
+          "exitCode": 0,
+          "result": "20 tests: 19 passed, 1 Linux/Android restored-link skip",
+          "scope": "Activation retry/load receipts, missing dependency continuation, source identity and export boundaries"
+        },
+        {
+          "command": "python -B tools/test-plugin-discovery.py",
+          "exitCode": 0,
+          "result": "23 tests: 19 passed, 4 explicit Windows/Linux link/runtime skips",
+          "scope": "Isolated plugin discovery, partial registration, disabled intent, bounded lock and source/update capability"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android/FUSE live mutation and descriptor behavior were not tested."
+        }
+      ],
+      "residual": [
+        "End-of-export graph rehash bounds live mutation detection. Host tests exercise outside-source refusal, scoped dependency/bin materialization and credential exclusion; an independently malicious plugin sandbox is not claimed."
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-SEC-20",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/asset-deployment.json",
+        "app/src/main/assets/register-builtin-plugins.py",
+        "tools/history/engineering/assets/selftest.py"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/verify-asset-deployment.py",
+          "exitCode": 0,
+          "result": "PASS explicit APK deployment: 214 current source files plus generated/external contracts",
+          "scope": "Source deployment membership; does not claim a rebuilt/signed APK"
+        },
+        {
+          "command": "python -B tools/test-asset-deployment.py",
+          "exitCode": 0,
+          "result": "11 tests passed",
+          "scope": "Explicit deployment source boundary and unknown-asset refusal"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "selftest.py is absent from current assets/deployment. The registration contract comment now names builtin-plugins.json rather than retired selftest/fix scripts. Final APK membership remains a root gate."
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-PATCH-04",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/runtime-patches.json",
+        "app/src/main/java/com/deepseekharness/app/ui/WebPageScripts.java",
+        "app/src/main/assets/web-integration/startup-relay.js",
+        "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+        "tools/smoke-dsh-runtime.mjs",
+        "tools/test-gecko-model-navigation.mjs"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/verify-asset-deployment.py",
+          "exitCode": 0,
+          "result": "PASS explicit APK deployment: 214 current source files plus generated/external contracts",
+          "scope": "Source deployment membership; does not claim a rebuilt/signed APK"
+        },
+        {
+          "command": "node tools/test-gecko-model-navigation.mjs",
+          "exitCode": 0,
+          "result": "PASS locale validation and current startup relay; retired model messages cause no dispatch",
+          "scope": "Actual current relay in isolated VM; not Android/Gecko native instrumentation"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Current native/browser/runtime consumers no longer dispatch the retired model-navigation event; old model/preset recipes stay historical and outside active registry. Current upstream owns model settings and read-only preset headings."
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-PRESET-01",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+        "app/src/main/assets/legacy-preset-convert.cjs",
+        "app/src/main/assets/rc1-migration.py",
+        "tools/test-legacy-preset-convert.mjs",
+        "tools/test-rc1-migration.py"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-legacy-preset-convert.mjs",
+          "exitCode": 0,
+          "result": "PASS block/flow, document marker, comments, multiline text, YAML anchors/aliases equivalence, !!js as data and malformed/duplicate rejection",
+          "scope": "Actual locked yaml library; no evaluation or source changes"
+        },
+        {
+          "command": "python -B tools/test-rc1-migration.py",
+          "exitCode": 0,
+          "result": "25 tests: 23 passed, 2 Windows symlink skips",
+          "scope": "Space preflight, incomplete-generation reuse, original preservation, typed I/O failure, inert YAML candidates and bounded committed-only reuse checkpoint"
+        }
+      ],
+      "softwareChanges": [
+        "Found the additional rc1 preparation path still hand-embedding YAML. Removed generated legacy bundles from that path; it preserves byte-identical inert raw candidates and defers conversion to the existing explicit native AST converter.",
+        "Extended current YAML behavior checks with document marker/comment/multiline/anchor-alias equivalence. No source YAML is executed."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Explicit native restore UI and Android guest YAML execution were not exercised; actual locked YAML host converter passed."
+        }
+      ],
+      "residual": [],
+      "changed": true
+    }
+  ],
+  "crossLane": {
+    "D-PERF-03": {
+      "owner": "runtime",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "tools/mobile-server/compress.js",
+        "tools/mobile-server/index.js",
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/index.js"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-mobile-server-streams.mjs",
+          "exitCode": 0,
+          "result": "34 tests passed",
+          "scope": "Node 24 real HTTP; async compression cap, 17 MiB/small concurrency under 100 ms, carrier scope, callbacks, cancel, unload, after-end errors and backpressure"
+        },
+        {
+          "command": "node tools/test-mobile-server-patches.mjs",
+          "exitCode": 0,
+          "result": "3 tests passed",
+          "scope": "Fixed a094288883b343e848d7f9cf302d73ad8ed4794b upstream fingerprints, canonical idempotence and input drift rejection"
+        }
+      ],
+      "changes": "Async at most two worker items, quality 4; correct chunked compressed boundary, native streaming and carrier scope. Accepted work finishes once after hook unload. Device performance remains unknown."
+    },
+    "D-PERF-04": {
+      "owner": "runtime",
+      "checks": [
+        {
+          "command": "python -B tools/test-plugin-downloads.py",
+          "exitCode": 0,
+          "result": "22 tests passed",
+          "scope": "Actual owned package children, progress/idle/overall budgets, cancellation and no hook replay"
+        }
+      ],
+      "changes": "Guest command 900s overall/120s output-idle is verified. Runtime owner raised outer manager to 3,000,000ms for at most two npm packs plus dependency install and verification; no hook install replay."
+    },
+    "D-RES-02": {
+      "owner": "data",
+      "checks": [
+        {
+          "command": "python -B tools/test-rc1-migration.py",
+          "exitCode": 0,
+          "result": "25 tests: 23 passed, 2 Windows symlink skips",
+          "scope": "Space preflight, incomplete-generation reuse, original preservation, typed I/O failure, inert YAML candidates and bounded committed-only reuse checkpoint"
+        }
+      ],
+      "changes": "Existing space-preflight/failed-generation snapshots remain; added strict dual-settings identity, raw preset preservation and committed-only reuse.json checkpoint. RetainedCatalogue candidate-name compatibility is data-owned."
+    },
+    "D-API-07/D-ARCH-02": {
+      "owner": "core/ui",
+      "checks": [
+        {
+          "command": "python -B tools/test-plugin-discovery.py",
+          "exitCode": 0,
+          "result": "23 tests: 19 passed, 4 explicit Windows/Linux link/runtime skips",
+          "scope": "Isolated plugin discovery, partial registration, disabled intent, bounded lock and source/update capability"
+        }
+      ],
+      "changes": "Guest updatable uses the same query-capable source parser as actual update_metadata, independently of deletable. PluginRepository Item.updatable and instance revision/get(Context) provided; DshaApp owner/Fragment/Browser integration belongs to core/ui."
+    },
+    "D-DEAD-04/D-DEAD-05": {
+      "owner": "legacy",
+      "sourceReview": "frozen is reachable for offline chosen lock reuse and prefer-offline; current resolve_plugin_dir returns once from each distinct source order, without former duplicate terminal checks."
+    }
+  },
+  "deferredIntegratedChecks": [
+    {
+      "command": "python -B tools/test-runtime-descriptor-inputs.py",
+      "exitCode": 1,
+      "result": "DESCRIPTOR_SOURCE_BYTES: adb-shell.py during shared source edits before root regeneration; not recorded as passed"
+    },
+    {
+      "command": "node tools/test-native-plugin-manager.mjs",
+      "exitCode": 1,
+      "result": "TEST_FIXTURE_BYTES_OR_MEMBERS_CHANGED: node_modules/dsh-device-shell-guide in concurrently changed managed fixture; requires root-producer refresh and final rerun, not recorded as passed"
+    }
+  ],
+  "verificationBoundaries": [
+    "JDK17 exact-file google-java-format completed with token checks; app/build/java-format/build156-plugins*.json receipts.",
+    "Do not add skipped Linux/Windows symlink/crash cases to passed counts.",
+    "No final generated runtime/descriptor/APK bytes were produced by this lane; root owns those final gates.",
+    "No Android 6/7/16KiB/FUSE/long-session or full external-model matrix claim."
+  ]
+}

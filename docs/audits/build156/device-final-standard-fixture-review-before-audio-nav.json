@@ -1,0 +1,604 @@
+{
+  "schema": "dsha-device-fixture-review-v1",
+  "reviewedAt": "2026-10-04T04:53:41+08:00",
+  "reviewMode": "read_only_existing_device_evidence",
+  "softwareChanged": false,
+  "scope": {
+    "deviceOperator": "root",
+    "artifact": "final Standard build156",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "flavor": "standard",
+    "androidRelease": 13,
+    "engine": "system WebView",
+    "apkSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b",
+    "bindingBasis": "Final Standard installation and engine identified by the device operator; APK digest independently cross-checked against the current artifact ledger. The 22-event fixture record contains no metadata event, so it does not independently identify APK/engine/provider version or runtime generation.",
+    "fixtureName": "dsh-acceptance-156",
+    "fixtureVersion": "0.0.156",
+    "fixtureTgzSha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+    "fixtureEntry": "/a156",
+    "topOrigin": "http://127.0.0.1:3080"
+  },
+  "summary": {
+    "ownedRuns": 1,
+    "events": 22,
+    "pages": 2,
+    "requestIds": 6,
+    "successfulTwoFileBatches": 2,
+    "verifiedFileObjects": 4,
+    "currentPageAudioLiveThenEnded": 1,
+    "videoRejections": 1,
+    "mixedRejections": 1,
+    "differentPortAudioRejections": 1,
+    "filesNavigationScenarios": 1,
+    "missingAudioNavigationScenarios": 1,
+    "observedFailureMarkers": 0,
+    "overallMicrophoneStatus": "partial_device_coverage",
+    "overallDeviceMatrixStatus": "partial_device_coverage"
+  },
+  "sourceEvidence": {
+    "ownedJsonl": {
+      "privateEvidenceGroup": "app/build/audit-build156/device-private/fixture-collected",
+      "privateIdentifiersOmitted": true,
+      "sha256": "676127908d2a664681bccfa66b6dd98d6bc9e0753272dbf8af14ec55f8b775a7",
+      "bytes": 7364,
+      "events": 22
+    },
+    "collectionManifest": {
+      "sha256": "646b364d1844b66b1734b0c6f15a72da8abdbcc78ac4424722a8c5d6707c2647",
+      "bytes": 536,
+      "declaredFileCount": 1,
+      "declaredDigestSizeAndRowCountMatched": true
+    },
+    "operatorActionsPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "ef7a6c27b1a2e2e6c00b3b7b16e9b204b91fff7d604c7253d7a4fe08534b0bdf",
+      "bytes": 55798,
+      "records": 383,
+      "firstRecordIndex": 0,
+      "lastRecordIndex": 382,
+      "lastTime": "2026-10-04T04:25:02.756808+08:00",
+      "hashRecipe": "SHA256 of the first 55798 bytes of the original action log (383 complete JSONL records). Later appended rows do not affect this prefix digest. Command arguments, input text and unrelated row bodies are omitted."
+    },
+    "artifactLedger": {
+      "path": "app/build/audit-build156/licenses-two-apk.json",
+      "sha256": "a8eebe8f8bd0e55d4fd56416e6429899d73cb8efb356a52bf50f788139cff858"
+    },
+    "fixtureTgz": {
+      "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156.tgz",
+      "sha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+      "bytes": 9687,
+      "members": 9,
+      "allPackagedMembersMatchedFrozenPublicSourceBytes": true
+    },
+    "sourceFiles": [
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/public/fixture.js",
+        "sha256": "6759c1deb9d97088cc4adc4a898d9317e10b0424b43756bc5818e4b8cb94f718"
+      },
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/public/frame.html",
+        "sha256": "2b06b082fb9608d4ef600d324a823978bd12e2c09c2e89f810a0be1b9930ada6"
+      },
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/public/index.html",
+        "sha256": "dacb7516bb8300e459155863836b176cf3d2d0722cd236fe9e5a9b173e8f0436"
+      },
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/lib/index.js",
+        "sha256": "02e49f6412d0a169e18dde5458c5adca5dce661ddf7d410243c2230f36dbdd04"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/collect-owned-fixture.py",
+        "sha256": "bd7f9e54d5373818707d77bcf4f5a11c59f9d947e5991820fc8c354092cab810"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+        "sha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java",
+        "sha256": "935ab0eeac035fc676b81d65e5a21a8026b4dcf2fa0d98c472a1dbdfbbba5b27"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/WebViewMicrophone.java",
+        "sha256": "543798a2dfb95672281cc72a8b48cef93fa653debe2ed6a7077edf944b9aba00"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/BrowserMicrophone.java",
+        "sha256": "9dd04ffbee671aac2bfddd0913381b5a8a6a95e8ec7d9527821d380d1662cb71"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/util/BrowserUploadRequestState.java",
+        "sha256": "06e7ed494f573e3e946d13a65efdc77bd5cf8edddee59bca840efb4fc4de0c6c"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/util/MicrophonePolicy.java",
+        "sha256": "3796dd328ffacb2f45b07e2a41240a2a479066ed8615ed6a27c8205bd5e81803"
+      }
+    ],
+    "screenshots": [
+      {
+        "id": "two-file-results",
+        "file": "app/build/audit-build156/device-private/final-standard-two-file-results.png",
+        "sha256": "d8d73fa5127325820dbffe737f0fb6dc083d21ec035ba832ddf416e93783f695",
+        "bytes": 317905,
+        "actionIndex0Based": 332,
+        "operatorTime": "2026-10-04T04:07:10.114773+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "audio-permission",
+        "file": "app/build/audit-build156/device-private/final-standard-audio-permission.png",
+        "sha256": "c3f01f50c5603ee88dcc05ff5b615d1fb3d128077eba6746ae956071187e3a99",
+        "bytes": 198936,
+        "actionIndex0Based": 338,
+        "operatorTime": "2026-10-04T04:09:49.418421+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "audio-result",
+        "file": "app/build/audit-build156/device-private/final-standard-audio-result.png",
+        "sha256": "2d05612f006e617cc8d17f8af50f4d0ac3a58441d4337e50e4cf46f8cc1f82ff",
+        "bytes": 282710,
+        "actionIndex0Based": 340,
+        "operatorTime": "2026-10-04T04:10:43.119107+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "camera-result",
+        "file": "app/build/audit-build156/device-private/final-standard-camera-result.png",
+        "sha256": "cf6359707548a24d9c6c9d06c086ae69ee9527cf4b2fac2585daa6a40cbc663b",
+        "bytes": 289751,
+        "actionIndex0Based": 346,
+        "operatorTime": "2026-10-04T04:12:06.680306+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "mixed-result",
+        "file": "app/build/audit-build156/device-private/final-standard-mixed-result.png",
+        "sha256": "acebec7c6a8dc5be2b1478c77ac3808a79e43a89c152c8ebf425ad504c6a5cbb",
+        "bytes": 308616,
+        "actionIndex0Based": 352,
+        "operatorTime": "2026-10-04T04:13:03.193038+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "origin-frame",
+        "file": "app/build/audit-build156/device-private/final-standard-origin-frame.png",
+        "sha256": "41bf5aa95bac357a975ac101942a7d67719f197dac87280046cb16d7ce13f14d",
+        "bytes": 296245,
+        "actionIndex0Based": 358,
+        "operatorTime": "2026-10-04T04:14:07.263510+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "wrong-origin-result",
+        "file": "app/build/audit-build156/device-private/final-standard-wrong-origin-result.png",
+        "sha256": "590b43b5c48b8bab4aef8ffebe7298b440d18ef20beb63fb532ba4886b87d1d8",
+        "bytes": 255727,
+        "actionIndex0Based": 360,
+        "operatorTime": "2026-10-04T04:15:42.360044+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "file-nav-pending",
+        "file": "app/build/audit-build156/device-private/final-standard-file-nav-pending.png",
+        "sha256": "a0d22472a504cf8599c514e1d96519e1aa8b7262a3a169e15db9e9ff307bab70",
+        "bytes": 112900,
+        "actionIndex0Based": 366,
+        "operatorTime": "2026-10-04T04:17:24.330313+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "old-picker-two",
+        "file": "app/build/audit-build156/device-private/final-standard-old-picker-two.png",
+        "sha256": "1e81406b60b796c31fd1baacb4f52d1db406057e56a15cf28ea952d129157ff7",
+        "bytes": 112102,
+        "actionIndex0Based": 370,
+        "operatorTime": "2026-10-04T04:19:07.252231+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "old-picker-returned",
+        "file": "app/build/audit-build156/device-private/final-standard-old-picker-returned.png",
+        "sha256": "811ebc513b26617d7b24739b360f893edcd4251caa9ed01f184a55060f483761",
+        "bytes": 269047,
+        "actionIndex0Based": 372,
+        "operatorTime": "2026-10-04T04:19:08.538462+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "new-page-upload-result",
+        "file": "app/build/audit-build156/device-private/final-standard-new-page-upload-result.png",
+        "sha256": "720cbdec5c74c94275198b048a39600b1a63f00f1fe02f7bb9727bc571a62a90",
+        "bytes": 314000,
+        "actionIndex0Based": 380,
+        "operatorTime": "2026-10-04T04:20:37.832928+08:00",
+        "visuallyReviewed": true
+      }
+    ]
+  },
+  "ownedSentinelsInOrder": [
+    {
+      "name": "dsh-acceptance-156-a.txt",
+      "size": 52,
+      "sha256": "6015f0d76906328021f27c59003bda02eb3d78e07ec094173dcc8638554139af",
+      "order": 0,
+      "match": true
+    },
+    {
+      "name": "dsh-acceptance-156-b.txt",
+      "size": 63,
+      "sha256": "fd19dde3939b50dbd8b501855ddbe8262dbb42cfff5ae58ee8227acf0721ced3",
+      "order": 1,
+      "match": true
+    }
+  ],
+  "checks": [
+    {
+      "id": "multi",
+      "result": "pass_observed",
+      "events0Based": [
+        1,
+        2,
+        3
+      ],
+      "screenshots": [
+        "two-file-results"
+      ],
+      "summary": "Page A received two files from the real Android chooser. Full File.arrayBuffer SHA-256, actual byte sizes and selection order match both frozen owned sentinels."
+    },
+    {
+      "id": "audio",
+      "result": "pass_observed_current_page_only",
+      "events0Based": [
+        4,
+        5,
+        6
+      ],
+      "operatorActions0Based": [
+        339
+      ],
+      "screenshots": [
+        "audio-permission",
+        "audio-result"
+      ],
+      "summary": "User-triggered pure audio showed the Android microphone permission dialog, then one audio track became live and was immediately stopped to ended. No audio bytes or device labels were recorded."
+    },
+    {
+      "id": "video",
+      "result": "pass_observed",
+      "events0Based": [
+        7,
+        8
+      ],
+      "screenshots": [
+        "camera-result"
+      ],
+      "summary": "A user-triggered video-only request was rejected with NotAllowedError; no media-resolved event exists for this request."
+    },
+    {
+      "id": "mixed",
+      "result": "pass_observed",
+      "events0Based": [
+        9,
+        10
+      ],
+      "screenshots": [
+        "mixed-result"
+      ],
+      "summary": "A user-triggered audio+video request was rejected with NotAllowedError; no media-resolved event exists for this request."
+    },
+    {
+      "id": "wrongport",
+      "result": "pass_observed",
+      "events0Based": [
+        11,
+        12,
+        13
+      ],
+      "screenshots": [
+        "origin-frame",
+        "wrong-origin-result"
+      ],
+      "topOrigin": "http://127.0.0.1:3080",
+      "childOrigin": "http://127.0.0.1:33239",
+      "summary": "The different-port child was actually loaded and its own button requested audio. Secure context, getUserMedia availability and microphone permissions policy all reported true. The request was rejected with NotAllowedError. This is not a failed child-load/API-unavailable substitute for origin evidence.",
+      "causalityLimit": "Web API and screenshot evidence show rejection consistent with the native origin policy; this run did not instrument the internal PermissionRequest callback."
+    },
+    {
+      "id": "files-nav",
+      "result": "pass_observed",
+      "events0Based": [
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "operatorActions0Based": [
+        370,
+        371,
+        372,
+        379,
+        380
+      ],
+      "screenshots": [
+        "file-nav-pending",
+        "old-picker-two",
+        "old-picker-returned",
+        "new-page-upload-result"
+      ],
+      "pageBReadyAt": "2026-10-04T04:17:22.403+08:00",
+      "oldPickerTwoSelectedScreenshotAt": "2026-10-04T04:19:07.252231+08:00",
+      "oldPickerConfirmationActionLoggedAt": "2026-10-04T04:19:07.449982+08:00",
+      "returnedPageBScreenshotAt": "2026-10-04T04:19:08.538462+08:00",
+      "pageBFreshRequestAt": "2026-10-04T04:20:31.784+08:00",
+      "pageBFreshTwoFileResultAt": "2026-10-04T04:20:36.843+08:00",
+      "summary": "A opened the real multiple-file picker, then navigated to B while it was pending. B loaded well before the old picker was confirmed about 105 seconds later. The returned B screenshot still shows no result; R5 has no file-change/result in the collected record. A distinct fresh B request R6 then received both exact sentinel byte digests in order.",
+      "oldRequestCallbackEventsObserved": 0,
+      "unsolicitedPageBFileEventsBeforeFreshRequest": 0,
+      "timingLimit": "Operator timestamps are logged around action/screenshot capture, and no exact native callback instant or separate PC-device clock offset was recorded. The visible two-selected-old-picker and returned-B captures support the observed order; numerical cross-clock gaps are approximate. Absence is limited to this recorded scenario and observation interval."
+    },
+    {
+      "id": "audio-nav",
+      "result": "missing_evidence",
+      "events0Based": [],
+      "summary": "No audio navigation-scheduled event or system permission result after an already-loaded B page exists. The only A-to-B navigation in this record is files-nav. Current-page audio success does not establish stale system media callback handling."
+    }
+  ],
+  "reviewedEventTimeline": [
+    {
+      "index0Based": 0,
+      "kind": "page-ready",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:04:21.517+08:00",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index0Based": 1,
+      "kind": "file-request",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:05:22.280+08:00",
+      "request": "R1",
+      "test": "files"
+    },
+    {
+      "index0Based": 2,
+      "kind": "file-change",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:07:07.510+08:00",
+      "request": "R1",
+      "status": "received",
+      "count": 2
+    },
+    {
+      "index0Based": 3,
+      "kind": "file-result",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:07:07.529+08:00",
+      "request": "R1",
+      "status": "verified-owned-two-files",
+      "fileBatch": "ownedSentinelsInOrder"
+    },
+    {
+      "index0Based": 4,
+      "kind": "media-request",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:09:48.231+08:00",
+      "request": "R2",
+      "test": "audio"
+    },
+    {
+      "index0Based": 5,
+      "kind": "media-resolved",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:10:40.871+08:00",
+      "request": "R2",
+      "test": "audio",
+      "status": "resolved",
+      "tracks": [
+        {
+          "kind": "audio",
+          "readyState": "live"
+        }
+      ]
+    },
+    {
+      "index0Based": 6,
+      "kind": "media-stopped",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:10:40.882+08:00",
+      "request": "R2",
+      "test": "audio",
+      "tracks": [
+        {
+          "kind": "audio",
+          "readyState": "ended"
+        }
+      ]
+    },
+    {
+      "index0Based": 7,
+      "kind": "media-request",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:12:05.201+08:00",
+      "request": "R3",
+      "test": "video"
+    },
+    {
+      "index0Based": 8,
+      "kind": "media-rejected",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:12:05.322+08:00",
+      "request": "R3",
+      "test": "video",
+      "status": "rejected",
+      "errorName": "NotAllowedError"
+    },
+    {
+      "index0Based": 9,
+      "kind": "media-request",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:13:02.008+08:00",
+      "request": "R4",
+      "test": "mixed"
+    },
+    {
+      "index0Based": 10,
+      "kind": "media-rejected",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:13:02.055+08:00",
+      "request": "R4",
+      "test": "mixed",
+      "status": "rejected",
+      "errorName": "NotAllowedError"
+    },
+    {
+      "index0Based": 11,
+      "kind": "frame-created",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:14:05.960+08:00",
+      "status": "waiting-for-actual-child-ready",
+      "frameOrigin": "http://127.0.0.1:33239"
+    },
+    {
+      "index0Based": 12,
+      "kind": "child-ready",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:14:06.036+08:00",
+      "status": "actual-child-loaded",
+      "probe": {
+        "secureContext": true,
+        "mediaApi": true,
+        "microphonePolicyAllowed": true
+      },
+      "frameOrigin": "http://127.0.0.1:33239"
+    },
+    {
+      "index0Based": 13,
+      "kind": "child-result",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:15:41.178+08:00",
+      "status": "rejected",
+      "errorName": "NotAllowedError",
+      "probe": {
+        "secureContext": true,
+        "mediaApi": true,
+        "microphonePolicyAllowed": true
+      },
+      "frameOrigin": "http://127.0.0.1:33239"
+    },
+    {
+      "index0Based": 14,
+      "kind": "file-request",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:17:20.121+08:00",
+      "request": "R5",
+      "test": "files-nav"
+    },
+    {
+      "index0Based": 15,
+      "kind": "navigation-scheduled",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:17:20.136+08:00",
+      "request": "R5",
+      "test": "files"
+    },
+    {
+      "index0Based": 16,
+      "kind": "page-hide",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T04:17:22.364+08:00",
+      "status": "all-owned-streams-stopped"
+    },
+    {
+      "index0Based": 17,
+      "kind": "page-ready",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T04:17:22.403+08:00",
+      "status": "loaded-no-permission-request",
+      "from": "P1/A"
+    },
+    {
+      "index0Based": 18,
+      "kind": "file-request",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T04:20:31.784+08:00",
+      "request": "R6",
+      "test": "files",
+      "from": "P1/A"
+    },
+    {
+      "index0Based": 19,
+      "kind": "file-change",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T04:20:36.817+08:00",
+      "request": "R6",
+      "status": "received",
+      "count": 2,
+      "from": "P1/A"
+    },
+    {
+      "index0Based": 20,
+      "kind": "file-result",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T04:20:36.843+08:00",
+      "request": "R6",
+      "status": "verified-owned-two-files",
+      "from": "P1/A",
+      "fileBatch": "ownedSentinelsInOrder"
+    },
+    {
+      "index0Based": 21,
+      "kind": "page-hide",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T04:25:02.736+08:00",
+      "status": "all-owned-streams-stopped",
+      "from": "P1/A"
+    }
+  ],
+  "validation": {
+    "command": "Read-only Python heredoc: parse owned collection/JSONL; SHA256-match size/row-count; assert request/page/timeline and expected sentinel SHA/size/order; hash-match 11 screenshots against action rows; verify all 9 tgz members against frozen source; verify final Standard digest in artifact ledger.",
+    "exitCode": 0,
+    "jsonlEventsChecked": 22,
+    "screenshotDigestsMatched": 11,
+    "screenshotImagesVisuallyReviewed": 11,
+    "tgzMembersByteMatched": 9,
+    "sourceFilesOnlyRead": 11,
+    "operatorActionPrefixRecordCount": 383
+  },
+  "hostEvidenceSeparate": {
+    "path": "app/build/audit-build156/device-fixtures/host-verification.json",
+    "sha256": "25aff0ef32b51143a6e2db24dfe5ebbc1f783cd3ad6209aee9dddbd779243a45",
+    "scope": "not tested; no microphone/video permission requested in desktop fixture",
+    "checks": [
+      "unauthenticated401",
+      "authenticatedHTML",
+      "sameOriginPrivateReport",
+      "wrongOriginPOST403",
+      "ownedDifferentPortFrame200",
+      "twoFilesActualBytesSHA",
+      "actualChildReady",
+      "unloadOwnRoute404"
+    ],
+    "countsAsDeviceMediaEvidence": false
+  },
+  "interpretationLimits": [
+    "Only this final Standard Android 13 WebView run is reviewed. No Low/Gecko, Android 6/7, old Chromium or full device matrix is claimed.",
+    "Pure audio establishes permission plus track live-to-ended, not recorded-sample quality or stale navigation/cancellation handling.",
+    "Wrong-port evidence covers one actually loaded different-port iframe. Same-port hostname variants, emergency localhost, screen/system audio and other origins are outside this run.",
+    "Two owned sentinel batches prove real chooser bytes and ordering for this case; provider failure, duplicate-URI, maximum-size/count and long-run descriptor/resource limits are outside this run.",
+    "Audio navigation/cancellation after a pending Android permission request remains missing. There is no overall microphone PASS."
+  ],
+  "privacy": {
+    "publicContent": "Owned test names, counts, digests, deidentified page/request labels, timestamps and evidence file references only. Raw private JSONL, raw operator command arguments and screenshots are not copied into this report.",
+    "recordedAudioBytes": 0,
+    "uploadedFileContentBytes": 0,
+    "realUserFileContentsInOwnedFixtureReport": false,
+    "credentialsAndDeviceSerialInPublicReport": false
+  }
+}

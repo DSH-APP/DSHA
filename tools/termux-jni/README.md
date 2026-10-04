@@ -1,3 +1,21 @@
+# Termux JNI：现行身份与重编入口
+
+现行库为 API 23、arm64；`max-page-size=16384`、`common-page-size=4096`。当前入库 [libtermux.so](../../app/src/main/jniLibs/arm64-v8a/libtermux.so) 实际 SHA-256：`0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147`。
+
+[build.ps1](build.ps1) 校验固定上游 `termux.c`，在构建目录生成出生身份握手补丁；子进程自读 stat，父进程登记并确认后才允许 exec。脚本检查 LOAD、RELRO 和 JNI 导出再替换入库文件，不下载工具、不调用 Gradle。默认 API 与对齐值以上述脚本为准。
+
+在仓库根目录设置已有 NDK r26d：
+
+```powershell
+& ./tools/termux-jni/build.ps1 -Ndk $env:ANDROID_NDK_HOME -MinApi 23
+```
+
+这是 Windows PowerShell 的重编入口。JNI/ELF 字节核验不能代替对应 Android 版本、真实页大小和非调试应用的进程访问时序验收。本轮文档更新仅只读核对入库文件，未重编或执行设备测试。工程步骤见 [CONTRIBUTING](../../CONTRIBUTING.md)，进程归属见 [模块图](../../docs/module-map.md)。
+
+## 历史构建记录
+
+以下保留旧报告正文；其“当前”“现行”、API 26、common-page-size=16384、旧哈希和手机结果只属于原日期/产物，不能覆盖上方现行入口。原字节与摘要见 [历史原件](../history/documents/tools/termux-jni/README.md) 和 [保存清单](../../docs/audits/build154/history-document-sources.json)。
+
 # Termux JNI 16KB 重编
 
 2026-09-10 rc1.1（版本码 118 修正版）：新增 `dsha-pty.c` / `dsha-pty.h`，构建脚本先校验原版源码，再在构建目录生成六处固定锚点补丁。子进程 `setsid` 后自读 `/proc/self/stat`，通过仅用于本次 fork 的 socketpair 回传；父进程登记 PID、PPID、启动时间与独立会话号后确认，子进程才允许 exec。握手失败在原生 waitFor 启动前回收刚创建的子进程。Java 不再在启动后单次读取身份，也不在停止时临时认领未知 PID。

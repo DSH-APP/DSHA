@@ -1,0 +1,16 @@
+[
+  {"zh":"检查%s失败：%s；保留此通道上次结果，可重试检查或继续使用已下载包","en":"Checking %s failed: %s; this channel's previous result is retained. Retry the check or use the downloaded package","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"检查%s失败：%s；可重新检查","en":"Checking %s failed: %s; retry the check","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"正在检查%s更新…","en":"Checking for %s updates…","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"发现新版本 %s","en":"New version found: %s","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"此通道暂无适合当前设备的更新；当前版本码 %s","en":"This channel has no update compatible with this device; current version code %s","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"下载尚未开始：%s；请在更新页重试","en":"Download did not start: %s; retry on the update page","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"下载暂停：%s；可继续下载","en":"Download paused: %s; you can resume it","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"%s\n已保留 %s 及已有下载文件，但无法确认查询来源；请联网重新检查，确认当前通道后才能下载/安装","en":"%s\nRetained %s and its existing downloads, but the check channel is unknown; check online and confirm the current channel before downloading or installing","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"%s\n候选来源：%s","en":"%s\nCandidate channel: %s","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"%s\n已保留 %s（来源：%s），与当前%s不匹配；切回来源通道或重新检查后才能下载/安装","en":"%s\nRetained %s (source: %s), which does not match the current %s; switch back to its channel or check again before downloading or installing","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"%s；保存任务状态失败，下次需要重新检查","en":"%s; saving the task state failed; check again next time","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"安装前校验失败：%s","en":"Pre-install validation failed: %s","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]},
+  {"zh":"安装前校验失败：%s；请重试","en":"Pre-install validation failed: %s; retry","uiFormat":true,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateRepository.java"]},
+  {"zh":"安装包不是正式非调试版本","en":"The package is not a non-debug release","uiFormat":false,"files":["app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"]}
+]

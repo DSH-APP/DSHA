@@ -1,0 +1,85 @@
+Classfile /C:/Users/18768/AppData/Local/Temp/dsha-build156-constant-ozu9mi2m/BreakStrategyInlineProbe.class
+  Last modified Oct 3, 2026; size 702 bytes
+  SHA-256 checksum ec6f86c9e37b404d5633e859e8641deb6dbd1106dc5df80d538c694d39b20824
+  Compiled from "BreakStrategyInlineProbe.java"
+public final class BreakStrategyInlineProbe
+  minor version: 0
+  major version: 61
+  flags: (0x0031) ACC_PUBLIC, ACC_FINAL, ACC_SUPER
+  this_class: #20                         // BreakStrategyInlineProbe
+  super_class: #2                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 3, attributes: 2
+Constant pool:
+   #1 = Methodref          #2.#3          // java/lang/Object."<init>":()V
+   #2 = Class              #4             // java/lang/Object
+   #3 = NameAndType        #5:#6          // "<init>":()V
+   #4 = Utf8               java/lang/Object
+   #5 = Utf8               <init>
+   #6 = Utf8               ()V
+   #7 = Class              #8             // android/graphics/text/LineBreaker
+   #8 = Utf8               android/graphics/text/LineBreaker
+   #9 = Methodref          #10.#11        // android/text/StaticLayout$Builder.setBreakStrategy:(I)Landroid/text/StaticLayout$Builder;
+  #10 = Class              #12            // android/text/StaticLayout$Builder
+  #11 = NameAndType        #13:#14        // setBreakStrategy:(I)Landroid/text/StaticLayout$Builder;
+  #12 = Utf8               android/text/StaticLayout$Builder
+  #13 = Utf8               setBreakStrategy
+  #14 = Utf8               (I)Landroid/text/StaticLayout$Builder;
+  #15 = Methodref          #16.#17        // android/widget/TextView.setBreakStrategy:(I)V
+  #16 = Class              #18            // android/widget/TextView
+  #17 = NameAndType        #13:#19        // setBreakStrategy:(I)V
+  #18 = Utf8               android/widget/TextView
+  #19 = Utf8               (I)V
+  #20 = Class              #21            // BreakStrategyInlineProbe
+  #21 = Utf8               BreakStrategyInlineProbe
+  #22 = Utf8               Code
+  #23 = Utf8               LineNumberTable
+  #24 = Utf8               layout
+  #25 = Utf8               (Landroid/text/StaticLayout$Builder;)Landroid/text/StaticLayout$Builder;
+  #26 = Utf8               text
+  #27 = Utf8               (Landroid/widget/TextView;)V
+  #28 = Utf8               SourceFile
+  #29 = Utf8               BreakStrategyInlineProbe.java
+  #30 = Utf8               InnerClasses
+  #31 = Class              #32            // android/text/StaticLayout
+  #32 = Utf8               android/text/StaticLayout
+  #33 = Utf8               Builder
+{
+  public BreakStrategyInlineProbe();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 1: 0
+
+  public static android.text.StaticLayout$Builder layout(android.text.StaticLayout$Builder);
+    descriptor: (Landroid/text/StaticLayout$Builder;)Landroid/text/StaticLayout$Builder;
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: aload_0
+         1: iconst_0
+         2: invokevirtual #9                  // Method android/text/StaticLayout$Builder.setBreakStrategy:(I)Landroid/text/StaticLayout$Builder;
+         5: areturn
+      LineNumberTable:
+        line 3: 0
+
+  public static void text(android.widget.TextView);
+    descriptor: (Landroid/widget/TextView;)V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: aload_0
+         1: iconst_0
+         2: invokevirtual #15                 // Method android/widget/TextView.setBreakStrategy:(I)V
+         5: return
+      LineNumberTable:
+        line 6: 0
+        line 7: 5
+}
+SourceFile: "BreakStrategyInlineProbe.java"
+InnerClasses:
+  public static final #33= #10 of #31;    // Builder=class android/text/StaticLayout$Builder of class android/text/StaticLayout

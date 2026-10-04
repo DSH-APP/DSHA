@@ -1,0 +1,146 @@
+[
+  {
+    "code": "ROOT_LINK",
+    "zh": "Web 根目录是链接，未终止任何进程"
+  },
+  {
+    "code": "ROOT_FOREIGN_UID",
+    "zh": "Web 根目录不属于本应用，未终止任何进程"
+  },
+  {
+    "code": "ROOT_ACCESS_UNCONFIRMED",
+    "zh": "Web 根目录权限无法确认"
+  },
+  {
+    "code": "PID_RECORD_INVALID",
+    "zh": "Web PID 文件异常，未终止任何进程"
+  },
+  {
+    "code": "PID_INVALID",
+    "zh": "Web PID 无效，未终止任何进程"
+  },
+  {
+    "code": "RECORD_FOREIGN_UID",
+    "zh": "Web 记录不属于本应用，未终止任何进程"
+  },
+  {
+    "code": "RECORD_ACCESS_UNCONFIRMED",
+    "zh": "Web 记录权限无法确认"
+  },
+  {
+    "code": "SENTINEL_UNWRITABLE",
+    "zh": "无法写入停止标记，尚未停止 Web"
+  },
+  {
+    "code": "PROC_INFO_LIMIT",
+    "zh": "进程信息超过核验上限"
+  },
+  {
+    "code": "INSPECTION_INTERRUPTED",
+    "zh": "进程核验被中断"
+  },
+  {
+    "code": "CHECK_FAILED",
+    "zh": "检查 Web 进程失败（PID %s，errno=%s）"
+  },
+  {
+    "code": "BIRTH_UNREADABLE",
+    "zh": "内核进程身份无法解析"
+  },
+  {
+    "code": "COMMAND_UNREADABLE",
+    "zh": "进程命令行暂不可读"
+  },
+  {
+    "code": "INSPECTION_FAILED",
+    "zh": "无法核验本应用进程（PID %s）：%s"
+  },
+  {
+    "code": "PID_STALE_LOCATION_INVALID",
+    "zh": "旧 PID 保留位置异常"
+  },
+  {
+    "code": "RECORD_RETIRE_FAILED",
+    "zh": "无法隔离旧 Web 进程记录"
+  },
+  {
+    "code": "IDENTITY_RECORD_INVALID",
+    "zh": "Web 身份记录异常，原环境保留"
+  },
+  {
+    "code": "IDENTITY_RECORD_VALUE_INVALID",
+    "zh": "Web 身份记录无效"
+  },
+  {
+    "code": "IDENTITY_RECORD_RETIRE_FAILED",
+    "zh": "无法清理旧 Web 身份记录"
+  },
+  {
+    "code": "IDENTITY_RECORD_WRITE_FAILED",
+    "zh": "Web 身份记录未写入，将使用完整进程核验"
+  },
+  {
+    "code": "PRE_EXEC_WAIT",
+    "zh": "Web 启动脚本仍在退出，已保留容器启动器"
+  },
+  {
+    "code": "IDENTITY_CHANGED",
+    "zh": "Web 进程身份已变化，未终止其他进程，请重试"
+  },
+  {
+    "code": "INSPECTION_UNCONFIRMED",
+    "zh": "Web 进程核验尚未确认（%s），原环境保持保护"
+  },
+  {
+    "code": "TRIAL_IDENTITY_CHANGED",
+    "zh": "隔离试运行进程身份已变化，原环境保持保护"
+  },
+  {
+    "code": "SIGNAL_DENIED",
+    "zh": "Web 停止信号被拒绝，原环境保持保护"
+  },
+  {
+    "code": "EXIT_UNCONFIRMED",
+    "zh": "Web 进程退出尚未确认（%s），原环境保持保护"
+  },
+  {
+    "code": "PENDING_EXIT",
+    "zh": "已请求停止，Web 尚未退出；稍后可重试，未强杀容器启动器"
+  },
+  {
+    "code": "STOP_INTERRUPTED",
+    "zh": "停止等待被中断，请检查 Web 状态"
+  },
+  {
+    "code": "STOP_FAILED",
+    "zh": "停止 Web 未完成：%s"
+  },
+  {
+    "code": "TRIAL_STOP_FAILED",
+    "zh": "停止隔离检查进程未完成：%s"
+  },
+  {
+    "code": "TRIAL_UNCONFIRMED",
+    "zh": "隔离试运行进程未确认退出，原环境保持保护"
+  },
+  {
+    "code": "OWNED_WEB_REMAINS",
+    "zh": "仍有 Web 进程未退出，原环境保留"
+  },
+  {
+    "code": "OWNED_WEB_SCAN_UNCONFIRMED",
+    "zh": "无法核验本应用进程，原环境保留"
+  },
+  {
+    "code": "FORCE_EVIDENCE_UNCONFIRMED",
+    "zh": "强制停止的身份或记录未通过复核：%s"
+  },
+  {
+    "code": "LEGACY_DETAIL",
+    "zh": "%s"
+  },
+  {
+    "code": "TRIAL_INSPECTION_DENIED",
+    "zh": "隔离试运行进程不可读取，原环境保持保护"
+  }
+]

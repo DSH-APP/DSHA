@@ -1,0 +1,90 @@
+{
+  "owner": "G1-bounded-api-scheduler",
+  "items": [
+    {
+      "id": "D-API-05",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+        "app/src/main/java/com/deepseekharness/app/util/DiagnosticReport.java",
+        "app/src/test/java/com/deepseekharness/app/util/DiagnosticReportTest.java"
+      ],
+      "checks": [
+        "5 current-source JVM behavior tests PASS: complete fixed-command protocol; localized/log lookalikes and missing npm rejected; duplicate/empty/invalid/oversized version evidence rejected; immutable shared report/card observations; repair failure retains collected checks",
+        "DiagnosticRepository and pure model standalone Java17 compilation PASS against actual Android37 and AndroidX dependencies"
+      ],
+      "current": "Collection produces stable-key, typed-health observations; text report and card details render those same observations. Node/npm/Python health uses all three values from only the successfully completed fixed command's DSHA_TOOL_* protocol. No final report splitting, translated-text matching or historical log inference remains. Bash/ELF readiness, runtime smoke marker, installed descriptor, retained trial failure, artifact probes, browser metadata, storage, startup issues, channels, host resources and local operation records remain represented.",
+      "residual": "Checks remain bounded observations, not universal device/third-party plugin acceptance. An unavailable runtime or failed guest command is not reported healthy. Existing diagnostic privacy/redaction and no-upload boundary remains. No phone or Android engine matrix executed."
+    },
+    {
+      "id": "D-API-06",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java",
+        "app/src/main/java/com/deepseekharness/app/util/StorageCategoryLabels.java",
+        "app/src/test/java/com/deepseekharness/app/util/StorageCategoryLabelsTest.java"
+      ],
+      "checks": [
+        "2 current-source JVM behavior tests PASS: reordering known categories preserves identity and Chinese/English names; unknown keys are displayed verbatim in both languages",
+        "StorageActivity and labels standalone Java17 compilation PASS"
+      ],
+      "current": "All eight actual StorageMaintenance.inspect category keys have explicit labels. Presentation does not rely on iteration position; unknown keys stay visible as their original value. Inspection, estimates, unreadable counts, cleanup confirmation, retention and user actions are unchanged.",
+      "residual": "Storage byte totals remain estimates from the existing bounded inspection. No phone UI matrix executed."
+    },
+    {
+      "id": "D-NAME-01",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentAccess.java",
+        "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+        "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+      ],
+      "checks": [
+        "All three actual production callers use requiresMaintenanceBeforeStart; no old production method reference remains",
+        "Existing EnvironmentIdentity 5 behavior tests PASS for unchanged maintenance/start gating",
+        "All four current production sources standalone Java17 compilation PASS"
+      ],
+      "current": "The method name now states its actual result: true means maintenance is required before starting. Latest/readable/busy/pending/candidate/attempted predicates and compatible-predecessor behavior are preserved verbatim.",
+      "residual": "This is a naming correction, not a new runtime acceptance policy."
+    },
+    {
+      "id": "D-CONC-01",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackupService.java",
+        "app/src/main/java/com/deepseekharness/app/util/ScheduledBackupOwner.java",
+        "app/src/test/java/com/deepseekharness/app/util/ScheduledBackupOwnerTest.java"
+      ],
+      "checks": [
+        "5 current-source JVM event-trace tests PASS: stop before queued preparation prevents submission; submitted job retains exact cancellation identity; late worker/old stop/old finish cannot affect next request; completion/destruction closes only current ticket; worker access to event-thread ownership rejected",
+        "AutomaticBackupService, AutomaticBackups, WorkerQuiescence and owner standalone Java17 compilation PASS",
+        "One independent read-only review of current service/owner found no remaining actionable ticket, exact-ID cancellation or producer/secret cleanup race"
+      ],
+      "current": "Preparation worker only checks eligibility/idle state and obtains the internal secret. Main event thread alone accepts a per-request ticket, submits the native export, registers its exact ID, polls and stops it. Stop/destruction invalidates the ticket; queued late completion does no export but still erases its secret and closes the producer lease. State/ID comparison and cancellation hold the NativeBackupJobs monitor together. Old parameters and callbacks cannot clear a newer ticket. Existing native worker-quiescence remains the factory-reset deletion barrier.",
+      "residual": "NativeBackupJobs.exportAutomatic performs its local startup journal/directory writes synchronously on main before launching the snapshot worker; slow local storage may briefly delay the callback. Actual archive traversal remains background work. This review does not establish phone latency or JobScheduler/OEM behavior. jobFinished/busy=false is not treated as native-finally completion."
+    }
+  ],
+  "focusedCheck": "17 current-source JUnit tests PASS (12 new behavior tests plus 5 existing EnvironmentIdentity tests). Current owned sources and necessary callers standalone javac PASS; no stubs, Gradle, APK or phone operations.",
+  "sourceInputRegistration": [
+    "app/src/main/java/com/deepseekharness/app/util/DiagnosticReport.java",
+    "app/src/main/java/com/deepseekharness/app/util/StorageCategoryLabels.java",
+    "app/src/main/java/com/deepseekharness/app/util/ScheduledBackupOwner.java",
+    "app/src/test/java/com/deepseekharness/app/util/DiagnosticReportTest.java",
+    "app/src/test/java/com/deepseekharness/app/util/StorageCategoryLabelsTest.java",
+    "app/src/test/java/com/deepseekharness/app/util/ScheduledBackupOwnerTest.java"
+  ],
+  "existingSourceInputsChanged": [
+    "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+    "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java",
+    "app/src/main/java/com/deepseekharness/app/core/EnvironmentAccess.java",
+    "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+    "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java",
+    "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+    "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackupService.java"
+  ],
+  "noNewRuntimeAssets": true,
+  "noPhone": true,
+  "noGradle": true,
+  "frozen": true
+}

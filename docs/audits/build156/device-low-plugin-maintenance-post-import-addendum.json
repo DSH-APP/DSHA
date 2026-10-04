@@ -1,0 +1,77 @@
+{
+  "schema": "dsha-plugin-post-import-visible-addendum-v1",
+  "reviewedAt": "2026-10-04T08:31:40+08:00",
+  "scope": {
+    "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+    "flavor": "low",
+    "androidRelease": 13,
+    "engine": "previously selected/saved Gecko, now opened again after healthy local import",
+    "plugin": "dsh-acceptance-156 0.0.156",
+    "expectedFrozenTgzSha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+    "deviceOperator": "runtime lease",
+    "reviewerDeviceCommands": 0
+  },
+  "parentReview": {
+    "path": "docs/audits/build156/device-low-plugin-maintenance-review.json",
+    "sha256": "d4d5734a972703298cd75d63e3e7ef2f33ddee45da9b7aa21c5121b0413e3927",
+    "unchanged": true
+  },
+  "observed": {
+    "postImportFrontendAndOwnEntryVisible": true,
+    "freshSameOriginOwnedRouteReady": true,
+    "modelCredentialRequiredForFixture": false,
+    "summary": "After the earlier local import success and native READY, screenshot0787 shows the real frontend with the own 156 acceptance button and an empty optional model-key prompt. Subsequent recorded clicks dismiss configuration and open the own entry. Screenshot0788 shows a newly loaded A page at 127.0.0.1:3080 with the enabled test button and no result. This adds actual post-reimport frontend/owned-route visibility beyond the prior native READY snapshot.",
+    "frontendAt": "2026-10-04T08:04:50.605883+08:00",
+    "freshPageAt": "2026-10-04T08:05:45.020904+08:00"
+  },
+  "limits": [
+    "These are two actual visible UI captures and action metadata, not newly collected plugin JSONL or independently parsed current transaction journal.",
+    "They do not prove exact candidate/content/retained-tree digest or PID/startup birth identity.",
+    "The earlier 25-event Low media/files record is not relabeled as post-reimport or Standard, and its files-nav/policy-attribution gaps remain.",
+    "No APK or source change, variant0.0.157 installation, or new device operation by reviewer is part of this addendum."
+  ],
+  "sourceEvidence": {
+    "screenshots": [
+      {
+        "id": "lease-low-reimported-gecko-ready-0787",
+        "privateEvidenceFile": "lease-low-reimported-gecko-ready-0787.png",
+        "sha256": "052bc51fc6a4e8f152bbfd2cddbc715264c38fd10adbc12c9161f9350b0996a5",
+        "bytes": 104667,
+        "operatorTime": "2026-10-04T08:04:50.605883+08:00",
+        "actionIndex0Based": 1084,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-low-fresh-reimport-route-ready-0788",
+        "privateEvidenceFile": "lease-low-fresh-reimport-route-ready-0788.png",
+        "sha256": "2ffd1502884da8320d9a8af511c17b665a2f309b61784249d7c73559f916c423",
+        "bytes": 265762,
+        "operatorTime": "2026-10-04T08:05:45.020904+08:00",
+        "actionIndex0Based": 1087,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      }
+    ],
+    "operatorActionsPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "52717f8ceb8cbc4fec3cee8577597c979dbaf76a68e77eaab21bf25e92d1c936",
+      "bytes": 155728,
+      "records": 1088,
+      "lastRecordIndex0Based": 1087,
+      "lastTime": "2026-10-04T08:05:45.020904+08:00",
+      "hashRecipe": "SHA256 of first 155728 bytes (1088 complete rows); later append does not affect this prefix. Raw command arguments/input text omitted."
+    }
+  },
+  "validation": {
+    "command": "Read-only Python: both screenshot hashes match action rows, bound to unchanged Low overlay and prior local-import timeline; no intervening overlay; original maintenance review bytes preserved.",
+    "exitCode": 0,
+    "screenshotsVisuallyReviewed": 2,
+    "screenshotDigestsMatched": 2
+  },
+  "privacy": {
+    "rawScreenshotPixelsPublished": false,
+    "credentialValueOrDeviceSerialPublished": false,
+    "privatePageIdentifiersPublished": false
+  }
+}

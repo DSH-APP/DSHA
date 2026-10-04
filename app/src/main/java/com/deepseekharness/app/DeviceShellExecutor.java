@@ -1,164 +1,124 @@
 package com.deepseekharness.app;
 
-import android.content.Context;
 import com.deepseekharness.app.util.DeviceAppPolicy;
 import com.deepseekharness.app.util.DeviceShellPolicy;
 import com.deepseekharness.app.util.SensitiveData;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /** 设备 shell 的执行前守卫。调用者不能通过确认开关、root 或内部标志跳过判定。 */
 public final class DeviceShellExecutor {
-    private DeviceShellExecutor() { }
-    interface Runner { String run(List<String> argv); }
+  private DeviceShellExecutor() {}
 
-    static String execute(String command, Runner runner) {
-        DeviceShellPolicy.Plan plan = DeviceShellPolicy.inspect(command);
-        if (!plan.allowed()) return plan.reason + "\n[EXIT=126]";
-        // UserService 不持有 App 的授权记录；短信必须先经过原生授权桥再走 ADB。
-        if (plan.kind == DeviceShellPolicy.Kind.SENSITIVE_READ)
-            return com.deepseekharness.app.util.UiText.text("[POLICY_BLOCKED] 短信读取请使用 ADB 通道，并在 DSHA 授权\n[EXIT=126]");
+  interface Runner {
+    String run(List<String> argv);
+  }
+
+  static String execute(String command, Runner runner) {
+    return execute(command, runner, null);
+  }
+
+  static String execute(
+      String command, Runner runner, com.deepseekharness.app.util.SelfPackageIdentity identity) {
+    DeviceShellPolicy.Plan plan = DeviceShellPolicy.inspect(command);
+    if (!plan.allowed()) return plan.reason + "\n[EXIT=126]";
+    // UserService 不持有 App 的授权记录；短信必须先经过原生授权桥再走 ADB。
+    if (plan.kind == DeviceShellPolicy.Kind.SENSITIVE_READ)
+      return com.deepseekharness.app.util.UiText.text(
+          "[POLICY_BLOCKED] 短信读取请使用 ADB 通道，并在 DSHA 授权\n[EXIT=126]");
+    try {
+      int uid = android.os.Process.myUid();
+      if (uid == 0 || uid == 2000) validateRootReadPaths(plan);
+      if (plan.kind == DeviceShellPolicy.Kind.STOP) {
+        if (identity == null) throw new IOException("SELF_PACKAGE_UNVERIFIED");
+        String users = checked(runner.run(Arrays.asList("pm", "list", "packages", "-U", "-3")));
+        String systems = checked(runner.run(Arrays.asList("pm", "list", "packages", "-U", "-s")));
+        DeviceAppPolicy.Snapshot snapshot = DeviceAppPolicy.snapshot(users, systems, identity.name);
+        String processes =
+            plan.command().equals("kill")
+                ? checked(runner.run(Arrays.asList("ps", "-A", "-o", "PID,UID,NAME")))
+                : "";
+        final List<String> targets;
         try {
-            if (android.os.Process.myUid() == 0) validateRootReadPaths(plan);
-            if (plan.kind == DeviceShellPolicy.Kind.STOP) {
-                String users = checked(runner.run(Arrays.asList("pm", "list", "packages", "-U", "-3")));
-                String systems = checked(runner.run(Arrays.asList("pm", "list", "packages", "-U", "-s")));
-                DeviceAppPolicy.Snapshot snapshot = DeviceAppPolicy.snapshot(users, systems);
-                String processes = plan.command().equals("kill") ? checked(runner.run(Arrays.asList("ps", "-A", "-o", "PID,UID,NAME"))) : "";
-                final List<String> targets;
-                try { targets = snapshot.targets(plan, processes); }
-                catch (IllegalArgumentException blocked) { return snapshot.grouped() + "[POLICY_BLOCKED] " + blocked.getMessage() + "\n[EXIT=126]"; }
-                StringBuilder output = new StringBuilder(snapshot.grouped());
-                for (String target : targets) {
-                    // 按包名操作，避免检查完 PID 后号码复用而误伤系统进程。
-                    String result = runner.run(Arrays.asList("am", "force-stop", target));
-                    output.append(com.deepseekharness.app.util.UiText.text("停止用户应用：")).append(target).append('\n').append(result).append('\n');
-                    if (!result.endsWith("[EXIT=0]")) break;
-                }
-                return output.toString().trim();
-            }
-            if (plan.kind == DeviceShellPolicy.Kind.FILE) {
-                validateFiles(plan);
-                List<String> argv = new ArrayList<>(plan.argv);
-                for (int i = 1; i < argv.size(); i++) if (plan.operands.contains(argv.get(i))) argv.set(i, DeviceShellPolicy.normalize(argv.get(i)));
-                return runner.run(argv);
-            }
-            return runner.run(plan.argv);
-        } catch (IOException | IllegalArgumentException error) {
-            return "[POLICY_BLOCKED] " + SensitiveData.redact(error.getMessage()) + "\n[EXIT=126]";
+          targets = snapshot.targets(plan, processes);
+        } catch (IllegalArgumentException blocked) {
+          return snapshot.grouped() + "[POLICY_BLOCKED] " + blocked.getMessage() + "\n[EXIT=126]";
         }
-    }
-
-    /** Privileged typed entry used only by VirtualScreenManager, never by generic shell text. */
-    static String executeVirtualScreen(String command, Runner runner) {
-        int uid = android.os.Process.myUid();
-        if (uid != 0 && uid != 2000)
-            return com.deepseekharness.app.util.UiText.text("[POLICY_BLOCKED] 虚拟屏启动仅允许特权设备通道\n[EXIT=126]");
-        try {
-            DeviceShellPolicy.Plan plan = DeviceShellPolicy.inspectVirtualScreenLaunch(command, installedDshaApkPath());
-            if (!plan.allowed()) return plan.reason + "\n[EXIT=126]";
-            return runner.run(plan.argv);
-        } catch (IOException | IllegalArgumentException error) {
-            return "[POLICY_BLOCKED] " + SensitiveData.redact(error.getMessage()) + "\n[EXIT=126]";
+        StringBuilder output = new StringBuilder(snapshot.grouped());
+        for (String target : targets) {
+          // 按包名操作，避免检查完 PID 后号码复用而误伤系统进程。
+          String result = runner.run(Arrays.asList("am", "force-stop", target));
+          output
+              .append(com.deepseekharness.app.util.UiText.text("停止用户应用："))
+              .append(target)
+              .append('\n')
+              .append(result)
+              .append('\n');
+          if (!result.endsWith("[EXIT=0]")) break;
         }
+        return output.toString().trim();
+      }
+      if (plan.kind == DeviceShellPolicy.Kind.FILE) {
+        com.deepseekharness.app.util.DeviceFileOperations.execute(
+            plan, new com.deepseekharness.app.bridge.AndroidDeviceFiles());
+        return "DEVICE_FILE_OPERATION_COMPLETE\n[EXIT=0]";
+      }
+      return runner.run(plan.argv);
+    } catch (java.io.InterruptedIOException cancelled) {
+      return "[EXECUTION_UNKNOWN] FILE_OPERATION_CANCELLED\n[EXIT=125]";
+    } catch (IOException | IllegalArgumentException error) {
+      return "[POLICY_BLOCKED] " + SensitiveData.redact(error.getMessage()) + "\n[EXIT=126]";
     }
+  }
 
-    /** Resolve the installed application source from PackageManager inside the privileged process. */
-    static String installedDshaApkPath() throws IOException {
-        try {
-            Context system = com.deepseekharness.app.runtime.PrivilegedPackageContext.systemContext();
-            android.content.pm.ApplicationInfo info = system.getPackageManager().getApplicationInfo("com.dsh.client", 0);
-            File source = new File(info.sourceDir);
-            String canonical = source.getCanonicalPath();
-            if (!source.isFile() || !source.getPath().equals(canonical)
-                    || !DeviceShellPolicy.canonicalApkPath(canonical))
-                throw new IOException("DSHA_APK_PATH_INVALID");
-            return canonical;
-        } catch (IOException error) {
-            throw error;
-        } catch (Throwable error) {
-            throw new IOException("DSHA_APK_UNVERIFIED", error);
-        }
-    }
+  /** Privileged typed entry used only by VirtualScreenManager, never by generic shell text. */
+  static String executeVirtualScreen(String command, Runner runner) {
+    return executeVirtualScreen(command, runner, null);
+  }
 
-    /** Recheck SMS-provider file reads at the privileged execution boundary. */
-    static void validateRootReadPaths(DeviceShellPolicy.Plan plan) throws IOException {
-        boolean recursive = DeviceShellPolicy.rootReadMayDescend(plan);
-        for (String path : DeviceShellPolicy.rootReadPaths(plan)) {
-            if (isSmsReadPath(path, recursive))
-                throw new IOException("短信数据库仅允许经原生授权的当前用户 content query");
-            final String canonical;
-            try { canonical = new File(path).getCanonicalPath(); }
-            catch (IOException unreadable) { throw new IOException("无法核验 Root 读取路径", unreadable); }
-            if (isSmsReadPath(canonical, recursive))
-                throw new IOException("短信数据库仅允许经原生授权的当前用户 content query");
-        }
+  static String executeVirtualScreen(
+      String command, Runner runner, com.deepseekharness.app.util.SelfPackageIdentity identity) {
+    int uid = android.os.Process.myUid();
+    if (uid != 0 && uid != 2000)
+      return com.deepseekharness.app.util.UiText.text(
+          "[POLICY_BLOCKED] 虚拟屏启动仅允许特权设备通道\n[EXIT=126]");
+    try {
+      if (identity == null) throw new IOException("SELF_PACKAGE_UNVERIFIED");
+      DeviceShellPolicy.Plan plan =
+          DeviceShellPolicy.inspectVirtualScreenLaunch(command, identity.source, identity.name);
+      if (!plan.allowed()) return plan.reason + "\n[EXIT=126]";
+      return runner.run(plan.argv);
+    } catch (IOException | IllegalArgumentException error) {
+      return "[POLICY_BLOCKED] " + SensitiveData.redact(error.getMessage()) + "\n[EXIT=126]";
     }
+  }
 
-    private static boolean isSmsReadPath(String path, boolean recursive) {
-        return DeviceShellPolicy.smsProviderPath(path)
-                || recursive && DeviceShellPolicy.smsProviderDescendant(path);
+  /** Recheck SMS-provider file reads at the privileged execution boundary. */
+  static void validateRootReadPaths(DeviceShellPolicy.Plan plan) throws IOException {
+    boolean recursive = DeviceShellPolicy.rootReadMayDescend(plan);
+    for (String path : DeviceShellPolicy.rootReadPaths(plan)) {
+      if (isSmsReadPath(path, recursive)) throw new IOException("短信数据库仅允许经原生授权的当前用户 content query");
+      final String canonical;
+      try {
+        canonical = new File(path).getCanonicalPath();
+      } catch (IOException unreadable) {
+        throw new IOException("无法核验 Root 读取路径", unreadable);
+      }
+      if (isSmsReadPath(canonical, recursive))
+        throw new IOException("短信数据库仅允许经原生授权的当前用户 content query");
     }
+  }
 
-    private static String checked(String output) throws IOException {
-        if (output == null || !output.endsWith("[EXIT=0]") || output.contains("[OUTPUT_TRUNCATED]"))
-            throw new IOException(com.deepseekharness.app.util.UiText.text("无法取得完整设备信息，未执行写入或停止操作"));
-        return output.substring(0, output.length() - "[EXIT=0]".length()).trim();
-    }
+  private static boolean isSmsReadPath(String path, boolean recursive) {
+    return DeviceShellPolicy.smsProviderPath(path)
+        || recursive && DeviceShellPolicy.smsProviderDescendant(path);
+  }
 
-    static void validateFiles(DeviceShellPolicy.Plan plan) throws IOException {
-        List<String> paths = plan.operands;
-        String op = plan.command();
-        if (op.equals("cp") || op.equals("mv")) {
-            File destination = checkedPath(paths.get(paths.size() - 1));
-            for (int i = 0; i < paths.size() - 1; i++) {
-                File source = new File(DeviceShellPolicy.normalize(paths.get(i)));
-                if (op.equals("mv")) { source = checkedPath(paths.get(i)); inspectTree(source, new int[]{0}); }
-                File actual = destination.isDirectory() ? checkedPath(new File(destination, source.getName()).getPath()) : destination;
-                inspectTree(actual, new int[]{0});
-            }
-        } else {
-            for (String path : paths) {
-                File file = checkedPath(path);
-                if (op.equals("rm") || op.equals("rmdir")) inspectTree(file, new int[]{0});
-            }
-        }
-    }
-
-    private static File checkedPath(String value) throws IOException {
-        if (!DeviceShellPolicy.writeAllowed(value)) throw new IOException(com.deepseekharness.app.util.UiText.text("受保护目录只读：") + value);
-        File file = new File(DeviceShellPolicy.normalize(value));
-        String canonical = file.getCanonicalPath();
-        if (!DeviceShellPolicy.writeAllowed(canonical)) throw new IOException(com.deepseekharness.app.util.UiText.text("链接实际指向受保护目录：") + value);
-        // 共享存储别名已统一；写入链上出现其它链接时不猜测行为。
-        for (File parent = file; parent != null && DeviceShellPolicy.writeAllowed(parent.getPath()); parent = parent.getParentFile()) {
-            try {
-                android.system.StructStat metadata = android.system.Os.lstat(parent.getPath());
-                if (android.system.OsConstants.S_ISLNK(metadata.st_mode))
-                    throw new IOException(com.deepseekharness.app.util.UiText.text("写入路径含符号链接，请使用明确的实际目录：") + value);
-            } catch (android.system.ErrnoException error) {
-                // 新建路径可以不存在；无权读取元数据不能被当成“不是链接”。
-                if (error.errno != android.system.OsConstants.ENOENT)
-                    throw new IOException(com.deepseekharness.app.util.UiText.text("无法核对路径元数据，未执行写入：") + value, error);
-            }
-        }
-        return file;
-    }
-    private static void inspectTree(File file, int[] count) throws IOException {
-        java.util.ArrayDeque<File> pending = new java.util.ArrayDeque<>(); pending.add(file);
-        while (!pending.isEmpty()) {
-            File current = pending.removeLast();
-            if (++count[0] > 20000) throw new IOException(com.deepseekharness.app.util.UiText.text("目录过大，无法完整核验；请缩小操作范围"));
-            checkedPath(current.getPath());
-            if (current.isDirectory()) {
-                File[] children = current.listFiles();
-                if (children == null) throw new IOException(com.deepseekharness.app.util.UiText.text("目录无法读取，未执行写入：") + current.getPath());
-                if (children.length + count[0] > 20000) throw new IOException(com.deepseekharness.app.util.UiText.text("目录过大，请缩小操作范围"));
-                pending.addAll(Arrays.asList(children));
-            }
-        }
-    }
+  private static String checked(String output) throws IOException {
+    if (output == null || !output.endsWith("[EXIT=0]") || output.contains("[OUTPUT_TRUNCATED]"))
+      throw new IOException(com.deepseekharness.app.util.UiText.text("无法取得完整设备信息，未执行写入或停止操作"));
+    return output.substring(0, output.length() - "[EXIT=0]".length()).trim();
+  }
 }

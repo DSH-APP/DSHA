@@ -1,10 +1,12 @@
 # DSHA 网站与插件目录
 
-目标域名：https://dsha.cc。默认页面为插件市场，当前构建为 DSHA 0.1.7-rc2 / 147、dsh 0.1.7-rc.2，正式通道；具体上线状态见部署验收记录。社区插件与技能保留各自的历史测试版本。
+目标域名为 https://dsha.cc。仓库中的本地站点版本来自**最终签名 APK 发布清单**，并与所选 `DSHA_SOURCE_ROOT` 的应用版本、DSH 锁和 runtimeId 核对；`package.json` 的 0.0.0 只属于私有构建器，不是 DSHA 版本。
+
+2026-09-28 的 build147 部署记录属于[历史官网验收](../docs/website-rc2-20260928.md)，历史说明字节保存在 `data/history/build147-release-notes.txt`。本轮只准备和验证本地网页；没有线上新版本或部署通过声明。
 
 ## 构建
 
-使用 Node.js 24 与 tar。在 `website` 目录执行，安装锁定的构建和测试依赖：
+使用 Node 24 与 tar。先在仓库根目录运行 `tools/generate-release-manifest.py`，从实际 `release` 两版最终 APK 提取包名、版本、DSH/runtimeId、证书和摘要；提供实际 `--standard`、`--low`、`--build-tools`、`--java` 与本轮 `--notes`。正式通道显式使用 `--channel stable`，不能仅凭版本名中的连字符猜通道。没有最终 APK 时不要为检查编造清单。
 
 ```text
 npm ci --ignore-scripts
@@ -12,32 +14,21 @@ npm run build
 npm run check
 ```
 
-构建前先在仓库根目录用 `tools/generate-release-manifest.py` 核验 `release` 中的两个最终 APK，指定 `--standard`、`--low`、`--build-tools`、`--java` 和 `--notes`。当前 rc2 正式版使用 `data/current-release-notes.txt`，按已确认的正式发布要求显式传入 `--channel stable`：文件名修正不改变既有发布通道，不能仅凭连字符判断通道。默认输出 `app/build/release-manifest.json` 及 GitHub 发布正文；以后发版时用 `--previous-manifest` 提供上一份线上清单，或保留现有输出供自动读取，避免丢失另一更新通道。
+默认清单为 `app/build/release-manifest.json`；可通过 `DSHA_RELEASE_MANIFEST` 指定。默认源为网站父目录；`DSHA_SOURCE_ROOT` 必须指向与目标 APK 一致的源码/描述符。仅更新线上网页时，选择线上 APK 与对应源码快照，不将未发布 APK 的更新接口提前部署。旧清单与新源码不匹配时构建明确失败。
 
-网站读取这份清单，核对两个 APK 的摘要后复制到 `dist/downloads`，同时生成 App 的 `/api/updates.json`。默认源码目录是当前项目父目录，可通过 `DSHA_SOURCE_ROOT` 指定；清单路径可用 `DSHA_RELEASE_MANIFEST` 指定。
-
-`dist` 是唯一公开部署目录。不要发布 `original`、取证目录或部署连接信息。
+`dist` 是唯一公开产物。构建重新核对两版实际 APK 摘要、复制下载文件及 sidecar，并生成 catalog/releases/updates 与域名关联数据。新清单使用 `--previous-manifest` 保留另一更新通道；旧下载目录由部署步骤保留。
 
 ## 内容维护
 
-- `data/catalog.mjs`：插件目录、测试范围和兼容说明；应用版本由实际 APK 清单注入。
-- `src/skills`：随网站分发的 rc1.1 适配技能，保留 MIT 许可。
-- `src`：样式、主题及搜索/复制/投稿增强。
-- `scripts/build.mjs`：生成静态页面、目录 API、APK/技能校验文件和 sitemap。
-- `original`：只在本机保留的原网站备份，不提交或部署。
+- `data/catalog.mjs` 保存社区插件实际来源与历史测试；内置版本由对应受管包读取，并说明内容核对不等于设备验证。
+- `agent-skills/` 是仓库根的唯一技能源；网站直接复制 SKILL.md 和 MIT 许可。`src/skills/` 仅保留来源提示。技能包文件名跟随实际 APK 版本，当前文档检查与旧设备记录分开。
+- `scripts/build.mjs` 生成静态页面与 API；`scripts/site.test.mjs` 检查来源、版本、实际下载内容与内部链接。
+- `src/packages` 的社区原包保持固定版本与摘要，不重新打包修改作者字节。仅格式审阅不声称设备实测。
 
-内置条目打开 App 管理页；技能下载后放入 dsh 技能目录。rc1.3 支持网页安装深链，App 解析实际包后由用户确认安装；未安装 App 时提供 APK 下载入口。网站不伪造安装状态，不接收本机桥 token。
+内置条目打开应用管理页；第三方链接进入当前自动解析/检查/提交路径。安装检查和脚本开放不提供恶意插件沙箱。网站不接收桥 token，不伪造手机安装状态。
 
-社区插件通过 GitHub Issue 人工审核。新增 `kind: 'plugin'` 条目须包含 HTTPS 固定版本下载地址、SHA-256、入口契约、使用前提和真实测试记录。仅格式校验不得宣称设备实测通过。
+## 发布与验证范围
 
-## 发布与验证
+本地预览使用 `npm run dev`，只监听 127.0.0.1:4180，不作为服务器。发布/回退见 [PUBLISHING](deploy/PUBLISHING.md)。只上传 dist 及核验过的下载文件；源码、历史私有原件、连接资料、取证、令牌和私钥不部署。
 
-上传 `dist` 完整内容，包括两个 APK 与对应 `.sha256`。服务器使用独立站点目录与 HTTPS，保留上一版以便回退。发布前后检查首页、详情、技能下载、APK HEAD/Range、错误页面、目录 API 与 `health.json`。
-
-具体流程见[发布与回退](deploy/PUBLISHING.md)。连接凭据、既有服务器操作记录和原始取证材料留在本机。
-
-本地预览：`npm run dev`，仅监听 127.0.0.1:4180。远端部署不使用这个开发服务器。
-
-三个新收录条目提供站内固定包镜像：`dsh-batch-tool-calls@1.0.0`、`dsh-any-background@0.2.8`、`dsh-peak-chip@4.1.8`。原包位于 `src/packages`，构建核对大小和 SHA-256 后复制到公开 `downloads/plugins`；保留原始下载地址、MIT 许可和 issue 来源。作者报告与历史宿主检查不冒充当前 rc2 真机验证。
-
-2026-09-28 已上线，当前构建 `b7e6957d3160c9b8`；验证来源、下载与回退范围见[本次官网验收](../docs/website-rc2-20260928.md)。
+`npm run check` 证明本地生成物，不能证明 Nginx 配置、GitHub 发布、公网 APK Range/HSTS 或 Android 覆盖安装。HTTPS 上的 `scripts/http-check.mjs` 会检查下载安全头和 Range，但本轮不执行线上部署。实际服务器切换与公网下载必须另存绑定版本、buildId 和摘要的回执。

@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "lane": "legacy",
+  "scope": "Only the MaintenanceErrorText error-code label concatenation; no process/history/other production edits.",
+  "frozen": true,
+  "source": "app/src/main/java/com/deepseekharness/app/util/MaintenanceErrorText.java",
+  "sourceSha256": "a371cc961a9501dc7ab77ec7e2e224131734d00a52f8bb1e73f20d06120c3f90",
+  "contribution": "docs/audits/build156/contribution-choose-legacy.json",
+  "contributionSha256": "e473ba6800cfe5b617c5ee72abebb6e9017300880cc8c950ab5207efcf0ee0a7",
+  "argumentContract": "Already-rendered application explanation and original stable error code pass unchanged as two %s arguments.",
+  "checks": [
+    {
+      "command": "python tools/format-java.py --write --offline --java F:/jdk17/jdk-17.0.20.1+1/bin/java.exe --files app/src/main/java/com/deepseekharness/app/util/MaintenanceErrorText.java",
+      "result": "PASS pinned 1.22.0; zero format changes; exact Java token identity",
+      "evidence": "app/build/java-format/build156-legacy-choose.json"
+    },
+    {
+      "command": "JDK17 javac --release 17 current maintenance/display helpers and generated UiMessages; JUnitCore MaintenanceErrorTextTest",
+      "result": "PASS narrow compile and 3 existing tests"
+    }
+  ],
+  "deferredIntegratedChecks": [
+    "UI owner merges the complete zh/en template into the owned catalog/scanner; root reruns final integrated checks."
+  ]
+}

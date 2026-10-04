@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "reportSha256": "3b8a62999e9dd990c127ee20b5e4b6181c96740a3dcfcf48df6a93598df85545",
+  "errors": 0,
+  "unusedResources": 0,
+  "warnings": 306,
+  "sourceOnlySkippedGenerators": [
+    "prepareStandardAssets",
+    "prepareRecoveryAssets"
+  ]
+}

@@ -7,8 +7,10 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import ssl
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -69,12 +71,13 @@ class PluginDownloadTest(unittest.TestCase):
                 finally: depth[0] -= 1
         def boundary(stage):
             self.assertEqual(1, depth[0]); boundaries.append(stage)
-        with patch.object(self.m.builtin, 'operation_lock', single_lock), patch.object(self.m.transactions(), 'boundary', boundary):
-            self.assertEqual('test-download', self.m.register_plugin(str(incoming), 'npm:test-download@1.0.0', reviewed=True))
+        link = patch.object(self.m.os, 'symlink', side_effect=lambda src, dst, **_: shutil.copytree(src, dst)) if os.name == 'nt' else contextlib.nullcontext()
+        with patch.object(self.m.builtin, 'operation_lock', single_lock), patch.object(self.m.transactions(), 'boundary', boundary), link:
+            self.assertEqual('test-download', self.m.register_plugin(str(incoming), 'npm:test-download@1.0.0'))
         self.assertEqual(1, len(acquisitions))
         self.assertIn('committed', boundaries)
-        self.assertEqual('DSHA_REVIEW_REQUIRED\n', Path(self.m.builtin.marker_path('test-download')).read_text())
-        self.assertNotIn('test-download', self.m.builtin.read_manifest()['dsh']['profile']['bundles'])
+        self.assertFalse(Path(self.m.builtin.marker_path('test-download')).exists())
+        self.assertIn('test-download', self.m.builtin.read_manifest()['dsh']['profile']['bundles'])
 
     def test_parallel_updates_are_bounded_and_keep_per_plugin_failure(self):
         names = ['test-download-'+str(i) for i in range(6)]
@@ -156,7 +159,9 @@ class PluginDownloadTest(unittest.TestCase):
         n=self.network('mirror'); calls=[]
         def run(args,cwd):
             calls.append(args)
-            return subprocess.CompletedProcess(args, 1 if len(calls)==1 else 0, '', 'E404' if len(calls)==1 else '')
+            result = subprocess.CompletedProcess(args, 1 if len(calls)==1 else 0, '', 'E404' if len(calls)==1 else '')
+            result.confirmed_exit = True
+            return result
         with patch.object(self.m,'run_package_command',side_effect=run):
             self.assertEqual(0,n.package_command(['npm','pack','--ignore-scripts','--','test@1.2.3'],str(self.home),frozen=True).returncode)
         self.assertEqual(2,len(calls))
@@ -167,17 +172,19 @@ class PluginDownloadTest(unittest.TestCase):
             with patch.object(self.m,'run_package_command',return_value=subprocess.CompletedProcess([],1,'',error)) as run:
                 n.package_command(['npm','pack','--','test@latest'],str(self.home));self.assertEqual(1,run.call_count)
 
-    def test_dependency_retry_keeps_existing_lock_and_disables_hooks(self):
+    def test_dependency_failure_never_replays_install_and_keeps_unlocked_hooks(self):
         n=self.network('mirror'); lock=self.home/'pnpm-lock.yaml';calls=[]
         def run(args,cwd):
             calls.append(args)
             if len(calls)==1:
                 lock.write_text('owned frozen bytes');return subprocess.CompletedProcess(args,1,'','ERR_PNPM_FETCH_503')
             self.assertEqual('owned frozen bytes',lock.read_text());return subprocess.CompletedProcess(args,0,'','')
-        args=['pnpm','install','--ignore-scripts','--ignore-pnpmfile','--no-frozen-lockfile']
-        with patch.object(self.m,'run_package_command',side_effect=run):n.package_command(args,str(self.home))
-        self.assertIn('--frozen-lockfile',calls[1]);self.assertNotIn('--no-frozen-lockfile',calls[1])
-        self.assertIn('--ignore-scripts',calls[1]);self.assertIn('--ignore-pnpmfile',calls[1])
+        args=['pnpm','install','--no-frozen-lockfile']
+        with patch.object(self.m,'run_package_command',side_effect=run):
+            self.assertEqual(1,n.package_command(args,str(self.home)).returncode)
+        self.assertEqual(1,len(calls));self.assertEqual('owned frozen bytes',lock.read_text())
+        self.assertIn('--no-frozen-lockfile',calls[0]);self.assertNotIn('--frozen-lockfile',calls[0])
+        self.assertNotIn('--ignore-scripts',calls[0]);self.assertNotIn('--ignore-pnpmfile',calls[0])
 
     def test_cancel_does_not_attempt_second_registry(self):
         n=self.network('mirror')
@@ -187,12 +194,102 @@ class PluginDownloadTest(unittest.TestCase):
 
     def test_whole_package_timeout_can_fall_back_once_after_runner_cleanup(self):
         n=self.network('mirror')
-        with patch.object(self.m,'run_package_command',side_effect=[self.m.PackageCommandTimeout('owned timeout'),subprocess.CompletedProcess([],0,'','')]) as run:
-            self.assertEqual(0,n.package_command(['npm','pack','--','test@1.0.0'],str(self.home)).returncode)
+        with patch.object(self.m,'run_package_command',side_effect=[self.m.PackageCommandTimeout('owned timeout',confirmed_exit=True),subprocess.CompletedProcess([],0,'','')]) as run:
+            self.assertEqual(0,n.package_command(['npm','pack','--ignore-scripts','--','test@1.0.0'],str(self.home)).returncode)
             self.assertEqual(2,run.call_count)
-        with patch.object(self.m,'run_package_command',side_effect=self.m.PackageCommandTimeout('owned timeout')) as run:
-            with self.assertRaises(self.m.PackageCommandTimeout):n.package_command(['npm','pack','--','test'],str(self.home))
+        with patch.object(self.m,'run_package_command',side_effect=self.m.PackageCommandTimeout('owned timeout',confirmed_exit=True)) as run:
+            with self.assertRaises(self.m.PackageCommandTimeout):n.package_command(['npm','pack','--ignore-scripts','--','test'],str(self.home))
             self.assertEqual(2,run.call_count)
+
+    def test_download_timeout_without_exit_proof_or_script_gate_is_not_replayed(self):
+        n=self.network('mirror')
+        for args, error in [(['npm','pack','--ignore-scripts','--','test'], self.m.PackageCommandTimeout('owned unknown')),
+                            (['npm','pack','--','test'], self.m.PackageCommandTimeout('owned closed',confirmed_exit=True))]:
+            with patch.object(self.m,'run_package_command',side_effect=error) as run:
+                with self.assertRaises(self.m.PackageCommandTimeout):n.package_command(args,str(self.home))
+                self.assertEqual(1,run.call_count)
+
+    def test_actual_child_silent_stall_uses_idle_budget_and_proven_close(self):
+        started=time.monotonic()
+        with self.assertRaises(self.m.PackageCommandTimeout) as caught:
+            self.m.run_package_command([sys.executable,'-c','import time; time.sleep(20)'],str(self.home),timeout=3,idle_timeout=.2)
+        self.assertTrue(caught.exception.confirmed_exit);self.assertLess(time.monotonic()-started,2)
+        self.assertIn('没有新进展',str(caught.exception))
+
+    def test_actual_output_progress_extends_idle_but_never_overall_budget(self):
+        code='import time\nfor _ in range(100):\n print("progress",flush=True);time.sleep(.03)'
+        started=time.monotonic()
+        with self.assertRaises(self.m.PackageCommandTimeout) as caught:
+            self.m.run_package_command([sys.executable,'-c',code],str(self.home),timeout=.5,idle_timeout=.2)
+        self.assertTrue(caught.exception.confirmed_exit);self.assertIn('整体时限',str(caught.exception))
+        self.assertLess(time.monotonic()-started,2)
+        result=self.m.run_package_command([sys.executable,'-c','import time\nfor _ in range(8):\n print("ok",flush=True);time.sleep(.05)'],str(self.home),timeout=2,idle_timeout=.2)
+        self.assertEqual(0,result.returncode);self.assertEqual(8,result.stdout.count('ok'));self.assertTrue(result.confirmed_exit)
+
+    def test_actual_flood_is_bounded_and_progress_reports_counts_only(self):
+        result=self.m.run_package_command([sys.executable,'-c','import sys;sys.stdout.write("a"*2200000);sys.stderr.write("b"*2200000)'],str(self.home),timeout=3,idle_timeout=1)
+        self.assertEqual(2200000,result.stdout_bytes);self.assertEqual(2200000,result.stderr_bytes)
+        self.assertLessEqual(len(result.stdout),1024*1024);self.assertLess(len(result.stderr),1024*1024+20000);self.assertTrue(result.output_truncated)
+        self.m.run_package_command([sys.executable,'-c','import time\nfor _ in range(24):\n print("opaque-test-value",flush=True);time.sleep(.05)'],str(self.home),timeout=3,idle_timeout=.3)
+        value=json.loads(Path(self.m.task_file('.json')).read_text(encoding='utf8'))
+        self.assertIn('字节',value['message']);self.assertNotIn('opaque-test-value',value['message'])
+
+    def test_actual_dependency_hook_side_effect_executes_once_on_network_error_and_timeout(self):
+        n=self.network('mirror'); original=self.m.run_package_command
+        for stall in [False,True]:
+            counter=self.home/('stall-counter' if stall else 'error-counter');calls=[]
+            code='from pathlib import Path\nimport sys,time\np=Path(sys.argv[1]);p.write_text(p.read_text()+"1" if p.exists() else "1")\n'+('time.sleep(20)' if stall else 'print("ERR_PNPM_FETCH_503",file=sys.stderr);sys.exit(1)')
+            def run(args,cwd):
+                calls.append(args)
+                return original([sys.executable,'-c',code,str(counter)],cwd,timeout=.4,idle_timeout=.2)
+            with patch.object(self.m,'run_package_command',side_effect=run):
+                if stall:
+                    with self.assertRaises(self.m.PackageCommandTimeout):n.package_command(['pnpm','install','--no-frozen-lockfile'],str(self.home))
+                else:self.assertEqual(1,n.package_command(['pnpm','install','--no-frozen-lockfile'],str(self.home)).returncode)
+            self.assertEqual('1',counter.read_text());self.assertEqual(1,len(calls));self.assertNotIn('--ignore-scripts',calls[0])
+
+    def test_actual_cancel_closes_only_owned_child_without_source_replay(self):
+        counter=self.home/'cancel-counter'; original=self.m.run_package_command;n=self.network('mirror');calls=[]
+        def cancel():
+            if counter.exists():raise self.m.PluginCancelled('owned cancel')
+        def run(args,cwd):
+            calls.append(args)
+            return original([sys.executable,'-c','from pathlib import Path\nimport sys,time\nPath(sys.argv[1]).write_text("1");time.sleep(20)',str(counter)],cwd,timeout=3,idle_timeout=1)
+        with patch.object(self.m,'run_package_command',side_effect=run),patch.object(self.m,'check_cancel',side_effect=cancel):
+            with self.assertRaises(self.m.PluginCancelled):n.package_command(['pnpm','install'],str(self.home))
+        self.assertEqual('1',counter.read_text());self.assertEqual(1,len(calls))
+
+    def test_unknown_exit_preserves_candidate_in_place_and_never_replays(self):
+        n=self.network('mirror'); original=self.m.subprocess.Popen; processes=[];counter=self.home/'unknown-counter'
+        def launch(args,**kwargs):
+            process=original([sys.executable,'-c','from pathlib import Path\nimport sys,time\nPath(sys.argv[1]).write_text("1");time.sleep(20)',str(counter)],**kwargs)
+            processes.append(process);return process
+        slot=''
+        try:
+            with patch.object(self.m.subprocess,'Popen',side_effect=launch),patch.object(self.m,'_stop_package_process',return_value=False):
+                with self.m.candidate_workspace(prefix='plugin-deps-',dir=str(self.home)) as slot:
+                    identity=os.stat(slot).st_ino
+                    with self.assertRaises(self.m.PackageCommandUnknown):
+                        self.m.run_package_command(['pnpm','install'],slot,timeout=.3,idle_timeout=.2)
+            self.assertTrue(Path(slot).is_dir());self.assertEqual(identity,os.stat(slot).st_ino)
+            self.assertTrue((Path(slot)/'.dsha-package-command-unknown.json').is_file());self.assertEqual('1',counter.read_text())
+            self.assertEqual(1,len(processes))
+            with patch.object(self.m,'run_package_command',side_effect=self.m.PackageCommandUnknown('unconfirmed')) as run:
+                with self.assertRaises(self.m.PackageCommandUnknown):n.package_command(['npm','pack','--ignore-scripts','--','test'],slot)
+                self.assertEqual(1,run.call_count)
+        finally:
+            for process in processes:
+                if process.poll() is None:process.kill()
+                process.wait(timeout=3)
+
+    def test_candidate_workspace_closes_success_but_retains_all_nested_unknown_slots(self):
+        with self.m.candidate_workspace(prefix='plugin-npm-',dir=str(self.home)) as ordinary:
+            self.put(Path(ordinary)/'source','preserved until successful close')
+        self.assertFalse(Path(ordinary).exists())
+        with self.m.candidate_workspace(prefix='plugin-import-',dir=str(self.home)) as outer:
+            with self.m.candidate_workspace(prefix='plugin-deps-',dir=str(self.home)) as inner:
+                self.m._retain_package_candidates(inner)
+        self.assertTrue(Path(outer).is_dir());self.assertTrue(Path(inner).is_dir())
 
     def test_shell_and_offline_preserve_configured_registry(self):
         n=self.network('')

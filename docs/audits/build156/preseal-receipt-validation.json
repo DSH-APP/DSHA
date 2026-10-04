@@ -1,0 +1,2007 @@
+{
+  "schemaVersion": 1,
+  "phase": "preseal_readonly_receipt_validation",
+  "checkedAtUtc": "2026-10-03T23:15:46.686672+00:00",
+  "validator": {
+    "path": "docs/audits/build156/finalize-ledger.py",
+    "sha256": "a3fe2d3953bc6d9616f41df844846fded41717a3851edca928342059588c812b",
+    "bytes": 45258
+  },
+  "receipts": {
+    "software": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+      "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+      "bytes": 125149
+    },
+    "host": {
+      "path": "docs/audits/build156/host-current-composite.json",
+      "sha256": "c9c339a0efcb2475e63309b6581932c8bc152f909ca610cbafe170a246a4120b",
+      "bytes": 1980
+    },
+    "style": {
+      "path": "docs/audits/build156/java-format-current-style.json",
+      "sha256": "8f47f0efc62a0893fad930618ddb8ea836ab414588bb8f3d2be36f81356bc442",
+      "bytes": 355246
+    },
+    "lint": {
+      "path": "docs/audits/build156/release-lint-classification.json",
+      "sha256": "f0c8053a9efded42e39a61b1da4201d0ecc379468edea89c76d35b36079054da",
+      "bytes": 1126973
+    },
+    "website": {
+      "path": "docs/audits/build156/website-build-check.json",
+      "sha256": "06df796916ca93793ce4dd93b7003289e1cce799a2500114b2788702281197f7",
+      "bytes": 27197
+    }
+  },
+  "validation": {
+    "software": {
+      "status": "PASS",
+      "softwareStatus": "PASS_WITH_EXPLICIT_DEVICE_GAPS",
+      "sourceSnapshot": {
+        "path": "F:\\DSHA_RESTART\\app\\build\\stability-acceptance\\5e2d5521-beb5-4775-b87e-85a074b4aade\\source-sha256.json",
+        "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+      },
+      "actualSourceInputs": 1507,
+      "commands": 35,
+      "junit": {
+        "Standard": {
+          "tests": 1195,
+          "passed": 1191,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 4
+        },
+        "Low": {
+          "tests": 1195,
+          "passed": 1191,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 4
+        }
+      },
+      "apks": [
+        {
+          "flavor": "standard",
+          "package": "com.dsh.client",
+          "versionCode": 156,
+          "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+          "minSdk": 30,
+          "abi": [
+            "arm64-v8a"
+          ],
+          "size": 397302610,
+          "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+          "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+        },
+        {
+          "flavor": "low",
+          "package": "com.dsh.client",
+          "versionCode": 156,
+          "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+          "minSdk": 23,
+          "abi": [
+            "arm64-v8a"
+          ],
+          "size": 473097048,
+          "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+          "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+        }
+      ],
+      "deviceScope": "software receipt does not establish phone acceptance"
+    },
+    "host": {
+      "status": "PASS",
+      "summary": {
+        "status": "PASS_COMPLETE_ACTIVE_HOST_MANIFEST",
+        "selectedStages": [
+          "fast",
+          "linux",
+          "runtime",
+          "windows"
+        ],
+        "executedStages": [
+          "fast",
+          "linux",
+          "runtime",
+          "windows"
+        ],
+        "declaredStageCounts": {
+          "fast": 44,
+          "runtime": 63,
+          "windows": 3,
+          "linux": 2
+        },
+        "allDeclaredStageCounts": {
+          "fast": 44,
+          "runtime": 63,
+          "windows": 3,
+          "history": 8,
+          "device": 2,
+          "support": 1,
+          "linux": 2
+        },
+        "excludedDeclaredEntries": [
+          {
+            "path": "tools/test-alpha1-startup.mjs",
+            "stage": "history",
+            "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据",
+            "args": [],
+            "timeoutSeconds": 300,
+            "requires": [],
+            "environment": {}
+          },
+          {
+            "path": "tools/test-alpha2-upgrade.mjs",
+            "stage": "history",
+            "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据",
+            "args": [],
+            "timeoutSeconds": 300,
+            "requires": [],
+            "environment": {}
+          },
+          {
+            "path": "tools/test-dns-compat-device.mjs",
+            "stage": "device",
+            "reason": "需要真实设备或ADB；本轮不运行",
+            "args": [],
+            "timeoutSeconds": 300,
+            "requires": [],
+            "environment": {}
+          },
+          {
+            "path": "tools/test-documents-parent.ps1",
+            "stage": "device",
+            "reason": "需要真实设备或ADB；本轮不运行",
+            "args": [],
+            "timeoutSeconds": 300,
+            "requires": [],
+            "environment": {}
+          },
+          {
+            "path": "tools/test-environment-data.py",
+            "stage": "history",
+            "reason": "Historical Python v1 original only; current NativeEnvironmentRebuild/MaintenanceDataSnapshot has separate JVM proof",
+            "args": [],
+            "timeoutSeconds": 900,
+            "requires": [
+              "python39"
+            ],
+            "environment": {},
+            "cli": "no positional arguments; see explicit environment/requirements"
+          },
+          {
+            "path": "tools/test-gecko-model-navigation.mjs",
+            "stage": "history",
+            "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据",
+            "args": [],
+            "timeoutSeconds": 300,
+            "requires": [],
+            "environment": {}
+          },
+          {
+            "path": "tools/test-restore-merge-plugins.py",
+            "stage": "history",
+            "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据",
+            "args": [],
+            "timeoutSeconds": 300,
+            "requires": [],
+            "environment": {}
+          },
+          {
+            "path": "tools/test-restore-merge-wsdir.py",
+            "stage": "history",
+            "reason": "Retired guest restore-merge implementation, temp-only historical fixture; cannot prove current NativeBackup boundary",
+            "args": [],
+            "timeoutSeconds": 300,
+            "requires": [
+              "python39"
+            ],
+            "environment": {}
+          },
+          {
+            "path": "tools/test-runtime-fixture.mjs",
+            "stage": "support",
+            "reason": "Runtime selection/proof helper, imported by real tests; not an independent test",
+            "args": [],
+            "timeoutSeconds": 300,
+            "requires": [],
+            "environment": {}
+          },
+          {
+            "path": "tools/test-startup-checkpoints.py",
+            "stage": "history",
+            "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence",
+            "args": [],
+            "timeoutSeconds": 900,
+            "requires": [
+              "python39"
+            ],
+            "environment": {},
+            "cli": "no positional arguments; see explicit environment/requirements"
+          },
+          {
+            "path": "tools/test-startup-recovery.py",
+            "stage": "history",
+            "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence",
+            "args": [],
+            "timeoutSeconds": 900,
+            "requires": [
+              "python39"
+            ],
+            "environment": {},
+            "cli": "no positional arguments; see explicit environment/requirements"
+          }
+        ],
+        "tests": 112,
+        "receipts": [
+          {
+            "path": "app/build/audit-build156/host-workspace-final/manifest.json",
+            "sha256": "bac509ddbf6934757a2cd2ea0e313316891013eb11b48de10279c263716fb984",
+            "bytes": 136903
+          },
+          {
+            "path": "docs/audits/build156/host-connected-label-delta-evidence/affected-host-manifest.json",
+            "sha256": "6a4121452eb94eba5a647e93c26e07e0ea99a2286c05f52f8b5e6c24e0124839",
+            "bytes": 28277
+          }
+        ],
+        "checks": [
+          {
+            "path": "tools/overlay-bridge-test.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\overlay-bridge-test.mjs.log",
+            "logSha256": "cde909ca05888bfe5c7debc35814c4456c29bc051916b75d915d5a40d1576598",
+            "finalSoftwareInputSha256": "516180bdf89906940cc4b24a9a0ffc59a4e165c6693205a918d5823cc3efc82f",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-adb-flow-audit.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-adb-flow-audit.py.log",
+            "logSha256": "3ccfc16d15f0df7daabd6909e55081d77f1ef24f08d7b2355ac527ae6ef40c9c",
+            "finalSoftwareInputSha256": "a4f2faa9d47defd6b9f6802852e3c938180a5487c2ddf89c1caa64de9e0de92d",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-adb-flow.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-adb-flow.py.log",
+            "logSha256": "aa2d903b9dc97e77b20b44240f0ce88fd5116e045219f1b120856e51d4d994dc",
+            "finalSoftwareInputSha256": "35c82467ac06006f5124d4013db80da1369b6916f920a383d347df2950b25db1",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-adb-vscreen-bridge.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-adb-vscreen-bridge.py.log",
+            "logSha256": "90fc4aafdf6c8bcf3558fbd88a5f5b7e4a2d99f947fa4c61f2eeddde29831b47",
+            "finalSoftwareInputSha256": "9a4e153e59479f8ae0d13df00c242a666809252aba6d6a0544a7da2b09b02fe5",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-aidl-shim.ps1",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-aidl-shim.ps1.log",
+            "logSha256": "7f2261f7d6f067e3fe4e4d9a3faafa83c1891d70f6e3432029dd28850624e199",
+            "finalSoftwareInputSha256": "07d51ea609dc2e6c73d7b42cf8255d439322c51805f6629b0beefd2126d5bc46",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-android-computer-use.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-android-computer-use.mjs.log",
+            "logSha256": "2bcb55dc484f41d9007fa15d0a401427f5c1b902c4b7af2a46e2b2fd837edfc1",
+            "finalSoftwareInputSha256": "1000b8125faea3cfde508736c7648efdad5bb2fcfb5b5f68f63a078250f9e78e",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-app-activity.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-app-activity.mjs.log",
+            "logSha256": "73db5ae2106cb8bcdfdf3b4ecdcb08990f7c0cae43d978acec6b9794821def97",
+            "finalSoftwareInputSha256": "1bd9bf1537875c6fbb1aea95c991ff204ae80b6f42fb2c71c10d93555f20f656",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-architecture-boundaries.py",
+            "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-architecture-boundaries.py.log",
+            "logSha256": "a9d2155ae07e410a24db922f748c04bd020b93e2658b332ce7087f26bc2c36f4",
+            "finalSoftwareInputSha256": "ac918cd6ae6e55ee708b864a5438087a70f829754c2aed2ecdf27083abf68abc",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-asset-deployment.py",
+            "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-asset-deployment.py.log",
+            "logSha256": "7879656470664999999ce943684da4886044d3d8e921da764d09318d763c939b",
+            "finalSoftwareInputSha256": "54ad1d461dd6c3013a4461661ff98bf314877ea9aef74af8aaa2333308309a62",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-attachment-store.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-attachment-store.mjs.log",
+            "logSha256": "6a939a2242a26a596bb04fc3fe00d9b51f7674e76cf692b9398461e9724aeadf",
+            "finalSoftwareInputSha256": "f14ae0d7ac5455fbd098017145b95509f7640c8a4c1432968543b86061c02124",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-backup-engine.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-backup-engine.py.log",
+            "logSha256": "ef415b3f289ebd27123cfba3924f5dbcfa1662fe0c40fddd4b998dcc14f2e686",
+            "finalSoftwareInputSha256": "9a25f7f52ba27d56252d684b503c1d179a8f7d31ce904c85bae08093eac335f7",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-bridge-logic.ps1",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-logic.ps1.log",
+            "logSha256": "4ebe01885e23c3169c4729a053127c566052f14a5f43d335159a59f06e9de0be",
+            "finalSoftwareInputSha256": "8e5a1665c35ce9a30572692adb79d19f6c6580437ab4fb630d60be8acbe7a4e6",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-bridge-routes.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-routes.py.log",
+            "logSha256": "d5eac78a61a345f659720067a989c0a6e5aed7e0263c044c1e6bbb45f1c655b7",
+            "finalSoftwareInputSha256": "73d877dfc0dd0d5a6bd4ae691a6ed3df9745ec857c4326fa8c820d0db5d7894d",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-bridge-token-compat.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-token-compat.mjs.log",
+            "logSha256": "cdd39598035aa905e38f00344cd3ea91ae424df5d4127d75211e812abbb848a2",
+            "finalSoftwareInputSha256": "efc5f3e1cbab8a3a9628cd5efe2360736f977d6802087818ad54d34d9c5d7a2b",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-browser-compat.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-browser-compat.mjs.log",
+            "logSha256": "4f540504ba6c231bd9c2d2d7b50ca51f7d100f6feb38ca770e95202c83cce250",
+            "finalSoftwareInputSha256": "bdf78717e111f821fd9b1523f7bb8ee46ce52fe17c46243c67eadc8a0924e656",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-browser-stream-resume.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-browser-stream-resume.mjs.log",
+            "logSha256": "09d8929a6f763c4f75e48cb09714cb6c79c529e34da0a2a8d8072b66a1712add",
+            "finalSoftwareInputSha256": "1d75e0c726d6ce7ee429f91b8e72077ae8fa4870bbd9445536b2e8aae5d8f2ce",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-chat-render-performance.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-chat-render-performance.mjs.log",
+            "logSha256": "22506eb4ee67d61fd52861b46dd11eaed6e37ee71f7a8ba677e7ea1ed335828c",
+            "finalSoftwareInputSha256": "c67e8a087b0133293d5072d1ce46ffd1dcb72670f63423f9c342d8e1216303a4",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-ci-package.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-ci-package.py.log",
+            "logSha256": "be8c354a91f17f49348f46e41ffacb42e08c67f1a40664330808d3bc877f6151",
+            "finalSoftwareInputSha256": "d353022363c94d38a0810add588b580034a96bc89eda4a6144d59566a5df5675",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-client-combo-cache.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-client-combo-cache.mjs.log",
+            "logSha256": "e42c04d59591a3b78c136838a7c6d0b5689824ff3cff19b0d446f16ec8e75c94",
+            "finalSoftwareInputSha256": "bcd483c5f7f3a92c923daf279fd8a1aa1a3074574c57729aa3b9a682ff8d2d19",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-composer-enter.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-composer-enter.mjs.log",
+            "logSha256": "50a27d19052fba9a951bba9995e981221ad71871362c7e03729da5bc96fc12fb",
+            "finalSoftwareInputSha256": "fb5d7d0433966610e6d2c1ce6bb18adcbe7b6aee980eba60ebce90e982260b6d",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-conversation-materialized.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-conversation-materialized.mjs.log",
+            "logSha256": "fc3619855b2df2aec9b7e4008650012127431f6c8ffabc0ce10160565190c7cb",
+            "finalSoftwareInputSha256": "4dc7343340afa238168eaefca63ce8a2fa94b9e104c9e013ea3da06895a00286",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-conversation-stop.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-conversation-stop.mjs.log",
+            "logSha256": "e46ca4e7af3acab15b17ad39e71d956da16af35ef288f86c1b36d329a98d0242",
+            "finalSoftwareInputSha256": "717e9d4290380ad2dd4b83874fbfafcd19e3336b6c8dd190922047658f670b83",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-credential-paths.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-credential-paths.py.log",
+            "logSha256": "4a203f958ef9d765ff1f89816631e1bdf553b4acf1d56449f1d10ad92bb46ff3",
+            "finalSoftwareInputSha256": "26d711cafc4c8530f0a7315223c02f3b08529843e6b527fb4693fd8c581fff16",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-deepseek-messages-compat.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-deepseek-messages-compat.mjs.log",
+            "logSha256": "6e58fe1c26f645a55fa254c0713594b9c09d4141941373a867fe2c6aeed82c0b",
+            "finalSoftwareInputSha256": "5a9598c82389447b1deaae30fc9a37cc16c0ff19864b09c15dfc7cdc5fbfa4af",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-device-script-selection.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-device-script-selection.py.log",
+            "logSha256": "8b7df4f4a25fc5466cbead22af349eaa2c77bbc2812f1d213484be4860bb161a",
+            "finalSoftwareInputSha256": "41dc97b610b35ca4fb921c52c94a698762ea1c54c11fa72a3d8ca505c405b2b4",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-device-shell-policy.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-device-shell-policy.py.log",
+            "logSha256": "8349d0bb046c25e4ce2b51f203513754ec64eafeac8eea3a6349cd92c3b9925c",
+            "finalSoftwareInputSha256": "cb20bbf614ee3b7b61fda9501877dc3a7103deb3e84c27ed6b43c3bca8998fdb",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-dns-compat.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-dns-compat.mjs.log",
+            "logSha256": "a19c69a829dc94b3c6a9d65bf20376746a8a1b23914ad3b83a7897c0f39e70cb",
+            "finalSoftwareInputSha256": "175925a3dca629761ed7fad04e8e079234bbf0985bed92056c8a700283e4061a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-dsh-builtins.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-dsh-builtins.mjs.log",
+            "logSha256": "91c6ba1b9751171b91cfb78827faac519f47c206a2df1ee75faf27ccc7183b8e",
+            "finalSoftwareInputSha256": "aa6e8260b98842eb46f8e1ab25a0ff2cf26f880d74e757ca54c3b9073fa4a131",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-dsh-sessions.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-dsh-sessions.mjs.log",
+            "logSha256": "5b91066fb49388e8676a570f978abf94437dd16165db3cb2afb5a49775baa142",
+            "finalSoftwareInputSha256": "7818336cc9de8ffc7bae64dbbe117c17cb9b5fb106193628b138a65af76bdc19",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-dsha-ui-regressions.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-dsha-ui-regressions.py.log",
+            "logSha256": "4c176368391d785b56d35f0d025cdefa895545a0bcf39a25c0ee616f9ace86ea",
+            "finalSoftwareInputSha256": "0558e19edcd59f9db7cbb93e21fa8f8fedc14de450d532b4551a768ed59e9d85",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-generated-asset-directory.py",
+            "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-generated-asset-directory.py.log",
+            "logSha256": "a8f308259c32bda7e90232466a11eb5df5b9bba6dc73bc6261a0eca955552593",
+            "finalSoftwareInputSha256": "e9b770c7446868e732f9185f22189a1036ab02081f701c9f3eb714562797d726",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-issue67-startup.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-issue67-startup.mjs.log",
+            "logSha256": "279dfe1452b08413c3c2d509ad824e48d111bee0005f16314dc7e0b7dfba7f42",
+            "finalSoftwareInputSha256": "e730aa89ac91890c10a1a3b053606989adddfa7e2a302ac2efc83972c238d822",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-legacy-preset-convert.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-legacy-preset-convert.mjs.log",
+            "logSha256": "59cf4fc41106a5d7d338408fcdca7852b593e6860218c44f9cd460478228a8b6",
+            "finalSoftwareInputSha256": "450e9e16adbba346901030b8a1a3ccc9de8839393ee443f89029fa7bb3f625a6",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-lexical-claim-compat.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-lexical-claim-compat.mjs.log",
+            "logSha256": "ce62df948aa204eec1b70851c705445f8685f5aca49af95f5641200902234e54",
+            "finalSoftwareInputSha256": "3d362ce68b4b4c371fcabc120851b6d5ba70e1bc89e406d4edec48d1d5212683",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-mobile-auth.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-auth.mjs.log",
+            "logSha256": "5ca81826b2f32aa19b6856e15ce7f7b10ac36e9cf0dc7e01ff82470de90a7dc3",
+            "finalSoftwareInputSha256": "5f69834aac97df685943cd52eab6835e17b6733285e00ed9d846f1bfbb82f494",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-mobile-delete.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-delete.mjs.log",
+            "logSha256": "6d388ed5e191f449be98e98f6b67ad75ed7682252b41924eca9cf46acd919e94",
+            "finalSoftwareInputSha256": "6b1b638131656139a52de6c17218b1420c2807b50e9a1f3c2ffb8c5ff39f3ef0",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-mobile-gesture-guard.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-gesture-guard.mjs.log",
+            "logSha256": "4f0adca7ffa334877d36045a92bc0c20af893c2ad390ddbada78de9adbcb0792",
+            "finalSoftwareInputSha256": "ed2f24d71e0d97ac8938c4c73871f4122fe321e9b7b1e58eb1bed316bac6cef6",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-mobile-modal-behavior.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-modal-behavior.mjs.log",
+            "logSha256": "ed1f331e6c65dd2d4b1b0086b2afff846a4ffd8c1cf644970337d41a212e2104",
+            "finalSoftwareInputSha256": "fadd4449b34ae63db390df86ecd852729243a9ceff77a2fe422dc0a1231e887a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-mobile-server-patches.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-server-patches.mjs.log",
+            "logSha256": "358817b15be8c6febd6abd45100b7807fb94ed50c4d79b6b6d4fbe9f23366b88",
+            "finalSoftwareInputSha256": "31a5f54af3756cb1175bba9cfa28308bf3fd5e85d5aa58552dc1a70f7f2df49b",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-mobile-server-streams.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-server-streams.mjs.log",
+            "logSha256": "9016e79bfc9feb86fe8f4d75c7617bc808d10dedebc22ea0fcd68236d06385d9",
+            "finalSoftwareInputSha256": "107764a618a3cba2ad4f635be26abd0c1f00fa8be8e14c9273716bae2db54979",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-mobile-update.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-mobile-update.mjs.log",
+            "logSha256": "a885e2c6a0397cfe9295a8893d88350714eef3027539756bea4b92b148bd158a",
+            "finalSoftwareInputSha256": "f4068dff9e5ec676c8858c8ea599fe807c5cde9624115198c735b1b748209b01",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-native-plugin-manager.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-native-plugin-manager.mjs.log",
+            "logSha256": "52de44688cd6c6a9d8fd0b18e971ff3daabb930ba1ba5c00c9fba954a79ab2ab",
+            "finalSoftwareInputSha256": "61dc527510f1fee2f4cd67a52d130d945e319f17e2e17ff9baa7ac110464d1fc",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-notification-actions.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-notification-actions.py.log",
+            "logSha256": "7a1bb35efbfca8f796856ae02c2a772ce4979286d452c740f625aac4f740efb4",
+            "finalSoftwareInputSha256": "0ff99286932143dcad5c43c9fcfd5c744444c8a4e1b408c0ee61bccf89976004",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-office-fonts.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-office-fonts.mjs.log",
+            "logSha256": "4724dfe113d3e1e89b54fce207eb4ff537e03833eff814302bc4736c9e6e49ba",
+            "finalSoftwareInputSha256": "4030894944df3e54646a94bc841733918497b5e60e927a19201fbab2ce789e70",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-pdf-compat.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-pdf-compat.mjs.log",
+            "logSha256": "42e8ae4baf14e19314b4bec63198ff966881b2bd085f60a2cf1c1a16c6275400",
+            "finalSoftwareInputSha256": "519486557f7a2af187136f52726f14b94f767196a740c4be5c2fef5bd7ae77e8",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-plugin-dependencies.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-dependencies.py.log",
+            "logSha256": "1bf75ad8766418bd3c0db1b02e5fc8afd4e93e7f8272244aa987ff01e9ddd571",
+            "finalSoftwareInputSha256": "483af64e0c5b1de20eee3f011a2a88569dd0e8029e01ba0941c12046c84c3d2a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-plugin-discovery.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-discovery.py.log",
+            "logSha256": "2634dbe7bee0e5f4f0bc634fff01647a99865443909c6f03752855056aa070e4",
+            "finalSoftwareInputSha256": "1083c60017abfd5552f541ccd80b6ffee2fefb63b67f607de787a36309f2a428",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-plugin-downloads.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-downloads.py.log",
+            "logSha256": "a83e52bff3f326c350c34ea34ad152d033ead9d781c0beb596ff073135e7fdc3",
+            "finalSoftwareInputSha256": "b6aaceacba59b8fe01bcd49650524b7ae8ace58bee3b8b8e180c901306a44dbc",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-plugin-resolution-order.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-resolution-order.mjs.log",
+            "logSha256": "5e2bcc690955adf1047981e474e6944eb839032ad05b474539d58a3e446d5c8d",
+            "finalSoftwareInputSha256": "71f5ca37daf16dc953a0186c36ca68b81c84807c539b7088e796d1eab73b0bcf",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-plugin-review.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-review.py.log",
+            "logSha256": "d75ac3f24fbd5712e1f5c8bcead2743f7fd4de4a6ec02c785b1d8a39897d84ca",
+            "finalSoftwareInputSha256": "cb139022fef1b0fb01c8fb48473136f2e58f873d27cabff491ccced0155929da",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-plugin-semver.cjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-semver.cjs.log",
+            "logSha256": "858ec085836aa1198a33a369808d9af70a4ab916fec15b5f4ed6ff3d64f9ce49",
+            "finalSoftwareInputSha256": "43b4f4f29580e2ee7d0f2484d0f648cf0a87c2b7c17bb8732bc3d86fb57e1f08",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-plugin-states.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-states.mjs.log",
+            "logSha256": "4b851f3fb1e6656b106c1df9ee545a925afebfa14213f4873036c7eb29b997e5",
+            "finalSoftwareInputSha256": "5e447524e6752bdaafcf261829ab8600d2acd2e7d50dec990db2b09adcad800a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-plugin-transactions.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-plugin-transactions.py.log",
+            "logSha256": "736146ffb382fb82c05a6f5b8ca363e2cfcafc36af9b2ac3b22fe3817d20f044",
+            "finalSoftwareInputSha256": "2e1657526bd001bc4d887b4209bb9da119aec66d5e238b8de1cae701678b3bd0",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-profile-settings-cli.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-profile-settings-cli.mjs.log",
+            "logSha256": "bb334d3069c8a39e19f7ef0e8acfa33c560f90f729acd0359d8a0ef986d92df3",
+            "finalSoftwareInputSha256": "e4f0253f8d952cb069694e5b6539579225f99723ba844fb9c89eb847d314b1a6",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-profile-settings-review.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-profile-settings-review.mjs.log",
+            "logSha256": "ad52e08ce84900a7429366a423eba9b492ffaa79be416076761f0df59d55ba35",
+            "finalSoftwareInputSha256": "b4d5179f535e4dfabe58cf15d135b6a992efe05951840a28dcbb9f4bb6d18520",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-proot-runtime-libs.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-proot-runtime-libs.py.log",
+            "logSha256": "e5bcbfaf1f54ea5f07b4e47f2f9ea7ed7e8cde0fab96804556f9f4d6cb48c23a",
+            "finalSoftwareInputSha256": "7c5b213b2a6f74688a2b62574823616b00a3023dcedb3300d311f9a8ea6e8a1a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-queue-steer.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-queue-steer.mjs.log",
+            "logSha256": "e2c479972383a0f64fc125d0af549212801d2474b2751fd5ed27d3392dc8e4c7",
+            "finalSoftwareInputSha256": "3e5d26290d64c3c164fc20193d044d28c51e052b836436004e1a81e3d236236c",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-rc1-browser-behavior.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-rc1-browser-behavior.mjs.log",
+            "logSha256": "7ee709c2c2e2f3eb4172ef6c7b8a2ba124b62852edae176bf6a7196242c1cac6",
+            "finalSoftwareInputSha256": "feb990f48357497dad37b34818d6e68c48fdb7cf61e06aff5b4eac053b0aced2",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-rc1-migration.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-rc1-migration.py.log",
+            "logSha256": "8596dcea44ae384bc8d551cb80b718d21b881ea909abd4841d9fb53f4dc3e662",
+            "finalSoftwareInputSha256": "3aca1cbe81386c24e0605ad295b215d8c3e9be73b101decbafa88df34727a8f6",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-rc1-settings-migration.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-rc1-settings-migration.mjs.log",
+            "logSha256": "4f81051c5e315ff3f07440d0b01ed66ea0a33b4b335c615870346c2dec2d0058",
+            "finalSoftwareInputSha256": "03a8a8730b76f198b07660a0569d93ebbced380ebf6a9d4d703824eb08f04a1a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-recovery-agent.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-agent.mjs.log",
+            "logSha256": "0572bcb41f97fae0d5db5a3ddcf655dd2ed5c986ef25a1b44dd1bef873c4e6a4",
+            "finalSoftwareInputSha256": "4adcad1c9ba9f6f743d8e2ffb25cc38af20833745859dc685a784cee08f029b3",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-recovery-apk-assets.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-apk-assets.py.log",
+            "logSha256": "7eccf522e5c2296070de7a9bba11c2be28999d469116e2462b66d4230a243102",
+            "finalSoftwareInputSha256": "2a3b65b70d9a9fef801c425fb8975b73089d911bc225ef1d3fb283d296e572cb",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-recovery-assets.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-assets.py.log",
+            "logSha256": "efc846e0cc7578b0312fe300afd4b8194b23fd6d379a20c96e6cda69095647b5",
+            "finalSoftwareInputSha256": "6236de03a76948fe4ef6810a0a757032a9efe228c5c00500196fef4b4436d342",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-recovery-browser-overlay.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-browser-overlay.mjs.log",
+            "logSha256": "18ea4ff3431a9559f03806a997f47fa65f324495696a476fb2835d6e1336f75e",
+            "finalSoftwareInputSha256": "54e61ad4d60f2d0dc0a0dc13d406082ab191a76ac76a97d4dcf0b3bfef524e82",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-recovery-profile-boot.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-recovery-profile-boot.mjs.log",
+            "logSha256": "b3c4a414e21cd650f51b1f6789736a655e158efff0e86086679a74db8e26f24a",
+            "finalSoftwareInputSha256": "0a9aad7d2490b299540d1eb86da28a74ee1ea4ec2218d816615719f9a462d80a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-release-acceptance.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-release-acceptance.py.log",
+            "logSha256": "22a3c0954cbd6c9c25617cbb7dfc182ec42d8b35de3bc2acff11b0d9c8df9acd",
+            "finalSoftwareInputSha256": "a8085c0ecfa153082f094a8a5776072843b6b4808de1e6425ffdf5363f937c3a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-release-evidence.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-release-evidence.py.log",
+            "logSha256": "714f29415a01b3dc098655f670ededa6a83a69a59d0cc42dd4e2d8bb8d9b4148",
+            "finalSoftwareInputSha256": "18ea62b0f2ab94d622d74620b739365c2382a0496ec11dfb7d0a759f603b6ad0",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-release-names.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-release-names.py.log",
+            "logSha256": "9c173a7729103f4810f7b4ae1450cc4a56a7b62939fe886c062caaa6e9bd34fc",
+            "finalSoftwareInputSha256": "ee8da2157cda1469a8b99c0c78ffce9d408082f293e0958e37b7c46bf4fb7d75",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-runtime-descriptor-inputs.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-descriptor-inputs.py.log",
+            "logSha256": "d6ab67fa3b9ba722c0069e267c6d2a59bad6bdf614489d77e0a99c74dbe1701a",
+            "finalSoftwareInputSha256": "c77358ad3ad7a6f90a8722cb80e9714ba58b2e644e9022e34410e66060e404fd",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-runtime-input-contract.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-input-contract.py.log",
+            "logSha256": "b4e4bf715be83287a674e0b0348ca16887dfbacd2fe15ec335c95615d8c95d8c",
+            "finalSoftwareInputSha256": "3159feb1f16c69bc1cf8f32e1f815ebeb91f9779158affb6a036421ad53ee7a8",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-runtime-proof.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-proof.py.log",
+            "logSha256": "fc0b4963f1c5de3de48e10ed0709f3e88f013071c72ad2c73d31f31ac3fbe31c",
+            "finalSoftwareInputSha256": "80dfb6ab32deb64210d131e0ba01249581e9a4c9670994ba07104ad499b8f413",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-runtime-publish-linux.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-publish-linux.mjs.log",
+            "logSha256": "771f51aff4fa05b0a08121cbf93a3d07190f5a239ebd87723ca8c82eb224ba42",
+            "finalSoftwareInputSha256": "998ceed87f9a4f79ec9bd74e223e3199d254acd5039fe09a817a7a34df5ab81c",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-runtime-publish.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-publish.mjs.log",
+            "logSha256": "f34d627aa506ab2f454be5c960d0517144080a41373bcf9cb3be16363f7c8543",
+            "finalSoftwareInputSha256": "7c050e491be373554015fb97323b364bcfdd9ad9964cb598e629b7c6e45df014",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-runtime-trial.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-trial.mjs.log",
+            "logSha256": "9235d7d0d4ae1be9aa4bde65b8ef9817cc553d606636f1eecb1b50bfe1b0fa48",
+            "finalSoftwareInputSha256": "66d05551b3037b54f47948634aecf51d4f7285f397324967e9ccd6e79262e2ae",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-session-interaction.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-session-interaction.mjs.log",
+            "logSha256": "c86a119f0ecb5a1d343cc7d1ac90cf9ae5ea490486a581d6ba4fc7019d161639",
+            "finalSoftwareInputSha256": "6715ffc2bebc1444ddde3e3cfe0a1042a9e09992f868c6a57dfe854cc3607350",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-source-text.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-source-text.py.log",
+            "logSha256": "1c2eb67f26c69697cc5674598632accf47d9db6af89cc1bbbd5e2a65e1da7ddf",
+            "finalSoftwareInputSha256": "1d44765ad1d190649b4d53c34de48d8ea342626d05367e5ceb5394a6de06e575",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-startup-diagnostics.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-startup-diagnostics.mjs.log",
+            "logSha256": "b8b2c9c6dcd3f8e762ac6de49721216ddc227d8cb78c29b36e7095f6bbc3e59a",
+            "finalSoftwareInputSha256": "ce2b0b7e5be5c3eb1ca9fe32e20133da6bdf1d3486d8152b46c601e69258a778",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-startup-page-relay.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-startup-page-relay.mjs.log",
+            "logSha256": "2e8ab9207aafd1365f7ed5916a9a1581628dcd050a11d2d7728cfbdf4be761fc",
+            "finalSoftwareInputSha256": "42fad18a566d8a3a968c91cde4fad0086ad70ab4838795f525f6b82a47a4edfa",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-storage-json-proroot-dirent.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-storage-json-proroot-dirent.mjs.log",
+            "logSha256": "faed3cf298cc589397e896ac13b6d8204e5f58f3847a3288d02185302e799b7d",
+            "finalSoftwareInputSha256": "ae25ca23e790c9968f35bfbcc997cf33d54d5411532351dff3a63becca995388",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-subagent-touch.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-subagent-touch.mjs.log",
+            "logSha256": "bcf6a5fc89749838fe1479f4281422905f918ced549e6f2b67e9880322c0f731",
+            "finalSoftwareInputSha256": "41f4e2853ec5ca9f5dcef143646cc12169b99994a7694a13a55fc390e9f760b1",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-ui-boundaries154.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-ui-boundaries154.py.log",
+            "logSha256": "c660c811f40747fc6b588448afeb78ec33ca207233c07f90d7fced8196669cbc",
+            "finalSoftwareInputSha256": "d2847390381aa3a150529d5a5a8bb678f3fed26e9b2f5ff5e6f7865632acb989",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-ui-colors.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-ui-colors.py.log",
+            "logSha256": "145f02a3851eb4094f4130132bfd83a437541b96e2cff36086cf074e1e8ee476",
+            "finalSoftwareInputSha256": "dcf04cfae130c39fef5bcec9175a3238d5125ecfac6441922ea42065e36a4a57",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-ui-language.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-ui-language.mjs.log",
+            "logSha256": "268ff0e23a745da292ce5ea192b3c65477dffe9a95c64756c50061ed95fccf21",
+            "finalSoftwareInputSha256": "10992b9f3cba31af163b858b299b65c7886e821aec0d25cba2e7ff1e64b1d119",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-update-flow.ps1",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-update-flow.ps1.log",
+            "logSha256": "d99cb754b5b285859754ac752ec3f9cb0f5ef83574eebe4eb29e57345fde0e02",
+            "finalSoftwareInputSha256": "6e64c07b48b913df801f33e05c1db852fcc5f1b3686c8647a7d095bdde0abacb",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-verification-require.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-verification-require.py.log",
+            "logSha256": "266b6cae1e9d038a2479744bd2d68283bd6a2ca21b8dd3a82764fa8ad7b0cd5c",
+            "finalSoftwareInputSha256": "7212146a2916dc9d63031433b9a89b8ae01f831e39a124cf8a86c54a5ed191b5",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-vscreen.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-vscreen.mjs.log",
+            "logSha256": "6faeaeb8034a8b1f7d6452fca303f76815586834036e9952b23fccf507b09a68",
+            "finalSoftwareInputSha256": "935221bb3ce84516db53b0e3f91625e158af2333159d483c60c6ebed2067e832",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-web-compat.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-web-compat.mjs.log",
+            "logSha256": "c70e47f298b9719fdef418236dd7ac60205b7b70103d3d64626460586b83aae7",
+            "finalSoftwareInputSha256": "7d33110302415ab221a4bc90fc56376c6946557c4c5d219eccc53228bd95e441",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-web-drafts.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-web-drafts.mjs.log",
+            "logSha256": "e3bdf9a0d5848b7ad7eb21ef5d899fb2b90f8a6e5d0d7424f6d310d7543e63bc",
+            "finalSoftwareInputSha256": "bffb55519f35d82dfae113ad4e3b9cf8b660cd8101aa16f79e0b31f7d54d362a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-web-ui-host-fixtures.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-web-ui-host-fixtures.mjs.log",
+            "logSha256": "6e7dfb72c844af8bf0be9f6c91a7ff6c551af488fffdca22c99dbb5d7694094a",
+            "finalSoftwareInputSha256": "3afcc005ac4fcb5b8431ece18f1b8f99dcbdcd644519f722ad77b727e6cfb9f7",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-workflow-compat-alias.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-workflow-compat-alias.mjs.log",
+            "logSha256": "1dba804cd88456280e5f024cc324e14816d409b8a5ec20509245b803a494af78",
+            "finalSoftwareInputSha256": "6c58f0dbd1e3463d735930aaa09aac1a9b08c4079e76752fd6aaa0aba36d3215",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-vscreen-manager-http.py",
+            "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-vscreen-manager-http.py.log",
+            "logSha256": "efc68a8610a882a14d432373a3c853fedab75437217ab61d74885e85edbf1db3",
+            "finalSoftwareInputSha256": "9ced61b9e60adedd65cb4ca5f96bf3ad3e52e25643f79f5cbfe26c5f26e3e907",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-format-java-tree.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-format-java-tree.py.log",
+            "logSha256": "a0e8f996ec957211feffe3b5dea084a1eb1b3be0e5d2e48462e454285835641b",
+            "finalSoftwareInputSha256": "8d11a5f03af17048f11ccd29247dbc238efdd55f9184f325a9a58f65dea5945b",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-low-preview-capability.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-low-preview-capability.mjs.log",
+            "logSha256": "1437aea07556af77489b6d9f3a692ebfde1a83082884c2e38b3dfc3b67a0fbcb",
+            "finalSoftwareInputSha256": "8e32dde970e2ad9391de604d2038415d9b887dfe62636d37ddc6af044c173957",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-runtime-stop-recovery.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-stop-recovery.py.log",
+            "logSha256": "25d5eb492a33132f644ab96ac631a000c36bd301a45e8f75fc432b9a6736a12a",
+            "finalSoftwareInputSha256": "d66cbd675590c26379140156628b59b5919e8ca554fe0761d16aa585c1805f90",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-credential-yaml-projection.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-credential-yaml-projection.mjs.log",
+            "logSha256": "c0e7d3bdfd980d3a9cb691030710ba4b82f952b998be64caf01aad839ee0437c",
+            "finalSoftwareInputSha256": "40e07adb6f96ee45a4cc7a7efb76cba42a224ea80762485f11de5c18210d48c5",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-native-session-handshake.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-native-session-handshake.py.log",
+            "logSha256": "d806a7643a9cb45489bf1820bf23e8d4452f8713db414667901c319ce4928291",
+            "finalSoftwareInputSha256": "ad3507ee44a6bb126e30bbe6ac6e64fb67403269ac4eb3575b579d0e0da8ba32",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-web-browser-fixture.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-web-browser-fixture.py.log",
+            "logSha256": "aee873735f7bbda09380972feb5b6edb6cb44f0995d6ddf7923f3c5b4687eb15",
+            "finalSoftwareInputSha256": "7967938d88de5fdf0a6ddb11ec195b7b15f403bf1c6d9e401292644db0f0722f",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-retired-audit-contract.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-retired-audit-contract.py.log",
+            "logSha256": "e271d3ef95d279c0860c9cc6aa39e6e3439350cc800fab3b298466335c63d7eb",
+            "finalSoftwareInputSha256": "b1a5f91060cb12a95a297322e4cac14667db269a89e005a961e650650d752503",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-bridge-files.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-files.py.log",
+            "logSha256": "be51f3c7be5ed566e69b82b662a5bf5dec456240c538ef5e2135c5917582265f",
+            "finalSoftwareInputSha256": "5020340fe56231b6cd9e3fa088ebebf41722ed947fb9bc0c6fd51d69df5f921a",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-bridge-token-transport.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-bridge-token-transport.py.log",
+            "logSha256": "8c8294c107ce94ce88611e87bc6517020fa7c95929b0b1d02353650668aa07b1",
+            "finalSoftwareInputSha256": "38bcf9db3bb4febe985353220de04654434bdd82d8984e8feff3ce765a671054",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-runtime-session.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-session.py.log",
+            "logSha256": "0ac7317f2e038303fc6e73f2886a4eda43f650b8c97567df6dadb2e01d5fcd70",
+            "finalSoftwareInputSha256": "0f5cd57f51d55ab60a5309f33e14d5344554a7f5e1c2c6f1106b1961fb606d8f",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-core-boundaries.py",
+            "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-core-boundaries.py.log",
+            "logSha256": "bd65e90d0ee55e7636b414b4c6d918d5b41357ab18d20a71596b02ffa9a4eb65",
+            "finalSoftwareInputSha256": "5f75121f7c02de2b6d6fc56667d924213c62fbb24d288357cf420861b9891754",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-ui-i18n.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-ui-i18n.py.log",
+            "logSha256": "d9ed743d4a81869adffc2da090e618519204446a5c2891dbc5ff5a9f5b4c0be1",
+            "finalSoftwareInputSha256": "c13fe6c38008710fdb123512deaf5e03f2c7eb2323b16be9ca6fd356a3f392a8",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-rc2-tooltips.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-rc2-tooltips.mjs.log",
+            "logSha256": "bf47324350da0c42cdd518f0f9462bf580b8e7429d53355d288de09990015e9c",
+            "finalSoftwareInputSha256": "36b0a0fbd5bb57ab6cebd4428502e6b1876ddec735b58b7721bf65af0240bfea",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-third-party-notices.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-third-party-notices.py.log",
+            "logSha256": "fd4d1504333c3cc9807b6d0b123e46a5bf9ecdc339b04fa5560b49b02bd5d965",
+            "finalSoftwareInputSha256": "413cbcd243b14a87d6aea259d382fe91b63b08ccbeaa7ce57740db271114a1d2",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-native-session-build.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-native-session-build.py.log",
+            "logSha256": "d6bf4d4cd6f6e69b9190f43eb10c548946e2122c1575d525c9dfa6db0e8d6d9e",
+            "finalSoftwareInputSha256": "c6a7839f8aeec037272715b021b87f8151afb86df7f12b72e488f5d311e436dc",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-runtime-descriptor-source.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-runtime-descriptor-source.py.log",
+            "logSha256": "915e774d76c2250e90175eafe2a43ff0277e297c1836a06d4c44a504aaf873ec",
+            "finalSoftwareInputSha256": "6f77bcc9d3a95a5bc4c8a93a0d67e79d53178bb712f286eceaa3b55a655c38d1",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-host-test-runner.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-host-test-runner.py.log",
+            "logSha256": "783e5e9c9705a2a75820ff4df45352ebef3630293a4fab4babbfa4a8f6908b6c",
+            "finalSoftwareInputSha256": "de4782219cf55a82b103f7250b21c766a24bc0654528fba7fc6ef3d4a02afcec",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-unit-test-runner.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-unit-test-runner.py.log",
+            "logSha256": "7be2383d8a849c1fffc620d4b830248e0dcf59552834094563ed987a1fca8db6",
+            "finalSoftwareInputSha256": "fd0b3672a813b15ab72bb3b561669cb7a40b3bf81ebffd4a56b4fbe790d9bc21",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-native-device-policy.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-native-device-policy.py.log",
+            "logSha256": "7a77a4c7715be73f897f93e555107ed2d2a42810203b26c86f1224ac25bb5b91",
+            "finalSoftwareInputSha256": "e1bd966adbba9dc3d17f86d42d6c10c90c59091354a69f3d838aa4ab963d8e07",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-java-format.py",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-java-format.py.log",
+            "logSha256": "033dcd90b77292f835a71b5d8d0dab91f2c0262eefe86f188a838e995e9106aa",
+            "finalSoftwareInputSha256": "f1614263a71643f0075fecdd09587799b9d05a3d485cd67264ab6edc54d7be33",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          },
+          {
+            "path": "tools/test-workspace-directory-policy.mjs",
+            "log": "app\\build\\audit-build156\\host-workspace-final\\test-workspace-directory-policy.mjs.log",
+            "logSha256": "8293c2355cab9feb0a3e65c9a8fdbb7734a6a8dd1bd66d0e6aa793777069ddbb",
+            "finalSoftwareInputSha256": "3a5b47df85ddee6c1e6f821e7570c52b96812b10ec8d188cd6b918d65962f673",
+            "scope": "latest SHA comes from final root software snapshot, not retroactively from host/focused logs; old focused source equality is not inferred"
+          }
+        ],
+        "packageScope": "Declared package host entries: 0; selectedStages alone is not execution. Actual signed APK/assets/ELF/plugin/recovery checks are verified separately in --software."
+      }
+    },
+    "style": {
+      "status": "PASS",
+      "summary": {
+        "status": "PASS_CURRENT_STYLE",
+        "files": 785,
+        "inventory": {
+          "path": "tools/java-format-files.json",
+          "sha256": "29357101d68438d06e9a035e4a6aca5b0f024bf4db09f379186fb70b752174d2",
+          "bytes": 62087
+        },
+        "receipt": {
+          "path": "docs/audits/build156/java-format-current-style.json",
+          "sha256": "8f47f0efc62a0893fad930618ddb8ea836ab414588bb8f3d2be36f81356bc442",
+          "bytes": 355246
+        },
+        "pinnedFormatter": {
+          "tool": "google-java-format",
+          "version": "1.22.0",
+          "sha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f"
+        },
+        "proofReceipts": [
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-01.json",
+            "sha256": "20ee1e51ad187ad6d79667ea6a0dd4553c3fd4e9860ae411e08eca50476246ba",
+            "bytes": 1278
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-02.json",
+            "sha256": "3b84c8da62eadab48acdea8337e67115045dcb5b34e3cf7b6e9c3af66ee0f925",
+            "bytes": 2619
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-03.json",
+            "sha256": "6f041f474b6027c21a759b43301e7f14ae9154d13768438b9be57d42efabbcb9",
+            "bytes": 2238
+          },
+          {
+            "path": "app/build/java-format/tests-build156-integration-repair-check.json",
+            "sha256": "9facfd3e8d1a3c4dc71f349dc34802b7978084b98df78692a179e03149f4c96b",
+            "bytes": 6017
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-04.json",
+            "sha256": "a125405b3f09285eccf44b69e35ec1a8bf9ecef0ee9818d6fd725aba85b88f90",
+            "bytes": 3374
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-05.json",
+            "sha256": "f3d19ab2aa930f30d8fa9a1424f820d155f8ae2506961220f2c1fec616552b37",
+            "bytes": 2995
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-06.json",
+            "sha256": "bf384cd6bd28cbcdef48b8da9f8332a4d8f6330e48dc8b9fae13ecf166575d85",
+            "bytes": 2152
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-07.json",
+            "sha256": "a878a50345dd3db0b734c53e3aabee4561437fda86896e33549e8e6bd9d474b9",
+            "bytes": 19971
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-08.json",
+            "sha256": "a6a905a5527b7554adb88aa57a7f6cfa826511c56f0c7a411575967144b88e14",
+            "bytes": 2965
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-09.json",
+            "sha256": "d4de86cfd7ac4ea729804328d025ce10db6638dbe4e6b9c757ac472a7adbc326",
+            "bytes": 11288
+          },
+          {
+            "path": "app/build/java-format/bridge156-vscreen-final-check.json",
+            "sha256": "b7fa728932a4744b846c3bd909417fc9d730c91428ab6f602d77b2d7e44f933b",
+            "bytes": 6885
+          },
+          {
+            "path": "app/build/java-format/core-build156-app-owner-final.json",
+            "sha256": "7bfca1105aa2e8a9ccd2c8bff2681333cb1e9eaa2427181c5aa5416e39280d46",
+            "bytes": 18060
+          },
+          {
+            "path": "app/build/java-format/ui-overlay-break-strategy156.json",
+            "sha256": "cabbb5ef608fc02c50225dc5aca269e7fffb404041b1d326de5db6e75fa6538b",
+            "bytes": 838
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-10.json",
+            "sha256": "382e11e97b050c23fc17103051a2d7bef1d7caee23e16b05357cc2be46dce58d",
+            "bytes": 32147
+          },
+          {
+            "path": "app/build/java-format/data-choose-final.json",
+            "sha256": "ec98cf4ef9a2c283d17b28a6e4ca945b795c2d49ed68c9e2e80c1cea757a6c42",
+            "bytes": 2711
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-11.json",
+            "sha256": "1a1d873a10400fbeffe83fd245ae28316fb1e82811dcebac465c1d27efc773d3",
+            "bytes": 2547
+          },
+          {
+            "path": "app/build/java-format/core-build156-choose-format.json",
+            "sha256": "81d2953c2d97b82c555bbbd8413dd69537e0b775b24e5a8ba079d3506a17da91",
+            "bytes": 2449
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-12.json",
+            "sha256": "b50b389ed59aff79c69e09fab62dbf2bce40291176b67d6e9c25f6baa4e3c706",
+            "bytes": 17404
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-13.json",
+            "sha256": "9db88e870cf2a7cfa5b3203cc8604bcb9cbeb26d2855b00597a0e06302e5495a",
+            "bytes": 1681
+          },
+          {
+            "path": "app/build/java-format/root-choose-recovery156.json",
+            "sha256": "65b7c7a30f21453aea1c71e91f8040a1e3dd6729c0e3ec0b3d22c4067553f169",
+            "bytes": 2513
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-14.json",
+            "sha256": "4b4a56c5e644a0a188b6801bdfc2378835cef59a089e358a42b2428c00fa2e69",
+            "bytes": 2565
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-15.json",
+            "sha256": "8a38e4b634fa2952a95bab6d36f6f53bb5e4c6a554c1b37cc6e74f56fee1a802",
+            "bytes": 21842
+          },
+          {
+            "path": "app/build/java-format/runtime156-choose.json",
+            "sha256": "b72ca9d991ed377506b42eaf1ab0244f4c9d7d14e7bb6e6f36c10ba84a38881b",
+            "bytes": 3475
+          },
+          {
+            "path": "app/build/java-format/root-runtime-final156.json",
+            "sha256": "d01e5330f486cae978578c857e55b620f504fbd4fdb93e8e5a13ee6d6d19a6b9",
+            "bytes": 3001
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-16.json",
+            "sha256": "4536ca50ef041bbf9937e07e0e4eba405686ed29500757ceea8675af11c935cd",
+            "bytes": 29565
+          },
+          {
+            "path": "app/build/java-format/bridge156-a11y-status-check.json",
+            "sha256": "2286bff5178a109e56743109baf8c0669d819bd325ebeb16872d50010f80b71c",
+            "bytes": 844
+          },
+          {
+            "path": "app/build/java-format/ui-choose-final156-check.json",
+            "sha256": "5f260a580c7d67679b1bf87ef292787844fcd91e12c390512b222beb98a962d5",
+            "bytes": 2947
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-17.json",
+            "sha256": "ef7cfb10c75435c61b9a30443fc62df3edce53d95c8d8e01924104318d60ab12",
+            "bytes": 75452
+          },
+          {
+            "path": "app/build/java-format/build156-legacy-choose.json",
+            "sha256": "a897cd2a592299ca9c163690bb1745be35f04b829b9a5584d8fcc44885090a93",
+            "bytes": 846
+          },
+          {
+            "path": "app/build/java-format/core-build156-workspace-policy-format.json",
+            "sha256": "afd29eacdbadea4ca38e7a08667e209e7dc8ae2f6606d40ed893888d17da8d49",
+            "bytes": 1270
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-18.json",
+            "sha256": "98170beea3582882bcb94757671b1b8b7965a2d386f2e715ab99b9b56068ad19",
+            "bytes": 5180
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-19.json",
+            "sha256": "fb0be6e9de851c3f55071bef0c91babba8d79389f90948c4874fdc375a8a6454",
+            "bytes": 1275
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-20.json",
+            "sha256": "9386646ec59652ce7aa9b21b80d38cdb7403cfd593aaa8dd547ec188311cc5e3",
+            "bytes": 832
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-21.json",
+            "sha256": "a7e887ca398da48bed062b33d22170ebfebf43417ff9bacd76bf584fc77a0027",
+            "bytes": 29556
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-22.json",
+            "sha256": "8f27c99bb9dd38372ef904e812f75b8f882da1aab8b024497aef08b18a3bd05d",
+            "bytes": 9018
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-23.json",
+            "sha256": "227b0d20747fe5c082fce7c03450a017b5c283d75a5b13cddc78863d047ee268",
+            "bytes": 1288
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-24.json",
+            "sha256": "79a9651e3df1e4a80163e87627270c57335b1096cbb414fae60032585161f81e",
+            "bytes": 21948
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-25.json",
+            "sha256": "92879a06cf3c05a7b1caecb88b735ac9bc8e34581478ecbc42fc9770f2d04209",
+            "bytes": 843
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-26.json",
+            "sha256": "90c9aea68d5930b2c9f92443642d7f419d2f77eab3bec41c893022fae60fe2db",
+            "bytes": 75684
+          },
+          {
+            "path": "app/build/audit-build156/style-first/tree-preflight-28.json",
+            "sha256": "83c40493604efd368764a68d47b708d3ae0a3a77cfcba9551c85915d3b2526a9",
+            "bytes": 817
+          }
+        ],
+        "scope": "actual software SHA equals formatted bytes and compiler token proof; does not re-label old focused test runs as post-format execution"
+      }
+    },
+    "lint": {
+      "status": "PASS",
+      "summary": {
+        "status": "PASS_CLASSIFIED_CURRENT",
+        "receipt": {
+          "path": "docs/audits/build156/release-lint-classification.json",
+          "sha256": "f0c8053a9efded42e39a61b1da4201d0ecc379468edea89c76d35b36079054da",
+          "bytes": 1126973
+        },
+        "reports": {
+          "standard": {
+            "xml": {
+              "path": "app/build/reports/lint-results-standardRelease.xml",
+              "sha256": "f24312fc42738733c73814bea0e83d972e82fd8f5fc35727b2d9727c93a9f188",
+              "bytes": 263401
+            },
+            "issues": 222,
+            "severityCounts": {
+              "Warning": 222
+            },
+            "classificationCounts": {
+              "user_authorized_capability_distribution_choice": 2,
+              "guarded_provider_diagnostic_choice": 2,
+              "synchronous_durability_ack_choice": 16,
+              "platform_hidden_api_unverified": 1,
+              "source_guarded_webview_feature": 2,
+              "source_guarded_resource_lifetime": 1,
+              "guest_path_or_denial_boundary_contract": 9,
+              "share_storage_path_boundary_contract": 1,
+              "framework_bound_storage_alias_contract": 1,
+              "older_platform_ignored_attribute": 1,
+              "apk_distribution_choice_aab_unverified": 1,
+              "activity_root_inflation_choice": 1,
+              "pinned_toolchain_choice": 1,
+              "final_apk_alignment_verified_device_missing": 1,
+              "api_annotation_propagation_improvement": 3,
+              "supported_api_drawable_choice_platform_unverified": 3,
+              "required_web_application_feature": 3,
+              "custom_trust_source_checked_platform_unverified": 1,
+              "explicit_cleartext_lan_contract": 1,
+              "list_update_performance_evidence_missing": 3,
+              "necessary_dual_flavor_api_guard": 63,
+              "shared_manifest_new_permission_annotation": 1,
+              "defensive_guard_below_supported_min": 3,
+              "shared_member_api_annotation_contract": 10,
+              "redundant_guard_after_prior_api_exit": 1,
+              "necessary_shared_resource_api_qualifier": 2,
+              "application_context_lifetime_contract": 6,
+              "application_overlay_lifetime_platform_unverified": 5,
+              "privileged_process_system_context_contract": 1,
+              "privileged_vscreen_process_context_contract": 1,
+              "retained_view_lifetime_platform_unverified": 1,
+              "layout_complexity_performance_unmeasured": 24,
+              "conservative_disk_bound_platform_unverified": 10,
+              "branding_asset_choice_platform_unverified": 22,
+              "autofill_semantics_requires_review": 5,
+              "custom_spinner_click_contract_platform_unverified": 1,
+              "raw_preview_metadata_display_contract": 1,
+              "layout_spacing_choice_visual_evidence_missing": 10,
+              "physical_screen_coordinate_choice": 1
+            },
+            "warnings": 222,
+            "scope": "every current XML issue explained; warnings are not claimed eliminated"
+          },
+          "low": {
+            "xml": {
+              "path": "app/build/reports/lint-results-lowRelease.xml",
+              "sha256": "3c4b2373795b1292930e688e81097e09ffef6091cb297460e1e97f6c4db097a0",
+              "bytes": 197523
+            },
+            "issues": 152,
+            "severityCounts": {
+              "Warning": 152
+            },
+            "classificationCounts": {
+              "user_authorized_capability_distribution_choice": 2,
+              "guarded_provider_diagnostic_choice": 2,
+              "synchronous_durability_ack_choice": 16,
+              "inlined_protocol_constant_choice": 4,
+              "verified_inlined_compatibility_constant": 2,
+              "platform_hidden_api_unverified": 1,
+              "source_guarded_webview_feature": 2,
+              "source_guarded_resource_lifetime": 1,
+              "guest_path_or_denial_boundary_contract": 9,
+              "share_storage_path_boundary_contract": 1,
+              "framework_bound_storage_alias_contract": 1,
+              "older_platform_ignored_attribute": 6,
+              "apk_distribution_choice_aab_unverified": 1,
+              "activity_root_inflation_choice": 1,
+              "pinned_toolchain_choice": 1,
+              "final_apk_alignment_verified_device_missing": 1,
+              "api_annotation_propagation_improvement": 3,
+              "supported_api_drawable_choice_platform_unverified": 3,
+              "required_web_application_feature": 3,
+              "custom_trust_source_checked_platform_unverified": 1,
+              "explicit_cleartext_lan_contract": 1,
+              "list_update_performance_evidence_missing": 3,
+              "defensive_guard_below_supported_min": 3,
+              "runtime_guard_under_higher_api_annotation": 2,
+              "redundant_guard_after_prior_api_exit": 1,
+              "application_context_lifetime_contract": 6,
+              "application_overlay_lifetime_platform_unverified": 5,
+              "privileged_process_system_context_contract": 1,
+              "privileged_vscreen_process_context_contract": 1,
+              "retained_view_lifetime_platform_unverified": 1,
+              "layout_complexity_performance_unmeasured": 24,
+              "conservative_disk_bound_platform_unverified": 10,
+              "branding_asset_choice_platform_unverified": 20,
+              "custom_spinner_click_contract_platform_unverified": 1,
+              "raw_preview_metadata_display_contract": 1,
+              "layout_spacing_choice_visual_evidence_missing": 10,
+              "physical_screen_coordinate_choice": 1
+            },
+            "warnings": 152,
+            "scope": "every current XML issue explained; warnings are not claimed eliminated"
+          }
+        },
+        "unknownReviewRequired": [
+          {
+            "flavor": "standard",
+            "issueIndex": 204,
+            "id": "Autofill",
+            "message": "Missing `autofillHints` attribute"
+          },
+          {
+            "flavor": "standard",
+            "issueIndex": 205,
+            "id": "Autofill",
+            "message": "Missing `autofillHints` attribute"
+          },
+          {
+            "flavor": "standard",
+            "issueIndex": 206,
+            "id": "Autofill",
+            "message": "Missing `autofillHints` attribute"
+          },
+          {
+            "flavor": "standard",
+            "issueIndex": 207,
+            "id": "Autofill",
+            "message": "Missing `autofillHints` attribute"
+          },
+          {
+            "flavor": "standard",
+            "issueIndex": 208,
+            "id": "Autofill",
+            "message": "Missing `autofillHints` attribute"
+          }
+        ],
+        "scope": "location classifications are retained; uncertainty is not automatically accepted as harmless"
+      }
+    },
+    "website": {
+      "status": "PASS",
+      "summary": {
+        "status": "PASS_ACTUAL156_LOCAL_WEBSITE",
+        "receipt": {
+          "path": "docs/audits/build156/website-build-check.json",
+          "sha256": "06df796916ca93793ce4dd93b7003289e1cce799a2500114b2788702281197f7",
+          "bytes": 27197
+        },
+        "tests": 28,
+        "versionCode": 156,
+        "scope": "local build/download bytes and behavior only; no production deployment"
+      }
+    }
+  },
+  "problems": [],
+  "deferred": [
+    "Root must create/validate the final project ZIP using the corrected precise selector. No project ZIP was created or validated here.",
+    "Actual formal device/delivery evidence is separate; new Low partial phone proof is not expanded to all19 acceptance checks or a broader matrix.",
+    "Root final ledger/detached delivery reports remain unwritten by this lane; no freeze/finalize function was called."
+  ],
+  "executionLimits": [
+    "Only read-only validate_software/host/style/lint/website functions were called.",
+    "No finalize, freeze, self-test, software test, Gradle, source/APK/ZIP/phone action or network request.",
+    "Subsequently authorized correction touched only docs/audits/build156/freeze-project.py plus audit proof; only five new focused selector self-tests and a read-only27-file byte check ran. No prior self-test/software/host suite was repeated."
+  ],
+  "observedFileCount": 1733,
+  "changedDuringValidation": [],
+  "status": "PASS_READONLY_PRESEAL_RECEIPTS_AND_SOURCE_SELECTOR_PENDING_ZIP_DEVICE_DELIVERY",
+  "hostTraceReview": {
+    "status": "PASS_SCOPED_COMPOSITE_TRACE",
+    "originalEntries": 112,
+    "actuallyRerun": 5,
+    "reusedReviewedUnchangedSelectedInputs": 107,
+    "sourceDelta": [
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+        "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+        "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a"
+      }
+    ],
+    "affectedEntries": [
+      "tools/test-architecture-boundaries.py",
+      "tools/test-asset-deployment.py",
+      "tools/test-core-boundaries.py",
+      "tools/test-generated-asset-directory.py",
+      "tools/test-vscreen-manager-http.py"
+    ],
+    "additionalFullTreeSourceGates": 2,
+    "evidence": [
+      {
+        "path": "docs/audits/build156/host-connected-label-delta-evidence/host112-input-impact.json",
+        "sha256": "cd42a4df8515fd2bf4436b7cbccb60f3505581822974adb134d0a82ba5d84ed7",
+        "bytes": 77884
+      },
+      {
+        "path": "docs/audits/build156/host-connected-label-delta-evidence/receipt.json",
+        "sha256": "5fbbc6c502a6acd539765416de40a2cab4688acf8b9c46927f7a8aa9f669325e",
+        "bytes": 7672
+      },
+      {
+        "path": "app/build/audit-build156/host-workspace-final/manifest.json",
+        "sha256": "bac509ddbf6934757a2cd2ea0e313316891013eb11b48de10279c263716fb984",
+        "bytes": 136903
+      },
+      {
+        "path": "docs/audits/build156/host-connected-label-delta-evidence/affected-host-manifest.json",
+        "sha256": "6a4121452eb94eba5a647e93c26e07e0ea99a2286c05f52f8b5e6c24e0124839",
+        "bytes": 28277
+      }
+    ],
+    "limits": "Reviewed selected-input dependency impact, not dynamic all-I/O tracing. Declaration-only compiled dependencies are not declared byte-identical. No new112-entry execution or device behavior is established."
+  },
+  "lintCacheTraceReview": {
+    "status": "PASS_READONLY_RECOMPUTED_CURRENT_LOCATION_TRACE",
+    "contract": {
+      "path": "docs/audits/build156/release-lint-analysis-cache-contract.json",
+      "sha256": "a27392b65a7ba7cf62a81f36215c55a815bebba088d93da3c196bee2d2348c70",
+      "bytes": 157463
+    },
+    "currentSnapshot": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+      "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222",
+      "bytes": 202368
+    },
+    "priorSnapshot": {
+      "path": "app/build/stability-acceptance/281e14af-8e44-40bc-93b8-7095838cef42/source-sha256.json",
+      "sha256": "21874dcb53fe1356721711928ceb294e43cd69f168de2367438a372e5fb387c2",
+      "bytes": 202368
+    },
+    "sourceDelta": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "actualAnalyzeAndCachedReportTaskLines": [
+      "> Task :app:lintAnalyzeStandardRelease",
+      "> Task :app:lintReportStandardRelease UP-TO-DATE",
+      "> Task :app:lintStandardRelease",
+      "> Task :app:lintAnalyzeLowRelease",
+      "> Task :app:lintReportLowRelease UP-TO-DATE",
+      "> Task :app:lintLowRelease"
+    ],
+    "cacheReused": true,
+    "timestampsFresh": false,
+    "warningIssues": 374,
+    "locationsRecomputedAndMatched": 394,
+    "changedFileWarningLocationsBeforeChangedMethod": 9,
+    "changedMethodStartLine": 563,
+    "unknownAutofillReviewEntriesRetained": 5,
+    "limits": "Actual analysis and exact unchanged XML/location excerpts justify scoped cache reuse; no fresh timestamp, warning elimination, universal cache waiver or device acceptance is claimed."
+  },
+  "ownerAuditAndSourceMappingReview": {
+    "status": "PASS_EXACT_CURRENT_236_OWNER_MERGE",
+    "coverage": 236,
+    "remainingSoftwareIds": [],
+    "pendingIds": [],
+    "statusCounts": {
+      "verified_no_remaining_software_change": 111,
+      "fixed_current_source": 94,
+      "external_evidence_missing": 3,
+      "required_contract": 19,
+      "duplicate": 4,
+      "device_evidence_missing": 1,
+      "not_applicable": 4
+    },
+    "closedRowsWithoutChecks": [],
+    "currentBindingScopeCounts": {
+      "actual final software sourceSnapshot input": 810,
+      "current file outside APK software sourceSnapshot; not inferred compiled/tested": 100,
+      "only declared final software sourceSnapshot members expanded; no unlisted file digest or execution claimed": 5
+    },
+    "outsideApkInputReferences": [
+      {
+        "id": "D-SEC-00",
+        "path": "docs/security-model.md"
+      },
+      {
+        "id": "D-SEC-00",
+        "path": "docs/security-model.en.md"
+      },
+      {
+        "id": "D-SEC-00",
+        "path": "docs/adr/0002-current-threat-model.md"
+      },
+      {
+        "id": "D-PROV-01",
+        "path": "docs/source-provenance.md"
+      },
+      {
+        "id": "D-PROV-01",
+        "path": "docs/audits/build156/shellservice-source-provenance.json"
+      },
+      {
+        "id": "D-SEC-06",
+        "path": "app/proguard-rules.pro"
+      },
+      {
+        "id": "D-LIC-01",
+        "path": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "id": "D-NET-01",
+        "path": "docs/adr/0001-build154-boundaries.md"
+      },
+      {
+        "id": "D-SEC-10",
+        "path": "docs/adr/0001-build154-boundaries.md"
+      },
+      {
+        "id": "D-PRIV-02",
+        "path": "docs/1.2-upgrade-report.md"
+      },
+      {
+        "id": "D-SEC-20",
+        "path": "tools/history/engineering/assets/selftest.py"
+      },
+      {
+        "id": "D-PRIV-03",
+        "path": "docs/stability-acceptance.md"
+      },
+      {
+        "id": "D-PRIV-03",
+        "path": "docs/audits/2026-09-27-round2-architecture/final-assessment.md"
+      },
+      {
+        "id": "D-PRIV-03",
+        "path": "docs/evidence/rc1.4-functional/release-build.log"
+      },
+      {
+        "id": "D-PRIV-03",
+        "path": "docs/audits/build156/privacy-document-sources.json"
+      },
+      {
+        "id": "D-LIC-02",
+        "path": "docs/audits/build156/third-party-license-sources.json"
+      },
+      {
+        "id": "D-LIC-02",
+        "path": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "id": "D-WEB-01",
+        "path": "docs/audits/build156/nginx-syntax.json"
+      },
+      {
+        "id": "D-PATCH-01",
+        "path": "tools/history/root-build156/app/src/main/assets/web-integration/tooltip-patch.json"
+      },
+      {
+        "id": "D-PATCH-01",
+        "path": "tools/history/root-build156/tools/test-tooltips.mjs"
+      },
+      {
+        "id": "D-DUP-16",
+        "path": "docs/audits/build156/retired-environment-data-sources.json"
+      },
+      {
+        "id": "D-BUG-07",
+        "path": "docs/audits/build156/retired-asset-sources.json"
+      },
+      {
+        "id": "D-BUG-10",
+        "path": "tools/history/engineering/assets/selftest.py"
+      },
+      {
+        "id": "D-BUG-12",
+        "path": "docs/audits/build156/retired-asset-sources.json"
+      },
+      {
+        "id": "D-SUP-01",
+        "path": "tools/history/root-build154/scripts/ci-make-offline-bundle.sh"
+      },
+      {
+        "id": "D-TEST-03",
+        "path": "tools/history/engineering/app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java"
+      },
+      {
+        "id": "D-TEST-05",
+        "path": "tools/history/android-audits/com/deepseekharness/app/ui/InstallSettingsAudit.java"
+      },
+      {
+        "id": "D-TEST-06",
+        "path": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java"
+      },
+      {
+        "id": "D-TEST-08",
+        "path": "tools/history/android-audits/com/deepseekharness/app/core/Rc21AttachmentAudit.java"
+      },
+      {
+        "id": "D-TEST-08",
+        "path": "tools/history/build156/obsolete-device-audits/device-backup-audit.init.gradle"
+      },
+      {
+        "id": "D-TEST-14",
+        "path": "tools/history/android-audits/com/deepseekharness/app/ui/UiPolishAudit.java"
+      },
+      {
+        "id": "D-TEST-15",
+        "path": "tools/history/android-audits/com/deepseekharness/app/ui/RecoveryEntryAudit.java"
+      },
+      {
+        "id": "D-TEST-17",
+        "path": "docs/audits/build156/retired-audit-modes.json"
+      },
+      {
+        "id": "D-TEST-17",
+        "path": "tools/history/build156/obsolete-audit-modes/BrowserCompatibilityAudit.java"
+      },
+      {
+        "id": "D-TEST-18",
+        "path": "tools/history/android-audits/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java"
+      },
+      {
+        "id": "D-TEST-18",
+        "path": "tools/history/android-audits/com/deepseekharness/app/core/Rc21AttachmentAudit.java"
+      },
+      {
+        "id": "D-BUILD-01",
+        "path": ".gitattributes"
+      },
+      {
+        "id": "D-TEST-22",
+        "path": "tools/history/engineering/assets/selftest.py"
+      },
+      {
+        "id": "D-BUILD-02",
+        "path": "tools/history/root-build154/scripts/ci-make-offline-bundle.sh"
+      },
+      {
+        "id": "D-TEST-29",
+        "path": "tools/history/private-device-audits/test-backup-device.py"
+      },
+      {
+        "id": "D-TEST-29",
+        "path": "tools/history/private-device-audits/hashes.json"
+      },
+      {
+        "id": "D-TEST-31",
+        "path": "docs/audits/build156/test-coverage-scope.json"
+      },
+      {
+        "id": "D-TEST-35",
+        "path": "tools/history/engineering/assets/restore-merge.py"
+      },
+      {
+        "id": "D-TEST-37",
+        "path": "tools/history/build156/obsolete-device-audits/device-backup-audit.init.gradle"
+      },
+      {
+        "id": "D-TEST-37",
+        "path": "docs/audits/build156/retired-test-control-sources.json"
+      },
+      {
+        "id": "D-TEST-38",
+        "path": "tools/history/build156/obsolete-device-audits/control-functional-audit.py"
+      },
+      {
+        "id": "D-TEST-38",
+        "path": "docs/audits/build156/retired-test-control-sources.json"
+      },
+      {
+        "id": "D-DOC-05",
+        "path": "docs/adr/0001-build154-boundaries.md"
+      },
+      {
+        "id": "D-DOC-05",
+        "path": "docs/plugins.md"
+      },
+      {
+        "id": "D-DOC-06",
+        "path": "docs/releases/build156-changes.zh.md"
+      },
+      {
+        "id": "D-DOC-06",
+        "path": "docs/releases/build156-changes.en.md"
+      },
+      {
+        "id": "D-DOC-10",
+        "path": "README.md"
+      },
+      {
+        "id": "D-DOC-10",
+        "path": "README.en.md"
+      },
+      {
+        "id": "D-DOC-10",
+        "path": "BUILD.md"
+      },
+      {
+        "id": "D-DOC-10",
+        "path": "docs/接手指南.md"
+      },
+      {
+        "id": "D-DOC-11",
+        "path": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "id": "D-DOC-12",
+        "path": "AGENTS.md"
+      },
+      {
+        "id": "D-DOC-12",
+        "path": "docs/engineering-standard.md"
+      },
+      {
+        "id": "D-DOC-12",
+        "path": "docs/module-map.md"
+      },
+      {
+        "id": "D-DEAD-02",
+        "path": "tools/history/engineering/assets/backup-prepare.py"
+      },
+      {
+        "id": "D-DEAD-02",
+        "path": "tools/history/engineering/assets/restore-merge.py"
+      },
+      {
+        "id": "D-DEAD-03",
+        "path": "docs/audits/build156/retired-asset-sources.json"
+      },
+      {
+        "id": "D-DEAD-03",
+        "path": "docs/audits/build156/retired-environment-data-sources.json"
+      },
+      {
+        "id": "D-DEAD-03",
+        "path": ".gitattributes"
+      },
+      {
+        "id": "D-DEAD-06",
+        "path": "tools/history/engineering/assets/rootfs-confirm-install.sh"
+      },
+      {
+        "id": "D-DOC-15",
+        "path": "docs/security-model.md"
+      },
+      {
+        "id": "D-DOC-15",
+        "path": "docs/security-model.en.md"
+      },
+      {
+        "id": "D-DOC-15",
+        "path": "docs/adr/0002-current-threat-model.md"
+      },
+      {
+        "id": "D-DEAD-07",
+        "path": "app/lint.xml"
+      },
+      {
+        "id": "D-DOC-16",
+        "path": "docs/audits/build154/history-document-sources.json"
+      },
+      {
+        "id": "D-DOC-16",
+        "path": "docs/1.2-upgrade-report.md"
+      },
+      {
+        "id": "D-DOC-16",
+        "path": "docs/android-low.md"
+      },
+      {
+        "id": "D-DOC-16",
+        "path": "docs/ROADMAP.md"
+      },
+      {
+        "id": "D-DOC-16",
+        "path": "docs/upgrade-dsh-0.1.5-alpha.2.md"
+      },
+      {
+        "id": "D-DOC-16",
+        "path": "docs/website-rc2-20260928.md"
+      },
+      {
+        "id": "D-DOC-17",
+        "path": "docs/plugins.md"
+      },
+      {
+        "id": "D-DEAD-09",
+        "path": "docs/audits/build156/retired-asset-sources.json"
+      },
+      {
+        "id": "D-DEAD-10",
+        "path": "app/lint.xml"
+      },
+      {
+        "id": "D-DOC-18",
+        "path": "docs/android-standard.md"
+      },
+      {
+        "id": "D-DOC-18",
+        "path": "docs/community-standard-feedback.md"
+      },
+      {
+        "id": "D-DOC-19",
+        "path": "docs/releases/v0.1.7-alpha1-build143.md"
+      },
+      {
+        "id": "D-DOC-19",
+        "path": "docs/releases/v0.1.7-alpha2-pre-release.md"
+      },
+      {
+        "id": "D-DOC-19",
+        "path": "docs/audits/build154/historical-invalid-digests.json"
+      },
+      {
+        "id": "D-DOC-19",
+        "path": "docs/audits/build156/historical-alpha2-digest-recovery.json"
+      },
+      {
+        "id": "D-DOC-19",
+        "path": "docs/audits/build156/historical-alpha2-document-before.json"
+      },
+      {
+        "id": "D-DOC-20",
+        "path": "BUILD.md"
+      },
+      {
+        "id": "D-DOC-20",
+        "path": "docs/接手指南.md"
+      },
+      {
+        "id": "D-DOC-21",
+        "path": "docs/接手指南.md"
+      },
+      {
+        "id": "D-DOC-21",
+        "path": "docs/module-map.md"
+      },
+      {
+        "id": "D-DOC-21",
+        "path": "docs/engineering-standard.md"
+      },
+      {
+        "id": "D-DOC-21",
+        "path": "BUILD.md"
+      },
+      {
+        "id": "D-DEAD-11",
+        "path": "tools/history/engineering/scripts/prepare-dsh-alpha-runtime.sh"
+      },
+      {
+        "id": "D-DEAD-11",
+        "path": "tools/history/engineering/scripts/generate-update-fixtures.py"
+      },
+      {
+        "id": "D-DEAD-12",
+        "path": "tools/history/engineering/tools/TarRepro.java"
+      },
+      {
+        "id": "D-DEAD-13",
+        "path": "tools/history/engineering/tools/inject-arm64-natives.py"
+      },
+      {
+        "id": "D-DOC-24",
+        "path": "docs/audits/2026-09-27-rc2-full-architecture/architecture.md"
+      },
+      {
+        "id": "D-DOC-24",
+        "path": "docs/audits/2026-09-27-rc2-full-architecture/findings.md"
+      },
+      {
+        "id": "D-DOC-24",
+        "path": "docs/audits/build154/history-document-sources.json"
+      },
+      {
+        "id": "D-DEAD-15",
+        "path": "tools/history/engineering/assets/pnpm-env-fix.sh"
+      },
+      {
+        "id": "D-DOC-25",
+        "path": "website/data/history/build147-release-notes.txt"
+      }
+    ],
+    "sourceMappingPolicy": "Latest input SHA binds only exact snapshot members; directories expand only declared members. Outside-snapshot files and non-file/retired references gain no inferred execution. Historical owner checks retain original scopes; final equality is not asserted retroactively.",
+    "limits": "No unsupported blanket PASS was found in this receipt/scope review. It does not re-execute every236 scenario or erase contracts, architecture next steps, device/external gaps or five uncertain Autofill items."
+  },
+  "historicalAlpha2DigestReview": {
+    "status": "PASS_PRESERVED_PRIMARY_METADATA_AND_ACTUAL_LOCAL_BYTES",
+    "receipt": {
+      "path": "docs/audits/build156/historical-alpha2-digest-recovery.json",
+      "sha256": "9c9071f42e7a04e384eaec30b2238e4631c7d531acb32c2e9a44765a448991db",
+      "bytes": 3857
+    },
+    "artifact": {
+      "path": "release/dsha-0.1.7-alpha2.apk",
+      "sha256": "3258884ae654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18",
+      "bytes": 272933762
+    },
+    "sidecarBytes": 89,
+    "sidecarSha256": "0b918528b02d99c07bd3c9c999942d33faec015383c199eb7d85111c13b20c10",
+    "officialSavedAssetId": 583817993,
+    "officialSavedSidecarId": 583817997,
+    "recoveredDigest": "3258884ae654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18",
+    "invalidOriginalStillPreserved": true,
+    "originalOneDeletedHexPosition": 8,
+    "networkPerformed": false,
+    "limits": "Saved official metadata/sidecar match actual local alpha2 Standard. Distinct unresolved alpha1 is not substituted; publication/legal origin and current build156 artifacts are not affected."
+  },
+  "publicRetiredSourceArchiveCorrection": {
+    "status": "PASS_SELECTOR_FIX_ZIP_STILL_PENDING",
+    "proof": {
+      "path": "docs/audits/build156/public-retired-source-allowlist-proof.json",
+      "sha256": "d2680cf0d1aa1f26b64ad67c6c3c3b74bf6b455171432c380de9c18b9dfe6233",
+      "bytes": 34540
+    },
+    "originalScript": {
+      "path": "app/build/audit-build156/history/before-public-retired-source-allowlist/freeze-project.before.py",
+      "sha256": "051024647509338073e468c6fdc140dd8852696e3ea3a70b7fdd008f002deaa5",
+      "bytes": 8403
+    },
+    "currentScript": {
+      "path": "docs/audits/build156/freeze-project.py",
+      "sha256": "ec9ec1ccc2d5ba08326188f9ff5ffdc968c6732fe9791400eb5c5a8ac72198dd",
+      "bytes": 21970
+    },
+    "requiredPublicFiles": 27,
+    "bytes": 215974,
+    "actualCurrentManifestByteCheck": "PASS",
+    "newFocusedSelectionSelfTests": 5,
+    "selectionGuards": "Recompute only the finite reviewed origin/path mapping from existing manifest SHA records. Reject unknown destination before reading it, then verify workspace/history containment, all ancestor symlink/junction metadata, allowed source suffix, file type, exact byte count when declared, and SHA. Unknown/private history and credential material remain excluded. Git candidate selection is unioned with this explicit required set.",
+    "privateHistoricalDocumentsAndCredentialsIncluded": false,
+    "affectsApkSoftwareInputs": false,
+    "zipCreatedByThisReview": false,
+    "limits": [
+      "No final ZIP, final ledger, APK, source snapshot or phone action occurred.",
+      "Five new focused selector self-tests only; the existing nine finalizer self-tests and software/host suites were not rerun.",
+      "Link/junction denial is checked with explicit modeled metadata in self-tests; current actual27 are separately checked link-free.",
+      "Only active current consumers determine this set; additional declared history-stage tests and private historical documents are not included."
+    ]
+  },
+  "supplementalObservedFileCount": 54,
+  "supplementalChangedDuringValidation": [],
+  "completedAtUtc": "2026-10-03T23:32:05.247705+00:00"
+}

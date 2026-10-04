@@ -1,0 +1,3601 @@
+{
+  "schema": 1,
+  "status": "PASS_VERIFIED_ANALYSIS_REPORT_CACHE",
+  "run": "5e2d5521-beb5-4775-b87e-85a074b4aade",
+  "atUtc": "2026-10-03T22:41:30.421620+00:00",
+  "cacheReused": true,
+  "timestampsFresh": false,
+  "manifest": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+    "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626"
+  },
+  "sourceSnapshot": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+    "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+  },
+  "allCurrentSourceHashesVerified": 1507,
+  "sourceDelta": [
+    "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+  ],
+  "fixEvidence": {
+    "path": "docs/audits/build156/bridge-a11y-bound-status-fix.json",
+    "sha256": "69fc474b35fdc9da044163b2f51a14ef0dca1e09ad4770e0c02cd89c4d7ec1df"
+  },
+  "changedMethodStartLine": 563,
+  "priorClassification": {
+    "path": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/release-lint-classification.json",
+    "sha256": "a81fefbad8cedf68ae350628577345aaf8bc6cfd86de81f49110a3dfb7b7f260"
+  },
+  "priorSourceSnapshot": {
+    "path": "app/build/stability-acceptance/281e14af-8e44-40bc-93b8-7095838cef42/source-sha256.json",
+    "sha256": "21874dcb53fe1356721711928ceb294e43cd69f168de2367438a372e5fb387c2"
+  },
+  "gradle": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/gradle-verification.log",
+    "sha256": "f13759fe8e128beb9313aa40be6dae88a4b10e320eee0b8ade0d5ba042aca47d",
+    "exitCode": 0,
+    "actualTaskLines": [
+      "> Task :app:lintAnalyzeStandardRelease",
+      "> Task :app:lintReportStandardRelease UP-TO-DATE",
+      "> Task :app:lintStandardRelease",
+      "> Task :app:lintAnalyzeLowRelease",
+      "> Task :app:lintReportLowRelease UP-TO-DATE",
+      "> Task :app:lintLowRelease"
+    ]
+  },
+  "sourceFloor": {
+    "path": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+    "mtimeUtc": "2026-10-03T21:13:58.183344+00:00"
+  },
+  "issueRowsVerified": 374,
+  "allLocationMappingsVerified": 394,
+  "locationMappings": [
+    {
+      "flavor": "standard",
+      "issueIndex": 0,
+      "file": "app/src/main/AndroidManifest.xml",
+      "line": 32,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246",
+      "priorSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 1,
+      "file": "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+      "line": 265,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f",
+      "priorSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 2,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+      "line": 341,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818",
+      "priorSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 3,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+      "line": 68,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63",
+      "priorSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 4,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+      "line": 93,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63",
+      "priorSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 5,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+      "line": 107,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63",
+      "priorSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 6,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+      "line": 140,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63",
+      "priorSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 7,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 45,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 8,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 59,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 9,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 91,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 10,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 171,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 11,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 184,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 12,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 194,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 13,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 235,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 14,
+      "file": "app/src/main/java/com/deepseekharness/app/core/ColdInstallDiagnostics.java",
+      "line": 23,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "63630a6878679d81049c19051e71d58f4f57b0f8708fabba2b051af1fb3e8a2c",
+      "priorSourceSha256": "63630a6878679d81049c19051e71d58f4f57b0f8708fabba2b051af1fb3e8a2c"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 15,
+      "file": "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+      "line": 408,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5",
+      "priorSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 16,
+      "file": "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+      "line": 443,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5",
+      "priorSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 17,
+      "file": "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+      "line": 453,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5",
+      "priorSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 18,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/PostUpgradeCleanupService.java",
+      "line": 61,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4112b6fcd9e20ce089825835ff2faf399677c3ae09fb82e2c33f7ba4c9c3d259",
+      "priorSourceSha256": "4112b6fcd9e20ce089825835ff2faf399677c3ae09fb82e2c33f7ba4c9c3d259"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 19,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/PrivilegedPackageContext.java",
+      "line": 216,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2dbf0353f53151002317b5457782b66ac07ec4f0e3f8abf15a94d55ec083b1d9",
+      "priorSourceSha256": "2dbf0353f53151002317b5457782b66ac07ec4f0e3f8abf15a94d55ec083b1d9"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 20,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebSurface.java",
+      "line": 167,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6",
+      "priorSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 21,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebSurface.java",
+      "line": 168,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6",
+      "priorSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 22,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebSurface.java",
+      "line": 227,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6",
+      "priorSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 23,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+      "line": 315,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "460cc91c2cb77bb710790d1c161f93830a4453df9edc96080194b0a22a892199",
+      "priorSourceSha256": "460cc91c2cb77bb710790d1c161f93830a4453df9edc96080194b0a22a892199"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 24,
+      "file": "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+      "line": 62,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7",
+      "priorSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 25,
+      "file": "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+      "line": 63,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7",
+      "priorSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 26,
+      "file": "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+      "line": 71,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7",
+      "priorSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 27,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+      "line": 96,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4",
+      "priorSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 28,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+      "line": 96,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4",
+      "priorSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 29,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+      "line": 146,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4",
+      "priorSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 30,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+      "line": 148,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4",
+      "priorSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 31,
+      "file": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+      "line": 1603,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7",
+      "priorSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 32,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java",
+      "line": 74,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4c1a071fe6fa8bc615a9ee2d81f87672b0b693431eb691f76d6a149f805c7828",
+      "priorSourceSha256": "4c1a071fe6fa8bc615a9ee2d81f87672b0b693431eb691f76d6a149f805c7828"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 33,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java",
+      "line": 114,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "056d8a5d5f508cbe994ef13f3bfacfc01271c511010dc3b885ea85374e2d5b09",
+      "priorSourceSha256": "056d8a5d5f508cbe994ef13f3bfacfc01271c511010dc3b885ea85374e2d5b09"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 34,
+      "file": "app/src/main/AndroidManifest.xml",
+      "line": 55,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246",
+      "priorSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 35,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/LanguageController.java",
+      "line": 33,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "93cdd781a66fce185e1031ed950720c2ce12363be0518d56380946149ac7567d",
+      "priorSourceSha256": "93cdd781a66fce185e1031ed950720c2ce12363be0518d56380946149ac7567d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 36,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "line": 497,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "priorSourceSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 37,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java",
+      "line": 87,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7f3500f7af214f9916f18e898f34d5122377d1deccf7e0ee29b5669a51a04e77",
+      "priorSourceSha256": "7f3500f7af214f9916f18e898f34d5122377d1deccf7e0ee29b5669a51a04e77"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 38,
+      "file": "gradle/wrapper/gradle-wrapper.properties",
+      "line": 3,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "1e3d87ddfd70069f68afa0c9ddcaab26913c3baf3d809447b0362d2d49f57325",
+      "priorSourceSha256": "1e3d87ddfd70069f68afa0c9ddcaab26913c3baf3d809447b0362d2d49f57325"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 39,
+      "file": "F:/DSHA/_toolchains/gradle-user-home/caches/9.3.1/transforms/a86e3df5935c2f01b9a2376f60a07cbd/workspace/transformed/terminal-emulator-0.118.0/jni/arm64-v8a/libtermux.so",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5d0b53693293a0ef372ee92530b1a436aa379ad0e931fbced511b7d557755e0b",
+      "priorSourceSha256": "5d0b53693293a0ef372ee92530b1a436aa379ad0e931fbced511b7d557755e0b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 40,
+      "file": "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java",
+      "line": 65,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "c544d4ac19658dc7aca082d63036daf05ad7c2211cfffeebe5f8ddb2da5ad788",
+      "priorSourceSha256": "c544d4ac19658dc7aca082d63036daf05ad7c2211cfffeebe5f8ddb2da5ad788"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 41,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 794,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 42,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 799,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 43,
+      "file": "app/src/main/res/layout/item_data_choice.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "537aad5ad44def1a14dc7a89b782b97cbe2118fd9a7fbe8b74db8357da644f82",
+      "priorSourceSha256": "537aad5ad44def1a14dc7a89b782b97cbe2118fd9a7fbe8b74db8357da644f82"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 44,
+      "file": "app/src/main/res/layout/plugin_list_header.xml",
+      "line": 24,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb",
+      "priorSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 45,
+      "file": "app/src/main/res/layout/plugin_list_header.xml",
+      "line": 32,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb",
+      "priorSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 46,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebSurface.java",
+      "line": 33,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6",
+      "priorSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 47,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RuntimeBrowserProbe.java",
+      "line": 126,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d0de82705a6249e9aa6e1fc40e620ca7b65660a9df839e9661313b4f8099a383",
+      "priorSourceSha256": "d0de82705a6249e9aa6e1fc40e620ca7b65660a9df839e9661313b4f8099a383"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 48,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+      "line": 349,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818",
+      "priorSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 49,
+      "file": "app/src/main/java/com/deepseekharness/app/core/TrustedNetwork.java",
+      "line": 45,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "38834a6d779ff89a7d7bc934b15ae53c5a281ca2dbf1f5b00d1d6393d2e7b944",
+      "priorSourceSha256": "38834a6d779ff89a7d7bc934b15ae53c5a281ca2dbf1f5b00d1d6393d2e7b944"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 50,
+      "file": "app/src/main/res/xml/network_security_config.xml",
+      "line": 6,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e793aae9bbe0ad36579542a22899a8f92a4bd1cf98f96133f55e27b1ca3d1436",
+      "priorSourceSha256": "e793aae9bbe0ad36579542a22899a8f92a4bd1cf98f96133f55e27b1ca3d1436"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 51,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "line": 563,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "priorSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 52,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "line": 645,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "priorSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 53,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "line": 657,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "priorSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 54,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AccessibilitySetupActivity.java",
+      "line": 71,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "598be8494df895e11c7ff4823c7eeba2f652aaefed71be705a144b2560048e4f",
+      "priorSourceSha256": "598be8494df895e11c7ff4823c7eeba2f652aaefed71be705a144b2560048e4f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 55,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java",
+      "line": 387,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7f3500f7af214f9916f18e898f34d5122377d1deccf7e0ee29b5669a51a04e77",
+      "priorSourceSha256": "7f3500f7af214f9916f18e898f34d5122377d1deccf7e0ee29b5669a51a04e77"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 56,
+      "file": "app/src/main/AndroidManifest.xml",
+      "line": 33,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246",
+      "priorSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 57,
+      "file": "app/src/main/java/com/deepseekharness/app/util/Compat.java",
+      "line": 187,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e813d9bbedea144f03599303c9877c827052c1f2fa3f918000755ffadfbac3ac",
+      "priorSourceSha256": "e813d9bbedea144f03599303c9877c827052c1f2fa3f918000755ffadfbac3ac"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 58,
+      "file": "app/src/main/java/com/deepseekharness/app/util/Compat.java",
+      "line": 258,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e813d9bbedea144f03599303c9877c827052c1f2fa3f918000755ffadfbac3ac",
+      "priorSourceSha256": "e813d9bbedea144f03599303c9877c827052c1f2fa3f918000755ffadfbac3ac"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 59,
+      "file": "app/src/main/java/com/deepseekharness/app/util/Compat.java",
+      "line": 284,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e813d9bbedea144f03599303c9877c827052c1f2fa3f918000755ffadfbac3ac",
+      "priorSourceSha256": "e813d9bbedea144f03599303c9877c827052c1f2fa3f918000755ffadfbac3ac"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 60,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+      "line": 67,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "1fa41b13960c5f0ff040a39db9f7399ca76cbb5ccb1c15e7a1efd5c8be255b4c",
+      "priorSourceSha256": "1fa41b13960c5f0ff040a39db9f7399ca76cbb5ccb1c15e7a1efd5c8be255b4c"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 61,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+      "line": 87,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "1fa41b13960c5f0ff040a39db9f7399ca76cbb5ccb1c15e7a1efd5c8be255b4c",
+      "priorSourceSha256": "1fa41b13960c5f0ff040a39db9f7399ca76cbb5ccb1c15e7a1efd5c8be255b4c"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 62,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+      "line": 137,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "1fa41b13960c5f0ff040a39db9f7399ca76cbb5ccb1c15e7a1efd5c8be255b4c",
+      "priorSourceSha256": "1fa41b13960c5f0ff040a39db9f7399ca76cbb5ccb1c15e7a1efd5c8be255b4c"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 63,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+      "line": 162,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "1fa41b13960c5f0ff040a39db9f7399ca76cbb5ccb1c15e7a1efd5c8be255b4c",
+      "priorSourceSha256": "1fa41b13960c5f0ff040a39db9f7399ca76cbb5ccb1c15e7a1efd5c8be255b4c"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 64,
+      "file": "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java",
+      "line": 91,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "c6c0e8c24289d3c2bed6a92013f92160a7337a1f0a5e04bc7aa8853ea25a1bb8",
+      "priorSourceSha256": "c6c0e8c24289d3c2bed6a92013f92160a7337a1f0a5e04bc7aa8853ea25a1bb8"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 65,
+      "file": "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java",
+      "line": 227,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "c6c0e8c24289d3c2bed6a92013f92160a7337a1f0a5e04bc7aa8853ea25a1bb8",
+      "priorSourceSha256": "c6c0e8c24289d3c2bed6a92013f92160a7337a1f0a5e04bc7aa8853ea25a1bb8"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 66,
+      "file": "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java",
+      "line": 288,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "c6c0e8c24289d3c2bed6a92013f92160a7337a1f0a5e04bc7aa8853ea25a1bb8",
+      "priorSourceSha256": "c6c0e8c24289d3c2bed6a92013f92160a7337a1f0a5e04bc7aa8853ea25a1bb8"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 67,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "line": 195,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "priorSourceSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 68,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "line": 507,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "priorSourceSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 69,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "line": 523,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "priorSourceSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 70,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "line": 540,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "priorSourceSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 71,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "line": 542,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "priorSourceSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 72,
+      "file": "app/src/main/java/com/deepseekharness/app/DeviceSense.java",
+      "line": 437,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2a5cf779d3a48e08423772d111e32f74cf564d17f6bd3927290cc885e79e34b9",
+      "priorSourceSha256": "2a5cf779d3a48e08423772d111e32f74cf564d17f6bd3927290cc885e79e34b9"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 73,
+      "file": "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+      "line": 265,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f",
+      "priorSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 74,
+      "file": "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java",
+      "line": 60,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "c544d4ac19658dc7aca082d63036daf05ad7c2211cfffeebe5f8ddb2da5ad788",
+      "priorSourceSha256": "c544d4ac19658dc7aca082d63036daf05ad7c2211cfffeebe5f8ddb2da5ad788"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 75,
+      "file": "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java",
+      "line": 65,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "c544d4ac19658dc7aca082d63036daf05ad7c2211cfffeebe5f8ddb2da5ad788",
+      "priorSourceSha256": "c544d4ac19658dc7aca082d63036daf05ad7c2211cfffeebe5f8ddb2da5ad788"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 76,
+      "file": "app/src/main/java/com/deepseekharness/app/core/DshModelRepository.java",
+      "line": 62,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "05852856365ad9dc70f94d96e11d27c6bda6c17e9d14f0b3f80c5c1ee10dabff",
+      "priorSourceSha256": "05852856365ad9dc70f94d96e11d27c6bda6c17e9d14f0b3f80c5c1ee10dabff"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 77,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 277,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 78,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 401,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 79,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 546,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 80,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 710,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 81,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 731,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 82,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 747,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 83,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 757,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 84,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 794,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 85,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 799,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 86,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 804,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 87,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaApp.java",
+      "line": 222,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0b46dc99a11735f356fb8e6b0771f09a2af3ca9ae2da4bcb0ad94b7ac454162a",
+      "priorSourceSha256": "0b46dc99a11735f356fb8e6b0771f09a2af3ca9ae2da4bcb0ad94b7ac454162a"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 88,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java",
+      "line": 79,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "22596e93ddc3976f9365d3e40ba7f4a8542de5d2832e357c397932d35fc4ef5b",
+      "priorSourceSha256": "22596e93ddc3976f9365d3e40ba7f4a8542de5d2832e357c397932d35fc4ef5b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 89,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java",
+      "line": 93,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "22596e93ddc3976f9365d3e40ba7f4a8542de5d2832e357c397932d35fc4ef5b",
+      "priorSourceSha256": "22596e93ddc3976f9365d3e40ba7f4a8542de5d2832e357c397932d35fc4ef5b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 90,
+      "file": "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+      "line": 467,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "043e418e694d776430f6178bf99caa8b92d9fb4ef01d71e7e99b4c5c54bba4ec",
+      "priorSourceSha256": "043e418e694d776430f6178bf99caa8b92d9fb4ef01d71e7e99b4c5c54bba4ec"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 91,
+      "file": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+      "line": 951,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7",
+      "priorSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 92,
+      "file": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+      "line": 1692,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7",
+      "priorSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 93,
+      "file": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+      "line": 2073,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7",
+      "priorSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 94,
+      "file": "app/src/main/java/com/deepseekharness/app/data/KeyVault.java",
+      "line": 88,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e0c57984dc86fceffd03d6318ece91540fe5a44adca31794cbfbc90940860d42",
+      "priorSourceSha256": "e0c57984dc86fceffd03d6318ece91540fe5a44adca31794cbfbc90940860d42"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 95,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
+      "line": 224,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6284b9a6ba441c488b1328f26b86db37a4b630134367834c31663f43fc6ccebf",
+      "priorSourceSha256": "6284b9a6ba441c488b1328f26b86db37a4b630134367834c31663f43fc6ccebf"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 96,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java",
+      "line": 397,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "dd90d656b254aea7dafe6712ea55de6cebbdf5dc52d2f50df630b6a4ee611f47",
+      "priorSourceSha256": "dd90d656b254aea7dafe6712ea55de6cebbdf5dc52d2f50df630b6a4ee611f47"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 97,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ModernAndroidUi.java",
+      "line": 26,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8b75ffc3dc1af217ae2a5616f5b918114ecfe8f4c246c58d0791c85cc61a5943",
+      "priorSourceSha256": "8b75ffc3dc1af217ae2a5616f5b918114ecfe8f4c246c58d0791c85cc61a5943"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 98,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ModernAndroidUi.java",
+      "line": 32,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8b75ffc3dc1af217ae2a5616f5b918114ecfe8f4c246c58d0791c85cc61a5943",
+      "priorSourceSha256": "8b75ffc3dc1af217ae2a5616f5b918114ecfe8f4c246c58d0791c85cc61a5943"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 99,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ModernAndroidUi.java",
+      "line": 62,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8b75ffc3dc1af217ae2a5616f5b918114ecfe8f4c246c58d0791c85cc61a5943",
+      "priorSourceSha256": "8b75ffc3dc1af217ae2a5616f5b918114ecfe8f4c246c58d0791c85cc61a5943"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 100,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 427,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 101,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 811,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 102,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java",
+      "line": 89,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450",
+      "priorSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 103,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java",
+      "line": 111,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450",
+      "priorSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 104,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java",
+      "line": 180,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450",
+      "priorSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 105,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java",
+      "line": 245,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450",
+      "priorSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 106,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java",
+      "line": 284,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450",
+      "priorSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 107,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java",
+      "line": 290,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450",
+      "priorSourceSha256": "d3eba7dfd3bc83cc7ef93729b55c6b47757c36d1045289dcdde677aae49e9450"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 108,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "line": 133,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "priorSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 109,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryActivity.java",
+      "line": 67,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d951a2a5211a16296314c52cd29f64ab7a33b9baad514081d861ff7e70f10209",
+      "priorSourceSha256": "d951a2a5211a16296314c52cd29f64ab7a33b9baad514081d861ff7e70f10209"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 110,
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryService.java",
+      "line": 23,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "87dcc3535357be46832bf72a7b4b117763b709e62086ba7feaf2fd43a95856b5",
+      "priorSourceSha256": "87dcc3535357be46832bf72a7b4b117763b709e62086ba7feaf2fd43a95856b5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 111,
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryService.java",
+      "line": 33,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "87dcc3535357be46832bf72a7b4b117763b709e62086ba7feaf2fd43a95856b5",
+      "priorSourceSha256": "87dcc3535357be46832bf72a7b4b117763b709e62086ba7feaf2fd43a95856b5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 112,
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryService.java",
+      "line": 51,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "87dcc3535357be46832bf72a7b4b117763b709e62086ba7feaf2fd43a95856b5",
+      "priorSourceSha256": "87dcc3535357be46832bf72a7b4b117763b709e62086ba7feaf2fd43a95856b5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 113,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java",
+      "line": 57,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "056d8a5d5f508cbe994ef13f3bfacfc01271c511010dc3b885ea85374e2d5b09",
+      "priorSourceSha256": "056d8a5d5f508cbe994ef13f3bfacfc01271c511010dc3b885ea85374e2d5b09"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 114,
+      "file": "app/src/main/java/com/deepseekharness/app/bridge/SensitiveClipboard.java",
+      "line": 9,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6e221a30410839f3fb50add51ede3cc932184831bc36739c6e87b8edc19bb44d",
+      "priorSourceSha256": "6e221a30410839f3fb50add51ede3cc932184831bc36739c6e87b8edc19bb44d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 115,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java",
+      "line": 210,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "27eab634f0ddfd8b62c22fefbf088b83da822fc8355bf6b4e83def2edee1b145",
+      "priorSourceSha256": "27eab634f0ddfd8b62c22fefbf088b83da822fc8355bf6b4e83def2edee1b145"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 116,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java",
+      "line": 268,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "27eab634f0ddfd8b62c22fefbf088b83da822fc8355bf6b4e83def2edee1b145",
+      "priorSourceSha256": "27eab634f0ddfd8b62c22fefbf088b83da822fc8355bf6b4e83def2edee1b145"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 117,
+      "file": "app/src/main/java/com/deepseekharness/app/UpdateDownloadService.java",
+      "line": 40,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8864d830b96cff662456044c15d88b3599628a6ab6a8531e1c7daea33686d91a",
+      "priorSourceSha256": "8864d830b96cff662456044c15d88b3599628a6ab6a8531e1c7daea33686d91a"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 118,
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+      "line": 640,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4",
+      "priorSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 119,
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+      "line": 650,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4",
+      "priorSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 120,
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+      "line": 653,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4",
+      "priorSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 121,
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+      "line": 671,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4",
+      "priorSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 122,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java",
+      "line": 24,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5d1fd763cb36b7b95c1ef9aa5dbac28d051bb2b7f53c73f9be7815ac689e503d",
+      "priorSourceSha256": "5d1fd763cb36b7b95c1ef9aa5dbac28d051bb2b7f53c73f9be7815ac689e503d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 123,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+      "line": 23,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef",
+      "priorSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 124,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+      "line": 48,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef",
+      "priorSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 125,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+      "line": 67,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef",
+      "priorSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 126,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenInput.java",
+      "line": 11,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d3f5d62200b67908d5f26ff0b3e81a4aa4989bbfdd3359be065593a0b625b94b",
+      "priorSourceSha256": "d3f5d62200b67908d5f26ff0b3e81a4aa4989bbfdd3359be065593a0b625b94b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 127,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+      "line": 140,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e5436d57e9d5c2a9ae70027814d3c069e1c27a4bdf80d54f00684e07ad0d76da",
+      "priorSourceSha256": "e5436d57e9d5c2a9ae70027814d3c069e1c27a4bdf80d54f00684e07ad0d76da"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 128,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+      "line": 44,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "48d8847c58524fe93f7c9ac2f877170827ac7941b2f1b36af3fca8f14c524077",
+      "priorSourceSha256": "48d8847c58524fe93f7c9ac2f877170827ac7941b2f1b36af3fca8f14c524077"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 129,
+      "file": "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java",
+      "line": 220,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8f3761c290ce00c838c0e594a13942a2b0bc44011049e27522834f2c639b122f",
+      "priorSourceSha256": "8f3761c290ce00c838c0e594a13942a2b0bc44011049e27522834f2c639b122f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 130,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+      "line": 341,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818",
+      "priorSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 131,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+      "line": 590,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818",
+      "priorSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 132,
+      "file": "app/src/main/res/mipmap-anydpi-v26",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": null,
+      "priorSourceSha256": null
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 133,
+      "file": "app/src/main/res/xml-v28",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": null,
+      "priorSourceSha256": null
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 134,
+      "file": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+      "line": 327,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7",
+      "priorSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 135,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "line": 50,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6bbb4a87b3bf6de350574faa95010cc9650c743e5cbbd643ec508c090c64730a",
+      "priorSourceSha256": "6bbb4a87b3bf6de350574faa95010cc9650c743e5cbbd643ec508c090c64730a"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 136,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 102,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 137,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 103,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 138,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 104,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 139,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 105,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 140,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 115,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 141,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/PrivilegedPackageContext.java",
+      "line": 15,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2dbf0353f53151002317b5457782b66ac07ec4f0e3f8abf15a94d55ec083b1d9",
+      "priorSourceSha256": "2dbf0353f53151002317b5457782b66ac07ec4f0e3f8abf15a94d55ec083b1d9"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 142,
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java",
+      "line": 23,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "60ac14b4f30b2e6bf99ad6fcd32556b9fd0a658e25549214d77ee36e1f1eff1b",
+      "priorSourceSha256": "60ac14b4f30b2e6bf99ad6fcd32556b9fd0a658e25549214d77ee36e1f1eff1b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 143,
+      "file": "app/src/main/java/com/deepseekharness/app/core/RuntimeTasks.java",
+      "line": 8,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "501b84a461682dea0281d52e51b1caa1cec34fad0f991e626f8817d0c0ca8a05",
+      "priorSourceSha256": "501b84a461682dea0281d52e51b1caa1cec34fad0f991e626f8817d0c0ca8a05"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 144,
+      "file": "app/src/main/java/com/deepseekharness/app/ShizukuShell.java",
+      "line": 18,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "f3d6dba059701b2a000ee2f331541692855c9dbf6c78a23fe0850b21c446eaaa",
+      "priorSourceSha256": "f3d6dba059701b2a000ee2f331541692855c9dbf6c78a23fe0850b21c446eaaa"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 145,
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+      "line": 30,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4",
+      "priorSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 146,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+      "line": 30,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef",
+      "priorSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 147,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+      "line": 103,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818",
+      "priorSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 148,
+      "file": "app/src/main/res/layout/activity_web_preview.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e8f08a45f2779753b86529f6e0e5d913228073484273d46b2dffc6f1b73fed11",
+      "priorSourceSha256": "e8f08a45f2779753b86529f6e0e5d913228073484273d46b2dffc6f1b73fed11"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 149,
+      "file": "app/src/main/res/layout/fragment_launch.xml",
+      "line": 22,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "dc6ad88e3d8d58c8c6b27ca3584bcf7f6a50c969dca971bf12e2fe38e60af3dc",
+      "priorSourceSha256": "dc6ad88e3d8d58c8c6b27ca3584bcf7f6a50c969dca971bf12e2fe38e60af3dc"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 150,
+      "file": "app/src/main/res/layout/fragment_terminal.xml",
+      "line": 11,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53",
+      "priorSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 151,
+      "file": "app/src/main/res/layout/activity_adb_pair.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "9beac348b99dfc90a2fd6bfa884991118e00238792397f333a62b3ee9dd9d864",
+      "priorSourceSha256": "9beac348b99dfc90a2fd6bfa884991118e00238792397f333a62b3ee9dd9d864"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 152,
+      "file": "app/src/main/res/layout/activity_diagnostics.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838",
+      "priorSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 153,
+      "file": "app/src/main/res/layout/activity_extract.xml",
+      "line": 1,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "39cb2f0b44dd126f6bb63a18d8ed8acd9850ddf7be278c9b65461ee406d878ef",
+      "priorSourceSha256": "39cb2f0b44dd126f6bb63a18d8ed8acd9850ddf7be278c9b65461ee406d878ef"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 154,
+      "file": "app/src/main/res/layout/activity_main.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "791f40fc600d339cb5e69b6e006463cf936f32dbbe90a860f5dc000d6b01c7f0",
+      "priorSourceSha256": "791f40fc600d339cb5e69b6e006463cf936f32dbbe90a860f5dc000d6b01c7f0"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 155,
+      "file": "app/src/main/res/layout/activity_plugin_install.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "bfeeb91de5958c134d3a793d96b5b4e1a825641f590704ba1e5b2ca56b2417ea",
+      "priorSourceSha256": "bfeeb91de5958c134d3a793d96b5b4e1a825641f590704ba1e5b2ca56b2417ea"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 156,
+      "file": "app/src/main/res/layout/activity_update.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "bad328d63f12ae606f0916d21770a1e42b2d699856b72e29e9810299e0644b46",
+      "priorSourceSha256": "bad328d63f12ae606f0916d21770a1e42b2d699856b72e29e9810299e0644b46"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 157,
+      "file": "app/src/main/res/layout/activity_welcome.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "754a65cbabb86eb713a61d093e08bd2d2664a8b2a0acce6c1ffa03130a737be9",
+      "priorSourceSha256": "754a65cbabb86eb713a61d093e08bd2d2664a8b2a0acce6c1ffa03130a737be9"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 158,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 159,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 160,
+      "file": "app/src/main/res/layout/fragment_install.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "df74e412ef310a49dbb38cf95e170f8d690cf3e5fa98d9a135fe612dec74a3b4",
+      "priorSourceSha256": "df74e412ef310a49dbb38cf95e170f8d690cf3e5fa98d9a135fe612dec74a3b4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 161,
+      "file": "app/src/main/res/layout/fragment_plugins.xml",
+      "line": 4,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "9d5152c768023478abb2076568ec248a6f9f7c4d23d23508ff43e62f100a048c",
+      "priorSourceSha256": "9d5152c768023478abb2076568ec248a6f9f7c4d23d23508ff43e62f100a048c"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 162,
+      "file": "app/src/main/res/layout/fragment_pty_terminal.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "46bf89362ce172a9a747c5f3f839253f19a28bdff3cd46f1be15608ee3ac58b9",
+      "priorSourceSha256": "46bf89362ce172a9a747c5f3f839253f19a28bdff3cd46f1be15608ee3ac58b9"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 163,
+      "file": "app/src/main/res/layout/fragment_settings.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "73f26e248d3602e01c26953087c768e93b354cab2bd9fcc61ab7fc36f0ddc0e9",
+      "priorSourceSha256": "73f26e248d3602e01c26953087c768e93b354cab2bd9fcc61ab7fc36f0ddc0e9"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 164,
+      "file": "app/src/main/res/layout/fragment_terminal.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53",
+      "priorSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 165,
+      "file": "app/src/main/res/layout/fragment_workspace.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "923a16165bb51151fa67883744cdcad9dc10e8b34bdea7e8dc3062b105e80710",
+      "priorSourceSha256": "923a16165bb51151fa67883744cdcad9dc10e8b34bdea7e8dc3062b105e80710"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 166,
+      "file": "app/src/main/res/layout/welcome_page1.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "57e11cbad44e6cc72b733cb12c7d56fc4a8807b1b89a54a204dd250e618cd7eb",
+      "priorSourceSha256": "57e11cbad44e6cc72b733cb12c7d56fc4a8807b1b89a54a204dd250e618cd7eb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 167,
+      "file": "app/src/main/res/layout/welcome_page2.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "fcbe3db193c0030057bc05e5d73038ac8689cbe143599ec57ccda82de7b172a1",
+      "priorSourceSha256": "fcbe3db193c0030057bc05e5d73038ac8689cbe143599ec57ccda82de7b172a1"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 168,
+      "file": "app/src/main/res/layout/welcome_page3.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0e76152410ce7d745c0e1a73529369f8a6d18ddb91e27f6babe8c25e85a7aa21",
+      "priorSourceSha256": "0e76152410ce7d745c0e1a73529369f8a6d18ddb91e27f6babe8c25e85a7aa21"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 169,
+      "file": "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+      "line": 494,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d72d1aad7712cee4f95681d4b02c712af9646533feb3ace3868829ebf08d1db5",
+      "priorSourceSha256": "d72d1aad7712cee4f95681d4b02c712af9646533feb3ace3868829ebf08d1db5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 170,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/ColdBundleTransaction.java",
+      "line": 50,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a08f79084966962f3957a15f11098c841055daeb524742d154db1c490aa6dc84",
+      "priorSourceSha256": "a08f79084966962f3957a15f11098c841055daeb524742d154db1c490aa6dc84"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 171,
+      "file": "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+      "line": 443,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f",
+      "priorSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 172,
+      "file": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+      "line": 291,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5d3d4ff417ef108ffb88ad994169fb4661c3e4e858b2959cf19b2b71cb50aac9",
+      "priorSourceSha256": "5d3d4ff417ef108ffb88ad994169fb4661c3e4e858b2959cf19b2b71cb50aac9"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 173,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ManagedRuntimeTransaction.java",
+      "line": 523,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0b441ec74681c98ca701eee7cacc4ba2618209ebaf68b87fd5e2aad45356bfe9",
+      "priorSourceSha256": "0b441ec74681c98ca701eee7cacc4ba2618209ebaf68b87fd5e2aad45356bfe9"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 174,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java",
+      "line": 531,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6ce48d2326c7b54f879774013c741575a383d7c474d5df7d0c029ec35bf67cf1",
+      "priorSourceSha256": "6ce48d2326c7b54f879774013c741575a383d7c474d5df7d0c029ec35bf67cf1"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 175,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/OnboardingPrepareActivity.java",
+      "line": 41,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0681796a57c01c71f1f21f03d8541d2d2c613d60ac46bf068516dc97e1d7cacf",
+      "priorSourceSha256": "0681796a57c01c71f1f21f03d8541d2d2c613d60ac46bf068516dc97e1d7cacf"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 176,
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "line": 139,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "cfcca5ce093f3fdeaecb9a03a78502937be6f44cdfec3edafe38d83139345319",
+      "priorSourceSha256": "cfcca5ce093f3fdeaecb9a03a78502937be6f44cdfec3edafe38d83139345319"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 177,
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+      "line": 363,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4",
+      "priorSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 178,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java",
+      "line": 152,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "f704e1cc1248122ae801381c396ec54787444e9d202ca1ec6ab5109801ea83e5",
+      "priorSourceSha256": "f704e1cc1248122ae801381c396ec54787444e9d202ca1ec6ab5109801ea83e5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 179,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 4,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 180,
+      "file": "app/src/main/res/layout/fragment_launch.xml",
+      "line": 5,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "dc6ad88e3d8d58c8c6b27ca3584bcf7f6a50c969dca971bf12e2fe38e60af3dc",
+      "priorSourceSha256": "dc6ad88e3d8d58c8c6b27ca3584bcf7f6a50c969dca971bf12e2fe38e60af3dc"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 181,
+      "file": "app/src/main/res/layout/fragment_install.xml",
+      "line": 100,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "df74e412ef310a49dbb38cf95e170f8d690cf3e5fa98d9a135fe612dec74a3b4",
+      "priorSourceSha256": "df74e412ef310a49dbb38cf95e170f8d690cf3e5fa98d9a135fe612dec74a3b4"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 182,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 183,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 184,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 185,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 186,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 187,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 188,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 189,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 190,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 191,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 192,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 193,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 194,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 195,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 196,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 197,
+      "file": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round_v137.xml",
+      "line": 1,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b811036ea80099b411ac32ce75402231321cf22d65d98f15ebce19e0dee1fa5b",
+      "priorSourceSha256": "b811036ea80099b411ac32ce75402231321cf22d65d98f15ebce19e0dee1fa5b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 198,
+      "file": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_v137.xml",
+      "line": 1,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b811036ea80099b411ac32ce75402231321cf22d65d98f15ebce19e0dee1fa5b",
+      "priorSourceSha256": "b811036ea80099b411ac32ce75402231321cf22d65d98f15ebce19e0dee1fa5b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 199,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 199,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 199,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 200,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 200,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 200,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 201,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 201,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 201,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 202,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 202,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 202,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 203,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 203,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 203,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 204,
+      "file": "app/src/main/res/layout/activity_adb_pair.xml",
+      "line": 18,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "9beac348b99dfc90a2fd6bfa884991118e00238792397f333a62b3ee9dd9d864",
+      "priorSourceSha256": "9beac348b99dfc90a2fd6bfa884991118e00238792397f333a62b3ee9dd9d864"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 205,
+      "file": "app/src/main/res/layout/activity_adb_pair.xml",
+      "line": 20,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "9beac348b99dfc90a2fd6bfa884991118e00238792397f333a62b3ee9dd9d864",
+      "priorSourceSha256": "9beac348b99dfc90a2fd6bfa884991118e00238792397f333a62b3ee9dd9d864"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 206,
+      "file": "app/src/main/res/layout/activity_diagnostics.xml",
+      "line": 54,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838",
+      "priorSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 207,
+      "file": "app/src/main/res/layout/fragment_terminal.xml",
+      "line": 16,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53",
+      "priorSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 208,
+      "file": "app/src/main/res/layout/plugin_list_header.xml",
+      "line": 34,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb",
+      "priorSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 209,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DshaSelectView.java",
+      "line": 41,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5a41af3db376a638317fb8ac9e9ee41e3c77db801fbbdf13f1d6f279e1ff1a3",
+      "priorSourceSha256": "b5a41af3db376a638317fb8ac9e9ee41e3c77db801fbbdf13f1d6f279e1ff1a3"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 210,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java",
+      "line": 318,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d9e7998f2391fdfba5be3b761119d7d788c7ac7337f8980fc98c6f75d688b6c8",
+      "priorSourceSha256": "d9e7998f2391fdfba5be3b761119d7d788c7ac7337f8980fc98c6f75d688b6c8"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 211,
+      "file": "app/src/main/res/layout/activity_diagnostics.xml",
+      "line": 18,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838",
+      "priorSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 212,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 29,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 213,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 43,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 214,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 48,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 215,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 59,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 216,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 63,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 217,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 8,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 218,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 24,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 219,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 49,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 220,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 50,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "standard",
+      "issueIndex": 221,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+      "line": 88,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "48d8847c58524fe93f7c9ac2f877170827ac7941b2f1b36af3fca8f14c524077",
+      "priorSourceSha256": "48d8847c58524fe93f7c9ac2f877170827ac7941b2f1b36af3fca8f14c524077"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 0,
+      "file": "app/src/main/AndroidManifest.xml",
+      "line": 32,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246",
+      "priorSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 1,
+      "file": "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+      "line": 265,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f",
+      "priorSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 2,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+      "line": 341,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818",
+      "priorSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 3,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+      "line": 68,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63",
+      "priorSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 4,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+      "line": 93,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63",
+      "priorSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 5,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+      "line": 107,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63",
+      "priorSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 6,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+      "line": 140,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63",
+      "priorSourceSha256": "690af93ca77bd1e8d14668e8826fcb47de68e441b7495cabf8e77b323fc06c63"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 7,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 45,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 8,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 59,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 9,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 91,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 10,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 171,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 11,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 184,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 12,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 194,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 13,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "line": 235,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f",
+      "priorSourceSha256": "0aebbf0c8024812ac5f0dabae4808871b9583916ed589d5fdbda2c6cae881c0f"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 14,
+      "file": "app/src/main/java/com/deepseekharness/app/core/ColdInstallDiagnostics.java",
+      "line": 23,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "63630a6878679d81049c19051e71d58f4f57b0f8708fabba2b051af1fb3e8a2c",
+      "priorSourceSha256": "63630a6878679d81049c19051e71d58f4f57b0f8708fabba2b051af1fb3e8a2c"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 15,
+      "file": "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+      "line": 408,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5",
+      "priorSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 16,
+      "file": "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+      "line": 443,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5",
+      "priorSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 17,
+      "file": "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+      "line": 453,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5",
+      "priorSourceSha256": "e13f6826b4d603636f886048e100207b92e6d2c5965cb18771705b5f0291a9e5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 18,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/PostUpgradeCleanupService.java",
+      "line": 61,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4112b6fcd9e20ce089825835ff2faf399677c3ae09fb82e2c33f7ba4c9c3d259",
+      "priorSourceSha256": "4112b6fcd9e20ce089825835ff2faf399677c3ae09fb82e2c33f7ba4c9c3d259"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 19,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java",
+      "line": 73,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b265e3822a16e592876f6ffab890c0410c59978883d14f04cf4db3fb6f4681e2",
+      "priorSourceSha256": "b265e3822a16e592876f6ffab890c0410c59978883d14f04cf4db3fb6f4681e2"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 20,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java",
+      "line": 77,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b265e3822a16e592876f6ffab890c0410c59978883d14f04cf4db3fb6f4681e2",
+      "priorSourceSha256": "b265e3822a16e592876f6ffab890c0410c59978883d14f04cf4db3fb6f4681e2"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 21,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java",
+      "line": 79,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b265e3822a16e592876f6ffab890c0410c59978883d14f04cf4db3fb6f4681e2",
+      "priorSourceSha256": "b265e3822a16e592876f6ffab890c0410c59978883d14f04cf4db3fb6f4681e2"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 22,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java",
+      "line": 158,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b265e3822a16e592876f6ffab890c0410c59978883d14f04cf4db3fb6f4681e2",
+      "priorSourceSha256": "b265e3822a16e592876f6ffab890c0410c59978883d14f04cf4db3fb6f4681e2"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 23,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 462,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 24,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 765,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 25,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/PrivilegedPackageContext.java",
+      "line": 216,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2dbf0353f53151002317b5457782b66ac07ec4f0e3f8abf15a94d55ec083b1d9",
+      "priorSourceSha256": "2dbf0353f53151002317b5457782b66ac07ec4f0e3f8abf15a94d55ec083b1d9"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 26,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebSurface.java",
+      "line": 167,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6",
+      "priorSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 27,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebSurface.java",
+      "line": 168,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6",
+      "priorSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 28,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebSurface.java",
+      "line": 227,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6",
+      "priorSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 29,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+      "line": 315,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "460cc91c2cb77bb710790d1c161f93830a4453df9edc96080194b0a22a892199",
+      "priorSourceSha256": "460cc91c2cb77bb710790d1c161f93830a4453df9edc96080194b0a22a892199"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 30,
+      "file": "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+      "line": 62,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7",
+      "priorSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 31,
+      "file": "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+      "line": 63,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7",
+      "priorSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 32,
+      "file": "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+      "line": 71,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7",
+      "priorSourceSha256": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 33,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+      "line": 96,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4",
+      "priorSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 34,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+      "line": 96,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4",
+      "priorSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 35,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+      "line": 146,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4",
+      "priorSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 36,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+      "line": 148,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4",
+      "priorSourceSha256": "3137b9a7453d795149ec9e93068c3611157ede895f0ff19842ead58c5a5527e4"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 37,
+      "file": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+      "line": 1603,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7",
+      "priorSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 38,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java",
+      "line": 74,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4c1a071fe6fa8bc615a9ee2d81f87672b0b693431eb691f76d6a149f805c7828",
+      "priorSourceSha256": "4c1a071fe6fa8bc615a9ee2d81f87672b0b693431eb691f76d6a149f805c7828"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 39,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java",
+      "line": 114,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "056d8a5d5f508cbe994ef13f3bfacfc01271c511010dc3b885ea85374e2d5b09",
+      "priorSourceSha256": "056d8a5d5f508cbe994ef13f3bfacfc01271c511010dc3b885ea85374e2d5b09"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 40,
+      "file": "app/src/low/AndroidManifest.xml",
+      "line": 9,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3e91f5b2ab9d5592cbbb6b61533172b9ec10b8a7f652cd84b6f1e9a185d737d4",
+      "priorSourceSha256": "3e91f5b2ab9d5592cbbb6b61533172b9ec10b8a7f652cd84b6f1e9a185d737d4"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 41,
+      "file": "app/src/main/AndroidManifest.xml",
+      "line": 55,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246",
+      "priorSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 42,
+      "file": "app/src/main/AndroidManifest.xml",
+      "line": 57,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246",
+      "priorSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 43,
+      "file": "app/src/main/AndroidManifest.xml",
+      "line": 142,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246",
+      "priorSourceSha256": "2f69cf30d81e3cab35c8ec527586fbf24c919e66a2eece8d0a32de107c3b4246"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 44,
+      "file": "app/src/main/res/xml/accessibility_service_config.xml",
+      "line": 15,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "606ec7bae3b8adfdab0cdbd3b28655d3755567469de306cf856635e9e42a8f55",
+      "priorSourceSha256": "606ec7bae3b8adfdab0cdbd3b28655d3755567469de306cf856635e9e42a8f55"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 45,
+      "file": "app/src/main/res/xml/accessibility_service_config.xml",
+      "line": 17,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "606ec7bae3b8adfdab0cdbd3b28655d3755567469de306cf856635e9e42a8f55",
+      "priorSourceSha256": "606ec7bae3b8adfdab0cdbd3b28655d3755567469de306cf856635e9e42a8f55"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 46,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/LanguageController.java",
+      "line": 33,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "93cdd781a66fce185e1031ed950720c2ce12363be0518d56380946149ac7567d",
+      "priorSourceSha256": "93cdd781a66fce185e1031ed950720c2ce12363be0518d56380946149ac7567d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 47,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "line": 497,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "priorSourceSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 48,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java",
+      "line": 87,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7f3500f7af214f9916f18e898f34d5122377d1deccf7e0ee29b5669a51a04e77",
+      "priorSourceSha256": "7f3500f7af214f9916f18e898f34d5122377d1deccf7e0ee29b5669a51a04e77"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 49,
+      "file": "gradle/wrapper/gradle-wrapper.properties",
+      "line": 3,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "1e3d87ddfd70069f68afa0c9ddcaab26913c3baf3d809447b0362d2d49f57325",
+      "priorSourceSha256": "1e3d87ddfd70069f68afa0c9ddcaab26913c3baf3d809447b0362d2d49f57325"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 50,
+      "file": "F:/DSHA/_toolchains/gradle-user-home/caches/9.3.1/transforms/a86e3df5935c2f01b9a2376f60a07cbd/workspace/transformed/terminal-emulator-0.118.0/jni/arm64-v8a/libtermux.so",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5d0b53693293a0ef372ee92530b1a436aa379ad0e931fbced511b7d557755e0b",
+      "priorSourceSha256": "5d0b53693293a0ef372ee92530b1a436aa379ad0e931fbced511b7d557755e0b"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 51,
+      "file": "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java",
+      "line": 65,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "c544d4ac19658dc7aca082d63036daf05ad7c2211cfffeebe5f8ddb2da5ad788",
+      "priorSourceSha256": "c544d4ac19658dc7aca082d63036daf05ad7c2211cfffeebe5f8ddb2da5ad788"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 52,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 794,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 53,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 799,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 54,
+      "file": "app/src/main/res/layout/item_data_choice.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "537aad5ad44def1a14dc7a89b782b97cbe2118fd9a7fbe8b74db8357da644f82",
+      "priorSourceSha256": "537aad5ad44def1a14dc7a89b782b97cbe2118fd9a7fbe8b74db8357da644f82"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 55,
+      "file": "app/src/main/res/layout/plugin_list_header.xml",
+      "line": 24,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb",
+      "priorSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 56,
+      "file": "app/src/main/res/layout/plugin_list_header.xml",
+      "line": 32,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb",
+      "priorSourceSha256": "8182dc3fab20c32e6deb720e4a0c3f19939774b0ba86e0c897b4d3cdd391d0bb"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 57,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebSurface.java",
+      "line": 33,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6",
+      "priorSourceSha256": "3f9e675188631d9888ea22814f5e4882d4efdf393abed5a16b45c1e0b513ffa6"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 58,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RuntimeBrowserProbe.java",
+      "line": 126,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d0de82705a6249e9aa6e1fc40e620ca7b65660a9df839e9661313b4f8099a383",
+      "priorSourceSha256": "d0de82705a6249e9aa6e1fc40e620ca7b65660a9df839e9661313b4f8099a383"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 59,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+      "line": 349,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818",
+      "priorSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 60,
+      "file": "app/src/main/java/com/deepseekharness/app/core/TrustedNetwork.java",
+      "line": 45,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "38834a6d779ff89a7d7bc934b15ae53c5a281ca2dbf1f5b00d1d6393d2e7b944",
+      "priorSourceSha256": "38834a6d779ff89a7d7bc934b15ae53c5a281ca2dbf1f5b00d1d6393d2e7b944"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 61,
+      "file": "app/src/main/res/xml/network_security_config.xml",
+      "line": 6,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e793aae9bbe0ad36579542a22899a8f92a4bd1cf98f96133f55e27b1ca3d1436",
+      "priorSourceSha256": "e793aae9bbe0ad36579542a22899a8f92a4bd1cf98f96133f55e27b1ca3d1436"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 62,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "line": 563,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "priorSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 63,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "line": 645,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "priorSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 64,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "line": 657,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "priorSourceSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 65,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "line": 523,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "priorSourceSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 66,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "line": 542,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a",
+      "priorSourceSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 67,
+      "file": "app/src/main/java/com/deepseekharness/app/DeviceSense.java",
+      "line": 437,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2a5cf779d3a48e08423772d111e32f74cf564d17f6bd3927290cc885e79e34b9",
+      "priorSourceSha256": "2a5cf779d3a48e08423772d111e32f74cf564d17f6bd3927290cc885e79e34b9"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 68,
+      "file": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+      "line": 804,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+      "priorSourceSha256": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 69,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+      "line": 48,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef",
+      "priorSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 70,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+      "line": 67,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef",
+      "priorSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 71,
+      "file": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+      "line": 327,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7",
+      "priorSourceSha256": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 72,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "line": 50,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6bbb4a87b3bf6de350574faa95010cc9650c743e5cbbd643ec508c090c64730a",
+      "priorSourceSha256": "6bbb4a87b3bf6de350574faa95010cc9650c743e5cbbd643ec508c090c64730a"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 73,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 102,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 74,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 103,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 75,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 104,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 76,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 105,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 77,
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "line": 115,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "priorSourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 78,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/PrivilegedPackageContext.java",
+      "line": 15,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "2dbf0353f53151002317b5457782b66ac07ec4f0e3f8abf15a94d55ec083b1d9",
+      "priorSourceSha256": "2dbf0353f53151002317b5457782b66ac07ec4f0e3f8abf15a94d55ec083b1d9"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 79,
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java",
+      "line": 23,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "60ac14b4f30b2e6bf99ad6fcd32556b9fd0a658e25549214d77ee36e1f1eff1b",
+      "priorSourceSha256": "60ac14b4f30b2e6bf99ad6fcd32556b9fd0a658e25549214d77ee36e1f1eff1b"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 80,
+      "file": "app/src/main/java/com/deepseekharness/app/core/RuntimeTasks.java",
+      "line": 8,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "501b84a461682dea0281d52e51b1caa1cec34fad0f991e626f8817d0c0ca8a05",
+      "priorSourceSha256": "501b84a461682dea0281d52e51b1caa1cec34fad0f991e626f8817d0c0ca8a05"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 81,
+      "file": "app/src/main/java/com/deepseekharness/app/ShizukuShell.java",
+      "line": 18,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "f3d6dba059701b2a000ee2f331541692855c9dbf6c78a23fe0850b21c446eaaa",
+      "priorSourceSha256": "f3d6dba059701b2a000ee2f331541692855c9dbf6c78a23fe0850b21c446eaaa"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 82,
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+      "line": 30,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4",
+      "priorSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 83,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+      "line": 30,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef",
+      "priorSourceSha256": "d66c1ec58af4b4ebd9e768c265a02d825548d7a3e3eac9cb473fe093316044ef"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 84,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+      "line": 103,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818",
+      "priorSourceSha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 85,
+      "file": "app/src/main/res/layout/activity_web_preview.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e8f08a45f2779753b86529f6e0e5d913228073484273d46b2dffc6f1b73fed11",
+      "priorSourceSha256": "e8f08a45f2779753b86529f6e0e5d913228073484273d46b2dffc6f1b73fed11"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 86,
+      "file": "app/src/main/res/layout/fragment_launch.xml",
+      "line": 22,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "dc6ad88e3d8d58c8c6b27ca3584bcf7f6a50c969dca971bf12e2fe38e60af3dc",
+      "priorSourceSha256": "dc6ad88e3d8d58c8c6b27ca3584bcf7f6a50c969dca971bf12e2fe38e60af3dc"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 87,
+      "file": "app/src/main/res/layout/fragment_terminal.xml",
+      "line": 11,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53",
+      "priorSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 88,
+      "file": "app/src/main/res/layout/activity_adb_pair.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "9beac348b99dfc90a2fd6bfa884991118e00238792397f333a62b3ee9dd9d864",
+      "priorSourceSha256": "9beac348b99dfc90a2fd6bfa884991118e00238792397f333a62b3ee9dd9d864"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 89,
+      "file": "app/src/main/res/layout/activity_diagnostics.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838",
+      "priorSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 90,
+      "file": "app/src/main/res/layout/activity_extract.xml",
+      "line": 1,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "39cb2f0b44dd126f6bb63a18d8ed8acd9850ddf7be278c9b65461ee406d878ef",
+      "priorSourceSha256": "39cb2f0b44dd126f6bb63a18d8ed8acd9850ddf7be278c9b65461ee406d878ef"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 91,
+      "file": "app/src/main/res/layout/activity_main.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "791f40fc600d339cb5e69b6e006463cf936f32dbbe90a860f5dc000d6b01c7f0",
+      "priorSourceSha256": "791f40fc600d339cb5e69b6e006463cf936f32dbbe90a860f5dc000d6b01c7f0"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 92,
+      "file": "app/src/main/res/layout/activity_plugin_install.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "bfeeb91de5958c134d3a793d96b5b4e1a825641f590704ba1e5b2ca56b2417ea",
+      "priorSourceSha256": "bfeeb91de5958c134d3a793d96b5b4e1a825641f590704ba1e5b2ca56b2417ea"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 93,
+      "file": "app/src/main/res/layout/activity_update.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "bad328d63f12ae606f0916d21770a1e42b2d699856b72e29e9810299e0644b46",
+      "priorSourceSha256": "bad328d63f12ae606f0916d21770a1e42b2d699856b72e29e9810299e0644b46"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 94,
+      "file": "app/src/main/res/layout/activity_welcome.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "754a65cbabb86eb713a61d093e08bd2d2664a8b2a0acce6c1ffa03130a737be9",
+      "priorSourceSha256": "754a65cbabb86eb713a61d093e08bd2d2664a8b2a0acce6c1ffa03130a737be9"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 95,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 96,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 97,
+      "file": "app/src/main/res/layout/fragment_install.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "df74e412ef310a49dbb38cf95e170f8d690cf3e5fa98d9a135fe612dec74a3b4",
+      "priorSourceSha256": "df74e412ef310a49dbb38cf95e170f8d690cf3e5fa98d9a135fe612dec74a3b4"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 98,
+      "file": "app/src/main/res/layout/fragment_plugins.xml",
+      "line": 4,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "9d5152c768023478abb2076568ec248a6f9f7c4d23d23508ff43e62f100a048c",
+      "priorSourceSha256": "9d5152c768023478abb2076568ec248a6f9f7c4d23d23508ff43e62f100a048c"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 99,
+      "file": "app/src/main/res/layout/fragment_pty_terminal.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "46bf89362ce172a9a747c5f3f839253f19a28bdff3cd46f1be15608ee3ac58b9",
+      "priorSourceSha256": "46bf89362ce172a9a747c5f3f839253f19a28bdff3cd46f1be15608ee3ac58b9"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 100,
+      "file": "app/src/main/res/layout/fragment_settings.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "73f26e248d3602e01c26953087c768e93b354cab2bd9fcc61ab7fc36f0ddc0e9",
+      "priorSourceSha256": "73f26e248d3602e01c26953087c768e93b354cab2bd9fcc61ab7fc36f0ddc0e9"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 101,
+      "file": "app/src/main/res/layout/fragment_terminal.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53",
+      "priorSourceSha256": "e5d8c36a08acf2fb026147582a484e13d0b8a76e71c2d4b703080816bb4edd53"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 102,
+      "file": "app/src/main/res/layout/fragment_workspace.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "923a16165bb51151fa67883744cdcad9dc10e8b34bdea7e8dc3062b105e80710",
+      "priorSourceSha256": "923a16165bb51151fa67883744cdcad9dc10e8b34bdea7e8dc3062b105e80710"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 103,
+      "file": "app/src/main/res/layout/welcome_page1.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "57e11cbad44e6cc72b733cb12c7d56fc4a8807b1b89a54a204dd250e618cd7eb",
+      "priorSourceSha256": "57e11cbad44e6cc72b733cb12c7d56fc4a8807b1b89a54a204dd250e618cd7eb"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 104,
+      "file": "app/src/main/res/layout/welcome_page2.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "fcbe3db193c0030057bc05e5d73038ac8689cbe143599ec57ccda82de7b172a1",
+      "priorSourceSha256": "fcbe3db193c0030057bc05e5d73038ac8689cbe143599ec57ccda82de7b172a1"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 105,
+      "file": "app/src/main/res/layout/welcome_page3.xml",
+      "line": 2,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0e76152410ce7d745c0e1a73529369f8a6d18ddb91e27f6babe8c25e85a7aa21",
+      "priorSourceSha256": "0e76152410ce7d745c0e1a73529369f8a6d18ddb91e27f6babe8c25e85a7aa21"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 106,
+      "file": "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+      "line": 494,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d72d1aad7712cee4f95681d4b02c712af9646533feb3ace3868829ebf08d1db5",
+      "priorSourceSha256": "d72d1aad7712cee4f95681d4b02c712af9646533feb3ace3868829ebf08d1db5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 107,
+      "file": "app/src/main/java/com/deepseekharness/app/runtime/ColdBundleTransaction.java",
+      "line": 50,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a08f79084966962f3957a15f11098c841055daeb524742d154db1c490aa6dc84",
+      "priorSourceSha256": "a08f79084966962f3957a15f11098c841055daeb524742d154db1c490aa6dc84"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 108,
+      "file": "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+      "line": 443,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f",
+      "priorSourceSha256": "08537191acb7a86e736b9d36adc45c6402b2e584453a6f7976855db14ae7226f"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 109,
+      "file": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+      "line": 291,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5d3d4ff417ef108ffb88ad994169fb4661c3e4e858b2959cf19b2b71cb50aac9",
+      "priorSourceSha256": "5d3d4ff417ef108ffb88ad994169fb4661c3e4e858b2959cf19b2b71cb50aac9"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 110,
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ManagedRuntimeTransaction.java",
+      "line": 523,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0b441ec74681c98ca701eee7cacc4ba2618209ebaf68b87fd5e2aad45356bfe9",
+      "priorSourceSha256": "0b441ec74681c98ca701eee7cacc4ba2618209ebaf68b87fd5e2aad45356bfe9"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 111,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java",
+      "line": 531,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6ce48d2326c7b54f879774013c741575a383d7c474d5df7d0c029ec35bf67cf1",
+      "priorSourceSha256": "6ce48d2326c7b54f879774013c741575a383d7c474d5df7d0c029ec35bf67cf1"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 112,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/OnboardingPrepareActivity.java",
+      "line": 41,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "0681796a57c01c71f1f21f03d8541d2d2c613d60ac46bf068516dc97e1d7cacf",
+      "priorSourceSha256": "0681796a57c01c71f1f21f03d8541d2d2c613d60ac46bf068516dc97e1d7cacf"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 113,
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+      "line": 139,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "cfcca5ce093f3fdeaecb9a03a78502937be6f44cdfec3edafe38d83139345319",
+      "priorSourceSha256": "cfcca5ce093f3fdeaecb9a03a78502937be6f44cdfec3edafe38d83139345319"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 114,
+      "file": "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+      "line": 363,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4",
+      "priorSourceSha256": "a963202339930b6a47d7e049a228b7d344ec95ef5259f1eb12391b66132462a4"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 115,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java",
+      "line": 152,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "f704e1cc1248122ae801381c396ec54787444e9d202ca1ec6ab5109801ea83e5",
+      "priorSourceSha256": "f704e1cc1248122ae801381c396ec54787444e9d202ca1ec6ab5109801ea83e5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 116,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 4,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 117,
+      "file": "app/src/main/res/layout/fragment_launch.xml",
+      "line": 5,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "dc6ad88e3d8d58c8c6b27ca3584bcf7f6a50c969dca971bf12e2fe38e60af3dc",
+      "priorSourceSha256": "dc6ad88e3d8d58c8c6b27ca3584bcf7f6a50c969dca971bf12e2fe38e60af3dc"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 118,
+      "file": "app/src/main/res/layout/fragment_install.xml",
+      "line": 100,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "df74e412ef310a49dbb38cf95e170f8d690cf3e5fa98d9a135fe612dec74a3b4",
+      "priorSourceSha256": "df74e412ef310a49dbb38cf95e170f8d690cf3e5fa98d9a135fe612dec74a3b4"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 119,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 120,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 121,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 122,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 123,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 124,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 125,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 126,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 127,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 128,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 129,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 130,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 131,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 132,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 133,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 134,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 134,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 134,
+      "file": "app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7",
+      "priorSourceSha256": "e9640c5fb1654562d61e4fc9d5d320e4cd230607c99e73b1658a2d9b43c959d7"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 135,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 135,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 135,
+      "file": "app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5",
+      "priorSourceSha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 136,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 136,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 136,
+      "file": "app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465",
+      "priorSourceSha256": "b2d932acdd60c20d244de2f5b41771e5ee464e89dcb463710a7cf16cbcef0465"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 137,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 137,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 137,
+      "file": "app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d",
+      "priorSourceSha256": "96e413047959a8efc90f2683c74cce0f53b816990ae3d8de94983f83150cd92d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 138,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 138,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round_v137.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 138,
+      "file": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "line": 0,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb",
+      "priorSourceSha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 139,
+      "file": "app/src/main/java/com/deepseekharness/app/ui/DshaSelectView.java",
+      "line": 41,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "b5a41af3db376a638317fb8ac9e9ee41e3c77db801fbbdf13f1d6f279e1ff1a3",
+      "priorSourceSha256": "b5a41af3db376a638317fb8ac9e9ee41e3c77db801fbbdf13f1d6f279e1ff1a3"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 140,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java",
+      "line": 318,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "d9e7998f2391fdfba5be3b761119d7d788c7ac7337f8980fc98c6f75d688b6c8",
+      "priorSourceSha256": "d9e7998f2391fdfba5be3b761119d7d788c7ac7337f8980fc98c6f75d688b6c8"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 141,
+      "file": "app/src/main/res/layout/activity_diagnostics.xml",
+      "line": 18,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838",
+      "priorSourceSha256": "356d674a0cbe71682cdf13d71264974f22fa27d842e79653801cd81e0c1b5838"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 142,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 29,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 143,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 43,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 144,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 48,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 145,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 59,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 146,
+      "file": "app/src/main/res/layout/fragment_config.xml",
+      "line": 63,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b",
+      "priorSourceSha256": "6489374a0004778d82d91255d03fb72b7fa739ca4f2ae661cafe142ce169d32b"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 147,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 8,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 148,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 24,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 149,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 49,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 150,
+      "file": "app/src/main/res/layout/fragment_device_grants.xml",
+      "line": 50,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d",
+      "priorSourceSha256": "5dcab664f1fa0e99b3dc9bb69c9047c4f28c8bc571bfcf4c9ae28f1ea278982d"
+    },
+    {
+      "flavor": "low",
+      "issueIndex": 151,
+      "file": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+      "line": 88,
+      "locationAndExcerptUnchanged": true,
+      "currentSourceSha256": "48d8847c58524fe93f7c9ac2f877170827ac7941b2f1b36af3fca8f14c524077",
+      "priorSourceSha256": "48d8847c58524fe93f7c9ac2f877170827ac7941b2f1b36af3fca8f14c524077"
+    }
+  ],
+  "scope": "Actual completed lintAnalyze and cached lintReport, identical XML bytes, current complete source snapshot, and every source location/excerpt verified unchanged. No timestamp changed and no general timestamp waiver."
+}

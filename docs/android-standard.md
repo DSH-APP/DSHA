@@ -1,5 +1,8 @@
 # Android 11+ 标准版适配与减重
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 当前预览版为 `1.2.0-rc1.2`（versionCode 111），最低 Android 11 / API 30，
 仅 arm64-v8a；Android 12 包含在支持范围内。编译和目标 SDK 为 Android 17 / API 37。
 采用系统 WebView；旧系统另有 [low 兼容版](android-low.md)。最新 APK 与校验值见 [rc1.2 发布说明](releases/v1.2.0-rc1.2.md)。

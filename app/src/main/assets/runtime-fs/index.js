@@ -2,6 +2,7 @@
 import { constants } from 'node:fs';
 import { copyFile, open, link, lstat, rename, rm } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
+import { dirname, join } from 'node:path';
 import { getSystemErrorName } from 'node:util';
 import { tryLockExclusive } from '@deepseek-ai/node-addon-system/flock';
 
@@ -30,10 +31,14 @@ async function kernelPublish(source, target) {
 }
 
 async function lockedSessionPublish(source, target) {
-  // 老内核可能缺 renameat2；私有会话的所有发布方共用同一持久锁文件。
+  // 一目录一个永久 inode；不按每个文件永久留下锁，也绝不 unlink 有等待者的锁。
   // 普通文件工具不使用此降级，以保留对其他程序的严格 createIfAbsent 语义。
-  const lock = await open(target + '.dsha-publish.lock', 'a', 0o600);
+  const name = join(dirname(target), '.dsha-publish.lock');
+  const lock = await open(name, constants.O_CREAT | constants.O_RDWR | constants.O_NOFOLLOW, 0o600);
   try {
+    const identity = await lock.stat();
+    if (!identity.isFile()) throw Object.assign(new Error('发布锁不是普通文件'), { code: 'EINVAL' });
+    await syncParent(target);
     const deadline = Date.now() + 10_000;
     for (;;) {
       try { await tryLockExclusive(lock.fd); break; }
@@ -42,6 +47,9 @@ async function lockedSessionPublish(source, target) {
         await new Promise(resolve => setTimeout(resolve, 25));
       }
     }
+    const current = await lstat(name);
+    if (!current.isFile() || current.dev !== identity.dev || current.ino !== identity.ino)
+      throw Object.assign(new Error('发布锁已被替换'), { code: 'ESTALE' });
     try {
       await lstat(target);
       throw Object.assign(new Error('目标会话文件已存在'), { code: 'EEXIST' });
@@ -50,9 +58,15 @@ async function lockedSessionPublish(source, target) {
   } finally { await lock.close(); }
 }
 
+async function syncParent(target) {
+  const parent = await open(dirname(target), constants.O_RDONLY | constants.O_DIRECTORY);
+  try { await parent.sync(); } finally { await parent.close(); }
+}
+
 /** 依赖注入只用于隔离文件系统回归；部署入口固定使用真实内核操作。 */
 export function createPublisher(renameNoReplace = kernelPublish) {
-  return async function publish(source, target, privateSession = false) {
+  return async function publish(source, target, privateSession = false, signal) {
+    signal?.throwIfAborted();
     if (process.platform !== 'linux') return link(source, target);
     const temporary = target + '.dsha-publish-' + randomUUID() + '.tmp';
     let created = false;
@@ -61,11 +75,13 @@ export function createPublisher(renameNoReplace = kernelPublish) {
       created = true;
       const file = await open(temporary, 'r+');
       try { await file.sync(); } finally { await file.close(); }
+      signal?.throwIfAborted();
       try { await renameNoReplace(temporary, target); }
       catch (error) {
         if (!privateSession || !['ENOSYS', 'EINVAL', 'EOPNOTSUPP'].includes(error.code)) throw error;
         await lockedSessionPublish(temporary, target);
       }
+      await syncParent(target);
     } finally { if (created) await rm(temporary, { force: true }); }
   };
 }

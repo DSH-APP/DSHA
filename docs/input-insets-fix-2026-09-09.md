@@ -1,5 +1,8 @@
 # 1.5-alpha.1 输入与系统栏修订
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 本次按反馈修复 low 的状态栏/键盘遮挡，并调整标准版与 low 共用的 dsh 对话输入逻辑。交付仍为本地 `1.5-alpha.1` / `1.5-alpha.1low`，版本码 114、环境版本 10。
 
 ## 修改

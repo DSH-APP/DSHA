@@ -1,0 +1,54 @@
+{
+  "finding": "D-PRIV-03",
+  "scope": "Bounded host-side device helpers and retirement of three historical intrusive runners; no device contacted",
+  "changedFiles": [
+    "tools/measure-stability-device.py",
+    "tools/device-policy-device-audit.py",
+    "tools/control-adb-flow-audit.py",
+    "tools/device_script_privacy.py",
+    "tools/test-device-script-selection.py",
+    "tools/host-tests.manifest.json",
+    "tools/history/private-device-audits/test-update-process.py",
+    "tools/history/private-device-audits/test-backup-device.py",
+    "tools/history/private-device-audits/run-backup-device-audit.py",
+    "tools/history/private-device-audits/README.md",
+    "tools/history/private-device-audits/hashes.json"
+  ],
+  "retiredActivePaths": [
+    "tools/test-update-process.py",
+    "tools/test-backup-device.py",
+    "tools/run-backup-device-audit.py"
+  ],
+  "checks": [
+    {
+      "command": "python tools/test-device-script-selection.py",
+      "result": "PASS: missing adb or serial exits before any subprocess for three remaining ADB runners; explicit command prefix and nested report redaction checked"
+    },
+    {
+      "command": "python tools/test-adb-flow-audit.py",
+      "result": "PASS: 10 isolated private request tests"
+    },
+    {
+      "command": "python -m py_compile tools/device_script_privacy.py tools/measure-stability-device.py tools/device-policy-device-audit.py tools/control-adb-flow-audit.py tools/test-device-script-selection.py",
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check -- tools/measure-stability-device.py tools/device-policy-device-audit.py tools/control-adb-flow-audit.py tools/host-tests.manifest.json",
+      "result": "PASS"
+    },
+    {
+      "command": "python tools/run-host-tests.py --check-manifest",
+      "result": "PASS_MANIFEST: 103 tests"
+    },
+    {
+      "command": "verify archived SHA-256 and Git blob IDs against each original HEAD path; verify active paths absent",
+      "result": "PASS: three exact archived blobs; active paths absent"
+    }
+  ],
+  "notDeviceRunners": [
+    "tools/test-dns-compat-device.mjs",
+    "tools/device-startup-performance.py",
+    "tools/device-startup-diagnostics.py"
+  ],
+  "policyNote": "The three historical debug/audit runners were removed from active tools and retained only as exact private Git blobs with hashes. Parameterization does not authorize their old actions. No APK was generated or installed; private historical blobs are excluded from the public source snapshot. This does not claim every historical reference was removed."
+}

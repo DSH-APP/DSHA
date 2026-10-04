@@ -1,0 +1,18 @@
+test_changed_candidate_and_invalid_log_preserve_all_originals (__main__.TransactionTest.test_changed_candidate_and_invalid_log_preserve_all_originals) ... ok
+test_committed_id_lookup_and_recovery_are_idempotent_after_archive (__main__.TransactionTest.test_committed_id_lookup_and_recovery_are_idempotent_after_archive) ... PLUGIN_RESULT: {"status": "ok", "message": "已移除 test-plugin 的加载入口；原件保留在数据页的保留区。重启 Web 后生效，对话和其他插件保留。"}
+ok
+test_completed_history_does_not_exhaust_future_transaction_slots (__main__.TransactionTest.test_completed_history_does_not_exhaust_future_transaction_slots) ... ok
+test_death_during_rollback_remains_recoverable (__main__.TransactionTest.test_death_during_rollback_remains_recoverable) ... skipped '回切后的链接恢复需要 Android/Linux 的真实符号链接'
+test_delete_crash_boundaries_restore_or_leave_committed_user_changes (__main__.TransactionTest.test_delete_crash_boundaries_restore_or_leave_committed_user_changes) ... ok
+test_delete_death_during_rollback_is_recoverable (__main__.TransactionTest.test_delete_death_during_rollback_is_recoverable) ... ok
+test_delete_failed_rollback_keeps_the_only_old_source (__main__.TransactionTest.test_delete_failed_rollback_keeps_the_only_old_source) ... ok
+test_delete_modified_staged_original_blocks_recovery (__main__.TransactionTest.test_delete_modified_staged_original_blocks_recovery) ... ok
+test_every_commit_boundary_recovers_or_preserves_finalized_user_changes (__main__.TransactionTest.test_every_commit_boundary_recovers_or_preserves_finalized_user_changes) ... skipped '提交后的链接恢复需要 Android/Linux 的真实符号链接'
+test_legacy_three_file_journal_preserves_unrecorded_activation_state (__main__.TransactionTest.test_legacy_three_file_journal_preserves_unrecorded_activation_state) ... ok
+test_modified_configuration_after_crash_is_never_overwritten (__main__.TransactionTest.test_modified_configuration_after_crash_is_never_overwritten) ... ok
+test_read_only_pending_does_not_move_committed_work_still_used_by_child (__main__.TransactionTest.test_read_only_pending_does_not_move_committed_work_still_used_by_child) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 8.183s
+
+OK (skipped=2)

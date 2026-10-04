@@ -1,0 +1,170 @@
+[
+  {
+    "zh": "自动开无线调试失败: %s",
+    "en": "Could not enable wireless debugging automatically: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BootReceiver.java"
+    ]
+  },
+  {
+    "zh": "后台暂不能启动 ADB 保活: %s",
+    "en": "ADB keep-alive cannot start in the background yet: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "ADB 保活启动失败: %s",
+    "en": "ADB keep-alive failed to start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "3090 桥启动失败: %s",
+    "en": "Bridge on port 3090 failed to start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "Shizuku 绑定失败: %s",
+    "en": "Could not bind Shizuku: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "网络监听注册失败: %s",
+    "en": "Could not register the network listener: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "屏幕广播注册失败: %s",
+    "en": "Could not register screen broadcasts: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "保活探测异常: %s",
+    "en": "Keep-alive probe error: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "保活探测未完成：%s",
+    "en": "Keep-alive probe did not complete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "设备确认桥未就绪：%s",
+    "en": "Device confirmation bridge is not ready: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "ADB 准备失败：%s",
+    "en": "ADB preparation failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "触发原因：%s",
+    "en": "Triggered by: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "重连端口 %s",
+    "en": "Reconnecting on port %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "无线调试连接尚未验证；请检查连接端口或重新配对。%s",
+    "en": "The wireless debugging connection has not been verified. Check the connection port or pair again. %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "无线调试似乎已关闭（失败 %s 次）",
+    "en": "Wireless debugging appears to be disabled (%s failed attempts)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceBridgeService.java"
+    ]
+  },
+  {
+    "zh": "已授权，连接失败：%s。点击下方重试。",
+    "en": "Authorized, but the connection failed: %s. Retry below.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
+    ]
+  },
+  {
+    "zh": "[EXECUTION_UNKNOWN] 设备命令结果未确认，不会自动重试：%s\n[EXIT=125]",
+    "en": "[EXECUTION_UNKNOWN] Device command result is unconfirmed; it will not be retried automatically: %s\n[EXIT=125]",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
+    ]
+  },
+  {
+    "zh": "[EXECUTION_UNKNOWN] 虚拟屏启动结果未确认，不会自动重试：%s\n[EXIT=125]",
+    "en": "[EXECUTION_UNKNOWN] Virtual screen startup result is unconfirmed; it will not be retried automatically: %s\n[EXIT=125]",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
+    ]
+  },
+  {
+    "zh": "位置 %s",
+    "en": "Location %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceSense.java"
+    ]
+  },
+  {
+    "zh": "传感器/手电 %s",
+    "en": "Sensors/flashlight %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceSense.java"
+    ]
+  },
+  {
+    "zh": "BAD_KEY 支持的名字：light accel gyro magnet pressure proximity humidity temperature gravity rotation steps",
+    "en": "BAD_KEY Supported names: light accel gyro magnet pressure proximity humidity temperature gravity rotation steps",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DeviceSense.java"
+    ]
+  }
+]

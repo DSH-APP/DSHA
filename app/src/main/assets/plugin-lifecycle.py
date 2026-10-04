@@ -78,6 +78,51 @@ class Lifecycle:
             raise ValueError('插件管理目录指向外部，已停止操作')
         return path
 
+    def migrate_legacy_reviews(self, locked=False):
+        """Activate only markers written by the removed review gate.
+
+        Empty/user-disabled and safe-mode markers remain untouched. Invalid
+        packages remain disabled so a broken old install cannot block startup.
+        """
+        def migrate():
+            doc = self.builtin.read_manifest() or {}
+            references = doc.get('dependencies') or {}
+            activated, skipped = [], []
+            for name, reference in references.items():
+                if not self.builtin.valid_name(name) or name in self.builtin.OFFICIAL_BUNDLES or name in self.builtin.builtin_names():
+                    continue
+                marker = self.builtin.marker_path(name)
+                if os.path.islink(marker) or not os.path.isfile(marker) or os.path.getsize(marker) != len(b'DSHA_REVIEW_REQUIRED\n'):
+                    continue
+                with open(marker, 'rb') as stream:
+                    if stream.read() != b'DSHA_REVIEW_REQUIRED\n':
+                        continue
+                relative = os.path.join(self.g['PLUGIN_SRC'], name)
+                directory = self.local(relative)
+                if reference != 'link:' + relative.replace('\\', '/') or os.path.islink(directory) or not os.path.isdir(directory):
+                    skipped.append(name); continue
+                try:
+                    package = self.g['plugin_package'](directory)
+                    if package['name'] != name:
+                        raise ValueError('插件名称与启用记录不一致：' + name)
+                    content = self.g['dependencies']().current(directory)
+                    if package['name'] != name or content['missing']:
+                        skipped.append(name); continue
+                    self.queue_activation(name, content['sha256'], package['version'])
+                    if self.builtin.enable_plugin(name):
+                        skipped.append(name); continue
+                    activated.append(name)
+                except (OSError, ValueError):
+                    skipped.append(name)
+            self.g['result']('ok', '已启用 %d 个旧版待审阅插件%s' %
+                             (len(activated), ('；%d 个原件不完整，保持停用' % len(skipped)) if skipped else ''),
+                             activated=activated, skipped=skipped)
+            return 0
+        if locked:
+            return migrate()
+        with self.builtin.operation_lock(self.g['check_cancel']):
+            return migrate()
+
     def history_path(self, name):
         if not self.builtin.valid_name(name):
             raise ValueError('无效插件名')
@@ -200,6 +245,8 @@ class Lifecycle:
                 item['dependencyCount'] = len(snapshot.get('resolved', []))
                 item['dependencyLockSha256'] = snapshot.get('lockSha256', '')
                 item['packageManagerVersion'] = snapshot.get('managerVersion', 'not-executed')
+                if snapshot.get('authorClaims'):
+                    item['authorDependencyClaims'] = snapshot['authorClaims']
                 reviewed.append({'path': os.path.relpath(plugin_root, path).replace(os.sep, '/'),
                                  'snapshotSha256': self.digest(os.path.join(plugin_root, '.dsha-dependencies.json'))})
             prepared = {'previewId': key, 'source': self.g['dependencies']().source_label(request.get('source') or source), 'commandKind': parts[0], 'sha256': digest,
@@ -228,7 +275,7 @@ class Lifecycle:
         except Exception:
             shutil.rmtree(path); raise
         if emit:
-            self.g['result']('ok', '插件包已解析，请核对作者、版本和兼容信息后确认安装', preview=prepared)
+            self.g['result']('ok', '插件包已解析，正在提交安装', preview=prepared)
             return 0
         return prepared
 
@@ -237,7 +284,7 @@ class Lifecycle:
         preview = self.read(os.path.join(path, 'preview.json'), {})
         if not preview or self.review_digest(preview) != preview.get('confirmationSha256'):
             raise ValueError('预览记录不可读取或已变化，原件已保留')
-        self.g['result']('ok', '请确认插件版本与兼容范围', preview=preview)
+        self.g['result']('ok', '插件包已准备，正在继续安装', preview=preview)
         return 0
 
     def pending_previews(self):
@@ -263,7 +310,7 @@ class Lifecycle:
 
     def review_existing(self, name, action='enable', restored=None):
         if not self.builtin.valid_name(name) or action not in ('enable', 'rollback', 'restored'):
-            raise ValueError('无效插件审阅请求')
+            raise ValueError('无效插件操作请求')
         if action == 'restored':
             directory = restored['directory']
         elif action == 'rollback':
@@ -293,7 +340,7 @@ class Lifecycle:
             item['existingConflict'] = bool(self.g['resolve_plugin_dir'](name))
         preview['confirmationSha256'] = self.review_digest(preview)
         self.write(os.path.join(path, 'preview.json'), preview)
-        self.g['result']('ok', '请审阅实际插件与依赖后明确启用', preview=preview)
+        self.g['result']('ok', '插件和依赖已准备，正在启用', preview=preview)
         return 0
 
     def restored_directory(self, group, node):
@@ -330,19 +377,12 @@ class Lifecycle:
         if not preview:
             raise ValueError('预览记录不可读取或已变化，原件已保留')
         if not re.fullmatch('[a-f0-9]{64}', confirmation) or preview.get('confirmationSha256') != confirmation or self.review_digest(preview) != confirmation:
-            raise ValueError('安装确认对象已变化，请重新审阅')
-        approval = self.g['task_file']('.approval')
-        if not approval or os.path.islink(approval) or not os.path.isfile(approval) or os.path.getsize(approval) != 64:
-            raise ValueError('请在原生插件界面确认安装，等待 Web 与终端停止后再提交')
-        with open(approval, encoding='ascii') as stream:
-            if stream.read(65) != confirmation:
-                raise ValueError('安装确认对象已变化，请重新审阅')
-        os.unlink(approval)
+            raise ValueError('插件准备内容已变化，请重新解析')
         if preview.get('action') in ('enable', 'rollback', 'restored'):
             name = preview['name']
             directory = self.restored_directory(preview['restoredGroup'],preview['restoredNode']) if preview['action']=='restored' else os.path.join(self.history_path(name), 'package') if preview['action'] == 'rollback' else self.g['resolve_plugin_dir'](name)
             if not directory or self.g['dependencies']().current(directory)['sha256'] != preview['sha256']:
-                raise ValueError('插件或依赖在审阅后发生变化，请重新审阅')
+                raise ValueError('插件或依赖在准备后发生变化，请重新检查')
             if preview['items'][0].get('missingDependencies'):
                 raise ValueError('插件缺少运行依赖，原件保持隔离，请先修复依赖')
             if preview['action'] == 'restored':
@@ -360,7 +400,7 @@ class Lifecycle:
                     tx = self.g['transactions'](); plan = tx.prepare(work,name,directory,doc,sources,None,link_target=directory,remove_marker=True)
                     link = os.path.join(self.local(self.builtin.NODE_MODULES),name)
                     try:
-                        if os.path.lexists(link): raise ValueError('插件目标在审阅后出现，当前内容未修改')
+                        if os.path.lexists(link): raise ValueError('插件目标在准备后出现，当前内容未修改')
                         self.queue_activation(name,preview['sha256'],preview['items'][0]['version'],transaction=(tx,work,plan))
                         os.makedirs(os.path.dirname(link),exist_ok=True); os.symlink(directory,link,target_is_directory=True)
                         tx.apply_file(work,'marker',plan);tx.apply_file(work,'sources',plan);tx.apply_file(work,'manifest',plan);tx.mark(work,'committed')
@@ -368,17 +408,13 @@ class Lifecycle:
                         tx.recover(work);raise
                 self.g['result']('ok','恢复的插件已启用，原隔离副本保留；重启 Web 后确认加载')
             elif preview['action'] == 'rollback':
-                self.rollback(name, preview['items'][0]['version'], reviewed=True)
+                self.rollback(name, preview['items'][0]['version'], prepared=True)
             else:
-                self.builtin._native_review_approved = True
-                try:
-                    with self.builtin.operation_lock(self.g['check_cancel']), self.g['committing']('正在启用已审阅插件…'):
-                        self.queue_activation(name, preview['sha256'], preview['items'][0]['version'])
-                        if self.builtin.enable_plugin(name):
-                            raise ValueError('插件启用未完成，原件已保留')
-                finally:
-                    self.builtin._native_review_approved = False
-                self.g['result']('ok', '已启用已审阅插件；重启 Web 后观察实际加载结果')
+                with self.builtin.operation_lock(self.g['check_cancel']), self.g['committing']('正在启用插件…'):
+                    self.queue_activation(name, preview['sha256'], preview['items'][0]['version'])
+                    if self.builtin.enable_plugin(name):
+                        raise ValueError('插件启用未完成，原件已保留')
+                self.g['result']('ok', '插件已启用；重启 Web 后加载')
             shutil.rmtree(path)
             return 0
         if set(os.listdir(path)) - {'archive', 'contents', 'preview.json'}:
@@ -392,7 +428,7 @@ class Lifecycle:
             if current.get('version') != preview.get('fromVersion'):
                 raise ValueError('插件已被其他操作更新，请重新检查版本')
         if self.g['dependencies']().tree(os.path.join(path, 'contents'), self.g['check_cancel'])[0] != preview.get('contentsSha256'):
-            raise ValueError('预览内容已变化，请重新审阅')
+            raise ValueError('准备内容已变化，请重新解析')
         roots = preview.get('reviewedRoots', [])
         if not roots or len(roots) != len(preview.get('items', [])) or len(roots) > 30:
             raise ValueError('安装预览缺少冻结依赖，请重新解析')
@@ -406,9 +442,9 @@ class Lifecycle:
             target = self.g['safe_target'](path, root['path'])
             name = self.g['plugin_package'](target)['name']
             expected = preview.get('fromVersion') if name == preview.get('updateFor') else None
-            installed.append(self.g['register_plugin'](target, preview.get('source', ''), expected_version=expected, reviewed=True))
+            installed.append(self.g['register_plugin'](target, preview.get('source', ''), expected_version=expected))
         shutil.rmtree(path)
-        self.g['result']('ok', '插件已安装到待审阅状态，请明确启用后再重启 Web', installed=installed)
+        self.g['result']('ok', '插件已安装并启用；启动 Web 后即可使用', installed=installed)
         return 0
 
     def activation_state(self):
@@ -435,34 +471,53 @@ class Lifecycle:
     def loading(self, action, startup):
         if str(uuid.UUID(startup)) != startup or action not in ('begin', 'complete', 'failed'):
             raise ValueError('插件启动记录标识无效')
+        failures = []
         with self.builtin.operation_lock(self.g['check_cancel']):
             value = self.activation_state()
             doc = self.builtin.read_manifest() or {}
             enabled = set(doc.get('dsh', {}).get('profile', {}).get('bundles', []))
-            for name, entry in value['entries'].items():
-                status = entry.get('status')
-                if action == 'begin' and (status == 'queued' or status == 'attempted' and entry.get('startup') == startup):
-                    directory = self.g['resolve_plugin_dir'](name)
-                    if name not in enabled:
-                        entry['status'] = 'disabled'; continue
-                    if not directory or self.g['dependencies']().current(directory)['sha256'] != entry.get('fingerprint'):
-                        if self.builtin.disable_plugin(name):
-                            raise ValueError('无法保留插件停用状态，请先完成恢复')
-                        entry.update(status='changed', reason='CONTENT_CHANGED_BEFORE_LOAD'); continue
-                    entry.update(status='attempted', startup=startup)
-                elif action == 'begin' and status == 'attempted':
-                    if self.builtin.disable_plugin(name):
-                        raise ValueError('无法保留插件停用状态，请先完成恢复')
-                    entry.update(status='unconfirmed', reason='PREVIOUS_LOAD_NOT_CONFIRMED')
-                elif entry.get('startup') == startup and status == 'attempted':
-                    if action == 'complete':
-                        entry.update(status='loaded', loadedAt=int(time.time()))
-                    elif action == 'failed':
-                        if self.builtin.disable_plugin(name):
-                            raise ValueError('无法保留插件停用状态，请先完成恢复')
-                        entry.update(status='failed', reason='LOADER_OR_BROWSER_FAILED')
-            self.write(self.path('plugin-activations.json'), value)
-        self.g['result']('ok', '插件加载状态已更新')
+            def failed(name, entry, reason, status='failed', missing=None, message=''):
+                if self.builtin.disable_plugin(name):
+                    raise ValueError('无法保留插件停用状态，请先完成恢复：' + name)
+                entry.update(status=status, reason=reason)
+                if missing is not None: entry['missing'] = missing[:50]
+                if message: entry['message'] = message[:400]
+                failures.append({'name': name, 'reason': reason, 'missing': (missing or [])[:50]})
+            try:
+                for name, entry in value['entries'].items():
+                    self.g['check_cancel']()
+                    status = entry.get('status')
+                    if action == 'begin' and status in ('queued', 'attempted'):
+                        if name not in enabled:
+                            entry['status'] = 'disabled'; continue
+                        directory = self.g['resolve_plugin_dir'](name)
+                        if not directory:
+                            failed(name, entry, 'PLUGIN_ENTITY_MISSING', 'changed'); continue
+                        try:
+                            package = self.g['plugin_package'](directory)
+                            if package['name'] != name:
+                                failed(name, entry, 'PLUGIN_IDENTITY_CHANGED', message='插件名称与启用记录不一致'); continue
+                            current = self.g['dependencies']().current(directory)
+                        except (ValueError, OSError) as error:
+                            failed(name, entry, 'PLUGIN_METADATA_OR_DEPENDENCY_INVALID', message=str(error)); continue
+                        if current['missing']:
+                            failed(name, entry, 'PLUGIN_DEPENDENCY_MISSING', missing=current['missing']); continue
+                        fingerprint = current['sha256']
+                        if entry.get('startup') == startup and fingerprint != entry.get('fingerprint'):
+                            failed(name, entry, 'CONTENT_CHANGED_DURING_LOAD', 'changed'); continue
+                        edited = bool(entry.get('fingerprint') and fingerprint != entry['fingerprint'])
+                        entry.update(status='attempted', startup=startup, fingerprint=fingerprint,
+                                     version=package['version'], locallyEdited=edited)
+                    elif entry.get('startup') == startup and status == 'attempted':
+                        if action == 'complete':
+                            entry.update(status='loaded', loadedAt=int(time.time()))
+                        elif action == 'failed':
+                            failed(name, entry, 'LOADER_OR_BROWSER_FAILED')
+            finally:
+                # Even a later plugin/disable failure must not discard earlier
+                # receipts. Failure to persist still blocks this Web launch.
+                self.write(self.path('plugin-activations.json'), value)
+        self.g['result']('ok', '插件加载状态已更新' + ('；部分插件待修复：' + '、'.join(row['name'] for row in failures) if failures else ''), failedPlugins=failures)
         return 0
 
     def source_command(self, name):
@@ -470,6 +525,16 @@ class Lifecycle:
         directory = self.g['resolve_plugin_dir'](name)
         pkg = self.read(os.path.join(directory, 'package.json'), {}) if directory else {}
         source = sources.get(name, '') or self.g['repository_url'](pkg)
+        return self.command_from_source(source)
+
+    def can_check_updates(self, source):
+        try:
+            return shlex.split(self.command_from_source(source))[0] in ('npm','github','release')
+        except ValueError:
+            return False
+
+    def command_from_source(self, source):
+        if not isinstance(source,str): raise ValueError('插件来源格式无效')
         if source.startswith('npm:'):
             match = re.fullmatch(r'((?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*)(?:@[^/]+)?', source[4:])
             if not match:
@@ -565,7 +630,7 @@ class Lifecycle:
         if comparison is None or comparison <= 0:
             shutil.rmtree(self.preview_path(preview['previewId']))
             raise ValueError('归档中的实际插件版本没有更新，请向作者核对 Release 内容')
-        self.g['result']('ok', '请确认更新包的作者、实际版本和兼容声明', preview=preview)
+        self.g['result']('ok', '更新包已解析，正在安装并启用', preview=preview)
         return 0
 
     def check_updates(self, name='', emit=True):
@@ -580,6 +645,9 @@ class Lifecycle:
             if not self.builtin.valid_name(item):
                 continue
             directory = self.g['resolve_plugin_dir'](item)
+            runtime = self.builtin.runtime_bundle_dir(item)
+            if runtime and directory and os.path.realpath(runtime) == os.path.realpath(directory):
+                continue
             pkg = self.read(os.path.join(directory, 'package.json'), {}) if directory else {}
             if not (pkg.get('dsh') or {}).get('bundle'):
                 continue
@@ -627,8 +695,8 @@ class Lifecycle:
             self.g['result']('ok', '已检查 %d 个第三方插件，%d 个可更新；详情见插件卡片' % (len(checked), updates), updates=checked)
         return 0
 
-    def rollback(self, name, expected='', reviewed=False):
-        if not reviewed:
+    def rollback(self, name, expected='', prepared=False):
+        if not prepared:
             return self.review_existing(name, 'rollback')
         if name in self.builtin.OFFICIAL_BUNDLES or name in self.builtin.builtin_names():
             raise ValueError('内置插件请通过应用更新维护')
@@ -637,7 +705,7 @@ class Lifecycle:
             raise ValueError('没有可回退的上一版')
         if expected and previous.get('version') != expected:
             raise ValueError('上一版已发生变化，请刷新后重新确认')
-        self.g['register_plugin'](os.path.join(self.history_path(name), 'package'), previous.get('source', ''), reviewed=True, restoring=True)
+        self.g['register_plugin'](os.path.join(self.history_path(name), 'package'), previous.get('source', ''), restoring=True)
         self.g['result']('ok', '已回退 ' + name + ' 至 ' + str(previous.get('version', '')) + '；启用状态保留，重启 Web 生效')
         return 0
 
@@ -684,13 +752,10 @@ class Lifecycle:
                             current = self.g['dependencies']().current(self.g['resolve_plugin_dir'](name))['sha256']
                             if current != (state.get('fingerprints') or {}).get(name):
                                 remaining.append(name); continue
-                            self.builtin._native_review_approved = True
                             if self.builtin.enable_plugin(name): remaining.append(name)
                             else: restored.append(name)
                         except (ValueError, OSError):
                             remaining.append(name)
-                        finally:
-                            self.builtin._native_review_approved = False
                 self.write(path, {'active': bool(remaining), 'names': remaining, 'fingerprints': state.get('fingerprints', {})})
                 self.g['result']('partial' if remaining else 'ok', '已恢复 %d 个插件的启用状态；重启 Web 生效%s' %
                                  (len(restored), ('；仍需修复：' + '、'.join(remaining)) if remaining else ''), safeMode=bool(remaining))

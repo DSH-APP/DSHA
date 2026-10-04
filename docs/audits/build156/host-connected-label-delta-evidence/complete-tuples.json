@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "status": "PASS_COMPLETE_TUPLE_REUSE_AND_FULL_I18N",
+  "file": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+  "addedRefreshA11yTuples": [
+    {
+      "tupleJavaTokens": [
+        "\"已连接，可以在对话中使用 Computer Use。\"",
+        "\"Connected. Computer Use is available in conversations.\""
+      ],
+      "line": 9
+    },
+    {
+      "tupleJavaTokens": [
+        "\"开关已开启，正在等待系统连接；可重新开关服务。\"",
+        "\"Enabled, waiting for the system to connect. Try toggling the service.\""
+      ],
+      "line": 12
+    }
+  ],
+  "referenceSource": "app/src/main/java/com/deepseekharness/app/ui/AccessibilitySetupActivity.java",
+  "allTuplesMatchExistingCompleteTuples": true,
+  "changedFileFragmentFindings": [],
+  "changedFileDynamicArguments": 0,
+  "newFindings": 0,
+  "explicitWholeParagraphDeclarations": 8,
+  "staleDeclarations": 0,
+  "catalogChanged": false,
+  "baselineWhitelistModified": false,
+  "scope": "Exact lexical source and tuple check. Native visual state/language behavior remains device evidence, not these assertions."
+}

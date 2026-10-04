@@ -7,9 +7,13 @@
 import argparse
 import importlib.util
 import json
+import re
 from pathlib import Path
 import shlex
 import subprocess
+import sys
+import traceback
+from device_script_privacy import redact
 import time
 import types
 import urllib.parse
@@ -20,7 +24,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--adb', required=True)
 parser.add_argument('--serial', required=True)
 parser.add_argument('--output', required=True)
+parser.add_argument('--fixture-id', required=True, help='Same UUID supplied to DevicePolicyAudit with -e fixtureId; never reuses another run')
 args = parser.parse_args()
+sys.excepthook = lambda kind, error, trace: print(redact(''.join(traceback.format_exception(kind, error, trace)), (args.adb, args.serial, args.output)), file=sys.stderr)
+if re.fullmatch(r'[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}',args.fixture_id) is None:
+    parser.error('--fixture-id must be an exact UUID')
+fixture_cache = 'cache/device-policy-audit-' + args.fixture_id
 root = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('device_policy', root / 'app/src/main/assets/device-shell-policy.py')
 policy = importlib.util.module_from_spec(spec)
@@ -73,11 +82,11 @@ def execute(command):
 
 try:
     for _ in range(80):
-        ready = adb('shell', 'run-as com.dsh.client cat cache/device-policy-audit/ready')
+        ready = adb('shell', 'run-as com.dsh.client cat '+shlex.quote(fixture_cache+'/ready'))
         if ready.returncode == 0 and ready.stdout.strip() == 'ready': break
         time.sleep(.25)
     else: raise AssertionError('原生测试桥未就绪')
-    token = adb('shell', 'run-as com.dsh.client cat cache/device-policy-audit/token').stdout.strip()
+    token = adb('shell', 'run-as com.dsh.client cat '+shlex.quote(fixture_cache+'/token')).stdout.strip()
     require(token.startswith('audit_'), '仅使用独立测试 token')
     forwarded = adb('forward', 'tcp:0', 'tcp:3090')
     require(forwarded.returncode == 0, 'USB 端口转发就绪')
@@ -174,4 +183,4 @@ finally:
         if value == parent + suffix and suffix.startswith('dsha-policy-audit-'):
             adb('shell', '/system/bin/rm -rf -- ' + shlex.quote(value))
     if port is not None: adb('forward', '--remove', 'tcp:' + str(port))
-    adb('shell', 'run-as com.dsh.client touch cache/device-policy-audit/done')
+    adb('shell', 'run-as com.dsh.client touch '+shlex.quote(fixture_cache+'/done'))

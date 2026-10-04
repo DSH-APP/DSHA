@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const runtime = testRuntime('raw');
+const runtime = testRuntime('managed');
 const { publishExclusive, createPublisher } = await import(pathToFileURL(join(runtime, 'node_modules/dsha-runtime-fs/index.js')));
 async function fixture(run) {
   const root = await mkdtemp(join(tmpdir(), 'dsha-publish-'));

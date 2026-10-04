@@ -9,7 +9,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/** 合成旧树在无 Bash 情况下导出/恢复，并验证旧树只读及私有副本密码错误保护。 */
+/** 历史隔离安装验收源码；本轮仅维护无密码 API 一致性，未生成或运行审计 APK。 */
 public final class RetainedWorkflowDeviceAudit extends Instrumentation {
     private final AndroidBackupFileSystem fs=new AndroidBackupFileSystem();private final List<Map<String,Object>> tests=new ArrayList<>();
     private void check(boolean value,String code)throws IOException{if(!value)throw new IOException(code);}
@@ -48,17 +48,18 @@ public final class RetainedWorkflowDeviceAudit extends Instrumentation {
             bash=new File(controller.proot().getRootfsDir().getCanonicalFile(),"usr/bin/bash");parked=new File(directory,"owned-bash");File from=bash,to=parked;
             BackupManager.runDataTask(controller,()->{fs.move(from,to);return null;});check(!controller.proot().hasBash(),"BASH_FIXTURE_ACTIVE");
             var jobs=NativeBackupJobs.get(context);var selected=new NativeDataLocations.Selection();selected.scope="application";selected.retainedKey="ENVIRONMENT:"+operation+":previous-linux-data";
-            char[] password="owned-retained-password".toCharArray();String filename=AuditDocumentProvider.document(target).name;
-            check(jobs.export(selected,password,target,filename,true),"RETAINED_EXPORT_REFUSED:"+jobs.state().error);waitFor(jobs,"FINISHED");String copy=jobs.state().id;
+            String filename=AuditDocumentProvider.document(target).name;
+            check(jobs.export(selected,target,filename,true),"RETAINED_EXPORT_REFUSED:"+jobs.state().error);waitFor(jobs,"FINISHED");String copy=jobs.state().id;
             check(jobs.state().result.equals("BEST_EFFORT_RESCUE"),"RESCUE_UPGRADED_TO_COMPLETE");check(originalHash.equals(BackupTree.digest(fs,old,new BackupControl(null))),"OLD_TREE_WRITTEN");pass("old_tree_exports_without_bash_and_remains_read_only");
-            check(jobs.prepareRestoreCopy(copy,"wrong password".toCharArray(),Set.of("sessions"),false,"PRIVATE"),"COPY_PREFLIGHT_REFUSED");
-            long until=android.os.SystemClock.elapsedRealtime()+60000;while(jobs.state().busy&&android.os.SystemClock.elapsedRealtime()<until)Thread.sleep(100);
-            check(!jobs.state().busy&&jobs.state().stage.equals("FAILED_RETAINED")&&jobs.state().error.equals("AUTHENTICATION_FAILED"),"WRONG_PASSWORD_STATE:"+jobs.state().stage+":"+jobs.state().error);check(Compat.readAll(current).equals("new current conversation"),"PASSWORD_ERROR_CHANGED_DATA");pass("retained_encrypted_copy_wrong_password_preserves_current_data");
+            check(jobs.prepareRestoreCopy(copy,null,Set.of("sessions"),false,"PRIVATE"),"COPY_PREFLIGHT_REFUSED");waitFor(jobs,"PREVIEW");
+            check(Compat.readAll(current).equals("new current conversation"),"PREFLIGHT_CHANGED_DATA");
+            check(jobs.decide(jobs.state().id,false),"CANCEL_CONFIRMATION_REFUSED");waitFor(jobs,"CANCELLED");
+            check(Compat.readAll(current).equals("new current conversation"),"CANCEL_CHANGED_DATA");pass("retained_password_free_copy_cancel_preserves_current_data");
             check(jobs.prepareRestoreTree(selected.retainedKey,Set.of("sessions"),"PRIVATE"),"OLD_TREE_PREFLIGHT_REFUSED");waitFor(jobs,"PREVIEW");check(Compat.readAll(current).equals("new current conversation"),"PREFLIGHT_CHANGED_DATA");
             check(jobs.decide(jobs.state().id,true),"CONFIRMATION_REFUSED");waitFor(jobs,"FINISHED");
             check(Compat.readAll(current).equals("original retained conversation"),"OLD_TREE_RESTORE_BYTES");check(originalHash.equals(BackupTree.digest(fs,old,new BackupControl(null))),"RESTORE_CHANGED_ORIGINAL");pass("old_tree_restore_requires_preview_and_preserves_retained_source");
-            put(current,"current replacement fixture");check(jobs.prepareRestoreCopy(copy,password,Set.of("sessions"),false,"PRIVATE"),"PRIVATE_COPY_RESTORE_REFUSED:"+jobs.state().error);waitFor(jobs,"PREVIEW");check(jobs.decide(jobs.state().id,true),"PRIVATE_COPY_CONFIRMATION");waitFor(jobs,"FINISHED");
-            check(Compat.readAll(current).equals("original retained conversation"),"PRIVATE_COPY_RESTORE_BYTES");Arrays.fill(password,'\0');pass("verified_private_copy_uses_existing_restore_pipeline");
+            put(current,"current replacement fixture");check(jobs.prepareRestoreCopy(copy,null,Set.of("sessions"),false,"PRIVATE"),"PRIVATE_COPY_RESTORE_REFUSED:"+jobs.state().error);waitFor(jobs,"PREVIEW");check(jobs.decide(jobs.state().id,true),"PRIVATE_COPY_CONFIRMATION");waitFor(jobs,"FINISHED");
+            check(Compat.readAll(current).equals("original retained conversation"),"PRIVATE_COPY_RESTORE_BYTES");pass("verified_private_copy_uses_existing_restore_pipeline");
             quarantineCopy(context,files);
         }catch(Throwable failure){result.putString("failure",SensitiveData.redact(android.util.Log.getStackTraceString(failure)));}
         finally{

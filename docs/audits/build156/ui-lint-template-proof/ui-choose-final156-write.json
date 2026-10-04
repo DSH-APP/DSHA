@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "tool": "google-java-format",
+  "version": "1.22.0",
+  "artifactSha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f",
+  "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\r\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+  "mode": "write",
+  "files": [
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+      "beforeSha256": "235d626350be8e5e3b853f82f95273390f0ec12df8e443906a0f2562deb28880",
+      "formattedSha256": "235d626350be8e5e3b853f82f95273390f0ec12df8e443906a0f2562deb28880",
+      "javaTokenSha256": "eae183b18a72b0e5804fa59d36512b2446d14a77e518925503c341193039be1f",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+      "beforeSha256": "50ec157e0c60106e0066348e28c3c9a2c7ca712222c298c79d33f67596446da8",
+      "formattedSha256": "8a6eee859a814625892a0d2010476aee49ab56a192e24a23343a3840bf418442",
+      "javaTokenSha256": "348c5d6b71c7320ac8d65888c3e0450859024605d9053447c2e05db7eb31d078",
+      "needsFormatting": true,
+      "diff": "--- app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java (before)\n+++ app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java (formatted)\n@@ -137,8 +137,7 @@\n           .append(\"\\n\")\n           .append(com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail));\n     if (pending)\n-      summary.append(\n-          com.deepseekharness.app.util.UiText.text(\"\\n\\n有未完成的环境维护，请恢复原环境后再继续。\"));\n+      summary.append(com.deepseekharness.app.util.UiText.text(\"\\n\\n有未完成的环境维护，请恢复原环境后再继续。\"));\n     ((TextView) view.findViewById(R.id.workspace_backup_status)).setText(summary.toString());\n     for (int id : new int[] {R.id.workspace_backup, R.id.workspace_location, R.id.workspace_reset})\n       view.findViewById(id).setEnabled(!busy && !pending);\n"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java",
+      "beforeSha256": "35f4a7f6797e8750cf47d0c8dea941a8ae06f18d98825542983fb0e6f105a7d4",
+      "formattedSha256": "5cc5aac37ecc354e43262186045ef4b41b365b682c44c9fd3a01a1a8c0ea56c4",
+      "javaTokenSha256": "bdaf95bb72d86196ea04a6a38bacec50889db63046e05046ba8cbe8c0f719ad2",
+      "needsFormatting": true,
+      "diff": "--- app/src/main/java/com/deepseekharness/app/ui/MainActivity.java (before)\n+++ app/src/main/java/com/deepseekharness/app/ui/MainActivity.java (formatted)\n@@ -481,8 +481,7 @@\n                       if (scan.best != null) {\n                         String message =\n                             com.deepseekharness.app.util.UiText.format(\n-                                \"发现已有备份：\\n%s\\n\\n先核验内容和实际范围，确认后才会恢复。\",\n-                                scan.best.describe());\n+                                \"发现已有备份：\\n%s\\n\\n先核验内容和实际范围，确认后才会恢复。\", scan.best.describe());\n                         if (scan.unreadable > 0)\n                           message +=\n                               com.deepseekharness.app.util.UiText.format(\n"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "beforeSha256": "0e21d19598664ed0bda7a59d621b9150dee09eb3c755e301ddd7683be26166f2",
+      "formattedSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "javaTokenSha256": "ab1537ca8d33e1b0bb83ed517f2b7e3954bbfa2bd13b70ff4636215a7c95659a",
+      "needsFormatting": true,
+      "diff": "--- app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java (before)\n+++ app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java (formatted)\n@@ -781,8 +781,7 @@\n         .setTitle(com.deepseekharness.app.util.UiText.choose(\"删除插件？\", \"Delete plugin?\"))\n         .setMessage(\n             com.deepseekharness.app.util.UiText.format(\n-                \"%s 将从加载路径移除；原件保留在数据页的保留区。对话、其他插件和外部源码目录保留。\",\n-                item.name))\n+                \"%s 将从加载路径移除；原件保留在数据页的保留区。对话、其他插件和外部源码目录保留。\", item.name))\n         .setNegativeButton(com.deepseekharness.app.util.UiText.choose(\"取消\", \"Cancel\"), null)\n         .setPositiveButton(\n             com.deepseekharness.app.util.UiText.choose(\"删除\", \"Delete\"),\n"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java",
+      "beforeSha256": "8b215923bd4adf7839c034ccdb1c606a6e05f1b6c436589c4aa17dc446e4579b",
+      "formattedSha256": "def20c9021d465cc289b9555d6dc7dfa62dab6f851cb340fc5996c66edd9f431",
+      "javaTokenSha256": "e9de1ea967517955e8b375ea3dd16180a223dc02d2dbad02530a0f82623d5824",
+      "needsFormatting": true,
+      "diff": "--- app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java (before)\n+++ app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java (formatted)\n@@ -134,8 +134,7 @@\n       retained.browser.syncLanguage(\n           new com.deepseekharness.app.core.ConfigStore(this).getUiLanguage());\n     } catch (RuntimeException | LinkageError error) {\n-      showError(\n-          UiText.format(\"应急网页无法加载：%s\", error.getClass().getSimpleName()));\n+      showError(UiText.format(\"应急网页无法加载：%s\", error.getClass().getSimpleName()));\n     }\n   }\n \n"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java",
+      "beforeSha256": "73190e54be7bc22c03e9af93cc4df1a2e70a58bf6ac27ba4e27abf5e638319bb",
+      "formattedSha256": "203b75e42a6855c129ee71646aef806a95079207feca572d89f47e15088528a4",
+      "javaTokenSha256": "9ffd3bf97a7415a3893f50d7e4af7ff00dec1ebf4f1faf99926c3ab2a7484d22",
+      "needsFormatting": true,
+      "diff": "--- app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java (before)\n+++ app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java (formatted)\n@@ -98,8 +98,7 @@\n     } catch (Exception ignored) {\n     }\n     TextView ver = v.findViewById(R.id.settings_ver);\n-    ver.setText(\n-        com.deepseekharness.app.util.UiText.format(\"DSHA v%s · MIT 许可\", version));\n+    ver.setText(com.deepseekharness.app.util.UiText.format(\"DSHA v%s · MIT 许可\", version));\n     TextView updateSub = v.findViewById(R.id.settings_update_sub);\n     updateSub.setText(com.deepseekharness.app.util.UiText.text(\"稳定版与预览版更新\"));\n \n"
+    }
+  ]
+}

@@ -51,11 +51,25 @@ class RuntimeInputContractTest(unittest.TestCase):
         self.spec['installs'][0]['target'] = 'root/.dsh/plugin-v2.py'
         self.write(MANIFEST, json.dumps(self.spec))
         self.assertNotEqual(before, self.identity())
+    def test_generator_content_and_missing_source_are_identified(self):
+        self.spec['generatorSources'] = ['tools/render.py']
+        self.write('tools/render.py', 'first recipe')
+        self.write(MANIFEST, json.dumps(self.spec))
+        before=self.identity()
+        self.write('tools/render.py', 'changed recipe')
+        self.assertNotEqual(before,self.identity())
+        (self.root/'tools/render.py').unlink()
+        with self.assertRaises(ValueError):self.identity()
     def test_ui_and_apk_version_do_not_change_identity(self):
         before = self.identity()
         self.write(JAVA + '/ui/Page.java', 'UI only')
         self.write('app/build.gradle', 'versionCode 148')
         self.assertEqual(before, self.identity())
+    def test_production_cold_probe_and_package_policy_are_identified(self):
+        selected = launcher_paths(ROOT)
+        for name in ('util/ColdInstallPlan.java', 'util/ColdInstallPackages.java'):
+            self.assertIn(name, selected, 'Cold compatibility and package policy must invalidate old runtime proofs')
+            self.assertEqual(selected[name], ROOT / JAVA / name)
     def test_invalid_recipe_rejected_before_install(self):
         for bad in ('../outside', '/absolute', 'root//duplicate', 'C:/windows', 'a\\b', 'a/./b'):
             with self.subTest(path=bad):

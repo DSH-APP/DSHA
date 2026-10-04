@@ -1,0 +1,164 @@
+{
+  "files": [
+    {
+      "file": "docs/audits/build156/i18n-contribution-bridge.json",
+      "contributed": 76,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-build.json",
+      "contributed": 14,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-core-stop.json",
+      "contributed": 38,
+      "newAtFinalMerge": 24
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-core.json",
+      "contributed": 44,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-data.json",
+      "contributed": 35,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-legacy.json",
+      "contributed": 23,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-plugins.json",
+      "contributed": 1,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-root.json",
+      "contributed": 21,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-runtime.json",
+      "contributed": 33,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-ui-final.json",
+      "contributed": 5,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-ui-fragments.json",
+      "contributed": 49,
+      "newAtFinalMerge": 0
+    },
+    {
+      "file": "docs/audits/build156/i18n-contribution-ui-manual.json",
+      "contributed": 47,
+      "newAtFinalMerge": 0
+    }
+  ],
+  "conflicts": [
+    {
+      "zh": "Web PID 文件异常，未终止任何进程",
+      "canonical": "Invalid Web PID file; no process terminated",
+      "proposal": "The Web PID record is invalid; no process was stopped.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "Web PID 无效，未终止任何进程",
+      "canonical": "Invalid Web PID; no process terminated",
+      "proposal": "The Web PID is invalid; no process was stopped.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "无法写入停止标记，尚未停止 Web",
+      "canonical": "Could not write stop marker; Web has not been stopped",
+      "proposal": "Cannot write the stop marker; Web has not been stopped.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "进程信息超过核验上限",
+      "canonical": "Process information exceeds the verification limit",
+      "proposal": "Process information exceeds the verification limit.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "进程核验被中断",
+      "canonical": "Process verification interrupted",
+      "proposal": "Process verification was interrupted.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "检查 Web 进程失败（PID %s，errno=%s）",
+      "canonical": "Could not inspect the Web process (PID %s, errno=%s)",
+      "proposal": "Failed to inspect the Web process (PID %s, errno=%s)",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "内核进程身份无法解析",
+      "canonical": "Could not parse kernel process identity",
+      "proposal": "Cannot parse the kernel process identity.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "进程命令行暂不可读",
+      "canonical": "Process command line temporarily unreadable",
+      "proposal": "The process command line is temporarily unreadable.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "Web 身份记录异常，原环境保留",
+      "canonical": "Web process identity record error; original environment preserved",
+      "proposal": "The Web identity record is invalid; the environment is retained.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "Web 启动脚本仍在退出，已保留容器启动器",
+      "canonical": "Web startup script is still exiting; container launcher preserved",
+      "proposal": "The Web startup script is still exiting; the container launcher is retained.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "Web 进程身份已变化，未终止其他进程，请重试",
+      "canonical": "Web process identity changed. Other processes were not terminated. Retry.",
+      "proposal": "The Web process identity changed; no other process was stopped. Retry.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "已请求停止，Web 尚未退出；稍后可重试，未强杀容器启动器",
+      "canonical": "Stop requested, but Web has not exited. Retry later; the container launcher was not forcibly killed.",
+      "proposal": "Stop was requested but Web has not exited; retry later. The container launcher was not force-killed.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "停止等待被中断，请检查 Web 状态",
+      "canonical": "Stop wait interrupted. Check Web status.",
+      "proposal": "The stop wait was interrupted; check the Web state.",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "停止 Web 未完成：%s",
+      "canonical": "Web has not stopped: %s",
+      "proposal": "Web stop is incomplete: %s",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "%s 秒",
+      "canonical": "%s seconds",
+      "proposal": "%s s",
+      "decision": "Retain existing synonymous canonical wording"
+    },
+    {
+      "zh": "[会话已就绪；中止会重启 shell，cd/export 状态随重启清除]\n",
+      "canonical": "[Session ready. Stopping restarts the shell and clears cd/export state.]\n",
+      "proposal": "[Session ready; stopping restarts the shell and clears its cd/export state]\n",
+      "decision": "Retain existing synonymous canonical wording"
+    }
+  ],
+  "entries": 3502,
+  "formats": 415
+}

@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <resources>
+
     <string name="app_name" translatable="false">DSHA</string>
-    <string name="nav_launch">启动</string>
-    <string name="nav_plugins">插件</string>
-    <string name="nav_settings">设置</string>
-    <string name="nav_terminal">终端</string>
+
+
+
+
+
+
+
+
+
     <string name="accessibility_desc">两个用途：① 自动读取系统「无线调试」的配对码，省掉手抄（配对码两分钟就失效）；② 让 AI 助手能读屏、点按、输入、按键、截屏（截屏需 Android 11+），从而在没有 ADB 和 Shizuku 的情况下也能操作手机。
 
-DSHA 不做任何后台屏幕记录：读屏只发生在助手明确请求的那一刻，结果直接回到对话里，不落盘也不上传；配对码只在你点过「自动读配对码」后的两分钟内读取。</string>
+
+
+DSHA 不做任何后台屏幕记录：读屏只发生在助手明确请求的那一刻，读屏文字和 MCP 截图返回本次对话；普通截图按请求保存到应用私有截图目录。DSHA 不会单独自动上传截图，模型/插件对返回结果的处理由当前配置决定；配对码只在你点过「自动读配对码」后的两分钟内读取。</string>
+
 </resources>

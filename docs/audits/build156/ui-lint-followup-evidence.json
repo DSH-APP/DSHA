@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "status": "FROZEN_AUTHORIZED_LINT_UI_FOLLOWUP",
+  "utc": "2026-10-03T16:02:07.625644+00:00",
+  "catalogue": {
+    "entries": 3528,
+    "formats": 441,
+    "sha256": "78e499bc41d6b5e0c185ee81595a49cd8c4f8ad173c0278b07df9683fd63019f"
+  },
+  "frozenSources": {
+    "app/src/main/java/com/deepseekharness/app/OverlayController.java": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+    "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java": "235d626350be8e5e3b853f82f95273390f0ec12df8e443906a0f2562deb28880",
+    "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java": "8a6eee859a814625892a0d2010476aee49ab56a192e24a23343a3840bf418442",
+    "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java": "5cc5aac37ecc354e43262186045ef4b41b365b682c44c9fd3a01a1a8c0ea56c4",
+    "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+    "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java": "def20c9021d465cc289b9555d6dc7dfa62dab6f851cb340fc5996c66edd9f431",
+    "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java": "203b75e42a6855c129ee71646aef806a95079207feca572d89f47e15088528a4"
+  },
+  "frozenInputSources": {
+    "tools/check-ui-i18n.py": "cd9a2ab12be7be074b8a11343b7be8d29b318b5895d735f59049321adba17aa9",
+    "tools/test-ui-i18n.py": "c13fe6c38008710fdb123512deaf5e03f2c7eb2323b16be9ca6fd356a3f392a8",
+    "tools/i18n/ui-source-baseline.json": "ea8bfce055d6d6d5776efd0ccc6847805c918648b46db3705604e620f28e6f74",
+    "tools/i18n/messages.json": "78e499bc41d6b5e0c185ee81595a49cd8c4f8ad173c0278b07df9683fd63019f"
+  },
+  "checks": [
+    {
+      "command": "python -B tools/prepare-ui-languages.py --output app/build/audit-build156/ui/generated",
+      "result": "PASS 3528/3528 EN; 441 strict full templates",
+      "exitCode": 0
+    },
+    {
+      "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+      "result": "PASS 46 JDK17 tests, including all441 templates bidirectionally with raw Unicode/percent/newline arguments",
+      "exitCode": 0,
+      "receipt": "docs/audits/build156/ui-lint-template-proof/jvm-result-current.txt"
+    },
+    {
+      "command": "python -B tools/check-ui-i18n.py --report docs/audits/build156/ui-i18n-choose-final.json",
+      "result": "PASS 0 new, 1 protected external-source debt, 8 exact complete-paragraph nonfindings, 0 stale declarations, 23 reviewed dynamic text arguments",
+      "exitCode": 0
+    },
+    {
+      "command": "python -B tools/test-ui-i18n.py",
+      "result": "PASS 9 scanner/signature/occurrence/raw/qualified-call/format cases",
+      "exitCode": 0
+    },
+    {
+      "command": "python -B tools/test-ui-boundaries154.py",
+      "result": "PASS 4 source/resource boundary cases",
+      "exitCode": 0
+    },
+    {
+      "command": "python -B tools/test-dsha-ui-regressions.py",
+      "result": "PASS 32 source/resource cases",
+      "exitCode": 0
+    },
+    {
+      "command": "python -B docs/audits/build156/verify-break-strategy-inline.py",
+      "result": "PASS SDK37 actual IntDef/ConstantValue, JDK17 iconst_0/no executable API29 access, D8 minAPI23 DEX with no LineBreaker reference; exact2-source-symbol check",
+      "exitCode": 0,
+      "receipt": "docs/audits/build156/overlay-break-strategy-proof/receipt.json"
+    },
+    {
+      "command": "python -B tools/format-java.py --check --files app/src/main/java/com/deepseekharness/app/OverlayController.java --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --offline --report app/build/java-format/ui-overlay-break-strategy156.json",
+      "result": "PASS 1 file, 0 differences; exact token guard",
+      "exitCode": 0
+    },
+    {
+      "command": "python -B tools/format-java.py --check --files app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java app/src/main/java/com/deepseekharness/app/ui/MainActivity.java app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --offline --report app/build/java-format/ui-choose-final156-check.json",
+      "result": "PASS 6 files, 0 differences; exact token guard",
+      "exitCode": 0
+    }
+  ],
+  "scope": "Only authorized Overlay2 constant symbols, six UI text consumers, scanner/tests and catalog/baseline. Other lane sources are represented by their own receipts. No Gradle, signing, phone/ADB, GUI or additional APK executed by UI lane.",
+  "priorActualFailures": [
+    "docs/audits/build156/f7328-lint-failure/preservation.json",
+    "docs/audits/build156/ui-lint-template-proof/whole-template-conflict-before.json"
+  ],
+  "canonicalOverride": "New count English items -> established entries; matching rules and raw parameter semantics unchanged.",
+  "nonfindings": "Nine originally reviewed complete paragraph joins: eight remain with exact SHA/signature/occurrences, one Extract footer absorbed into its new whole-body template. Separate from protected debt; cannot offset new findings.",
+  "deferredIntegratedChecks": [
+    "Root next full Standard/Low unit/Release compile/Lint/APK verification. f7328 Standard actual2Error/224Warning preserved; old Low XML cannot supply final counts.",
+    "Actual non-debug Low API23 rendering and OEM heap/clipboard/SAF/Keystore/FUSE coverage remain separate device evidence."
+  ]
+}

@@ -1,0 +1,15 @@
+test_accepted_is_not_reported_as_completed (__main__.AuditControlTest.test_accepted_is_not_reported_as_completed) ... ok
+test_accidental_code_argument_is_rejected_without_echo (__main__.AuditControlTest.test_accidental_code_argument_is_rejected_without_echo) ... ok
+test_invalid_code_and_ports_fail_before_adb (__main__.AuditControlTest.test_invalid_code_and_ports_fail_before_adb) ... ok
+test_missing_listener_never_sends (__main__.AuditControlTest.test_missing_listener_never_sends) ... ok
+test_missing_result_times_out_without_resending_pair (__main__.AuditControlTest.test_missing_result_times_out_without_resending_pair) ... ok
+test_no_wait_allows_followup_rotate_without_replay (__main__.AuditControlTest.test_no_wait_allows_followup_rotate_without_replay) ... ok
+test_pair_code_only_enters_stdin_not_commandline (__main__.AuditControlTest.test_pair_code_only_enters_stdin_not_commandline) ... ok
+test_printed_success_and_errors_hide_code (__main__.AuditControlTest.test_printed_success_and_errors_hide_code) ... ok
+test_report_path_cannot_read_other_private_files (__main__.AuditControlTest.test_report_path_cannot_read_other_private_files) ... ok
+test_sender_error_does_not_echo_adb_stderr_or_input (__main__.AuditControlTest.test_sender_error_does_not_echo_adb_stderr_or_input) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.007s
+
+OK

@@ -1,0 +1,100 @@
+{
+  "schema": "owned-plugin-historical-commit-device-read-v1",
+  "reviewedAt": "2026-10-04T09:27:35+08:00",
+  "reviewMode": "read_only_host_validation_of_metadata_collected_by_device_operator",
+  "deviceCommandsExecutedByReviewer": 0,
+  "operation": {
+    "id": "462056f9-0918-490c-9daf-83adaf74ee99",
+    "name": "dsh-acceptance-156",
+    "format": 2,
+    "kind": "historical Low normal local install",
+    "historicalLowApkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+    "recordVisibleBeforeStandardOverlayAt": "2026-10-04T08:14:40.158863+08:00",
+    "readLaterWhileStandardApkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+    "collectorPushAt": "2026-10-04T08:58:47.279940+08:00",
+    "actualMetadataPullAt": "2026-10-04T09:01:40.730927+08:00",
+    "newStandardCommitClaimed": false
+  },
+  "verified": {
+    "exactOwnPlanScopeValidated": true,
+    "exactCommittedMarkerValidated": true,
+    "committedMarkerBytes": 47,
+    "planBytes": 1388,
+    "recordReachedCommitted": true,
+    "recordNewTreeDigest": "b73c2a76761dad22f9db6f5416999d710de090cdf5cddf5be2a36a81918d027b",
+    "oldPresent": false,
+    "oldVersion": "",
+    "currentOwnedPackageIdentity": {
+      "name": "dsh-acceptance-156",
+      "version": "0.0.156",
+      "packageJsonSha256": "445a637d6067cfc4a648e0d7eb97aff41fa0cfc99911c887905a0965e159772f",
+      "indexSha256": "02e49f6412d0a169e18dde5458c5adca5dce661ddf7d410243c2230f36dbdd04"
+    },
+    "recordNewVersionIndependentlyRecorded": false,
+    "currentWholePayloadTreeIndependentlyHashed": false,
+    "retainedPayloadScopePromoted": false
+  },
+  "sourceEvidence": {
+    "collectionManifest": {
+      "privateEvidenceGroup": "app/build/audit-build156/device-private/latest-retake-20261004/standard-collected/journal",
+      "sha256": "ce75e7b46749c45d6079940cd7668198b0344ee995f9a6089f4a3b16aea61390",
+      "bytes": 1213
+    },
+    "files": [
+      {
+        "name": "plan.json",
+        "sha256": "e365920b7081810b01a316c8c975599b76e471c869305ebcd7a1cd2c962452b3",
+        "bytes": 1388
+      },
+      {
+        "name": "committed",
+        "sha256": "3e0cc46f13688b16baaf09e9ca49a42e7793c19a34a64f0a3b391f06bf29414c",
+        "bytes": 47
+      }
+    ],
+    "collector": {
+      "path": "app/build/audit-build156/device-private/collect-owned-plugin-journal.py",
+      "sha256": "9c79b913b85d37081a5c15c2afc175fe82e073f3bd653ee97fb825a7232a6920"
+    },
+    "producer": {
+      "path": "app/src/main/assets/plugin-transactions.py",
+      "sha256": "aa36d2acf5e07287b27b43b26e1d924485428986ce30e36574597d165db3c496",
+      "planPrepareLine": 269,
+      "markerContractLine": 106
+    },
+    "preOverlayLowRetainedUi": {
+      "privateEvidenceFile": "lease-low-latest-plugin-retained-details-0795.png",
+      "sha256": "6377ebd290f46a838849837f0daa914482140dd0b0fa683c06b099217430a5ef",
+      "operatorTime": "2026-10-04T08:14:40.158863+08:00",
+      "actionIndex0Based": 1105,
+      "visuallyReviewed": true,
+      "reportedScope": "unknown, retained as displayed; not upgraded by this metadata proof"
+    },
+    "operatorActionsPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "532c23da66325ea8db6297d5910138bf234ada40d8407118b3e9c734859d59bb",
+      "bytes": 177826,
+      "records": 1249,
+      "lastRecordIndex0Based": 1248,
+      "lastTime": "2026-10-04T09:01:40.730927+08:00"
+    }
+  },
+  "validation": {
+    "command": "Read-only Python: use the exact collector schema validator on pulled plan, verify marker literal UUID+committed, both file hashes/sizes against receipt, exact current owned package/index pins and source bytes; correlate historical Low Retained UI before overlay with collector/pull after overlay.",
+    "exitCode": 0,
+    "physicalMetadataFilesValidated": 2,
+    "retainedUiScreenshotVisuallyReviewed": 1
+  },
+  "limits": [
+    "This independently confirms the exact named format2 plan and committed terminal marker. It does not independently re-run the transaction or verify current filesystem switch/payload tree.",
+    "Format2 plan does not contain NEW version. The0.0.156 current-owned package/index checks are separately captured by the strict collector; they do not retrofit a new-version field into the historical plan.",
+    "Shared activation/manifest/sources bodies, old/new payloads, other operations/profile/credentials were not copied or reviewed. Retained UI full scope remains unknown.",
+    "The operation was already visible on Low before the Standard overlay. Reading it later on Standard is not a new Standard commit.",
+    "The exact deletion-operation UUID was not independently collected; deletion has bounded UI evidence separately."
+  ],
+  "privacy": {
+    "sharedConfigOrPayloadPublished": false,
+    "credentialsOrDeviceSerialPublished": false,
+    "rawScreenshotsPublished": false
+  }
+}

@@ -1,0 +1,15 @@
+UI language catalog: 3528/3528 entries
+JUnit version 4.13.2
+.........................
+Time: 1.276
+
+OK (25 tests)
+
+PASS actual blocked HTTP releases LOCK and old session cannot commit
+PASS actual HTTP preserves target and old authority cannot commit
+PASS actual out-of-order frame responses cannot regress state
+PASS actual concurrent touch requests preserve one ordered channel
+PASS real input result preserved while older metadata cannot regress or render
+PASS actual distinct-owner bearer/state isolation and late close cache/UI callback fence
+PASS current main/standard release source compilation and owned-state JUnit; Android framework construction is bypassed only in explicit host owner fixtures
+PASS current source compilation, selected JUnit and actual HTTP manager fixture; no Android platform acceptance claimed

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "catalogueSha256": "7c8f5fef70a06fb7e0bcfce447b868468140de4c1c19f94dacda54c0ced66ff8",
+  "entries": 3502,
+  "formats": 415,
+  "checks": [
+    {
+      "command": "python -B tools/prepare-ui-languages.py --output app/build/audit-build156/ui/generated",
+      "result": "PASS 3502/3502 EN and strict argument/conversion signature check"
+    },
+    {
+      "command": "python -B app/build/audit-build156/ui/run-jvm.py",
+      "result": "PASS 46 current-source JVM cases, including all 415 registered template language round trips"
+    },
+    {
+      "command": "python -B tools/test-ui-i18n.py",
+      "result": "PASS 5 scanner/growth/format grammar cases"
+    },
+    {
+      "command": "python -B tools/check-ui-i18n.py --report app/build/audit-build156/ui/i18n-final.json",
+      "result": "PASS 0 new; 1 exact protected external-source residue; 23 closed app-owned dynamic argument uses/source role review"
+    },
+    {
+      "command": "Compare original review-ui sourceFingerprints against frozen UI files",
+      "result": "PASS original 46 production/test Java SHA-256 fingerprints unchanged by final follow-up"
+    }
+  ],
+  "projectionReview": [
+    "app/build/audit-build156/data-final-tests/receipt.json",
+    "app/build/audit-build156/data-final-tests/junit.log",
+    "app/build/audit-build156/data-sdk/receipt.json",
+    "docs/audits/build156/credential-yaml-projection-evidence.json"
+  ],
+  "productionSourceChanges": [],
+  "scope": "Final read-only cross-owner YAML proof and catalogue-only merge; no Android device/APK/Gradle actions"
+}

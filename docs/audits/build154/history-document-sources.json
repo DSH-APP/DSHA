@@ -1,0 +1,272 @@
+[
+  {
+    "path": "docs/接手指南.md",
+    "retainedSource": "tools/history/documents/docs/接手指南.md",
+    "sha256": "fcbbd1099515ce3eb486f2b762ccafd547291e28b9d1f1f733184b0b5ae243a9",
+    "bytes": 17334
+  },
+  {
+    "path": "tools/termux-jni/README.md",
+    "retainedSource": "tools/history/documents/tools/termux-jni/README.md",
+    "sha256": "c29a880a9d7014d58b125bd57e6f7a52a4bae4bda64e76dd22a2819382f521ca",
+    "bytes": 3547
+  },
+  {
+    "path": "docs/1.2-upgrade-report.md",
+    "retainedSource": "tools/history/documents/docs/1.2-upgrade-report.md",
+    "sha256": "efcdcff44cc9c2b4db52b7b498d0dbcd6b46c1f38f016b9473a25b5ce5538ca0",
+    "bytes": 43973
+  },
+  {
+    "path": "docs/adb-flow-audit.md",
+    "retainedSource": "tools/history/documents/docs/adb-flow-audit.md",
+    "sha256": "3ca87b23e37d7e34c621b60967378b22192d6d61fe4eab6b1095260c6c804613",
+    "bytes": 8984
+  },
+  {
+    "path": "docs/android-low.md",
+    "retainedSource": "tools/history/documents/docs/android-low.md",
+    "sha256": "8bbe4d9c7d06a7029d362de0c0f5b539f24bd1481a83b6cb9e0c1f1c4dec3b23",
+    "bytes": 4123
+  },
+  {
+    "path": "docs/android-standard.md",
+    "retainedSource": "tools/history/documents/docs/android-standard.md",
+    "sha256": "288cc833ccf162ff1647834f0c566bda50ceecad70140c28ef8182a3301b2204",
+    "bytes": 4700
+  },
+  {
+    "path": "docs/backup-upgrade-baseline.md",
+    "retainedSource": "tools/history/documents/docs/backup-upgrade-baseline.md",
+    "sha256": "5f7e92d1ab1765be564a92416a53a12b46c618f3331d1b567c608e385218c9d0",
+    "bytes": 1946
+  },
+  {
+    "path": "docs/device-acceptance-2026-09-05.md",
+    "retainedSource": "tools/history/documents/docs/device-acceptance-2026-09-05.md",
+    "sha256": "4f938f4862872db043ac0ab85401f98ff78ba6d4a034af6bad28d7ea7ef62afe",
+    "bytes": 4895
+  },
+  {
+    "path": "docs/device-acceptance-alpha15-2026-09-09.md",
+    "retainedSource": "tools/history/documents/docs/device-acceptance-alpha15-2026-09-09.md",
+    "sha256": "39dff92b7730a103910ff57d10be46d4ae83f35cb73b00a699c9647b2dd11c11",
+    "bytes": 6020
+  },
+  {
+    "path": "docs/device-permissions-2026-09-09.md",
+    "retainedSource": "tools/history/documents/docs/device-permissions-2026-09-09.md",
+    "sha256": "a2eb510df938b0501cbde5d6b797d726f664c3acd6e324d151da4c7cb51c0975",
+    "bytes": 6308
+  },
+  {
+    "path": "docs/extract-startup-speed-2026-09-10.md",
+    "retainedSource": "tools/history/documents/docs/extract-startup-speed-2026-09-10.md",
+    "sha256": "07ae457b64b5ce7beae26ca0b8aef9b7b1725659b2471817cacdf4c42d1cb16f",
+    "bytes": 5777
+  },
+  {
+    "path": "docs/functional-audit-rc1.4.md",
+    "retainedSource": "tools/history/documents/docs/functional-audit-rc1.4.md",
+    "sha256": "9aeae1d33a61e8618e3fbe9cc5601c082613c1e70cc0ebdeb65c0c68ce80b906",
+    "bytes": 14878
+  },
+  {
+    "path": "docs/input-insets-fix-2026-09-09.md",
+    "retainedSource": "tools/history/documents/docs/input-insets-fix-2026-09-09.md",
+    "sha256": "7f1fe7b06e4c8670d1de38591db99fd4f7a3eba5d190a14d2819af6b9e56243e",
+    "bytes": 4573
+  },
+  {
+    "path": "docs/maintenance-rc1.4-verification.md",
+    "retainedSource": "tools/history/documents/docs/maintenance-rc1.4-verification.md",
+    "sha256": "d6829083e2db2f515f14daae7f13ea872e6d90f4b3a3f4b52fa3a2167fe176af",
+    "bytes": 11268
+  },
+  {
+    "path": "docs/optimization-backup-verification.md",
+    "retainedSource": "tools/history/documents/docs/optimization-backup-verification.md",
+    "sha256": "e6f47c8701aedba6a99bfbad0c1fdb243fc4594365f94f4b959d3bb908317e1a",
+    "bytes": 3917
+  },
+  {
+    "path": "docs/optimization-runtime-verification.md",
+    "retainedSource": "tools/history/documents/docs/optimization-runtime-verification.md",
+    "sha256": "a8ccf5e43e72e4163bfe33f57325e7626f2836e675922273538689a512b1f4cf",
+    "bytes": 2394
+  },
+  {
+    "path": "docs/optimization-site-verification.md",
+    "retainedSource": "tools/history/documents/docs/optimization-site-verification.md",
+    "sha256": "8de3a0eb46939ae7e5f7f5011833fa4f324a7883c89fc9b92855739e8cb13b24",
+    "bytes": 2497
+  },
+  {
+    "path": "docs/optimization-transfer-verification.md",
+    "retainedSource": "tools/history/documents/docs/optimization-transfer-verification.md",
+    "sha256": "d1d843b7904206004d0b49f8cdc7b106a56d98074cae4b7b211647286be802cb",
+    "bytes": 3931
+  },
+  {
+    "path": "docs/optimization-web-verification.md",
+    "retainedSource": "tools/history/documents/docs/optimization-web-verification.md",
+    "sha256": "c8e7f5f5decbe190ac8e9b49ea24ed97f8ee4512b756bd6fab5859b6adb68cba",
+    "bytes": 4090
+  },
+  {
+    "path": "docs/pid-stop-fix-2026-09-10.md",
+    "retainedSource": "tools/history/documents/docs/pid-stop-fix-2026-09-10.md",
+    "sha256": "526c1a3560c88b0472a37c0b807713c734c7db837ec5fb98094d91bed8bbc0c5",
+    "bytes": 3178
+  },
+  {
+    "path": "docs/plugin-download-npm-fix-2026-09-05.md",
+    "retainedSource": "tools/history/documents/docs/plugin-download-npm-fix-2026-09-05.md",
+    "sha256": "96f5c357233ffe0ebec1bec41ed3e9daf396d00b81f71c01f711980f1bc1cfcf",
+    "bytes": 3090
+  },
+  {
+    "path": "docs/plugin-layout-install-fix-2026-09-05.md",
+    "retainedSource": "tools/history/documents/docs/plugin-layout-install-fix-2026-09-05.md",
+    "sha256": "ee49efa28cfc095f0d24ae1ab92863f29da979b9d065e8df2e19c46d98688224",
+    "bytes": 2186
+  },
+  {
+    "path": "docs/proroot-experiment-plan.md",
+    "retainedSource": "tools/history/documents/docs/proroot-experiment-plan.md",
+    "sha256": "b3c522a0e5c9dbb7f4416bc8407cf11da20e07cd13990f9f642fc34d2ed787f4",
+    "bytes": 15380
+  },
+  {
+    "path": "docs/proroot-startup-fix-2026-09-09.md",
+    "retainedSource": "tools/history/documents/docs/proroot-startup-fix-2026-09-09.md",
+    "sha256": "e294703ad3c189c1105b9ebec9cc5cd57f2d408789417d21964ffa2d90745184",
+    "bytes": 6413
+  },
+  {
+    "path": "docs/rc1.3-implementation.md",
+    "retainedSource": "tools/history/documents/docs/rc1.3-implementation.md",
+    "sha256": "59cd2717a31f81ce0a8c85480da4948c74e6c9b5dd54bc7e6e3feb92685303db",
+    "bytes": 1807
+  },
+  {
+    "path": "docs/release-rc1.2-2026-09-06.md",
+    "retainedSource": "tools/history/documents/docs/release-rc1.2-2026-09-06.md",
+    "sha256": "55fc1aa09814c8e66f304cc3677390f6619ce9afcb1ad71cf052b7ac350e6bcc",
+    "bytes": 2458
+  },
+  {
+    "path": "docs/release-rc1.3-2026-09-07.md",
+    "retainedSource": "tools/history/documents/docs/release-rc1.3-2026-09-07.md",
+    "sha256": "0da1afdc6dafe5dfc33bd6721f3a17a4c08b561cb4cdc28a6235ce78db5cf9e9",
+    "bytes": 6080
+  },
+  {
+    "path": "docs/release-rc1.4-2026-09-07.md",
+    "retainedSource": "tools/history/documents/docs/release-rc1.4-2026-09-07.md",
+    "sha256": "f322a769b15f658b2ae4cbd015e358016757b603ce6c13023ad806bd8efeb044",
+    "bytes": 5466
+  },
+  {
+    "path": "docs/stability-acceptance.md",
+    "retainedSource": "tools/history/documents/docs/stability-acceptance.md",
+    "sha256": "5d50ee7336da651fcc466ab1edd90b340326a829daf98a52b5b3870b60578cc4",
+    "bytes": 19834
+  },
+  {
+    "path": "docs/startup-diagnostics-2026-09-10.md",
+    "retainedSource": "tools/history/documents/docs/startup-diagnostics-2026-09-10.md",
+    "sha256": "5d9f43925d6b33e15101c842fe2a1c14bee4d9d6404e3e81c910a29aba051cde",
+    "bytes": 5228
+  },
+  {
+    "path": "docs/theme-rc1.4-verification.md",
+    "retainedSource": "tools/history/documents/docs/theme-rc1.4-verification.md",
+    "sha256": "6d540d9c4e42ec3276d72fbd59c02cfafdc9ec1cf5b37a8c125860957e5b7024",
+    "bytes": 3618
+  },
+  {
+    "path": "docs/theme-toolbar-only-rc1.4.md",
+    "retainedSource": "tools/history/documents/docs/theme-toolbar-only-rc1.4.md",
+    "sha256": "ad049de4cd5d41532c02023ec659560a3bb3d7ab74169bff3f1c97729d07494c",
+    "bytes": 1587
+  },
+  {
+    "path": "docs/ui-interactions-logs-2026-09-09.md",
+    "retainedSource": "tools/history/documents/docs/ui-interactions-logs-2026-09-09.md",
+    "sha256": "717730e0828211111d1e672efb1bcbe9bb1d218d1a26a70650efc9ac093d9100",
+    "bytes": 4712
+  },
+  {
+    "path": "docs/ui-layout-rc1.4-verification.md",
+    "retainedSource": "tools/history/documents/docs/ui-layout-rc1.4-verification.md",
+    "sha256": "88ce168ff47ddce05c2f499e0327c27c775736ae4463246a12cd92ddcc932400",
+    "bytes": 3735
+  },
+  {
+    "path": "docs/update-flow-rc1.4-verification.md",
+    "retainedSource": "tools/history/documents/docs/update-flow-rc1.4-verification.md",
+    "sha256": "be2a211158762698868f86626e3d32f9545148a5ed63c92a9994c20c337b5282",
+    "bytes": 11105
+  },
+  {
+    "path": "docs/ROADMAP.md",
+    "retainedSource": "tools/history/documents/docs/ROADMAP.md",
+    "sha256": "f9d9b81745dad9160334b7105e698857e21a3e57aa1638a803c9a506e8529564",
+    "bytes": 10112
+  },
+  {
+    "path": "docs/upgrade-dsh-0.1.5-alpha.1.md",
+    "retainedSource": "tools/history/documents/docs/upgrade-dsh-0.1.5-alpha.1.md",
+    "sha256": "fbb138f25492d3350e752aa53b936874820ea39eb23c79835f8fb72708c57247",
+    "bytes": 6283
+  },
+  {
+    "path": "docs/upgrade-dsh-0.1.5-alpha.2.md",
+    "retainedSource": "tools/history/documents/docs/upgrade-dsh-0.1.5-alpha.2.md",
+    "sha256": "9e61d0df494e67a19ad8edd09759054f7f945e0088350565e305f81807563ffb",
+    "bytes": 7141
+  },
+  {
+    "path": "docs/website-rc2-20260928.md",
+    "retainedSource": "tools/history/documents/docs/website-rc2-20260928.md",
+    "sha256": "51620402af6f63a29b83abd5a49b056e5b3471d2556a74ac06e812e274e2c23d",
+    "bytes": 3540
+  },
+  {
+    "path": "docs/releases/v0.1.7-alpha1-build143.md",
+    "retainedSource": "tools/history/documents/docs/releases/v0.1.7-alpha1-build143.md",
+    "sha256": "a164acf5dd9b5ae977baed68f0b65911692660dbf71875f4a4e558bff137a12d",
+    "bytes": 1119
+  },
+  {
+    "path": "docs/releases/v0.1.7-alpha2-pre-release.md",
+    "retainedSource": "tools/history/documents/docs/releases/v0.1.7-alpha2-pre-release.md",
+    "sha256": "625d0c8702adb9b3594cc94b6db62838dfef9d79f273287897e98ad7b3bf9ec9",
+    "bytes": 3812
+  },
+  {
+    "path": "docs/audits/2026-09-27-rc2-full-architecture/architecture.md",
+    "retainedSource": "tools/history/documents/docs/audits/2026-09-27-rc2-full-architecture/architecture.md",
+    "sha256": "6034515f72276ddf164881255cbaf59a467ef77aef8043952aa7f9774b4f9ee8",
+    "bytes": 12140
+  },
+  {
+    "path": "docs/audits/2026-09-27-rc2-full-architecture/architecture-before-fixes.md",
+    "retainedSource": "tools/history/documents/docs/audits/2026-09-27-rc2-full-architecture/architecture-before-fixes.md",
+    "sha256": "6034515f72276ddf164881255cbaf59a467ef77aef8043952aa7f9774b4f9ee8",
+    "bytes": 12140
+  },
+  {
+    "path": "docs/audits/2026-09-27-rc2-full-architecture/findings.md",
+    "retainedSource": "tools/history/documents/docs/audits/2026-09-27-rc2-full-architecture/findings.md",
+    "sha256": "063c8d0e5d631a4d0e124e341c109de4d4fcc3e17ec64e01d6cddc8d02bcab45",
+    "bytes": 16435
+  },
+  {
+    "path": "docs/audits/2026-09-27-rc2-full-architecture/findings-before-fixes.md",
+    "retainedSource": "tools/history/documents/docs/audits/2026-09-27-rc2-full-architecture/findings-before-fixes.md",
+    "sha256": "063c8d0e5d631a4d0e124e341c109de4d4fcc3e17ec64e01d6cddc8d02bcab45",
+    "bytes": 16435
+  }
+]

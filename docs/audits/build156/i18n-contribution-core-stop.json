@@ -1,0 +1,306 @@
+[
+  {
+    "zh": "Web 根目录是链接，未终止任何进程",
+    "en": "The Web root is a link; no process was stopped.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 根目录不属于本应用，未终止任何进程",
+    "en": "The Web root is not owned by this app; no process was stopped.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 根目录权限无法确认：%s",
+    "en": "Cannot confirm Web root access: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web PID 文件异常，未终止任何进程",
+    "en": "The Web PID record is invalid; no process was stopped.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web PID 无效，未终止任何进程",
+    "en": "The Web PID is invalid; no process was stopped.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 记录不属于本应用，未终止任何进程",
+    "en": "The Web record is not owned by this app; no process was stopped.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 记录权限无法确认：%s",
+    "en": "Cannot confirm Web record access: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "无法写入停止标记，尚未停止 Web",
+    "en": "Cannot write the stop marker; Web has not been stopped.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "进程信息超过核验上限",
+    "en": "Process information exceeds the verification limit.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "进程核验被中断",
+    "en": "Process verification was interrupted.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "检查 Web 进程失败（PID %s，errno=%s）",
+    "en": "Failed to inspect the Web process (PID %s, errno=%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "内核进程身份无法解析",
+    "en": "Cannot parse the kernel process identity.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "进程命令行暂不可读",
+    "en": "The process command line is temporarily unreadable.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "无法核验本应用进程：%s",
+    "en": "Cannot verify this app process: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 旧记录隔离目录异常，原环境保留",
+    "en": "The old Web record quarantine is invalid; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "无法隔离旧 Web 记录，原环境保留",
+    "en": "Cannot quarantine the old Web record; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 身份记录异常，原环境保留",
+    "en": "The Web identity record is invalid; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "无法隔离旧 Web 身份记录，原环境保留",
+    "en": "Cannot quarantine the old Web identity record; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 身份记录暂未保存：%s",
+    "en": "The Web identity record could not be saved: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 启动脚本仍在退出，已保留容器启动器",
+    "en": "The Web startup script is still exiting; the container launcher is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 进程身份已变化，未终止其他进程，请重试",
+    "en": "The Web process identity changed; no other process was stopped. Retry.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 进程身份尚未确认，原环境保留：%s",
+    "en": "The Web process identity is unconfirmed; the environment is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "隔离验证进程身份已变化，原现场保留",
+    "en": "The isolated trial process identity changed; its original state is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "系统拒绝终止本次 Web，原环境保留",
+    "en": "The system denied stopping this Web process; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 退出尚未确认，原环境保留：%s",
+    "en": "Web exit is unconfirmed; the environment is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "已请求停止，Web 尚未退出；稍后可重试，未强杀容器启动器",
+    "en": "Stop was requested but Web has not exited; retry later. The container launcher was not force-killed.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "停止等待被中断，请检查 Web 状态",
+    "en": "The stop wait was interrupted; check the Web state.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "停止 Web 未完成：%s",
+    "en": "Web stop is incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "隔离验证停止未完成：%s",
+    "en": "The isolated trial stop is incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "隔离验证进程退出尚未确认，原现场保留",
+    "en": "The isolated trial process exit is unconfirmed; its original state is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "本应用仍有未退出的 Web，原环境保留",
+    "en": "This app still has a running Web process; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "本应用进程清单尚未确认，原环境保留：%s",
+    "en": "This app process list is unconfirmed; the environment is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "无法核验本次 Web 停止候选，未终止任何进程：%s",
+    "en": "Cannot verify this Web stop candidate; no process was stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "请先完成普通停止；只有退出尚未确认时才能准备强制停止候选",
+    "en": "Complete the normal stop first; a force-stop candidate is available only while exit remains unconfirmed.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 停止请求已变化，请重新检查当前状态",
+    "en": "The Web stop request changed; check the current state again.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "Web 身份记录无效，原环境保留",
+    "en": "The Web identity record is invalid; the environment is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "隔离验证进程不可读取，原现场保留",
+    "en": "The isolated trial process is unreadable; its original state is retained.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  },
+  {
+    "zh": "已知 Web 启动器未能确认退出",
+    "en": "The known Web launcher has not been confirmed to exit.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebStopText.java"
+    ]
+  }
+]

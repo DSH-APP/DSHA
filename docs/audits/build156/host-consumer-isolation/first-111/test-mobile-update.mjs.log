@@ -1,0 +1,12 @@
+✔ 3.0.3 上游 bundle 保留 DSHA 移动端入口与头部让位 (2.7034ms)
+✔ 3.0.3 侧栏与文件面板手势使用同一方向/速度门槛 (17.9268ms)
+✔ 3.0.3 拖动让位与水平滚动容器判定仍由纯函数负责 (2.4369ms)
+✔ 3.0.3 DOM reconciler 按 dirty scope 合并到一帧 (3.039ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 35.2926

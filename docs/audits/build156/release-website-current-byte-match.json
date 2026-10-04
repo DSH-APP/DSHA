@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "status": "PASS_ACTUAL_RELEASE_AND_TESTED_WEBSITE_BYTE_MATCH",
+  "checkedAtUtc": "2026-10-04T04:37:14.311103+00:00",
+  "delivery": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/delivery-c936ac13-f3bc-4087-8270-fc5d0e0596e2.json",
+    "sha256": "a15287bcc213fe05aef204c32b0a83ca34f266f77064213cb192ad135adf2f34",
+    "bytes": 125795
+  },
+  "manifest": {
+    "path": "app/build/release-manifest.json",
+    "sha256": "5aade95dc81a0d4d1c0411ab4bed6997bd8852680c6f4f4a5eba6a791953b0ca",
+    "bytes": 4970
+  },
+  "originalWebsiteReceipt": {
+    "path": "docs/audits/build156/website-build-check.json",
+    "sha256": "06df796916ca93793ce4dd93b7003289e1cce799a2500114b2788702281197f7",
+    "bytes": 27197
+  },
+  "artifacts": [
+    {
+      "flavor": "standard",
+      "release": {
+        "path": "release/dsha-0.2.0-rc2.apk",
+        "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+        "bytes": 397302610
+      },
+      "sidecar": {
+        "path": "release/dsha-0.2.0-rc2.apk.sha256",
+        "sha256": "7cf2c6746261be072bb13cf8e79e33a783fa998fe45efc6100c13f51b30f9363",
+        "bytes": 85
+      },
+      "website": {
+        "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2.apk",
+        "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+        "bytes": 397302610
+      },
+      "websiteSidecar": {
+        "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2.apk.sha256",
+        "sha256": "7cf2c6746261be072bb13cf8e79e33a783fa998fe45efc6100c13f51b30f9363",
+        "bytes": 85
+      },
+      "allBytesMatched": true
+    },
+    {
+      "flavor": "low",
+      "release": {
+        "path": "release/dsha-0.2.0-rc2low.apk",
+        "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+        "bytes": 473097048
+      },
+      "sidecar": {
+        "path": "release/dsha-0.2.0-rc2low.apk.sha256",
+        "sha256": "9d0e8784764bed11f621616c00017ad7ceaa2dcb942f61257f96a6b553bebf1c",
+        "bytes": 88
+      },
+      "website": {
+        "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2low.apk",
+        "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+        "bytes": 473097048
+      },
+      "websiteSidecar": {
+        "path": "website/dist/downloads/0.2.7-20261003.1944-dsh0.2.0-rc.2/dsha-0.2.0-rc2low.apk.sha256",
+        "sha256": "9d0e8784764bed11f621616c00017ad7ceaa2dcb942f61257f96a6b553bebf1c",
+        "bytes": 88
+      },
+      "allBytesMatched": true
+    }
+  ],
+  "priorReleasePreserved": {
+    "path": "app/build/audit-build156/history/before-formal-delivery/receipt.json",
+    "sha256": "b5c7dd124786c60761eceddf0c30a0bbd774b10547cc308af24e66cadf0817d2",
+    "bytes": 1233
+  },
+  "websiteReceiptRewritten": false,
+  "websiteTestsRerun": false,
+  "scope": "The already-built/tested actual156 candidate site and unchanged generated metadata now match the actual delivered release bytes. Historical candidateOnly/realReleaseUntouched fields describe the earlier website run and were not rewritten. This is an exact-byte comparison, not a new website test or online publication.",
+  "hostedDeploymentPerformed": false
+}

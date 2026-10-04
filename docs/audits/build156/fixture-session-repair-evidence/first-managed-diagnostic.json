@@ -1,0 +1,248 @@
+{
+  "diagnosticScope": "Real current managed complete-byte proof, metadata capture then actual follow-up walker; read-only and no marker refresh",
+  "python": "3.12.14",
+  "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+  "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+  "fullHashSeconds": 248.125,
+  "followupSeconds": 4.406,
+  "rootCaptured": {
+    "dev": "7707620078706453033",
+    "ino": "844424932778567"
+  },
+  "rootAfter": {
+    "dev": "7707620078706453033",
+    "ino": "844424932778567"
+  },
+  "entries": 32889,
+  "differenceCount": 305,
+  "firstDifferences": [
+    {
+      "key": "node_modules/@deepseek-ai/cordis-plugin-loader/lib/types/config",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362402",
+        "size": "0",
+        "mtimeNs": "1790997610029355500",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362402",
+        "size": "4096",
+        "mtimeNs": "1790997610029355500",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/cordis/lib/types",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362344",
+        "size": "0",
+        "mtimeNs": "1790997610039322900",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362344",
+        "size": "4096",
+        "mtimeNs": "1790997610039322900",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/cordis/src",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362366",
+        "size": "0",
+        "mtimeNs": "1790997610053798000",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362366",
+        "size": "4096",
+        "mtimeNs": "1790997610053798000",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/cosmokit/lib/types",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362446",
+        "size": "0",
+        "mtimeNs": "1790997609879680600",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362446",
+        "size": "4096",
+        "mtimeNs": "1790997609879680600",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/cosmokit/src",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362464",
+        "size": "0",
+        "mtimeNs": "1790997609897536400",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362464",
+        "size": "4096",
+        "mtimeNs": "1790997609897536400",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/dsh-acp-app",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362511",
+        "size": "0",
+        "mtimeNs": "1790997609015950700",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362511",
+        "size": "4096",
+        "mtimeNs": "1790997609015950700",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/dsh-acp/lib/types",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362498",
+        "size": "0",
+        "mtimeNs": "1790997609483721500",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362498",
+        "size": "4096",
+        "mtimeNs": "1790997609483721500",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/dsh-agent-loop/lib/types",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362579",
+        "size": "0",
+        "mtimeNs": "1790997609594833400",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362579",
+        "size": "4096",
+        "mtimeNs": "1790997609594833400",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/dsh-agent-preset",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362593",
+        "size": "0",
+        "mtimeNs": "1790997609980268300",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362593",
+        "size": "4096",
+        "mtimeNs": "1790997609980268300",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/dsh-agent-preset-registry/lib/types",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362638",
+        "size": "0",
+        "mtimeNs": "1790997609979668000",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362638",
+        "size": "4096",
+        "mtimeNs": "1790997609979668000",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/dsh-agent/lib/types",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362526",
+        "size": "0",
+        "mtimeNs": "1790997609907732500",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362526",
+        "size": "4096",
+        "mtimeNs": "1790997609907732500",
+        "executable": 0
+      }
+    },
+    {
+      "key": "node_modules/@deepseek-ai/dsh-api-account-controller/lib",
+      "captured": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362683",
+        "size": "0",
+        "mtimeNs": "1790997609411869000",
+        "executable": 0
+      },
+      "current": {
+        "type": "DIRECTORY",
+        "dev": "7707620078706453033",
+        "ino": "281474979362683",
+        "size": "4096",
+        "mtimeNs": "1790997609411869000",
+        "executable": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+test_children_receive_private_home_and_no_inherited_secrets_or_optimization (__main__.HostRunnerTest.test_children_receive_private_home_and_no_inherited_secrets_or_optimization) ... ok
+test_final_full_byte_failure_invalidates_a_provisionally_successful_child (__main__.HostRunnerTest.test_final_full_byte_failure_invalidates_a_provisionally_successful_child) ... ok
+test_invalid_executor_placeholder_and_boolean_timeout_cannot_be_silent (__main__.HostRunnerTest.test_invalid_executor_placeholder_and_boolean_timeout_cannot_be_silent) ... ok
+test_orphan_and_duplicate_entries_fail_manifest_check (__main__.HostRunnerTest.test_orphan_and_duplicate_entries_fail_manifest_check) ... ok
+test_real_failed_child_does_not_hide_later_pass_and_fixture_is_removed (__main__.HostRunnerTest.test_real_failed_child_does_not_hide_later_pass_and_fixture_is_removed) ... ok
+test_runtime_identity_and_session_metadata_are_checked_for_each_test (__main__.HostRunnerTest.test_runtime_identity_and_session_metadata_are_checked_for_each_test) ... ok
+test_setup_exception_is_an_explicit_failure_and_aggregation_continues (__main__.HostRunnerTest.test_setup_exception_is_an_explicit_failure_and_aggregation_continues) ... ok
+test_timeout_is_reported_then_next_child_runs (__main__.HostRunnerTest.test_timeout_is_reported_then_next_child_runs) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.557s
+
+OK

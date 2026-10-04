@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <data-extraction-rules>
     <cloud-backup disableIfNoEncryptionCapabilities="true">
         <include domain="sharedpref" path="dsha-portable-settings.xml" />
-        <include domain="file" path="user-data-v5/" />
         <include domain="file" path="data-locations-v5.json" />
         <include domain="file" path="linux/ubuntu/root/.dsh/sessions/" />
         <include domain="file" path="linux/ubuntu/root/.dsh/storages/" />
@@ -10,10 +9,21 @@
         <include domain="file" path="linux/ubuntu/root/.dsh/settings.yaml" />
         <include domain="file" path="linux/ubuntu/root/.dsh/profiles/" />
         <include domain="file" path="linux/ubuntu/root/.dsh/plugin-src/" />
+        <include domain="file" path="user-data-v5/dsh/sessions/" />
+        <include domain="file" path="user-data-v5/dsh/storages/" />
+        <include domain="file" path="user-data-v5/dsh/attachments/" />
+        <include domain="file" path="user-data-v5/dsh/settings.yaml" />
+        <include domain="file" path="user-data-v5/dsh/profiles/" />
+        <include domain="file" path="user-data-v5/dsh/plugin-src/" />
+        <exclude domain="file" path="user-data-v5/dsh/sessions/.sessions-trash/" />
+        <exclude domain="file" path="user-data-v5/dsh/profiles/.bridge_token" />
+        <exclude domain="file" path="user-data-v5/dsh/profiles/.bridge_headers" />
+        <exclude domain="file" path="linux/ubuntu/root/.dsh/sessions/.sessions-trash/" />
+        <exclude domain="file" path="linux/ubuntu/root/.dsh/profiles/.bridge_token" />
+        <exclude domain="file" path="linux/ubuntu/root/.dsh/profiles/.bridge_headers" />
     </cloud-backup>
     <device-transfer>
         <include domain="sharedpref" path="dsha-portable-settings.xml" />
-        <include domain="file" path="user-data-v5/" />
         <include domain="file" path="data-locations-v5.json" />
         <include domain="file" path="linux/ubuntu/root/.dsh/sessions/" />
         <include domain="file" path="linux/ubuntu/root/.dsh/storages/" />
@@ -21,5 +31,17 @@
         <include domain="file" path="linux/ubuntu/root/.dsh/settings.yaml" />
         <include domain="file" path="linux/ubuntu/root/.dsh/profiles/" />
         <include domain="file" path="linux/ubuntu/root/.dsh/plugin-src/" />
+        <include domain="file" path="user-data-v5/dsh/sessions/" />
+        <include domain="file" path="user-data-v5/dsh/storages/" />
+        <include domain="file" path="user-data-v5/dsh/attachments/" />
+        <include domain="file" path="user-data-v5/dsh/settings.yaml" />
+        <include domain="file" path="user-data-v5/dsh/profiles/" />
+        <include domain="file" path="user-data-v5/dsh/plugin-src/" />
+        <exclude domain="file" path="user-data-v5/dsh/sessions/.sessions-trash/" />
+        <exclude domain="file" path="user-data-v5/dsh/profiles/.bridge_token" />
+        <exclude domain="file" path="user-data-v5/dsh/profiles/.bridge_headers" />
+        <exclude domain="file" path="linux/ubuntu/root/.dsh/sessions/.sessions-trash/" />
+        <exclude domain="file" path="linux/ubuntu/root/.dsh/profiles/.bridge_token" />
+        <exclude domain="file" path="linux/ubuntu/root/.dsh/profiles/.bridge_headers" />
     </device-transfer>
 </data-extraction-rules>

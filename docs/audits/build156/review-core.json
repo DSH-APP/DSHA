@@ -1,0 +1,662 @@
+{
+  "schemaVersion": 1,
+  "lane": "core",
+  "phase": "final_app_owner_source_frozen_root_gates_separate",
+  "scope": "18 exact IDs; no phone/ADB/debug-audit-APK/Gradle/upload/version/signature changes by this lane",
+  "items": [
+    {
+      "id": "D-API-01",
+      "title": "WebProcessManager.stop/stopOne 以 String 返回错误，混用错误码与本地化文案",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/WebRecordedStop.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebStopDiagnostic.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebStopException.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebStopCoordinator.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebStopText.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        },
+        {
+          "command": "python tools/test-core-boundaries.py",
+          "result": "PASS 9 source ownership checks including unique App factories, missing-owner refusal, instance-only mutable screen/preference state, low-level UiText=0 and typed stop facts",
+          "scope": "Source structure; final actual JVM formatter/protocol assertions follow in the final receipt"
+        },
+        {
+          "command": "Core WebStopTextTest + existing WebStopCoordinatorTest in actual current SDK/JVM run",
+          "result": "PASS: current-language render preserves code/raw facts; unknown exception raw parameters; typed nested cause; all-source immutable list and late locale re-render; actual exit confirmation still required",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual formatter/Coordinator behavior with typed producers; no Android signal/device claim"
+        }
+      ],
+      "softwareChanges": [
+        "All lower-level stop/inspection/force failures now carry immutable codes/raw facts; both runtime stop algorithms have zero UiText. Application-injected HostPorts and Core WebStopText render human language. Main Core Result retains all typed sources, detail is computed for the current locale, and old String APIs are explicit compatibility seams."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android signal permission and phone lifecycle acceptance not run by user instruction"
+        }
+      ],
+      "residual": [
+        "Legacy String/detail constructors and fake owners keep compatibility; production ports/result lists use typed diagnostics. Rendering is never used to decide identity, signalling or release."
+      ],
+      "changed": true,
+      "reason": "All lower-level stop/inspection/force failures now carry immutable codes/raw facts; both runtime stop algorithms have zero UiText. Application-injected HostPorts and Core WebStopText render human language. Main Core Result retains all typed sources, detail is computed for the current locale, and old String APIs are explicit compatibility seams.",
+      "deferredIntegratedChecks": [
+        {
+          "kind": "integrated",
+          "detail": "Root final Gradle, APK, signature, ELF and current-source SHA integration gates are separate from this lane’s focused source/SDK/JVM receipt."
+        }
+      ]
+    },
+    {
+      "id": "D-API-02",
+      "title": "以 exception.getMessage() 字符串比较做控制流",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestPreparationFailure.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+        "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        }
+      ],
+      "softwareChanges": [
+        "Runtime preparation uses typed GuestPreparationFailure. DestinationChecksumFailure and RetainedCatalogue.PageChanged replace the final producer/consumer message comparisons while keeping historical diagnostic codes."
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "Runtime preparation uses typed GuestPreparationFailure. DestinationChecksumFailure and RetainedCatalogue.PageChanged replace the final producer/consumer message comparisons while keeping historical diagnostic codes.",
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-API-04",
+      "title": "文件类型用字符串字面量（FILE/DIRECTORY/LINK/MISSING/UNREADABLE/EXCLUDED）在全包散布",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/FileKind.java",
+        "app/src/main/java/com/deepseekharness/app/backup/BackupFileSystem.java",
+        "app/src/main/java/com/deepseekharness/app/backup/BackupSource.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Stable serialized file-kind names remain read-compatible; do not rewrite historical manifests merely to remove string tokens."
+      ],
+      "changed": false,
+      "reason": "FileKind rejects unknown names and Node.kind is the internal typed authority. Historical type/wire spelling remains for archive compatibility; current filesystem migration uses typed checks.",
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-API-07",
+      "title": "PluginFragment 操作菜单以中文显示串作为分派键",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        },
+        {
+          "command": "plugins lane actual discovery tests + UI action/instance consumer review",
+          "result": "Python discovery 23 cases: 19 PASS / 4 explicit Windows-Linux gaps; source CHECK_UPDATE uses updatable independently of deletion",
+          "receipt": "docs/audits/build156/review-plugins.json",
+          "scope": "Real guest inventory metadata and stable enum dispatch; UI platform behavior belongs to root software/device gate"
+        }
+      ],
+      "softwareChanges": [
+        "Actions dispatch by PluginAction; CHECK_UPDATE follows real source updatable metadata independently of deletable. Revision/invalidation now belong to the application PluginRepository instance."
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "Actions dispatch by PluginAction; CHECK_UPDATE follows real source updatable metadata independently of deletable. Revision/invalidation now belong to the application PluginRepository instance.",
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-API-08",
+      "title": "vscreen 工具 schema 把所有属性设为 required，且长 text 经 GET 查询串传输会超过桥首行上限",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/VscreenBridgeRequest.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+      ],
+      "checks": [
+        {
+          "command": "bridge lane current SDK/JUnit + managed Node fixture",
+          "result": "BridgeRoutes 4 source/compiled route checks PASS; 71 actual current JVM checks PASS; managed Node clients PASS",
+          "receipt": "docs/audits/build156/review-bridge.json",
+          "scope": "Typed POST/auth order/own identity and route behavior; no Android device claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android device/platform acceptance was not performed by user instruction"
+        }
+      ],
+      "residual": [],
+      "changed": false,
+      "reason": "Vscreen large text uses typed POST body and operation-specific validation. Bridge lane current Java typed-request suite and real managed Node clients cover the production route.",
+      "deferredIntegratedChecks": [
+        {
+          "kind": "integrated",
+          "detail": "Root final Gradle, APK, signature, ELF and current-source SHA integration gates are separate from this lane’s focused source/SDK/JVM receipt."
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-01",
+      "title": "HarnessController 集中了 Web 生命周期、迁移、插件注册、LAN 鉴权、日志与配置重置",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java",
+        "app/src/main/java/com/deepseekharness/app/core/LanAuthBridge.java",
+        "app/src/main/java/com/deepseekharness/app/core/HostConfigService.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebProcessSession.java",
+        "app/src/main/java/com/deepseekharness/app/core/StartupEnvironmentActions.java",
+        "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java",
+        "app/src/main/java/com/deepseekharness/app/core/HarnessSessionState.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        },
+        {
+          "command": "python tools/test-core-boundaries.py",
+          "result": "PASS 9 source ownership checks including unique App factories, missing-owner refusal, instance-only mutable screen/preference state, low-level UiText=0 and typed stop facts",
+          "receipt": "tools/test-core-boundaries.py",
+          "scope": "Source ownership only; runtime/backup→ui=0, no RuntimeHostPorts.shared, package-private Web collaborators; 20 explicitly classified Android coordinator edges frozen after 5 business edges removed"
+        },
+        {
+          "command": "python tools/format-java.py --write --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files explicit-owned-list",
+          "result": "PASS pinned GJF 1.22.0; exact Java tokens preserved",
+          "receipt": "app/build/java-format/core-build156-format-final.json",
+          "scope": "36 explicit core-owned files plus 5 coupling files in core-build156-coupling-format.json; no whole-tree formatting"
+        }
+      ],
+      "softwareChanges": [
+        "HarnessController is 276 lines after typed force-stop entry points. LAN exchange, native config transaction, exact launcher/bridge leases and host preparation are substantive collaborators; no second production lifecycle/queue/state owner was introduced."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android device/platform acceptance was not performed by user instruction"
+        }
+      ],
+      "residual": [],
+      "changed": true,
+      "reason": "HarnessController is 276 lines after typed force-stop entry points. LAN exchange, native config transaction, exact launcher/bridge leases and host preparation are substantive collaborators; no second production lifecycle/queue/state owner was introduced.",
+      "deferredIntegratedChecks": [
+        {
+          "kind": "integrated",
+          "detail": "Root final Gradle, APK, signature, ELF and current-source SHA integration gates are separate from this lane’s focused source/SDK/JVM receipt."
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-02",
+      "title": "全局可变静态单例充当服务定位器（RuntimeHostPorts、MainActivity.current、vscreen 等）",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DshaApp.java",
+        "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/core/InstallRepository.java",
+        "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "app/src/main/java/com/deepseekharness/app/util/ApplicationServiceSlot.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java",
+        "app/src/main/java/com/deepseekharness/app/data/PortableSettings.java",
+        "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        },
+        {
+          "command": "python tools/test-core-boundaries.py",
+          "result": "PASS 9 source ownership checks including unique App factories, missing-owner refusal, instance-only mutable screen/preference state, low-level UiText=0 and typed stop facts",
+          "receipt": "tools/test-core-boundaries.py",
+          "scope": "Source ownership only; runtime/backup→ui=0, no RuntimeHostPorts.shared, package-private Web collaborators; 20 explicitly classified Android coordinator edges frozen after 5 business edges removed"
+        },
+        {
+          "command": "python tools/format-java.py --write --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files explicit-owned-list",
+          "result": "PASS pinned GJF 1.22.0; exact Java tokens preserved",
+          "receipt": "app/build/java-format/core-build156-format-final.json",
+          "scope": "36 explicit core-owned files plus 5 coupling files in core-build156-coupling-format.json; no whole-tree formatting"
+        },
+        {
+          "command": "Current PortableSettingsOwnerTest using Android37 SharedPreferences interfaces and real Executor",
+          "result": "PASS 3 actual lifecycle cases: two owners/listener/error/write isolation; reset drains accepted write before clearing and rejects old callbacks; failed import retains portable original and retry registers one listener",
+          "receipt": "app/build/audit-build156/portable-owner/receipt.json",
+          "scope": "Fake preference storage, real asynchronous ordering; not Android disk IO, SDK/phone lifecycle or power-loss evidence"
+        },
+        {
+          "command": "Bridge final actual SDK37/R main/standard Release + instance HTTP/JVM ownership checks",
+          "result": "PASS 25 current JVM + 6 actual HTTP + 9 source structure + 71 bridge behavior cases; final source/token fingerprints recorded",
+          "receipt": "docs/audits/build156/bridge-vscreen-ownership.json",
+          "scope": "Actual owner/factory/wrapper/context isolation, ticket/lock/worker/node/late-callback isolation; host fixtures explicitly bypass Android framework construction, no real hardware/device claim"
+        }
+      ],
+      "softwareChanges": [
+        "RuntimeHostPorts.SHARED/shared and HarnessService.activeService were removed. DshaApp ApplicationOwner holds the controller, backup/install/plugin repositories and service slot; legacy resolvers do not own static mutable instances. UI/bridge/recovery lanes remove their corresponding locators.",
+        "ApplicationOwner now also owns the reopened VirtualScreenManager and PortableSettings. Screen locks/epoch/generation/worker and visual/node collaborators share one manager. Portable listener/error/writer/binding are instance state; Context facades resolve the existing application Owner, missing owner fails closed, no App.current/default second manager. One hardware session and revoke/reset/writer ordering remain contracts."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android device/platform acceptance was not performed by user instruction"
+        }
+      ],
+      "residual": [
+        "Auxiliary app_process and UID-wide runtime registries retain their actual process/resource contracts; this does not claim every static field or dependency graph edge disappeared. Actual virtual hardware/system UI/OEM lifecycle behavior requires separate device evidence."
+      ],
+      "changed": true,
+      "reason": "ApplicationOwner now also owns the reopened VirtualScreenManager and PortableSettings. Screen locks/epoch/generation/worker and visual/node collaborators share one manager. Portable listener/error/writer/binding are instance state; Context facades resolve the existing application Owner, missing owner fails closed, no App.current/default second manager. One hardware session and revoke/reset/writer ordering remain contracts.",
+      "deferredIntegratedChecks": [
+        {
+          "kind": "integrated",
+          "detail": "Root final Gradle, APK, signature, ELF and current-source SHA integration gates are separate from this lane’s focused source/SDK/JVM receipt."
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-03",
+      "title": "分层反转：runtime/backup 层直接依赖 ui 与 core，缺少架构边界测试",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+        "app/src/main/java/com/deepseekharness/app/DshaApp.java",
+        "app/src/main/java/com/deepseekharness/app/backup/MaintenanceUiPorts.java",
+        "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+        "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+        "app/src/main/java/com/deepseekharness/app/core/PluginJournalRecovery.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        },
+        {
+          "command": "python tools/test-core-boundaries.py",
+          "result": "PASS 9 source ownership checks including unique App factories, missing-owner refusal, instance-only mutable screen/preference state, low-level UiText=0 and typed stop facts",
+          "receipt": "tools/test-core-boundaries.py",
+          "scope": "Source ownership only; runtime/backup→ui=0, no RuntimeHostPorts.shared, package-private Web collaborators; 20 explicitly classified Android coordinator edges frozen after 5 business edges removed"
+        },
+        {
+          "command": "python tools/format-java.py --write --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files explicit-owned-list",
+          "result": "PASS pinned GJF 1.22.0; exact Java tokens preserved",
+          "receipt": "app/build/java-format/core-build156-format-final.json",
+          "scope": "36 explicit core-owned files plus 5 coupling files in core-build156-coupling-format.json; no whole-tree formatting"
+        },
+        {
+          "command": "per-edge current-source review",
+          "result": "25 reviewed: 5 unnecessary dependencies removed, 20 explicit Android coordinator facts",
+          "receipt": "docs/audits/build156/architecture-backup-core-dispositions.json",
+          "scope": "No class-move/line-count/whitelist claim of full package decoupling"
+        }
+      ],
+      "softwareChanges": [
+        "UI destinations are injected by the application; runtime/backup have zero direct UI references. Five real unnecessary core dependencies were removed. Remaining twenty are individually justified Android job/service or native Settings/Targets adapters and same-authority maintenance coordination, not declared fully eliminated."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android device/platform acceptance was not performed by user instruction"
+        }
+      ],
+      "residual": [
+        "Twenty reviewed Android coordination/native-settings edges remain by explicit role; see each edge reason. There is no claim of a zero backup→core import graph."
+      ],
+      "changed": true,
+      "reason": "UI destinations are injected by the application; runtime/backup have zero direct UI references. Five real unnecessary core dependencies were removed. Remaining twenty are individually justified Android job/service or native Settings/Targets adapters and same-authority maintenance coordination, not declared fully eliminated.",
+      "deferredIntegratedChecks": [
+        {
+          "kind": "integrated",
+          "detail": "Root final Gradle, APK, signature, ELF and current-source SHA integration gates are separate from this lane’s focused source/SDK/JVM receipt."
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-06",
+      "title": "HttpShellService.handle 用 30 多个 if-else 分支做路由，无路由表或处理器接口",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgeRoutes.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+      ],
+      "checks": [
+        {
+          "command": "bridge lane current SDK/JUnit + managed Node fixture",
+          "result": "BridgeRoutes 4 source/compiled route checks PASS; 71 actual current JVM checks PASS; managed Node clients PASS",
+          "receipt": "docs/audits/build156/review-bridge.json",
+          "scope": "Typed POST/auth order/own identity and route behavior; no Android device claim"
+        }
+      ],
+      "softwareChanges": [
+        "Bridge uses the actual route registry, typed route validation and shared auth policy. Launch/clipboard PackageManager/main-thread operations moved into AppDeviceActions; no unrelated route may skip the original generation/approval authority."
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "Bridge uses the actual route registry, typed route validation and shared auth policy. Launch/clipboard PackageManager/main-thread operations moved into AppDeviceActions; no unrelated route may skip the original generation/approval authority.",
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-ARCH-07",
+      "title": "旧 tar.gz（guest Python 引擎）与 v5 宿主原生 dshbak 两套备份/恢复系统并存",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostSnapshot.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        }
+      ],
+      "softwareChanges": [
+        "BackupTask maps all four legacy integer scopes to the actual native v5 exporter without acquiring an old archive owner. BackupManager production creation uses native Downloads export/current HostSnapshot; old guest backup --archive writers are gone. Historical import/restore and interrupted journals remain readable."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android device/platform acceptance was not performed by user instruction"
+        }
+      ],
+      "residual": [],
+      "changed": true,
+      "reason": "BackupTask maps all four legacy integer scopes to the actual native v5 exporter without acquiring an old archive owner. BackupManager production creation uses native Downloads export/current HostSnapshot; old guest backup --archive writers are gone. Historical import/restore and interrupted journals remain readable.",
+      "deferredIntegratedChecks": [
+        {
+          "kind": "integrated",
+          "detail": "Root final Gradle, APK, signature, ELF and current-source SHA integration gates are separate from this lane’s focused source/SDK/JVM receipt."
+        }
+      ]
+    },
+    {
+      "id": "D-DEP-01",
+      "title": "BackupJson（Gson 严格流式）与 org.json 两套 JSON 解析并存，严格性不同",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java",
+        "app/src/main/java/com/deepseekharness/app/backup/BackupJson.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        }
+      ],
+      "softwareChanges": [
+        "The untrusted process diagnostic event boundary now uses strict BackupJson with duplicate-key/size rejection and typed fatal flag validation; old org.json behavior can no longer turn ambiguous output into a fatal issue. Trusted Android/asset DTO adapters retain org.json where their contract requires it; no claim that every org.json import disappeared."
+      ],
+      "missingEvidence": [],
+      "residual": [
+        "Trusted org.json adapters remain; strict untrusted archive/network/process boundaries are checked individually, not by a blind global parser replacement."
+      ],
+      "changed": true,
+      "reason": "The untrusted process diagnostic event boundary now uses strict BackupJson with duplicate-key/size rejection and typed fatal flag validation; old org.json behavior can no longer turn ambiguous output into a fatal issue. Trusted Android/asset DTO adapters retain org.json where their contract requires it; no claim that every org.json import disappeared.",
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-ERR-01",
+      "title": "LaunchFragment.refreshRunState 整个方法体包在 catch(Throwable ignored) 中",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "current LaunchFragment refresh source review",
+          "result": "RuntimeException failure boundary + UI_REFRESH_FAILED; no catch(Throwable) wrapping entire refresh",
+          "receipt": "docs/audits/build156/review-ui.json",
+          "scope": "Bounded source/lifecycle behavior; no actual Activity injection/device claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android device/platform acceptance was not performed by user instruction"
+        }
+      ],
+      "residual": [],
+      "changed": false,
+      "reason": "The run-state refresh no longer swallows Throwable; expected RuntimeException is rate-limited as UI_REFRESH_FAILED and rendered as failure while lifecycle departure short-circuits normally.",
+      "deferredIntegratedChecks": [
+        {
+          "kind": "integrated",
+          "detail": "Root final Gradle, APK, signature, ELF and current-source SHA integration gates are separate from this lane’s focused source/SDK/JVM receipt."
+        }
+      ]
+    },
+    {
+      "id": "D-PKG-01",
+      "title": "多处硬编码包名 com.dsh.client，applicationId 变化或加后缀即失效",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/SelfPackageIdentity.java",
+        "app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+        "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java"
+      ],
+      "checks": [
+        {
+          "command": "bridge lane current SDK/JUnit + managed Node fixture",
+          "result": "BridgeRoutes 4 source/compiled route checks PASS; 71 actual current JVM checks PASS; managed Node clients PASS",
+          "receipt": "docs/audits/build156/review-bridge.json",
+          "scope": "Typed POST/auth order/own identity and route behavior; no Android device claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android device/platform acceptance was not performed by user instruction"
+        }
+      ],
+      "residual": [],
+      "changed": false,
+      "reason": "The current package/UID/APK identity is carried to self-protection and app_process entry points; production com.dsh.client literals remain only historical comments. No suffix audit APK was generated.",
+      "deferredIntegratedChecks": [
+        {
+          "kind": "integrated",
+          "detail": "Root final Gradle, APK, signature, ELF and current-source SHA integration gates are separate from this lane’s focused source/SDK/JVM receipt."
+        }
+      ]
+    },
+    {
+      "id": "D-API-03",
+      "title": "ProotBootstrap.startRootfs 有 5 层布尔参数重载，应改为 LaunchSpec 值对象",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/LaunchSpec.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeLauncher.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "Named immutable LaunchSpec is the single rootfs launch input. Actual RuntimeLauncherTest proves env-only key, immutable options and malformed env rejection.",
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-API-05",
+      "title": "DiagnosticRepository 从拼好的报告文本里反向解析结构化结果",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java",
+        "app/src/main/java/com/deepseekharness/app/util/DiagnosticReport.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "collect returns DiagnosticReport; report text and result cards render that structured projection. report.split is absent and no displayed text is parsed back as state.",
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-API-06",
+      "title": "StorageActivity 按迭代序号取标签，与 StorageMaintenance.inspect 的插入顺序隐式对齐",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java",
+        "app/src/main/java/com/deepseekharness/app/util/StorageCategoryLabels.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "Storage labels come from stable category keys, with unknown keys preserved. StorageCategoryLabelsTest covers language-independent key lookup and the unknown fallback.",
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-ARCH-05",
+      "title": "main 源集的 StorageMaintenance.CACHE 硬编码 debug/deviceAudit 审计目录名",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java"
+      ],
+      "checks": [
+        {
+          "command": "current cache whitelist / historical preservation review",
+          "result": "CACHE has WebView/GPUCache/Code Cache/GrShaderCache/DawnCache; HISTORICAL is count-only",
+          "scope": "Actual source deletion policy, no forbidden audit teardown run"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Historical/unknown audit fixtures remain available for retained-data inspection instead of automatic deletion."
+      ],
+      "changed": false,
+      "reason": "CACHE contains only regenerable categories. Historical audit names are counted separately and never included in deletion; preserving their unknown bytes is the current user contract. No audit APK/instrumentation was executed.",
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-NAME-01",
+      "title": "EnvironmentAccess.shouldAttemptRuntimeUpdate 名为\"应尝试更新\"，实际返回\"是否阻止启动、需进入维护页\"",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentAccess.java",
+        "app/src/main/java/com/deepseekharness/app/util/EnvironmentIdentity.java"
+      ],
+      "checks": [
+        {
+          "command": "python app/build/audit-build156/compile-core.py",
+          "result": "PASS: 348 current main sources, 37 test sources; 126 run / 125 passed / 0 failures / 1 Windows real-symlink capability assumption / 0 ignored",
+          "receipt": "app/build/audit-build156/core-jvm/receipt.json",
+          "scope": "Actual Android37/AndroidX compile and fresh3502catalog; includes current App-owner VirtualScreen/Portable/Foreground/Accessibility/bridge/reset/NativeDataActivity caller closure; source fingerprints unchanged during run; no device/Gradle claim"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "requiresMaintenanceBeforeStart names the actual blocking decision, and descriptor IOException fails closed. shouldAttemptRuntimeUpdate is absent from current production sources.",
+      "deferredIntegratedChecks": []
+    }
+  ],
+  "findings": [
+    "RuntimeHostPorts and foreground service/repository locators now have application ownership.",
+    "LAN network exchange has a generation/address snapshot; stale results never publish.",
+    "1000 structured issue events retain fresh trace while writes are capped per generation.",
+    "UTF-8 byte budget and atomic history recovery preserve old diagnostic records.",
+    "Legacy backup creation was a live path and now uses actual native v5 Downloads export; all four scope IDs and default credential exclusion are verified.",
+    "Five unnecessary backup/core dependencies were removed and twenty Android coordinator facts reviewed individually."
+  ],
+  "additionalWork": {
+    "i18nContribution": "docs/audits/build156/i18n-contribution-core.json",
+    "fullTemplates": 82,
+    "forceStop": "Explicit native same-candidate/same-owner-generation escalation after an unconfirmed ordinary stop; actual signal proof remains in WebProcessManager and launchers still require graceful/exit confirmation.",
+    "jvmGap": "One Windows host symlink-creation assumption; portable LINK refusal and unchanged target tests passed.",
+    "nextGate": "Root final full flavor unit/Lint/APK/ELF/signature and current source SHA integration; no device coverage implied.",
+    "stopI18nContribution": "docs/audits/build156/i18n-contribution-core-stop.json",
+    "catalogEntriesAtFocusedRun": 3502,
+    "latestJVM": "348 main / 37 test files; 126 run, 125 pass, 1 explicit Windows real-symlink capability assumption; 9 source ownership checks pass",
+    "architectureAssessment": "docs/audits/build156/architecture-assessment.md",
+    "architectureFacts": "docs/audits/build156/architecture-assessment.json"
+  }
+}

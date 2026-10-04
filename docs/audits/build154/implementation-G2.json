@@ -1,0 +1,230 @@
+{
+  "schema": 1,
+  "baselineBuild": 153,
+  "date": "2026-10-03",
+  "stage": "proposal_only_waiting_root_production_gate",
+  "tasks": [
+    {
+      "id": "G2-T1",
+      "owner": "G2",
+      "findings": [
+        "D-ARCH-01",
+        "D-ARCH-02",
+        "D-API-01",
+        "D-RT-05"
+      ],
+      "name": "单一Web owner与启动/输出/停止协作者",
+      "files": [
+        "core/HarnessController.java",
+        "core/StartupPipeline.java (new)",
+        "core/WebOutputSession.java (new)",
+        "core/WebStopCoordinator.java (new)",
+        "runtime/RuntimeHostPorts.java"
+      ],
+      "changes": "StartupPipeline严格步骤/失败短路；输出仅提交官方auth/退出事件；Controller独占代次、队列、fallback和重启；停机结果类型化，lease仅在完整退出后释放。",
+      "proof": "假Ports步骤/安全profile/代次失效；官方输出/旧回调无权发布；双stop单飞、unknown退出保留屏障；公开API兼容。"
+    },
+    {
+      "id": "G2-T2",
+      "owner": "G2",
+      "findings": [
+        "D-ARCH-04",
+        "D-RT-08",
+        "D-API-03",
+        "D-RT-03",
+        "D-RT-04",
+        "D-RT-07",
+        "D-RT-14",
+        "D-RT-15",
+        "D-RT-16",
+        "D-RT-17"
+      ],
+      "name": "LaunchSpec、RuntimeLauncher和安装/脚本明确职责",
+      "files": [
+        "runtime/ProotBootstrap.java",
+        "runtime/ContainerRuntime.java",
+        "runtime/UserDataBindings.java",
+        "runtime/LaunchSpec.java (new)",
+        "runtime/RuntimeLauncher.java (new)",
+        "bridge/AdbBridge.java (coordinate G1)"
+      ],
+      "changes": "具名启动配置和不可变bind；各runtime自行准备/env且异常传播；固定当前资产名，删无调用uninstall；显式host数据域；初次安装stage只能在关闭/签名计划证明下治理；ADB大脚本stdin；按实际UID生成组。",
+      "proof": "实际argv/env矩阵；153parent-link/ColdInstall/guest生命期/proot NEEDED回归；200KiB注入不E2BIG、未知布局零写、未完成现场保持；Ubuntu身份不变。"
+    },
+    {
+      "id": "G2-T3",
+      "owner": "G2 with G1 FS",
+      "findings": [
+        "D-IO-01",
+        "D-IO-03",
+        "D-DEP-01"
+      ],
+      "name": "完整受管补丁链与可信输入/原子发布",
+      "files": [
+        "runtime/RuntimeTools.java",
+        "runtime/ManagedRuntimeAssets.java",
+        "assets patch recipes",
+        "backup/BackupFileSystem.java (G1/G3 contract)"
+      ],
+      "changes": "cold/stage/overlay共用链；恢复canonical模块后应用所有当前同模块patch，不能抹先前composer/session；关键宿主输入有界严格，原子marker与FS接口协同；缓存不越维护门禁。",
+      "proof": "真实rc2模块旧patch恢复→全部patch保留→二次幂等；stage/cold一致；mode/inode变化缓存失效；同步/读写失败留原件。"
+    },
+    {
+      "id": "G2-T4",
+      "owner": "G2 + root/G3 composition",
+      "findings": [
+        "D-ARCH-03",
+        "D-RT-12",
+        "D-RT-11"
+      ],
+      "name": "移除runtime到ui真实边与复用有界输出",
+      "files": [
+        "runtime/RuntimeTrial.java",
+        "runtime/ProfileSettingsTrial.java",
+        "ui/RuntimeBrowserProbe.java",
+        "DshaApp.java (root)",
+        "core/EnvironmentMaintenance.java (root/G3)"
+      ],
+      "changes": "RuntimeTrial接受BrowserProbe注入端口，runtime不再调用ui全限定名；根组合提供现有ui实现，不建新Locator；ProfileSettingsTrial有界排空+脱敏tail；继续慢启动/可取消。",
+      "proof": "假BrowserProbe成功/失败/取消/关闭；全限定边证明runtime→ui已去除，不能改包凑图；大输出不阻guest，未知退出仍锁住。"
+    },
+    {
+      "id": "G2-T5",
+      "owner": "G2",
+      "findings": [
+        "D-HEUR-01",
+        "D-HEUR-02",
+        "D-RT-10",
+        "D-RT-13",
+        "D-RT-06",
+        "D-RT-18",
+        "D-PLAT-02"
+      ],
+      "name": "证据分类、安全进程查询/停止/诊断",
+      "files": [
+        "util/WebProcSel.java",
+        "runtime/WebProcessManager.java",
+        "runtime/IsolatedInstallProcess.java",
+        "runtime/BoundedGuestSessions.java",
+        "core/StartupDiagnostics.java",
+        "util/ProcessIdentity.java"
+      ],
+      "changes": "argv精确分类防grep/vim误阻；启发式与确定issue/fatal分开；同步状态推进与退避；仅完整身份的手动force可选，未知绝不SIGKILL；逐记录只读原因，坏日志不释放屏障。",
+      "proof": "真实proot/proroot/安全profile命令+误报；PID复用/denied/unknown无信号；普通missing不会抑制fallback；畸形/live混合仍blocked；设备矩阵不冒称。"
+    },
+    {
+      "id": "G2-T6",
+      "owner": "G2 with G3 storage/root web",
+      "findings": [
+        "D-RES-02",
+        "D-RT-19",
+        "D-RES-01"
+      ],
+      "name": "迁移/应急/草稿空间正反馈治理",
+      "files": [
+        "assets/rc1-migration.py",
+        "recovery/RecoveryRuntime.java",
+        "recovery/RecoveryController.java",
+        "assets/app-integration/client.js (root)",
+        "backup/RetainedCatalogue.java (G3)"
+      ],
+      "changes": "空间/输入预算预检；同输入失败快照经实际成员身份摘要核验后复用，不仅比settings stamp；已有保护普通启动仍小读；应急可再生候选治理需要关闭+计划证明，sessions/retained未知修改原件不按年龄删；草稿仅已证明删除session可回收。",
+      "proof": "ENOSPC零复制；同输入3次失败无全量增长、输入变化新代次；已有保护不扫sessions；应急unknown与修改现场保留；真实IndexedDB孤儿/满额/未加载会话/导出。"
+    },
+    {
+      "id": "G2-T7",
+      "owner": "G2 runtime-fs; G3 compression/package",
+      "findings": [
+        "D-FS-01",
+        "D-PERF-03",
+        "D-PERF-04"
+      ],
+      "name": "有界异步I/O和依赖钩子副作用",
+      "files": [
+        "assets/runtime-fs/index.js (G2)",
+        "assets/builtin-plugins/dsh-web-mobile/lib/compress.js (G3/root)",
+        "assets/plugin-network.py (G3)",
+        "assets/plugin-manager.py (G3)"
+      ],
+      "changes": "目录级同inode永久协作锁、父sync、EEXIST/源保留；压缩异步且header/end/取消保持；整体/无进展安装预算分离，hook已执行不能当网络失败换源重放，开放策略不改。",
+      "proof": "100发布/并发别名/冲突/取消/private/FUSE；17MiB大响应与小请求延迟；长进度/静默/取消/hook后失败不重放。"
+    },
+    {
+      "id": "G2-T8",
+      "owner": "root/G4 with G2 runtime",
+      "findings": [
+        "D-I18N-01",
+        "D-I18N-02",
+        "D-I18N-03",
+        "D-A11Y-01",
+        "D-ERR-01",
+        "D-API-02",
+        "D-RT-09",
+        "D-STYLE-01"
+      ],
+      "name": "显示语义、错误边界和可审阅性",
+      "files": [
+        "util/UiText.java (root)",
+        "ui/LaunchFragment.java (root)",
+        "ui/OverlayFragment.java (root)",
+        "ui/WelcomeActivity.java (root)",
+        "runtime/InstallPipeline.java (G2)",
+        "tools i18n/formatter (root)"
+      ],
+      "changes": "整句模板、稳定步骤/错误code、用户原文不翻译、a11y标签；刷新异常限速显式；G2仅运行时/安装层，root负责UI资源；格式与逻辑分开。",
+      "proof": "中英模板与原文；步骤/错误/取消/刷新；视图语义静态/host断言；TalkBack不冒称；不开额外审计APK。"
+    }
+  ],
+  "otherOwners": [
+    {
+      "owner": "G1",
+      "ids": [
+        "D-RT-20",
+        "D-IO-02",
+        "D-IO-03",
+        "D-ARCH-06",
+        "D-PKG-01",
+        "D-PLAT-01",
+        "D-API-08"
+      ],
+      "scope": "安全桥token/STABLE、Tar、隐私、设备/vscreen工具；G2不并行写HttpShellService/Tar，包身份runtime部分协调。"
+    },
+    {
+      "owner": "G3",
+      "ids": [
+        "D-PERF-01",
+        "D-ARCH-07",
+        "D-API-04",
+        "D-CONC-01",
+        "D-ARCH-05",
+        "D-API-06",
+        "D-API-07",
+        "D-PERF-03",
+        "D-PERF-04"
+      ],
+      "scope": "备份/插件/保留区，保持无密码v5 tar.gz和全历史读取；菜单/压缩/安装预算由G3协调。"
+    },
+    {
+      "owner": "root/G4",
+      "ids": [
+        "D-RT-01",
+        "D-PERF-02",
+        "D-CONC-02",
+        "D-IO-04",
+        "D-API-05",
+        "D-NAME-01"
+      ],
+      "scope": "前台健康/虚拟屏/日志与报告/环境命名，G2只提供runtime端口。"
+    }
+  ],
+  "coveredOpenCount": 55,
+  "unassignedOpenIds": [],
+  "boundedExecution": "只有根代理确认全部236清单并开放实施后改生产。按有限任务执行；行为及去边证明通过后停止，不为凑评分拓范围。",
+  "constraints": [
+    "保持旧Android组件名、包名及Harness公共API兼容、唯一生命周期owner",
+    "不靠新ServiceLocator/换包名/违规基线/行数声称架构已修",
+    "插件免审阅、开放钩子、终端shell、无密码tar.gz及历史数据保护保持",
+    "未知PID/guest不强杀不释放屏障、不删未知修改原件",
+    "不操作手机、不生成额外审计APK、Ubuntu基础版本不变"
+  ]
+}

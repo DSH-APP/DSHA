@@ -1,0 +1,42 @@
+{
+  "owner": "G1-container-transfer",
+  "items": [
+    {
+      "id": "D-SEC-02",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/util/ContainerFileTransfers.java",
+        "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+        "app/src/test/java/com/deepseekharness/app/util/ContainerFileTransfersTest.java"
+      ],
+      "checks": [
+        "8 meaningful transfer tests PASS on actual disk with explicit link-model adapter: STABLE plugin roundtrip/source preserved, platform alias and absolute guest links, granted public-storage mapping, escape/malformed path, safe dangling writes/failed reads, descriptor replacement/create failure, rename replacement race, streamed multi-MiB/domain change",
+        "2 existing GuestDataResolver tests PASS; full isolated JVM subset92 PASS",
+        "Current-source ProotBootstrap/GuestDataResolver/new boundary standalone Java17 compilation against existing actual dependencies PASS",
+        "RuntimeWorkPort keeps existing task barrier held through descriptors/verification/publication"
+      ],
+      "current": "Only push/pull/containerFile helpers changed in ProotBootstrap. Existing GuestDataResolver defaults unchanged; optional explicit alias handles actual platform/stable/managed guest bindings. Approved physical paths use AndroidBackupFS NOFOLLOW/fstat; bounded by source actual size and sibling atomic rename with retained prior target on failure.",
+      "residual": "No phone/kernel matrix. Windows link behavior uses explicit link adapter; descriptor implementation Android syscalls are existing verified boundary. Same-UID code is authorized code, not an isolated attacker domain. A failed post-publication domain check keeps both copy and retained original rather than overwriting unknown state."
+    }
+  ],
+  "longPathFix": {
+    "files": [
+      "tools/runtime_fixture_proof.py",
+      "tools/prepare-test-runtime.py",
+      "tools/test-runtime-proof.py"
+    ],
+    "checks": [
+      "11 proof tests10 PASS,1 Windows POSIX-link skip",
+      "Actual >500-character file proof/Node validator and producer long-member copytree/path traversal PASS"
+    ],
+    "current": "Extended Win32 physical I/O only; logical proof names and ordinary relative inputs unchanged. No missing-file skip or failed marker certification."
+  },
+  "sourceInputRegistration": [
+    "Add ContainerFileTransfers.java and GuestDataResolver.java to applicable native/launcher input contract if not already listed",
+    "ProotBootstrap.java existing launcher source hash changed",
+    "runtime_fixture_proof.py only host fixture helper, not production runtime payload"
+  ],
+  "noPhone": true,
+  "noGradle": true
+}

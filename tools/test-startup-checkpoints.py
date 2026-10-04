@@ -8,9 +8,16 @@ import unittest
 from unittest.mock import patch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('checkpoints', ROOT / 'app/src/main/assets/startup-checkpoints.py')
+spec = importlib.util.spec_from_file_location('checkpoints', ROOT / 'tools/history/engineering/assets/startup-checkpoints.py')
 module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
+original_spec = importlib.util.spec_from_file_location
+def historical_dependency(name, path, *args, **kwargs):
+    if name == 'register': path = ROOT / 'app/src/main/assets/register-builtin-plugins.py'
+    return original_spec(name, path, *args, **kwargs)
+# Retained v1 script bytes stay immutable outside deployment. Its historical
+# register dependency is supplied only while the isolated fixture imports it.
+with patch('importlib.util.spec_from_file_location', side_effect=historical_dependency):
+    spec.loader.exec_module(module)
 
 
 class Checkpoints(unittest.TestCase):

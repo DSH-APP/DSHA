@@ -4,6 +4,7 @@ import argparse
 import gzip
 import hashlib
 import io
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -19,11 +20,12 @@ PACKAGES = [
      "7f46b2f3ca588cd2f05d2cfb6844017309760b4201105cdfda4b339f9e6c69da",
      "libreadline8t64", "libreadline.so.8.2", "libreadline.so.8"),
 ]
-PNPM_VERSION = "10.34.5"
-PNPM_SHA256 = "ccb5c479cab1b00621325bfe7d4c9a8a8031e7a525d7249e275ecbec81b08db2"
-CERTIFI_VERSION = "2026.7.22"
-CERTIFI_URL = "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl"
-CERTIFI_SHA256 = "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+TOOL_LOCK = json.loads((Path(__file__).resolve().parent / "runtime-tools.lock.json").read_text(encoding="utf-8"))
+PNPM_VERSION = TOOL_LOCK["pnpm"]["version"]
+PNPM_SHA256 = TOOL_LOCK["pnpm"]["sha256"]
+CERTIFI_VERSION = TOOL_LOCK["certifi"]["version"]
+CERTIFI_URL = TOOL_LOCK["certifi"]["url"]
+CERTIFI_SHA256 = TOOL_LOCK["certifi"]["sha256"]
 
 
 def download(cache, name, checksum, urls):

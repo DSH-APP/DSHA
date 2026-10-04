@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "tool": "google-java-format",
+  "version": "1.22.0",
+  "javaMajor": 17,
+  "artifact": "google-java-format-1.22.0-all-deps.jar",
+  "size": 3612615,
+  "sha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f",
+  "publishedSha1": "693d8fd04656886a2287cfe1d7a118c4697c3a57",
+  "mavenUrl": "https://repo.maven.apache.org/maven2/com/google/googlejavaformat/google-java-format/1.22.0/google-java-format-1.22.0-all-deps.jar",
+  "publishedSha1Url": "https://repo.maven.apache.org/maven2/com/google/googlejavaformat/google-java-format/1.22.0/google-java-format-1.22.0-all-deps.jar.sha1",
+  "releaseUrl": "https://github.com/google/google-java-format/releases/tag/v1.22.0",
+  "releaseArtifactUrl": "https://github.com/google/google-java-format/releases/download/v1.22.0/google-java-format-1.22.0-all-deps.jar",
+  "verification": "Both official artifact URLs yielded the same 3612615 bytes and SHA-256. Maven published SHA-1 also matches. The 2024 GitHub asset has no published digest, and Maven has no .sha256 sidecar; the SHA-256 here is calculated from those verified bytes.",
+  "license": "Apache-2.0",
+  "flags": [
+    "--skip-sorting-imports",
+    "--skip-removing-unused-imports",
+    "--skip-reflowing-long-strings",
+    "--skip-javadoc-formatting"
+  ],
+  "protectedFiles": [
+    "app/src/main/java/com/deepseekharness/app/ShellService.java"
+  ],
+  "generatedFiles": [
+    "app/src/main/java/com/deepseekharness/app/util/BuiltinPluginRegistry.java",
+    "app/src/main/java/com/deepseekharness/app/util/CredentialPathRules.java"
+  ]
+}

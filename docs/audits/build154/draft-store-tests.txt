@@ -1,0 +1,30 @@
+✔ alpha.2 使用驻留 Session binding，不能遍历 WeakMap 或激活冷会话 (0.8333ms)
+✔ 阅读位置把一帧内的滚动合并，并延迟一次写入 (0.5448ms)
+✔ 旧阅读位置令牌被实际迁移，新位置不持久化任何查询串 (0.2206ms)
+✔ revision mismatch, wrong MIME and excessive size are not restored (0.2225ms)
+✔ unchanged empty input restores exact bytes without sending (0.9728ms)
+✔ an image added during database loading wins over the saved image (0.2906ms)
+✔ disposed session cannot restore an attachment after its delayed read (0.1176ms)
+✔ synchronous tombstone prevents old attachments from returning after interrupted commit (0.1131ms)
+✔ failed load or cross-page revision change never replaces a saved record with an empty draft (0.2076ms)
+▶ 真实Chromium IndexedDB：有限GC、引用保护、容量和跨页删除证明
+  ✔ known stale revision releases actual Blob records; valid other draft remains byte-identical (6.2261ms)
+  ✔ active other-page lease prevents stale record GC and capacity overwrite (2.599ms)
+  ✔ pending other-page lease prevents stale record GC and capacity overwrite (2.0806ms)
+  ✔ missing revision is unknown, not proof of an orphan (1.8644ms)
+  ✔ unknown/forged byte declaration stays intact and does not provide false capacity (1.919ms)
+  ✔ proof read failure aborts the real transaction before deleting any candidate (2.0568ms)
+  ✔ unknown lease and same-session other-page reference both preserve the actual previous row (2.88ms)
+  ✔ queued stale save cannot delete/overwrite a newer record; explicit own empty save can release capacity (2.3453ms)
+  ✔ one GC transaction removes at most32 records and oversize store fails closed (49.9324ms)
+  ✔ real cross-page lease preserves persisted/current-upload Blob bytes (50.6169ms)
+  ✔ successful exact deletion binds revision; changed revision during request gets no proof (35.6697ms)
+✔ 真实Chromium IndexedDB：有限GC、引用保护、容量和跨页删除证明 (793.0652ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 868.8089

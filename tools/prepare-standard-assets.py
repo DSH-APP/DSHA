@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """生成两版共用资产；用已锁定的新 dsh 替换旧依赖，原始 rootfs 保持不变。"""
+from source_text import write_text as write_source_text, matches_text
 import argparse
 import collections
 import gzip
@@ -12,6 +13,7 @@ import shutil
 import tarfile
 import importlib.util
 from generated_asset_directory import prune as prune_generated
+from asset_deployment import load_manifest, selected_assets, verify_reader_contracts, MANIFEST as DEPLOYMENT_MANIFEST
 
 GLOBAL_PACKAGE_ALIASES = {
     '@deepseek-ai/dsh-workflow-worker-thread': '@deepseek-ai/dsh-workflow-ptc',
@@ -95,15 +97,9 @@ def main():
         raise ValueError("生成目录不能放在原始资产目录内")
     rootfs = source / "offline-rootfs.bin"
     runtime = source / "dsh-runtime.bin"
-    excluded = {"offline-rootfs.bin", "runtime-python/python-runtime.tgz",
-                "glibc-python.tar.gz", "adb-wheels.tar.gz", "dsh-runtime.bin", "dsh-runtime.inputs.json", "ubuntu-tools.inputs.json"}
-    selected = []
-    for path in source.rglob("*"):
-        relative = path.relative_to(source)
-        if not path.is_file() or "__pycache__" in relative.parts or path.suffix == ".pyc" \
-                or relative.parts[0] == "runtime-python" or relative.as_posix() in excluded:
-            continue
-        selected.append((path, relative))
+    deployment = load_manifest()
+    verify_reader_contracts(source, deployment)
+    selected = selected_assets(source, deployment)
     expected = {relative.as_posix() for _, relative in selected}
     expected.update({"web-integration/gecko-compat.js", "glibc-python.bin", "adb-wheels.bin"})
     if rootfs.is_file():
@@ -123,10 +119,11 @@ def main():
         raise ValueError('网页兼容代码与依赖锁不一致，请运行 tools/prepare-web-compat.mjs')
     compatibility = (source / 'web-integration/es-compat.js').read_text(encoding='utf-8')
     compatibility += '\n' + (source / 'web-integration/compat.js').read_text(encoding='utf-8')
+    compatibility += '\n' + (source / 'bridge-token-compat.cjs').read_text(encoding='utf-8')
     compatibility += '\n' + (source / 'web-integration/startup.js').read_text(encoding='utf-8')
     injector = "(function(){function install(){var root=document.head||document.documentElement;if(!root)return;var script=document.createElement('script');script.textContent=" \
         + json.dumps(compatibility, ensure_ascii=True) + ";root.appendChild(script);script.remove();}if(document.documentElement)install();else document.addEventListener('DOMContentLoaded',install,{once:true});})();\n"
-    (output / 'web-integration/gecko-compat.js').write_text(injector, encoding='utf-8')
+    write_source_text(output / 'web-integration/gecko-compat.js',injector,encoding='utf-8')
     # 清理旧构建生成的两个兼容版资产，不触碰输入目录。
     for name in ("python3.14", "python-runtime.tgz"):
         (output / "runtime-python" / name).unlink(missing_ok=True)
@@ -152,8 +149,8 @@ def main():
         raise ValueError('dsh 离线运行时与当前补丁/依赖锁不一致，请重新生成 dsh-runtime.bin')
     # 同一份 dsh 覆盖层供冷安装和覆盖更新读取；不再嵌进 Ubuntu 大归档重复解压。
     shutil.copyfile(runtime, output / 'dsh-runtime.bin')
-    (output / 'dsh-runtime.sha256').write_text(metadata['archive_sha256'] + '\n', encoding='ascii')
-    (output / 'offline-rootfs.layout').write_text('split-runtime-v1\n', encoding='ascii')
+    write_source_text(output / 'dsh-runtime.sha256',metadata['archive_sha256'] + '\n',encoding='ascii')
+    write_source_text(output / 'offline-rootfs.layout','split-runtime-v1\n',encoding='ascii')
     tools_spec = importlib.util.spec_from_file_location('ubuntu_tools_builder', Path(__file__).with_name('prepare-ubuntu-tools.py'))
     tools_builder = importlib.util.module_from_spec(tools_spec)
     tools_spec.loader.exec_module(tools_builder)
@@ -166,6 +163,9 @@ def main():
         if hashlib.sha256(original.extractfile(status).read()).hexdigest() != tools_metadata.get('base_status_sha256'):
             raise ValueError('Ubuntu 基础包状态已变化，必须重新解析离线工具依赖')
     signature = {"source_sha256": sha256(rootfs), "recipe_sha256": sha256(Path(__file__)),
+                 "text_writer_sha256": sha256(Path(__file__).with_name('source_text.py')),
+                 "deployment_sha256": sha256(DEPLOYMENT_MANIFEST),
+                 "deployment_reader_sha256": sha256(Path(__file__).with_name('asset_deployment.py')),
                  "dsh_runtime_sha256": sha256(runtime)}
     report_path = output.parent / "standard-assets-report.json"
     optimized = output / "offline-rootfs.bin"
@@ -173,8 +173,8 @@ def main():
         try:
             cached = json.loads(report_path.read_text(encoding="utf-8"))
             if cached.get("inputs") == signature and cached.get("output_sha256") == sha256(optimized) and cached.get('unpacked_bytes', 0) > 0:
-                (output / 'offline-rootfs.bytes').write_text(str(cached['unpacked_bytes']) + '\n', encoding='ascii')
-                (output / 'offline-rootfs.sha256').write_text(cached['output_sha256'] + '\n', encoding='ascii')
+                write_source_text(output / 'offline-rootfs.bytes',str(cached['unpacked_bytes']) + '\n',encoding='ascii')
+                write_source_text(output / 'offline-rootfs.sha256',cached['output_sha256'] + '\n',encoding='ascii')
                 print("rootfs 内容未变化，复用已校验的减重资产")
                 return
         except (ValueError, OSError):
@@ -230,10 +230,9 @@ def main():
                   kept_paths_sha256=kept.hexdigest(),
                   inputs=signature, output_sha256=sha256(optimized),
                   note="新 dsh 及依赖只保留一份；环境更新须经过用户数据迁移及校验，禁止直接清空旧数据")
-    report_path.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-    (output / 'offline-rootfs.bytes').write_text(str(kept_bytes) + '\n', encoding='ascii')
-    (output / 'offline-rootfs.sha256').write_text(report['output_sha256'] + '\n', encoding='ascii')
+    write_source_text(report_path,json.dumps(report, indent=2, ensure_ascii=False),encoding="utf-8")
+    write_source_text(output / 'offline-rootfs.bytes',str(kept_bytes) + '\n',encoding='ascii')
+    write_source_text(output / 'offline-rootfs.sha256',report['output_sha256'] + '\n',encoding='ascii')
     print("rootfs: %.2f -> %.2f MiB" % (report["original_bytes"] / 1048576,
                                      report["optimized_bytes"] / 1048576))
     print("移除解压内容:", {key: round(value / 1048576, 2) for key, value in removed.items()})

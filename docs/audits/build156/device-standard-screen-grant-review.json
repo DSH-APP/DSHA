@@ -1,0 +1,613 @@
+{
+  "schema": "dsha-device-screen-grant-review-v1",
+  "reviewedAt": "2026-10-04T05:39:12+08:00",
+  "reviewMode": "read_only_existing_private_device_evidence",
+  "softwareChanged": false,
+  "phoneOperationsPerformedByReviewer": false,
+  "scope": {
+    "deviceOperator": "root",
+    "flavor": "standard",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+    "androidRelease": 13,
+    "engine": "system WebView",
+    "debuggable": false,
+    "apkSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b",
+    "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "bindingBasis": "The device operator identifies the installed candidate as this Standard APK. The SHA, package, version and release signer are cross-checked against the preserved supply-check ledger. The dump result envelopes themselves do not identify an APK digest or numeric Web generation.",
+    "testTarget": "own DSHA native UI only",
+    "routePath": "/app/ui/dump",
+    "transport": "authenticated local bridge via operator-managed local forwarding; credentials omitted",
+    "newerCandidateExcluded": "A later candidate identified by root with SHA prefix 5e2 includes the DeviceGrantsFragment connection-status fix. These device observations belong only to installed 5aeb and do not establish installation or device acceptance of that later candidate."
+  },
+  "summary": {
+    "manualRevocationStatus": "pass_observed_for_this_case",
+    "ordinaryWebStopStartRevocationStatus": "pass_observed_for_this_case",
+    "ownDshaTreeBeforeManualRevocation": true,
+    "ownDshaTreeBeforeNormalWebStop": true,
+    "manualRevocationRequiredNewNativeConfirmation": true,
+    "newWebRunRequiredNewNativeConfirmation": true,
+    "bothRejectedRequestsReturnedNoTree": true,
+    "earlierPermissionChangeUsedAsNormalWebStopEvidence": false,
+    "overallDeviceMatrixStatus": "partial_device_coverage"
+  },
+  "sourceEvidence": {
+    "operatorActionPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "cb804e41bf1a4cfcdae317744dfa674a11865d9b47f765712b41ae9616254c72",
+      "bytes": 84683,
+      "records": 591,
+      "firstRecordIndex0Based": 0,
+      "lastRecordIndex0Based": 590,
+      "lastOperatorTime": "2026-10-04T05:28:56.753327+08:00",
+      "hashRecipe": "SHA256 of the original first 84683 bytes: 591 complete JSONL records. Later appends do not affect this prefix. Raw command arguments and unrelated row bodies are omitted."
+    },
+    "artifactLedgerAtReview": {
+      "path": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/final-apk-supply-checks.json",
+      "sha256": "deb65791a984f0aa6cf7aad210a757fb0fe889625138554dd71ab156cb5b9931",
+      "boundCandidateSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b",
+      "pathMayLaterBeReplacedByNewCandidateLedger": false,
+      "originalReviewedPath": "docs/audits/build156/final-apk-supply-checks.json",
+      "preservedByteIdentical": true,
+      "preservationReceiptPath": "app/build/audit-build156/history/before-accessibility-status/preservation-receipt.json",
+      "preservationReceiptSha256": "16f7bfb6c1d0a54abd7038cdfcc6ce0da36c5e443cd2ded1f126378d6de3da06"
+    },
+    "existingDeviceBindingReview": {
+      "path": "docs/audits/build156/device-final-standard-fixture-review.json",
+      "sha256": "108867f71ab1e6b4b6d663cb118f3471dcc92d41cd538383aedd08984161efa7",
+      "boundCandidateSha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b"
+    },
+    "responses": [
+      {
+        "id": "screen-initial",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-initial.json",
+        "sha256": "66613dce7ad6f37b7ef9467c76f854b279704dacdd1b2a8bdcaf30dea8c11f8b",
+        "bytes": 88,
+        "actionIndex0Based": 453,
+        "operatorTime": "2026-10-04T04:43:16.094087+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": "SCREEN_TARGET_CHANGED",
+        "stableRefusalPrefix": null,
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "id": "screen-authorized",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-authorized.json",
+        "sha256": "4cd3bab966e16659997c464d5d7571720684149b4a82e035c3794179dd309365",
+        "bytes": 2121,
+        "actionIndex0Based": 454,
+        "operatorTime": "2026-10-04T04:43:16.256420+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": null,
+        "stableRefusalPrefix": null,
+        "ownDshaWindow": true,
+        "treeNodesPresent": true,
+        "rawResultOmitted": true
+      },
+      {
+        "id": "screen-after-restart",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-after-restart.json",
+        "sha256": "e079dd9304ba30533c02a99805c6ed0a3a7f7f1a591c0552373f7c044c5e30f2",
+        "bytes": 44,
+        "actionIndex0Based": 484,
+        "operatorTime": "2026-10-04T04:50:12.913533+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": "SCREEN_TARGET_UNAVAILABLE",
+        "stableRefusalPrefix": null,
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "id": "screen-current-generation",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-current-generation.json",
+        "sha256": "e079dd9304ba30533c02a99805c6ed0a3a7f7f1a591c0552373f7c044c5e30f2",
+        "bytes": 44,
+        "actionIndex0Based": 543,
+        "operatorTime": "2026-10-04T05:04:19.273959+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": "SCREEN_TARGET_UNAVAILABLE",
+        "stableRefusalPrefix": null,
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "id": "screen-rebound-request",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-rebound-request.json",
+        "sha256": "66613dce7ad6f37b7ef9467c76f854b279704dacdd1b2a8bdcaf30dea8c11f8b",
+        "bytes": 88,
+        "actionIndex0Based": 571,
+        "operatorTime": "2026-10-04T05:19:45.360463+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": "SCREEN_TARGET_CHANGED",
+        "stableRefusalPrefix": null,
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "id": "screen-rebound-authorized",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-rebound-authorized.json",
+        "sha256": "bb122f86ca94f8cfe1cdf3d5d58d54ee1200ba2eada0c1258f8150ff4f0643e3",
+        "bytes": 1732,
+        "actionIndex0Based": 572,
+        "operatorTime": "2026-10-04T05:21:30.944214+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": null,
+        "stableRefusalPrefix": null,
+        "ownDshaWindow": true,
+        "treeNodesPresent": true,
+        "rawResultOmitted": true
+      },
+      {
+        "id": "screen-manual-revoked",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-manual-revoked.json",
+        "sha256": "63bb3a790128325d14faa6f82f248948bc32885808e353345c32f9d60cda6a25",
+        "bytes": 49,
+        "actionIndex0Based": 578,
+        "operatorTime": "2026-10-04T05:23:37.023296+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": null,
+        "stableRefusalPrefix": "[ERR] 你拒绝了这次屏幕读取",
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "id": "screen-grant-for-stop",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-grant-for-stop.json",
+        "sha256": "66613dce7ad6f37b7ef9467c76f854b279704dacdd1b2a8bdcaf30dea8c11f8b",
+        "bytes": 88,
+        "actionIndex0Based": 581,
+        "operatorTime": "2026-10-04T05:26:13.194445+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": "SCREEN_TARGET_CHANGED",
+        "stableRefusalPrefix": null,
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "id": "screen-grant-before-normal-stop",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-grant-before-normal-stop.json",
+        "sha256": "b8b72222b01f49fbbe6728d7637050c500830a39a5acf8d7e18456e29ff1c99b",
+        "bytes": 2110,
+        "actionIndex0Based": 582,
+        "operatorTime": "2026-10-04T05:26:13.407651+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": null,
+        "stableRefusalPrefix": null,
+        "ownDshaWindow": true,
+        "treeNodesPresent": true,
+        "rawResultOmitted": true
+      },
+      {
+        "id": "screen-after-normal-stop",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-after-normal-stop.json",
+        "sha256": "63bb3a790128325d14faa6f82f248948bc32885808e353345c32f9d60cda6a25",
+        "bytes": 49,
+        "actionIndex0Based": 590,
+        "operatorTime": "2026-10-04T05:28:56.753327+08:00",
+        "actionDigestMatched": true,
+        "routePath": "/app/ui/dump",
+        "responseEnvelope": "result:string",
+        "stableErrorCode": null,
+        "stableRefusalPrefix": "[ERR] 你拒绝了这次屏幕读取",
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      }
+    ],
+    "screenshots": [
+      {
+        "id": "a11y-setup-connected",
+        "path": "app/build/audit-build156/device-private/final-standard-a11y-setup-connected.png",
+        "sha256": "5dfc92429fbe570e6799da8da633dee8059b85bda23bc15f575de2d29d17acbf",
+        "bytes": 280451,
+        "actionIndex0Based": 568,
+        "operatorTime": "2026-10-04T05:17:08.994502+08:00",
+        "actionDigestMatched": true,
+        "imageBytesNotPublished": true,
+        "visuallyReviewedByThisReviewer": false,
+        "nativeUiObservationSource": "device operator root; this review checks preserved image hashes and action times only"
+      },
+      {
+        "id": "screen-rebound-ask",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-rebound-ask.png",
+        "sha256": "1af5fdc44bf61078413b40cc0a02ef9629534096450ff18380cc8a5a9429922d",
+        "bytes": 296572,
+        "actionIndex0Based": 569,
+        "operatorTime": "2026-10-04T05:18:58.681287+08:00",
+        "actionDigestMatched": true,
+        "imageBytesNotPublished": true,
+        "visuallyReviewedByThisReviewer": false,
+        "nativeUiObservationSource": "device operator root; this review checks preserved image hashes and action times only"
+      },
+      {
+        "id": "screen-ready-revoke",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-ready-revoke.png",
+        "sha256": "396f6fbb61fe60bb3c88daba615870ca0f89e832084dd4b3f18bdd7f2082cdd9",
+        "bytes": 245432,
+        "actionIndex0Based": 574,
+        "operatorTime": "2026-10-04T05:21:32.163442+08:00",
+        "actionDigestMatched": true,
+        "imageBytesNotPublished": true,
+        "visuallyReviewedByThisReviewer": false,
+        "nativeUiObservationSource": "device operator root; this review checks preserved image hashes and action times only"
+      },
+      {
+        "id": "screen-revocation-prompt",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-revocation-prompt.png",
+        "sha256": "f590acc536da78d50a6019bf9029739dfd356381912c79541baf795f6b5c334b",
+        "bytes": 255695,
+        "actionIndex0Based": 576,
+        "operatorTime": "2026-10-04T05:22:52.424213+08:00",
+        "actionDigestMatched": true,
+        "imageBytesNotPublished": true,
+        "visuallyReviewedByThisReviewer": false,
+        "nativeUiObservationSource": "device operator root; this review checks preserved image hashes and action times only"
+      },
+      {
+        "id": "screen-before-stop-ask",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-before-stop-ask.png",
+        "sha256": "d1b6d892b45b4d8b4b28bc7ea913e4e91338994d5ea62ba6d871d3f32817559e",
+        "bytes": 255714,
+        "actionIndex0Based": 579,
+        "operatorTime": "2026-10-04T05:25:25.813501+08:00",
+        "actionDigestMatched": true,
+        "imageBytesNotPublished": true,
+        "visuallyReviewedByThisReviewer": false,
+        "nativeUiObservationSource": "device operator root; this review checks preserved image hashes and action times only"
+      },
+      {
+        "id": "screen-grant-web-normal-stop",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-grant-web-normal-stop.png",
+        "sha256": "6288b50ea60a4497027dd4575be96a988d613ac86b9a3b9ee41233205ed49614",
+        "bytes": 252269,
+        "actionIndex0Based": 585,
+        "operatorTime": "2026-10-04T05:26:15.064527+08:00",
+        "actionDigestMatched": true,
+        "imageBytesNotPublished": true,
+        "visuallyReviewedByThisReviewer": false,
+        "nativeUiObservationSource": "device operator root; this review checks preserved image hashes and action times only"
+      },
+      {
+        "id": "screen-next-generation-starting",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-next-generation-starting.png",
+        "sha256": "64989c279d9dd7855e65861c6f629204934c3fc9c7648ed5ba11834bca52d6b8",
+        "bytes": 198910,
+        "actionIndex0Based": 587,
+        "operatorTime": "2026-10-04T05:27:00.834300+08:00",
+        "actionDigestMatched": true,
+        "imageBytesNotPublished": true,
+        "visuallyReviewedByThisReviewer": false,
+        "nativeUiObservationSource": "device operator root; this review checks preserved image hashes and action times only"
+      },
+      {
+        "id": "screen-next-generation-ready",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-next-generation-ready.png",
+        "sha256": "68a252d1cf2853dad604fd1b02ab1bac95935646cc7702489fc27d92c004e705",
+        "bytes": 257034,
+        "actionIndex0Based": 588,
+        "operatorTime": "2026-10-04T05:27:55.341717+08:00",
+        "actionDigestMatched": true,
+        "imageBytesNotPublished": true,
+        "visuallyReviewedByThisReviewer": false,
+        "nativeUiObservationSource": "device operator root; this review checks preserved image hashes and action times only"
+      },
+      {
+        "id": "screen-stop-invalidated",
+        "path": "app/build/audit-build156/device-private/final-standard-screen-stop-invalidated.png",
+        "sha256": "f8e97f91517d96975c06939a1e8b1b32b55d75fdc66fa1c4ee2e4fc66cdf37b4",
+        "bytes": 280310,
+        "actionIndex0Based": 589,
+        "operatorTime": "2026-10-04T05:28:08.507533+08:00",
+        "actionDigestMatched": true,
+        "imageBytesNotPublished": true,
+        "visuallyReviewedByThisReviewer": false,
+        "nativeUiObservationSource": "device operator root; this review checks preserved image hashes and action times only"
+      }
+    ],
+    "operatorActions": [
+      {
+        "actionIndex0Based": 557,
+        "operatorTime": "2026-10-04T05:14:15.861209+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "DSHA normal accessibility settings sequence",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 558,
+        "operatorTime": "2026-10-04T05:14:16.055390+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "DSHA normal accessibility settings sequence",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 560,
+        "operatorTime": "2026-10-04T05:15:00.127633+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "DSHA service enable confirmation sequence",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 562,
+        "operatorTime": "2026-10-04T05:17:06.168014+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "DSHA rebind sequence",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 563,
+        "operatorTime": "2026-10-04T05:17:06.352957+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "DSHA rebind sequence",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 565,
+        "operatorTime": "2026-10-04T05:17:07.574138+08:00",
+        "actionType": "key",
+        "operatorReportedMeaning": "return from settings",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 566,
+        "operatorTime": "2026-10-04T05:17:07.751253+08:00",
+        "actionType": "key",
+        "operatorReportedMeaning": "return from settings",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 567,
+        "operatorTime": "2026-10-04T05:17:07.938242+08:00",
+        "actionType": "key",
+        "operatorReportedMeaning": "return from settings",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 570,
+        "operatorTime": "2026-10-04T05:19:45.339658+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "allow native screen request",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 573,
+        "operatorTime": "2026-10-04T05:21:31.125007+08:00",
+        "actionType": "key",
+        "operatorReportedMeaning": "return to native device-grants page",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 575,
+        "operatorTime": "2026-10-04T05:22:40.569196+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "manual revoke current screen grant",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 577,
+        "operatorTime": "2026-10-04T05:23:37.014943+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "deny new native screen request after manual revoke",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 580,
+        "operatorTime": "2026-10-04T05:26:13.176327+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "allow native request before Web stop",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 583,
+        "operatorTime": "2026-10-04T05:26:13.633663+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "navigate before ordinary Web stop",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 584,
+        "operatorTime": "2026-10-04T05:26:13.887452+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "ordinary native UI StopWeb",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      },
+      {
+        "actionIndex0Based": 586,
+        "operatorTime": "2026-10-04T05:26:59.697114+08:00",
+        "actionType": "tap",
+        "operatorReportedMeaning": "ordinary native UI StartWeb",
+        "meaningAttribution": "root operator observation; raw tap/key arguments omitted"
+      }
+    ],
+    "earlierPermissionChangeLogs": [
+      {
+        "path": "app/build/audit-build156/device-private/final-standard-exit-info-private.txt",
+        "sha256": "bfd7987a7eb0696e49ae5d60af64c602407e0134741e4ad202ab1153784c47f3",
+        "bytes": 6596,
+        "rawLogOmitted": true,
+        "operatorReportedEventTime": "2026-10-04T04:48:09.857+08:00",
+        "permissionChangeTimestampAndReasonMarkersPresent": true,
+        "countsAsOrdinaryWebStopEvidence": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/final-standard-crash-buffer-private.txt",
+        "sha256": "43b0868123286ee91fbe9d8ed361220571f11eb478392c3616c0a3e180900b3d",
+        "bytes": 33762,
+        "rawLogOmitted": true,
+        "currentDateFatalExceptionMarkerPresent": false,
+        "interpretation": "Finite crash buffer only; absence of a current-date FATAL marker does not prove every process/service stayed alive."
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "normal_accessibility_rebind",
+      "status": "observed_by_device_operator",
+      "operatorObservation": "Only the DSHA accessibility service was toggled off/on through ordinary system UI; AndroidMenu stayed enabled. Setup displayed connected at 05:17. No secure-settings overwrite or forced grant is claimed.",
+      "evidenceActionIndices0Based": [
+        557,
+        558,
+        560,
+        562,
+        563,
+        568
+      ],
+      "positiveReadActionIndex0Based": 572,
+      "receiptOwnDshaWindowAndTree": true
+    },
+    {
+      "id": "manual_screen_grant_revoke",
+      "status": "pass_observed",
+      "sequence": "Native allow, successful own DSHA tree; native revoke current grant; subsequent dump displays a fresh native confirmation; operator denies it; result explicitly refuses screen reading.",
+      "evidenceActionIndices0Based": [
+        569,
+        570,
+        571,
+        572,
+        574,
+        575,
+        576,
+        577,
+        578
+      ],
+      "positiveControlActionIndex0Based": 572,
+      "postRevokePromptScreenshotActionIndex0Based": 576,
+      "denialResponseActionIndex0Based": 578,
+      "denialPrefix": "[ERR] 你拒绝了这次屏幕读取",
+      "postRevokeTreeReturned": false,
+      "nativePromptAndClickSemanticsAttribution": "root operator observation; JSON result and file digests independently checked"
+    },
+    {
+      "id": "reallow_then_ordinary_web_stop_start",
+      "status": "pass_observed",
+      "sequence": "After manual revoke denial, operator allows a fresh request. The immediate confirmation-transition result is SCREEN_TARGET_CHANGED; a following real dump returns the own DSHA tree. Operator normally stops and starts Web through native UI. After the new run is Ready, another dump displays fresh native confirmation; the operator denies it and receives the same refusal with no tree.",
+      "evidenceActionIndices0Based": [
+        579,
+        580,
+        581,
+        582,
+        584,
+        585,
+        586,
+        587,
+        588,
+        589,
+        590
+      ],
+      "positiveControlActionIndex0Based": 582,
+      "normalStopActionIndex0Based": 584,
+      "normalStartActionIndex0Based": 586,
+      "nextRunReadyScreenshotActionIndex0Based": 588,
+      "newRunPromptScreenshotActionIndex0Based": 589,
+      "newRunDenialResponseActionIndex0Based": 590,
+      "previousRememberedGrantBypassedNewPrompt": false,
+      "newRunDenialPrefix": "[ERR] 你拒绝了这次屏幕读取",
+      "newRunTreeReturned": false,
+      "noOsPermissionChangeInThisSequence": "Explicitly reported by root. Unlike the earlier permission-reset sequence, this is an ordinary UI Web stop/start test.",
+      "readyElapsedSecondsReportedByOperator": 10.7,
+      "readyDurationMeasurementAttribution": "root native UI observation; not calculated from screenshot timestamps"
+    },
+    {
+      "id": "confirmation_target_transition",
+      "status": "fail_closed_observed_then_positive_read",
+      "responseActionIndices0Based": [
+        453,
+        571,
+        581
+      ],
+      "stableErrorCode": "SCREEN_TARGET_CHANGED",
+      "treeReturnedForThoseResponses": false,
+      "followingPositiveReadActionIndices0Based": [
+        454,
+        572,
+        582
+      ],
+      "interpretation": "The first reads around native confirmation did not return a tree because the target changed. Subsequent requests actually returned the own DSHA tree. The report retains both outcomes and does not label the transition responses successful reads."
+    }
+  ],
+  "excludedEarlierSequence": {
+    "id": "microphone_permission_reset_and_accessibility_disconnect",
+    "status": "separate_limit_not_a_normal_web_stop_pass",
+    "operatorReportedCause": "The operator changed microphone permission from deny to ask-every through AppInfo around 04:48. Exit-info contains the reported timestamp and PERMISSION CHANGE marker. DSHA later appeared enabled but disconnected; Bound services did not include DSHA until the ordinary UI rebind.",
+    "responseActionIndices0Based": [
+      484,
+      543
+    ],
+    "stableErrorCode": "SCREEN_TARGET_UNAVAILABLE",
+    "treeReturned": false,
+    "countsAsOrdinaryWebStopRevocationEvidence": false,
+    "displayFixScope": "The enabled-but-disconnected label defect was corrected in a later frozen source change. Installed 5aeb does not contain that fix; this report is not device validation of the corrected label."
+  },
+  "checks": [
+    {
+      "command": "PowerShell $reviewScript | python - (read-only prefix, per-file digest, result-envelope and timestamp assertions; writes only this sanitized JSON report)",
+      "exitCode": 0,
+      "completeActionPrefixRecordsChecked": 591,
+      "artifactDigestsMatchedActionRecords": 19,
+      "responseJsonFilesChecked": 10,
+      "screenshotDigestsChecked": 9,
+      "screenshotsIndependentlyVisuallyReviewedByThisReviewer": 0,
+      "positiveOwnDshaTreeResponses": 3,
+      "explicitNativeRefusalResponses": 2,
+      "targetChangedResponsesWithoutTree": 3,
+      "unavailableResponsesWithoutTree": 2,
+      "softwareTestsOrBuildsRun": 0
+    },
+    {
+      "command": "rg -n -C 4 uiGrant/revokeScreenGrant/SCREEN_TARGET_CHANGED in HttpShellService.java and ScreenSessionGrant.java; rg -n -C 3 revokeScreenGrant/beginStop/stopWeb in WebLifecycleController.java and DeviceGrantsFragment.java; Get-Content HttpShellService.java lines 1028-1159",
+      "exitCode": 0,
+      "scope": "Current-source read-only context for generation/revision authorization and revoke entry points; not an extra device test or an installed-APK source-equivalence assertion."
+    },
+    {
+      "command": "PowerShell $reviewScript | python -: re-read generated report; verify preserved old supply ledger SHA, immutable action prefix, every private evidence digest/size and redacted field constraints",
+      "exitCode": 0,
+      "preservedOldSupplyLedgerBytesMatched": true,
+      "operatorActionPrefixStillMatched": true,
+      "reportReferencesDigestAndSizeMatched": 21,
+      "reportOnlyWrite": true
+    }
+  ],
+  "interpretationLimits": [
+    "Observed closure covers one manual revocation and one ordinary Web stop/start with native re-confirmation and denial, reading only the own DSHA application on this Standard Android 13 installation.",
+    "No numeric Web generation is persisted in these result envelopes. This is behavioral evidence that the previously remembered grant was not reused after the operator-observed new Web run; it does not claim a crafted stale-generation client parameter test.",
+    "The actual native prompt/revoke/allow/deny and Ready meanings are observations supplied by the root device operator. This reviewer verifies saved response prefixes, target/tree booleans, action times and file digests; it does not independently inspect private screenshot pixels.",
+    "The dump receipts persist JSON result strings, not HTTP status lines. Refusal is checked at result level; no device HTTP status-code assertion is added.",
+    "This case does not establish in-flight old dialog callbacks during stop, asynchronous screenshot cancellation, all sensitive applications, independent virtual displays, LAN behavior, Low/Gecko, Android 6/7, 16 KiB devices or the complete hardware matrix.",
+    "No evidence here transfers to the later 5e2 candidate or the updated connection-status label. A later package needs its own installation and bounded device confirmation."
+  ],
+  "privacy": {
+    "published": "Package name, bounded results, stable error/refusal prefixes, operator timestamps, evidence-relative paths, file sizes and hashes only.",
+    "bridgeTokenPublished": false,
+    "cookiesOrAuthorizationHeadersPublished": false,
+    "deviceSerialPublished": false,
+    "fullControlTreePublished": false,
+    "screenshotPixelsPublished": false,
+    "tapKeyArgumentsPublished": false,
+    "userContentCopied": false
+  }
+}

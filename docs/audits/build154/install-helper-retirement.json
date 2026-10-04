@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "id": "D-PATCH-03",
+  "activeCaller": "InstallPipeline.LocalEnvironment.repairPatches -> RuntimeTools.prepare",
+  "retiredOriginal": "tools/history/root-build154/InstallProbe-with-legacy-repair.java",
+  "retiredSha256": "38b6a0c9f460ef179fb4fd856fb1913866b0e1497425413dbdf32e4b22b0c630",
+  "reason": "Remove parallel LAN rewrite and unsafe link-to-rename session rewrite; current signed managed patch chain is authoritative."
+}

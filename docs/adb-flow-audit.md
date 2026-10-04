@@ -1,5 +1,10 @@
 # ADB debug 自插桩验收
 
+> build154 公开证据副本脱敏：已替换可识别设备序列号、私网地址与开发机路径；保留版本、日期、设备类型、统计及结论。原始 blob 与 SHA 保留在私有历史证据中，本次未改写原件，也不表示已清除过去公开副本。
+
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 ## 最终设备结果 · 2026-09-08
 
 主流程已在 Android 13 完成真实系统配对码 TLS 配对，App 通道 `id` 返回 `uid=2000(shell)`，关闭/重新开启无线调试后无需重新配对。完整测试 **170 条断言通过**，最终门控及 wheel 改动后连接复验 **10 条通过**。真实缺失路径退出码为 1，无响应 socket 在 2.563 秒退出 124，命令尚未发送；23 项 Python 故障场景另通过。配对码仅经私有临时输入传送，不进入日志或报告。见[完整功能验收](functional-audit-rc1.4.md)。
@@ -13,7 +18,7 @@
 先安装主线程构建的 debug APK。在终端一启动监听，并等到 `AdbFlowAudit READY`：
 
 ```powershell
-& 'F:/DSHA/_toolchains/android-sdk/platform-tools/adb.exe' shell am instrument -w -e mode listen -e seconds 1800 com.dsh.client/com.deepseekharness.app.ui.AdbFlowAudit
+& '<TOOLCHAIN_ROOT>/android-sdk/platform-tools/adb.exe' shell am instrument -w -e mode listen -e seconds 1800 com.dsh.client/com.deepseekharness.app.ui.AdbFlowAudit
 ```
 
 多台设备时，在 `shell` 前加 `-s <USB序列号>`；下列助手也加同一个 `--serial`。
@@ -21,8 +26,8 @@
 终端二准备工具路径，然后检查/准备环境：
 
 ```powershell
-$adbAuditPython = 'C:/Users/18768/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe'
-$adbAuditControl = 'F:/DSHA_RESTART/tools/control-adb-flow-audit.py'
+$adbAuditPython = '<USER_HOME>/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe'
+$adbAuditControl = '<WORKSPACE>/tools/control-adb-flow-audit.py'
 & $adbAuditPython -I -B $adbAuditControl status
 & $adbAuditPython -I -B $adbAuditControl prepare
 ```

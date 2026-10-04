@@ -1,0 +1,270 @@
+{
+  "schema": 1,
+  "artifact": "final-standard-owned-v5-fd-data-review",
+  "result": "PASS_FOR_RECORDED_OWN_PROJECT_EXPORT_AND_BOUNDED_NATIVE_FD_OBSERVATION",
+  "installedApk": {
+    "flavor": "standard",
+    "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+    "package": "com.dsh.client",
+    "versionCode": 156,
+    "authority": "Runtime exclusive official-device acceptance and host Standard APK hash independently checked; older5a/ea08 reviews remain historical."
+  },
+  "actualNativeExport": {
+    "result": "PASS",
+    "preparationChannel": "Host exclusive mkdir/xb/full512000-byte readback, then authorized ADBshell creation/push of one new own source; app allFiles remainedOFF. ADB preparation was not the backup mechanism.",
+    "backupPath": "Ordinary native UI, one systemDocumentsProvider SAF project source, siblingoutput target; normalexport with no password, no rescue or restore.",
+    "nativeApiKeySelection": "Default excluded; all verified records belong only to the fake projects root.",
+    "outerArchiveBytes": 92697,
+    "outerArchiveSha256": "b772981abd78d84a20450cd0b1635999e8f7262646561ff35690caa2a3943b7a",
+    "gzipCrcAndTarMembersVerified": true,
+    "plainDshadataVersion": 5,
+    "completeArchiveFooterVerified": true,
+    "declaredAndPayloadRootsMatchExactly": true,
+    "logicalRoots": 1,
+    "scope": "projects",
+    "files": 1000,
+    "directories": 1,
+    "allFileBytesExactlyVerified": true,
+    "fileBytesEach": 512,
+    "payloadBytes": 512000,
+    "sourceAggregateSha256": "b51108f6ee6c7da14150fb945f0c9e9a66e173082e6c48bb9ed0d1d95d3443e4",
+    "sourceConsistency": "EXTERNAL_CHECKED",
+    "retainedPhysicalHostCopy": true,
+    "nativeUiItemCount": 1001
+  },
+  "auditAdapter": {
+    "originalHelperSha256": "c69dd261125967825879dcb3c575ef7f8fa3ce0e4713695ab81184e246009182",
+    "originalFailure": "MANIFEST_SCOPE_SUMMARY because original audit helper wrongly assumed summary.scope. Actual producer writes summary.requestedScope. Original helper/FAIL receipt preserved.",
+    "adaptedHelper": "verify-owned-v5-export-requested-scope.py",
+    "adaptedHelperSha256": "f7d25d9a42459700d7dc86a1019fe79ec4aff5d412e4f43743beee3d74aadfc8",
+    "actualCommand": "python app/build/audit-build156/device-private/verify-owned-v5-export-requested-scope.py <actual private92697B archive> --receipt <new privateactual requested-scope verification>",
+    "producerBasis": "NativeBackupJobs provenance.put(requestedScope,frozen.scope)",
+    "onlySemanticAdaptation": "One exact summary field-name correction. Root/record scopes,1000full-byte comparisons,CRC/tar/footer andall other checks unchanged.",
+    "productionEdits": 0,
+    "unrelatedTestsRerun": 0
+  },
+  "nativeFdObservation": {
+    "result": "POST_FD_COUNTS_WITHIN_RECORDED_BASELINE_RANGE",
+    "baseline1": {
+      "sourceType": "actual complete SAF-exported native DiagnosticRepository report",
+      "fds": 160,
+      "threads": 50,
+      "privateEvidenceSha256": "fe3d177b5e00455181ed76c40ec425a610e30e25e6c7daba67a80e99b08c69e3"
+    },
+    "otherSamples": [
+      {
+        "sample": "baseline2",
+        "sourceType": "actual original native-card screenshot visually read by host assistant",
+        "capturedAt": "2026-10-04T11:06:22.597654+08:00",
+        "fds": 158,
+        "threads": 50,
+        "privateScreenshotSha256": "6c2cf0d72026143d9dfcd49794b83b0318ece91d0d93c3420426387687e8f09f",
+        "hostPidMatchesSameVerifiedProcess": true
+      },
+      {
+        "sample": "postFirst",
+        "sourceType": "actual original native-card screenshot visually read by host assistant",
+        "capturedAt": "2026-10-04T11:16:04.904986+08:00",
+        "fds": 160,
+        "threads": 61,
+        "privateScreenshotSha256": "3e8c85b0da53d6a1d22d28bac580650be3fb966558c3fab02d33fc466493c699",
+        "hostPidMatchesSameVerifiedProcess": true,
+        "secondsAfterRecordedExportCompletionObservation": 103.903814
+      },
+      {
+        "sample": "postSecond",
+        "sourceType": "actual original native-card screenshot visually read by host assistant",
+        "capturedAt": "2026-10-04T11:17:45.623083+08:00",
+        "fds": 160,
+        "threads": 61,
+        "privateScreenshotSha256": "256692b645ae71b3c09d6c72930e7a36c43592714da8699b4c3bd1b6aaefe300",
+        "hostPidMatchesSameVerifiedProcess": true,
+        "secondsAfterRecordedExportCompletionObservation": 204.621911
+      }
+    ],
+    "baselineObservedFdRange": [
+      158,
+      160
+    ],
+    "postObservedFdRange": [
+      160,
+      160
+    ],
+    "threadsObservedBefore": 50,
+    "threadsObservedAfter": 61,
+    "sameRecordedNativePid": true,
+    "sameKernelBirthAndBootIndependentlyVerified": true,
+    "identitySource": "Four actual private before/after/proc stat andboot files parsed; validfield22/startTicks andbootUUID matched each other andthe native report/screenshots. Not inferred from file existence.",
+    "nativeDiagnosticPidOnlyBoundary": "The native card itself exposes PID,not birth. This particular run has independent paired kernel receipts; PID-only samples without them remain limited.",
+    "exportCompletionObservedAt": "2026-10-04T11:14:21.001172+08:00",
+    "timing": "Postlabels do not imply exact30/60second schedules. Actual screenshots were~103.904/~204.622seconds after the recordedcompletion observation.",
+    "claim": "One1000-file export shows no workload-proportional native FD growth andpost counts at recordedbaseline maximum. This is an observation,not a universal zero-leak or descriptor-target audit.",
+    "guestOrBrowserChildFdCountsUsed": false,
+    "rawPidBootStartTicksEmitted": false
+  },
+  "finalDataSnapshot": {
+    "result": "NO_NEW_SUBSTANTIVE_ANOMALY_IN_RECORDED_SCOPE",
+    "captureSha256": "3bfd6aeaa3bc0f9f0b8955a7f0836e641c1c66d0453fa5d86a126e09e6ba5e06",
+    "capturedAtEpoch": 1791085117.979014,
+    "records": 1225,
+    "errors": 0,
+    "sameFourExclusionRulesAsOriginal149": true,
+    "original149Comparison": {
+      "same": 996,
+      "changed": 47,
+      "added": 182,
+      "removedFromSamePath": 1,
+      "onlyOriginalPathRemoval": "known operational stoppedmarker"
+    },
+    "currentC676InitialComparison": {
+      "same": 1117,
+      "changed": 10,
+      "added": 98,
+      "removedFromSamePath": 26,
+      "changedKnownOperationalOrPluginMetadataPaths": [
+        ".dsh/plugin-activations.json",
+        ".dsh/plugin-sources.json",
+        ".dsh/profiles/web/package.json",
+        ".dsh/repair-builtin.log",
+        ".dsha-web-activity.json",
+        ".dsha-web.identity",
+        ".dsha-web.pid",
+        ".dsha-web.pid.stale",
+        "dsh-lan.log",
+        "dsh-web.log"
+      ]
+    },
+    "credentialDocumentFullRecordedMetadataUnchanged": true,
+    "webPackageAndPluginSourcesFullRecordedMetadataExactlyEqual149AfterOwnPluginRemoval": true,
+    "profilePatch": "Same approved343B bytes; bounded2source-derived welcomeNoticeVersion candidates yield1unique149whole-byte SHA match,proving all otherbytes unchanged. Earlierfailed probes remain preserved.",
+    "existingFiveAcceptanceSessionRecordsUnchangedFromInitialC676": true,
+    "workspaceRegistryWholeRecordedBodyUnchangedFromInitialC676": true,
+    "currentWorkspaceCount": 1,
+    "currentNewAcceptanceSessionCount": 1,
+    "original149OldSessionSamples": 0,
+    "eighteenFilesRemovedFromCurrentOwnLoadPathsRetainedUnderCompletedDeleteRecords": true,
+    "removedFileRetentionProof": "Recordedtype/mode/size/payloadSHA matches; directories andlinks without hashes are not claimed to prove targetcontents.",
+    "limits": "Metadata reviewofcapturedscope,notnew fullaudit of182additions or47changedrecords. Does not infer unavailablepersonal bodies."
+  },
+  "cleanup": {
+    "at": "2026-10-04T11:33:01.671075+08:00",
+    "hostArchiveVerifiedBeforeOwnCorpusDeletion": true,
+    "ownCorpusAndOutputOnlyDeletedAfterExactOwnershipMembersNoLinksChecks": true,
+    "hostPhysicalArchiveAndPrivateEvidenceRetained": true,
+    "nativeProjectSelectionEmptyObservedAfterNormalBack": true,
+    "persistedReadGrantStatus": "not independently confirmed revoked; no broad grant reset",
+    "permissionStateAuthority": "Runtime recordednormalrestore; data lane didnot operatepermissions or independentlyrecheck allsettings.",
+    "captureBoundary": "Finalrootmetadata is at its recordedcapturetime. Subsequent auxiliary/appscope own-file cleanup is runtime-owned separately; no claim thatlateruser datawas recaptured."
+  },
+  "privateEvidence": [
+    {
+      "artifact": "DSHA-data-v5-9713a5e1-331b-4095-81c7-700b965b685f.tar.gz",
+      "sha256": "b772981abd78d84a20450cd0b1635999e8f7262646561ff35690caa2a3943b7a",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "actual-owned-v5-requested-scope-verification.json",
+      "sha256": "b8ff4119dc06494dc65f0801c4b4560a7f939492ba1f47b6eaf0f753ae24ccd4",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "actual-owned-v5-verification.json",
+      "sha256": "4b9288bed17bcd65381f28783139956bce06c61322ff4a19794f5e3f36aca796",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "verify-owned-v5-export.py",
+      "sha256": "c69dd261125967825879dcb3c575ef7f8fa3ce0e4713695ab81184e246009182",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "verify-owned-v5-export-requested-scope.py",
+      "sha256": "f7d25d9a42459700d7dc86a1019fe79ec4aff5d412e4f43743beee3d74aadfc8",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "DSHA-diagnostic-20261004-110435.txt",
+      "sha256": "fe3d177b5e00455181ed76c40ec425a610e30e25e6c7daba67a80e99b08c69e3",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "baseline1-collection.json",
+      "sha256": "74b92bb4756ffd91c752cf19742cad007eceba953699c1f853e0417465953b2c",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "visual-observations-private.json",
+      "sha256": "1aaba6335b7e84ede3621efb900810450b1bf43abee7ba9ece16a407d120342d",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "native-birth-private.json",
+      "sha256": "98fb82e759da463429cb8989a5ac92554e16a997b64c5bf3502fb4825cb57558",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "birth-before-private.txt",
+      "sha256": "be62096b7fe13750dabb0609321f1b192a4e3ddc2614034c1b6f94b485f5c88d",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "birth-after-private.txt",
+      "sha256": "ebe139123c88cb0699991e5e9b77fab2bd79ee972840d51d62576908230b3ed2",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "boot-before-private.txt",
+      "sha256": "7c902527906d53492d56d41be504cbe29a11bd548f823b389ac0b1d9abdcf950",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "boot-after-private.txt",
+      "sha256": "7c902527906d53492d56d41be504cbe29a11bd548f823b389ac0b1d9abdcf950",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "export-observation-private.json",
+      "sha256": "f5035c65d8bfcb520fa90752fcfb6b00f93dc45be4526bdb5c672d4bf995c032",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "owned-corpus-cleanup.json",
+      "sha256": "4aff2494996dae101bb6bea2c4b892fb91251f49a314a44b013082ba980bb172",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "finalStandardC676AfterCleanup156.json",
+      "sha256": "3bfd6aeaa3bc0f9f0b8955a7f0836e641c1c66d0453fa5d86a126e09e6ba5e06",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "before149.json",
+      "sha256": "94f589f9a48ea08672b62236b146d06472bf92efe29e861792364d7ad9b357be",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "latestStandard156.json",
+      "sha256": "c61cab63c31c819d66e04114cbb60fed8fa2a2336aae167c71771eef1da63efb",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "bounded-historical-welcome-marker-proof.json",
+      "sha256": "1a850fd5d299074b53d0339b785b1e02d8ab58635f16e3d70c1c5d402a913140",
+      "privateOriginalRetained": true
+    },
+    {
+      "artifact": "actions.jsonl",
+      "sha256": "17c9ac8d72f01175a77b97394b4f9730c2262411f6ac273e8ae50a10470a5cf1",
+      "privateOriginalRetained": true
+    }
+  ],
+  "limits": [
+    "Only one currentStandard nondebug officialAPK ononeactualdevice; no Android6/7,otherOEM or FUSE/power-loss matrix claim.",
+    "Backupsourcewas SAF; native staging/read/write paths used AndroidBackupFileSystem AutoClose ownership. Doesnot separately prove FileBackupSource host-source traversal or restore/rollback.",
+    "Original149 capturedno oldworkspace/session sample. Newacceptance sessionunchanged doesnot prove fullhistorical chatretention.",
+    "Directorysymlinktargets,four excludedcache/history categories andnativeKeystore/preferences outside/root were not content-covered.",
+    "PersistedSAF readgrant revocation not independently confirmed; no broadgrant reset or fullwipe.",
+    "No model request,faultinjection,user-originaldelete,restoreoverwrite,temporaryAPK,phoneoperation orproductionchange by data lane."
+  ],
+  "privacy": "Onlyaggregatecounts,safeproducerfieldnames,publicAPK identity andoverallprivate-evidenceSHA. No token,serial,usercontent,credentialdigest,userpath,workspace/sessionID orrawbirthidentity published."
+}

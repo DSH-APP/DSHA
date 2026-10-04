@@ -1,0 +1,872 @@
+{
+  "schema": 1,
+  "lane": "data",
+  "build": 156,
+  "scope": "All 20 original data assignment IDs reviewed against current source; same workspace, no phone/Gradle/APK/version/signing/publication actions by this lane.",
+  "items": [
+    {
+      "id": "D-SEC-07",
+      "title": "SAF DocumentsProvider 可浏览/读取 rootfs 内桥 token、.credentials.yaml、.env",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PrivateRoots.java",
+        "app/src/main/java/com/deepseekharness/app/util/CredentialPaths.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgePathPolicy.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "SAF resolve checks both original and resolved files; shared credential basenames remain hidden/refused. New private recovery-maintenance tools, rotated diagnostics and startup history roots are registered; user-similar names stay visible."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "UserDataLayoutTest/CredentialPathsTest/BridgePathPolicyTest passed in current-source JDK17 combination; PrivateRootsTest passed in final 72."
+        }
+      ],
+      "residual": [
+        "Android DocumentsUI/SAF URI grant and syscall/device behavior untested."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android DocumentsUI/SAF URI grant and syscall/device behavior untested."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-SEC-15",
+      "title": "桥路径拒绝表 /root/.dsha- 前缀条目失效，且工作区 .env 可经 /app/export 落公共目录",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BridgePathPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/util/CredentialPaths.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgeFileSnapshot.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current exact basename/prefix rules reject .env*, .credentials.*, actual .bridge names and root/.dsha-*; canonical guest and host checks remain distinct."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current-source credential/bridge path behavior passed in JDK17 combination; bridge lane owns actual HttpShellService closure."
+        }
+      ],
+      "residual": [
+        "Same-UID authorized plugin code is not sandboxed by file-export policy. Device HTTP/share/provider behavior untested."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Same-UID authorized plugin code is not sandboxed by file-export policy. Device HTTP/share/provider behavior untested."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-SEC-16",
+      "title": "full 备份无条件把工作区 .env 与未脱敏 dsh-web.log 打进导出到 Download 的归档",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CredentialProjection.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CredentialFileBackupSource.java",
+        "app/src/main/assets/backup-engine.py"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Removed every guest backup CLI invocation from BackupManager writers. BackupTask now uses explicit native exportToDownloads; current portable v5 payload is wrapped and verified as real tar.gz before publication."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Native credential projections remove client-connection records while keeping user provider values/schema. Native API key remains excluded by default; explicit project scope keeps requested project bytes."
+        },
+        {
+          "command": "python tools/test-backup-engine.py: 54 completed, 39 passed, 15 explicit Windows/Linux-only skips. Final 72 JVM cases and rc2 30-case YAML differential passed.",
+          "result": "python tools/test-backup-engine.py: 54 completed, 39 passed, 15 explicit Windows/Linux-only skips. Final 72 JVM cases and rc2 30-case YAML differential passed."
+        }
+      ],
+      "residual": [
+        "User-selected projects and user provider credentials may legitimately contain secrets; this is not a globally secret-free archive claim. Android Downloads/SAF execution untested."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "User-selected projects and user provider credentials may legitimately contain secrets; this is not a globally secret-free archive claim. Android Downloads/SAF execution untested."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-SEC-21",
+      "title": "v5 备份机器状态名单写错桥 token 文件名，.bridge_token 会作为普通设置进入备份",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CredentialProjection.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CredentialFileBackupSource.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Actual bridge token/header/status/device-id names are machine state, including nested app-data entries. Explicit project selection does not apply app machine filename exclusions. Retained application exports omit raw historical native key files without editing originals."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Fresh gap fixed: native v5 previously copied .credentials.yaml verbatim. Current export and selected restore candidates use the bounded AST projection; raw and projected digests bind each source item."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "7 CredentialProjection tests, actual old-v5 inspect/buildCandidates fixture, 30 locked rc2 differential cases, selected retained actual-file exclusion test passed."
+        }
+      ],
+      "residual": [
+        "Actual Android Keystore/browser signing-secret rotation/provider restore untested; project scope is explicitly preserved."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android Keystore/browser signing-secret rotation/provider restore untested; project scope is explicitly preserved."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-SEC-22",
+      "title": "系统 Auto Backup/设备迁移整目录纳入 user-data-v5/，STABLE 布局下凭据随之离机",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "app/src/main/res/xml/data_extraction_rules.xml",
+        "app/src/main/res/xml/backup_rules.xml",
+        "app/src/main/res/xml-v28/backup_rules.xml"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Fresh XML review: four domains, 112 direct shared-rule credential cases and Legacy/Stable allowlist symmetry passed; no broad user-data-v5 root include. API23-27 only portable settings."
+        }
+      ],
+      "residual": [
+        "Android system backup/cloud/device-transfer transport not exercised. Filename allowlists cannot prove arbitrary user profile files contain no embedded secrets."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android system backup/cloud/device-transfer transport not exercised. Filename allowlists cannot prove arbitrary user profile files contain no embedded secrets."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-BAK-01",
+      "title": "自动备份内部随机密钥丢失后旧自动备份不可解密，仅抛错误码",
+      "currentDisposition": "required_contract",
+      "changed": false,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PasswordFreeBackupExport.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PortableBackupEnvelope.java",
+        "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java",
+        "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Latest AGENTS.md and ADR 0001 preserve user originals, plain user tar.gz exports, locally protected automatic copies, explicit factory reset and read-only retained catalogue."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current automatic-copy key failure keeps ciphertext/original records and reports unavailable key. Manual exports remain password-free; old authenticated copies can be re-exported to the current plain tar.gz envelope."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "PasswordFreeBackupExportTest, PortableBackupEnvelopeTest and VerifiedBackupCopyTest passed in current JDK17 combination; final independent crypto vector/resource/JCE cases passed."
+        }
+      ],
+      "residual": [
+        "Local protected copies and key have no uninstall-survival guarantee; actual Android Keystore/JobScheduler/OEM lifecycle untested."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Local protected copies and key have no uninstall-survival guarantee; actual Android Keystore/JobScheduler/OEM lifecycle untested."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-BAK-03",
+      "title": "格式化会删除公共存储 Documents/dshdata 整个目录，与用户决策相反",
+      "currentDisposition": "required_contract",
+      "changed": false,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Latest AGENTS.md and ADR 0001 preserve user originals, plain user tar.gz exports, locally protected automatic copies, explicit factory reset and read-only retained catalogue."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current explicit full-format contract retains strict core deletion and attempts legacy Documents/dshdata removal with public-storage failures as warnings; other personal/export folders stay outside scope. Refusing the attachment proposal to silently change this into private-only format."
+        }
+      ],
+      "residual": [
+        "No device format or destructive user-data action was run."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No device format or destructive user-data action was run."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-BAK-04",
+      "title": "保留区、事务归档与插件删除记录只增不减，无容量上限与用户清理入口",
+      "currentDisposition": "required_contract",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+        "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostOperationArchive.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Latest AGENTS.md and ADR 0001 preserve user originals, plain user tar.gz exports, locally protected automatic copies, explicit factory reset and read-only retained catalogue."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Retained catalogue stays read-only and paged; current storage inspection remains explicit. No automated purge or newly invented deletion authority for unknown originals."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Fixed current generation preset candidate names (16-hex plus 8-hex) so preserved raw candidates are visible; legacy hex revisions stay readable. Final selected retained 4-case source/old-tree/preset/privacy tests passed."
+        }
+      ],
+      "residual": [
+        "Retained user/failed/unknown originals can continue to consume disk; their deletion remains outside the latest read-only contract. Physical disk-capacity and long-term device lifecycle evidence missing."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Retained user/failed/unknown originals can continue to consume disk; their deletion remains outside the latest read-only contract. Physical disk-capacity and long-term device lifecycle evidence missing."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-IO-02",
+      "title": "TarGzipExtractor 的 symlink/硬链接/chmod 失败被 catch Throwable 吞掉，解压不完整仍报成功；lastSkipped/lastSkipNote 是死字段",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ArchiveFileBoundary.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Runtime lane removed lastSkipped/lastSkipNote dead fields; trusted signed asset extraction retains normal guest absolute links and rejects actual link/mode/type failures with paths."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current runtime receipt is coordinated separately; no old build155 APK/extraction receipt is promoted to this round."
+        }
+      ],
+      "residual": [
+        "Actual Android link/chmod/ELF cold extraction/FUSE behavior untested."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android link/chmod/ELF cold extraction/FUSE behavior untested."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-IO-03",
+      "title": "runtime 包仍大量用 java.io.File 直接读写，未走 backup 包的安全文件系统层",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeAssetFiles.java",
+        "app/src/main/java/com/deepseekharness/app/backup/AndroidBackupFileSystem.java",
+        "app/src/main/java/com/deepseekharness/app/util/ContainerFileTransfers.java",
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Runtime lane moved current runtime data writes/transfers behind existing descriptor-checked adapters. Data lane removed all BackupManager raw guest Compat.write/FileOutputStream paths; legacy readers use anchored exclusive copies and atomic signed helper publication."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current-source 27-main data closure compiles against Android37/AndroidX. Current-source ContainerFileTransfersTest/GuestDataResolverTest passed in combination; runtime owns final current transfer receipt."
+        }
+      ],
+      "residual": [
+        "Kernel descriptor/rename/parent-race/OEM/FUSE matrix not executed; authorized same-UID code is not an attacker sandbox."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Kernel descriptor/rename/parent-race/OEM/FUSE matrix not executed; authorized same-UID code is not an attacker sandbox."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-RES-02",
+      "title": "rc1 迁移 prepare 每次失败都新建 generation 并全量快照，失败不清理且无空间预检",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/assets/rc1-migration.py",
+        "tools/test-rc1-migration.py",
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Plugins lane current rc1 migration test: 25 completed, 23 passed and 2 Windows symlink skips; low-space/reuse/failure behavior preserves originals and avoids repeated same-input snapshots."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Data lane made current raw preset generations visible/readable in RetainedCatalogue; no automatic original purge was introduced."
+        }
+      ],
+      "residual": [
+        "Two real POSIX symlink cases require Linux privilege/device evidence; partial/corrupt/original snapshots retained."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Two real POSIX symlink cases require Linux privilege/device evidence; partial/corrupt/original snapshots retained."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-IO-01",
+      "title": "原子写有多套实现，BackupFileSystem.atomic 之外约 10 个文件自写 tmp+rename 且不 fsync 父目录",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/BackupFileSystem.java",
+        "app/src/main/java/com/deepseekharness/app/backup/VerifiedFilePublication.java",
+        "app/src/main/java/com/deepseekharness/app/util/StartupHistoryStore.java",
+        "app/src/main/java/com/deepseekharness/app/util/MaintenanceTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/util/RuntimeUpdateTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java",
+        "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java",
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Fresh review found earlier evidence had not covered old record/wheel/download helpers. Now those writes use the shared filesystem interface, exclusive sibling creation, descriptor checks, retained previous files, verified publication and parent sync. Startup history reads a complete .previous after interrupted replacement."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Failed exclusive creation no longer deletes an unowned colliding temporary file; exact key+device binds cleanup. Native source descriptors include device in identity equality."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Final 72 current JDK17 tests passed; atomic, wheel failure/rollback/collision, history recovery and verified export actual-file behaviors are included. Root recovery lane independently migrated its atomic/publish writes with 11 actual host cases."
+        }
+      ],
+      "residual": [
+        "Android syscall, power-loss persistence and FUSE fsync evidence missing; a post-publication sync failure retains the complete output and reports failure."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android syscall, power-loss persistence and FUSE fsync evidence missing; a post-publication sync failure retains the complete output and reports failure."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-IO-04",
+      "title": "DiagnosticLog 每条事件截断重写整个文件，崩溃处理器中断写入会丢失全部历史",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/DiagnosticLog.java",
+        "app/src/main/java/com/deepseekharness/app/core/DiagnosticHistory.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Core lane owns this source: append/atomic durable history and bounded UTF-8 record size preserve full prior publication; crash recursion guard and symlink refusal are covered by current DiagnosticHistoryTest."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Data lane registered rotated diagnostics/startup history as private and added numeric-only rebuild free-space events."
+        }
+      ],
+      "residual": [
+        "Actual Android crash/power-loss behavior untested."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android crash/power-loss behavior untested."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-PRIV-02",
+      "title": "SensitiveData.redact 依赖字段名/固定前缀，无前缀密钥漏脱敏且每次现编译正则",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java",
+        "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "docs/1.2-upgrade-report.md"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current source precompiles patterns for Google/AWS/Slack/JWT and bounded known native secrets; ConfigStore and bridge credential owners register real values."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "SensitiveDataTest passed in current JDK17 combination; text documents best-effort limits."
+        }
+      ],
+      "residual": [
+        "Unregistered arbitrary secrets and custom formats cannot be guaranteed masked; physical logging paths were not device-tested."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Unregistered arbitrary secrets and custom formats cannot be guaranteed masked; physical logging paths were not device-tested."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-RES-01",
+      "title": "图片草稿 IndexedDB 记录只在本会话清空附件时删除，孤儿草稿会挤占 256MB 总配额",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "app/src/main/assets/app-integration/client.js",
+        "tools/test-web-drafts.mjs"
+      ],
+      "checks": [
+        {
+          "command": "node tools/test-web-drafts.mjs: 21 passed, 0 skipped, including real Chromium IndexedDB and cross-page Blob/reference/deletion proof behavior.",
+          "result": "node tools/test-web-drafts.mjs: 21 passed, 0 skipped, including real Chromium IndexedDB and cross-page Blob/reference/deletion proof behavior."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current GC is bounded by exact revisions and successful deletion receipts; 32 removals per transaction, maximum store records and explicit unknown/capacity failures. Missing revision/incomplete session visibility never proves a user draft is disposable."
+        }
+      ],
+      "residual": [
+        "Unknown drafts and unclosed cross-page references stay retained. Arbitrary 30-day/oldest-draft eviction would violate preservation without deletion proof. Physical mobile quota/crash lifecycle untested."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Unknown drafts and unclosed cross-page references stay retained. Arbitrary 30-day/oldest-draft eviction would violate preservation without deletion proof. Physical mobile quota/crash lifecycle untested."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-SEC-01",
+      "title": "TarGzipExtractor 链接越界校验为纯文本归一，不解析已解出的链接链",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ArchiveFileBoundary.java",
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current archive boundaries distinguish trusted signed Ubuntu link semantics from untrusted user tar roots; staged regular-file exclusive opening and link graph/parent checks remain in source. Runtime lane owns fresh tar behavior receipt."
+        }
+      ],
+      "residual": [
+        "Android syscall/device extraction and filesystem matrix untested; this is defence in depth for authorized app-UID code."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android syscall/device extraction and filesystem matrix untested; this is defence in depth for authorized app-UID code."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-SEC-02",
+      "title": "宿主按 rootfs 相对路径读写容器文件时跟随 guest 可控符号链接",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java",
+        "app/src/main/java/com/deepseekharness/app/util/ContainerFileTransfers.java",
+        "app/src/main/java/com/deepseekharness/app/backup/GuestDataResolver.java",
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current runtime transfers use approved Stable/Legacy/public-storage mappings, raw source/target proofs and verified sibling publication rather than a bare new File rootfs write."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Data removed remaining BackupManager raw guest write paths, preserved old archive reader behavior and current-source transfer tests passed."
+        }
+      ],
+      "residual": [
+        "Android/OEM proc/syscall and FUSE behavior untested. Windows links use explicit modelling where privileges are unavailable; original and published copy are retained on unknown post-publication outcomes."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android/OEM proc/syscall and FUSE behavior untested. Windows links use explicit modelling where privileges are unavailable; original and published copy are retained on unknown post-publication outcomes."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-SEC-08",
+      "title": "旧版恢复从 .dsha-apikey 回填 Keystore 后不删除明文文件",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "No syncApiKeyFromRootfs remains and no automatic old active-file API-key readback was reintroduced. Explicit native restore key selection remains. Old active/input originals are not deleted to claim completion."
+        },
+        {
+          "command": "python tools/test-backup-engine.py current 54-case run includes three historical-key/native-config boundary tests; final selected retained test confirms raw old key does not enter retained app exports and original stays intact.",
+          "result": "python tools/test-backup-engine.py current 54-case run includes three historical-key/native-config boundary tests; final selected retained test confirms raw old key does not enter retained app exports and original stays intact."
+        }
+      ],
+      "residual": [
+        "Android Keystore not exercised; key-only historical archives still need explicit key restoration choice."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android Keystore not exercised; key-only historical archives still need explicit key restoration choice."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-BAK-02",
+      "title": "环境重建峰值空间为估算值，未实测",
+      "currentDisposition": "device_evidence_missing",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+        "app/src/main/java/com/deepseekharness/app/backup/MaintenanceSpaceTrace.java"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Added stage-by-stage getUsableSpace samples for preflight, capture, switch, extraction, restore, trial, commit, cleanup, failure and rollback. Records contain only numeric space metrics/stable stages, estimated required bytes and observed minimum."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Preflight error has complete localized required/available template; arithmetic is checked. Two MaintenanceSpaceTrace tests and current SDK compilation passed."
+        }
+      ],
+      "residual": [
+        "Observed free-space delta includes unrelated filesystem activity. No Android physical peak-space ratio/capacity calibration was measured; no <=1 ratio claim."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Observed free-space delta includes unrelated filesystem activity. No Android physical peak-space ratio/capacity calibration was measured; no <=1 ratio claim."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ]
+    },
+    {
+      "id": "D-FS-01",
+      "title": "runtime-fs 降级发布的 .dsha-publish.lock 从不删除，且 rename 后不 fsync 父目录",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "app/src/main/assets/runtime-fs/index.js",
+        "tools/test-runtime-publish-linux.mjs"
+      ],
+      "checks": [
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Current-source Linux Node24.12.0/musl+locked native package fixture passed 9 assertions: 100 publications/one stable lock, 32 concurrent single winner, EEXIST/source retention, cancellation, attachment directory link and lock symlink refusal."
+        },
+        {
+          "command": "current_source_review_or_bound_receipt",
+          "result": "Aggregate current host runner PASS after tests lane fixed explicit Windows->Linux executor gate; native package lock and current publisher source hashes are checked."
+        }
+      ],
+      "residual": [
+        "Real host tmpfs /dev/shm, not Android FUSE or disk power-loss persistence. Windows managed fixture refused stale client-combo-cache recipe input; root regenerated fixture verification remains separate."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Real host tmpfs /dev/shm, not Android FUSE or disk power-loss persistence. Windows managed fixture refused stale client-combo-cache recipe input; root regenerated fixture verification remains separate."
+        }
+      ],
+      "evidenceReferences": [
+        "app/build/audit-build156/data-final-tests/receipt.json",
+        "app/build/audit-build156/data-jvm-current/receipt.json",
+        "app/build/audit-build156/data-sdk/receipt.json",
+        "app/build/audit-build156/data-final-tests/retained-receipt.json",
+        "docs/audits/build156/credential-yaml-projection-evidence.json",
+        "app/build/audit-build156/data-linux-final/manifest.json",
+        "app/build/audit-build156/data-system-backup.json",
+        "app/build/java-format/data156-final.json"
+      ],
+      "deferredIntegratedChecks": [
+        {
+          "detail": "Windows managed fixture refused stale client-combo-cache recipe input; root regenerated fixture verification remains separate."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "originalIds": 20,
+    "changedIds": [
+      "D-SEC-07",
+      "D-SEC-16",
+      "D-SEC-21",
+      "D-BAK-04",
+      "D-IO-02",
+      "D-IO-03",
+      "D-RES-02",
+      "D-IO-01",
+      "D-IO-04",
+      "D-SEC-02",
+      "D-BAK-02"
+    ],
+    "currentJdk17Final": "72 passed, 0 failed plus 4 selected RetainedCatalogue cases",
+    "lockedRc2YamlDifferential": "9 current positives +1 exact old-flat +20 refusals =30 passed; source and errors/value isolation checked",
+    "legacyEngine": "54 completed:39 passed/15 explicit platform skips",
+    "chromiumDrafts": "21 passed, 0 skipped",
+    "linuxNativePublish": "9 assertions,100 publications,32 concurrent publishers,one lock; /dev/shm host only",
+    "systemXml": "4 domains,112 direct credential cases passed",
+    "sdkCompilation": "27 current main sources plus current core declarations compiled with Android37/AndroidX; no Android execution",
+    "policy": "Latest AGENTS.md and ADR 0001 preserve user originals, plain user tar.gz exports, locally protected automatic copies, explicit factory reset and read-only retained catalogue.",
+    "earlierFailures": "Unfinished preliminary JDK25 probe is not delivery evidence. First JDK17 combination had only one missing-classpath vector failure; fixed resource scope crypto passed. Comment-only YAML legitimate-empty regression was found and fixed before final72. Stale managed fixture and initially blocked Windows->Linux dispatch are retained separately, not labelled passed."
+  },
+  "deferredIntegratedChecks": [
+    {
+      "detail": "The root final complete Standard/Low Gradle tests, Release Lint and APK/ELF/signature/integration gates remain the root delivery checks; this lane did not execute Gradle or an APK build and does not promote host software evidence into device PASS."
+    }
+  ]
+}

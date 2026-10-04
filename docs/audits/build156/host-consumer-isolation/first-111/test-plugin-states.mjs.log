@@ -1,0 +1,26 @@
+✔ 等待、卸载与未知状态不报错；一个失败实例不能被成功实例掩盖 (2.6825ms)
+✔ 桥晚于启动可重试，状态变化串行发送并清除已恢复故障，卸载取消后续发送 (1.9371ms)
+✖ 锁定 Cordis 实例：等待依赖、异步加载、实际失败和卸载的报告一致 (143.8461ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 158.0537
+
+✖ failing tests:
+
+test at tools\test-plugin-states.mjs:39:1
+✖ 锁定 Cordis 实例：等待依赖、异步加载、实际失败和卸载的报告一致 (143.8461ms)
+  Error: TEST_FIXTURE_SESSION_ROOT_CHANGED
+      at verifyRuntimeSession (file:///F:/DSHA_RESTART/tools/test-runtime-fixture.mjs:64:171)
+      at testRuntime (file:///F:/DSHA_RESTART/tools/test-runtime-fixture.mjs:95:7)
+      at TestContext.<anonymous> (file:///F:/DSHA_RESTART/tools/test-plugin-states.mjs:40:54)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7)

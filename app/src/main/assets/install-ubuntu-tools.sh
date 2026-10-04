@@ -13,6 +13,8 @@ read -r -a packages < packages.txt
 dpkg --configure "${packages[@]}"
 curl --version
 git --version
+/usr/local/bin/node --version
+/usr/bin/python3 -I -S -c 'import hashlib, sqlite3, ssl; assert hashlib.sha256(b"DSHA").digest(); assert sqlite3.sqlite_version; assert ssl.OPENSSL_VERSION'
 cp version.txt /root/.dsha-ubuntu-tools-version
 rm -f -- ./*.deb SHA256SUMS packages.txt version.txt
 cd /root

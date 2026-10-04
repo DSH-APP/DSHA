@@ -1,149 +1,128 @@
 # 第三方组件声明
 
-DSHA 的 APK 内包含以下第三方二进制组件。
+此文由 `python tools/generate-third-party-notices.py` 从当前锁和实际资产生成。DSHA 自有代码采用 MIT；随包第三方组件分别遵循其许可，不因 APK 顶层许可变成 MIT。
 
-## DSH 0.1.6-alpha.2 Office 预览
+## DSH 与 npm 依赖
 
-- 随锁定的 DSH 包包含 `@deepseek-ai/libreoffice-kit@0.0.1` 与 Linux 使用的 `@deepseek-ai/libreoffice-kit-wasm@0.0.1`，入口包声明 MPL-2.0；上游引擎、集成代码及第三方组件的声明分别保留在包内 `NOTICE`、`licenses`、`sources` 与 `prebuilds.json` 中。
-- DSHA 仅补充 Android `/system/fonts` 到默认字体查找路径；使用已有系统字体，不额外复制系统字体。修改由 `assets/office-fonts-patch.json` 记录，用户明确配置的字体目录仍按上游规则优先使用。
+- 当前 `@deepseek-ai/dsh` 为 **0.2.0-rc.2**。完整版本、来源与 integrity 见 `tools/dsh-runtime/package-lock.json`；各包原许可文件保留在运行归档中。
+- Office 入口 `@deepseek-ai/libreoffice-kit` **0.1.2**、WASM **0.1.1**：保留上游 NOTICE、licenses、sources 与预构建说明。DSHA 的字体路径适配见 `assets/office-fonts-patch.json`。
+- pnpm **10.34.5**（MIT）和 certifi **2026.7.22**（MPL-2.0）：版本和原包摘要由 `tools/runtime-tools.lock.json` 固定。CA 未关闭 TLS 核验。
+- 许可目录和实际依赖需结合归档成员检查；锁文件内其他平台可选依赖不等于已进入 arm64 APK。
+- core-js **3.50.0**（MIT），原包来源 `https://registry.npmjs.org/core-js/-/core-js-3.50.0.tgz`，全文为 `assets/web-integration/core-js.LICENSE`。
+- sharp **0.35.5** 为 Apache-2.0；arm64 libvips 包 **1.3.4** 声明 LGPL-3.0-or-later，来源为锁内 npm 原包和 https://github.com/lovell/sharp-libvips 。包内 README 含嵌入依赖及源码获取说明，应结合实际二进制核对；不把单一 libvips 许可扩展到所有嵌入库。
+- `@ubjs/core` / `@ubjs/node` **0.31.0-3** 为 MPL-2.0，来源 https://github.com/jhugman/uniffi-bindgen-react-native ；`@trycua/cua-driver` **0.28.0** 包装层为 MIT，而 Linux arm64 原生包为 **MIT AND MPL-2.0**，来源 https://github.com/trycua/cua 。原生包声明与包装层分开核对。
+- MPL-2.0、LGPL-3.0 与 GPL-3.0 全文随 `assets/licenses` 提供；文本精确来源与摘要记录在 `docs/audits/build156/third-party-license-sources.json`。通用许可全文不能证明二进制原件的来源或分发权利。
 
-## rc2.1 宿主数据保护依赖
+## 移动插件
 
-- Gson **2.13.1**：仅使用受限 JSON 流式读写，不使用任意类型反序列化。许可为 Apache-2.0，随包全文位于 `assets/licenses/gson-LICENSE.txt`。[上游版本与许可](https://github.com/google/gson/tree/gson-parent-2.13.1)。
-- Bouncy Castle **bcprov-jdk15to18 1.85.2**：使用轻量 PBKDF2-HMAC-SHA256 和 AES-GCM API，不注册或替换系统全局 Provider，也没有明文降级路径。许可全文从该 JAR 的 `org.bouncycastle.LICENSE` 导出，位于 `assets/licenses/bouncycastle-LICENSE.txt`。[上游许可](https://www.bouncycastle.org/licence.html)。
-- 两个 flavor 均由 `tools/backup-dependencies.lock.json` 固定版本与 JAR SHA-256；Java 编译前执行 `verifyBackupDependencies`，不匹配即停止构建。JVM 测试覆盖 Node/OpenSSL 固定向量及 JCE 互操作；API 23 上的实际运行尚待用户安排的设备验证。
+- `dsh-web-mobile` **3.0.3**，MIT，来自 `https://github.com/mexiaosqwq/dsh-web-mobile`，固定提交 `a094288883b343e848d7f9cf302d73ad8ed4794b`。
+- 上游 client 摘要 `88bfc7b315249cbe8a4fcbcaf41854cce3a8480a5b98a7bdb063ba78b1ae9a19`；本地差异由 `tools/apply-mobile-client-patches.mjs` 与 `tools/mobile-server/` 管理。不是未修改的上游产物。
+- 许可全文：`app/src/main/assets/builtin-plugins/dsh-web-mobile/LICENSE`。当前产物摘要：
 
-## Termux 终端 JNI（标准版）
+- `client.js`：`3e5568a4c41730df9b3a01261b7781678cb74866e1c96f45164204e5e9a6c5e7`
+- `index.js`：`1ab8021dec1453ed7e48a43269efcc46598a27005de2d51b6644579544c90445`
+- `compress.js`：`f5902f4f036d0f7a67d2ce6e4c71b01a98227cb4365abde7a4bf8f1bf5e6de0c`
+- `delete-session.js`：`f4f8caf0fd54ab49ad264908296b12d9d46868542b082136927afe3c21d32b19`
 
-- 来源：`termux/termux-app` 的 `v0.118.0`，`terminal-emulator/src/main/jni/termux.c`。
-- 许可：Apache-2.0（上游对 terminal-emulator 的许可例外，说明与许可全文保存在 `tools/termux-jni/`）。
-- 在包内的位置：`lib/arm64-v8a/libtermux.so`。
-- 标准版使用 NDK r26d 从同版本原始源码重新编译，保持原有 JNI 接口，设置 16 KB ELF 页对齐。
-- 源码及复现命令：`tools/termux-jni/termux.c`、`tools/termux-jni/build.ps1`。
+## 终端与会话启动器
 
-## proot（Termux 分支）
+- Termux terminal-emulator 的 `termux.c` 来自 v0.118.0；上游明确的 Apache-2.0 许可例外保存在 `tools/termux-jni/LICENSE.upstream.md`，全文为 `LICENSE-2.0.txt`。不要将该例外扩展到整个 Termux 应用。
+- 本地 PTY 身份握手和会话查询差异见 `dsha-pty.c`、`dsha-process.c` 与 `build.ps1`，目标 API 23、LOAD 16 KiB、common-page-size 4096。
+- DSHA 独立会话启动器源码为 `tools/native-session/session-launcher.c`；跨平台构建入口 `tools/native-session/build.py`，锁定 NDK 26.3.11579264。
 
-- 来源：https://github.com/termux/proot
-- 许可：GPL-2.0
-- 在包内的位置：`lib/arm64-v8a/libproot.so`、`libprootloader.so`、
-  `libprootloader32.so`、`libtalloc.so`、`libandroidshmem.so`
-- 用途：默认的容器运行时，用 ptrace 实现免 root 的 chroot 环境
-- 说明：文件名带 `lib` 前缀、`.so` 后缀是 Android 打包要求
-  （只有这样系统才会把它提取到可执行的 `nativeLibraryDir`），
-  内容未作修改
+## proot / proroot
 
-## proroot
+- proot（Termux 分支）为 GPL-2.0。标准与兼容资产保留 COPYING；API 23 构建及源码差异见 `tools/build-low-proot.py`。完整声明位于 `assets/licenses/proot-COPYING.txt`。
+- proroot v1.2.8 为上游专有许可。DSHA 分发上游原始二进制，不声称可重编、审计源码或任意修改后再分发；许可证与来源见随包声明。不能用容器 root 身份推断 Android root 权限。
+- Windows 重编、Linux 重编与手机执行是不同证据；不能从一种宿主成功推导全部平台通过。
 
-- 来源：https://github.com/coderredlab/proroot（v1.2.8）
-- 许可：Proprietary。README 原文：*"Free to use in your projects.
-  Redistribution of modified binaries is not permitted."*
-  —— 允许在项目中使用，禁止分发**修改过**的二进制
-- 在包内的位置：`lib/arm64-v8a/libproroot.so`、`libproroot-runtime.so`、
-  `libproroot-linker.so`、`libproroot-stub-loader.so`、`libproroot-bridge.so`
-- 用途：**默认**的容器运行时（v1.1.6 起）。用 LD_PRELOAD + 二进制补丁做进程内
-  路径翻译，没有 ptrace 的上下文切换开销，真机实测启动快 5~6 倍
-- 分发的是官方 release 的**原始二进制**，未作任何修改，sha256 与
-  上游 release notes 一致：
+## Android 与备份依赖
 
-```
-a4e74d75b66cdc02b080adfe863dbf9951c3b30610d77beddc95488d5fe5de01  libproroot.so
-8c47a0a7db32d84c179ebb5bf3640f655a3181860ece5886ae44d92858730c34  libproroot-runtime.so
-1c5bc9537a270e8bf8b1c70222813f57b60b828bfb5503ddf8fe37685092de2f  libproroot-bridge.so
-51a0ec5bfed00e572a0de09e22d9057e2befc386b78e426613d3e0ab03f4ecee  libproroot-linker.so
-06c6624db3bdc45b9ced151cd781df439a37b47731d244b93e9d6a58cd48cde0  libproroot-stub-loader.so
-```
+- Shizuku API/provider：Standard 13.1.5、Low 12.2.0（MIT），公开来源 RikkaApps/Shizuku-API；许可全文随 `assets/licenses/Shizuku-MIT.txt` 保存，原始 Git blob 及 SHA 记录在 build154 审计。
+- Termux terminal-view / terminal-emulator 0.118.0 的 Apache-2.0 例外及全文随 `assets/licenses/Termux-terminal-Apache-2.0.txt` 保存；不将其声明扩展到整个上游工程。
+- Gson 2.13.1：Apache-2.0；Bouncy Castle bcprov-jdk15to18 1.85.2：上游许可全文随 `assets/licenses` 保存。版本与 JAR 摘要见 `tools/backup-dependencies.lock.json`，构建执行 `verifyBackupDependencies`。
+- SnakeYAML 2.4（Apache-2.0）：固定官方 Maven Central JAR/POM 与 `snakeyaml-2.4` 源码标签，使用宿主 data-only SafeConstructor 投影凭据中的本机连接字段。许可原文为 `assets/licenses/snakeyaml-LICENSE.txt`，Java 8 类文件及 Android FIELD 路径见 `docs/audits/build156/snakeyaml-official-artifacts.json`；不由静态兼容声明推导旧设备验收完成。
+- Low 的 GeckoView 143.0.20251003115653 为 MPL-2.0，来自 Mozilla Maven；保留相应声明。兼容版最低 API 23，不表示所有旧设备已经验收。
+- Ubuntu 软件包各自遵循其许可；包内 `/usr/share/doc` 与 common-licenses 保留版权信息。根环境仍为 Ubuntu 24.04 arm64，DSHA 基础环境身份 10。
+- node-semver 7.8.1 为 ISC，完整许可随 `assets/plugin-semver.cjs` 提供。
 
-### 为什么随包分发而不是按需下载
+当前 Gradle 直接运行依赖坐标（不包含测试依赖；完整传递依赖许可审查仍需实际解析结果）：
 
-Android 10+ 的 W^X 策略不允许从应用可写目录（`filesDir`）执行代码。
-下载到 `filesDir` 的 `.so` 无法执行，只有放进 APK 的 `jniLibs`、
-由系统提取到 `nativeLibraryDir` 才能跑。现有的 `libproot.so` 同理。
+- `androidx.appcompat:appcompat:1.6.1`
+- `androidx.webkit:webkit:1.15.0`
+- `com.android.tools:desugar_jdk_libs:2.0.4`
+- `com.google.android.material:material:1.11.0`
+- `com.google.code.gson:gson:2.13.1`
+- `com.termux.termux-app:terminal-view:0.118.0`
+- `dev.rikka.shizuku:api:12.2.0`
+- `dev.rikka.shizuku:api:13.1.5`
+- `dev.rikka.shizuku:provider:12.2.0`
+- `dev.rikka.shizuku:provider:13.1.5`
+- `org.bouncycastle:bcprov-jdk15to18:1.85.2`
+- `org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653`
+- `org.yaml:snakeyaml:2.4`
 
-### 用户可控性
+## 实际入库 JNI 成员与来源边界
 
-- **默认启用**（v1.1.6 起），可在「配置」页取消勾选改用传统 proot
-- 不参与装机路径（解压、安装六步一律用 proot），只影响「执行命令」这一层
-- 运行时文件缺失时自动降回 proot
-- 连续 3 次启动失败会强制切回 proot 并告知用户
-- 因此最坏情况是这一层退回 proot，不会导致环境不可用 ——
-  这是敢把闭源组件设为默认的前提：**它不可用时系统自动绕过它**
+| 资产 | 许可声明 | 来源 / 可核验范围 |
+|---|---|---|
+| `app/src/low/jniLibs/arm64-v8a/libproot_legacy.so` | GPL-2.0 | tools/build-low-proot.py, proot v5.1.107.92 source archive and local changes |
+| `app/src/low/jniLibs/arm64-v8a/libprootloader_legacy.so` | GPL-2.0 | tools/build-low-proot.py, proot v5.1.107.92 source archive |
+| `app/src/main/jniLibs/arm64-v8a/libandroidshmem.so` | unknown origin/license for this original binary | Retained original; no current exact-source reproduction receipt |
+| `app/src/main/jniLibs/arm64-v8a/libdsha-session.so` | MIT | tools/native-session/session-launcher.c; locked API 23 build |
+| `app/src/main/jniLibs/arm64-v8a/libproot.so` | GPL-2.0 | Termux proot; original Standard binary exact revision remains unverified |
+| `app/src/main/jniLibs/arm64-v8a/libprootloader.so` | GPL-2.0 | Termux proot; original Standard binary exact revision remains unverified |
+| `app/src/main/jniLibs/arm64-v8a/libprootloader32.so` | GPL-2.0 | Termux proot; original Standard binary exact revision remains unverified |
+| `app/src/main/jniLibs/arm64-v8a/libproroot-bridge.so` | upstream proprietary | proroot v1.2.8 original binary |
+| `app/src/main/jniLibs/arm64-v8a/libproroot-linker.so` | upstream proprietary | proroot v1.2.8 original binary |
+| `app/src/main/jniLibs/arm64-v8a/libproroot-runtime.so` | upstream proprietary | proroot v1.2.8 original binary |
+| `app/src/main/jniLibs/arm64-v8a/libproroot-stub-loader.so` | upstream proprietary | proroot v1.2.8 original binary |
+| `app/src/main/jniLibs/arm64-v8a/libproroot.so` | upstream proprietary | proroot v1.2.8 original binary; source reproducibility not asserted |
+| `app/src/main/jniLibs/arm64-v8a/libtalloc.so` | LGPL family; exact binary revision unverified | Samba talloc; build-low-proot.py locks talloc 2.4.3 headers, not the origin of this binary |
+| `app/src/main/jniLibs/arm64-v8a/libtermux.so` | Apache-2.0 exception | tools/termux-jni, v0.118.0 source plus local handshake changes |
 
-### 已知限制
+## npm 锁中需另核对的许可声明
 
-- 上游未公开源码，无法审计，出问题只能等作者修
-- 作者已将开发重心转向另一个项目（proroom），更新频率会下降
-- 因闭源，Termux 官方仓库拒绝收录（见 proroot issue #21）
+此表来自当前锁，包含其它平台可选包。`check-third-party-notices.py --archive` 再核对实际运行归档中的包版本和声明；两者都不代替源码提供、嵌入库或法律来源核验。
 
-## 内置移动端适配插件（dsh-mobile-nav）
+| 锁内路径 | 版本 | 上游声明 | 原包来源 |
+|---|---|---|---|
+| `node_modules/@deepseek-ai/libreoffice-kit` | 0.1.2 | MPL-2.0 | https://registry.npmjs.org/@deepseek-ai/libreoffice-kit/-/libreoffice-kit-0.1.2.tgz |
+| `node_modules/@deepseek-ai/libreoffice-kit-darwin-arm64` | 0.1.1 | MPL-2.0 | https://registry.npmjs.org/@deepseek-ai/libreoffice-kit-darwin-arm64/-/libreoffice-kit-darwin-arm64-0.1.1.tgz |
+| `node_modules/@deepseek-ai/libreoffice-kit-darwin-x64` | 0.1.1 | MPL-2.0 | https://registry.npmjs.org/@deepseek-ai/libreoffice-kit-darwin-x64/-/libreoffice-kit-darwin-x64-0.1.1.tgz |
+| `node_modules/@deepseek-ai/libreoffice-kit-wasm` | 0.1.1 | MPL-2.0 | https://registry.npmjs.org/@deepseek-ai/libreoffice-kit-wasm/-/libreoffice-kit-wasm-0.1.1.tgz |
+| `node_modules/@deepseek-ai/libreoffice-kit-win32-arm64` | 0.1.2 | MPL-2.0 | https://registry.npmjs.org/@deepseek-ai/libreoffice-kit-win32-arm64/-/libreoffice-kit-win32-arm64-0.1.2.tgz |
+| `node_modules/@deepseek-ai/libreoffice-kit-win32-x64` | 0.1.2 | MPL-2.0 | https://registry.npmjs.org/@deepseek-ai/libreoffice-kit-win32-x64/-/libreoffice-kit-win32-x64-0.1.2.tgz |
+| `node_modules/@img/sharp-libvips-darwin-arm64` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-darwin-arm64/-/sharp-libvips-darwin-arm64-1.3.4.tgz |
+| `node_modules/@img/sharp-libvips-darwin-x64` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-darwin-x64/-/sharp-libvips-darwin-x64-1.3.4.tgz |
+| `node_modules/@img/sharp-libvips-linux-arm` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-linux-arm/-/sharp-libvips-linux-arm-1.3.4.tgz |
+| `node_modules/@img/sharp-libvips-linux-arm64` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-linux-arm64/-/sharp-libvips-linux-arm64-1.3.4.tgz |
+| `node_modules/@img/sharp-libvips-linux-ppc64` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-linux-ppc64/-/sharp-libvips-linux-ppc64-1.3.4.tgz |
+| `node_modules/@img/sharp-libvips-linux-riscv64` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-linux-riscv64/-/sharp-libvips-linux-riscv64-1.3.4.tgz |
+| `node_modules/@img/sharp-libvips-linux-s390x` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-linux-s390x/-/sharp-libvips-linux-s390x-1.3.4.tgz |
+| `node_modules/@img/sharp-libvips-linux-x64` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.3.4.tgz |
+| `node_modules/@img/sharp-libvips-linuxmusl-arm64` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-arm64/-/sharp-libvips-linuxmusl-arm64-1.3.4.tgz |
+| `node_modules/@img/sharp-libvips-linuxmusl-x64` | 1.3.4 | LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-x64/-/sharp-libvips-linuxmusl-x64-1.3.4.tgz |
+| `node_modules/@img/sharp-wasm32` | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later AND MIT | https://registry.npmjs.org/@img/sharp-wasm32/-/sharp-wasm32-0.35.5.tgz |
+| `node_modules/@img/sharp-win32-arm64` | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-win32-arm64/-/sharp-win32-arm64-0.35.5.tgz |
+| `node_modules/@img/sharp-win32-ia32` | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-win32-ia32/-/sharp-win32-ia32-0.35.5.tgz |
+| `node_modules/@img/sharp-win32-x64` | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later | https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.5.tgz |
+| `node_modules/@trycua/cua-driver-darwin-arm64` | 0.28.0 | MIT AND MPL-2.0 | https://registry.npmjs.org/@trycua/cua-driver-darwin-arm64/-/cua-driver-darwin-arm64-0.28.0.tgz |
+| `node_modules/@trycua/cua-driver-darwin-x64` | 0.28.0 | MIT AND MPL-2.0 | https://registry.npmjs.org/@trycua/cua-driver-darwin-x64/-/cua-driver-darwin-x64-0.28.0.tgz |
+| `node_modules/@trycua/cua-driver-linux-arm64-gnu` | 0.28.0 | MIT AND MPL-2.0 | https://registry.npmjs.org/@trycua/cua-driver-linux-arm64-gnu/-/cua-driver-linux-arm64-gnu-0.28.0.tgz |
+| `node_modules/@trycua/cua-driver-linux-x64-gnu` | 0.28.0 | MIT AND MPL-2.0 | https://registry.npmjs.org/@trycua/cua-driver-linux-x64-gnu/-/cua-driver-linux-x64-gnu-0.28.0.tgz |
+| `node_modules/@trycua/cua-driver-win32-arm64-msvc` | 0.28.0 | MIT AND MPL-2.0 | https://registry.npmjs.org/@trycua/cua-driver-win32-arm64-msvc/-/cua-driver-win32-arm64-msvc-0.28.0.tgz |
+| `node_modules/@trycua/cua-driver-win32-x64-msvc` | 0.28.0 | MIT AND MPL-2.0 | https://registry.npmjs.org/@trycua/cua-driver-win32-x64-msvc/-/cua-driver-win32-x64-msvc-0.28.0.tgz |
+| `node_modules/@ubjs/core` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/core/-/core-0.31.0-3.tgz |
+| `node_modules/@ubjs/node` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/node/-/node-0.31.0-3.tgz |
+| `node_modules/@ubjs/node-darwin-arm64` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/node-darwin-arm64/-/node-darwin-arm64-0.31.0-3.tgz |
+| `node_modules/@ubjs/node-darwin-x64` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/node-darwin-x64/-/node-darwin-x64-0.31.0-3.tgz |
+| `node_modules/@ubjs/node-linux-arm64-gnu` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/node-linux-arm64-gnu/-/node-linux-arm64-gnu-0.31.0-3.tgz |
+| `node_modules/@ubjs/node-linux-arm64-musl` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/node-linux-arm64-musl/-/node-linux-arm64-musl-0.31.0-3.tgz |
+| `node_modules/@ubjs/node-linux-x64-gnu` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/node-linux-x64-gnu/-/node-linux-x64-gnu-0.31.0-3.tgz |
+| `node_modules/@ubjs/node-linux-x64-musl` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/node-linux-x64-musl/-/node-linux-x64-musl-0.31.0-3.tgz |
+| `node_modules/@ubjs/node-win32-arm64-msvc` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/node-win32-arm64-msvc/-/node-win32-arm64-msvc-0.31.0-3.tgz |
+| `node_modules/@ubjs/node-win32-x64-msvc` | 0.31.0-3 | MPL-2.0 | https://registry.npmjs.org/@ubjs/node-win32-x64-msvc/-/node-win32-x64-msvc-0.31.0-3.tgz |
+| `node_modules/argparse` | 2.0.1 | Python-2.0 | https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz |
 
-- 上游：[mexiaosqwq/dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile)
-- 包名：`@dsh-external/dsh-mobile-nav`
-- 版本：`v2.1.1`（按 tag 固定，不跟 main 漂移）
-- 许可：**MIT** —— 许可证全文随文件一并分发于 `app/src/main/assets/mobile-nav/LICENSE`
-
-随 APK 分发的是上游仓库里的构建产物，未作任何修改：
-
-| 文件 | sha256 |
-| --- | --- |
-| `lib/client.js` | `6c6ee969b3de2d7f04eafd4b70319c8f9c8891a72a21090fb5878636be6b2e04` |
-| `lib/index.js` | `855d07192c12ac831830e87246216dbc74ad8c83a6d67ae00ee7e89a378591ef` |
-| `package.json` | `b80273b3cb53a7c2aac643a6838c7d4d39f98374c22ee467692f977d41fc61ab` |
-| `cordis.patch.yml` | `427367650ec107cf5fd35cc6496398c629680f57cd6f7b980a3622fd70e082ef` |
-| `LICENSE` | `0d50650e8ee0e00996facf70e6d246dddb836e27c4ce7027cdcf800ac5758f4b` |
-
-### 为什么随包分发
-
-装机要离线可用，这是相对同类项目的主要优势；而移动端适配是「手机上能不能正常用」
-的前提，不该依赖首启联网。插件是单文件构建产物（~132KB），纯前端 DOM/CSS 改造 ——
-零网络请求、无 `eval`/`new Function`，外部依赖只有官方浏览器侧共享的 `react` 与
-`@deepseek-ai/dsh-client-ui-primitives`，随包带上代价很小。
-
-### 关系说明
-
-我们只负责把上游产物打进 APK 并做安置/注册，插件的功能与 UI 行为归上游维护。
-界面细节问题建议直接反馈到上游仓库。
-
-### 替换历史
-
-这次更换之前内置的是 `dsh-client-ui-mobile-adapt`
-（[Hotsteel2901](https://github.com/Hotsteel2901/dsh-client-ui-mobile-adapt)，MIT），
-因作者长期停更而换掉。升级时 App 会自动把旧插件从 profile 的 `bundles` /
-`dependencies` 摘掉并删除实体（`migrateLegacyMobileAdapt`）—— 两个插件改造同一批
-DOM 元素，同时激活会互相打架（抽屉/浮层出两份、事件绑定两遍）。如果你此前手动
-禁用过旧插件，新插件会沿用「已禁用」状态，不会被悄悄打开。
-
-## 其他
-
-- 随包 CA 证书来自 certifi 2026.7.22 / Mozilla 根证书集合（MPL-2.0），许可证随 assets/licenses/certifi-LICENSE.txt 提供。
-  构建脚本 tools/build-standard-runtime.py 固定官方下载地址与 SHA-256；没有关闭 TLS 验证。
-- low 兼容版内核：GeckoView 143.0.20251003115653（MPL-2.0），来自 Mozilla Maven；
-  [对应源码](https://hg.mozilla.org/releases/mozilla-release/rev/08388fb6b18c61dbb3d0baa9bee4e7440b85f671)。
-  后续 Firefox Android 提高了最低系统要求，因此保留兼容 Android 6/7 的这个版本，仅用于本机 dsh 预览。
-- low 兼容版容器：Termux proot v5.1.107.92（GPL-2.0），
-  [上游源码](https://github.com/termux/proot/tree/v5.1.107.92)；API 23 编译配置、兼容函数和 fd 断言补丁完整保存在
-  `tools/build-low-proot.py`，脚本校验上游归档 SHA-256 后可重现构建。COPYING 随兼容包资产分发。
-- 标准版补充资产 `python-support.bin`：Ubuntu 24.04 arm64 的 `libsqlite3-0` 3.45.1-1ubuntu2.7、
-  `libreadline8t64` 8.2-4build1，未修改二进制。版权文件随包保存在容器 `usr/share/doc`。
-  对应源码：[sqlite3](https://launchpad.net/ubuntu/+source/sqlite3/3.45.1-1ubuntu2.7)、
-  [readline](https://launchpad.net/ubuntu/+source/readline/8.2-4build1)。
-- `pnpm-runtime.bin`：pnpm 10.34.5（MIT），来自 npm 官方发布包，保留许可证，省略其他平台的可执行文件。
-  [源码](https://github.com/pnpm/pnpm/tree/v10.34.5)；可用 `tools/build-standard-runtime.py` 按固定校验值复现资产。
-- Ubuntu arm64 rootfs（`assets/offline-rootfs.bin`）：各软件包遵循各自许可
-- GeckoView（`libxul.so` 等）：MPL-2.0
-- `@deepseek-ai/dsh`：见其 npm 包内的许可声明
-
-## npm node-semver 7.8.1
-
-插件版本兼容性使用 [npm/node-semver](https://github.com/npm/node-semver) 7.8.1，遵循 ISC 许可。完整许可随 `app/src/main/assets/plugin-semver.cjs` 一并分发；生成方式见 `tools/vendor-plugin-semver.cjs`。
-
-## 0.1.6-alpha1 运行时扩展
-
-完整依赖和摘要锁定在 `tools/dsh-runtime/package-lock.json`，原 npm 包的许可文件保留在离线运行时中。新增主要组件按发布包声明：
-
-- DSH 0.1.6-alpha.1 及其 Browser Use、Computer Use、Auto review、Team、SSH 等官方组件：见各包随附许可。
-- `@trycua/cua-driver` 0.28.0：MIT；Linux arm64 原生可选依赖一并保留。
-- `@browserbasehq/stagehand` 4.1.0：MIT。
-- `@playwright/mcp` 0.0.80：Apache-2.0。
-- `chrome-devtools-mcp` 1.9.0：Apache-2.0。
-
-DSHA 的 Android Computer Use 适配层和独立会话启动器为本仓库实现，沿用本仓库 MIT 许可；未替换上游 Cua Driver 的实现或将其标为 Android 原生驱动。
+GPL、MPL、LGPL 等组件的具体再分发义务应按相应包和修改范围核对。源码入口与许可副本不等于已证明所有上游二进制可逐字节重现。

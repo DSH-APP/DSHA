@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <full-backup-content>
     <include domain="sharedpref" path="dsha-portable-settings.xml" />
-    <include domain="file" path="user-data-v5/" requireFlags="clientSideEncryption" />
     <include domain="file" path="data-locations-v5.json" requireFlags="clientSideEncryption" />
     <include domain="file" path="linux/ubuntu/root/.dsh/sessions/" requireFlags="clientSideEncryption" />
     <include domain="file" path="linux/ubuntu/root/.dsh/storages/" requireFlags="clientSideEncryption" />
@@ -9,4 +8,16 @@
     <include domain="file" path="linux/ubuntu/root/.dsh/settings.yaml" requireFlags="clientSideEncryption" />
     <include domain="file" path="linux/ubuntu/root/.dsh/profiles/" requireFlags="clientSideEncryption" />
     <include domain="file" path="linux/ubuntu/root/.dsh/plugin-src/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="user-data-v5/dsh/sessions/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="user-data-v5/dsh/storages/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="user-data-v5/dsh/attachments/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="user-data-v5/dsh/settings.yaml" requireFlags="clientSideEncryption" />
+    <include domain="file" path="user-data-v5/dsh/profiles/" requireFlags="clientSideEncryption" />
+    <include domain="file" path="user-data-v5/dsh/plugin-src/" requireFlags="clientSideEncryption" />
+    <exclude domain="file" path="user-data-v5/dsh/sessions/.sessions-trash/" />
+    <exclude domain="file" path="user-data-v5/dsh/profiles/.bridge_token" />
+    <exclude domain="file" path="user-data-v5/dsh/profiles/.bridge_headers" />
+    <exclude domain="file" path="linux/ubuntu/root/.dsh/sessions/.sessions-trash/" />
+    <exclude domain="file" path="linux/ubuntu/root/.dsh/profiles/.bridge_token" />
+    <exclude domain="file" path="linux/ubuntu/root/.dsh/profiles/.bridge_headers" />
 </full-backup-content>

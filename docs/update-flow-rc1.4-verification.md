@@ -1,5 +1,8 @@
 # rc1.4 更新流程修复与验证
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 ## 最终集成验收 · 2026-09-08
 
 主流程已完成两版 Release、Lint、JUnit 与 LowDebug AndroidTest 编译。最终 debug 自插桩 **135 条 Android 断言通过**，包括新增的旧来源迁移和实际进度控件阶段展示。原始结果见[功能验收](functional-audit-rc1.4.md)。测试使用可控清单及安装校验执行器；系统安装器、未知来源权限往返和厂商后台策略仍按下文保留实机覆盖限制。

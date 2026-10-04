@@ -1,0 +1,222 @@
+
+> Configure project :app
+签名：已配置历史发布证书
+
+> Task :app:prepareBackupAssets
+managed package proofs: 588
+
+> Task :app:verifyRuntimeDescriptorInputs
+单源运行时输入契约通过：64 安装项、107 资产、267 启动输入；缺失离线归档待完整 package 核验：[]
+
+> Task :app:prepareRuntimeDescriptor
+runtime descriptor: 8346292c9810245a1664530becc4690084b7d99f7a53f8bb77e99d0fda3b4159
+
+> Task :app:prepareStandardAssets
+rootfs 内容未变化，复用已校验的减重资产
+
+> Task :app:prepareRecoveryAssets
+recovery runtime: 90b86cb94761ed5852299f45236c1b7c08d40b7838cf74162189df18abcb9fff files: 20603 expanded: 707383535
+
+> Task :app:prepareUiLanguages
+UI language catalog: 3502/3502 entries
+
+> Task :app:verifyBuiltinRegistry
+
+> Task :app:verifyBundledIdentities
+PASS runtime tools identity
+
+> Task :app:verifyCredentialRegistry
+Credential paths JSON/Java scope table PASS
+
+> Task :app:preBuild
+> Task :app:preStandardDebugBuild
+> Task :app:compileStandardDebugAidl UP-TO-DATE
+> Task :app:generateStandardDebugBuildConfig UP-TO-DATE
+> Task :app:generateStandardDebugResValues UP-TO-DATE
+> Task :app:generateStandardDebugResources
+> Task :app:packageStandardDebugResources
+> Task :app:processStandardDebugNavigationResources
+> Task :app:javaPreCompileStandardDebug UP-TO-DATE
+> Task :app:parseStandardDebugLocalResources
+> Task :app:verifyBackupDependencies
+> Task :app:generateStandardDebugRFile UP-TO-DATE
+> Task :app:compileStandardDebugKotlin NO-SOURCE
+
+> Task :app:compileStandardDebugJavaWithJavac
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+
+> Task :app:checkStandardDebugAarMetadata UP-TO-DATE
+> Task :app:mapStandardDebugSourceSetPaths
+> Task :app:compileStandardDebugNavigationResources UP-TO-DATE
+> Task :app:createStandardDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksStandardDebug UP-TO-DATE
+> Task :app:processStandardDebugMainManifest UP-TO-DATE
+> Task :app:processStandardDebugManifest UP-TO-DATE
+> Task :app:processStandardDebugManifestForPackage UP-TO-DATE
+> Task :app:preStandardDebugUnitTestBuild
+> Task :app:javaPreCompileStandardDebugUnitTest UP-TO-DATE
+> Task :app:processStandardDebugJavaRes NO-SOURCE
+> Task :app:preLowDebugBuild
+> Task :app:compileLowDebugAidl UP-TO-DATE
+> Task :app:generateLowDebugBuildConfig UP-TO-DATE
+> Task :app:generateLowDebugResValues UP-TO-DATE
+> Task :app:generateLowDebugResources
+> Task :app:mergeStandardDebugResources
+> Task :app:packageLowDebugResources
+> Task :app:processLowDebugNavigationResources
+> Task :app:javaPreCompileLowDebug UP-TO-DATE
+> Task :app:parseLowDebugLocalResources
+> Task :app:checkLowDebugAarMetadata UP-TO-DATE
+> Task :app:generateLowDebugRFile UP-TO-DATE
+> Task :app:compileLowDebugKotlin NO-SOURCE
+> Task :app:processStandardDebugResources
+
+> Task :app:compileLowDebugJavaWithJavac
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+
+> Task :app:mapLowDebugSourceSetPaths
+> Task :app:compileLowDebugNavigationResources UP-TO-DATE
+> Task :app:createLowDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksLowDebug UP-TO-DATE
+> Task :app:processLowDebugMainManifest UP-TO-DATE
+> Task :app:processLowDebugManifest UP-TO-DATE
+> Task :app:processLowDebugManifestForPackage UP-TO-DATE
+> Task :app:preLowDebugUnitTestBuild
+> Task :app:javaPreCompileLowDebugUnitTest UP-TO-DATE
+> Task :app:processLowDebugJavaRes NO-SOURCE
+> Task :app:preStandardReleaseBuild
+> Task :app:compileStandardReleaseAidl UP-TO-DATE
+> Task :app:generateStandardReleaseBuildConfig UP-TO-DATE
+> Task :app:generateStandardReleaseResValues UP-TO-DATE
+> Task :app:generateStandardReleaseResources UP-TO-DATE
+> Task :app:packageStandardReleaseResources UP-TO-DATE
+> Task :app:processStandardReleaseNavigationResources UP-TO-DATE
+> Task :app:parseStandardReleaseLocalResources UP-TO-DATE
+> Task :app:generateStandardReleaseRFile UP-TO-DATE
+> Task :app:mergeLowDebugResources
+> Task :app:compileStandardReleaseKotlin NO-SOURCE
+> Task :app:javaPreCompileStandardRelease UP-TO-DATE
+> Task :app:processLowDebugResources
+> Task :app:bundleStandardDebugClassesToRuntimeJar
+> Task :app:bundleStandardDebugClassesToCompileJar
+
+> Task :app:compileStandardReleaseJavaWithJavac
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+
+> Task :app:compileStandardDebugUnitTestKotlin NO-SOURCE
+> Task :app:compileStandardDebugUnitTestJavaWithJavac
+> Task :app:processStandardDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:testStandardDebugUnitTest
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:extractDeepLinksStandardRelease UP-TO-DATE
+> Task :app:processStandardReleaseMainManifest UP-TO-DATE
+> Task :app:generateStandardReleaseLintReportModel
+> Task :app:preLowReleaseBuild
+> Task :app:compileLowReleaseAidl UP-TO-DATE
+> Task :app:generateLowReleaseBuildConfig UP-TO-DATE
+> Task :app:generateLowReleaseResValues UP-TO-DATE
+> Task :app:generateLowReleaseResources
+> Task :app:packageLowReleaseResources
+> Task :app:processLowReleaseNavigationResources
+> Task :app:javaPreCompileLowRelease UP-TO-DATE
+> Task :app:extractDeepLinksLowRelease UP-TO-DATE
+> Task :app:processLowReleaseMainManifest UP-TO-DATE
+> Task :app:mergeStandardReleaseJniLibFolders UP-TO-DATE
+> Task :app:parseLowReleaseLocalResources
+> Task :app:mergeStandardReleaseNativeLibs UP-TO-DATE
+> Task :app:generateLowReleaseRFile UP-TO-DATE
+> Task :app:compileLowReleaseKotlin NO-SOURCE
+> Task :app:bundleLowDebugClassesToRuntimeJar
+> Task :app:bundleLowDebugClassesToCompileJar
+
+> Task :app:compileLowReleaseJavaWithJavac
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+
+> Task :app:compileLowDebugUnitTestKotlin NO-SOURCE
+> Task :app:compileLowDebugUnitTestJavaWithJavac
+> Task :app:processLowDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:lintAnalyzeStandardRelease
+> Task :app:testLowDebugUnitTest
+> Task :app:generateLowReleaseLintReportModel
+> Task :app:stripStandardReleaseDebugSymbols UP-TO-DATE
+> Task :app:mergeStandardReleaseArtProfile UP-TO-DATE
+> Task :app:expandStandardReleaseL8ArtProfileWildcards UP-TO-DATE
+> Task :app:checkStandardReleaseAarMetadata UP-TO-DATE
+> Task :app:mapStandardReleaseSourceSetPaths UP-TO-DATE
+> Task :app:compileStandardReleaseNavigationResources UP-TO-DATE
+> Task :app:mergeStandardReleaseResources UP-TO-DATE
+> Task :app:createStandardReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:processStandardReleaseManifest UP-TO-DATE
+> Task :app:processStandardReleaseManifestForPackage UP-TO-DATE
+> Task :app:processStandardReleaseResources UP-TO-DATE
+
+> Task :app:lintReportStandardRelease
+Wrote HTML report to file:///F:/DSHA_RESTART/app/build/reports/lint-results-standardRelease.html
+Lint found 2 errors and 224 warnings. First failure:
+F:\DSHA_RESTART\app\src\main\java\com\deepseekharness\app\OverlayController.java:462: Error: Must be one of: LineBreaker.BREAK_STRATEGY_SIMPLE, LineBreaker.BREAK_STRATEGY_HIGH_QUALITY, LineBreaker.BREAK_STRATEGY_BALANCED [WrongConstant]
+              .setBreakStrategy(android.text.Layout.BREAK_STRATEGY_SIMPLE)
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+> Task :app:extractStandardReleaseNativeSymbolTables
+> Task :app:checkStandardReleaseDuplicateClasses
+> Task :app:dexBuilderStandardRelease
+
+> Task :app:lintStandardRelease FAILED
+Lint found 2 errors, 224 warnings. First failure:
+
+F:\DSHA_RESTART\app\src\main\java\com\deepseekharness\app\OverlayController.java:462: Error: Must be one of: LineBreaker.BREAK_STRATEGY_SIMPLE, LineBreaker.BREAK_STRATEGY_HIGH_QUALITY, LineBreaker.BREAK_STRATEGY_BALANCED [WrongConstant]
+              .setBreakStrategy(android.text.Layout.BREAK_STRATEGY_SIMPLE)
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The full lint text report is located at:
+  F:\DSHA_RESTART\app\build\intermediates\lint_intermediate_text_report\standardRelease\lintReportStandardRelease\lint-results-standardRelease.txt
+
+> Task :app:lintAnalyzeLowRelease
+
+[Incubating] Problems report is available at: file:///F:/DSHA_RESTART/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:lintStandardRelease'.
+> Lint found errors in the project; aborting build.
+  
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+  
+  Lint found 2 errors, 224 warnings. First failure:
+  
+  F:\DSHA_RESTART\app\src\main\java\com\deepseekharness\app\OverlayController.java:462: Error: Must be one of: LineBreaker.BREAK_STRATEGY_SIMPLE, LineBreaker.BREAK_STRATEGY_HIGH_QUALITY, LineBreaker.BREAK_STRATEGY_BALANCED [WrongConstant]
+                .setBreakStrategy(android.text.Layout.BREAK_STRATEGY_SIMPLE)
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  The full lint text report is located at:
+    F:\DSHA_RESTART\app\build\intermediates\lint_intermediate_text_report\standardRelease\lintReportStandardRelease\lint-results-standardRelease.txt
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 19m 16s
+109 actionable tasks: 49 executed, 60 up-to-date

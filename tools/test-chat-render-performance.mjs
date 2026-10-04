@@ -1,10 +1,17 @@
 #!/usr/bin/env node
+import {testRuntime} from './test-runtime-fixture.mjs';
 // 只加载当前锁定 DSH 的 React/DOM 与 ui-chat，不连接真实账户，不创建设备会话。
 import fs from 'node:fs';
 import { browserFixture } from './rc1-browser-fixture.mjs';
 
-const runtime = process.env.DSHA_TEST_RUNTIME || JSON.parse(fs.readFileSync('app/build/test-runtimes/current.json', 'utf8')).raw;
+const runtime = testRuntime('raw');
 const fixture = await browserFixture(runtime);
+const errors = [];
+fixture.page.on('pageerror', error => errors.push(error.message));
+fixture.page.on('console', message => {
+  if (message.type() === 'error' && !message.location().url.endsWith('/favicon.ico'))
+    errors.push(message.text());
+});
 try {
   await fixture.load('dsh-client-ui-chat', [], 'module.exports.audit = {ChatNodeList};');
   const result = await fixture.page.evaluate(async () => {
@@ -43,9 +50,13 @@ try {
       if (i < 5) { app.unmount(); host.replaceChildren(); app = ReactDOM.createRoot(host); }
     }
     return {samples, flowRows: host.querySelectorAll('[data-chat-flow-key]').length,
-      htmlBytes: host.innerHTML.length, errors: []};
+      htmlBytes: host.innerHTML.length};
   });
   if (result.flowRows !== 100) throw new Error(`chat rows lost after remount: ${result.flowRows}`);
-  if (result.errors.length) throw new Error(result.errors.join('\n'));
+  if (errors.length) throw new Error(errors.join('\n'));
+  const budget = Number(process.env.DSHA_CHAT_RENDER_BUDGET_MS || 3000);
+  if (!Number.isFinite(budget) || budget <= 0) throw new Error('Invalid render budget');
+  if (Math.max(...result.samples) > budget)
+    throw new Error(`100-message mount exceeded ${budget}ms: ${result.samples.join(', ')}`);
   console.log(JSON.stringify({runtime, scenario: '100 messages; code/stream placeholders; 6 mount/unmount cycles', ...result}, null, 2));
 } finally { await fixture.close(); }

@@ -1,0 +1,739 @@
+{
+  "schema": 1,
+  "artifact": "device-standard-data-review",
+  "result": "PASS_FOR_EXISTING_RECORDED_ROOT_SCOPE",
+  "operation": "Read-only comparison of root-supplied existing device evidence; no phone operation, source/software change or private original evidence modification by data lane.",
+  "installedApk": {
+    "file": "app/build/outputs/apk/standard/release/app-standard-release.apk",
+    "sha256": "ea08a6cbe5fe2d95047be2bde90c7cf82fd4ecca0e96bd04a3b180e0ed9bb4e4",
+    "bytes": 397301573,
+    "runtimeId": "b4e51319d7be81f72e9941e383737405bed8db69daec5f8032de386e2b39d276",
+    "signedPackageIdentityAuthority": [
+      "docs/audits/build156/final-build-supply-chain.json",
+      "app/build/stability-acceptance/11360de1-2526-406b-b49e-0d7bc747bd93/manifest.json"
+    ],
+    "releaseDirectoryNote": "release regular filenames were still build155 at review time; this comparison uses the exact Standard156 APK hash provided for the actual overlay install."
+  },
+  "privateEvidence": [
+    {
+      "file": "app/build/audit-build156/device-private/before149.json",
+      "sha256": "94f589f9a48ea08672b62236b146d06472bf92efe29e861792364d7ad9b357be"
+    },
+    {
+      "file": "app/build/audit-build156/device-private/afterStandard156.json",
+      "sha256": "6cfce44fa7e16974071ee28274ed20445abbf5f222adef01df73e3756b1cffad"
+    },
+    {
+      "file": "app/build/audit-build156/device-private/compare-149-standard156-private.json",
+      "sha256": "507565082f96f5b7e4c470d466a91f750734722599fb25c15ca4b7210f6c9ba0"
+    }
+  ],
+  "snapshotComparison": {
+    "beforeEntries": 1044,
+    "afterEntries": 1055,
+    "same": 1011,
+    "changed": 33,
+    "added": 11,
+    "removed": 0,
+    "captureErrors": 0,
+    "comparisonRecomputedExactly": true,
+    "exclusionRulesUnchanged": true,
+    "beforeTypeCounts": {
+      "file": 297,
+      "directory": 129,
+      "link": 618
+    },
+    "afterTypeCounts": {
+      "file": 308,
+      "directory": 129,
+      "link": 618
+    }
+  },
+  "differenceClassification": {
+    "exactSignedInstallAssetContentChanges": 31,
+    "exactSignedInstallAssetAdditions": 11,
+    "exactGeneratedWrapperModeOnlyChanges": 2,
+    "unclassified": 0,
+    "individualManagedDifferences": [
+      {
+        "difference": "changed",
+        "guestPath": "/root/.dsh/adb-shell.py",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/adb-shell.py",
+        "apkAssetSha256": "e634b6f7aa78c772c06d76066ba3396db2bcace7b3fcc7ef514af15c73bd999d",
+        "actualSource": "app/src/main/assets/adb-shell.py",
+        "actualSourceSha256": "e634b6f7aa78c772c06d76066ba3396db2bcace7b3fcc7ef514af15c73bd999d",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/.dsh/device-shell-policy.py",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/device-shell-policy.py",
+        "apkAssetSha256": "71dbb3054a0fd7b7abe5483417ed1aeb979dd7de60ef31dab68f961398c6d3a3",
+        "actualSource": "app/src/main/assets/device-shell-policy.py",
+        "actualSourceSha256": "71dbb3054a0fd7b7abe5483417ed1aeb979dd7de60ef31dab68f961398c6d3a3",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/.dsh/plugin-dependencies.py",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/plugin-dependencies.py",
+        "apkAssetSha256": "f4c3fde9914fd27566839d172e96c9185f5d1148e33ca3983c6440efbfe4eef2",
+        "actualSource": "app/src/main/assets/plugin-dependencies.py",
+        "actualSourceSha256": "f4c3fde9914fd27566839d172e96c9185f5d1148e33ca3983c6440efbfe4eef2",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/.dsh/plugin-lifecycle.py",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/plugin-lifecycle.py",
+        "apkAssetSha256": "bd08db4cd03c99b3cb4b815e2361421702cf488e342d0fe369a29f189bd8de02",
+        "actualSource": "app/src/main/assets/plugin-lifecycle.py",
+        "actualSourceSha256": "bd08db4cd03c99b3cb4b815e2361421702cf488e342d0fe369a29f189bd8de02",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/.dsh/plugin-manager.py",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/plugin-manager.py",
+        "apkAssetSha256": "b7f232ad73d6af9e22324a841f62c308b3ce4e403ea80f566af33ab7a3d530bd",
+        "actualSource": "app/src/main/assets/plugin-manager.py",
+        "actualSourceSha256": "b7f232ad73d6af9e22324a841f62c308b3ce4e403ea80f566af33ab7a3d530bd",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/.dsh/plugin-network.py",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/plugin-network.py",
+        "apkAssetSha256": "697044d33f7328140c047f75ad4f475c1e443d9c2d2c4e634c484b5607dc5a8b",
+        "actualSource": "app/src/main/assets/plugin-network.py",
+        "actualSourceSha256": "697044d33f7328140c047f75ad4f475c1e443d9c2d2c4e634c484b5607dc5a8b",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/.dsh/rc1-migration.py",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/rc1-migration.py",
+        "apkAssetSha256": "574a797f88d6457a15624a736bc12d1f211e77b100b0494e3dbb3ccbbcf71596",
+        "actualSource": "app/src/main/assets/rc1-migration.py",
+        "actualSourceSha256": "574a797f88d6457a15624a736bc12d1f211e77b100b0494e3dbb3ccbbcf71596",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/.dsh/register-builtin-plugins.py",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/register-builtin-plugins.py",
+        "apkAssetSha256": "3aca18b791871ff8983f5748a05b2ff1e8bd3be09286a4c71aa54ff81533aa1b",
+        "actualSource": "app/src/main/assets/register-builtin-plugins.py",
+        "actualSourceSha256": "3aca18b791871ff8983f5748a05b2ff1e8bd3be09286a4c71aa54ff81533aa1b",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/.dsh/startup-observer.cjs",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/startup-observer.cjs",
+        "apkAssetSha256": "c93051cca99a0c688b119719997c5176ccf81b291703ac7275b7b8164354d508",
+        "actualSource": "app/src/main/assets/startup-observer.cjs",
+        "actualSourceSha256": "c93051cca99a0c688b119719997c5176ccf81b291703ac7275b7b8164354d508",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsh-bin/adb-shell",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/dsha-device-shell.sh",
+        "apkAssetSha256": "3347727402d0f887ec7099a275dc4a2af7ce7891dc4f338e87680512b852d62c",
+        "actualSource": "app/src/main/assets/dsha-device-shell.sh",
+        "actualSourceSha256": "3347727402d0f887ec7099a275dc4a2af7ce7891dc4f338e87680512b852d62c",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o755"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsh-bin/dsha-plugin",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/dsha-plugin.sh",
+        "apkAssetSha256": "ea2941594d35d903c7a007425b9d1b6ef8949c42cb049baec0cba34cdedd55a1",
+        "actualSource": "app/src/main/assets/dsha-plugin.sh",
+        "actualSourceSha256": "ea2941594d35d903c7a007425b9d1b6ef8949c42cb049baec0cba34cdedd55a1",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o755"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsh-bin/install-ubuntu-tools",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/install-ubuntu-tools.sh",
+        "apkAssetSha256": "8f0a916b667374a88265a1794b0afa94683ee194f140b9ce14d3622097005129",
+        "actualSource": "app/src/main/assets/install-ubuntu-tools.sh",
+        "actualSourceSha256": "8f0a916b667374a88265a1794b0afa94683ee194f140b9ce14d3622097005129",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o755"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-app-integration/client.js",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/app-integration/client.js",
+        "apkAssetSha256": "100d18a433a6980265681fb1e71b10fb54a30413846916ea7cbb24b5b3fb752d",
+        "actualSource": "app/src/main/assets/app-integration/client.js",
+        "actualSourceSha256": "100d18a433a6980265681fb1e71b10fb54a30413846916ea7cbb24b5b3fb752d",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-app-integration/package.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/app-integration/package.json",
+        "apkAssetSha256": "ee462abdee3918b47bd6276b1efd7f2d0bba3954cddd79944577bddcfd51f98a",
+        "actualSource": "app/src/main/assets/app-integration/package.json",
+        "actualSourceSha256": "ee462abdee3918b47bd6276b1efd7f2d0bba3954cddd79944577bddcfd51f98a",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-auto-review/package.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-auto-review/package.json",
+        "apkAssetSha256": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-auto-review/package.json",
+        "actualSourceSha256": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-computer-use-android/lib/server.cjs",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-computer-use-android/lib/server.cjs",
+        "apkAssetSha256": "c874bfd4b0b7bac8c209f1eeccd6e4312a27333df192e54952523e89e2b45782",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-computer-use-android/lib/server.cjs",
+        "actualSourceSha256": "c874bfd4b0b7bac8c209f1eeccd6e4312a27333df192e54952523e89e2b45782",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-computer-use-android/package.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-computer-use-android/package.json",
+        "apkAssetSha256": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json",
+        "actualSourceSha256": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-device-shell-guide/lib/index.js",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-device-shell-guide/lib/index.js",
+        "apkAssetSha256": "5be634a38567cef97f4626f650dd65effa46e51572e314ced99d36de2131fdba",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/lib/index.js",
+        "actualSourceSha256": "5be634a38567cef97f4626f650dd65effa46e51572e314ced99d36de2131fdba",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-device-shell-guide/package.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-device-shell-guide/package.json",
+        "apkAssetSha256": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json",
+        "actualSourceSha256": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-status-overlay/lib/index.js",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-status-overlay/lib/index.js",
+        "apkAssetSha256": "cf3b51585c8da0a522bcb45fa5851dfa16c512d1a9d92f37278f5af212cd5a7a",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-status-overlay/lib/index.js",
+        "actualSourceSha256": "cf3b51585c8da0a522bcb45fa5851dfa16c512d1a9d92f37278f5af212cd5a7a",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-status-overlay/package.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-status-overlay/package.json",
+        "apkAssetSha256": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-status-overlay/package.json",
+        "actualSourceSha256": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-task-notifier/lib/index.js",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-task-notifier/lib/index.js",
+        "apkAssetSha256": "3ba4cc4680853736ae1413ae16d14921f217f6b5d594ee4f7ce0c79f5fb10f87",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-task-notifier/lib/index.js",
+        "actualSourceSha256": "3ba4cc4680853736ae1413ae16d14921f217f6b5d594ee4f7ce0c79f5fb10f87",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-task-notifier/package.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-task-notifier/package.json",
+        "apkAssetSha256": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-task-notifier/package.json",
+        "actualSourceSha256": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-tool-vscreen/lib/server.cjs",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs",
+        "apkAssetSha256": "6a2a193e5f6b2a5661ba5c4c8fdb35bf57a872b3f5ba9be6f4b0694572ef33ad",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs",
+        "actualSourceSha256": "6a2a193e5f6b2a5661ba5c4c8fdb35bf57a872b3f5ba9be6f4b0694572ef33ad",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-tool-vscreen/package.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-tool-vscreen/package.json",
+        "apkAssetSha256": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/package.json",
+        "actualSourceSha256": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-web-mobile/LICENSE",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-web-mobile/LICENSE",
+        "apkAssetSha256": "0d50650e8ee0e00996facf70e6d246dddb836e27c4ce7027cdcf800ac5758f4b",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-web-mobile/LICENSE",
+        "actualSourceSha256": "0d50650e8ee0e00996facf70e6d246dddb836e27c4ce7027cdcf800ac5758f4b",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-web-mobile/cordis.patch.yml",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-web-mobile/cordis.patch.yml",
+        "apkAssetSha256": "90e1e7a4ef3bfb11198cb1d686d4c5deb26bf3683915a78c5b4b050879393bb6",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-web-mobile/cordis.patch.yml",
+        "actualSourceSha256": "90e1e7a4ef3bfb11198cb1d686d4c5deb26bf3683915a78c5b4b050879393bb6",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-web-mobile/lib/compress.js",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+        "apkAssetSha256": "f5902f4f036d0f7a67d2ce6e4c71b01a98227cb4365abde7a4bf8f1bf5e6de0c",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+        "actualSourceSha256": "f5902f4f036d0f7a67d2ce6e4c71b01a98227cb4365abde7a4bf8f1bf5e6de0c",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-web-mobile/lib/delete-session.js",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js",
+        "apkAssetSha256": "f4f8caf0fd54ab49ad264908296b12d9d46868542b082136927afe3c21d32b19",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js",
+        "actualSourceSha256": "f4f8caf0fd54ab49ad264908296b12d9d46868542b082136927afe3c21d32b19",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-web-mobile/lib/index.js",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-web-mobile/lib/index.js",
+        "apkAssetSha256": "1ab8021dec1453ed7e48a43269efcc46598a27005de2d51b6644579544c90445",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/index.js",
+        "actualSourceSha256": "1ab8021dec1453ed7e48a43269efcc46598a27005de2d51b6644579544c90445",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsha-web-mobile/package.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins/dsh-web-mobile/package.json",
+        "apkAssetSha256": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f",
+        "actualSource": "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+        "actualSourceSha256": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/adb-pair.py",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/adb-pair.py",
+        "apkAssetSha256": "d219cee2616b356c67ae606de2d752a68b137cd3f2e417cf05acbde806f77aca",
+        "actualSource": "app/src/main/assets/adb-pair.py",
+        "actualSourceSha256": "d219cee2616b356c67ae606de2d752a68b137cd3f2e417cf05acbde806f77aca",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o755"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/adb-setup.sh",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/adb-setup.sh",
+        "apkAssetSha256": "f23c15ddffbe150d3f140d45227d8a48be14abc14c05ce3be8c6b9f158329e90",
+        "actualSource": "app/src/main/assets/adb-setup.sh",
+        "actualSourceSha256": "f23c15ddffbe150d3f140d45227d8a48be14abc14c05ce3be8c6b9f158329e90",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o755"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/adb-wheels.lock.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/adb-wheels.lock.json",
+        "apkAssetSha256": "e2330a5049072a46317bbc8938f1467a8a7e366cfa2a4121ab6289dce13111e9",
+        "actualSource": "app/src/main/assets/adb-wheels.lock.json",
+        "actualSourceSha256": "e2330a5049072a46317bbc8938f1467a8a7e366cfa2a4121ab6289dce13111e9",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/bridge-token-compat.cjs",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/bridge-token-compat.cjs",
+        "apkAssetSha256": "f0d42affc9994aa1900d530e364d3fdb74375236d2263e864a4ea1fcf0f1f335",
+        "actualSource": "app/src/main/assets/bridge-token-compat.cjs",
+        "actualSourceSha256": "f0d42affc9994aa1900d530e364d3fdb74375236d2263e864a4ea1fcf0f1f335",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/builtin-plugins.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/builtin-plugins.json",
+        "apkAssetSha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304",
+        "actualSource": "app/src/main/assets/builtin-plugins.json",
+        "actualSourceSha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/credential-paths.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/credential-paths.json",
+        "apkAssetSha256": "a11aee46add1e1cfde3700a3024a80bf6491a71e3a5744013ff4023a7baf5bae",
+        "actualSource": "app/src/main/assets/credential-paths.json",
+        "actualSourceSha256": "a11aee46add1e1cfde3700a3024a80bf6491a71e3a5744013ff4023a7baf5bae",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/credential-yaml-filter.cjs",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/credential-yaml-filter.cjs",
+        "apkAssetSha256": "3d6504475047061a9c0fb9d2477d532cf2665a663164f4cb0c870137a7d7c114",
+        "actualSource": "app/src/main/assets/credential-yaml-filter.cjs",
+        "actualSourceSha256": "3d6504475047061a9c0fb9d2477d532cf2665a663164f4cb0c870137a7d7c114",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/legacy-preset-convert.cjs",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/legacy-preset-convert.cjs",
+        "apkAssetSha256": "04e5948e7d20db511bb6e02f0089d6abda75ba147f4b3f66deb89bd00a387ccb",
+        "actualSource": "app/src/main/assets/legacy-preset-convert.cjs",
+        "actualSourceSha256": "04e5948e7d20db511bb6e02f0089d6abda75ba147f4b3f66deb89bd00a387ccb",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/runtime-patches.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/runtime-patches.json",
+        "apkAssetSha256": "128099a1c6d799b1133ad51a0502a9ceccac5ce382b4c55e3b81290b5112e7cf",
+        "actualSource": "app/src/main/assets/runtime-patches.json",
+        "actualSourceSha256": "128099a1c6d799b1133ad51a0502a9ceccac5ce382b4c55e3b81290b5112e7cf",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/runtime-tools.json",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/runtime-tools.json",
+        "apkAssetSha256": "dc6b58c0e3d514ff56242646d5db222d0e2b826321aa6ef1343ac2a405ab808b",
+        "actualSource": "app/src/main/assets/runtime-tools.json",
+        "actualSourceSha256": "dc6b58c0e3d514ff56242646d5db222d0e2b826321aa6ef1343ac2a405ab808b",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "added",
+        "guestPath": "/root/.dsh/script-version",
+        "mapping": "signed managed-runtime-inputs.json installs exact target",
+        "apkAsset": "assets/adb-script-version",
+        "apkAssetSha256": "5378796307535df3ec8d8b15a2e2dc5641419c3d3060cfe32238c0fa973f7aa3",
+        "actualSource": "app/src/main/assets/adb-script-version",
+        "actualSourceSha256": "5378796307535df3ec8d8b15a2e2dc5641419c3d3060cfe32238c0fa973f7aa3",
+        "afterBytesExactlyMatchApk": true,
+        "afterSizeExactlyMatchApk": true,
+        "afterModeOctal": "0o600"
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsh-bin/npm",
+        "mapping": "Exact ManagedRuntimeLayout entry and RuntimeTools npm/npx generated-wrapper recipe, bound by signed descriptor launcher hashes",
+        "producerSources": [
+          {
+            "source": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+            "sourceSha256": "dc024f0d11ab945b8c8930dd15af0b66e35a417018cf9dd99a69334fcac2b70a",
+            "descriptorLauncherInput": "runtime/RuntimeTools.java",
+            "signedDeclarationMatchesCurrentSource": true
+          },
+          {
+            "source": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeAssetFiles.java",
+            "sourceSha256": "cea4f5df7b9981af29c948bd82e763837edbbb33efac92be8cd864ce8cf130fc",
+            "descriptorLauncherInput": "runtime/RuntimeAssetFiles.java",
+            "signedDeclarationMatchesCurrentSource": true
+          },
+          {
+            "source": "app/src/main/java/com/deepseekharness/app/util/ManagedRuntimeLayout.java",
+            "sourceSha256": "19fc756a58b3e04e8716da4f1208f4223239a8a6a0f9c7b359c2c9d0d8aa7029",
+            "descriptorLauncherInput": "util/ManagedRuntimeLayout.java",
+            "signedDeclarationMatchesCurrentSource": true
+          }
+        ],
+        "generatedBytesSha256": "bdb797f1ee35a5c0be22fb2c1392a70aa7e76f4c4c7c6262b0676f661fb68d59",
+        "beforeAndAfterBytesEqualRecipe": true,
+        "beforeModeOctal": "0o711",
+        "afterModeOctal": "0o755",
+        "explanation": "The verified managed candidate creates this executable wrapper at 0755; its previous recorded bytes were already identical at 0711."
+      },
+      {
+        "difference": "changed",
+        "guestPath": "/root/dsh-bin/npx",
+        "mapping": "Exact ManagedRuntimeLayout entry and RuntimeTools npm/npx generated-wrapper recipe, bound by signed descriptor launcher hashes",
+        "producerSources": [
+          {
+            "source": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+            "sourceSha256": "dc024f0d11ab945b8c8930dd15af0b66e35a417018cf9dd99a69334fcac2b70a",
+            "descriptorLauncherInput": "runtime/RuntimeTools.java",
+            "signedDeclarationMatchesCurrentSource": true
+          },
+          {
+            "source": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeAssetFiles.java",
+            "sourceSha256": "cea4f5df7b9981af29c948bd82e763837edbbb33efac92be8cd864ce8cf130fc",
+            "descriptorLauncherInput": "runtime/RuntimeAssetFiles.java",
+            "signedDeclarationMatchesCurrentSource": true
+          },
+          {
+            "source": "app/src/main/java/com/deepseekharness/app/util/ManagedRuntimeLayout.java",
+            "sourceSha256": "19fc756a58b3e04e8716da4f1208f4223239a8a6a0f9c7b359c2c9d0d8aa7029",
+            "descriptorLauncherInput": "util/ManagedRuntimeLayout.java",
+            "signedDeclarationMatchesCurrentSource": true
+          }
+        ],
+        "generatedBytesSha256": "4df7ba03852c8fc7aa4413f554778f3b2ad6c3b0e8301398ceab95919b02d49f",
+        "beforeAndAfterBytesEqualRecipe": true,
+        "beforeModeOctal": "0o711",
+        "afterModeOctal": "0o755",
+        "explanation": "The verified managed candidate creates this executable wrapper at 0755; its previous recorded bytes were already identical at 0711."
+      }
+    ]
+  },
+  "signedDeclarationEvidence": [
+    {
+      "asset": "assets/runtime-descriptor.json",
+      "sha256": "5b1e37bd3b8942926860742190644f7a88936132f0441d2e6a8fb492136c48a7",
+      "currentSourceEqual": true
+    },
+    {
+      "asset": "assets/managed-runtime-inputs.json",
+      "sha256": "e6849005b66e697b84e5c8bd6acba253baede32377a691e234e9d1be1de79c88",
+      "currentSourceEqual": true
+    },
+    {
+      "asset": "assets/builtin-plugins.json",
+      "sha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304",
+      "currentSourceEqual": true
+    }
+  ],
+  "personalDataPreservationAggregates": {
+    "credentialDocument": {
+      "beforeCount": 1,
+      "afterCount": 1,
+      "sameFullRecordedTypeModeSizeHashOrLinkMetadata": 1,
+      "changedOrRemovedCount": 0,
+      "beforeEntryTypes": {
+        "file": 1
+      },
+      "afterEntryTypes": {
+        "file": 1
+      }
+    },
+    "personalLegacySettingsFiles": {
+      "beforeCount": 0,
+      "afterCount": 0,
+      "sameFullRecordedTypeModeSizeHashOrLinkMetadata": 0,
+      "changedOrRemovedCount": 0,
+      "beforeEntryTypes": {},
+      "afterEntryTypes": {}
+    },
+    "profileDefinitions": {
+      "beforeCount": 2,
+      "afterCount": 2,
+      "sameFullRecordedTypeModeSizeHashOrLinkMetadata": 2,
+      "changedOrRemovedCount": 0,
+      "beforeEntryTypes": {
+        "file": 2
+      },
+      "afterEntryTypes": {
+        "file": 2
+      }
+    },
+    "pluginHistoryContainerAndMembers": {
+      "beforeCount": 1,
+      "afterCount": 1,
+      "sameFullRecordedTypeModeSizeHashOrLinkMetadata": 1,
+      "changedOrRemovedCount": 0,
+      "beforeEntryTypes": {
+        "directory": 1
+      },
+      "afterEntryTypes": {
+        "directory": 1
+      }
+    },
+    "pluginSourceMetadataAndContainer": {
+      "beforeCount": 2,
+      "afterCount": 2,
+      "sameFullRecordedTypeModeSizeHashOrLinkMetadata": 2,
+      "changedOrRemovedCount": 0,
+      "beforeEntryTypes": {
+        "file": 1,
+        "directory": 1
+      },
+      "afterEntryTypes": {
+        "file": 1,
+        "directory": 1
+      }
+    },
+    "sessionRecords": {
+      "beforeCount": 0,
+      "afterCount": 0,
+      "sameFullRecordedTypeModeSizeHashOrLinkMetadata": 0,
+      "changedOrRemovedCount": 0,
+      "beforeEntryTypes": {},
+      "afterEntryTypes": {}
+    },
+    "projectEnvironmentFiles": {
+      "beforeCount": 0,
+      "afterCount": 0,
+      "sameFullRecordedTypeModeSizeHashOrLinkMetadata": 0,
+      "changedOrRemovedCount": 0,
+      "beforeEntryTypes": {},
+      "afterEntryTypes": {}
+    }
+  },
+  "allOtherBeforeEntries": {
+    "recordedMetadataUnchanged": 1011,
+    "changedOutsideExactManagedClassification": 0,
+    "removed": 0,
+    "proof": "Every changed/added record was individually verified against an exact signed installation declaration or exact signed-source generated-wrapper recipe. No private-path prefix was used to discard differences."
+  },
+  "sessionEvidence": {
+    "workspaceIdCount": 0,
+    "archivedSessionIdCount": 0,
+    "pinnedSessionIdCount": 0,
+    "workspaceTableCount": 0,
+    "capturedSessionFileCount": 0,
+    "claim": "This device evidence contains no old workspace/session sample. It verifies retention of the captured credentials/profile/plugin metadata and root records; it does not establish chat preservation or a complete historical data matrix."
+  },
+  "limits": [
+    "The captures do not follow directory symlinks; unchanged link metadata does not prove the linked directory target contents were read or preserved.",
+    "Four explicit cache/history exclusions remain outside the snapshot comparison. Only their identical exclusion set is checked; their contents are not covered.",
+    "Legacy settings/project environment categories have zero captured records, so there is no positive file-preservation sample for those categories. Native preferences/Keystore outside the captured root tree are not proved by this comparison.",
+    "The captured plugin-history and plugin-source directories supply container metadata only where there are no captured member records; no historical plugin payload matrix is claimed.",
+    "Standard156 actual install/Ready observation is provided by root device acceptance; this read-only review does not perform another process, UI, model-service or kernel check. Low flavor/other devices/Android versions and all historical chats remain independent acceptance scopes."
+  ],
+  "privacy": "Only aggregate personal-data counts, safe APK-managed paths/source hashes, public APK identity and hashes of private evidence files are published. No token, credentials, user project path, user filename, private link target or private file-level digest is included."
+}

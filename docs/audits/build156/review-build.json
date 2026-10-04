@@ -1,0 +1,602 @@
+{
+  "schema": 1,
+  "lane": "build",
+  "baselineBuild": 155,
+  "items": [
+    {
+      "id": "D-BUILD-01",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "tools/verify-runtime-descriptor-source.py",
+        "tools/test-runtime-descriptor-source.py",
+        "tools/test-runtime-descriptor-inputs.py",
+        ".github/workflows/ci-fast.yml",
+        ".github/workflows/ci-package.yml",
+        ".gitattributes"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-runtime-descriptor-source.py",
+          "result": "exit 0; 4 isolated tests: exact member sets/identity, byte and CRLF drift, missing regular source, launcher drift; ignored archives explicitly deferred only when absent",
+          "evidence": "docs/audits/build156/checks-build.json"
+        },
+        {
+          "command": "python -B tools/test-source-text.py",
+          "result": "exit 0; 7 generated-text tests",
+          "evidence": "docs/audits/build156/checks-build.json"
+        }
+      ],
+      "residual": [
+        "Full descriptor hashes must be generated only after all lanes freeze; no managed archive or descriptor generation was run by this lane. Legacy fixed history -text -eol precedence without rewriting original bytes."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Clean Linux checkout/hosted CI execution"
+        }
+      ],
+      "deferredIntegratedChecks": [
+        "Parent final full prepare-runtime-descriptor.py --check and signed APK asset verification"
+      ]
+    },
+    {
+      "id": "D-BUILD-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        ".github/workflows/ci-package.yml",
+        "tools/ci-assets.py",
+        "tools/history/root-build154/scripts/ci-make-offline-bundle.sh"
+      ],
+      "checks": [
+        {
+          "command": "Current active scripts/CI source inspection",
+          "result": "The obsolete ci-make-offline-bundle/provision-builtin/offline-provision/make-offline-bundle/old scripts/ci template are absent from active paths; historical exact-byte copies remain outside deployment."
+        }
+      ],
+      "residual": [
+        "Current package workflow consumes exact supplied offline archives; it does not execute the retired shell chain."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Hosted complete offline input/package job"
+        }
+      ],
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-CI-01",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        ".github/workflows/ci-fast.yml",
+        ".github/workflows/ci-package.yml",
+        ".github/workflows/release.yml",
+        "tools/ci-toolchain.py",
+        "tools/verify-ci-package.py",
+        "tools/test-ci-package.py"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-ci-package.py",
+          "result": "exit 0; 8 tests: actual UUID receipt layout, duplicate receipts, APK/source/log tampering, missing checks, unexecuted JUnit, foreign/failed/wrong run and toolchain drift",
+          "evidence": "docs/audits/build156/checks-build.json"
+        },
+        {
+          "command": "python -B tools/ci-toolchain.py",
+          "result": "exit 0; source matches JDK17/Gradle9.3.1/AGP9.1.1/android-37.0/NDK26.3.11579264",
+          "evidence": "docs/audits/build156/checks-build.json"
+        }
+      ],
+      "residual": [
+        "Fixed the real package manifest path mismatch and weak receipt checks. Fast is push/PR/manual; complete package and protected release are manually dispatched with fixed offline inputs. Source i18n, descriptor bytes, notices and package native rebuild checks are wired."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Hosted runs and branch required-check settings"
+        },
+        {
+          "kind": "external",
+          "detail": "Actual protected release environment/secrets configuration"
+        }
+      ],
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-SEC-23",
+      "currentDisposition": "required_contract",
+      "changed": false,
+      "files": [
+        "app/build.gradle",
+        "ci/release-identity.json",
+        "tools/sign-release-apks.py"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/sign-release-apks.py --apks missing-standard-unsigned.apk missing-low-unsigned.apk --output <isolated-output>, with signing env removed",
+          "result": "exit 2 as expected; explicit DSHA_KEYSTORE required before reading a key or writing an APK",
+          "evidence": "docs/audits/build156/checks-build.json"
+        },
+        {
+          "command": "Read-only signing configuration inspection",
+          "result": "No android store/key password fallback or keystore path print; historical androiddebugkey alias and E7E3 identity deliberately preserved."
+        }
+      ],
+      "residual": [
+        "Key rotation is outside this user-authorized contract; no signing key was read by this lane."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Private key storage/hosted environment assurance"
+        }
+      ],
+      "deferredIntegratedChecks": [
+        "Parent final E7E3/v1/v2/v3/nondebug APK verification"
+      ]
+    },
+    {
+      "id": "D-CI-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "tools/verify-stability.py",
+        "tools/sign-release-apks.py",
+        ".github/workflows/ci-package.yml"
+      ],
+      "checks": [
+        {
+          "command": "Read-only actual CLI/control-flow inspection",
+          "result": "software and unsigned package stages remove signing env; signing uses a separate sign-release-apks entry; no missing-key signing fallback. software success is PASS_SOFTWARE, package is PASS_UNSIGNED_PACKAGE."
+        },
+        {
+          "command": "python -B tools/test-release-evidence.py",
+          "result": "exit 0; 5 actual receipt/device-binding tests, required new license gates included",
+          "evidence": "docs/audits/build156/checks-build.json"
+        }
+      ],
+      "residual": [
+        "The software/package checks remain strict about their real runtime inputs; a missing artifact is not classified as a signing failure. No Gradle tasks were run by this lane."
+      ],
+      "missingEvidence": [],
+      "deferredIntegratedChecks": [
+        "Parent full software/package execution"
+      ]
+    },
+    {
+      "id": "D-LIC-01",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "tools/generate-third-party-notices.py",
+        "tools/check-third-party-notices.py",
+        "tools/test-third-party-notices.py",
+        "tools/verify-third-party-apk.py",
+        "tools/verify-stability.py",
+        "THIRD_PARTY_NOTICES.md",
+        "tools/asset-deployment.json",
+        "app/src/main/assets/licenses/LGPL-3.0.txt",
+        "app/src/main/assets/licenses/MPL-2.0.txt",
+        "app/src/main/assets/licenses/snakeyaml-LICENSE.txt",
+        "app/src/main/java/com/deepseekharness/app/ui/AboutFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-third-party-notices.py",
+          "result": "exit 0; 3 fixtures verify actual package declaration/version/license/notice failures and unknown JNI/missing source license",
+          "evidence": "docs/audits/build156/checks-build.json"
+        },
+        {
+          "command": "python -B tools/check-third-party-notices.py",
+          "result": "exit 0; current notices, 14 JNI identities and ten required license files; source-only scope",
+          "evidence": "tools/check-third-party-notices.py"
+        },
+        {
+          "command": "python -B tools/check-third-party-notices.py --archive app/src/main/assets/dsh-runtime.bin --output docs/audits/build156/third-party-declarations.json",
+          "result": "Earlier pre-freeze archive: 616 actual npm records matched; this is not a current final-archive proof after subsequent own-package source edits.",
+          "evidence": "docs/audits/build156/third-party-declarations.json"
+        }
+      ],
+      "residual": [
+        "Added actual core-js/sharp/libvips/ubjs/cua declarations, Android coordinates and JNI source boundaries; generic full licenses do not prove binary origin or all redistribution obligations. UI lane now lists actual license files."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Complete transitive Gradle license and embedded native library/source-offer legal review"
+        }
+      ],
+      "deferredIntegratedChecks": [
+        "Final regenerated runtime and both APK license-byte checks"
+      ]
+    },
+    {
+      "id": "D-LIC-02",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/assets/licenses/proot-COPYING.txt",
+        "app/src/main/assets/licenses/LGPL-3.0.txt",
+        "app/src/main/assets/licenses/GPL-3.0.txt",
+        "tools/verify-third-party-apk.py",
+        "docs/audits/build156/third-party-license-sources.json",
+        "THIRD_PARTY_NOTICES.md"
+      ],
+      "checks": [
+        {
+          "command": "Exact source byte extraction and SHA checks",
+          "result": "LGPL3: e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118; MPL2: fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85 from locked Ubuntu archive; main proot COPYING is already common to flavors.",
+          "evidence": "docs/audits/build156/third-party-license-sources.json"
+        }
+      ],
+      "residual": [
+        "Original Standard proot and talloc binary exact revision/source proof remain unknown; talloc2.4.3 header recipe is not claimed as its binary origin."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Legal/source-offer and original binary provenance proof"
+        }
+      ],
+      "deferredIntegratedChecks": [
+        "Parent final both-flavor APK byte gate"
+      ]
+    },
+    {
+      "id": "D-PROV-01",
+      "currentDisposition": "external_evidence_missing",
+      "changed": true,
+      "files": [
+        "docs/source-provenance.md",
+        "docs/audits/build156/shellservice-source-provenance.json"
+      ],
+      "checks": [
+        {
+          "command": "git log --follow and git show <commit>:app/src/main/java/com/deepseekharness/app/ShellService.java",
+          "result": "10 actual local-history blobs hashed; earliest available path commit a3a0b00321402f20fc4efc91d3f9c83d3ecd01d4; CFR header/current source bytes preserved by this lane.",
+          "evidence": "docs/audits/build156/shellservice-source-provenance.json"
+        }
+      ],
+      "residual": [
+        "Repository history does not establish an original external decompilation target, original author or legal permission. No unsupported rewrite or legal conclusion was made."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Original external code source/license grant or independently reviewed replacement provenance"
+        }
+      ],
+      "deferredIntegratedChecks": []
+    },
+    {
+      "id": "D-REPRO-01",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "tools/native-session/build.py",
+        "tools/test-native-session-build.py",
+        ".github/workflows/ci-package.yml",
+        "tools/test-dns-compat.mjs",
+        "tools/dns-compat-fixture.c",
+        "tools/test-dns-compat-device.mjs"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/test-native-session-build.py",
+          "result": "exit 0; 3 actual production-builder contract tests; read-only comparison rejects changed/missing original and wrong NDK without replacing shipped ELF",
+          "evidence": "docs/audits/build156/checks-build.json"
+        },
+        {
+          "command": "node --test tools/test-dns-compat.mjs",
+          "result": "exit 0; 6 pass, 1 explicit Linux LD_PRELOAD skip on Windows. The previously uncalled C fixture now compiles and exercises real Node/libuv/local HTTP in the Linux test path.",
+          "evidence": "docs/audits/build156/checks-build.json"
+        }
+      ],
+      "residual": [
+        "An earlier Windows native byte comparison was superseded by runtime lane's subsequently authorized launcher source change; it is not reported as latest ELF acceptance. Runtime owns the new native rebuild."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Hosted Linux native byte reproducibility/real native DNS case"
+        }
+      ],
+      "deferredIntegratedChecks": [
+        "Latest native rebuild/check and parent final ELF gate"
+      ]
+    },
+    {
+      "id": "D-SUP-01",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "tools/dsh-runtime/package.json",
+        "tools/build-standard-runtime.py",
+        ".github/workflows/ci-package.yml",
+        "tools/history/root-build154/scripts/ci-make-offline-bundle.sh"
+      ],
+      "checks": [
+        {
+          "command": "Current active supply path source inspection",
+          "result": "Current DSH input comes from package/lock and current descriptor; retired alpha2 shell recipes do not execute or deploy. Exact historical source text remains preserved."
+        }
+      ],
+      "residual": [
+        "Historical alpha2 literals are evidence and are not silently rewritten."
+      ],
+      "missingEvidence": [],
+      "deferredIntegratedChecks": [
+        "Parent complete generated archive identity gate"
+      ]
+    },
+    {
+      "id": "D-SUP-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "tools/runtime-tools.lock.json",
+        "tools/prepare-runtime-tools.py",
+        "app/src/main/assets/runtime-tools.json",
+        "app/src/main/assets/plugin-dependencies.py",
+        "tools/build-standard-runtime.py",
+        "tools/verify-stability.py",
+        "app/build.gradle"
+      ],
+      "checks": [
+        {
+          "command": "python -B tools/prepare-runtime-tools.py --check",
+          "result": "exit 0; current source/guest generated identity matches the single runtime-tools lock",
+          "evidence": "docs/audits/build156/checks-build.json"
+        },
+        {
+          "command": "rg -n 10\\.34\\.5 in current production Java/plugin-dependencies.py/build-standard-runtime.py/verify-stability.py",
+          "result": "No duplicated production Java/Python literal; Gradle BUNDLED_PNPM_VERSION and readers use the lock/generated identity."
+        }
+      ],
+      "residual": [
+        "Actual pnpm version/archive checks still run in final software/package verification."
+      ],
+      "missingEvidence": [],
+      "deferredIntegratedChecks": [
+        "Parent final package pnpm execution"
+      ]
+    },
+    {
+      "id": "D-SUP-03",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/main/assets/adb-script-version"
+      ],
+      "checks": [
+        {
+          "command": "Fresh source inspection and bridge/runtime owner report",
+          "result": "SCRIPT_VERSION=\"20\" removed; injectedState/wrapperPresent call bundledDeviceScriptsMatch→RuntimeTools.deviceScriptsMatch, checking signed script/wrapper/version exact bytes and execution mode. Installing remains RuntimeTools-owned."
+        }
+      ],
+      "residual": [
+        "Actual Android integration compile and cold-install verification are separate from source wiring. Bridge/runtime own this cross-lane code change and narrow behavior evidence."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android physical script installation behavior (phone excluded this round)"
+        }
+      ],
+      "deferredIntegratedChecks": [
+        "Runtime DeviceScriptProof behavior receipt",
+        "Parent final compile"
+      ]
+    },
+    {
+      "id": "D-UPD-01",
+      "currentDisposition": "fixed_current_source",
+      "changed": true,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/UpdateLocations.java",
+        "app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java",
+        "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+        "app/src/main/java/com/deepseekharness/app/core/UpdateRepository.java",
+        "app/src/test/java/com/deepseekharness/app/util/UpdateLocationsTest.java",
+        "app/src/test/java/com/deepseekharness/app/util/UpdatePolicyTest.java"
+      ],
+      "checks": [
+        {
+          "command": "python -B app/build/build156-build-updates/run.py",
+          "result": "exit 0; isolated current-source JDK17/JUnit 23 tests across update policy/locations/redirects/resume. Official page fallback and complete installed signer-set rejection are included.",
+          "evidence": "docs/audits/build156/checks-build-updates.json"
+        },
+        {
+          "command": "Actual consolidated UiText catalog template fixture",
+          "result": "14 new/complete messages render in both languages; raw Unicode/%s arguments stay unchanged; owned UpdateEngine/Repository lexical fragment count is zero.",
+          "evidence": "docs/audits/build156/checks-build-i18n.json"
+        }
+      ],
+      "residual": [
+        "Metadata remains official HTTPS without an independent manifest signature. Server compromise can still misdescribe official releases; full APK SHA/package/version/flavor/current-signer gates remain. Added Android nondebug validation; final Android compile is owned by root."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Live update service/CDN validation"
+        },
+        {
+          "kind": "device",
+          "detail": "Android physical update/install device matrix"
+        }
+      ],
+      "deferredIntegratedChecks": [
+        "Parent final Android compile/APK gate"
+      ]
+    },
+    {
+      "id": "D-UPD-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "changed": false,
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/UpdateRedirects.java",
+        "app/src/main/java/com/deepseekharness/app/util/ResumableDownload.java",
+        "app/src/test/java/com/deepseekharness/app/util/UpdateRedirectsTest.java",
+        "app/src/test/java/com/deepseekharness/app/util/ResumableDownloadTest.java"
+      ],
+      "checks": [
+        {
+          "command": "Isolated production UpdateRedirects + ResumableDownload JUnit",
+          "result": "Within the 23 passed tests: evil target rejected before open, metadata chain restricted, six-hop loop bounded/closed, official CDN Range preserves prefix with whole-file SHA, cancellation/unknown transport never switches source.",
+          "evidence": "docs/audits/build156/checks-build-updates.json"
+        }
+      ],
+      "residual": [
+        "Unknown future CDN origins fail clearly; no live network edge or physical device result is inferred."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "Live current CDN/network edge validation"
+        }
+      ],
+      "deferredIntegratedChecks": []
+    }
+  ],
+  "findings": [
+    {
+      "id": "build156-ci-receipt-layout",
+      "audits": [
+        "D-CI-01"
+      ],
+      "fixed": true,
+      "finding": "Production verifier reports live under stability-acceptance/<UUID>; release receipt selector incorrectly required a direct stability-acceptance parent."
+    },
+    {
+      "id": "build156-ci-receipt-binding",
+      "audits": [
+        "D-CI-01"
+      ],
+      "fixed": true,
+      "finding": "Unsigned receipt gate previously accepted missing required checks/logs/JUnit and omitted source; now binds actual downloaded logs and full available source."
+    },
+    {
+      "id": "build156-license-text-and-package-declarations",
+      "audits": [
+        "D-LIC-01",
+        "D-LIC-02"
+      ],
+      "fixed": true,
+      "finding": "Current MPL/LGPL packages lacked full text and old APK gate inventoried declarations without enforcing lock/notice relationships. Exact full copies and runtime/APK gates added."
+    },
+    {
+      "id": "build156-update-artifact-preflight",
+      "audits": [
+        "D-UPD-01"
+      ],
+      "fixed": true,
+      "finding": "Unsafe page metadata discarded otherwise valid artifacts instead of falling back; install preflight also lacked explicit nondebug rejection."
+    }
+  ],
+  "crossLaneChanges": [
+    {
+      "purpose": "Native v5 credential machine-token projection dependency",
+      "version": "org.yaml:snakeyaml:2.4",
+      "jarSha256": "ef779af5d29a9dde8cc70ce0341f5c6f7735e23edff9685ceaa9d35359b7bb7f",
+      "files": [
+        "app/build.gradle",
+        "tools/backup-dependencies.lock.json",
+        "gradle/verification-metadata.xml",
+        "app/src/main/assets/licenses/snakeyaml-LICENSE.txt",
+        "tools/asset-deployment.json"
+      ],
+      "checks": [
+        "Official Maven JAR/POM/sources published SHA1 verified; exact tag2.4 LICENSE downloaded",
+        "Actual Gradle doLast evaluated in isolated Groovy DSL with three real JARs: 6 valid/invalid cases pass",
+        "JDK17 with java.desktop absent: actual SafeConstructor map/dump/reopen + duplicate/tag/alias/depth/codepoint reject cases pass"
+      ],
+      "evidence": [
+        "docs/audits/build156/snakeyaml-official-artifacts.json",
+        "docs/audits/build156/snakeyaml-license-origin.json",
+        "docs/audits/build156/snakeyaml-safety-checks.json",
+        "docs/audits/build156/checks-backup-dependency-gate.json"
+      ],
+      "residual": [
+        "Data lane owns real credential projection and provider semantic preservation",
+        "Java8 bytecode/official Android fallback source is not a physical API23 acceptance result"
+      ]
+    }
+  ],
+  "scope": {
+    "gradleTasksRun": false,
+    "apkGeneratedByLane": false,
+    "phoneOperated": false,
+    "uploaded": false,
+    "signingKeyRead": false,
+    "hostedCI": "unknown_not_executed",
+    "protectedEnvironment": "unknown_not_inspected",
+    "originalExternalCodeLegalOrigin": "unknown",
+    "finalSourceFreezeAndApkGate": "parent_owned_pending"
+  },
+  "evidenceSchemaMigration": {
+    "originalMissingEvidence": {
+      "D-BUILD-01": [
+        "Parent final full prepare-runtime-descriptor.py --check and signed APK asset verification",
+        "Clean Linux checkout/hosted CI execution"
+      ],
+      "D-BUILD-02": [
+        "Hosted complete offline input/package job"
+      ],
+      "D-CI-01": [
+        "Hosted runs and branch required-check settings",
+        "Actual protected release environment/secrets configuration"
+      ],
+      "D-SEC-23": [
+        "Parent final E7E3/v1/v2/v3/nondebug APK verification",
+        "Private key storage/hosted environment assurance"
+      ],
+      "D-CI-02": [
+        "Parent full software/package execution"
+      ],
+      "D-LIC-01": [
+        "Final regenerated runtime and both APK license-byte checks",
+        "Complete transitive Gradle license and embedded native library/source-offer legal review"
+      ],
+      "D-LIC-02": [
+        "Parent final both-flavor APK byte gate",
+        "Legal/source-offer and original binary provenance proof"
+      ],
+      "D-PROV-01": [
+        "Original external code source/license grant or independently reviewed replacement provenance"
+      ],
+      "D-REPRO-01": [
+        "Latest native rebuild/check and parent final ELF gate",
+        "Hosted Linux native byte reproducibility/real native DNS case"
+      ],
+      "D-SUP-01": [
+        "Parent complete generated archive identity gate"
+      ],
+      "D-SUP-02": [
+        "Parent final package pnpm execution"
+      ],
+      "D-SUP-03": [
+        "Runtime DeviceScriptProof behavior receipt",
+        "Parent final compile and device install behavior (phone excluded this round)"
+      ],
+      "D-UPD-01": [
+        "Parent final Android compile/APK gate",
+        "Live update service/CDN/device matrix"
+      ],
+      "D-UPD-02": [
+        "Live current CDN/network edge validation"
+      ]
+    },
+    "splitMixedScopes": [
+      "D-SUP-03",
+      "D-UPD-01"
+    ],
+    "executedChecksPreserved": true,
+    "productionChanged": false
+  }
+}

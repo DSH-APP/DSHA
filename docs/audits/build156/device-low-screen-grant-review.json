@@ -1,0 +1,636 @@
+{
+  "schema": "dsha-device-screen-grant-review-v1",
+  "reviewedAt": "2026-10-04T07:52:27+08:00",
+  "reviewMode": "host_only_existing_low_device_evidence",
+  "softwareChanged": false,
+  "deviceCommandsByReviewer": 0,
+  "scope": {
+    "flavor": "low",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+    "minSdk": 23,
+    "targetSdk": 37,
+    "debuggable": false,
+    "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+    "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "androidReleaseReportedByOperator": 13,
+    "lastUpdateTime": "2026-10-04T06:14:37+08:00",
+    "deviceOperator": "runtime holding parent-authorized exclusive device lease",
+    "bindingBasis": "Root/build preflight identifies the exact signed APK; successful overlay receipt and post-install package metadata establish this Low package/version. The digest is not obtained by pulling installed APK bytes in this review.",
+    "testTarget": "own DSHA native application only",
+    "routePath": "/app/ui/dump",
+    "authorizationMethod": "Root-authorized runtime operator explicitly selected native Allow/Deny for this bounded read-only request; no HTTP confirmation API.",
+    "browserEngineProofFromThisScreenChain": false
+  },
+  "summary": {
+    "status": "pass_observed_bounded_low_screen_chain",
+    "nativeAllowSelections": 2,
+    "positiveOwnDshaTreeReceipts": 2,
+    "manualRevokeThenNativeDenyRefusal": true,
+    "ordinaryWebStopStartThenNativeDenyRefusal": true,
+    "nativeDenyReceiptsWithoutTree": 2,
+    "firstAllowTargetChangedReceiptsRetained": 2,
+    "referencePromptCropMatches": 4,
+    "laterReceiptsWithSelectedAtAndPendingReaderEvidence": 3,
+    "firstReceiptMissingFieldsNotBackfilled": true,
+    "overallDeviceMatrixStatus": "partial_device_coverage"
+  },
+  "sourceEvidence": {
+    "packageBindingReview": {
+      "path": "docs/audits/build156/device-low-lan-background-review.json",
+      "sha256": "4810af4cb3ace9d26edb6452f5869638bfb381aa002b2987b17826d54873d452",
+      "bytes": 12361
+    },
+    "nativeBoundedOperatorHelper": {
+      "path": "app/build/audit-build156/device-private/native-read-confirm-bounded.py",
+      "sha256": "8679882b495097ed136255c5142f1225281938970cb47ba921e362b4402539db",
+      "bytes": 3939,
+      "sourceVersionScope": "Current helper version accounts for the three later receipts. It does not add missing fields to the first version receipt.",
+      "guardsReadFromCurrentSource": [
+        "Exactly one current-focus line must name com.dsh.client/",
+        "Owned dump reader process remains pending before native selection",
+        "Screenshot size must be 1080x2400",
+        "Read-only dialog/body and both-button crop must byte-match reviewed reference RGB pixels",
+        "Final pending check and elapsed limit under 12s precede the direct native input tap",
+        "Only explicit allow/deny operator argument chooses the native button"
+      ],
+      "deviceCalls": "Only dumpsys window, exec-out screencap, and one input tap call site. No uiautomator or HTTP /confirm path appears in this helper.",
+      "executedByReviewer": false
+    },
+    "ownedReadClient": {
+      "path": "app/build/audit-build156/device-private/owned-ui-inspect.py",
+      "sha256": "0b5af81290fb0dda5875e542be326f07ce72beb5f4cd9e79402087d925303665",
+      "bytes": 13732,
+      "requestContract": "One GET /app/ui/dump, raw response saved privately; no approval/point/input endpoint; safe exact-whitelist stdout only.",
+      "executedByReviewer": false
+    },
+    "reviewedReferencePrompt": {
+      "path": "app/build/audit-build156/device-private/lease-low-active-screen-prompt-0763.png",
+      "sha256": "37b2d5375adad43d669ae0be90405660916eff711ae86ab96d51e952735c16ee",
+      "bytes": 224866,
+      "actionIndex0Based": 1017,
+      "operatorTime": "2026-10-04T07:32:50.179011+08:00",
+      "imageSize": [
+        1080,
+        2400
+      ],
+      "dialogBox": [
+        125,
+        900,
+        950,
+        1540
+      ],
+      "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+      "semanticReadOnlyBodyAndButtonsReviewedBy": "root/runtime device operator previously visually inspected reference763; this reviewer checks exact RGB crop equality without rendering pixels.",
+      "pixelsPublished": false
+    },
+    "nativeChoiceReceipts": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-allow-current-native-choice.json",
+        "sha256": "2327db62a88f2e4d63e93de37124a3b34e8701b7aa0ffae8b758fad553e3ead1",
+        "bytes": 433,
+        "case": "low-allow-current",
+        "explicitOperatorChoice": "allow",
+        "startedAt": "2026-10-04T07:39:27.401+08:00",
+        "finishedAt": "2026-10-04T07:39:28.903+08:00",
+        "elapsedSeconds": 1.502,
+        "readerExitCode": 3,
+        "inspectedDialogExactPixelMatch": true,
+        "dialogBox": [
+          125,
+          900,
+          950,
+          1540
+        ],
+        "referenceCropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+        "selectedAtFieldRecorded": false,
+        "pendingReaderFieldRecorded": false,
+        "afterScreenshotRecorded": false,
+        "promptScreenshotActionIndex0Based": 1023,
+        "tapActionIndex0Based": 1024,
+        "firstVersionLimit": "This receipt has no selectedAt/pending-reader field or after screenshot. Saved prompt pixels and the contemporaneous native tap action remain available; later helper fields are not backfilled."
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-manual-revoke-deny-native-choice.json",
+        "sha256": "c31f532fbbfbfa4544a67ad17f02b182656b106071fd343d9023c6bdfff2122c",
+        "bytes": 511,
+        "case": "low-after-manual-revoke-deny",
+        "explicitOperatorChoice": "deny",
+        "startedAt": "2026-10-04T07:41:18.535+08:00",
+        "finishedAt": "2026-10-04T07:41:20.554+08:00",
+        "elapsedSeconds": 2.02,
+        "readerExitCode": 3,
+        "inspectedDialogExactPixelMatch": true,
+        "dialogBox": [
+          125,
+          900,
+          950,
+          1540
+        ],
+        "referenceCropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+        "selectedAtFieldRecorded": true,
+        "pendingReaderFieldRecorded": true,
+        "afterScreenshotRecorded": true,
+        "promptScreenshotActionIndex0Based": 1031,
+        "tapActionIndex0Based": 1032,
+        "selectedAt": "2026-10-04T07:41:19.735+08:00",
+        "ownedReaderStillPendingAtChoice": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-grant-for-generation-native-choice.json",
+        "sha256": "48fc6bfe756332e2ad796f104b1497c150590b3eb804037dedd86d83a0958f29",
+        "bytes": 514,
+        "case": "low-grant-for-generation",
+        "explicitOperatorChoice": "allow",
+        "startedAt": "2026-10-04T07:41:21.498+08:00",
+        "finishedAt": "2026-10-04T07:41:23.541+08:00",
+        "elapsedSeconds": 2.043,
+        "readerExitCode": 3,
+        "inspectedDialogExactPixelMatch": true,
+        "dialogBox": [
+          125,
+          900,
+          950,
+          1540
+        ],
+        "referenceCropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+        "selectedAtFieldRecorded": true,
+        "pendingReaderFieldRecorded": true,
+        "afterScreenshotRecorded": true,
+        "promptScreenshotActionIndex0Based": 1034,
+        "tapActionIndex0Based": 1035,
+        "selectedAt": "2026-10-04T07:41:22.531+08:00",
+        "ownedReaderStillPendingAtChoice": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-stop-start-deny-native-choice.json",
+        "sha256": "d7907f63568f5c8ff6f3d731aa9f50ad66ba90e0052d346dc3331e735ca59f91",
+        "bytes": 513,
+        "case": "low-after-stop-start-deny",
+        "explicitOperatorChoice": "deny",
+        "startedAt": "2026-10-04T07:43:54.137+08:00",
+        "finishedAt": "2026-10-04T07:43:56.484+08:00",
+        "elapsedSeconds": 2.347,
+        "readerExitCode": 3,
+        "inspectedDialogExactPixelMatch": true,
+        "dialogBox": [
+          125,
+          900,
+          950,
+          1540
+        ],
+        "referenceCropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+        "selectedAtFieldRecorded": true,
+        "pendingReaderFieldRecorded": true,
+        "afterScreenshotRecorded": true,
+        "promptScreenshotActionIndex0Based": 1043,
+        "tapActionIndex0Based": 1044,
+        "selectedAt": "2026-10-04T07:43:55.486+08:00",
+        "ownedReaderStillPendingAtChoice": true
+      }
+    ],
+    "nativePromptAndAfterScreenshotFingerprints": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-allow-current-inspected-native-prompt.png",
+        "sha256": "b8d2f39dceca5dc0b72ea495523fe09f515f1841686386775402fa7b58e0c808",
+        "bytes": 277886,
+        "actionIndex0Based": 1023,
+        "operatorTime": "2026-10-04T07:39:28.805222+08:00",
+        "cropMatchesReviewedReference": true,
+        "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+        "pixelContentOmitted": true,
+        "visuallyReviewedByThisReviewer": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-manual-revoke-deny-native-choice-after.png",
+        "sha256": "7065e895d47edb6f0ba6c9253f52bf0b1cae07934cb989310b8b9c0fca8a285f",
+        "bytes": 283300,
+        "actionIndex0Based": 1033,
+        "operatorTime": "2026-10-04T07:41:20.554936+08:00",
+        "pixelContentOmitted": true,
+        "visuallyReviewedByThisReviewer": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-manual-revoke-deny-inspected-native-prompt.png",
+        "sha256": "e76e1f7ea51f99b29bc1d3ef6c38bce9336e044a7e94a0b6bcbeca61f773e5d3",
+        "bytes": 270390,
+        "actionIndex0Based": 1031,
+        "operatorTime": "2026-10-04T07:41:19.667501+08:00",
+        "cropMatchesReviewedReference": true,
+        "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+        "pixelContentOmitted": true,
+        "visuallyReviewedByThisReviewer": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-grant-for-generation-native-choice-after.png",
+        "sha256": "ef83fd1335cec25fb5c2c00d7094aeb52e3d868dfd98027a2369f6c615fc81a9",
+        "bytes": 234776,
+        "actionIndex0Based": 1036,
+        "operatorTime": "2026-10-04T07:41:23.541828+08:00",
+        "pixelContentOmitted": true,
+        "visuallyReviewedByThisReviewer": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-grant-for-generation-inspected-native-prompt.png",
+        "sha256": "4170e6914bd7f38dc792ddd006c16c1163a4e41abd1ce69b01845ec26c8d1c0e",
+        "bytes": 223812,
+        "actionIndex0Based": 1034,
+        "operatorTime": "2026-10-04T07:41:22.465721+08:00",
+        "cropMatchesReviewedReference": true,
+        "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+        "pixelContentOmitted": true,
+        "visuallyReviewedByThisReviewer": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-stop-start-deny-native-choice-after.png",
+        "sha256": "dba9e0e1c5d5a47a8d4124afcdf82cbc471786281a3c2ea415ae662c2e43fe32",
+        "bytes": 235283,
+        "actionIndex0Based": 1045,
+        "operatorTime": "2026-10-04T07:43:56.483876+08:00",
+        "pixelContentOmitted": true,
+        "visuallyReviewedByThisReviewer": false
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-stop-start-deny-inspected-native-prompt.png",
+        "sha256": "982aff8994229dd9fdc5aeb3c46a9b2421bb5c75a8ca6d68753232a3d65024ca",
+        "bytes": 229263,
+        "actionIndex0Based": 1043,
+        "operatorTime": "2026-10-04T07:43:55.410064+08:00",
+        "cropMatchesReviewedReference": true,
+        "cropPixelsSha256": "e4c962cdb6db83dade1eaaacdad37a2ed87cd200b645e85a4cdaf943b76e4c96",
+        "pixelContentOmitted": true,
+        "visuallyReviewedByThisReviewer": false
+      }
+    ],
+    "responseReceipts": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-allow-current-dump.json",
+        "sha256": "66613dce7ad6f37b7ef9467c76f854b279704dacdd1b2a8bdcaf30dea8c11f8b",
+        "bytes": 88,
+        "case": "low-allow-current",
+        "routePath": "/app/ui/dump",
+        "stableRefusalPrefix": null,
+        "stableErrorCode": "SCREEN_TARGET_CHANGED",
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-manual-revoke-deny-dump.json",
+        "sha256": "63bb3a790128325d14faa6f82f248948bc32885808e353345c32f9d60cda6a25",
+        "bytes": 49,
+        "case": "low-after-manual-revoke-deny",
+        "routePath": "/app/ui/dump",
+        "stableRefusalPrefix": "[ERR] 你拒绝了这次屏幕读取",
+        "stableErrorCode": null,
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-grant-for-generation-dump.json",
+        "sha256": "66613dce7ad6f37b7ef9467c76f854b279704dacdd1b2a8bdcaf30dea8c11f8b",
+        "bytes": 88,
+        "case": "low-grant-for-generation",
+        "routePath": "/app/ui/dump",
+        "stableRefusalPrefix": null,
+        "stableErrorCode": "SCREEN_TARGET_CHANGED",
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-stop-start-deny-dump.json",
+        "sha256": "63bb3a790128325d14faa6f82f248948bc32885808e353345c32f9d60cda6a25",
+        "bytes": 49,
+        "case": "low-after-stop-start-deny",
+        "routePath": "/app/ui/dump",
+        "stableRefusalPrefix": "[ERR] 你拒绝了这次屏幕读取",
+        "stableErrorCode": null,
+        "ownDshaWindow": false,
+        "treeNodesPresent": false,
+        "rawResultOmitted": true
+      }
+    ],
+    "positiveOwnTreeReceipts": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-fast-granted-own-tree.json",
+        "sha256": "089ccf4e4c3ce13ff7223e6e213e072b6aa6ea576de67a676c290c147f9b5c72",
+        "bytes": 5277,
+        "routePath": "/app/ui/dump",
+        "ownDshaWindow": true,
+        "treeNodesPresent": true,
+        "hostFileMtime": "2026-10-04T07:40:05.135+08:00",
+        "mtimeIsNotADeviceEventTimestamp": true,
+        "rawTreeOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-grant-for-generation-tree.json",
+        "sha256": "7c4b4ad926ab728467fe27658e4de90d89d0ac3b159f27f8b804c77937ac37c1",
+        "bytes": 1871,
+        "routePath": "/app/ui/dump",
+        "ownDshaWindow": true,
+        "treeNodesPresent": true,
+        "hostFileMtime": "2026-10-04T07:41:24.503+08:00",
+        "mtimeIsNotADeviceEventTimestamp": true,
+        "rawTreeOmitted": true
+      }
+    ],
+    "nativeContextScreenshotFingerprints": [
+      {
+        "path": "app/build/audit-build156/device-private/lease-low-native-revoke-current-0766.png",
+        "sha256": "1f7c7f94dc39a054a8152201c213724ab93997985e9526816c7ccffc54d4d80c",
+        "bytes": 235363,
+        "actionIndex0Based": 1029,
+        "operatorTime": "2026-10-04T07:40:13.258621+08:00",
+        "nativeUiMeaningAttribution": "runtime device operator; no independent visual review or raw pixels published"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-low-granted-generation-stopped-0767.png",
+        "sha256": "da1ce1e6dc9a2fd5387078c3cebb0d7be6ec93fe9d6e7cb63ef3d052e71c1db3",
+        "bytes": 255074,
+        "actionIndex0Based": 1039,
+        "operatorTime": "2026-10-04T07:42:08.468016+08:00",
+        "nativeUiMeaningAttribution": "runtime device operator; no independent visual review or raw pixels published"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-low-plugins-page-current-0768.png",
+        "sha256": "92c70dceb6e2b83f776d804ad2719d9108c63ba5743c2d0712d8984b74512299",
+        "bytes": 235037,
+        "actionIndex0Based": 1042,
+        "operatorTime": "2026-10-04T07:43:00.466550+08:00",
+        "nativeUiMeaningAttribution": "runtime device operator; no independent visual review or raw pixels published"
+      }
+    ],
+    "operatorActions": [
+      {
+        "actionIndex0Based": 1023,
+        "operatorTime": "2026-10-04T07:39:28.805222+08:00",
+        "action": "inspected-native-read-prompt",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1024,
+        "operatorTime": "2026-10-04T07:39:28.878962+08:00",
+        "action": "tap",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1029,
+        "operatorTime": "2026-10-04T07:40:13.258621+08:00",
+        "action": "screenshot",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1030,
+        "operatorTime": "2026-10-04T07:41:16.982329+08:00",
+        "action": "tap",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1031,
+        "operatorTime": "2026-10-04T07:41:19.667501+08:00",
+        "action": "inspected-native-read-prompt",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1032,
+        "operatorTime": "2026-10-04T07:41:19.735470+08:00",
+        "action": "tap",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1033,
+        "operatorTime": "2026-10-04T07:41:20.554936+08:00",
+        "action": "screenshot",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1034,
+        "operatorTime": "2026-10-04T07:41:22.465721+08:00",
+        "action": "inspected-native-read-prompt",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1035,
+        "operatorTime": "2026-10-04T07:41:22.531723+08:00",
+        "action": "tap",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1036,
+        "operatorTime": "2026-10-04T07:41:23.541828+08:00",
+        "action": "screenshot",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1037,
+        "operatorTime": "2026-10-04T07:42:04.281341+08:00",
+        "action": "tap",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1038,
+        "operatorTime": "2026-10-04T07:42:05.842039+08:00",
+        "action": "tap",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1039,
+        "operatorTime": "2026-10-04T07:42:08.468016+08:00",
+        "action": "screenshot",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1040,
+        "operatorTime": "2026-10-04T07:42:09.462104+08:00",
+        "action": "tap",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1041,
+        "operatorTime": "2026-10-04T07:42:57.904371+08:00",
+        "action": "tap",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1042,
+        "operatorTime": "2026-10-04T07:43:00.466550+08:00",
+        "action": "screenshot",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1043,
+        "operatorTime": "2026-10-04T07:43:55.410064+08:00",
+        "action": "inspected-native-read-prompt",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1044,
+        "operatorTime": "2026-10-04T07:43:55.486280+08:00",
+        "action": "tap",
+        "rawArgumentsOmitted": true
+      },
+      {
+        "actionIndex0Based": 1045,
+        "operatorTime": "2026-10-04T07:43:56.483876+08:00",
+        "action": "screenshot",
+        "rawArgumentsOmitted": true
+      }
+    ],
+    "operatorActionPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "0a536b53cf287071fdb574493126accedfd759c26f90496d14088b12799e5cdc",
+      "bytes": 149702,
+      "records": 1046,
+      "lastIndex0Based": 1045,
+      "lastTime": "2026-10-04T07:43:56.483876+08:00",
+      "hashRecipe": "Exact original byte prefix containing 1046 complete JSONL records through the last native-choice after screenshot. Later appended rows do not change this hash."
+    },
+    "inspectLogs": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-allow-current-inspect.log",
+        "sha256": "8bc9b6b903bc44155759782657abd9cf5df614a5699498ee8866c7144dbd0587",
+        "bytes": 29,
+        "safeOriginalMarker": "[ERR] SCREEN_TARGET_CHANGED",
+        "rawLogBodyOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-manual-revoke-deny-inspect.log",
+        "sha256": "507a157e24ff65093b60929880844b5b1688634813e00912b491acaa1d00d18b",
+        "bytes": 38,
+        "safeOriginalMarker": "[ERR] 你拒绝了这次屏幕读取",
+        "rawLogBodyOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-grant-for-generation-inspect.log",
+        "sha256": "8bc9b6b903bc44155759782657abd9cf5df614a5699498ee8866c7144dbd0587",
+        "bytes": 29,
+        "safeOriginalMarker": "[ERR] SCREEN_TARGET_CHANGED",
+        "rawLogBodyOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-after-stop-start-deny-inspect.log",
+        "sha256": "507a157e24ff65093b60929880844b5b1688634813e00912b491acaa1d00d18b",
+        "bytes": 38,
+        "safeOriginalMarker": "[ERR] 你拒绝了这次屏幕读取",
+        "rawLogBodyOmitted": true
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "native_allow_then_positive_own_read",
+      "status": "pass_observed",
+      "nativeChoiceCase": "low-allow-current",
+      "firstResult": "SCREEN_TARGET_CHANGED; no tree returned",
+      "followingPositiveReceipt": "low-fast-granted-own-tree.json",
+      "firstReceiptLimit": "selectedAt/pending-reader/after fields were not recorded by its first helper version. Actual saved reference-matching prompt, native tap action1024 and later positive tree are checked; no new fields are fabricated."
+    },
+    {
+      "id": "manual_grant_revocation",
+      "status": "pass_observed",
+      "positiveBeforeRevoke": "low-fast-granted-own-tree.json",
+      "ordinaryNativeRevokeActionIndex0Based": 1030,
+      "revokeTargetObservedBy": "runtime operator on device-grants UI; known requested coordinate matches privately, screenshot1029 retained",
+      "followingNativeChoice": "low-after-manual-revoke-deny",
+      "newNativeReadPromptCropMatches": true,
+      "explicitChoice": "deny",
+      "resultPrefix": "[ERR] 你拒绝了这次屏幕读取",
+      "treeReturned": false
+    },
+    {
+      "id": "reallow_then_ordinary_web_generation_revocation",
+      "status": "pass_observed",
+      "nativeChoiceCase": "low-grant-for-generation",
+      "firstAllowResult": "SCREEN_TARGET_CHANGED; no tree returned",
+      "followingPositiveOwnTree": "low-grant-for-generation-tree.json",
+      "normalStopActionIndex0Based": 1038,
+      "normalStoppedScreenshotActionIndex0Based": 1039,
+      "normalStartActionIndex0Based": 1040,
+      "operatorReportsNewFormalRunReady": true,
+      "followingNativeChoice": "low-after-stop-start-deny",
+      "newNativeReadPromptCropMatches": true,
+      "explicitChoice": "deny",
+      "resultPrefix": "[ERR] 你拒绝了这次屏幕读取",
+      "treeReturned": false,
+      "oldRememberedGrantBypassedNewPrompt": false,
+      "stopStartMeaningsAttribution": "runtime device operator; temporal action sequence and response receipts checked independently"
+    }
+  ],
+  "earlierTimingAttempts": {
+    "preservedArtifacts": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-active-screen-first.json",
+        "sha256": "63bb3a790128325d14faa6f82f248948bc32885808e353345c32f9d60cda6a25",
+        "bytes": 49,
+        "usedAsPositiveAcceptanceEvidence": false,
+        "nativeRefusalPrefixObserved": true,
+        "rawResultOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-active-screen-confirmed-tree.json",
+        "sha256": "63bb3a790128325d14faa6f82f248948bc32885808e353345c32f9d60cda6a25",
+        "bytes": 49,
+        "usedAsPositiveAcceptanceEvidence": false,
+        "nativeRefusalPrefixObserved": true,
+        "rawResultOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-low-active-screen-prompt-0763.png",
+        "sha256": "37b2d5375adad43d669ae0be90405660916eff711ae86ab96d51e952735c16ee",
+        "bytes": 224866,
+        "actionIndex0Based": 1017,
+        "operatorTime": "2026-10-04T07:32:50.179011+08:00",
+        "usedAsPositiveAcceptanceEvidence": false,
+        "pixelContentOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-low-active-screen-prompt-second-0764.png",
+        "sha256": "b638cb5786afb5a6b57844a8523e24e4e7ef11e29004b792055679f18d370062",
+        "bytes": 224614,
+        "actionIndex0Based": 1019,
+        "operatorTime": "2026-10-04T07:34:37.692732+08:00",
+        "usedAsPositiveAcceptanceEvidence": false,
+        "pixelContentOmitted": true
+      }
+    ],
+    "countsAsAcceptancePass": false,
+    "operatorReportedTimingLimit": "Earlier ordinary model round trips took 44–52s against a 30s client timeout. Their saved refusals/late prompts are retained as timing-limited attempts, not reclassified as a device permission defect. The bounded native-choice cases here complete in 1.5–2.4s.",
+    "exactOldRoundTripDurationsIndependentlyMeasuredByReviewer": false,
+    "earlierArtifactsModifiedOrDeleted": false
+  },
+  "checks": [
+    {
+      "command": "PowerShell $reviewScript | python -: six dump envelopes/four safe-marker inspection logs/own-window/tree/error checks; four choice receipts; PIL read-only RGB hash comparisons of four private dialog crops to reference763; three selectedAt/action/pending matches; native-tap/revoke/stop-start timeline; current helper and owned reader AST scope; immutable action prefix and all artifact digests",
+      "exitCode": 0,
+      "dumpResponsesChecked": 6,
+      "choiceReceiptsChecked": 4,
+      "matchingDialogCrops": 4,
+      "laterReceiptsWithPendingAndSelectedAtChecked": 3,
+      "afterScreenshotDigestsChecked": 3,
+      "privateImagesRenderedOrPublished": 0,
+      "deviceCommandsByReviewer": 0,
+      "productionSourceTestsBuildsOrChanges": 0,
+      "inspectLogsChecked": 4
+    }
+  ],
+  "interpretationLimits": [
+    "Acceptance is limited to this new Low37aa installation, own DSHA app, two actual native Allows followed by own-tree reads, one manual revoke/Deny and one ordinary formal Web stop/start/Deny.",
+    "No numeric Web generation or client-carried stale-generation parameter is persisted by these dump envelopes. This is behavioral evidence of new native confirmation after the operator-observed new run.",
+    "The explicit operator permission to run the bounded native helper is supplied by root/runtime. This read-only audit checks its source and saved evidence; it neither invokes the helper nor grants any wider approval policy.",
+    "The helper source checks pending state before the native tap; it is not an atomic proof of every possible concurrent callback/race or other dialog scenario.",
+    "Reference dialog intent/actual UI action meanings come from the prior root/runtime visual observation. This reviewer compares private pixels by SHA without displaying images or independently reading the entire screenshot.",
+    "No sensitive-app matrix, asynchronous screenshot cancellation, virtual-screen hardware capability, Low Android6/7, full browser-engine matrix or all callbacks is declared verified.",
+    "LAN old-credential rejection at07:32 belongs to the earlier formal stop/start sequence, not this 07:42 screen-test restart. Prior reports and timing-limited original files are preserved."
+  ],
+  "privacy": {
+    "tokenCookieOrHeadersPublished": false,
+    "deviceSerialPidUidPublished": false,
+    "rawTreePublished": false,
+    "rawScreenshotPixelsPublished": false,
+    "rawInputCoordinatesOrCommandsPublished": false,
+    "privateUserContentPublished": false
+  }
+}

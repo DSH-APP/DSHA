@@ -1,0 +1,45 @@
+[
+  {
+    "id": "build156_40ae91a8e461",
+    "zh": "%s · 总耗时 %s 秒%s%s",
+    "en": "%s · Total time %s seconds%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ]
+  },
+  {
+    "id": "build156_74964260b8a6",
+    "zh": "%s\n\n版本：%s%s%s%s%s%s",
+    "en": "%s\n\nVersion: %s%s%s%s%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "id": "build156_fa978bf38891",
+    "zh": "%s · 点击查看进度",
+    "en": "%s · View progress",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "zh": "QQ群 %s · 问题反馈",
+    "en": "QQ group %s · Issue tracker",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AboutFragment.java"
+    ]
+  },
+  {
+    "zh": "无法打开浏览器，请在浏览器中访问 %s",
+    "en": "Could not open the browser. Visit %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  }
+]

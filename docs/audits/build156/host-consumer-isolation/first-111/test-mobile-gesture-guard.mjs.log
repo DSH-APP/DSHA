@@ -1,0 +1,1 @@
+PASS generated mobile gesture guard uses weak per-node marks and preserves expiry/ancestor semantics

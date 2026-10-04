@@ -1,5 +1,7 @@
 # Gradle / Android 构建产物
 .gradle/
+.gradle-user-home/
+.pnpm-store/
 build/
 app/build/
 captures/
@@ -32,6 +34,7 @@ release/history/
 
 # 本地临时/中间产物
 tmp_*/
+tmp-*/
 tools/offline-rootfs-old-v8.bin
 python-runtime.tgz
 scr_backup.png

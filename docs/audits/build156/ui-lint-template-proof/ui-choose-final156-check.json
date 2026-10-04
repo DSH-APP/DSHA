@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "tool": "google-java-format",
+  "version": "1.22.0",
+  "artifactSha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f",
+  "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\r\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+  "mode": "check",
+  "files": [
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+      "beforeSha256": "235d626350be8e5e3b853f82f95273390f0ec12df8e443906a0f2562deb28880",
+      "formattedSha256": "235d626350be8e5e3b853f82f95273390f0ec12df8e443906a0f2562deb28880",
+      "javaTokenSha256": "eae183b18a72b0e5804fa59d36512b2446d14a77e518925503c341193039be1f",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+      "beforeSha256": "8a6eee859a814625892a0d2010476aee49ab56a192e24a23343a3840bf418442",
+      "formattedSha256": "8a6eee859a814625892a0d2010476aee49ab56a192e24a23343a3840bf418442",
+      "javaTokenSha256": "348c5d6b71c7320ac8d65888c3e0450859024605d9053447c2e05db7eb31d078",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java",
+      "beforeSha256": "5cc5aac37ecc354e43262186045ef4b41b365b682c44c9fd3a01a1a8c0ea56c4",
+      "formattedSha256": "5cc5aac37ecc354e43262186045ef4b41b365b682c44c9fd3a01a1a8c0ea56c4",
+      "javaTokenSha256": "bdaf95bb72d86196ea04a6a38bacec50889db63046e05046ba8cbe8c0f719ad2",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "beforeSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "formattedSha256": "b58d5e4c5699c1403c89cbda14c8869171ca5c8cc7c4856dda74fe074a9c4a2d",
+      "javaTokenSha256": "ab1537ca8d33e1b0bb83ed517f2b7e3954bbfa2bd13b70ff4636215a7c95659a",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java",
+      "beforeSha256": "def20c9021d465cc289b9555d6dc7dfa62dab6f851cb340fc5996c66edd9f431",
+      "formattedSha256": "def20c9021d465cc289b9555d6dc7dfa62dab6f851cb340fc5996c66edd9f431",
+      "javaTokenSha256": "e9de1ea967517955e8b375ea3dd16180a223dc02d2dbad02530a0f82623d5824",
+      "needsFormatting": false,
+      "diff": ""
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java",
+      "beforeSha256": "203b75e42a6855c129ee71646aef806a95079207feca572d89f47e15088528a4",
+      "formattedSha256": "203b75e42a6855c129ee71646aef806a95079207feca572d89f47e15088528a4",
+      "javaTokenSha256": "9ffd3bf97a7415a3893f50d7e4af7ff00dec1ebf4f1faf99926c3ab2a7484d22",
+      "needsFormatting": false,
+      "diff": ""
+    }
+  ]
+}

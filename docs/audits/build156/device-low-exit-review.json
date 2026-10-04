@@ -1,0 +1,320 @@
+{
+  "schema": "dsha-device-exit-snapshot-review-v1",
+  "reviewedAt": "2026-10-04T06:59:53+08:00",
+  "reviewMode": "host_only_existing_private_log_classification",
+  "softwareChanged": false,
+  "deviceCommandsByReviewer": 0,
+  "scope": {
+    "flavor": "low",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+    "minSdk": 23,
+    "targetSdk": 37,
+    "debuggable": false,
+    "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+    "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "androidReleaseReportedByOperator": 13,
+    "lastUpdateTime": "2026-10-04T06:14:37+08:00",
+    "deviceOperator": "runtime holding parent-authorized exclusive device lease",
+    "bindingBasis": "Root/build preflight identifies the exact signed APK; successful overlay receipt and post-install package metadata establish this Low package/version. The digest is not obtained by pulling installed APK bytes in this review."
+  },
+  "summary": {
+    "status": "no_new_failure_marker_in_these_finite_snapshots",
+    "historicalOwnJavaFatalEvents": 2,
+    "currentLowPeriodJavaFatalEventsObserved": 0,
+    "exitRecords": 16,
+    "ownMainExitRecords": 7,
+    "webviewIsolatedChildExitRecords": 9,
+    "historicalAndCurrentInstallOrOverlayMainExits": 6,
+    "priorPermissionChangeMainExits": 1,
+    "currentLowOverlayTransitionExits": 1,
+    "postOverlayRunningPeriodExitsObserved": 0,
+    "crashNativeCrashOrAnrExitReasonRecordsObserved": 0,
+    "universalNoCrashGuarantee": false
+  },
+  "collectionScope": {
+    "crashBufferUidFilterReportedByOperator": "Only this application UID; no buffer clearing. Filter command provenance is operator-reported, while observed FATAL process identity and record classification are directly checked.",
+    "exitInfo": "Existing application exit-info history; no clear/reset performed by reviewer.",
+    "reviewerReadsOnly": true
+  },
+  "sourceEvidence": {
+    "packageBinding": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/apk-preflight.json",
+        "sha256": "2b2582536a4e74a2ca46118c108d895fa13549baeb5b1f2c31a32c7ab5b56cdc",
+        "bytes": 905
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-install.txt",
+        "sha256": "c4aa470acafcf8576c15b0f0b5ae7e852d1ec5413372d0e6a9272e788e1306d3",
+        "bytes": 38
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-package-after.txt",
+        "sha256": "2036a4198d3f59e2b75f2d5b145ac9c7ba2264a5d0ae5f80437d2bc46c3a97fc",
+        "bytes": 13588
+      },
+      {
+        "path": "docs/audits/build156/final-apk-supply-checks.json",
+        "sha256": "4f7361be8931535c0037e3c50a5df814b49bbc7146f07be2f939c4749210d348",
+        "bytes": 69878
+      }
+    ],
+    "finiteLogs": [
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-logcat-crash-private.txt",
+        "sha256": "df7f57cc57ee74a4aa4ad8d94d8d8831bfecd68ac06e291b9034b39c6b3d8edf",
+        "bytes": 10243,
+        "hostFileMtime": "2026-10-04T06:54:22.953+08:00",
+        "hostMtimeIsNotADeviceEventTimestamp": true,
+        "rawContentsOmitted": true
+      },
+      {
+        "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-exit-info-private.txt",
+        "sha256": "47823e2c661fe26ce8bc34dec1487ce9582a7149a128ca7b9f14cebfac0c66b9",
+        "bytes": 6661,
+        "hostFileMtime": "2026-10-04T06:54:23.010+08:00",
+        "hostMtimeIsNotADeviceEventTimestamp": true,
+        "rawContentsOmitted": true
+      }
+    ],
+    "historicalJavaFatalEvents": [
+      {
+        "logTimestamp": "09-27 06:31:20.086",
+        "processCategory": "own_main_app",
+        "exceptionTypes": [
+          "android.app.ForegroundServiceStartNotAllowedException"
+        ],
+        "period": "historical_before_current_low_overlay"
+      },
+      {
+        "logTimestamp": "09-29 18:04:57.921",
+        "processCategory": "own_main_app",
+        "exceptionTypes": [
+          "java.lang.IllegalStateException"
+        ],
+        "period": "historical_before_current_low_overlay"
+      }
+    ],
+    "classifiedExitRecords": [
+      {
+        "recordIndex0Based": 0,
+        "timestamp": "2026-10-04T06:14:37.391+08:00",
+        "processCategory": "own_main_app",
+        "reasonNumber": 10,
+        "reasonName": "USER REQUESTED",
+        "status": 0,
+        "classification": "package_install_or_overlay_exit",
+        "period": "current_low_install_transition",
+        "installPackageLIMarker": true,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 1,
+        "timestamp": "2026-10-04T05:43:10.504+08:00",
+        "processCategory": "webview_isolated_child",
+        "reasonNumber": 13,
+        "reasonName": "OTHER KILLS BY SYSTEM",
+        "status": 0,
+        "classification": "prior_webview_isolated_process_system_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 2,
+        "timestamp": "2026-10-04T04:56:06.936+08:00",
+        "processCategory": "webview_isolated_child",
+        "reasonNumber": 13,
+        "reasonName": "OTHER KILLS BY SYSTEM",
+        "status": 0,
+        "classification": "prior_webview_isolated_process_system_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 3,
+        "timestamp": "2026-10-04T04:48:09.857+08:00",
+        "processCategory": "own_main_app",
+        "reasonNumber": 8,
+        "reasonName": "PERMISSION CHANGE",
+        "status": 0,
+        "classification": "prior_permission_change_main_process_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 4,
+        "timestamp": "2026-10-04T04:25:33.058+08:00",
+        "processCategory": "webview_isolated_child",
+        "reasonNumber": 13,
+        "reasonName": "OTHER KILLS BY SYSTEM",
+        "status": 0,
+        "classification": "prior_webview_isolated_process_system_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 5,
+        "timestamp": "2026-10-04T03:46:31.122+08:00",
+        "processCategory": "webview_isolated_child",
+        "reasonNumber": 1,
+        "reasonName": "EXIT_SELF",
+        "status": 0,
+        "classification": "prior_webview_isolated_process_self_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 6,
+        "timestamp": "2026-10-04T03:34:50.315+08:00",
+        "processCategory": "webview_isolated_child",
+        "reasonNumber": 13,
+        "reasonName": "OTHER KILLS BY SYSTEM",
+        "status": 0,
+        "classification": "prior_webview_isolated_process_system_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 7,
+        "timestamp": "2026-10-04T03:24:15.441+08:00",
+        "processCategory": "own_main_app",
+        "reasonNumber": 10,
+        "reasonName": "USER REQUESTED",
+        "status": 0,
+        "classification": "package_install_or_overlay_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": true,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 8,
+        "timestamp": "2026-10-04T03:18:14.603+08:00",
+        "processCategory": "webview_isolated_child",
+        "reasonNumber": 13,
+        "reasonName": "OTHER KILLS BY SYSTEM",
+        "status": 0,
+        "classification": "prior_webview_isolated_process_system_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 9,
+        "timestamp": "2026-10-04T01:34:36.464+08:00",
+        "processCategory": "webview_isolated_child",
+        "reasonNumber": 13,
+        "reasonName": "OTHER KILLS BY SYSTEM",
+        "status": 0,
+        "classification": "prior_webview_isolated_process_system_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 10,
+        "timestamp": "2026-10-04T01:27:11.453+08:00",
+        "processCategory": "webview_isolated_child",
+        "reasonNumber": 13,
+        "reasonName": "OTHER KILLS BY SYSTEM",
+        "status": 0,
+        "classification": "prior_webview_isolated_process_system_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 11,
+        "timestamp": "2026-10-04T01:22:58.926+08:00",
+        "processCategory": "own_main_app",
+        "reasonNumber": 10,
+        "reasonName": "USER REQUESTED",
+        "status": 0,
+        "classification": "package_install_or_overlay_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": true,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 12,
+        "timestamp": "2026-10-03T22:31:02.429+08:00",
+        "processCategory": "webview_isolated_child",
+        "reasonNumber": 13,
+        "reasonName": "OTHER KILLS BY SYSTEM",
+        "status": 0,
+        "classification": "prior_webview_isolated_process_system_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": false,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 13,
+        "timestamp": "2026-09-30T06:35:51.824+08:00",
+        "processCategory": "own_main_app",
+        "reasonNumber": 10,
+        "reasonName": "USER REQUESTED",
+        "status": 0,
+        "classification": "package_install_or_overlay_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": true,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 14,
+        "timestamp": "2026-09-30T05:46:58.968+08:00",
+        "processCategory": "own_main_app",
+        "reasonNumber": 10,
+        "reasonName": "USER REQUESTED",
+        "status": 0,
+        "classification": "package_install_or_overlay_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": true,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      },
+      {
+        "recordIndex0Based": 15,
+        "timestamp": "2026-09-30T04:45:56.572+08:00",
+        "processCategory": "own_main_app",
+        "reasonNumber": 10,
+        "reasonName": "USER REQUESTED",
+        "status": 0,
+        "classification": "package_install_or_overlay_exit",
+        "period": "before_current_low_overlay",
+        "installPackageLIMarker": true,
+        "rawDescriptionProcessIdsUidsAndTraceOmitted": true
+      }
+    ]
+  },
+  "interpretation": [
+    "The two saved own-app Java FATALs have log timestamps 09-27 and 09-29. They predate this 10-04 Low overlay and are retained historical evidence, not new37aa failures.",
+    "The newest own-main exit at 06:14:37.391 is USER REQUESTED/status0 with installPackageLI. It falls at the recorded Low coverage-install boundary and is classified as an installation transition that closes the previous installed process, not a Low runtime Java crash.",
+    "The 04:48 PERMISSION CHANGE/status0 main-process record precedes the Low overlay. It is the earlier microphone-permission-change event; it cannot be used as new Low Web-stop or runtime-crash evidence.",
+    "The nine historical isolated WebView child exits retain their recorded system/self reasons. They are not relabeled as main-app Java crashes or automatically treated as proof of a browser crash.",
+    "This finite crash-buffer and retained exit history contains no observed new Low runtime Java FATAL/CRASH/CRASH_NATIVE/ANR marker after overlay. Absence in these files is a bounded observation, not proof of universal no-crash stability or every possible native/service failure.",
+    "Later screen/revoke or stress scenarios need their own later captures; these snapshots must not be extended to events occurring after their collection."
+  ],
+  "checks": [
+    {
+      "command": "PowerShell $reviewScript | python -: parse two FATAL events without message/stack; parse all16 ApplicationExitInfo blocks; classify own-main/isolated-child reason/status/installation markers against exact post-install update time; verify newLow preflight/supply/install metadata digests",
+      "exitCode": 0,
+      "fatalEvents": 2,
+      "exitRecords": 16,
+      "unclassifiedExitRecords": 0,
+      "hardwareCommandsByReviewer": 0,
+      "softwareBuildsOrTests": 0
+    }
+  ],
+  "privacy": {
+    "pidUidSerialPublished": false,
+    "rawCrashStacksPublished": false,
+    "rawExitDescriptionsOrTracePathsPublished": false,
+    "userContentOrCredentialsPublished": false
+  }
+}

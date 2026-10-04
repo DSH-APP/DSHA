@@ -22,5 +22,5 @@
       </LinearLayout>
     </LinearLayout>
     <Button android:id="@+id/btnPluginRestore" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/gap_control" android:visibility="gone" android:text="@string/ui_m0104" />
-  
+
 </LinearLayout>

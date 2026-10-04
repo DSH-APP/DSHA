@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "scope": "root-authorized exact three choose templates; count/bytes/raw port/raw plugin name unchanged; six complete BackupTask paragraphs classified nonfinding and preserved",
+  "sourceFrozen": true,
+  "sources": [
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+      "sha256": "59c698950d49d332d69243d227539cdeb360c8074c6d44608f8c9aef8569c5b6"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java",
+      "sha256": "53bd61d91041d81975554a462fb0a6672173c7b03fd503d7c4d3d70f49f2e72c"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/core/StartupRepairs.java",
+      "sha256": "eef95f4513b77684c62e18d8e3aded18c6c99901c536b1fdf1c39080c831bc64"
+    }
+  ],
+  "contribution": "docs/audits/build156/contribution-choose-core.json",
+  "catalogOwner": "ui",
+  "catalogEntriesAtVerification": 3528,
+  "formattingEvidence": "app/build/java-format/core-build156-choose-format.json",
+  "narrowEvidence": "app/build/audit-build156/choose-core/receipt.json",
+  "checks": [
+    "Actual three-source Android37/AndroidX compile with fresh catalog PASS",
+    "Seven actual template/progress/zero-count/diagnostic/raw-name/current-language checks PASS",
+    "All six independent complete BackupTask choose paragraphs retain identical quoted literals",
+    "Production source SHA unchanged during and after the focused verification"
+  ],
+  "excluded": [
+    "No Gradle/phone or additional scope",
+    "No guest deletePlugin operation or shared data write",
+    "No Manager/Portable/AppOwner changes"
+  ]
+}

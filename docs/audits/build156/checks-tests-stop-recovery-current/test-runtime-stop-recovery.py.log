@@ -1,0 +1,10 @@
+UI language catalog: 3502/3502 entries
+注: F:\DSHA_RESTART\app\src\main\java\com\deepseekharness\app\runtime\PrivilegedPackageContext.java使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+JUnit version 4.13.2
+.......................
+Time: 0.634
+
+OK (23 tests)
+
+PASS current SIGTERM/identity/wait algorithm and pending-trial recovery; platform adapter results are explicit fixtures, no Android signal or process operation

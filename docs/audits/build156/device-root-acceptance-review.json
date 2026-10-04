@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "status": "REVIEWED_FOR_EXISTING_DELIVERY_GATE",
+  "reviewedAtUtc": "2026-10-04T04:35:04.338198+00:00",
+  "sourceSoftwareReceipt": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+  "sourceSoftwareReceiptSha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+  "privateReviewedEvidence": "app/build/audit-build156/device-private/latest-retake-20261004/device-evidence-reviewed.json",
+  "privateReviewedEvidenceSha256": "8bd9d5d4a0a067b283ac9a8d5abe8dd86ad43f41c7456b3acc70d672738ddb78",
+  "declaredChecks": {
+    "standard": 19,
+    "low": 19
+  },
+  "originalContractValidatorsExecuted": true,
+  "basis": [
+    {
+      "path": "docs/audits/build156/device-final-standard-owned-v5-fd-data-review.json",
+      "sha256": "c276f9446cc98fb631bbd4357944d991f1250971a6fc05ff5c1162346efdbe53"
+    },
+    {
+      "path": "docs/audits/build156/device-standard-source-switch-data-supplement.json",
+      "sha256": "e3955e0e65302e5eec0dc094a7070ffb7e3c7bfdee601b53fcee0daed7e988b5"
+    },
+    {
+      "path": "docs/audits/build156/device-standard-after-source-supplement-review.json",
+      "sha256": "f50a9047a9fccf051640737f3a54b127cda4529c8239d0224ddd9e1997a9d180"
+    },
+    {
+      "path": "docs/audits/build156/device-standard-plugin-download-sources-review.json",
+      "sha256": "69b9e53d1df64ea5d8d2e8631414049f537d319925da9e61ce606c6901d9cad2"
+    },
+    {
+      "path": "docs/audits/build156/device-latest-two-flavor-scope-summary.json",
+      "sha256": "489b1b43bb0b3284631b8f6c9499af95a51242b4e91541caf7cf5291b229b393"
+    }
+  ],
+  "scope": "Actual Android13/4KiB finite behaviors, reviewed item by item against observations and explicit limits; does not establish all branches/platforms.",
+  "retainedLimits": [
+    "Retained-history single pages: Low30 and Standard40; no nextpage above50.",
+    "Own DSHA provider actual create/write and full guest-byte readback; current r-mode/rename/delete not fully re-exercised.",
+    "Source selector and healthy pinned HTTPS installation; no live NPM mirror/failure fallback matrix.",
+    "Final known file supplement: eight unchanged; plugin-activation runtime record SHA changed, body semantics not inferred.",
+    "Three isolated WebView system exits retained; no universal no-exit/no-crash claim.",
+    "Four owned diagnostic reports retained and deletion of the precise owned source SAF persistent grant was not independently confirmed.",
+    "Original149 had no old conversation sample; no Android6/7/physical16KiB/OEM/Root/Shizuku/full FUSE/model matrix."
+  ],
+  "privateRawEvidencePublished": false,
+  "releaseFilesModifiedByThisReview": false
+}

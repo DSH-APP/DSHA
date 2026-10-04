@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {definitions, validate} from '../app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs';
+import {definitions,tools,validate,requestFor,decodeBridge} from '../app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs';
 const names=definitions.map(row=>row[0]);
 assert.deepEqual(names,['android_vscreen_create','android_vscreen_status','android_vscreen_launch','android_vscreen_see','android_vscreen_tap','android_vscreen_swipe','android_vscreen_touch','android_vscreen_type','android_vscreen_key','android_vscreen_tree','android_vscreen_node','android_vscreen_editor','android_vscreen_close']);
 const tap=definitions.find(row=>row[0]==='android_vscreen_tap');
@@ -11,4 +11,15 @@ validate(touch,{generation:'test-generation',frameSeq:1,stroke:'0123456789abcdef
 assert.throws(()=>validate(touch,{generation:'test-generation',frameSeq:1,stroke:'bad',action:0,x:3,y:4}),/INVALID_stroke/);
 const editor=definitions.find(row=>row[0]==='android_vscreen_editor');
 validate(editor,{generation:'test-generation',op:'get',editorId:'',text:'',start:0,end:0});
+validate(editor,{generation:'test-generation',op:'get'});
+validate(editor,{generation:'test-generation',op:'submit',editorId:'3:42'});
+assert.throws(()=>validate(editor,{generation:'test-generation',op:'submit'}),/INVALID_editorId/);
+const get=requestFor('android_vscreen_editor',{generation:'test-generation',op:'get'});assert.equal(get.method,'GET');assert.match(get.url,/\/editor\?/);
+const text='中'.repeat(16000),edit=requestFor('android_vscreen_editor',{generation:'test-generation',op:'edit',editorId:'3:42',text});
+assert.equal(edit.method,'POST');assert.match(edit.url,/\/edit$/);assert.ok(edit.url.length<150);assert.equal(JSON.parse(edit.body).text,text);assert.ok(Buffer.byteLength(edit.body)<128*1024);
+const submit=requestFor('android_vscreen_editor',{generation:'test-generation',op:'submit',editorId:'3:42'});assert.match(submit.url,/\/submit$/);assert.equal(submit.method,'POST');assert.ok(!Object.hasOwn(JSON.parse(submit.body),'text'));
+const node=definitions.find(row=>row[0]==='android_vscreen_node');validate(node,{generation:'g',frameSeq:1,nodeId:'n',action:'click'});assert.throws(()=>validate(node,{generation:'g',frameSeq:1,nodeId:'n',action:'set_text'}),/INVALID_text/);
+assert.deepEqual(tools.find(row=>row.name==='android_vscreen_editor').inputSchema.required,['generation','op']);
+assert.deepEqual(decodeBridge(JSON.stringify({result:JSON.stringify({ok:true,generation:'g',previewB64:'image'})})),{ok:true,generation:'g',previewB64:'image'});
+assert.equal(decodeBridge(JSON.stringify({result:'[UNAUTHORIZED]'})).ok,false);
 console.log('PASS virtual screen tool schema, frameSeq validation and fixed tool surface');

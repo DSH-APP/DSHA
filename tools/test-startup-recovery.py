@@ -66,8 +66,14 @@ class RecoveryTests(unittest.TestCase):
 
     def test_recovery_ignores_broken_original_and_preserves_shared_data(self):
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {'DSHA_TEST_ROOT': temporary, 'DSH_HOME': '/root/.dsh'}):
-            spec = importlib.util.spec_from_file_location('recovery', ASSETS / 'startup-recovery.py')
-            module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+            spec = importlib.util.spec_from_file_location('recovery', Path(__file__).resolve().parents[1] / 'tools/history/engineering/assets/startup-recovery.py')
+            module = importlib.util.module_from_spec(spec)
+            original_spec = importlib.util.spec_from_file_location
+            def historical_dependency(name, path, *args, **kwargs):
+                if name == 'register': path = ASSETS / 'register-builtin-plugins.py'
+                return original_spec(name,path,*args,**kwargs)
+            with patch('importlib.util.spec_from_file_location',side_effect=historical_dependency):
+                spec.loader.exec_module(module)
             home = Path(temporary) / 'root/.dsh'
             web = home / 'profiles/web'; web.mkdir(parents=True)
             (web / 'package.json').write_text('{BROKEN', encoding='utf-8')

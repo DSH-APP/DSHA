@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "status": "FROZEN_EXACT_PASSWORD_FREE_EXPORT_TWO_ACTIVE_MESSAGES",
+  "files": [
+    {
+      "file": "app/src/main/res/values/ui_iteration.xml",
+      "beforeSha256": "d26262747e0f4ad30a30df6e454860b90b3c114aee1c8409b63b6fbbb60f8088",
+      "preserved": "docs/audits/build156/password-free-subtitle/values-ui_iteration.xml.before",
+      "sha256": "cb64564e214fe75e0b9fec673326cc2c20de5cc5b5327f5712b3c549153b9330",
+      "exactOnlyAuthorizedTwoStaticMessages": true
+    },
+    {
+      "file": "app/src/main/res/values-en/ui_iteration.xml",
+      "beforeSha256": "8dc9cd9cb8d64f19eda294d334105e219f5064517e558296a69240da0f9e9099",
+      "preserved": "docs/audits/build156/password-free-subtitle/values-en-ui_iteration.xml.before",
+      "sha256": "3ff497bd741aa243d405ba4ea70aa5ed636f449637ae85d7b501f460fc323a47",
+      "exactOnlyAuthorizedTwoStaticMessages": true
+    },
+    {
+      "file": "tools/i18n/messages.json",
+      "beforeSha256": "78e499bc41d6b5e0c185ee81595a49cd8c4f8ad173c0278b07df9683fd63019f",
+      "preserved": "docs/audits/build156/password-free-subtitle/i18n-messages.json.before",
+      "sha256": "5321c9a7aa5a6705ca8f2ff2c96b1245a63986fb60da98f379f93c8f931b7320",
+      "exactOnlyAuthorizedTwoStaticMessages": true
+    }
+  ],
+  "catalogue": {
+    "entries": 3528,
+    "formats": 441,
+    "sha256": "5321c9a7aa5a6705ca8f2ff2c96b1245a63986fb60da98f379f93c8f931b7320"
+  },
+  "generatedSha256": "98efdc433cafb7ee2d74ac6da27971d7b37518366309e32ebc6838be17d5d2d6",
+  "sourceReferences": [
+    "fragment_workspace.xml @string/ui2_data_sub",
+    "WelcomeActivity PageAdapter -> welcome_page3.xml @string/ui2_ws2_0"
+  ],
+  "checks": [
+    {
+      "command": "python -B tools/prepare-ui-languages.py --output app/build/audit-build156/ui/generated",
+      "result": "PASS 3528/3528 and strict format signatures",
+      "exitCode": 0
+    },
+    {
+      "command": "Compare exact2 byte replacements per XML and exact2 catalog entries only; XML parse + production layout/adapter references + fresh generated2 pairs",
+      "result": "PASS only active ui2_data_sub/ui2_ws2_0 zh/en changed, no other entry/field/API/logic or formatting change",
+      "exitCode": 0
+    },
+    {
+      "command": "python -B tools/check-ui-i18n.py --report docs/audits/build156/password-free-subtitle/i18n-source.json",
+      "exitCode": 0,
+      "result": "PASS 0new/8 exact complete-paragraph nonfindings/1 protected debt/0stale; dynamic23 untouched"
+    }
+  ],
+  "scope": "Only3 authorized static UI text inputs; no archive, runtime descriptor, managed inputs, version, Gradle, phone or extra APK changes. Root will rebuild/revalidate production APK.",
+  "notChanged": "Unused historical encrypted-export catalogue item remains; actual historical encrypted backup readers and internal encrypted automatic copies remain unchanged."
+}

@@ -1,0 +1,25 @@
+UI language catalog: 3478/3478 entries
+F:\DSHA_RESTART\app\src\main\java\com\deepseekharness\app\runtime\WebProcessManager.java:572: 错误: 找不到符号
+          .hostPorts()
+          ^
+  符号:   方法 hostPorts()
+  位置: 类型为ProotBootstrap的变量 proot
+F:\DSHA_RESTART\app\src\main\java\com\deepseekharness\app\runtime\WebProcessManager.java:590: 错误: 找不到符号
+      return new StopResult(StopStatus.STOPPED, "WEB_GUESTS_STOPPED", facts, proot.hostPorts());
+                                                                                  ^
+  符号:   方法 hostPorts()
+  位置: 类型为ProotBootstrap的变量 proot
+F:\DSHA_RESTART\app\src\main\java\com\deepseekharness\app\runtime\WebProcessManager.java:595: 错误: 找不到符号
+        proot.hostPorts());
+             ^
+  符号:   方法 hostPorts()
+  位置: 类型为ProotBootstrap的变量 proot
+3 个错误
+Traceback (most recent call last):
+  File "F:\DSHA_RESTART\tools\test-runtime-stop-recovery.py", line 75, in <module>
+    main()
+  File "F:\DSHA_RESTART\tools\test-runtime-stop-recovery.py", line 61, in main
+    subprocess.run([str(args.jdk / ('bin/javac' + suffix)), '-J-Dfile.encoding=UTF-8',
+  File "C:\Users\18768\AppData\Local\Programs\Python\Python311\Lib\subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['F:\\DSHA\\_toolchains\\jdk-17\\bin\\javac.exe', '-J-Dfile.encoding=UTF-8', '@C:\\Users\\18768\\AppData\\Local\\Temp\\dsha-current-stop-recovery-xo8l1tas\\javac.args']' returned non-zero exit status 1.

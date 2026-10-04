@@ -4,7 +4,7 @@
     "tools/web-compat/package.json": "d94d5034497123d2975d13e09ae74b833b8be07595a1870760d3748dab5a8054",
     "tools/web-compat/package-lock.json": "2b7787112947ce7a706dcfbeb3e854b856ef6ec46f2f431d874789f59670bc7e",
     "tools/web-compat/entry.cjs": "001e3b9bdf17cc633ce22caf830c0e86a510aeaf2aaa6de0520916da2230d837",
-    "app/src/main/assets/web-integration/compat.js": "c0e53eb673fda76b8c889b71bcbbfb23f81f14a5898432642dce83f812fdade1"
+    "app/src/main/assets/web-integration/compat.js": "dc935b398e32f5a712b5e621b02f063015f4125a352a49e2d416ff1df431d6ea"
   },
   "sha256": "a17b4cce3260f37753902ca0214ff61c66ebbf7ce764612b8ddc92aa8a9f51cd"
 }

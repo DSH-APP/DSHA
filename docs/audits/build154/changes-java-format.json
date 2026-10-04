@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "D-STYLE-01",
+      "status": "implemented-tooling-and-explicit-source-adoption",
+      "files": [
+        "tools/format-java.py",
+        "tools/java-format.lock.json",
+        "tools/java-format-files.json",
+        "tools/java-format/JavaTokenFingerprint.java",
+        "tools/java-format/README.md",
+        "tools/test-java-format.py",
+        "app/src/debug/java/com/deepseekharness/app/OwnedAuditFiles.java"
+      ],
+      "checks": [
+        "Official Maven SHA-1 checked; official Maven and GitHub release artifact SHA-256/size equal; fixed lock recorded.",
+        "JDK 17 actual formatter --write adopted then --check adopted: 2 files pass, 0 remaining changes; only OwnedAuditFiles.java changed.",
+        "tools/test-java-format.py: 8 PASS, 0 skip on this Windows host. Real Java compilation before/after preserves UTF-8 result 中文:91.",
+        "Actual JDK scanner rejects changed operators/identifiers/literal spelling; original comments/whitespace only accepted.",
+        "Actual Git staged/unstaged/untracked selection checked; history/upstream/generated/protected source and traversal rejected; Windows owned junction refused.",
+        "Corrupt/missing offline JAR refused; invalid second Java source prevents first file from being formatted."
+      ],
+      "evidence": "docs/audits/build154/java-format-evidence.json",
+      "residual": [
+        "Root owns CI hook and host test manifest registration: source check uses --check --files adopted; test-java-format.py stage fast requires python39/jdk17 and JAVA_HOME={jdk}.",
+        "Root applies separate formatting batches to frozen RuntimeTrial.java, HttpShellService.java and selected new helpers, then adds only passing actual paths to adoption list; current 2-file pass does not claim whole Java tree formatted.",
+        "No phone, Gradle, system installation or new APK; formatter JAR and lexer classes only in ignored app/build/java-format."
+      ]
+    }
+  ],
+  "sourceFreezeSha256": {
+    "tools/format-java.py": "1bc48c81a5819332dbbe47821e03bea702efa86fffeec37fb2e51eaa9e324ea8",
+    "tools/java-format.lock.json": "d624ac787c3e5fafed8582709ff2619f590dcf9a85fa31abce270046f6bdda7a",
+    "tools/java-format-files.json": "201e09f7322042f8fac8aa41bfbd013d1b203492c1c9adb580ecaa37ce6d3398",
+    "tools/java-format/JavaTokenFingerprint.java": "3006493f0d88b66ee4f7298f0a98437be3f84689688fe6365f5a5a30f06cdbe2",
+    "tools/java-format/README.md": "d1eedaa775a36591d15862c4583e74d67a663dced3212c2a6b072a40ef65157d",
+    "tools/test-java-format.py": "c159aabab4ee974f81edda186e11ada9bf2b2127409f699571c13b54690ab645",
+    "app/src/debug/java/com/deepseekharness/app/OwnedAuditFiles.java": "90431bcf2acd203cbe69df822066a891a768f94ab420424b808cefacec8fe9e6"
+  }
+}

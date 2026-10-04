@@ -1,5 +1,8 @@
 # 解压错误修复与启动提速
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 本次仍为 1.5-alpha.2 / 1.5-alpha.2low、版本码 115、Ubuntu 基础环境版本 10，沿用历史发布签名。本地交付，不上传发布。
 
 ## 已定位的问题

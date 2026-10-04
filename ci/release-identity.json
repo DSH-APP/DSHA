@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "packageName": "com.dsh.client",
+  "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+  "schemes": ["v1", "v2", "v3"]
+}

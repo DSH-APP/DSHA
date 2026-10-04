@@ -3,6 +3,13 @@ plugins {
 }
 
 // 两版共用功能和离线环境；只有 low 携带兼容旧 Android 的 Gecko 内核。
+// 文件名独立于可诊断版本名，保持当前用户下载入口不变。
+ext.dshaApkNameVersion = '0.2.0-rc2'
+def bundledTools = new groovy.json.JsonSlurper().parse(rootProject.file('tools/runtime-tools.lock.json'))
+if (bundledTools.schema != 1 || !(bundledTools.pnpm.version ==~ /[0-9]+\.[0-9]+\.[0-9]+/))
+    throw new GradleException('随包工具身份格式错误')
+// CI 只生成未签名完整包；该产物不得进入 release 或覆盖安装。
+def unsignedPackage = project.findProperty('dsha.unsignedPackage') == 'true'
 
 android {
     namespace 'com.deepseekharness.app'
@@ -15,8 +22,10 @@ android {
         applicationId "com.dsh.client"
         minSdk 30
         targetSdk 37
-        versionCode 147
-        versionName "0.1.7-rc2"
+        buildConfigField 'String', 'BUNDLED_PNPM_VERSION', '"' + bundledTools.pnpm.version + '"'
+        versionCode 157
+        // DSHA 修订号 + 固定的北京时间戳 + 内置 DSH 版本；同一交付重建不变。
+        versionName "0.2.8-20261004.1719-dsh0.2.0-rc.2"
         testInstrumentationRunner project.findProperty('dsha.testRunner') ?: "com.deepseekharness.app.Rc13Instrumentation"
         ndk {
             abiFilters 'arm64-v8a'
@@ -50,12 +59,14 @@ android {
             if (ksPath != null && !ksPath.toString().isEmpty() && file(ksPath).exists()) {
                 storeFile file(ksPath)
                 storePassword System.getenv("DSHA_KEYSTORE_PASSWORD")
-                        ?: project.findProperty("dsha.keystore.password") ?: "android"
+                        ?: project.findProperty("dsha.keystore.password")
                 keyAlias System.getenv("DSHA_KEY_ALIAS")
                         ?: project.findProperty("dsha.key.alias") ?: "androiddebugkey"
                 keyPassword System.getenv("DSHA_KEY_PASSWORD")
-                        ?: project.findProperty("dsha.key.password") ?: "android"
-                println "签名：发布 keystore ${ksPath}（alias=${keyAlias}）"
+                        ?: project.findProperty("dsha.key.password")
+                if (!storePassword || !keyPassword)
+                    throw new GradleException('必须明确提供发布密钥口令，不能使用隐式缺省值')
+                println "签名：已配置历史发布证书"
             } else {
                 println "签名：未配置历史发布证书；正式 APK 打包将被阻止"
             }
@@ -71,7 +82,7 @@ android {
         }
         release {
             minifyEnabled false
-            signingConfig signingConfigs.publish
+            if (!unsignedPackage) signingConfig signingConfigs.publish
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -109,6 +120,9 @@ android {
         main.assets.setSrcDirs([layout.buildDirectory.dir("generated/standardAssets").get().asFile,
                 layout.buildDirectory.dir("generated/recoveryAssets").get().asFile])
         main.java.srcDir(layout.buildDirectory.dir("generated/uiLanguage").get().asFile)
+        // Both browser test entry points load one test-only HTML fixture.
+        debug.assets.srcDir(rootProject.file("tools/fixtures/web-state"))
+        androidTest.assets.srcDir(rootProject.file("tools/fixtures/web-state"))
     }
 }
 
@@ -120,20 +134,55 @@ def verifyPublishCertificate = tasks.register("verifyPublishCertificate") {
         def store = java.security.KeyStore.getInstance(java.security.KeyStore.getDefaultType())
         signing.storeFile.withInputStream { store.load(it, signing.storePassword.toCharArray()) }
         def certificate = store.getCertificate(signing.keyAlias)
-        def expected = "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+        def expected = new groovy.json.JsonSlurper().parse(rootProject.file('ci/release-identity.json')).certificateSha256
         if (certificate == null || java.security.MessageDigest.getInstance("SHA-256")
                 .digest(certificate.encoded).encodeHex().toString() != expected)
             throw new GradleException("发布证书不是历史 E7E3，停止打包")
     }
 }
 tasks.configureEach {
-    if (name.matches("(package|validateSigning|assemble)(Standard|Low)Release")) dependsOn(verifyPublishCertificate)
+    if (!unsignedPackage && name.matches("(package|validateSigning|assemble)(Standard|Low)Release")) dependsOn(verifyPublishCertificate)
+}
+tasks.register('signPublishRelease') {
+    if (!unsignedPackage) dependsOn(verifyPublishCertificate, 'assembleStandardRelease', 'assembleLowRelease')
+    doFirst {
+        if (unsignedPackage) throw new GradleException('未签名 CI 模式不能执行正式发布任务')
+    }
+}
+
+def verifyBundledIdentities = tasks.register('verifyBundledIdentities', Exec) {
+    inputs.files(rootProject.files('tools/runtime-tools.lock.json', 'tools/prepare-runtime-tools.py',
+            'app/src/main/assets/runtime-tools.json'))
+    commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
+            rootProject.file('tools/prepare-runtime-tools.py').absolutePath, '--check')
+}
+def verifyBuiltinRegistry = tasks.register('verifyBuiltinRegistry', Exec) {
+    inputs.files(rootProject.files('tools/generate-builtin-plugins.py', 'app/src/main/assets/builtin-plugins.json',
+            'app/src/main/java/com/deepseekharness/app/util/BuiltinPluginRegistry.java'))
+    commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
+            rootProject.file('tools/generate-builtin-plugins.py').absolutePath, '--verify')
+}
+def verifyCredentialRegistry = tasks.register('verifyCredentialRegistry', Exec) {
+    inputs.files(rootProject.files('tools/generate-credential-paths.py', 'app/src/main/assets/credential-paths.json',
+            'app/src/main/java/com/deepseekharness/app/util/CredentialPathRules.java'))
+    commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
+            rootProject.file('tools/generate-credential-paths.py').absolutePath, '--check')
+}
+tasks.named('preBuild').configure { dependsOn(verifyBundledIdentities, verifyBuiltinRegistry, verifyCredentialRegistry) }
+tasks.withType(Test).configureEach {
+    systemProperty 'dsha.assetsDir', file('src/main/assets').absolutePath
+}
+tasks.configureEach {
+    if (name in ['verifyBundledIdentities', 'verifyBuiltinRegistry', 'prepareStandardAssets',
+                 'prepareBackupAssets', 'prepareRuntimeDescriptor', 'prepareRecoveryAssets', 'prepareUiLanguages'])
+        inputs.file(rootProject.file('tools/source_text.py'))
 }
 
 def prepareStandardAssets = tasks.register("prepareStandardAssets", Exec) {
     inputs.dir("src/main/assets")
     inputs.file(rootProject.file("tools/prepare-standard-assets.py"))
     inputs.file(rootProject.file("tools/generated_asset_directory.py"))
+    inputs.files(rootProject.files("tools/asset-deployment.json", "tools/asset_deployment.py", "tools/verify-asset-deployment.py"))
     inputs.file(rootProject.file("tools/prepare-web-compat.mjs"))
     inputs.files(rootProject.files("tools/web-compat/entry.cjs", "tools/web-compat/package.json", "tools/web-compat/package-lock.json"))
     inputs.file(rootProject.file("tools/build-dsh-runtime.py"))
@@ -170,6 +219,7 @@ def prepareRuntimeDescriptor = tasks.register("prepareRuntimeDescriptor", Exec) 
         inputs.files(fileTree(rootProject.file(path)) { include path.contains('/java/') ? '**/*.java' : '**/*.so' })
     }
     runtimeInputContract.launcherSources.each { inputs.file(file("src/main/java/com/deepseekharness/app/${it}")) }
+    (runtimeInputContract.generatorSources ?: []).each { inputs.file(rootProject.file(it)) }
     outputs.file(file("src/main/assets/runtime-descriptor.json"))
     commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B", rootProject.file("tools/prepare-runtime-descriptor.py").absolutePath, "--check")
 }
@@ -190,6 +240,7 @@ def prepareRecoveryAssets = tasks.register("prepareRecoveryAssets", Exec) {
     inputs.file(rootProject.file("tools/prepare-recovery-assets.py"))
     inputs.file(rootProject.file("tools/recovery_runtime_overlay.py"))
     inputs.file(rootProject.file("tools/generated_asset_directory.py"))
+    inputs.files(rootProject.files("tools/asset-deployment.json", "tools/asset_deployment.py"))
     inputs.file(rootProject.file("tools/recovery-runtime/lock.json"))
     // 正式归档变化必须重算物理位置；固定副本可以首次缺失后由同摘要种子建立。
     inputs.files(layout.buildDirectory.file("generated/standardAssets/offline-rootfs.bin"),
@@ -215,22 +266,48 @@ def verifyBackupDependencies = tasks.register("verifyBackupDependencies") {
     inputs.file(rootProject.file("tools/backup-dependencies.lock.json"))
     doLast {
         def lock = new groovy.json.JsonSlurper().parse(rootProject.file("tools/backup-dependencies.lock.json"))
-        if (lock.version != 1 || lock.dependencies.size() != 2) throw new GradleException("备份依赖锁格式错误")
+        def requiredCoordinates = ["com.google.code.gson:gson", "org.bouncycastle:bcprov-jdk15to18", "org.yaml:snakeyaml"] as Set
+        if (!(lock instanceof Map) || lock.version != 1 || !(lock.dependencies instanceof List)
+                || lock.dependencies.size() != requiredCoordinates.size())
+            throw new GradleException("备份依赖锁格式错误")
+        def coordinates = new HashSet<String>()
+        lock.dependencies.each { expected ->
+            if (!(expected instanceof Map) || !(expected.group instanceof String)
+                    || !(expected.name instanceof String) || !(expected.version instanceof String)
+                    || !(expected.sha256 instanceof String) || !(expected.license instanceof String)
+                    || !(expected.licenseAsset instanceof String) || !(expected.source instanceof String)
+                    || !(expected.group ==~ /[A-Za-z0-9_.-]+/) || !(expected.name ==~ /[A-Za-z0-9_.-]+/)
+                    || !(expected.version ==~ /[A-Za-z0-9][A-Za-z0-9_.+-]*/)
+                    || !(expected.sha256 ==~ /[a-f0-9]{64}/) || expected.license.isEmpty()
+                    || !(expected.licenseAsset ==~ /licenses\/[A-Za-z0-9_.-]+\.txt/)
+                    || !expected.source.startsWith("https://")
+                    || !coordinates.add(expected.group + ":" + expected.name)
+                    || (expected.licenseSha256 != null && (!(expected.licenseSha256 instanceof String)
+                        || !(expected.licenseSha256 ==~ /[a-f0-9]{64}/))))
+                throw new GradleException("备份依赖锁记录无效或坐标重复")
+        }
+        if (coordinates != requiredCoordinates) throw new GradleException("备份依赖锁缺少必需坐标")
+        def fileDigest = { File content ->
+            def hash = java.security.MessageDigest.getInstance("SHA-256")
+            content.withInputStream { input ->
+                byte[] buffer = new byte[65536]; int count
+                while ((count = input.read(buffer)) != -1) hash.update(buffer, 0, count)
+            }
+            hash.digest().encodeHex().toString()
+        }
         ["standardReleaseRuntimeClasspath", "lowReleaseRuntimeClasspath"].each { name ->
             def resolved = configurations.getByName(name).resolvedConfiguration.resolvedArtifacts
             lock.dependencies.each { expected ->
                 def selected = resolved.findAll { it.moduleVersion.id.group == expected.group && it.name == expected.name }
                 if (selected.size() != 1 || selected[0].moduleVersion.id.version != expected.version)
                     throw new GradleException("备份依赖版本未锁定：${expected.group}:${expected.name}")
-                def hash = java.security.MessageDigest.getInstance("SHA-256")
-                selected[0].file.withInputStream { input ->
-                    byte[] buffer = new byte[65536]; int count
-                    while ((count = input.read(buffer)) != -1) hash.update(buffer, 0, count)
-                }
-                if (hash.digest().encodeHex().toString() != expected.sha256)
+                if (fileDigest(selected[0].file) != expected.sha256)
                     throw new GradleException("备份依赖摘要不符：${expected.name}")
-                if (!file("src/main/assets/${expected.licenseAsset}").isFile())
+                def license = file("src/main/assets/${expected.licenseAsset}")
+                if (!license.isFile())
                     throw new GradleException("缺少备份依赖许可：${expected.name}")
+                if (expected.licenseSha256 != null && fileDigest(license) != expected.licenseSha256)
+                    throw new GradleException("备份依赖许可摘要不符：${expected.name}")
             }
         }
     }
@@ -266,5 +343,7 @@ dependencies {
     // 宿主备份：流式 JSON 清单与跨 API 23 的 PBKDF2-SHA256 / AES-GCM 实现，版本锁定。
     implementation 'com.google.code.gson:gson:2.13.1'
     implementation 'org.bouncycastle:bcprov-jdk15to18:1.85.2'
+    // 宿主凭据 YAML 仅使用 data-only SafeConstructor；来源、JAR 和许可由备份锁核验。
+    implementation 'org.yaml:snakeyaml:2.4'
     testImplementation 'junit:junit:4.13.2'
 }

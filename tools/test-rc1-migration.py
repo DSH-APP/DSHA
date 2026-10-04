@@ -27,11 +27,39 @@ class Migration(unittest.TestCase):
     def test_new_input_after_commit_has_new_generation(self):
         self.prepare();first=self.folder();self.verified();self.finalize();(self.dsh/'settings.yaml').write_text('llm: {model: other}\n')
         self.prepare();self.assertNotEqual(first,self.folder());self.assertTrue(first.is_dir())
+    def test_both_settings_inputs_require_exact_match_and_valid_hashes(self):
+        root={'path':'/root/.dsh','device':'1','inode':'2'}
+        stamp=lambda inputs:dict(dataRoot=root,inputs=inputs)
+        a='a'*64;b='b'*64
+        self.assertTrue(mod.same_input(stamp({'settings.yaml':a}),stamp({'settings.yaml.imported':a})))
+        self.assertFalse(mod.same_input(stamp({'settings.yaml':a}),stamp({'settings.yaml':a,'settings.yaml.imported':a})))
+        self.assertFalse(mod.same_input(stamp({'settings.yaml':a,'settings.yaml.imported':b}),stamp({'settings.yaml':a,'settings.yaml.imported':a})))
+        self.assertTrue(mod.same_input(stamp({'settings.yaml':a,'settings.yaml.imported':b}),stamp({'settings.yaml':a,'settings.yaml.imported':b})))
+        self.assertFalse(mod.same_input(stamp({'settings.yaml':'invalid'}),stamp({'settings.yaml.imported':'invalid'})))
+        self.assertFalse(mod.same_input(stamp({'unknown':a}),stamp({'unknown':a})))
     def test_restore_epoch_same_bytes_has_new_generation(self):
         self.prepare();first=self.folder();(self.dsh/'.dsha-rc1-restore-generation').write_text('restore-operation-2');self.prepare();self.assertNotEqual(first,self.folder())
     def test_completed_ordinary_prepare_does_not_scan_sessions(self):
         self.prepare();self.verified();self.finalize()
         with patch.object(mod.Resolver,'files',side_effect=AssertionError('ordinary startup must not enumerate')):self.prepare()
+    def test_reuse_checkpoint_only_follows_complete_same_generation_receipt(self):
+        self.prepare();self.finalize();self.assertFalse((self.folder()/'reuse.json').exists())
+        self.verified();self.finalize();checkpoint=json.loads((self.folder()/'reuse.json').read_text())
+        self.assertEqual(checkpoint['inputs'],self.doc()['inputs']);self.assertEqual(checkpoint['generation'],self.result()['generation'])
+        self.assertEqual(checkpoint['status'],'prepared');self.assertTrue(checkpoint['protectionComplete']);self.assertNotIn('sources',checkpoint)
+        self.assertLess((self.folder()/'reuse.json').stat().st_size,4096)
+        (self.folder()/'reuse.json').unlink();self.finalize();self.assertTrue((self.folder()/'reuse.json').is_file())
+        (self.folder()/'reuse.json').write_text('{broken')
+        self.assertEqual(self.finalize(),0);self.assertEqual(json.loads((self.folder()/'reuse.json').read_text()),checkpoint)
+        bad=dict(self.result(),sourcePreserved=False)
+        (self.folder()/'receipt.json').write_text(json.dumps(bad));(self.folder()/'reuse.json').unlink()
+        self.assertFalse(mod.publish_reuse(self.folder(),self.doc(),json.loads((self.state/'current.json').read_text()),bad))
+        self.assertFalse((self.folder()/'reuse.json').exists())
+    def test_partial_or_legacy_committed_receipt_is_rechecked_instead_of_upgraded(self):
+        self.prepare();self.verified();self.finalize();(self.folder()/'reuse.json').unlink()
+        receipt=self.result();receipt['version']=1;(self.folder()/'receipt.json').write_text(json.dumps(receipt))
+        (self.folder()/self.doc()['sources'][0]['snapshot']).write_text('damaged')
+        self.assertEqual(self.finalize(),1);self.assertFalse((self.folder()/'reuse.json').exists())
     def test_missing_source_and_changed_session_do_not_claim_preserved(self):
         self.prepare();(self.dsh/'settings.yaml').unlink();(self.dsh/'sessions/session.v3.jsonl').write_text('changed')
         self.assertEqual(self.finalize(),1);self.assertFalse(self.result()['sourcePreserved'])
@@ -42,6 +70,24 @@ class Migration(unittest.TestCase):
     def test_snapshot_io_error_blocks_prepared_and_never_creates_current(self):
         with patch.object(mod,'snapshot_row',side_effect=OSError('disk full')):self.assertEqual(self.prepare(),1)
         self.assertFalse((self.state/'current.json').exists());self.assertTrue((self.dsh/'settings.yaml').is_file())
+    def test_low_space_preflight_does_not_copy_or_create_generation(self):
+        with patch.object(mod.shutil,'disk_usage',return_value=type('Space',(),{'free':0})()),patch.object(mod,'snapshot_row',side_effect=AssertionError('must preflight before copy')):
+            self.assertEqual(self.prepare(),1)
+        self.assertFalse((self.state/'generations').exists());self.assertFalse((self.state/'current.json').exists())
+    def test_same_complete_inventory_reuses_verified_failed_snapshots(self):
+        crew=self.dsh/'.agent-presets/crew';crew.mkdir(parents=True);(crew/'agent.cordis.yml').write_text('- id: old\n')
+        generations=[];counts=[]
+        with patch.object(mod.shutil,'copyfile',side_effect=OSError('candidate disk write unavailable')):
+            for _ in range(3):
+                self.assertEqual(self.prepare(),1)
+                folder=next((self.state/'generations').iterdir());doc=json.loads((folder/'prepare.json').read_text());generations.append(doc['generation']);counts.append(len(list((folder/'snapshots').iterdir())))
+        self.assertEqual(len(set(generations)),1);self.assertEqual(len(set(counts)),1)
+        self.assertEqual(self.prepare(),0);self.assertEqual(self.doc()['generation'],generations[0])
+    def test_failed_inventory_identity_changes_start_new_generation_without_deleting_old(self):
+        crew=self.dsh/'.agent-presets/crew';crew.mkdir(parents=True);(crew/'agent.cordis.yml').write_text('- id: old\n')
+        with patch.object(mod.shutil,'copyfile',side_effect=OSError('candidate failure')):self.assertEqual(self.prepare(),1)
+        old=next((self.state/'generations').iterdir());(self.dsh/'sessions/session.v3.jsonl').write_text('new contents')
+        self.assertEqual(self.prepare(),0);self.assertNotEqual(old,self.folder());self.assertTrue(old.is_dir())
     def test_file_and_byte_budget_are_errors_not_partial_success(self):
         with patch.object(mod,'MAX_FILES',1):self.assertEqual(self.prepare(),1)
         with patch.object(mod,'MAX_BYTES',1):self.assertEqual(self.prepare(),1)
@@ -50,8 +96,51 @@ class Migration(unittest.TestCase):
         self.prepare();self.assertEqual(self.doc()['version'],2);self.assertTrue((self.folder()/'legacy-receipt.json').exists())
     def test_preset_source_and_candidate_remain_independent(self):
         preset=self.dsh/'.agent-presets/crew';preset.mkdir(parents=True);(preset/'agent.cordis.yml').write_text('- id: old\n')
-        self.prepare();candidate=self.dsh/self.doc()['presets'][0]['candidate'];self.assertTrue((candidate/'bundle/package.json').is_file());(preset/'agent.cordis.yml').write_text('changed')
+        self.prepare();candidate=self.dsh/self.doc()['presets'][0]['candidate'];self.assertFalse((candidate/'bundle').exists());(preset/'agent.cordis.yml').write_text('changed')
+        self.assertIsNone(self.doc()['presets'][0]['bundle']);self.assertFalse(self.doc()['presets'][0]['activated'])
         self.assertEqual((candidate/'agent.cordis.yml').read_text(),'- id: old\n');self.assertEqual(self.finalize(),1)
+    def test_preset_yaml_remains_raw_for_explicit_native_ast_conversion(self):
+        preset=self.dsh/'.agent-presets/crew';preset.mkdir(parents=True)
+        original='---\n# preserved comment\n- id: old\n  name: plugin\n  config: &shared\n    prompt: |\n      user: prompt\n- id: next\n  name: plugin\n  config: *shared\n'
+        (preset/'agent.cordis.yml').write_text(original,encoding='utf8');self.assertEqual(self.prepare(),0)
+        candidate=self.dsh/self.doc()['presets'][0]['candidate']
+        self.assertEqual((candidate/'agent.cordis.yml').read_text(encoding='utf8'),original)
+        self.assertFalse((candidate/'bundle').exists());self.assertEqual((preset/'agent.cordis.yml').read_text(encoding='utf8'),original)
+    def test_preset_root_metadata_is_snapshotted_without_becoming_directory_candidate(self):
+        presets=self.dsh/'.agent-presets';presets.mkdir();(presets/'index.json').write_text('{"selected":"crew"}')
+        (presets/'notes').write_text('keep this unknown root file')
+        crew=presets/'crew';crew.mkdir();(crew/'agent.cordis.yml').write_text('- id: old\n')
+        self.assertEqual(self.prepare(),0)
+        doc=self.doc();self.assertEqual(len(doc['presets']),1);self.assertEqual(doc['presets'][0]['id'],'crew')
+        rows={row['path']:row for row in doc['sources']}
+        for name,value in [('index.json','{"selected":"crew"}'),('notes','keep this unknown root file')]:
+            self.assertEqual((self.folder()/rows['.agent-presets/'+name]['snapshot']).read_text(),value)
+            self.assertEqual((presets/name).read_text(),value)
+            self.assertIn('PRESET_ROOT_FILE_PRESERVED:.agent-presets/'+name,doc['warnings'])
+        self.assertEqual(len(list((self.folder()/'snapshots').iterdir())),len(doc['sources']))
+    def test_post_snapshot_copy_failure_records_exact_operation_and_path(self):
+        crew=self.dsh/'.agent-presets/crew';crew.mkdir(parents=True);(crew/'agent.cordis.yml').write_text('- id: old\n')
+        with patch.object(mod.shutil,'copyfile',side_effect=IsADirectoryError(21,'is a directory')):
+            self.assertEqual(self.prepare(),1)
+        folder=next((self.state/'generations').iterdir());doc=json.loads((folder/'prepare.json').read_text())
+        self.assertEqual(doc['failure']['operation'],'preset-candidate-copy')
+        self.assertEqual(doc['failure']['path'],'.agent-presets/crew/agent.cordis.yml')
+        self.assertIn('IsADirectoryError',doc['failure']['traceback'])
+        self.assertFalse(doc['protectionComplete']);self.assertFalse((self.state/'current.json').exists())
+        self.assertEqual(len(list((folder/'snapshots').iterdir())),len(doc['sources']))
+        self.assertEqual((crew/'agent.cordis.yml').read_text(),'- id: old\n')
+    def test_directory_settings_has_typed_source_error(self):
+        settings=self.dsh/'settings.yaml';settings.unlink();settings.mkdir();(settings/'keep').write_text('original')
+        with self.assertRaises(mod.MigrationSourceError) as raised:self.prepare()
+        self.assertEqual(str(raised.exception),'MIGRATION_SOURCE_NOT_REGULAR')
+        self.assertEqual(raised.exception.operation,'settings-input')
+        self.assertEqual(raised.exception.logical,str(settings))
+        self.assertFalse((self.state/'current.json').exists());self.assertEqual((settings/'keep').read_text(),'original')
+    def test_directory_never_passes_snapshot_source_guard(self):
+        folder=self.root/'candidate';folder.mkdir();directory=self.dsh/'directory';directory.mkdir()
+        with self.assertRaisesRegex(mod.MigrationSourceError,'SOURCE_NOT_REGULAR'):
+            mod.snapshot_row(folder,self.dsh,directory,directory,[],'preset',0)
+        self.assertFalse((folder/'snapshots/0').exists())
     def test_stale_finalize_cannot_commit_new_startup(self):
         self.prepare();self.assertEqual(mod.finalize(str(self.root),str(self.state),'old-boot'),1);self.assertFalse((self.folder()/'receipt.json').exists())
     def link(self,target,link,directory=False):

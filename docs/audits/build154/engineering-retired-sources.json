@@ -1,0 +1,185 @@
+[
+  {
+    "path": "app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+    "retainedSource": "tools/history/engineering/app/src/androidTest/java/com/deepseekharness/app/Rc13Instrumentation.java",
+    "sha256": "d12bd2755bf96a3e315851685681bfd044da1d52c9d9d7b02750f87489761fa8",
+    "bytes": 21759,
+    "reason": "Old private-device plugin/update APK fixtures cannot validate the current generation; default runner remains an explicit retired stub."
+  },
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java",
+    "retainedSource": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/ui/FunctionalAuditInstrumentation.java",
+    "sha256": "7273cd229462512a41cfb14e1f94ddb72ccea400b5f1fa2c10177c2fe9d3b96b",
+    "bytes": 30627,
+    "reason": "Historical manual workflow modifies real configuration/credentials and obsolete backup-launch counter; retired from compilation and manifest."
+  },
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java",
+    "retainedSource": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/core/UpgradeDeviceAudit.java",
+    "sha256": "1938c926bcbfdc3a9d2d7c4f3df384ad905cba059be37c62077e5855ce6a75e8",
+    "bytes": 11892,
+    "reason": "Historical device upgrade workflow modifies real environment and asserts an obsolete built-in count; retired from compilation and manifest."
+  },
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java",
+    "retainedSource": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/core/StartupDiagnosticsAudit.java",
+    "sha256": "cc2bc5c760311166600227f68a87f46b787602e2ab520c2657174d91aa22d0fc",
+    "bytes": 8979,
+    "reason": "Historical manual diagnostic restarts user Web, changes renderer preferences and captures private screen; retired instead of retaining sensitive evidence."
+  },
+  {
+    "path": "app/src/main/java/com/deepseekharness/app/bridge/AppBridge.java",
+    "retainedSource": "tools/history/engineering/app/src/main/java/com/deepseekharness/app/bridge/AppBridge.java",
+    "sha256": "392633d0b3289d9eb3863407fcd543fee1526b391c13050ecf8fce445548f86f",
+    "bytes": 497,
+    "reason": "Unimplemented interface has no production or test consumer."
+  },
+  {
+    "path": "app/src/main/java/com/deepseekharness/app/DangerShellGuard.java",
+    "retainedSource": "tools/history/engineering/app/src/main/java/com/deepseekharness/app/DangerShellGuard.java",
+    "sha256": "ab919ecc550f20ee4ab92de72963363a5961503f96e9b351dbb1ea3ef3ce74a6",
+    "bytes": 6541,
+    "reason": "Unused historical shell guard; current execution uses DeviceShellPolicy."
+  },
+  {
+    "path": "app/src/main/java/com/deepseekharness/app/ui/OverlayStyleDialog.java",
+    "retainedSource": "tools/history/engineering/app/src/main/java/com/deepseekharness/app/ui/OverlayStyleDialog.java",
+    "sha256": "3d7d38b36cfcf977008904810dddf7aa725d3cf6a5c8b78b980f092ddcb42dfb",
+    "bytes": 13350,
+    "reason": "Production settings uses OverlayFragment; this obsolete dialog is referenced only by its removed debug layout case."
+  },
+  {
+    "path": "tools/TarRepro.java",
+    "retainedSource": "tools/history/engineering/tools/TarRepro.java",
+    "sha256": "a01874d60e6f4879244c0959c88a50503278a15fb58c218d2d394450d4468ce1",
+    "bytes": 5258,
+    "reason": "Unreferenced unsafe substitute extractor; production TarGzipExtractor fixtures remain."
+  },
+  {
+    "path": "tools/inject-arm64-natives.py",
+    "retainedSource": "tools/history/engineering/tools/inject-arm64-natives.py",
+    "sha256": "8f9af620e97b7c9ec0d068c1fa6f6780807faaca17eab538c45b603cf37cd592",
+    "bytes": 4080,
+    "reason": "Unreferenced unverified tar injection; current locked build-dsh-runtime remains."
+  },
+  {
+    "path": "scripts/prepare-dsh-alpha-runtime.sh",
+    "retainedSource": "tools/history/engineering/scripts/prepare-dsh-alpha-runtime.sh",
+    "sha256": "2e1dd857cca254fa8ddea1c594344fa7f937b7a9db0fdcc06d49cc158a86610d",
+    "bytes": 10364,
+    "reason": "Unreferenced obsolete alpha runtime builder; locked rc2 archive builder remains."
+  },
+  {
+    "path": "scripts/generate-update-fixtures.py",
+    "retainedSource": "tools/history/engineering/scripts/generate-update-fixtures.py",
+    "sha256": "b41db6c371e70ddab1d114031a4046cddd701be3debb4032c60b7b35e03b3f68",
+    "bytes": 3301,
+    "reason": "Unreferenced downgrade/manual APK fixture generator; no extra audit APK generation is permitted."
+  },
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/ui/ConfigurationAuditInstrumentation.java",
+    "retainedSource": "tools/history/engineering/app/src/debug/java/com/deepseekharness/app/ui/ConfigurationAuditInstrumentation.java",
+    "sha256": "e84af6dc17d5aa2930504de70550167367d9d74e1e882a8fea559df38755043c",
+    "bytes": 4395,
+    "reason": "Manual real-configuration credential rewrite audit is retired; current isolated host configuration tests remain.",
+    "gitBlob": "afa7f6a6dbc7657612ce955819cb95a48f0fb2dc"
+  },
+  {
+    "path": "app/src/main/assets/backup-prepare.py",
+    "retainedSource": "tools/history/engineering/assets/backup-prepare.py",
+    "sha256": "8fd9bc95f12d0e26d281349eca94e5a0a96da1aeaf6d9cc5528435070ae8bee2",
+    "bytes": 12627,
+    "reason": "No current production execution entry; historical source retained outside APK deployment. Native legacy import/read contracts remain."
+  },
+  {
+    "path": "app/src/main/assets/restore-merge.py",
+    "retainedSource": "tools/history/engineering/assets/restore-merge.py",
+    "sha256": "0fe3d18a01fbe133c9c166aba52f38022fbcd60db6ddd3381e3c6961d185c4d7",
+    "bytes": 53339,
+    "reason": "No current production execution entry; historical source retained outside APK deployment. Native legacy import/read contracts remain."
+  },
+  {
+    "path": "app/src/main/assets/rootfs-confirm-install.sh",
+    "retainedSource": "tools/history/engineering/assets/rootfs-confirm-install.sh",
+    "sha256": "1c64ef22aff5964c3beeaef4be110507dc8916f37bdb71ef15b82a557053cf3d",
+    "bytes": 8208,
+    "reason": "No current production execution entry; historical source retained outside APK deployment. Native legacy import/read contracts remain."
+  },
+  {
+    "path": "app/src/main/assets/pnpm-env-fix.sh",
+    "retainedSource": "tools/history/engineering/assets/pnpm-env-fix.sh",
+    "sha256": "61003026497d645efdbe66a61a6896cebceae73d1296f5d0c78f0983c4351350",
+    "bytes": 3206,
+    "reason": "No current production execution entry; historical source retained outside APK deployment. Native legacy import/read contracts remain."
+  },
+  {
+    "path": "app/src/main/assets/selftest.py",
+    "retainedSource": "tools/history/engineering/assets/selftest.py",
+    "sha256": "e7bafe7566796e80ec37b74185e199b3c5e002c1187355f8080c23acd8e5dbaa",
+    "bytes": 68287,
+    "reason": "No current production execution entry; historical source retained outside APK deployment. Native legacy import/read contracts remain."
+  },
+  {
+    "path": "app/src/main/assets/startup-checkpoints.py",
+    "retainedSource": "tools/history/engineering/assets/startup-checkpoints.py",
+    "sha256": "3c96e772631d9bbfe12375261f16aa1dd7832365fee895e908b7da93ae4a9b1a",
+    "bytes": 9119,
+    "reason": "No current production execution entry; historical source retained outside APK deployment. Native legacy import/read contracts remain."
+  },
+  {
+    "path": "app/src/main/assets/startup-recovery.py",
+    "retainedSource": "tools/history/engineering/assets/startup-recovery.py",
+    "sha256": "6c307f6ec62aecb1ddb31f57e1588baf9dc262d157185bc6f2f233461ba4d20e",
+    "bytes": 1302,
+    "reason": "No current production execution entry; historical source retained outside APK deployment. Native legacy import/read contracts remain."
+  },
+  {
+    "path": "app/src/main/assets/agent-preset-patch.json",
+    "retainedSource": "tools/history/engineering/retired-preset/app/src/main/assets/agent-preset-patch.json",
+    "sha256": "98025f90d8039cd4e329906a86c24ca9e9c805635c19a28d1eb359dad6ac2c08",
+    "bytes": 8157,
+    "reason": "No current deployment/public runtime reader: upstream rc2 owns preset/model navigation; archive/session/persona compatibility fingerprints and rc1 migration remain. Old mocked navigation test retired."
+  },
+  {
+    "path": "app/src/main/assets/models-navigation-patch.json",
+    "retainedSource": "tools/history/engineering/retired-preset/app/src/main/assets/models-navigation-patch.json",
+    "sha256": "d8d15c308c0c09a1a861d27a9e4b05bc4665ee6a57bcf153b6d8c4f4b80f4cc8",
+    "bytes": 1551,
+    "reason": "No current deployment/public runtime reader: upstream rc2 owns preset/model navigation; archive/session/persona compatibility fingerprints and rc1 migration remain. Old mocked navigation test retired."
+  },
+  {
+    "path": "app/src/main/assets/web-integration/agent-preset-header.css",
+    "retainedSource": "tools/history/engineering/retired-preset/app/src/main/assets/web-integration/agent-preset-header.css",
+    "sha256": "92d91c666a61ce23267d05cdecbe98103f7c8e4d7ad79febf12bb9e18942bc6c",
+    "bytes": 2643,
+    "reason": "No current deployment/public runtime reader: upstream rc2 owns preset/model navigation; archive/session/persona compatibility fingerprints and rc1 migration remain. Old mocked navigation test retired."
+  },
+  {
+    "path": "app/src/main/assets/web-integration/agent-preset-switch.js",
+    "retainedSource": "tools/history/engineering/retired-preset/app/src/main/assets/web-integration/agent-preset-switch.js",
+    "sha256": "a25c160a0b4e0c4bf8060869589f18179ea4682504a697fea8b597a3d53db664",
+    "bytes": 2853,
+    "reason": "No current deployment/public runtime reader: upstream rc2 owns preset/model navigation; archive/session/persona compatibility fingerprints and rc1 migration remain. Old mocked navigation test retired."
+  },
+  {
+    "path": "tools/test-agent-preset-switch.mjs",
+    "retainedSource": "tools/history/engineering/retired-preset/tools/agent-preset-switch.retired.mjs",
+    "sha256": "ae7be7a37984487351cda5ee47d07606c0ff525c544b5c8e15325799aaf32a41",
+    "bytes": 6401,
+    "reason": "No current deployment/public runtime reader: upstream rc2 owns preset/model navigation; archive/session/persona compatibility fingerprints and rc1 migration remain. Old mocked navigation test retired."
+  },
+  {
+    "path": "tools/test-restore-merge-wsdir.py",
+    "retainedSource": "tools/history/engineering/legacy-workspace-test.before.py",
+    "sha256": "fe914de746ec45a14f8b952decf937cbd024beef9e508a8a7a7ef4368360ca71",
+    "bytes": 3540,
+    "reason": "Exact pre-fix unsafe legacy fixture source retained; active test now uses only owned TemporaryDirectory paths, does not claim current restore boundary."
+  },
+  {
+    "path": "scripts/fix-corrupt-session.py",
+    "retainedSource": "tools/history/engineering/scripts/fix-corrupt-session.py",
+    "sha256": "88e65b88cd083af7867971201e1cd3ebc9eb0eccad70ab2b973d4238d603c264",
+    "bytes": 4112,
+    "reason": "No safe active deployment/caller; single-frame rewrite can discard later events. Retained exact historical source only; never executed during retirement."
+  }
+]

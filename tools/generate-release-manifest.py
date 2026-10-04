@@ -7,9 +7,11 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import zipfile
 from urllib.parse import quote, urlparse
+from release_names import apk_filename
 
-PUBLISH_CERT = 'e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5'
+PUBLISH_CERT = json.loads((Path(__file__).resolve().parents[1]/'ci/release-identity.json').read_text(encoding='utf-8'))['certificateSha256']
 
 
 def release_channel(version, explicit=None):
@@ -59,17 +61,21 @@ def inspect(apk, flavor, build_tools, java):
         raise ValueError(f'{apk.name}: 系统要求或架构不匹配')
     if 'application-debuggable' in badging:
         raise ValueError(f'{apk.name}: 不允许发布调试包')
-    signing = run([java, '-jar', build_tools / 'lib/apksigner.jar', 'verify', '--verbose', '--print-certs', apk])
+    signing = run([java, '-jar', build_tools / 'lib/apksigner.jar', 'verify', '--min-sdk-version', '23', '--verbose', '--print-certs', apk])
     certs = re.findall(r'Signer #\d+ certificate SHA-256 digest: ([a-fA-F0-9]+)', signing)
     if [c.lower() for c in certs] != [PUBLISH_CERT]:
         raise ValueError(f'{apk.name}: 与历史发布签名不一致')
+    for scheme in ('v1','v2','v3'):
+        if not re.search(r'Verified using '+scheme+r' scheme[^\n]+true',signing):raise ValueError('签名方案缺失:'+scheme)
+    with zipfile.ZipFile(apk) as archive:
+        runtime=json.loads(archive.read('assets/runtime-descriptor.json'))
     digest = hashlib.sha256()
     with apk.open('rb') as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b''):
             digest.update(chunk)
     return dict(filename=apk.name, flavor=flavor, minSdk=int(sdk[1]), abi='arm64-v8a',
                 bytes=apk.stat().st_size, sha256=digest.hexdigest(),
-                versionCode=int(package[2]), versionName=package[3])
+                versionCode=int(package[2]), versionName=package[3], dshVersion=runtime['dshVersion'], runtimeId=runtime['runtimeId'])
 
 
 def main():
@@ -92,19 +98,21 @@ def main():
     artifacts = [inspect(args.standard, 'standard', args.build_tools, args.java),
                  inspect(args.low, 'low', args.build_tools, args.java)]
     version, code = artifacts[0]['versionName'], artifacts[0]['versionCode']
-    if not re.fullmatch(r'\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9.]+)?', version):
+    if not re.fullmatch(r'\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9.-]+)?', version):
         raise ValueError('版本名称无效')
     if artifacts[1]['versionName'] != version + 'low' or artifacts[1]['versionCode'] != code:
         raise ValueError('两版 APK 版本不一致')
+    if artifacts[0]['runtimeId']!=artifacts[1]['runtimeId'] or artifacts[0]['dshVersion']!=artifacts[1]['dshVersion']:
+        raise ValueError('两版受管运行身份不一致')
     notes = args.notes.read_text(encoding='utf-8').strip()
     for artifact, apk in zip(artifacts, (args.standard, args.low)):
-        expected = f'dsha-{version}{"low" if artifact["flavor"] == "low" else ""}.apk'
+        expected = apk_filename(artifact['flavor'])
         if artifact['filename'] != expected:
             raise ValueError(f'发布文件名应为 {expected}')
         artifact['url'] = origin + '/downloads/' + quote(version) + '/' + quote(artifact['filename'])
         apk.with_suffix('.apk.sha256').write_bytes(f'{artifact["sha256"]}  {apk.name}\n'.encode('utf-8'))
     release = dict(version=version, versionCode=code, channel=release_channel(version, args.channel),
-                   pageUrl=origin + '/download/', notes=notes, artifacts=artifacts)
+                   pageUrl=origin + '/download/', notes=notes, dshVersion=artifacts[0]['dshVersion'], runtimeId=artifacts[0]['runtimeId'], artifacts=artifacts)
     manifest = dict(schemaVersion=1, packageName='com.dsh.client', certificateSha256=PUBLISH_CERT,
                     releases=retain_channels(release, previous))
     args.output.parent.mkdir(parents=True, exist_ok=True)

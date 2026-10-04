@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "owner": "mobile_server154-docs",
+  "phase": "complete-own-scope",
+  "items": [
+    {
+      "id": "D-DOC-21",
+      "status": "fixed",
+      "files": [
+        "docs/接手指南.md"
+      ],
+      "checks": [
+        "Rewritten from current source/locks/contribution workflow; retired guide exact bytes/hash retained; obsolete task/class/CI claims explicitly historical"
+      ]
+    },
+    {
+      "id": "D-DOC-23",
+      "status": "fixed",
+      "files": [
+        "tools/termux-jni/README.md"
+      ],
+      "checks": [
+        "Default API23, max16384/common4096 agree with actual build.ps1; current libtermux.so SHA read-only measured 0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147; NDK env example; old body isolated under history heading; no binary rebuild/device operation"
+      ]
+    },
+    {
+      "id": "D-DOC-16",
+      "status": "fixed-own-scope",
+      "files": [
+        "docs/接手指南.md",
+        "docs/1.2-upgrade-report.md",
+        "docs/adb-flow-audit.md",
+        "docs/android-low.md",
+        "docs/android-standard.md",
+        "docs/backup-upgrade-baseline.md",
+        "docs/device-acceptance-2026-09-05.md",
+        "docs/device-acceptance-alpha15-2026-09-09.md",
+        "docs/device-permissions-2026-09-09.md",
+        "docs/extract-startup-speed-2026-09-10.md",
+        "docs/functional-audit-rc1.4.md",
+        "docs/input-insets-fix-2026-09-09.md",
+        "docs/maintenance-rc1.4-verification.md",
+        "docs/optimization-backup-verification.md",
+        "docs/optimization-runtime-verification.md",
+        "docs/optimization-site-verification.md",
+        "docs/optimization-transfer-verification.md",
+        "docs/optimization-web-verification.md",
+        "docs/pid-stop-fix-2026-09-10.md",
+        "docs/plugin-download-npm-fix-2026-09-05.md",
+        "docs/plugin-layout-install-fix-2026-09-05.md",
+        "docs/proroot-experiment-plan.md",
+        "docs/proroot-startup-fix-2026-09-09.md",
+        "docs/rc1.3-implementation.md",
+        "docs/release-rc1.2-2026-09-06.md",
+        "docs/release-rc1.3-2026-09-07.md",
+        "docs/release-rc1.4-2026-09-07.md",
+        "docs/stability-acceptance.md",
+        "docs/startup-diagnostics-2026-09-10.md",
+        "docs/theme-rc1.4-verification.md",
+        "docs/theme-toolbar-only-rc1.4.md",
+        "docs/ui-interactions-logs-2026-09-09.md",
+        "docs/ui-layout-rc1.4-verification.md",
+        "docs/update-flow-rc1.4-verification.md",
+        "docs/ROADMAP.md",
+        "docs/upgrade-dsh-0.1.5-alpha.1.md",
+        "docs/upgrade-dsh-0.1.5-alpha.2.md",
+        "docs/website-rc2-20260928.md",
+        "docs/releases/v0.1.7-alpha1-build143.md",
+        "docs/releases/v0.1.7-alpha2-pre-release.md",
+        "docs/audits/2026-09-27-rc2-full-architecture/architecture.md",
+        "docs/audits/2026-09-27-rc2-full-architecture/architecture-before-fixes.md",
+        "docs/audits/2026-09-27-rc2-full-architecture/findings.md",
+        "docs/audits/2026-09-27-rc2-full-architecture/findings-before-fixes.md"
+      ],
+      "checks": [
+        "Old root reports/ROADMAP/upgrades/site/release notes have date/version/evidence-scope banner; no historical acceptance fact rewritten as current"
+      ]
+    },
+    {
+      "id": "D-DOC-19",
+      "status": "recording-error-explicit",
+      "files": [
+        "docs/releases/v0.1.7-alpha1-build143.md",
+        "docs/releases/v0.1.7-alpha2-pre-release.md"
+      ],
+      "checks": [
+        "Two 63-hex records explicitly invalid and unusable; no authenticated one-to-one original/official sidecar evidence, no guessed replacement"
+      ],
+      "residual": [
+        "The real original digest is unresolved; this is not a claimed successful artifact verification."
+      ]
+    },
+    {
+      "id": "D-DOC-24",
+      "status": "fixed",
+      "files": [
+        "docs/audits/2026-09-27-rc2-full-architecture/architecture.md",
+        "docs/audits/2026-09-27-rc2-full-architecture/findings.md"
+      ],
+      "checks": [
+        "Previously identical current-copy filenames now historical navigation wrappers; before-fix originals remain with exact-byte receipts; current architecture/audit links explicit"
+      ]
+    },
+    {
+      "id": "engineering-navigation",
+      "status": "fixed",
+      "files": [
+        "docs/engineering-standard.md",
+        "docs/module-map.md",
+        "docs/adr/0001-build154-boundaries.md",
+        "CONTRIBUTING.md"
+      ],
+      "checks": [
+        "Cross-links to current guide/build boundaries; explicit asset deployment and history exact-byte policy"
+      ]
+    }
+  ],
+  "validation": {
+    "retainedOriginalDocuments": 45,
+    "originalByteHashes": "PASS",
+    "newCurrentLocalLinks": 35,
+    "invalidRecordedDigestCount": 2,
+    "scope": "Docs and explicitly authorized incremental asset test only after source freeze; no Gradle/APK/device action in this phase"
+  }
+}

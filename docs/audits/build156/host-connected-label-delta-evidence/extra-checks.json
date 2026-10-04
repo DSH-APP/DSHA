@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "current-full-ui-i18n",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "tools/check-ui-i18n.py",
+        "--report",
+        "F:\\DSHA_RESTART\\app\\build\\audit-build156\\host-connected-label-delta\\ui-i18n-report.json"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 2.406,
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\current-full-ui-i18n.log",
+      "logSha256": "fbf97616a303c8e5ce9470ebc84d965de501e9d6fd984c4f7198874603653deb"
+    },
+    {
+      "name": "current-source-hygiene",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "tools/check-source-hygiene.py"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 0.719,
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\current-source-hygiene.log",
+      "logSha256": "63cf5ec8fc283b1182a6b1e36dfa4cbb3b8e2090b7709bbf9358d957f3e5721a"
+    }
+  ]
+}

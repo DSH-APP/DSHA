@@ -1,0 +1,809 @@
+{
+  "schemaVersion": 1,
+  "lane": "docs",
+  "phase": "final_current_source_review",
+  "scope": "27 exact source IDs; current docs and local website only; no phone/debug-audit-APK/upload/deployment",
+  "items": [
+    {
+      "id": "D-DOC-17",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "docs/plugins.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [
+        "重写当前rc2插件指南，明示依赖hooks/pnpmfile开放、npm pack与临时manifest的不同阶段、实际锁/摘要/事务及未知退出保护"
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-25",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "website/README.md",
+        "website/data/catalog.mjs",
+        "website/data/history/build147-release-notes.txt",
+        "website/scripts/build.mjs",
+        "website/scripts/release-input.mjs",
+        "website/scripts/site.test.mjs",
+        "website/package.json",
+        "website/package-lock.json"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        },
+        {
+          "command": "node website/scripts/build.mjs",
+          "result": "EXPECTED BLOCK: source156 / APK manifest155 mismatch",
+          "exitCode": 1,
+          "scope": "identity fence rejected stale manifest before dist mutation; not a successful website build"
+        },
+        {
+          "command": "python docs/audits/build156/website-preflight.py",
+          "result": "PASS build and 28/28 tests with real155 manifest/APKs and exact authenticated155 source",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/website-preflight-build155.json",
+          "scope": "changed website code preflight only; NOT final156/deployment"
+        },
+        {
+          "command": "python docs/audits/build156/website-final.py",
+          "result": "PASS actual156 website build and 28 tests",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/website-build-check.json",
+          "scope": "actual156 artifact/source/SHA-bound local website only; not deployment"
+        }
+      ],
+      "softwareChanges": [
+        "实际APK清单与源码version/code/DSH/runtimeId一致门禁；移除私有构建器当前版复制；当前内置信息动态注入，历史社区记录保留；旧build147 notes退出current入口"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "未部署dsha.cc或核对公网新版本下载响应；本轮无部署授权"
+        }
+      ],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-SEC-00",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "docs/security-model.md",
+        "docs/security-model.en.md",
+        "docs/adr/0002-current-threat-model.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [
+        "新增具体资产/主体/威胁/控制范围的ADR0002，中英同步明确同UID、loopback、LAN明文、脚本开放、设备写策略及短信边界"
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-04",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+        "app/src/main/res/xml/accessibility_service_config.xml"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-09",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "website/data/catalog.mjs",
+        "website/scripts/build.mjs",
+        "website/README.md",
+        "agent-skills/README.md",
+        "agent-skills/device-shell/SKILL.md",
+        "agent-skills/screen-ocr-operator/SKILL.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [
+        "技能目录/卡片改为当前受管接口与Root/Shizuku/ADB实际通道；旧设备记录与新文档字节分开，包名跟实际清单版本生成"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "网站本轮未部署，新技能源分发仅本地；历史线上内容不能当已更新"
+        }
+      ],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-10",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "README.md",
+        "README.en.md",
+        "BUILD.md",
+        "docs/接手指南.md",
+        "website/README.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        },
+        {
+          "command": "python docs/audits/build156/write-docs-review.py --final",
+          "result": "PASS current156 README/AGENTS banner and removal of cited stale AGENTS constraints",
+          "exitCode": 0,
+          "scope": "current root documents, not historical facts/global privacy claim"
+        }
+      ],
+      "softwareChanges": [
+        "当前BUILD/guide/website入口已同步，root完成中英README的156本地与历史公开版本边界"
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-11",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "THIRD_PARTY_NOTICES.md",
+        "tools/generate-third-party-notices.py",
+        "tools/apply-mobile-client-patches.mjs"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        },
+        {
+          "command": "python tools/generate-third-party-notices.py --check",
+          "result": "PASS current locked third-party identities",
+          "exitCode": 0,
+          "scope": "current generated notice versions/digests; final APK license presence is the build owner's separate gate"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-12",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "AGENTS.md",
+        "docs/engineering-standard.md",
+        "docs/module-map.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        },
+        {
+          "command": "python docs/audits/build156/write-docs-review.py --final",
+          "result": "PASS current156 README/AGENTS banner and removal of cited stale AGENTS constraints",
+          "exitCode": 0,
+          "scope": "current root documents, not historical facts/global privacy claim"
+        }
+      ],
+      "softwareChanges": [
+        "root完成AGENTS156横幅和相互冲突旧约束清理；模块图/工程规范记录本轮真实协作者与仍存依赖边"
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-13",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "agent-skills/README.md",
+        "agent-skills/device-shell/SKILL.md",
+        "website/src/skills/device-shell/SKILL.md",
+        "website/scripts/build.mjs"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [
+        "原生受管桥与通道的canonical SKILL现行字节保持，修掉仍称裸ADB/OCR通道的技能README；网站从唯一源分发，不再维护独立内容"
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-15",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "docs/security-model.md",
+        "docs/security-model.en.md",
+        "docs/adr/0002-current-threat-model.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-19",
+      "currentDisposition": "external_evidence_missing",
+      "files": [
+        "docs/releases/v0.1.7-alpha1-build143.md",
+        "docs/releases/v0.1.7-alpha2-pre-release.md",
+        "docs/audits/build154/historical-invalid-digests.json",
+        "docs/audits/build156/historical-alpha2-digest-recovery.json",
+        "docs/audits/build156/historical-alpha2-document-before.json"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        },
+        {
+          "command": "python docs/audits/build156/recover-alpha2-digest.py",
+          "result": "PASS actual local artifact, official APK digest/size, fetched89-byte sidecar and E7E3/v1/v2/v3 identity",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/historical-alpha2-digest-recovery.json",
+          "scope": "Root actually executed historical alpha2 Standard recovery only; no current156 APK/source mutation"
+        }
+      ],
+      "softwareChanges": [
+        "alpha2 Standard完整摘要已由实际APK、官方asset digest/size与原字节sidecar追回；历史文档仅追加更正，错误值/旧警告和更正前字节保持"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "仅alpha1旧63位记录的对应原件/官方旁证仍未匹配；本地另一版本143候选不能代替该原件。alpha2已追回，未补猜"
+        }
+      ],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执",
+      "recoveredHistoricalDigest": {
+        "sha256": "3258884ae654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18",
+        "proof": "docs/audits/build156/historical-alpha2-digest-recovery.json",
+        "officialSidecarUrl": "https://github.com/DSH-APP/DSHA/releases/download/v0.1.7-alpha2/dsha-0.1.7-alpha2.apk.sha256",
+        "originalInvalidValuePreserved": "3258884e654740f00cf43988b246e6c26483fd43a2f08ec703e98a333aa8b18"
+      }
+    },
+    {
+      "id": "D-DOC-20",
+      "currentDisposition": "external_evidence_missing",
+      "files": [
+        ".github/workflows/ci-fast.yml",
+        ".github/workflows/ci-package.yml",
+        ".github/workflows/release.yml",
+        "BUILD.md",
+        "docs/接手指南.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [
+        "现行说明区分Windows、Linux宿主、Hosted CI与设备，不再以跳过或配置文件替代通过；旧事实保持历史范围"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "没有本轮Hosted Linux发布job/受保护环境/仓库保护的真实运行回执；本地软件和tmpfs不代替该证据"
+        }
+      ],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-21",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "docs/接手指南.md",
+        "docs/module-map.md",
+        "docs/engineering-standard.md",
+        "BUILD.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [
+        "现行指南移除154当前版锁定，并按真正入口列测试/平台边界；模块图纳入本轮真实协作者与App实例状态，不声称全反转已完成"
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-22",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/lib/index.js",
+        "tools/test-device-script-selection.py"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        },
+        {
+          "command": "python tools/test-device-script-selection.py",
+          "result": "PASS 3 tests",
+          "exitCode": 0,
+          "scope": "retired intrusive tools are not default selected; no device action"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-02",
+      "currentDisposition": "duplicate",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执",
+      "duplicate_of": "D-DOC-08"
+    },
+    {
+      "id": "D-DOC-03",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+        "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "只核对被引用四类的注释/相邻Javadoc；没有全仓checkstyle/doclint零告警声明"
+      ],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-05",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PluginNavigation.java",
+        "docs/adr/0001-build154-boundaries.md",
+        "docs/plugins.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "现行用户政策明确正式插件自动解析/提交，无审阅门槛；旧建议要求外部来源额外确认不可直接套回。当前导航注释已准确。"
+    },
+    {
+      "id": "D-DOC-06",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java",
+        "tools/generate-changelog.py",
+        "docs/releases/build156-changes.zh.md",
+        "docs/releases/build156-changes.en.md",
+        "app/src/main/res/raw/changelog.md",
+        "app/src/main/res/raw-en/changelog.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        },
+        {
+          "command": "python tools/generate-changelog.py --check",
+          "result": "FAIL: CHANGELOG_STALE:zh",
+          "exitCode": 1,
+          "scope": "156 source notes exist; raw resources still await root regeneration"
+        },
+        {
+          "command": "python tools/generate-changelog.py --check",
+          "result": "PASS bundled changelog from locale release notes",
+          "exitCode": 0,
+          "scope": "actual current156 notes/raw bytes"
+        }
+      ],
+      "softwareChanges": [
+        "root从156中英notes生成当前raw资源；UpdateActivity继续读取资源，实际字节check通过"
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-07",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java",
+        "app/src/test/java/com/deepseekharness/app/util/SensitiveDataTest.java"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "已知七类与注册秘密规则不保证识别任意自定义头/非常规键或未知秘密；这是文档明确的范围"
+      ],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-08",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java",
+        "app/src/main/java/com/deepseekharness/app/util/BuiltinPluginRegistry.java",
+        "app/src/main/assets/builtin-plugins.json",
+        "app/src/main/assets/register-builtin-plugins.py",
+        "tools/generate-builtin-plugins.py"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        },
+        {
+          "command": "python tools/generate-builtin-plugins.py --verify",
+          "result": "PASS",
+          "exitCode": 0,
+          "scope": "exact current generated builtin declarations"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-14",
+      "currentDisposition": "duplicate",
+      "files": [
+        "app/src/main/assets/register-builtin-plugins.py"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执",
+      "duplicate_of": "D-DOC-08"
+    },
+    {
+      "id": "D-DOC-16",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "docs/audits/build154/history-document-sources.json",
+        "docs/1.2-upgrade-report.md",
+        "docs/android-low.md",
+        "docs/ROADMAP.md",
+        "docs/upgrade-dsh-0.1.5-alpha.2.md",
+        "docs/website-rc2-20260928.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-18",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "docs/android-standard.md",
+        "docs/community-standard-feedback.md"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-23",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/termux-jni/README.md",
+        "tools/termux-jni/build.ps1",
+        "app/src/main/jniLibs/arm64-v8a/libtermux.so"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-DOC-24",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "docs/audits/2026-09-27-rc2-full-architecture/architecture.md",
+        "docs/audits/2026-09-27-rc2-full-architecture/findings.md",
+        "docs/audits/build154/history-document-sources.json"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": false,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-PRIV-03",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "docs/stability-acceptance.md",
+        "docs/audits/2026-09-27-round2-architecture/final-assessment.md",
+        "docs/evidence/rc1.4-functional/release-build.log",
+        "docs/audits/build156/privacy-document-sources.json"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        }
+      ],
+      "softwareChanges": [
+        "定点脱敏三份仍暴露开发机路径的公开历史副本，原始字节/摘要私有保留；旧final assessment标明评分与通过只属原日期"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "本轮不能擦除Git历史和既有公开副本；私有原件须继续从公开快照排除"
+        }
+      ],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    },
+    {
+      "id": "D-WEB-01",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "website/deploy/nginx-dsha-https.conf",
+        "website/deploy/PUBLISHING.md",
+        "website/scripts/http-check.mjs",
+        "docs/audits/build156/nginx-syntax.json"
+      ],
+      "checks": [
+        {
+          "command": "python docs/audits/build156/check-docs.py",
+          "result": "PASS",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/docs-checks.json",
+          "scope": "127 bounded current-document, cited-source and preserved-byte checks; not global doclint/device/deployment"
+        },
+        {
+          "command": "app/build/audit-build154/nginx/nginx-1.28.3/nginx.exe -t -p app/build/audit-build156/docs-nginx/ -c app/build/audit-build156/docs-nginx/syntax.conf",
+          "result": "PASS with listen-http2 deprecation warnings",
+          "exitCode": 0,
+          "receipt": "docs/audits/build156/nginx-syntax.json",
+          "scope": "Windows current-template syntax, isolated certificate/paths; server not started; initial missing fixture temp/log directories corrected, first failed receipt retained"
+        }
+      ],
+      "softwareChanges": [
+        "下载块安全头已存在；新增实际HTTPS检查项与部署说明，避免未来只查首页；本轮未部署"
+      ],
+      "missingEvidence": [
+        {
+          "kind": "external",
+          "detail": "没有dsha.cc本轮公网APK响应/实际Linux服务器回执；Windows本地语法检查不代替部署"
+        }
+      ],
+      "residual": [],
+      "changed": true,
+      "reason": "当前源逐项复核；附件建议不自动成为新授权，原始历史材料不当本轮通过回执"
+    }
+  ],
+  "crossCuttingChecks": [
+    {
+      "command": "python docs/audits/build156/test-merge-ledger.py",
+      "result": "PASS",
+      "exitCode": 0,
+      "scope": "8 real merger tests including exact coverage, incomplete owners, stale cache and required-contract separation"
+    }
+  ],
+  "findings": [
+    "155已修状态未能代表当前plugins指南与网站说明，已本轮真正修订",
+    "旧cached residual集合必须按本轮回执重建；8回归通过",
+    "root156元数据/说明/raw与实际156网站检查完成；alpha2已追回，仅alpha1旧摘要、Hosted CI和公网部署证据仍独立缺失"
+  ],
+  "missingExternalEvidence": [
+    "仅alpha1旧Standard63位记录的对应原件/官方旁证；alpha2完整摘要已追回",
+    "本轮Hosted Linux发布job/环境/保护真实回执",
+    "本轮dsha.cc部署及公网新APK响应",
+    "早已公开副本的删除/历史清理不能由本地脱敏证明"
+  ]
+}

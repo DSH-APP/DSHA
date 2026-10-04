@@ -1,0 +1,305 @@
+{
+  "group": "G1",
+  "items": [
+    {
+      "id": "D-SEC-07",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/CredentialPaths.java",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java"
+      ],
+      "checks": [
+        "25 actual-source isolated JVM tests PASS",
+        "current-source behavior assertions PASS"
+      ],
+      "residual": "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。"
+    },
+    {
+      "id": "D-SEC-15",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BridgePathPolicy.java",
+        "app/src/test/java/com/deepseekharness/app/util/CredentialPathsTest.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgeFileSnapshot.java"
+      ],
+      "checks": [
+        "25 actual-source isolated JVM tests PASS",
+        "current-source behavior assertions PASS",
+        "Bridge text read/list use anchored fs and source identity checks",
+        "Share/export private verified snapshots; original/preexisting destination/size cap actual-disk JVM tests PASS"
+      ],
+      "residual": "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。 Canonical guest-path authorization still follows app-selected mappings; same-UID plugin code is authorized code and is not isolated by bridge policy. System chooser/MediaStore device use not exercised."
+    },
+    {
+      "id": "D-SEC-21",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java"
+      ],
+      "checks": [
+        "25 actual-source isolated JVM tests PASS",
+        "current-source behavior assertions PASS"
+      ],
+      "residual": "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。"
+    },
+    {
+      "id": "D-SEC-22",
+      "status": "implemented",
+      "files": [
+        "app/src/main/res/xml/data_extraction_rules.xml",
+        "app/src/main/res/xml-v28/backup_rules.xml"
+      ],
+      "checks": [
+        "25 actual-source isolated JVM tests PASS",
+        "system XML allow/exclude checks PASS"
+      ],
+      "residual": "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。"
+    },
+    {
+      "id": "D-PRIV-02",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java",
+        "app/src/test/java/com/deepseekharness/app/util/SensitiveDataTest.java"
+      ],
+      "checks": [
+        "25 actual-source isolated JVM tests PASS",
+        "current-source behavior assertions PASS"
+      ],
+      "residual": "未进行Android系统备份/SAF/设备实际运行验收；任意未知秘密不能由正则保证全部识别。"
+    },
+    {
+      "id": "D-SEC-01",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ArchiveFileBoundary.java",
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java"
+      ],
+      "checks": [
+        "51 current-source JVM tests PASS",
+        "Actual generated cold asset sequence and repeated dsh extraction PASS with explicit filesystem shape fixture"
+      ],
+      "residual": "Android syscall/device extraction not run; future signed special types fail with path; hardlink assets normalize verified bytes and current shipped assets contain no hardlinks."
+    },
+    {
+      "id": "D-IO-02",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ArchiveFileBoundary.java"
+      ],
+      "checks": [
+        "Link/mode failures contain path/type; unsafe parent, leaf and graph escape reject before link publication",
+        "Valid link indirection preserved"
+      ],
+      "residual": "Host tests use actual disk for bytes and explicit Windows link-shape adapter; real Android syscalls not exercised."
+    },
+    {
+      "id": "D-SEC-03",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgeCredentialAuth.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgeCredentialFiles.java",
+        "app/src/main/assets/bridge-token-compat.cjs",
+        "tools/test-bridge-token-compat.mjs",
+        "app/src/main/assets/builtin-plugins/dsh-computer-use-android/lib/server.cjs",
+        "app/src/main/assets/builtin-plugins/dsh-task-notifier/lib/index.js",
+        "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs",
+        "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/lib/index.js"
+      ],
+      "checks": [
+        "Header-only and query/conflict/duplicate auth JVM checks PASS",
+        "Actual unmodified peak-chip 4.1.8 tgz function + Request/Headers/AbortSignal migration shim PASS",
+        "Bridge protocol 3 / header-x-token declared; browser universal injection does not claim CORS networking support"
+      ],
+      "residual": "Only literal loopback:3090 GET fetch is migrated. Unknown curl/http library legacy query clients require header update; no same-UID sandbox claim."
+    },
+    {
+      "id": "D-RT-20",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgeCredentialFiles.java"
+      ],
+      "checks": [
+        "Token root selected via UserDataLayout.current and Context-authorized physical private files",
+        "Nonfile credential source rejected, old regular token retained; atomic header and token readback JVM checks PASS"
+      ],
+      "residual": "Real restoration/device stop/rebind not exercised; restored data can no longer choose external token path."
+    },
+    {
+      "id": "D-SEC-19",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java",
+        "app/src/main/assets/device-shell-policy.py",
+        "tools/test-device-shell-policy.py"
+      ],
+      "checks": [
+        "Native mirrored/adopted SMS and ancestor bounds JVM PASS",
+        "21 real-source Python executor-policy tests PASS, including privileged adb and symlink-resolved read denial"
+      ],
+      "residual": "Real Root/Shizuku/SELinux/device channels not exercised; shared-storage cross-process races still require device evidence."
+    },
+    {
+      "id": "D-SEC-04",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/util/ScreenTarget.java",
+        "app/src/main/java/com/deepseekharness/app/util/SensitiveAppPolicy.java"
+      ],
+      "checks": [
+        "Display/pkg/window target identity and unknown-sensitive pure JVM cases PASS",
+        "No missing-focus editable fallback; actual-source production javac PASS"
+      ],
+      "residual": "No phone evidence. Window changes fail closed; package sensitivity is a heuristic and does not guarantee all sensitive interfaces are detected."
+    },
+    {
+      "id": "D-SEC-14",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java"
+      ],
+      "checks": [
+        "Privileged execution rechecks actual display top package; known expected target never succeeds when unverifiable",
+        "Stable VSCREEN_TARGET_UNVERIFIABLE/TARGET_CHANGED error; current Android37 source javac PASS"
+      ],
+      "residual": "TaskInfo hidden displayId availability and virtual display behavior require device evidence. Unknown target one-shot confirmation does not assert identity verification."
+    },
+    {
+      "id": "D-PRIV-04",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/util/ScreenTarget.java"
+      ],
+      "checks": [
+        "MCP screenshot PNG encoded in memory without disk path; existing file screenshot remains",
+        "Bundled real computer-use MCP screenshot and cancellation regression PASS"
+      ],
+      "residual": "File screenshots remain retained in app-private Pictures/DSHA; no retention auto-delete introduced. Actual screenshot device authorization not exercised."
+    },
+    {
+      "id": "D-SEC-05",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/SensitiveClipboard.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+      ],
+      "checks": [
+        "LAN address clipboard content preserved; sensitive flag on API24+, Toast no URL/token echo",
+        "Clipboard helper and bridge current-source production javac PASS"
+      ],
+      "residual": "LAN HTTP feature remains plaintext within selected network and Android23 cannot attach sensitive clipboard extras; no TLS/pairing claim or device clipboard test."
+    },
+    {
+      "id": "D-SEC-08",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+        "tools/test-backup-engine.py"
+      ],
+      "checks": [
+        "Removed both obsolete automatic active .dsha-apikey readbacks and the unused helper; nativeConfig import unchanged, explicit native file-key selection retained",
+        "3 current engine behavior/source-contract tests PASS: FULL never publishes raw historical key and archive/original previous tree preserved; partial valid restore preserves unselected key; out-of-scope key rejects; no candidate does not fabricate nativeConfig",
+        "Current-source production javac PASS with G2 public Context port"
+      ],
+      "residual": "Historical key-only archives require the existing explicit NativeRestoreTargets includeKey choice; unknown old active originals and input archives are not deleted or read into configuration. Android Keystore itself not exercised."
+    },
+    {
+      "id": "D-SEC-11",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java",
+        "app/src/main/res/layout/fragment_config.xml"
+      ],
+      "checks": [
+        "API Key replacement field blank, hierarchy save disabled in XML and Java, explicit separate remove operation",
+        "Blank save keeps record; new value save and ConfigStore readback checked; valid port controls Save; permission choice changes retained",
+        "Parent will compile ConfigFragment after AGP regenerates PermissionMode resources; source-only API Key callbacks checked"
+      ],
+      "residual": "Final AGP generated-resource compilation pending because previous R.jar has no newly added PermissionMode resources. UI/device rotation not exercised."
+    },
+    {
+      "id": "D-UPD-01",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/UpdateLocations.java",
+        "app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java",
+        "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+      ],
+      "checks": [
+        "Official dsha.cc /download and DSH-APP/DSHA release pages and artifact paths only",
+        "Bounded native plain-text notes; unsafe/other-repo/userinfo/port/encoding URLs rejected; current source JVM policy tests PASS"
+      ],
+      "residual": "Metadata is HTTPS from configured official site, not an independent signed manifest. APK full SHA, package/version/flavor and installed signer checks remain; server compromise can still misdescribe official releases."
+    },
+    {
+      "id": "D-UPD-02",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/UpdateRedirects.java",
+        "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java"
+      ],
+      "checks": [
+        "Injected production redirect transport blocks malicious domain before open, restricts metadata chain, bounds 6 hops and closes every rejected hop",
+        "Official GitHub release-CDN Range chain then production ResumableDownload full-file SHA verification PASS; cancellation/unknown result no alternate source replay"
+      ],
+      "residual": "Actual live CDN/network edge matrix not run; approved current official GitHub CDN hosts only, unknown new CDN fails clearly for manual review. Final APK signer checks preserved."
+    },
+    {
+      "id": "D-PRIV-01",
+      "status": "mitigated",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java",
+        "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java",
+        "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java"
+      ],
+      "checks": [
+        "Export description truthfully covers startup/plugin/runtime output and best-effort key redaction",
+        "Known-format and registered-opaque-key synthetic JVM fixtures PASS; sensitive clipboard and no report value Toast"
+      ],
+      "residual": "No real runtime log sampled from phone. Programs/plugins may print private content and unknown keys; no all-sensitive-data removal guarantee."
+    },
+    {
+      "id": "D-DUP-06",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/CredentialPathRules.java",
+        "app/src/main/java/com/deepseekharness/app/util/CredentialPaths.java",
+        "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java",
+        "app/src/main/assets/credential-paths.json",
+        "tools/generate-credential-paths.py",
+        "tools/test-credential-paths.py"
+      ],
+      "checks": [
+        "Authoritative credential-paths.json generated Java exact bytes and 4 generator failure/scope tests PASS",
+        "Real BridgePathPolicy, UserDataLayout and DataRootPolicy consumers tested: external .env private but selected backup .env data remains; sessions-trash only at sessions root",
+        "Current-source 72 JVM tests PASS; G3 Python integration delegated and table is build-time generated, not runtime loose parse"
+      ],
+      "residual": "G3 integrating Python consumer; root integrating Gradle drift and managed-asset gate. No credential regex is a universal secrets detector."
+    }
+  ],
+  "no_device_operations": true,
+  "production_baseline_not_used_as_fix": true,
+  "checkpoint": {
+    "jvm_tests": 72,
+    "generator_tests": 4,
+    "node_compat_and_computer_use": "PASS",
+    "production_javac": "PASS except ConfigFragment old generated R pending final AGP",
+    "device_operations": false,
+    "legacy_credential_boundary_tests": 3
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "schema": "dsha-device-ending-delta-review-v1",
+  "reviewedAt": "2026-10-04T12:17:37+08:00",
+  "reviewMode": "host_only_after_source_supplement_delta",
+  "softwareChanged": false,
+  "deviceCommandsByReviewer": 0,
+  "scope": {
+    "flavor": "standard",
+    "packageName": "com.dsh.client",
+    "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+    "lastUpdateTime": "2026-10-04T10:51:25+08:00",
+    "priorCaptureAt": "2026-10-04T11:45:44.610012+08:00",
+    "afterCaptureAt": "2026-10-04T12:15:24.698346+08:00",
+    "sameOfficialApkNoNewInstall": true
+  },
+  "summary": {
+    "status": "no_new_main_process_crash_marker_in_this_finite_delta",
+    "newOwnMainExitRecords": 0,
+    "newPermissionChangeExitRecords": 0,
+    "newJavaNativeOrAnrMarkers": false,
+    "newIsolatedWebviewSystemExitRecords": 2,
+    "newIsolatedWebviewExitsPreserved": true,
+    "allProcessExitsAbsent": false,
+    "retainedExitRecordsBefore": 16,
+    "retainedExitRecordsAfter": 16,
+    "unchangedExitEntries": 14,
+    "oldEntriesOutsideNewRetainedWindow": 2,
+    "universalNoCrashGuarantee": false
+  },
+  "evidence": {
+    "priorFrozenReview": {
+      "path": "docs/audits/build156/device-standard-exit-review.json",
+      "sha256": "7726e0dd70ea5ff6b8e2f6a0425835f5449d4876e4978564e0910182075cb8e5",
+      "bytes": 23994
+    },
+    "newEndingMetadata": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-source-only/ending-private.json",
+      "sha256": "ac4f8c44a6645d1143c7b31eacd2b4729a6364bd6651153eb00c5289dffdce0a",
+      "bytes": 535
+    },
+    "newPackageMetadata": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-source-only/package-after-private.txt",
+      "sha256": "bfc64b4eba20408ef0d29438a528f0a5db77392699a1778c5f02766ddfcf4f34",
+      "bytes": 16448
+    },
+    "newCrashBuffer": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-source-only/app-crash-buffer-after-private.txt",
+      "sha256": "df7f57cc57ee74a4aa4ad8d94d8d8831bfecd68ac06e291b9034b39c6b3d8edf",
+      "bytes": 10243,
+      "byteIdenticalToPriorFreshFinalBuffer": true,
+      "currentDateFailureMarkers": {
+        "javaFatal": false,
+        "nativeFatalSignal": false,
+        "anr": false
+      },
+      "historicalFatalEntriesRemain": 2,
+      "freshCollectionAttribution": "Root actual own-UID crash-buffer/own-package exit capture with no clearing, recorded in ending metadata; no collection executed by reviewer."
+    },
+    "newExitHistory": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-source-only/app-exit-info-after-private.txt",
+      "sha256": "6738026d3aab99f1b838b61ecf3ca01b6044f58ba47c6be09582ead59cc85619",
+      "bytes": 6380,
+      "comparisonIdentity": "Private timestamp/process/PID/reason/status tuple used internally; process names/PIDs/UIDs and descriptions are not published.",
+      "newEntries": [
+        {
+          "timestamp": "2026-10-04T12:11:31.002+08:00",
+          "processCategory": "webview_isolated_child",
+          "reasonNumber": 13,
+          "reasonName": "OTHER KILLS BY SYSTEM",
+          "status": 0,
+          "installPackageLIMarker": false
+        },
+        {
+          "timestamp": "2026-10-04T12:06:09.556+08:00",
+          "processCategory": "webview_isolated_child",
+          "reasonNumber": 13,
+          "reasonName": "OTHER KILLS BY SYSTEM",
+          "status": 0,
+          "installPackageLIMarker": false
+        }
+      ],
+      "priorEntriesNotInNewRetainedWindow": [
+        {
+          "timestamp": "2026-10-04T06:14:37.391+08:00",
+          "processCategory": "own_main_app",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "installPackageLIMarker": true
+        },
+        {
+          "timestamp": "2026-10-04T05:43:10.504+08:00",
+          "processCategory": "webview_isolated_child",
+          "reasonNumber": 13,
+          "reasonName": "OTHER KILLS BY SYSTEM",
+          "status": 0,
+          "installPackageLIMarker": false
+        }
+      ]
+    }
+  },
+  "operatorRestorationStatements": {
+    "noPermissionOrOtherSettingChangesReported": true,
+    "normalOwnedPluginRemovedReported": true,
+    "otherHealthySourceTransactions": "Reviewed separately by root/data; this small exit delta does not revalidate plugin/source/backup content or duplicate their PASS.",
+    "scopeAttribution": "Ending metadata and root operation statement; no independent screenshot rendering here."
+  },
+  "interpretation": [
+    "Two new isolated WebView child exits at 12:06:09.556 and 12:11:31.002 retain OTHER KILLS BY SYSTEM/status0. Their cause is not diagnosed or asserted harmless from that broad reason.",
+    "No new own-main exit, PERMISSION CHANGE, CRASH/CRASH_NATIVE/ANR exit reason or current-date Java/native/ANR crash-buffer marker is observed in this finite delta.",
+    "The retained exit history still has 16 records: 14 unchanged, 2 newly recorded and2 earlier entries no longer in the captured retained window. Those missing entries are not treated as deletion, recovery or an undone installation.",
+    "The identical historical-content crash buffer was freshly collected as reported by root; identical bytes are not a universal absence-of-failure guarantee.",
+    "Only this same-c676 interval is added. The frozen 7726 report and its 18 prior references are unchanged and were not reaudited."
+  ],
+  "checks": [
+    {
+      "command": "PowerShell $reviewScript | python -: frozen 7726 report SHA only; 4 new artifact digests/identity;safe package 156/min30/target37/unchanged install time;new crash byte/marker comparison;exit tuple delta against prior captured history;no new main/permission/crash reasons;redacted new child records",
+      "exitCode": 0,
+      "prior18ReferencesRerun": false,
+      "newArtifactsChecked": 4,
+      "newIsolatedChildExits": 2,
+      "newOwnMainExits": 0,
+      "deviceCommands": 0,
+      "productionSourceTestsBuildsOrChanges": 0
+    }
+  ],
+  "privacy": {
+    "serialPidUidRawProcessNamesPublished": false,
+    "rawCrashStacksOrExitDescriptionsPublished": false,
+    "tokensCookiesUrlsOrUserContentPublished": false
+  }
+}

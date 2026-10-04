@@ -9,14 +9,13 @@ import com.deepseekharness.app.util.Compat;
 import java.io.*;
 import java.util.*;
 
-/** 非调试 Android 的应用级作业与 Provider 验收；所有归档、源、恢复目录仅属于测试安装。 */
+/** 历史隔离安装验收源码；本轮仅维护编译一致性，未生成或运行审计 APK。 */
 public final class BackupWorkflowDeviceAudit extends Instrumentation {
     private final List<Map<String,Object>> results=new ArrayList<>();
     private final AndroidBackupFileSystem fs=new AndroidBackupFileSystem();
     private NativeBackupJobs jobs;
     private File files,fixture,project,disabled,bash;
     private HarnessController controller;
-    private char[] password="test-only-random-fixture-password".toCharArray();
     private NativeDataLocations.Selection selection;
     private interface Case { void run() throws Exception; }
     private void check(boolean value,String error) throws IOException { if(!value)throw new IOException(error); }
@@ -32,7 +31,7 @@ public final class BackupWorkflowDeviceAudit extends Instrumentation {
         var state=jobs.state();check(!state.busy||preview&&state.stage.equals("PREVIEW"),"TEST_OPERATION_STILL_RUNNING");return state;
     }
     private NativeBackupJobs.State export(Uri uri) throws Exception {
-        check(jobs.export(selection,password,uri,AuditDocumentProvider.document(uri).name,false),"EXPORT_NOT_STARTED:"+jobs.state().error);
+        check(jobs.export(selection,uri,AuditDocumentProvider.document(uri).name,false),"EXPORT_NOT_STARTED:"+jobs.state().error);
         return await(false);
     }
     private String latest() throws IOException { return BackupTree.digest(fs,new File(files,"host-backup-catalogue/latest.json"),new BackupControl(null)); }
@@ -58,13 +57,17 @@ public final class BackupWorkflowDeviceAudit extends Instrumentation {
             Uri verified=AuditDocumentProvider.create(context,fixture,"pipe");
             test("native_job_export_without_guest_to_pipe",()->{var state=export(verified);check(state.result.equals("COMPLETE"),state.stage+":"+state.result+":"+state.error);});
             String successful=latest();
-            test("wrong_password_keeps_data_and_latest",()->{
-                check(jobs.prepareRestore(verified,"incorrect-test-password".toCharArray(),Set.of("projects"),false),"RESTORE_NOT_STARTED");
-                var state=await(false);check(state.error.equals("AUTHENTICATION_FAILED"),state.stage+":"+state.error);
-                check(original.equals(BackupTree.digest(fs,project,new BackupControl(null)))&&successful.equals(latest()),"AUTH_FAILURE_CHANGED_DATA");
+            test("password_free_transport_and_cancelled_preflight_keep_data_and_latest",()->{
+                File payload=new File(fixture,"verified-payload");
+                check(PortableBackupEnvelope.unwrapIfPresent(fs,AuditDocumentProvider.document(verified).file,payload,new BackupControl(null)),"EXPORT_NOT_TAR_ENVELOPE");
+                try(InputStream input=fs.read(payload,fs.stat(payload))){check("UNENCRYPTED".equals(BackupArchive.read(input,null,new BackupControl(null)).get("sensitivePolicy")),"EXPORT_STILL_PASSWORD_PROTECTED");}
+                check(jobs.prepareRestore(verified,null,Set.of("projects"),false),"RESTORE_NOT_STARTED");
+                var preview=await(true);check(preview.stage.equals("PREVIEW"),preview.stage+":"+preview.error);
+                check(jobs.decide(preview.id,false),"CANCEL_DECISION_REJECTED");var state=await(false);check(state.stage.equals("CANCELLED"),state.stage+":"+state.error);
+                check(original.equals(BackupTree.digest(fs,project,new BackupControl(null)))&&successful.equals(latest()),"CANCEL_CHANGED_DATA");
             });
             test("project_preflight_and_native_commit_without_guest",()->{
-                check(jobs.prepareRestore(verified,password,Set.of("projects"),false),"RESTORE_NOT_STARTED");
+                check(jobs.prepareRestore(verified,null,Set.of("projects"),false),"RESTORE_NOT_STARTED");
                 var preview=await(true);check(preview.stage.equals("PREVIEW"),preview.stage+":"+preview.error);
                 check(original.equals(BackupTree.digest(fs,project,new BackupControl(null))),"PREFLIGHT_CHANGED_SOURCE");
                 check(jobs.decide(preview.id,true),"RESTORE_DECISION_REJECTED");var done=await(false);check(done.result.startsWith("DATA_RESTORED"),done.stage+":"+done.error);
@@ -89,7 +92,6 @@ public final class BackupWorkflowDeviceAudit extends Instrumentation {
             });
         } catch(Throwable error) { result.putString("failure",com.deepseekharness.app.util.SensitiveData.redact(android.util.Log.getStackTraceString(error))); }
         finally {
-            Arrays.fill(password,'\0');
             if(disabled!=null)try { if(fs.stat(disabled).type.equals("FILE"))BackupManager.runDataTask(controller,()->{fs.move(disabled,bash);return null;}); }
             catch(Exception error) { result.putString("cleanupFailure",android.util.Log.getStackTraceString(error)); }
             if(screen!=null) { Activity closed=screen;runOnMainSync(closed::finish); }

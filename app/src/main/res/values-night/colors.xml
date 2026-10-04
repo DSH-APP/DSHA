@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="panel_top">#111214</color>
-    <color name="panel_bottom">#111214</color>
-    <color name="panel_outline">#292C32</color>
+
+
+
     <color name="primary">#6AA4FF</color>
     <color name="primary_dark">#3A75DA</color>
     <color name="accent_on">#081428</color>
@@ -18,7 +18,7 @@
     <color name="err">#E08A8A</color>
     <color name="preview">#080B10</color>
     <color name="logo_top">#12233D</color>
-    <color name="logo_bot">#12233D</color>
+
     <!-- 深色底下涟漪要更亮一点才看得见 -->
     <color name="ripple">#187DA7F4</color>
     <color name="primary_ripple">#20FFFFFF</color>

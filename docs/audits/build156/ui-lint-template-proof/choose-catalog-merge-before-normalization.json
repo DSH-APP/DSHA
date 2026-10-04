@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "status": "MERGED_AUTHORIZED_CHOOSE_TEMPLATES",
+  "catalog": "tools/i18n/messages.json",
+  "beforeSha256": "7c8f5fef70a06fb7e0bcfce447b868468140de4c1c19f94dacda54c0ced66ff8",
+  "sha256": "3ae0f4da2b83c4ce5d1e84ab5fef5d2af9cb484c5bf1c9773ada08311b66a8c6",
+  "sources": [
+    {
+      "path": "docs/audits/build156/contribution-choose-ui.json",
+      "sha256": "6d6408cbf9cc60673b8f807de4833d3205fd5646db5c75c19b0b95e36ec4b752",
+      "entries": 9
+    },
+    {
+      "path": "docs/audits/build156/contribution-choose-core.json",
+      "sha256": "802a51cd09a3facd9a99607a3eba9566ff5ef07cfbb3beaa35044cb2cd3753ad",
+      "entries": 3
+    },
+    {
+      "path": "docs/audits/build156/contribution-choose-data.json",
+      "sha256": "41b42b9ff677e5dcb9f51e98eccc88b51ba99179ac563508ca4ea18750a96886",
+      "entries": 3
+    },
+    {
+      "path": "docs/audits/build156/contribution-choose-runtime.json",
+      "sha256": "6add35dd3e5a2b3e623085f513565331b04cf11f18fdee12c8faf034672afb5e",
+      "entries": 4
+    },
+    {
+      "path": "docs/audits/build156/contribution-choose-legacy.json",
+      "sha256": "e473ba6800cfe5b617c5ee72abebb6e9017300880cc8c950ab5207efcf0ee0a7",
+      "entries": 1
+    },
+    {
+      "path": "docs/audits/build156/contribution-choose-root.json",
+      "sha256": "289f6fabba0cd87fb1af3eb177cbae4ad75febd24b50fea7f978d5614a32f4f3",
+      "entries": 6
+    }
+  ],
+  "addedTemplates": 26,
+  "addedChineseKeys": [
+    "未完成的操作：%s\n最后记录阶段：%s\n\n%s\n\n原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。",
+    "最近手动备份：%s\n%s",
+    "\n最近自动副本：%s",
+    "发现已有备份：\n%s\n\n先核验内容和实际范围，确认后才会恢复。",
+    "\n另有 %s 个备份无法自动读取，可手动选择。",
+    "%s 将从加载路径移除；原件保留在数据页的保留区。对话、其他插件和外部源码目录保留。",
+    "应急网页无法加载：%s",
+    "DSHA v%s · MIT 许可",
+    "跟随系统 · %s",
+    "\n已安全清理 %s 项 · %s",
+    "Web 端口被占用：%s",
+    "插件已卸载，可重试启动：%s",
+    "%s 项 · %s",
+    "旧环境清理暂缓，原件保留：%s",
+    "\n旧事务归档暂缓，原件保留：%s",
+    "检查离线安装运行方式：%s",
+    "使用已验证方式安装离线工具：%s",
+    "离线工具尚未安装完成；已保留解压文件、安装现场和诊断：\n%s",
+    "隔离检查插件无法启动，详细原因：\n%s",
+    "%s\n错误代码：%s",
+    "应急 DSH 未就绪：%s",
+    "应急进程退出尚未确认：%s",
+    "正在校验应急安装包 (%s/%s)…",
+    "正在准备应急环境 (%s/%s)…",
+    "已保留的应急运行时约 %s；应急会话约 %s。原件保留，未自动删除。",
+    "正在核验应急文件 (%s/%s)…"
+  ],
+  "conflicts": [],
+  "entries": 3528,
+  "formats": 441,
+  "scope": "Six authorized choose-template files only; existing canonical translations retained."
+}

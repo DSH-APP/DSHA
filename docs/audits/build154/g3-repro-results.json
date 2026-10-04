@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "scope": "隔离宿主夹具，只读源码；未运行手机、未改生产数据",
+  "executed": [
+    {
+      "id": "D-BUG-08",
+      "method": "实际 Node HTTP ServerResponse + 当前 installResponseCompression，Accept-Encoding gzip，100ms后再end",
+      "observed": {
+        "callbackBeforeEnd": false,
+        "bytesBeforeEnd": 0,
+        "callbackAfterEnd": false,
+        "bytesAfterEnd": 10
+      }
+    },
+    {
+      "id": "D-BUG-06",
+      "method": "直接调用当前 backup-engine.trim_local_records 合成YAML",
+      "observed": {
+        "blockRemoved": true,
+        "flowRecordRemains": true,
+        "fourSpaceRecordRemains": true
+      }
+    },
+    {
+      "id": "D-BUG-01",
+      "method": "当前completed分支正则匹配标准8-4-4-4-12 UUID",
+      "observed": {
+        "matches": false
+      }
+    },
+    {
+      "id": "D-BUG-09",
+      "method": "DSHA_TEST_ROOT临时目录，当前plugin-manager.main无参数",
+      "observed": {
+        "exitCode": 1,
+        "message": "list index out of range"
+      }
+    },
+    {
+      "id": "D-COMPAT-02",
+      "method": "实际0.2.0-rc.2 app-boot.evaluatePluginCompatibility + 随包SemVer",
+      "observed": {
+        "allNinePeersIncludePrereleaseSatisfy": true,
+        "upstreamIssue": "undefined",
+        "defaultSemVerSatisfy": false
+      }
+    }
+  ]
+}

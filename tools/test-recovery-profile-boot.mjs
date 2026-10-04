@@ -9,10 +9,11 @@ import path from 'node:path';
 import { zstdDecompressSync } from 'node:zlib';
 
 const root=path.resolve(import.meta.dirname,'..');
+const expectedDsh=JSON.parse(await readFile(path.join(root,'tools/dsh-runtime/package.json'),'utf8')).dependencies['@deepseek-ai/dsh'];
 const fixture=JSON.parse(await readFile(path.join(root,'app/build/test-runtimes/current.json'),'utf8'));
 const runtime=path.resolve(process.env.DSHA_TEST_RUNTIME||fixture.raw);
 const actual=JSON.parse(await readFile(path.join(runtime,'node_modules/@deepseek-ai/dsh/package.json'),'utf8'));
-assert.equal(actual.version,'0.1.7-rc.2');
+assert.equal(actual.version,expectedDsh);
 const tempParent=path.join(root,'app/build/tmp');await mkdir(tempParent,{recursive:true});
 const temp=await mkdtemp(path.join(tempParent,'recovery-profile-'));
 const instance=randomBytes(16).toString('hex'),token=randomBytes(32).toString('hex'),profile=`dsha-emergency-${instance}`;

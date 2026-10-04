@@ -1,0 +1,599 @@
+{
+  "schema": 1,
+  "lane": "bridge",
+  "build": 156,
+  "baselineBuild": 155,
+  "reviewedAt": "2026-10-03T12:31:24Z",
+  "productionFrozen": true,
+  "scope": "Current-source repairs and isolated host checks only; no phone/ADB/Gradle/APK/upload by this lane",
+  "items": [
+    {
+      "id": "D-SEC-03",
+      "title": "桥 token 可经查询串传递，官方引导与多个内置插件把 token 放进 URL/命令行",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgeCredentialAuth.java",
+        "app/src/main/assets/builtin-plugins/dsh-computer-use-android/lib/server.cjs",
+        "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/lib/index.js",
+        "app/src/main/assets/builtin-plugins/dsh-task-notifier/lib/index.js",
+        "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs",
+        "tools/test-bridge-token-transport.py",
+        "tools/test-bridge-token-compat.mjs"
+      ],
+      "softwareChanges": [
+        "Verified current 3090 header-only credential transport and query/conflict/duplicate rejection; did not reinstate legacy query authorization.",
+        "Added an active-client/help source transport gate and complete bilingual help templates; transport enforcement itself was already present."
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS: 71 current-source JUnit cases; fresh UiMessages from current catalogue; no Android/FUSE/app_process execution",
+          "scope": "pure_behavior"
+        },
+        {
+          "command": "python tools/test-bridge-token-transport.py",
+          "result": "PASS: active managed client/help source gate, explicitly excludes distinct LAN/browser bootstrap and migration shim",
+          "scope": "narrow_source_gate"
+        },
+        {
+          "command": "node tools/test-bridge-token-compat.mjs",
+          "result": "PASS: actual peak-chip 4.1.8 tgz function, Request/Headers/AbortSignal, literal loopback/3090/GET bounds and conflicting/duplicate credentials; no network request",
+          "scope": "actual_client_behavior"
+        },
+        {
+          "command": "node tools/test-android-computer-use.mjs",
+          "result": "PASS: actual managed tool call uses X-Token and no token query, bounded PNG transfer, rejection and cancellation",
+          "scope": "actual_managed_client_behavior"
+        }
+      ],
+      "residual": [
+        "The limited migration shim does not cover unknown curl/HTTP-library clients. Formal same-UID plugins and terminal remain open; this credential gate is not a same-UID sandbox."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Real Android HTTP service/client integration was not executed."
+        }
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-SEC-04",
+      "title": "屏幕操作敏感应用判定靠包名子串黑名单且判定与执行间存在 TOCTOU，/app/launch 无授权闸",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java",
+        "app/src/main/java/com/deepseekharness/app/util/ScreenTarget.java",
+        "app/src/main/java/com/deepseekharness/app/util/SensitiveAppPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/util/ScreenSessionGrant.java"
+      ],
+      "softwareChanges": [
+        "Main-screen sensitivity confirmation is bound to the initially observed ScreenTarget.packageName instead of rereading another foreground package during authorization.",
+        "Execution keeps window/display/package and grant generation/revision checks; editable input now explicitly requires an enabled focused editable node.",
+        "Sensitive app launch keeps per-action confirmation and rechecks current run/grant after resolving the intent.",
+        "Launch/clipboard platform actions now execute through AppDeviceActions; bridge retains the sole confirmation/run authority.",
+        "Revocation carries the actual Application Context to its owned virtual session; no static service locator fallback."
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS: 71 current-source JUnit cases; fresh UiMessages from current catalogue; no Android/FUSE/app_process execution",
+          "scope": "pure_behavior"
+        },
+        {
+          "command": "python tools/test-bridge-routes.py",
+          "result": "PASS: four tests including compiled production route selectors and exact unknown/suffix rejection; HTTP wiring source-order checks are narrower than Android HTTP acceptance",
+          "scope": "java_behavior_and_narrow_wiring_source"
+        },
+        {
+          "command": "python tools/format-java.py --check --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files app/src/main/java/com/deepseekharness/app/util/DeviceFileOperations.java app/src/main/java/com/deepseekharness/app/bridge/AndroidDeviceFiles.java app/src/main/java/com/deepseekharness/app/DeviceFileCore.java app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java app/src/test/java/com/deepseekharness/app/util/DeviceFileOperationsTest.java app/src/main/java/com/deepseekharness/app/util/LanTokenState.java app/src/test/java/com/deepseekharness/app/util/LanTokenStateTest.java app/src/main/java/com/deepseekharness/app/LanProxyService.java app/src/test/java/com/deepseekharness/app/LanAuthTest.java app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java app/src/main/java/com/deepseekharness/app/HttpShellService.java app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java app/src/test/java/com/deepseekharness/app/util/BridgeTemplateFormattingTest.java --report app/build/java-format/bridge156-final-check.json",
+          "result": "PASS: pinned GJF 1.22.0, 16 files, zero formatting changes; exact Java tokens preserved",
+          "scope": "format_and_token_fingerprint"
+        },
+        {
+          "command": "python tools/test-vscreen-manager-http.py --jdk F:/DSHA/_toolchains/jdk-17 --sdk F:/DSHA/_toolchains/android-sdk --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS current main/standard release production sources compiled against SDK37/current standardRelease R/fresh UiMessages/locked dependencies; 25 selected JUnit and six actual loopback HTTP scenarios passed",
+          "scope": "actual_current_sdk_source_compile_and_jvm_loopback_behavior"
+        }
+      ],
+      "residual": [
+        "Package sensitivity remains a conservative name heuristic, not proof that every sensitive interface is recognized. The operating system can change the screen around a dispatch; no kernel-wide UI transaction is claimed."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No phone foreground-switch, payment-app launch, focused-node or accessibility dispatch acceptance."
+        }
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-SEC-05",
+      "title": "局域网模式为明文 HTTP，首访 token 在 URL 中并被显示/复制到剪贴板",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/LanProxyService.java",
+        "app/src/main/java/com/deepseekharness/app/util/LanTokenState.java",
+        "app/src/main/java/com/deepseekharness/app/LanAuth.java",
+        "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/SensitiveClipboard.java",
+        "tools/i18n/messages.json",
+        "app/src/test/java/com/deepseekharness/app/LanAuthTest.java"
+      ],
+      "softwareChanges": [
+        "Explicit LAN close and matching backend stop revoke the in-memory LAN credential. Old persisted preferences are not read back as live authorization; process restart also mints a fresh credential.",
+        "LAN cookie lifetime is 12 hours; current bootstrap redirects remove the URL credential.",
+        "UI owner changed default address to omit the credential and added an explicit view/copy dialog and unencrypted/trusted-network notice. Clipboard uses the existing sensitive helper without echoing the URL in Toast."
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS: 71 current-source JUnit cases; fresh UiMessages from current catalogue; no Android/FUSE/app_process execution",
+          "scope": "pure_behavior"
+        },
+        {
+          "command": "Current LaunchFragment.refreshLanAddr/showLanAddress source inspection",
+          "result": "Verified default service address has no token and token is only shown in an intentional dialog; no UI/device execution claimed",
+          "scope": "source_inspection"
+        },
+        {
+          "command": "python tools/format-java.py --check --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files app/src/main/java/com/deepseekharness/app/util/DeviceFileOperations.java app/src/main/java/com/deepseekharness/app/bridge/AndroidDeviceFiles.java app/src/main/java/com/deepseekharness/app/DeviceFileCore.java app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java app/src/test/java/com/deepseekharness/app/util/DeviceFileOperationsTest.java app/src/main/java/com/deepseekharness/app/util/LanTokenState.java app/src/test/java/com/deepseekharness/app/util/LanTokenStateTest.java app/src/main/java/com/deepseekharness/app/LanProxyService.java app/src/test/java/com/deepseekharness/app/LanAuthTest.java app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java app/src/main/java/com/deepseekharness/app/HttpShellService.java app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java app/src/test/java/com/deepseekharness/app/util/BridgeTemplateFormattingTest.java --report app/build/java-format/bridge156-final-check.json",
+          "result": "PASS: pinned GJF 1.22.0, 16 files, zero formatting changes; exact Java tokens preserved",
+          "scope": "format_and_token_fingerprint"
+        }
+      ],
+      "residual": [
+        "LAN remains HTTP plaintext by the accepted functional contract. Android 23 cannot provide the sensitive clipboard extras used on newer APIs."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android clipboard rendering, actual close/reopen sockets and old-browser cookie rejection were not performed."
+        }
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-SEC-14",
+      "title": "虚拟屏动作按主屏前台包判定敏感应用，敏感应用闸被旁路",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java",
+        "app/src/main/java/com/deepseekharness/app/util/VscreenBridgeRequest.java",
+        "app/src/main/java/com/deepseekharness/app/util/VirtualScreenRequestFence.java"
+      ],
+      "softwareChanges": [
+        "Reverified target display/package selection, per-action sensitive/unknown confirmation, and privileged expectedPackage fail-closed checks. No virtual-screen behavior rewrite was needed.",
+        "Kept native foreground/overlay main-thread dispatch separate from the independent app_process core synchronization contract.",
+        "Current application-owned virtual manager, previews/UI/node cache replaces static service state, without changing sensitive target/epoch/grant or independent Core identity rules; see bridge-vscreen-ownership.json."
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS: 71 current-source JUnit cases; fresh UiMessages from current catalogue; no Android/FUSE/app_process execution",
+          "scope": "pure_behavior"
+        },
+        {
+          "command": "python tools/test-bridge-routes.py",
+          "result": "PASS: four tests including compiled production route selectors and exact unknown/suffix rejection; HTTP wiring source-order checks are narrower than Android HTTP acceptance",
+          "scope": "java_behavior_and_narrow_wiring_source"
+        },
+        {
+          "command": "python tools/test-vscreen-manager-http.py --jdk F:/DSHA/_toolchains/jdk-17 --sdk F:/DSHA/_toolchains/android-sdk --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "NOT PASS: tool correctly refused stale StandardDebug R.jar; no Gradle/resource generation or historical audit R substitution performed by this lane",
+          "scope": "unexecuted_current_resource_prerequisite"
+        },
+        {
+          "command": "python tools/test-vscreen-manager-http.py --jdk F:/DSHA/_toolchains/jdk-17 --sdk F:/DSHA/_toolchains/android-sdk --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS current main/standard release production sources compiled against SDK37/current standardRelease R/fresh UiMessages/locked dependencies; 25 selected JUnit and six actual loopback HTTP scenarios passed",
+          "scope": "actual_current_sdk_source_compile_and_jvm_loopback_behavior"
+        },
+        {
+          "command": "python tools/test-core-boundaries.py",
+          "result": "PASS nine structure checks; from(Context) fail-closed delegates to DshaApp ApplicationOwner; no mutable static state in five owned virtual-screen collaborators",
+          "scope": "source_bound_structure_only"
+        },
+        {
+          "command": "python tools/test-bridge-routes.py",
+          "result": "PASS four current route and wiring checks",
+          "scope": "compiled_route_behavior_and_source_wiring"
+        },
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS 71 current production pure behavior cases with fresh catalogue",
+          "scope": "actual_jvm_behavior"
+        },
+        {
+          "command": "python tools/format-java.py --check --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenChannels.java app/src/main/java/com/deepseekharness/app/HttpShellService.java app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java app/src/main/java/com/deepseekharness/app/ForegroundActivity.java app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java app/src/main/java/com/deepseekharness/app/BackupManager.java app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerRevocationTest.java app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerOwnershipTest.java --report app/build/java-format/bridge156-vscreen-final-check.json",
+          "result": "PASS pinned GJF 1.22.0, 15 explicit Java files, zero formatting changes, exact Java tokens preserved",
+          "scope": "format_and_token_fingerprint"
+        }
+      ],
+      "residual": [
+        "Hidden TaskInfo/displayId availability and actual virtual display/input behavior require Android evidence. Known expected target cannot proceed when unverified; an unknown one-shot target is not claimed to be identity-verified."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Real virtual sensitive-app launch, tree/preview gating and hidden-API behavior not executed."
+        }
+      ],
+      "changed": true,
+      "evidenceReferences": [
+        "bridge-vscreen-ownership.json"
+      ]
+    },
+    {
+      "id": "D-SEC-19",
+      "title": "root 读取短信库拦截不含 /data_mirror 绑定挂载路径",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java",
+        "app/src/main/java/com/deepseekharness/app/DeviceFileCore.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/AndroidDeviceFiles.java",
+        "app/src/main/assets/device-shell-policy.py",
+        "tools/test-device-shell-policy.py",
+        "app/src/test/java/com/deepseekharness/app/util/DeviceFileOperationsTest.java"
+      ],
+      "softwareChanges": [
+        "Native protected SMS paths and ancestors now derive from one SMS_READ_ROOTS table; the Python executor consumes the emitted smsReadRoots instead of copying a path regex.",
+        "The exported native table is an immutable snapshot so callers cannot mutate private policy arrays.",
+        "Mirrored/adopted paths and traversal ancestors remain blocked, and managed FILE copies also check the actually opened source descriptor path against SMS roots."
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-device-shell-policy.py",
+          "result": "PASS: 27 current Python executor-policy cases, simulated device metadata; managed FILE single-send, no fallback, native SMS root table consumption",
+          "scope": "python_behavior_with_device_metadata_fixture"
+        },
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS: 71 current-source JUnit cases; fresh UiMessages from current catalogue; no Android/FUSE/app_process execution",
+          "scope": "pure_behavior"
+        },
+        {
+          "command": "python tools/test-native-device-policy.py",
+          "result": "PASS: 16 current production Java dry-plan cases; no Android process/permission evidence",
+          "scope": "production_policy_behavior"
+        }
+      ],
+      "residual": [
+        "Generic Root READ operations retain path/canonical validation rather than a universal inode allowlist. The accepted formal shell/third-party same-UID model is not a malicious-code sandbox."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Root/Shizuku/SELinux, hard-link/alias and shared-storage race conditions not validated on a phone."
+        }
+      ],
+      "changed": true
+    },
+    {
+      "id": "D-NET-01",
+      "title": "全应用 usesCleartextTraffic=true，未用 network_security_config 限定 localhost",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/AndroidManifest.xml",
+        "app/src/main/res/xml/network_security_config.xml",
+        "docs/adr/0001-build154-boundaries.md"
+      ],
+      "softwareChanges": [
+        "Reverified the explicit network-security config: official updater domains reject platform cleartext; loopback and user/third-party HTTP capabilities remain available by current authorization. Did not restore a blanket external HTTP denial."
+      ],
+      "checks": [
+        {
+          "command": "Python ElementTree inspection of current AndroidManifest.xml and network_security_config.xml",
+          "result": "PASS: NSC wiring, base user HTTP contract, literal loopbacks allowed, four official update domains disallow cleartext; source scope only",
+          "scope": "manifest_xml_source_contract"
+        }
+      ],
+      "residual": [
+        "NSC is not a guest Node, Gecko, raw-socket or system-browser firewall; retained HTTP capability is an accepted product contract, not an unimplemented security rewrite."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android platform enforcement and API23/newer networking matrix not exercised."
+        }
+      ],
+      "changed": false
+    },
+    {
+      "id": "D-SEC-06",
+      "title": "特权进程先校验路径再执行 cp/mv/rm，共享存储存在跨 App TOCTOU",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java",
+        "app/src/main/java/com/deepseekharness/app/DeviceFileCore.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/AndroidDeviceFiles.java",
+        "app/src/main/java/com/deepseekharness/app/util/DeviceFileOperations.java",
+        "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+        "app/src/main/assets/device-shell-policy.py",
+        "app/proguard-rules.pro",
+        "tools/test-device-shell-policy.py",
+        "tools/test-bridge-files.py",
+        "app/src/test/java/com/deepseekharness/app/util/DeviceFileOperationsTest.java"
+      ],
+      "softwareChanges": [
+        "Replaced post-check external cp/mv/rm execution with the shared typed DeviceFileOperations orchestrator and Android directory-descriptor adapter.",
+        "Every user child is NOFOLLOW; directory device/inode/type and parent descriptor location are checked. File opening precedes fstat/regular-file/hard-link checks and truncation. Recursive operations retain descriptors and recheck each object. Known unsafe batches are rejected before earlier deletions.",
+        "ADB FILE dispatch invokes the current installed APK DeviceFileCore under UID0/2000; current package UID/source classpath is checked through existing PrivilegedPackageContext, arguments stay argv data, and failures/unknown results never replay old shell commands.",
+        "New-file create is exclusive; same-source/descendant copy is rejected; cp -p, mkdir -p, touch -c, rm -d/-f, cancellation and no-clobber are explicit. mv -n uses exclusive hard-link publication for regular files; unsupported mounts/directories fail safely without copying/deleting fallback.",
+        "Added a keep rule for the app_process main entry."
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS: 71 current-source JUnit cases; fresh UiMessages from current catalogue; no Android/FUSE/app_process execution",
+          "scope": "pure_behavior"
+        },
+        {
+          "command": "python tools/test-device-shell-policy.py",
+          "result": "PASS: 27 current Python executor-policy cases, simulated device metadata; managed FILE single-send, no fallback, native SMS root table consumption",
+          "scope": "python_behavior_with_device_metadata_fixture"
+        },
+        {
+          "command": "$bridgeClasses = 'app/build/intermediates/javac/standardRelease/compileStandardReleaseJavaWithJavac/classes'; & F:/DSHA/_toolchains/jdk-17/bin/javac.exe '-J-Dfile.encoding=UTF-8' -encoding UTF-8 -source 17 -target 17 -classpath \"F:/DSHA/_toolchains/android-sdk/platforms/android-37.0/android.jar;$bridgeClasses\" -d build/bridge156/platform app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java app/src/main/java/com/deepseekharness/app/util/DeviceFileOperations.java app/src/main/java/com/deepseekharness/app/util/PrivilegedContextFailure.java app/src/main/java/com/deepseekharness/app/bridge/AndroidDeviceFiles.java app/src/main/java/com/deepseekharness/app/DeviceFileCore.java app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java app/src/main/java/com/deepseekharness/app/runtime/PrivilegedPackageContext.java",
+          "result": "PASS: current seven explicitly selected source files against Android 37; existing build155 release types are compile dependencies only; this is not a full application or APK gate",
+          "scope": "narrow_production_platform_source_compile"
+        },
+        {
+          "command": "NDK26.3 asm-generic/fcntl.h source lookup for O_DIRECTORY/O_CLOEXEC/O_PATH",
+          "result": "PASS: custom API23-compatible constants match pinned local NDK headers (00200000,02000000,010000000 octal)",
+          "scope": "pinned_platform_header_source"
+        },
+        {
+          "command": "python tools/format-java.py --check --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files app/src/main/java/com/deepseekharness/app/util/DeviceFileOperations.java app/src/main/java/com/deepseekharness/app/bridge/AndroidDeviceFiles.java app/src/main/java/com/deepseekharness/app/DeviceFileCore.java app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java app/src/test/java/com/deepseekharness/app/util/DeviceFileOperationsTest.java app/src/main/java/com/deepseekharness/app/util/LanTokenState.java app/src/test/java/com/deepseekharness/app/util/LanTokenStateTest.java app/src/main/java/com/deepseekharness/app/LanProxyService.java app/src/test/java/com/deepseekharness/app/LanAuthTest.java app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java app/src/main/java/com/deepseekharness/app/HttpShellService.java app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java app/src/test/java/com/deepseekharness/app/util/BridgeTemplateFormattingTest.java --report app/build/java-format/bridge156-final-check.json",
+          "result": "PASS: pinned GJF 1.22.0, 16 files, zero formatting changes; exact Java tokens preserved",
+          "scope": "format_and_token_fingerprint"
+        },
+        {
+          "command": "javac @build/bridge156/javac-platform.args (current owned sources and current runtime source closure)",
+          "result": "NOT PASS: closure requires newly introduced R.string.ui_welcome_counter and R.plurals.plugin_count, which old release R.jar does not contain; root will generate current release resources and run the full gate",
+          "scope": "explicit_integration_prerequisite"
+        }
+      ],
+      "residual": [
+        "The JVM handle fixture tests the orchestrator contract, not Android syscalls. Shared-storage inodes can be concurrently renamed/deleted; no global filesystem lock or multi-operand transaction is claimed. Failure/cancellation may follow earlier ordinary file effects.",
+        "Cross-device mv and atomic no-clobber moves unsupported by a mount return explicit errors with no alternate-channel replay. ADB cold helper context/ROM compatibility must be verified; no external cp fallback is kept."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android/FUSE descriptor behavior, the installed APK cold app_process/PM context, Root/Shizuku permissions and cancellation/process-lifecycle evidence are still missing."
+        }
+      ],
+      "changed": true,
+      "deferredIntegratedChecks": [
+        "Root must verify both final APKs contain DeviceFileCore and run the current full release compile/test/Lint gates."
+      ]
+    },
+    {
+      "id": "D-ADB-01",
+      "title": "AdbBridge 写入的 allow-root-shell/confirm-shell-* 标记文件无读取方（死代码）",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+        "app/src/main/assets/adb-shell.py",
+        "tools/test-adb-flow.py"
+      ],
+      "softwareChanges": [
+        "Confirmed the three historical dead flag writes remain absent. Historical flag bytes are retained and do not authorize current operations.",
+        "Coordinated removal of the additional dead request_confirm/ConfirmationError and obsolete readonly definitions/tests; active native policy/broker and unknown-result/no-replay behavior remains covered.",
+        "Cross-owner D-SUP-03: removed repeated Java SCRIPT_VERSION and delegated installed script/wrapper byte checks to runtime.bundledDeviceScriptsMatch."
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-adb-flow.py",
+          "result": "PASS: 29 current route/timeout/root authorization/native broker cases; no device or network command",
+          "scope": "python_behavior_with_device_fixture"
+        },
+        {
+          "command": "rg current AdbBridge/adb-shell for allow-root-shell, confirm-shell-, request_confirm and Java SCRIPT_VERSION",
+          "result": "No active flag writers/request_confirm or Java version literal; only the signed script diagnostic comment remains",
+          "scope": "narrow_source_check"
+        }
+      ],
+      "residual": [
+        "Historical marker files are intentionally not deleted. Current native preference/policy is the authorization authority."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Root-off real /exec denial not exercised on a device."
+        }
+      ],
+      "changed": true
+    }
+  ],
+  "crossOwner": [
+    {
+      "id": "D-ARCH-06",
+      "owner": "core",
+      "actualChange": "AppDeviceActions executes app launch and clipboard platform behavior; bridge retains route/auth/run/confirmation authority",
+      "checks": [
+        {
+          "command": "python tools/test-bridge-routes.py",
+          "result": "PASS: four tests including compiled production route selectors and exact unknown/suffix rejection; HTTP wiring source-order checks are narrower than Android HTTP acceptance",
+          "scope": "java_behavior_and_narrow_wiring_source"
+        },
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS: 71 current-source JUnit cases; fresh UiMessages from current catalogue; no Android/FUSE/app_process execution",
+          "scope": "pure_behavior"
+        }
+      ]
+    },
+    {
+      "id": "D-SUP-03",
+      "owner": "build/runtime/tests",
+      "actualChange": "AdbBridge uses runtime actual signed script/wrapper byte proof; runtime implemented producer checks; tests updated single asset contract",
+      "checks": [
+        {
+          "command": "python tools/test-adb-flow.py",
+          "result": "PASS: 29 current route/timeout/root authorization/native broker cases; no device or network command",
+          "scope": "python_behavior_with_device_fixture"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-02",
+      "owner": "ui/data",
+      "actualChange": "Existing private random-slot FileProvider snapshot sharing reverified; MIME now uses the data-owned BackupFileNames helper",
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Real Android chooser/grant exercise"
+        }
+      ]
+    },
+    {
+      "id": "D-BUG-05",
+      "owner": "ui/data",
+      "actualChange": "Bridge share uses the same exportMimeType as DownloadsExport; data owner added PNG/JSON and common types with own checks"
+    },
+    {
+      "id": "D-DEAD-01",
+      "owner": "legacy/tests",
+      "actualChange": "Removed unused native confirmEnabled/awaitConfirm and Python request_confirm; retained actual current native confirmations and policy/broker behavior",
+      "checks": [
+        {
+          "command": "python tools/test-adb-flow.py",
+          "result": "PASS: 29 current route/timeout/root authorization/native broker cases; no device or network command",
+          "scope": "python_behavior_with_device_fixture"
+        }
+      ]
+    },
+    {
+      "id": "i18n",
+      "owner": "ui",
+      "actualChange": "76 complete bridge template contributions merged by UI owner; raw caller arguments/protocol values preserved",
+      "checks": [
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS: 71 current-source JUnit cases; fresh UiMessages from current catalogue; no Android/FUSE/app_process execution",
+          "scope": "pure_behavior"
+        },
+        {
+          "command": "python tools/format-java.py --check --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files app/src/main/java/com/deepseekharness/app/util/DeviceFileOperations.java app/src/main/java/com/deepseekharness/app/bridge/AndroidDeviceFiles.java app/src/main/java/com/deepseekharness/app/DeviceFileCore.java app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java app/src/test/java/com/deepseekharness/app/util/DeviceFileOperationsTest.java app/src/main/java/com/deepseekharness/app/util/LanTokenState.java app/src/test/java/com/deepseekharness/app/util/LanTokenStateTest.java app/src/main/java/com/deepseekharness/app/LanProxyService.java app/src/test/java/com/deepseekharness/app/LanAuthTest.java app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java app/src/main/java/com/deepseekharness/app/HttpShellService.java app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java app/src/test/java/com/deepseekharness/app/util/BridgeTemplateFormattingTest.java --report app/build/java-format/bridge156-final-check.json",
+          "result": "PASS: pinned GJF 1.22.0, 16 files, zero formatting changes; exact Java tokens preserved",
+          "scope": "format_and_token_fingerprint"
+        }
+      ]
+    },
+    {
+      "id": "D-ARCH-02",
+      "owner": "core",
+      "actualChange": [
+        "DshaApp (core owner) lazily owns one VirtualScreenManager through ApplicationOwner. from(Context) resolves the existing application and throws when absent/cyclic; no global current/cached/default manager.",
+        "Manager context is the normalized Application; LOCK/ACTIONS/worker/random/epoch/token/channel/generation/port/tickets/clock/authorization thread-locals and heartbeat are per instance. Production facade consumers resolve or hold this owner.",
+        "Preview poller, foreground/overlay UI state and node/editor tree cache are owned by this manager. UI Activity remains weakly tracked, with existing main-thread forwarding and lifecycle detach/bitmap cleanup.",
+        "Existing request snapshots, one-shot ADB admission, immediate revoke, ordered actions and old close fences are preserved. Snapshot includes the actual manager owner; stop/revoke do not locate another static session.",
+        "Context-free screen revocation/token reset callers now carry their real owner Context, including the one legacy BackupManager restore call; standalone privileged VirtualScreenCore remains a separate process/RPC authority.",
+        "Root-requested HttpShellService four protocol/search lowercase conversions use Locale.ROOT; display formatting was not mechanically changed."
+      ],
+      "evidenceReferences": [
+        "bridge-vscreen-ownership.json"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-vscreen-manager-http.py --jdk F:/DSHA/_toolchains/jdk-17 --sdk F:/DSHA/_toolchains/android-sdk --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS current main/standard release production sources compiled against SDK37/current standardRelease R/fresh UiMessages/locked dependencies; 25 selected JUnit and six actual loopback HTTP scenarios passed",
+          "scope": "actual_current_sdk_source_compile_and_jvm_loopback_behavior"
+        },
+        {
+          "command": "python tools/test-core-boundaries.py",
+          "result": "PASS nine structure checks; from(Context) fail-closed delegates to DshaApp ApplicationOwner; no mutable static state in five owned virtual-screen collaborators",
+          "scope": "source_bound_structure_only"
+        },
+        {
+          "command": "python tools/test-bridge-routes.py",
+          "result": "PASS four current route and wiring checks",
+          "scope": "compiled_route_behavior_and_source_wiring"
+        },
+        {
+          "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+          "result": "PASS 71 current production pure behavior cases with fresh catalogue",
+          "scope": "actual_jvm_behavior"
+        },
+        {
+          "command": "python tools/format-java.py --check --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenChannels.java app/src/main/java/com/deepseekharness/app/HttpShellService.java app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java app/src/main/java/com/deepseekharness/app/ForegroundActivity.java app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java app/src/main/java/com/deepseekharness/app/BackupManager.java app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerRevocationTest.java app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerOwnershipTest.java --report app/build/java-format/bridge156-vscreen-final-check.json",
+          "result": "PASS pinned GJF 1.22.0, 15 explicit Java files, zero formatting changes, exact Java tokens preserved",
+          "scope": "format_and_token_fingerprint"
+        }
+      ]
+    }
+  ],
+  "sourceFingerprints": {
+    "app/src/main/java/com/deepseekharness/app/HttpShellService.java": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7",
+    "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+    "app/src/main/java/com/deepseekharness/app/LanProxyService.java": "78ee702b6cd482191c25468ef8ebe99e59c8e958d618402bc62b95a78b022963",
+    "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java": "752cead2c6ce43e507e05dc984ee21ffae4131444a7bfbaff4a3437ce5938ed5",
+    "app/src/main/java/com/deepseekharness/app/DeviceFileCore.java": "fae1c8279c4805665ce0b4cb6b377f7c7cab7e9e16bc97007fadb207e0b74846",
+    "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java": "9b6eb59233f9fb9da7fd3d69698e953185105aad679abfb972429a8a74407259",
+    "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java": "226a1a5217944ee7a33d591101f4bdba115d89c6d51c782918c062a5803bd178",
+    "app/src/main/java/com/deepseekharness/app/bridge/AndroidDeviceFiles.java": "27aa6142716b37c602f87a9ae31eb9de1804f460afbaacfb2aa18016ddc1e0a2",
+    "app/src/main/java/com/deepseekharness/app/util/DeviceFileOperations.java": "4b267daa4811b010911867232ba697c7dab141347fd3412246b27f081736d783",
+    "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7",
+    "app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java": "2d416ea0efe1b567ed27c89506225c10d690b678a1d5936268443d58880a1a5b",
+    "app/src/main/java/com/deepseekharness/app/util/LanTokenState.java": "e74c557fa377327bc673155b00987ded42b00ae00f3bc657805d1ff5b5a3a9c9",
+    "app/src/main/assets/adb-shell.py": "e634b6f7aa78c772c06d76066ba3396db2bcace7b3fcc7ef514af15c73bd999d",
+    "app/src/main/assets/device-shell-policy.py": "71dbb3054a0fd7b7abe5483417ed1aeb979dd7de60ef31dab68f961398c6d3a3",
+    "app/proguard-rules.pro": "d76705d7ee43e1c7203dc1948e1aefb1a80320620cef085e18d1d85b4cfa7c9d",
+    "tools/test-bridge-files.py": "5020340fe56231b6cd9e3fa088ebebf41722ed947fb9bc0c6fd51d69df5f921a",
+    "tools/test-bridge-token-transport.py": "38bcf9db3bb4febe985353220de04654434bdd82d8984e8feff3ce765a671054",
+    "tools/test-device-shell-policy.py": "cb20bbf614ee3b7b61fda9501877dc3a7103deb3e84c27ed6b43c3bca8998fdb",
+    "app/src/test/java/com/deepseekharness/app/util/DeviceFileOperationsTest.java": "db6df7678bc97c903f52f0fbf3f520d08564e5df35f1c371af4ed00334e3c205",
+    "app/src/test/java/com/deepseekharness/app/util/LanTokenStateTest.java": "5d28e64508ec54ccb4c04b4a23c2803716150ec8e7432a372ef5bb65788059a4",
+    "app/src/test/java/com/deepseekharness/app/util/BridgeTemplateFormattingTest.java": "60c61a2b8b8f71fa623ece2b3f55a999a491dcad96c3f6c7a4b458ff3a81db3b",
+    "app/src/test/java/com/deepseekharness/app/LanAuthTest.java": "5b7001684f2422693139d767a80b777b8c7c529afc6df41fac36e99ba24a46fc",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java": "e5436d57e9d5c2a9ae70027814d3c069e1c27a4bdf80d54f00684e07ad0d76da",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java": "699a37edf8cedd6095bb774c5e8cbadf2608fa00e16ed29955e168ce72e767e4",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java": "965c05b10887afa929bd2b8f2bc4d109554cc998ce4b61d0131e6afe04aef0eb",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java": "48d8847c58524fe93f7c9ac2f877170827ac7941b2f1b36af3fca8f14c524077",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java": "5d1fd763cb36b7b95c1ef9aa5dbac28d051bb2b7f53c73f9be7815ac689e503d",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java": "d9e7998f2391fdfba5be3b761119d7d788c7ac7337f8980fc98c6f75d688b6c8",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenChannels.java": "bd10a0e53c763c245ccc99762aa6050e2a56bfb07f7a72fa40f35f541730ea9c",
+    "app/src/main/java/com/deepseekharness/app/ForegroundActivity.java": "ac3e26cde5b0e71e3248943231133ba35ffbae0f4c6b19271d28617fa8ee5a25",
+    "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+    "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java": "8f3761c290ce00c838c0e594a13942a2b0bc44011049e27522834f2c639b122f",
+    "app/src/main/java/com/deepseekharness/app/BackupManager.java": "d72d1aad7712cee4f95681d4b02c712af9646533feb3ace3868829ebf08d1db5",
+    "app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerRevocationTest.java": "e6e618b62eb073ec3c374076ea293edec372fe3e7ffbbf14765c2fb42ca2e373",
+    "app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerOwnershipTest.java": "1aec3b148008d13037405e8a549f8c776b650cd784e95d5fb9c7da7d293f321e",
+    "tools/fixtures/vscreen-manager/ManagerHttpFixture.java": "340c0fae18f51dc6cc9ca3e696ee70e21beb6ff849db7036877b58219a67f2bc",
+    "tools/test-vscreen-manager-http.py": "9ced61b9e60adedd65cb4ca5f96bf3ad3e52e25643f79f5cbfe26c5f26e3e907",
+    "app/src/main/java/com/deepseekharness/app/DshaApp.java": "0b46dc99a11735f356fb8e6b0771f09a2af3ca9ae2da4bcb0ad94b7ac454162a"
+  },
+  "priorSourceFingerprints": {
+    "app/src/main/java/com/deepseekharness/app/HttpShellService.java": "72ca0dd92bb09dd300f7652fe98de76e8efb2c6a1ff693e217464f62ad663365",
+    "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java": "19c0c7c83322f392563e4ae0d3526cb99da89a09e5d391f630603040458aa13f",
+    "app/src/main/java/com/deepseekharness/app/LanProxyService.java": "78ee702b6cd482191c25468ef8ebe99e59c8e958d618402bc62b95a78b022963",
+    "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java": "752cead2c6ce43e507e05dc984ee21ffae4131444a7bfbaff4a3437ce5938ed5",
+    "app/src/main/java/com/deepseekharness/app/DeviceFileCore.java": "fae1c8279c4805665ce0b4cb6b377f7c7cab7e9e16bc97007fadb207e0b74846",
+    "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java": "9b6eb59233f9fb9da7fd3d69698e953185105aad679abfb972429a8a74407259",
+    "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java": "226a1a5217944ee7a33d591101f4bdba115d89c6d51c782918c062a5803bd178",
+    "app/src/main/java/com/deepseekharness/app/bridge/AndroidDeviceFiles.java": "27aa6142716b37c602f87a9ae31eb9de1804f460afbaacfb2aa18016ddc1e0a2",
+    "app/src/main/java/com/deepseekharness/app/util/DeviceFileOperations.java": "4b267daa4811b010911867232ba697c7dab141347fd3412246b27f081736d783",
+    "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java": "ee6f0368d0cab9c0194de4a9b37d3a1861956d063e224ae59aaa24c6eb732ec7",
+    "app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java": "2d416ea0efe1b567ed27c89506225c10d690b678a1d5936268443d58880a1a5b",
+    "app/src/main/java/com/deepseekharness/app/util/LanTokenState.java": "e74c557fa377327bc673155b00987ded42b00ae00f3bc657805d1ff5b5a3a9c9",
+    "app/src/main/assets/adb-shell.py": "e634b6f7aa78c772c06d76066ba3396db2bcace7b3fcc7ef514af15c73bd999d",
+    "app/src/main/assets/device-shell-policy.py": "71dbb3054a0fd7b7abe5483417ed1aeb979dd7de60ef31dab68f961398c6d3a3",
+    "app/proguard-rules.pro": "d76705d7ee43e1c7203dc1948e1aefb1a80320620cef085e18d1d85b4cfa7c9d",
+    "tools/test-bridge-files.py": "5020340fe56231b6cd9e3fa088ebebf41722ed947fb9bc0c6fd51d69df5f921a",
+    "tools/test-bridge-token-transport.py": "38bcf9db3bb4febe985353220de04654434bdd82d8984e8feff3ce765a671054",
+    "tools/test-device-shell-policy.py": "cb20bbf614ee3b7b61fda9501877dc3a7103deb3e84c27ed6b43c3bca8998fdb",
+    "app/src/test/java/com/deepseekharness/app/util/DeviceFileOperationsTest.java": "db6df7678bc97c903f52f0fbf3f520d08564e5df35f1c371af4ed00334e3c205",
+    "app/src/test/java/com/deepseekharness/app/util/LanTokenStateTest.java": "5d28e64508ec54ccb4c04b4a23c2803716150ec8e7432a372ef5bb65788059a4",
+    "app/src/test/java/com/deepseekharness/app/util/BridgeTemplateFormattingTest.java": "60c61a2b8b8f71fa623ece2b3f55a999a491dcad96c3f6c7a4b458ff3a81db3b",
+    "app/src/test/java/com/deepseekharness/app/LanAuthTest.java": "5b7001684f2422693139d767a80b777b8c7c529afc6df41fac36e99ba24a46fc"
+  },
+  "ownershipRevision": "bridge-vscreen-ownership.json"
+}

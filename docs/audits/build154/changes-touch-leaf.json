@@ -1,0 +1,28 @@
+{
+  "owner": "G1-touch-leaf",
+  "items": [
+    {
+      "id": "D-BUG-04",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java",
+        "app/src/main/java/com/deepseekharness/app/util/TouchGestureDispatch.java",
+        "app/src/test/java/com/deepseekharness/app/util/TouchGestureDispatchTest.java"
+      ],
+      "checks": [
+        "6 actual production-state-machine trace tests PASS for stream DOWN/MOVE/UP, explicit stream-unavailable discrete fallback, unknown down/move/up, cancellation/pinch, invalid border and changed sink/pan",
+        "No second discrete input after completed stream; no fallback/replay after uncertain stream attempt",
+        "92 existing tests plus6 new tests=98 isolated current-source JVM tests PASS",
+        "Current VirtualScreenPreviewView/helper standalone Java17 compilation PASS"
+      ],
+      "current": "View delegates route ownership to one pure gesture state machine; captured listener/generation/frame/stroke remains bound across callbacks. CANCEL consumes gesture; pan/clear cancel owned stream.",
+      "residual": "No phone/Android input-injection matrix. Enqueued stream outcomes remain async/unknown; they never cause a discrete replay. Only explicit unavailability before any send selects fallback."
+    }
+  ],
+  "sourceInputRegistration": [
+    "TouchGestureDispatch.java new UI pure state input if input manifest traces preview source dependencies",
+    "VirtualScreenPreviewView.java existing frontend input hash changed"
+  ],
+  "noPhone": true,
+  "noGradle": true
+}

@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "owner": "compat155",
+  "scope": "Source and host-only continuation after build154; no device, APK, release, or global ledger change",
+  "items": [
+    {
+      "id": "D-COMPAT-01",
+      "result": "source_corrected_host_probe_verified_device_unknown",
+      "files": [
+        "app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+        "tools/test-low-preview-capability.mjs"
+      ],
+      "evidence": "No Chrome<118 UA cutoff; explicit preference, API<26 and absent provider select Gecko. Actual WebView capability script handles missing APIs. Current local service/generation is checked before one Low handoff after capability failure or renderer crash; WebView resources close first. Host probe passed. Physical WebView/Gecko matrix not executed."
+    },
+    {
+      "id": "D-DUP-22",
+      "result": "source_consolidated_device_unknown",
+      "files": [
+        "app/build.gradle",
+        "tools/fixtures/web-state/web-state-fixture.html",
+        "app/src/androidTest/java/com/deepseekharness/app/ui/WebInstrumentation.java"
+      ],
+      "evidence": "debug and androidTest assets source sets point at the same test-only HTML file; both existing Java entry points remain. androidTest now validates the canonical fixture's JSON upload shape. No test APK or device browser run."
+    },
+    {
+      "id": "D-PATCH-04",
+      "result": "active_reference_removed",
+      "files": [
+        "app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java",
+        "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+        "tools/smoke-dsh-runtime.mjs",
+        "tools/test-gecko-model-navigation.mjs"
+      ],
+      "evidence": "No active dsha-open-models dispatch or retired patch load remains. Gecko relay host test passed for current language/startup messages. Historical audit and retired source references remain historical."
+    },
+    {
+      "id": "D-NET-02",
+      "result": "source_corrected_jvm_verified_device_unknown",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ResolverConfig.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/test/java/com/deepseekharness/app/util/ResolverConfigTest.java"
+      ],
+      "evidence": "No public DNS literal injection. Current Android active-network DNS is added only if user file lacks nameserver; no live query is required. A transient empty device DNS list preserves the last valid managed block, a new valid list replaces it, and an explicit user nameserver wins. Numeric IPv4/IPv6 parsing rejects malformed literals without hostname lookup. Eight direct JUnit tests passed. Device VPN/private-DNS behavior remains untested."
+    },
+    {
+      "id": "D-ROOT-01",
+      "result": "source_discovery_narrowed_device_unknown",
+      "files": ["app/src/main/java/com/deepseekharness/app/RootShell.java"],
+      "evidence": "Candidate search includes known root-manager locations; stat requires root owner and no group/world write, and discovery does not invoke su. Actual root-manager support and grants require device evidence."
+    },
+    {
+      "id": "D-PRIV-01",
+      "result": "default_export_reduced_device_unknown",
+      "files": ["app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java"],
+      "evidence": "Default export now contains bounded startup status, boolean/count fields and device/build context. Raw dsh-web.log, install/trial/history/diagnostic text, emergency detail and process output are excluded; in-app private diagnostics remain. Real share flow not device-tested."
+    }
+  ],
+  "checks": [
+    {"command": "node tools/test-low-preview-capability.mjs", "result": "passed"},
+    {"command": "node tools/test-gecko-model-navigation.mjs", "result": "passed"},
+    {"command": "node --check tools/smoke-dsh-runtime.mjs", "result": "passed"},
+    {"command": "javac ResolverConfig.java ResolverConfigTest.java; JUnitCore ResolverConfigTest", "result": "8 passed after transient-DNS regression fix"},
+    {"command": "python tools/format-java.py --write/--check --offline --files ResolverConfig.java ResolverConfigTest.java", "result": "pinned 1.22.0 formatted two files with exact Java tokens preserved; follow-up check passed"},
+    {"command": "gradlew :app:testLowDebugUnitTest --tests ResolverConfigTest", "result": "blocked before compile at shared prepareRuntimeDescriptor: descriptor differs from concurrently edited source; root agent will regenerate in final gate"},
+    {"command": "git diff --check for touched tracked files", "result": "passed"}
+  ],
+  "unfinished": [
+    "No Android 6/7/old-WebView/Gecko, root-manager, DNS network-mode or error-share device evidence by instruction.",
+    "No compile/Gradle result for the new Android code until the root agent synchronizes the shared managed runtime descriptor and runs the final gate.",
+    "No release APK or archive update in this task."
+  ]
+}

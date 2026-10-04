@@ -6,10 +6,15 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {fileURLToPath,pathToFileURL} from 'node:url';
+import {testRuntime} from './test-runtime-fixture.mjs';
 
 const repository=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const sourcePath=path.resolve(process.argv[2]||'');
 if(!sourcePath.startsWith(repository+path.sep))throw Error('Storage module must be inside the repository');
+const runtime=testRuntime('managed');
+assert.equal(await fs.realpath(sourcePath),
+ await fs.realpath(path.join(runtime,'node_modules/@deepseek-ai/dsh-storage-json/lib/index.js')),
+ 'the direct-path fixture must execute the verified current managed module');
 const source=await fs.readFile(sourcePath,'utf8');
 assert.match(source,/DSHA_PROROOT_DIRENT_FALLBACK_V2/);
 assert.match(source,/DSHA_PROROOT_DIRECT_RECORD_HINTS_V1/);
@@ -18,13 +23,14 @@ assert.match(source,/const DSHA_RECORD_HINT_LIMIT = 4096;/);
 assert.match(source,/dshaRecordHints = new DshaRecordHints\(\)/);
 assert.match(source,/this\.dshaRecordHints\.clear\(\)/);
 
-const moduleDir=path.dirname(sourcePath);
 const token=`dsha-dirent-test-${process.pid}-${randomUUID()}`;
 const fakeName=`.${token}-fs.mjs`;
 const backendName=`.${token}-backend.mjs`;
+const fixtureRoot=await fs.mkdtemp(path.join(repository,'app/build/storage-dirent-'));
+const packageCopy=path.join(fixtureRoot,'package');
+const moduleDir=path.join(packageCopy,'lib');
 const fakePath=path.join(moduleDir,fakeName);
 const backendPath=path.join(moduleDir,backendName);
-const fixtureRoot=await fs.mkdtemp(path.join(repository,'app/build/storage-dirent-'));
 const storageRoot=path.join(fixtureRoot,'storage');
 const nonce=randomUUID().replaceAll('-','');
 const descriptor=(prefix,options={})=>({
@@ -34,6 +40,12 @@ const record=value=>`${JSON.stringify({version:1,record:value},null,2)}\n`;
 const legacy=(name,value)=>`${JSON.stringify({unit:{name,version:1},global:null,tables:{items:{legacy:value}}},null,2)}\n`;
 
 try{
+ await fs.cp(path.dirname(path.dirname(sourcePath)),packageCopy,
+  {recursive:true,force:false,errorOnExist:true,verbatimSymlinks:true});
+ await fs.symlink(path.join(runtime,'node_modules'),path.join(fixtureRoot,'node_modules'),
+  process.platform==='win32'?'junction':'dir');
+ assert.equal(await fs.readFile(path.join(moduleDir,'index.js'),'utf8'),source,
+  'the owned backend copy must contain the verified current managed bytes');
  await fs.writeFile(fakePath,`import * as real from 'node:fs/promises';
 import path from 'node:path';
 export const mkdir=real.mkdir,open=real.open,rename=real.rename,rm=real.rm;

@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "beforeEdges": 25,
+  "remainingAndroidCoordinatorEdges": 20,
+  "unresolvedBusinessEdges": 0,
+  "edges": [
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "type": "com.deepseekharness.app.core.HarnessController",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android JobScheduler coordinator: reads the one Web lifecycle/config owner and the UID-wide active-work registry before scheduling; it cannot invent an independent stop/idle authority."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "type": "com.deepseekharness.app.core.RuntimeTasks",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android JobScheduler coordinator: reads the one Web lifecycle/config owner and the UID-wide active-work registry before scheduling; it cannot invent an independent stop/idle authority."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+      "type": "com.deepseekharness.app.core.BackupTask",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android foreground service: observes/cancels the exact BackupTask application owner and NativeBackupJobs lease; notification Activity destinations are supplied by MaintenanceUiPorts."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java",
+      "type": "com.deepseekharness.app.core.HarnessController",
+      "currentDisposition": "removed_unnecessary_business_dependency",
+      "reason": "Pure user-data predicate now receives only the selected rootfs File; actual legacy/stable body versus managed-marker behavior is covered by ExternalBackupDataPresenceTest."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+      "type": "com.deepseekharness.app.core.HarnessController",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android destructive-maintenance coordinator: requires the existing maintenance owner and drains the real Web/history/update writer before deleting private roots; file/format algorithms remain separate."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+      "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android destructive-maintenance coordinator: requires the existing maintenance owner and drains the real Web/history/update writer before deleting private roots; file/format algorithms remain separate."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+      "type": "com.deepseekharness.app.core.UpdateEngine",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android destructive-maintenance coordinator: requires the existing maintenance owner and drains the real Web/history/update writer before deleting private roots; file/format algorithms remain separate."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.ConfigStore",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.EnvironmentMaintenance",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.HarnessController",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.RuntimeTasks",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android export/import job owner and Context adapter: ConfigStore supplies native preferences/credential choices, the existing controller/coordinator supplies verified stop/maintenance authority, and RuntimeTasks keeps a foreground work lease. Pure archive, crypto, restore-plan and filesystem classes use ports."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+      "type": "com.deepseekharness.app.core.ConfigStore",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android storage/native-settings adapter: ConfigStore is the sole native preference serialization/installed-intent authority; the archive consumes its bytes through ValueBackupSource rather than owning a second preference store."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+      "type": "com.deepseekharness.app.core.ConfigStore",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android implementation of HostDataTransaction.Settings/Targets: it prepares/applies native preferences through ConfigStore; the pure transaction/restore plan only sees their explicit interfaces."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+      "type": "com.deepseekharness.app.core.HarnessController",
+      "currentDisposition": "removed_unnecessary_business_dependency",
+      "reason": "Guest execution/maintenance-authority recovery moved into core/PluginJournalRecovery; the backup journal class no longer imports or locates core."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+      "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+      "currentDisposition": "removed_unnecessary_business_dependency",
+      "reason": "Guest execution/maintenance-authority recovery moved into core/PluginJournalRecovery; the backup journal class no longer imports or locates core."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/PluginInstallJournals.java",
+      "type": "com.deepseekharness.app.core.RuntimeTasks",
+      "currentDisposition": "removed_unnecessary_business_dependency",
+      "reason": "Guest execution/maintenance-authority recovery moved into core/PluginJournalRecovery; the backup journal class no longer imports or locates core."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/PostUpgradeCleanupService.java",
+      "type": "com.deepseekharness.app.core.HarnessController",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android JobService: submits idle cleanup to the existing application lifecycle/maintenance owner, preserving live-process and byte-proof deletion barriers."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+      "type": "com.deepseekharness.app.core.ConfigStore",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android profile-import coordinator and implementation of transaction ports: native ConfigStore preference application and existing stop/lease/runtime-trial authority must be shared; file transaction algorithms do not locate a controller."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+      "type": "com.deepseekharness.app.core.HarnessController",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android profile-import coordinator and implementation of transaction ports: native ConfigStore preference application and existing stop/lease/runtime-trial authority must be shared; file transaction algorithms do not locate a controller."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+      "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android profile-import coordinator and implementation of transaction ports: native ConfigStore preference application and existing stop/lease/runtime-trial authority must be shared; file transaction algorithms do not locate a controller."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+      "type": "com.deepseekharness.app.core.RuntimeTasks",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android profile-import coordinator and implementation of transaction ports: native ConfigStore preference application and existing stop/lease/runtime-trial authority must be shared; file transaction algorithms do not locate a controller."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+      "type": "com.deepseekharness.app.core.HarnessController",
+      "currentDisposition": "removed_unnecessary_business_dependency",
+      "reason": "Preset conversion uses the explicit runtime ProotBootstrap adapter and its force-proot execution API; it no longer creates/locates a Web lifecycle controller."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+      "type": "com.deepseekharness.app.core.HarnessController",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android context/UI cleanup entry adapter: obtains app directories and the existing maintenance lease before calling bounded filesystem/runtime cleanup; cache/stat helpers do not publish Web state."
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+      "type": "com.deepseekharness.app.core.MaintenanceCoordinator",
+      "currentDisposition": "required_android_coordinator_fact",
+      "reason": "Android context/UI cleanup entry adapter: obtains app directories and the existing maintenance lease before calling bounded filesystem/runtime cleanup; cache/stat helpers do not publish Web state."
+    }
+  ]
+}

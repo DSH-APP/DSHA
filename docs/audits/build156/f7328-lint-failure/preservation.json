@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "run": "f7328b2f-68ef-42f5-9434-71dbcfddcbb0",
+  "status": "FAILED_WRONG_CONSTANT_PRESERVED",
+  "artifacts": [
+    {
+      "source": "app/build/reports/lint-results-standardRelease.xml",
+      "preserved": "docs/audits/build156/f7328-lint-failure/lint-results-standardRelease.xml",
+      "sha256": "f87d7ce8246aa4f221ea534af0734e15236d035c5dd3a3b9192c4d687aaae024",
+      "bytes": 267646,
+      "mtimeUtc": "2026-10-03T15:34:37.865874+00:00"
+    },
+    {
+      "source": "app/build/stability-acceptance/f7328b2f-68ef-42f5-9434-71dbcfddcbb0/gradle-verification.log",
+      "preserved": "docs/audits/build156/f7328-lint-failure/gradle-verification.log",
+      "sha256": "9d11910c4e3ce4b1869b1ae56b92d025d77fca4a1488fb149aa4b188f3fe5cb7",
+      "bytes": 10234,
+      "mtimeUtc": "2026-10-03T15:34:54.031538+00:00"
+    },
+    {
+      "source": "app/build/stability-acceptance/f7328b2f-68ef-42f5-9434-71dbcfddcbb0/manifest.json",
+      "preserved": "docs/audits/build156/f7328-lint-failure/all-manifest.json",
+      "sha256": "1237beb862d632fc5c0597b279b9c3c263f1d04f276af8dc6a38fb62d3bacfcc",
+      "bytes": 105980,
+      "mtimeUtc": "2026-10-03T15:34:54.096008+00:00"
+    },
+    {
+      "source": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "preserved": "docs/audits/build156/f7328-lint-failure/OverlayController.before.java",
+      "sha256": "4d886a65e9bc0a3d91e38efbcc838e87dfb396f038d1fcf0f90b0e559649e30c",
+      "bytes": 35837,
+      "mtimeUtc": "2026-10-03T12:24:03.171857+00:00"
+    }
+  ],
+  "lowLint": "Not preserved as current evidence: lowRelease XML is still build155 and the failed run stopped before refreshing it."
+}

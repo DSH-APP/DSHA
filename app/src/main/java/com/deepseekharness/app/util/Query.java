@@ -17,49 +17,48 @@ package com.deepseekharness.app.util;
  */
 public final class Query {
 
-    private Query() {
-    }
+  private Query() {}
 
-    /** 从请求目标（{@code /p?a=1&b=2}）里切出查询串；没有 {@code ?} 返回空串。 */
-    public static String of(String target) {
-        if (target == null) return "";
-        int i = target.indexOf('?');
-        return i >= 0 ? target.substring(i + 1) : "";
-    }
+  /** 从请求目标（{@code /p?a=1&b=2}）里切出查询串；没有 {@code ?} 返回空串。 */
+  public static String of(String target) {
+    if (target == null) return "";
+    int i = target.indexOf('?');
+    return i >= 0 ? target.substring(i + 1) : "";
+  }
 
-    /**
-     * 取参数原值（<b>不做 URL 解码</b>），没有该参数返回 {@code null}。
-     *
-     * <p>区分「参数不存在」（null）和「参数存在但值为空」（空串）：token 校验依赖这个区别 ——
-     * {@code ?token=} 带了个空 token 该走 fail-closed 的拒绝路径，而不是当成没带凭据。
-     */
-    public static String raw(String query, String key) {
-        if (query == null || key == null || key.isEmpty()) return null;
-        int hash = query.indexOf('#');
-        if (hash >= 0) query = query.substring(0, hash);
-        for (String kv : query.split("&")) {
-            int eq = kv.indexOf('=');
-            // eq == 0 是「= 开头」的畸形段（没有参数名）；eq < 0 是没带值的裸参数名
-            if (eq <= 0) continue;
-            if (kv.substring(0, eq).equals(key)) return kv.substring(eq + 1);
-        }
-        return null;
+  /**
+   * 取参数原值（<b>不做 URL 解码</b>），没有该参数返回 {@code null}。
+   *
+   * <p>区分「参数不存在」（null）和「参数存在但值为空」（空串）：token 校验依赖这个区别 ——
+   * {@code ?token=} 带了个空 token 该走 fail-closed 的拒绝路径，而不是当成没带凭据。
+   */
+  public static String raw(String query, String key) {
+    if (query == null || key == null || key.isEmpty()) return null;
+    int hash = query.indexOf('#');
+    if (hash >= 0) query = query.substring(0, hash);
+    for (String kv : query.split("&")) {
+      int eq = kv.indexOf('=');
+      // eq == 0 是「= 开头」的畸形段（没有参数名）；eq < 0 是没带值的裸参数名
+      if (eq <= 0) continue;
+      if (kv.substring(0, eq).equals(key)) return kv.substring(eq + 1);
     }
+    return null;
+  }
 
-    /**
-     * 取参数值并做 URL 解码；参数不存在或解码失败返回 {@code def}。
-     *
-     * <p>解码用 {@code UTF-8}，{@code +} 按 form 语义还原成空格 —— 与改造前的行为一致，
-     * 桥的调用方（容器里的 curl 与内置插件）都是这么编码的。
-     */
-    public static String param(String query, String key, String def) {
-        String v = raw(query, key);
-        if (v == null) return def;
-        try {
-            return java.net.URLDecoder.decode(v, "UTF-8");
-        } catch (Exception e) {
-            // 畸形百分号转义（%ZZ）：给默认值，不要把半解码的串当命令用
-            return def;
-        }
+  /**
+   * 取参数值并做 URL 解码；参数不存在或解码失败返回 {@code def}。
+   *
+   * <p>解码用 {@code UTF-8}，{@code +} 按 form 语义还原成空格 —— 与改造前的行为一致，
+   * 桥的调用方（容器里的 curl 与内置插件）都是这么编码的。
+   */
+  public static String param(String query, String key, String def) {
+    String v = raw(query, key);
+    if (v == null) return def;
+    try {
+      return java.net.URLDecoder.decode(v, "UTF-8");
+    } catch (Exception e) {
+      // 畸形百分号转义（%ZZ）：给默认值，不要把半解码的串当命令用
+      return def;
     }
+  }
 }

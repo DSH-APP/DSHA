@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- User-selected HTTP services and third-party page capabilities remain available.
+         UpdateLocations enforces HTTPS at the official updater execution boundary.
+         This Android platform policy does not govern guest Node or Gecko networking. -->
+    <base-config cleartextTrafficPermitted="true" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">::1</domain>
+    </domain-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">dsha.cc</domain>
+        <domain includeSubdomains="false">github.com</domain>
+        <domain includeSubdomains="false">release-assets.githubusercontent.com</domain>
+        <domain includeSubdomains="false">objects.githubusercontent.com</domain>
+    </domain-config>
+</network-security-config>

@@ -1,0 +1,1219 @@
+{
+  "schema": 1,
+  "lane": "legacy",
+  "reviewBasis": "Current source and actually executed checks; baseline summaries are not copied as completion evidence.",
+  "items": [
+    {
+      "id": "D-DUP-15",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostMaintenancePending.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "selectDataHome uses the full pending-domain authority. Cold-install, plugin journals and uncertain bounded guest records remain blocking contracts."
+      ],
+      "changed": false,
+      "title": "selectDataHome 手写 pending 事务清单，漏 plugin-install-journals 与 bounded-guest，并以 recovery=true 绕过通用门禁"
+    },
+    {
+      "id": "D-DUP-16",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/assets/builtin-plugins.json",
+        "app/src/main/java/com/deepseekharness/app/util/BuiltinPluginRegistry.java",
+        "tools/verify-dsh-upgrade-apk.py",
+        "app/src/main/java/com/deepseekharness/app/backup/MaintenanceDataSnapshot.java",
+        "docs/audits/build156/retired-environment-data-sources.json"
+      ],
+      "checks": [
+        {
+          "command": "python tools/generate-builtin-plugins.py --verify",
+          "result": "PASS current generated registry"
+        },
+        {
+          "command": "python - (temporary real ZIP built from current registry/package/entrypoint source)",
+          "result": "PASS all 8 packages; missing entrypoint, altered registry and wrong package name rejected"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [
+        "APK verification enumerates all signed registry plugins instead of a five-plugin tuple.",
+        "The unused guest environment writer and Java wrapper are removed from compilation/deployment; host snapshots derive managed plugin paths through ManagedRuntimeLayout."
+      ],
+      "missingEvidence": [],
+      "residual": [
+        "Canonical registry membership does not claim all device/plugin runtime behavior. BackupManager live old creation is separately audited by core/data and is not relabelled as read-only here.",
+        "The former Python v1 environment test is now explicitly history-only; actual NativeEnvironmentRebuildTest/RetiredEnvironmentCleanupTest cover the host implementation."
+      ],
+      "changed": true,
+      "title": "内置插件名单多处漂移：自测、重建快照、预置脚本、发布门禁与官网各写一份",
+      "deferredIntegratedChecks": [
+        "Final current signed-APK gate remains root-owned."
+      ]
+    },
+    {
+      "id": "D-DEAD-01",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/assets/adb-shell.py",
+        "tools/test-adb-flow.py",
+        "tools/test-retired-audit-contract.py"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        },
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "python tools/format-java.py --write --offline --java F:/jdk17/jdk-17.0.20.1+1/bin/java.exe --files explicit legacy-owned files",
+          "result": "PASS pinned 1.22.0 format and exact Java token identity",
+          "scope": "only named own files; no full-tree formatting"
+        },
+        {
+          "command": "python tools/test-adb-flow.py",
+          "result": "PASS 29 actual current script/native-routing mock-boundary tests; no real device connections"
+        },
+        {
+          "command": "python tools/test-retired-audit-contract.py",
+          "result": "PASS 4 structure/original-byte/source-set tests"
+        }
+      ],
+      "softwareChanges": [
+        "Removed unused partial-JSON inBundlesSection and its implementation-mirroring tests.",
+        "Runtime owner removed global unread lastSkipped/lastSkipNote; bridge owner removed unused confirmEnabled/awaitConfirm.",
+        "Bridge/tests owners removed uncalled adb-shell request_confirm and ConfirmationError plus stale direct/patch test scaffolding; active native authorization tests remain."
+      ],
+      "missingEvidence": [],
+      "residual": [
+        "The authenticated HTTP /confirm path, generation-bound device execution policy and independent recovery native confirmation remain active contracts."
+      ],
+      "changed": true,
+      "title": "Java/脚本层死代码与死接口累积（含会绕过策略的旧确认路径）"
+    },
+    {
+      "id": "D-DEAD-03",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "tools/asset-deployment.json",
+        "tools/test-asset-deployment.py",
+        "docs/audits/build156/retired-asset-sources.json",
+        "docs/audits/build156/retired-environment-data-sources.json",
+        ".gitattributes",
+        "tools/check-source-hygiene.py"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-asset-deployment.py; python tools/verify-asset-deployment.py",
+          "result": "PASS 11 tests; latest explicit selection 215 source files",
+          "scope": "actual source selection, dynamic readers and retained byte hashes"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        },
+        {
+          "command": "git check-attr text eol; git hash-object --stdin --path (no -w)",
+          "result": "PASS history CRLF byte preservation and active Java LF normalization control",
+          "evidence": "docs/audits/build156/history-git-attribute-checks.json"
+        }
+      ],
+      "softwareChanges": [
+        "Removed 9 additional uncalled heal/migration sources from current assets and deployment; retired the unused environment writer after confirming the actual host replacement.",
+        "Retained exact original bytes with recorded SHA/size; regression checks require production absence and reader-complete deployment.",
+        "History-specific Git -text/-eol rule is last and overrides every extension rule; a new current gate tests nine history path policies to prevent future original-byte normalization."
+      ],
+      "missingEvidence": [],
+      "residual": [
+        "An explicit whitelist alone had retained dead members; current gate now tests absence, not just registration.",
+        "Complete builtin/license/extension trees and pinned recovery archives are retained."
+      ],
+      "changed": true,
+      "title": "十余个旧自愈/迁移脚本无部署方仍随 APK 打包（根因：assets 整目录 rglob）",
+      "deferredIntegratedChecks": [
+        "Root final generated/APK member gate pending."
+      ]
+    },
+    {
+      "id": "D-DEAD-09",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "tools/asset-deployment.json",
+        "docs/audits/build156/retired-asset-sources.json",
+        "app/src/main/java/com/deepseekharness/app/backup/ConfigurationSnapshots.java"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-asset-deployment.py; python tools/verify-asset-deployment.py",
+          "result": "PASS 11 tests; latest explicit selection 215 source files",
+          "scope": "actual source selection, dynamic readers and retained byte hashes"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        },
+        {
+          "command": "git check-attr text eol; git hash-object --stdin --path (no -w)",
+          "result": "PASS history CRLF byte preservation and active Java LF normalization control",
+          "evidence": "docs/audits/build156/history-git-attribute-checks.json"
+        }
+      ],
+      "softwareChanges": [
+        "Removed the four remaining uncalled webserver/webui patch shell assets from production deployment."
+      ],
+      "missingEvidence": [],
+      "residual": [
+        "startup-checkpoints/startup-recovery production assets were already absent; the native strict v1 checkpoint reader remains required."
+      ],
+      "changed": true,
+      "title": "旧 webui/webserver 补丁脚本无部署方；startup-*.py 仍部署但无执行方；HttpShellService 注释引用旧鉴权补丁",
+      "deferredIntegratedChecks": [
+        "Root final current runtime descriptor and APK member checks pending."
+      ]
+    },
+    {
+      "id": "D-DUP-01",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+        "app/src/main/java/com/deepseekharness/app/util/ManagedRuntimePaths.java"
+      ],
+      "checks": [
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Both installed/staged lists call one enumeration and marker enum. The staged tree deliberately evaluates alias ownership against the live root."
+      ],
+      "changed": false,
+      "title": "受管 node_modules 别名枚举在 installedManagedPaths 与 stage 中复制两份"
+    },
+    {
+      "id": "D-DUP-02",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ProcStat.java",
+        "app/src/main/java/com/deepseekharness/app/util/ProcessIdentity.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebPidIdentity.java"
+      ],
+      "checks": [
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android vendor /proc access and actual process-reuse matrix not exercised."
+        }
+      ],
+      "residual": [
+        "Parsing is unified. Web birth identity and owned parent/group/session policies remain distinct wrappers; /proc traversal permissions and unreadable identity are platform authority, not a generic PID enumeration shortcut."
+      ],
+      "changed": false,
+      "title": "/proc/<pid>/stat 解析与 /proc 遍历在多个类中各自实现"
+    },
+    {
+      "id": "D-DUP-03",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TrialSupport.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android trial/guest matrix remains root/device scope."
+        }
+      ],
+      "residual": [
+        "One CheckedExit and identity launch prefix. Trial data/validation and separate unknown-guest close barriers remain caller contracts."
+      ],
+      "changed": false,
+      "title": "RuntimeTrial 与 ProfileSettingsTrial 的写文件、启动脚本与 CheckedExit 近乎复制"
+    },
+    {
+      "id": "D-DUP-04",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/main/assets/runtime-patches.json",
+        "app/src/main/java/com/deepseekharness/app/util/ManagedPatchChain.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Cold and managed overlay preparation call one applyPatchChain registry implementation. The latest complete generated runtime proof is root-owned."
+      ],
+      "changed": false,
+      "title": "RuntimeTools.prepare 与 prepareManagedOverlay 补丁调用序列复制两份"
+    },
+    {
+      "id": "D-DUP-05",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeLauncher.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeNativeFiles.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        },
+        {
+          "command": "runtime owner current SDK37 source compilation",
+          "result": "PASS real RuntimeNativeFiles library preparation and current RuntimeLauncher/ContainerRuntime",
+          "evidence": "app/build/audit-build156/runtime/receipt.json"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Device installer/terminal launcher behavior not exercised by this lane."
+        }
+      ],
+      "residual": [
+        "Native library preparation is runtime-owned. Independent recovery launcher byte selection and low API23 launcher assets must not be coalesced with the formal runtime."
+      ],
+      "changed": false,
+      "title": "proot native 依赖（libtalloc/libandroid-shmem）复制逻辑在 ProotBootstrap 中重复 5 处"
+    },
+    {
+      "id": "D-DUP-06",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BackupScope.java",
+        "app/src/main/java/com/deepseekharness/app/util/CredentialPaths.java",
+        "app/src/main/assets/credential-paths.json",
+        "app/src/main/assets/backup-engine.py"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-credential-paths.py",
+          "result": "PASS 4 tests"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Dead PUBLIC_HOT_ENTRIES/snapshotEntries are absent; shared machine/credential groups read one generated authority. Host direct-data roots and the historical guest archive reader are different data-contract groups and cannot be made equivalent by deleting one list."
+      ],
+      "changed": false,
+      "title": "备份热数据名单在 Java 与 Python 间多份硬编码，Java 侧 PUBLIC_HOT_ENTRIES 已无生产引用"
+    },
+    {
+      "id": "D-DUP-07",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/TransactionMarkers.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CompletedHistory.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostPendingTransactions.java",
+        "app/src/main/java/com/deepseekharness/app/backup/RestoreStaging.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Marker decoding and completed-history proof mechanics are shared. Thin domain wrappers preserve historical marker bytes, domain error codes, phase order and distinct terminal proof policies. Removing wrappers solely to satisfy a grep would not remove implementation duplication."
+      ],
+      "changed": false,
+      "title": "事务标记文件读写校验与 history proof 模式在十余个事务类中各自实现"
+    },
+    {
+      "id": "D-DUP-08",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/SystemPluginProjection.java",
+        "app/src/main/java/com/deepseekharness/app/backup/SystemPluginState.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Both routes call the same projection; original declarations, profile creation and persistence remain caller-specific."
+      ],
+      "changed": false,
+      "title": "系统插件启停投影逻辑在 SystemPluginState.apply 与 PluginRestoreGraph.applySystemPluginState 中近乎逐行复制"
+    },
+    {
+      "id": "D-DUP-09",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/PrivateRoots.java",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java",
+        "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Shared private roots own transaction names and privacy checks. Blanket denial of all unknown filesDir children would break existing root document IDs and user-created personal paths; new private roots still must register their intent."
+      ],
+      "changed": false,
+      "title": "UserDataLayout.PRIVATE 私有目录名单与各事务类目录常量各自硬编码"
+    },
+    {
+      "id": "D-DUP-10",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ArchiveFileBoundary.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android NOFOLLOW syscall extraction, all signed archive shape/device cases not run in this lane."
+        }
+      ],
+      "residual": [
+        "Member parsing now shares checksum/PAX/duplicate validation. Signed Ubuntu guest links and authenticated user imports have different allowed link/write boundaries and must retain separate adapters."
+      ],
+      "changed": false,
+      "title": "两套 tar 解析器质量不一：TarGzipExtractor 宽松且静默吞掉链接失败"
+    },
+    {
+      "id": "D-DUP-13",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/Ids.java",
+        "app/src/main/java/com/deepseekharness/app/util/ColdInstallPackages.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java",
+        "tools/check-source-hygiene.py"
+      ],
+      "checks": [
+        {
+          "command": "python tools/check-source-hygiene.py",
+          "result": "PASS shared UUID validation; only Ids.java has the literal regex"
+        },
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "python tools/format-java.py --write --offline --java F:/jdk17/jdk-17.0.20.1+1/bin/java.exe --files explicit legacy-owned files",
+          "result": "PASS pinned 1.22.0 format and exact Java token identity",
+          "scope": "only named own files; no full-tree formatting"
+        }
+      ],
+      "softwareChanges": [
+        "ColdInstallPackages uses the existing UUID authority; UI owner updated upload orphan handling to Ids.uuid.",
+        "Current main Java source gate rejects a new duplicate lowercase UUID regex literal."
+      ],
+      "missingEvidence": [],
+      "residual": [],
+      "changed": true,
+      "title": "UUID 格式正则在 main 源集手写 35 处，已有 1 处手误"
+    },
+    {
+      "id": "D-DUP-14",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/GuestPaths.java",
+        "app/src/main/java/com/deepseekharness/app/util/ManagedRuntimeLayout.java",
+        "app/src/main/java/com/deepseekharness/app/util/DocumentPaths.java",
+        "app/src/main/java/com/deepseekharness/app/util/ColdInstallPackages.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java"
+      ],
+      "checks": [
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "python tools/format-java.py --write --offline --java F:/jdk17/jdk-17.0.20.1+1/bin/java.exe --files explicit legacy-owned files",
+          "result": "PASS pinned 1.22.0 format and exact Java token identity",
+          "scope": "only named own files; no full-tree formatting"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [
+        "Physical document root, managed prefix and installer slot derive from GuestPaths; data owner changed live data-location/rebuild constructors."
+      ],
+      "missingEvidence": [],
+      "residual": [
+        "Historical document IDs, stored capsule/transaction member paths and explicit independent recovery roots remain stable contracts. This is not claimed as zero occurrences of linux/ubuntu across all persisted-format adapters."
+      ],
+      "changed": true,
+      "title": "rootfs 位置以 \"linux/ubuntu\" 字面量在 main 源集硬编码约 36 处"
+    },
+    {
+      "id": "D-DUP-20",
+      "currentDisposition": "required_contract",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ProcessPipePoller.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallProcess.java",
+        "app/src/main/java/com/deepseekharness/app/util/BoundedProcessRunner.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/BoundedGuestLifetime.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/IsolatedInstallProcess.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android hidden-process and proroot close matrix not exercised."
+        }
+      ],
+      "residual": [
+        "Pipe polling is shared. Install cleanup exceptions and bounded command result contracts remain distinct; current runtime owner binds typed execution to whole-session/group closure and retains uncertainty instead of treating launcher exit as guest exit."
+      ],
+      "changed": false,
+      "title": "两套 available() 轮询进程收集器回收语义不同（另有 IsolatedInstallProcess 自轮询）"
+    },
+    {
+      "id": "D-DUP-21",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "agent-skills/device-shell/SKILL.md",
+        "agent-skills/screen-ocr-operator/SKILL.md",
+        "website/scripts/build.mjs",
+        "website/scripts/site.test.mjs"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Website former source files are pointers, and build/test download bytes come from agent-skills. Historical catalog wording remediation belongs docs lane; no website deployment performed."
+      ],
+      "changed": false,
+      "title": "同名 Agent 技能在 website 与 agent-skills 两处内容分叉，官网来源链接指向相矛盾版本"
+    },
+    {
+      "id": "D-LEGACY-01",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/Rc1MigrationReuse.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/Rc1MigrationCache.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java",
+        "app/src/main/assets/rc1-migration.py"
+      ],
+      "checks": [
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "python tools/test-rc1-migration.py",
+          "result": "25 tests: 23 PASS and 2 Windows POSIX-link skips"
+        },
+        {
+          "command": "python tools/format-java.py --write --offline --java F:/jdk17/jdk-17.0.20.1+1/bin/java.exe --files explicit legacy-owned files",
+          "result": "PASS pinned 1.22.0 format and exact Java token identity",
+          "scope": "only named own files; no full-tree formatting"
+        },
+        {
+          "command": "runtime owner fresh Android37 javac and JUnitCore",
+          "result": "PASS current-source compilation and 27 tests including real-file Rc1MigrationCache and actual GuestPluginScripts dispatch",
+          "evidence": "app/build/audit-build156/runtime/receipt.json",
+          "scope": "owner receipt read by legacy; no Android runtime claim"
+        }
+      ],
+      "softwareChanges": [
+        "Added strict pure host checkpoint matching (same v2 generation/root identity/completed flags/current small input hashes).",
+        "Plugins owner writes a bounded private reuse checkpoint and checks both coexisting settings inputs. Runtime owner wired actual prepare/finalize with per-startup in-memory proof."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Android mapped aliases and actual device startup transitions not exercised."
+        }
+      ],
+      "residual": [
+        "The selected data root is re-anchored through fs.child before every small-input read, including when all inputs are absent.",
+        "Only matching private v2 root identity/generation/completed flags plus freshly verified settings/imported/restore hashes can skip guest prepare/finalize; stale startup IDs and unknown evidence follow the real guest path.",
+        "Old backup/checkpoint/tar readers and originals remain required; APK/build147 numbers are not data-format proof or a deletion boundary."
+      ],
+      "changed": true,
+      "title": "历史兼容分支（Legacy*/rc1 迁移/旧资产名兜底）无下线策略，rc1 迁移每次启动执行"
+    },
+    {
+      "id": "D-LEGACY-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BackupTaskKinds.java",
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+      ],
+      "checks": [
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "New persisted kinds are stable IDs. Historical translated-label normalization remains one read-compatible authority; unknown labels are preserved rather than guessed."
+      ],
+      "changed": false,
+      "title": "任务 kind 用本地化显示文案存盘并参与控制流判断"
+    },
+    {
+      "id": "D-DEAD-02",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/asset-deployment.json",
+        "tools/history/engineering/assets/backup-prepare.py",
+        "tools/history/engineering/assets/restore-merge.py"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-asset-deployment.py; python tools/verify-asset-deployment.py",
+          "result": "PASS 11 tests; latest explicit selection 215 source files",
+          "scope": "actual source selection, dynamic readers and retained byte hashes"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Both old preparation/merge sources are already outside production deployment. Historical format readers remain; their presence is not justification to execute dead writers."
+      ],
+      "changed": false,
+      "title": "backup-prepare.py、restore-merge.py 无调用方仍打进 APK，文案与现行引擎相反"
+    },
+    {
+      "id": "D-DEAD-04",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/plugin-network.py",
+        "app/src/main/assets/plugin-dependencies.py"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "The obsolete retry-time frozen-lockfile injection is absent. The remaining frozen parameter only supplies prefer-offline for the caller-selected offline policy and is not a second lock-policy implementation."
+      ],
+      "changed": false,
+      "title": "plugin-network 换源重试补 --frozen-lockfile 的分支不可达"
+    },
+    {
+      "id": "D-DEAD-05",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/assets/plugin-manager.py"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "resolve_plugin_dir checks each candidate once and ends with return None; no duplicate terminal package probe remains."
+      ],
+      "changed": false,
+      "title": "plugin-manager.resolve_plugin_dir 末尾重复检查永不命中"
+    },
+    {
+      "id": "D-DEAD-06",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/asset-deployment.json",
+        "tools/history/engineering/assets/rootfs-confirm-install.sh"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-asset-deployment.py; python tools/verify-asset-deployment.py",
+          "result": "PASS 11 tests; latest explicit selection 215 source files",
+          "scope": "actual source selection, dynamic readers and retained byte hashes"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Old guard class/script are absent from current deployment. Active device command authorization and independent recovery confirmation remain."
+      ],
+      "changed": false,
+      "title": "旧危险命令守卫 rootfs-confirm-install.sh 与 DangerShellGuard 均无部署/调用"
+    },
+    {
+      "id": "D-DEAD-07",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/res/layout/fragment_install.xml",
+        "app/lint.xml"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Named unused resources/install_crash are absent; source absence does not substitute for complete current lint."
+      ],
+      "changed": false,
+      "title": "4 个 drawable、1 个布局与 install_crash 按钮无引用仍随 APK 打包",
+      "deferredIntegratedChecks": [
+        "Root current Release Lint result pending."
+      ]
+    },
+    {
+      "id": "D-DEAD-08",
+      "currentDisposition": "duplicate",
+      "files": [
+        "app/src/main/res/values",
+        "app/src/main/res/values-en"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Duplicate resource-cleanup finding tracked with D-DEAD-10; four changed bilingual files have equal key sets."
+      ],
+      "changed": false,
+      "title": "21 条中英字符串在代码与布局中无引用"
+    },
+    {
+      "id": "D-DEAD-10",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/lint.xml",
+        "app/build.gradle",
+        ".github/workflows/ci-package.yml"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "UnusedResources is error and package CI runs current lint; minification/resource shrinking is deliberately not used to hide lifecycle/native/reflection dependencies."
+      ],
+      "changed": false,
+      "title": "大量字符串/样式/尺寸/颜色资源无引用，未开 shrinkResources 与 lint 门禁",
+      "deferredIntegratedChecks": [
+        "Root current Standard/Low Release Lint result pending."
+      ]
+    },
+    {
+      "id": "D-DEAD-11",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/history/engineering/scripts/prepare-dsh-alpha-runtime.sh",
+        "tools/history/engineering/scripts/generate-update-fixtures.py"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        },
+        {
+          "command": "git check-attr text eol; git hash-object --stdin --path (no -w)",
+          "result": "PASS history CRLF byte preservation and active Java LF normalization control",
+          "evidence": "docs/audits/build156/history-git-attribute-checks.json"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Obsolete live build/fixture entrypoints are absent. Exact originals remain non-executable historical reference."
+      ],
+      "changed": false,
+      "title": "scripts/ 下两个历史构建工具无调用方且锁定旧版本"
+    },
+    {
+      "id": "D-DEAD-12",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/history/engineering/tools/TarRepro.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        },
+        {
+          "command": "git check-attr text eol; git hash-object --stdin --path (no -w)",
+          "result": "PASS history CRLF byte preservation and active Java LF normalization control",
+          "evidence": "docs/audits/build156/history-git-attribute-checks.json"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Independent reproducer is not a current tool or production parser; actual production member parser is shared."
+      ],
+      "changed": false,
+      "title": "tools/TarRepro.java 无调用方且与 TarGzipExtractor 行为漂移"
+    },
+    {
+      "id": "D-DEAD-13",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/history/engineering/tools/inject-arm64-natives.py",
+        "tools/build-dsh-runtime.py"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        },
+        {
+          "command": "git check-attr text eol; git hash-object --stdin --path (no -w)",
+          "result": "PASS history CRLF byte preservation and active Java LF normalization control",
+          "evidence": "docs/audits/build156/history-git-attribute-checks.json"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "One-time injection source is absent from executable tools; the lock-bound runtime builder owns native inclusion."
+      ],
+      "changed": false,
+      "title": "tools/inject-arm64-natives.py 为 rc.1 一次性注入脚本，无调用方"
+    },
+    {
+      "id": "D-DEAD-14",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/build-dsh-runtime.py"
+      ],
+      "checks": [
+        {
+          "command": "python -m py_compile tools/build-dsh-runtime.py",
+          "result": "PASS"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "The two unused assignments are absent; current class_anchor transform remains. No claim that an unrun global Ruff check passed."
+      ],
+      "changed": false,
+      "title": "build-dsh-runtime.py 中 field_anchor/class_replacement 赋值后未使用"
+    },
+    {
+      "id": "D-DEAD-15",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "tools/asset-deployment.json",
+        "tools/history/engineering/assets/pnpm-env-fix.sh"
+      ],
+      "checks": [
+        {
+          "command": "python tools/test-asset-deployment.py; python tools/verify-asset-deployment.py",
+          "result": "PASS 11 tests; latest explicit selection 215 source files",
+          "scope": "actual source selection, dynamic readers and retained byte hashes"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        },
+        {
+          "command": "git check-attr text eol; git hash-object --stdin --path (no -w)",
+          "result": "PASS history CRLF byte preservation and active Java LF normalization control",
+          "evidence": "docs/audits/build156/history-git-attribute-checks.json"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "No production/deployment occurrence; explicit absence regression passes. Open current plugin dependency policy remains intact."
+      ],
+      "changed": false,
+      "title": "pnpm-env-fix.sh 无调用方仍随 APK 打包"
+    },
+    {
+      "id": "D-DUP-11",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BackupScopes.java",
+        "app/src/main/java/com/deepseekharness/app/backup/BackupArchive.java",
+        "app/src/main/java/com/deepseekharness/app/backup/VerifiedBackupCopy.java"
+      ],
+      "checks": [
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "All three v5 range readers use BackupScopes.ALL. Legacy integer encodings remain separate on-disk compatibility."
+      ],
+      "changed": false,
+      "title": "备份 scope 名单 application/sessions/settings/plugins/projects 在三处字面量重复"
+    },
+    {
+      "id": "D-DUP-12",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/NpmPackageName.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativePluginGraph.java",
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyBackupImporter.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java"
+      ],
+      "checks": [
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Archive name validation is centralized while retaining legacy casing, 214-byte bound and path ambiguity rejection."
+      ],
+      "changed": false,
+      "title": "npm 包名正则在三个类中复制"
+    },
+    {
+      "id": "D-DUP-17",
+      "currentDisposition": "not_applicable",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "No Android Ctrl input device behavior test in this turn."
+        }
+      ],
+      "residual": [
+        "The reported copied Ctrl character maps do not exist; current modifier handling delegates to TerminalView callbacks."
+      ],
+      "changed": false,
+      "title": "（已失效）终端 Ctrl 映射两段重复：当前源码已改用 TerminalView 回调，两段映射均不存在"
+    },
+    {
+      "id": "D-DUP-18",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Menu and card share one typed confirmation/deletion implementation; actual UI device actions were not performed."
+      ],
+      "changed": false,
+      "title": "插件删除确认框两份实现，文案与 i18n 写法不同"
+    },
+    {
+      "id": "D-DUP-19",
+      "currentDisposition": "verified_no_remaining_software_change",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/NotificationIds.java",
+        "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+        "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+        "app/src/main/java/com/deepseekharness/app/recovery/RecoveryService.java"
+      ],
+      "checks": [
+        {
+          "command": "F:/jdk17/jdk-17.0.20.1+1/bin/javac --release 17; org.junit.runner.JUnitCore selected util tests",
+          "result": "PASS 47 tests in 13 selected current-source test classes",
+          "scope": "isolated JVM; no Android claims"
+        },
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        }
+      ],
+      "softwareChanges": [],
+      "missingEvidence": [],
+      "residual": [
+        "Purpose notification IDs are shared and preserve shipped values; PendingIntent component/action namespaces are separate stable identity contracts."
+      ],
+      "changed": false,
+      "title": "通知/前台服务 ID 分散定义且两处为字面量，Constants 的“全局唯一”约定无保障"
+    },
+    {
+      "id": "D-DUP-22",
+      "currentDisposition": "fixed_current_source",
+      "files": [
+        "tools/fixtures/web-state/web-state-fixture.html",
+        "app/src/androidTest/java/com/deepseekharness/app/ui/WebInstrumentation.java",
+        "app/src/debug/java/com/deepseekharness/app/ui/WebRegressionAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/ui/WebBrowserAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/ui/WebBrowserFixture.java",
+        "tools/test-web-browser-fixture.py",
+        "tools/test-retired-audit-contract.py"
+      ],
+      "checks": [
+        {
+          "command": "PowerShell/Python current-source predicate audit",
+          "result": "PASS 20 of 20 current structure/byte checks",
+          "evidence": "docs/audits/build156/legacy-source-checks.json",
+          "scope": "structure only"
+        },
+        {
+          "command": "PATH=F:/jdk17/jdk-17.0.20.1+1/bin; python tools/test-web-browser-fixture.py",
+          "result": "PASS 9 actual loopback TCP checks compiling current shared HTTP server with actual JDK17"
+        },
+        {
+          "command": "python tools/test-retired-audit-contract.py",
+          "result": "PASS common real scenarios and single/multi variants; source structure only"
+        }
+      ],
+      "softwareChanges": [
+        "Tests owner extracted one HTTP fixture and shared browser scenario runner; debug and androidTest now keep only their single/multi selection distinction.",
+        "Shared HTML remains one actual source. No additional debug/audit APK is generated."
+      ],
+      "missingEvidence": [
+        {
+          "kind": "device",
+          "detail": "Actual Android browser/uploads/lifecycle matrix not exercised."
+        }
+      ],
+      "residual": [
+        "Actual Android file chooser callbacks, browser kernels and Activity lifecycle behavior remain separate device evidence."
+      ],
+      "changed": true,
+      "title": "web-state-fixture.html 与 Web 回归夹具 Java 类在 androidTest 与 debug 两份并已分叉"
+    }
+  ],
+  "additionalI18n": {
+    "contribution": "docs/audits/build156/i18n-contribution-legacy.json",
+    "result": "23 whole templates; 12 actual bilingual/raw-parameter/language-switch checks and 38 selected current-source JUnit tests PASS",
+    "files": [
+      "Fmt",
+      "PluginSource",
+      "SmsQuery",
+      "InstallProbe",
+      "TerminalSession",
+      "Compat",
+      "PtySession"
+    ],
+    "protectedSource": "ShellService.java remains unchanged; its external-origin constraint is explicit.",
+    "verification": {
+      "command": "JDK17 javac current display helpers/UiStateText/UiMessageFormat and fresh generated UiMessages; LegacyI18nProbe; JUnitCore four selected classes",
+      "generatedSource": "app/build/audit-build156/ui/generated/com/deepseekharness/app/util/UiMessages.java",
+      "result": "PASS 12 bilingual/raw-argument/state-language checks and 38 tests; no process code altered"
+    }
+  },
+  "notPerformed": [
+    "Android/ADB/phone operations",
+    "Gradle",
+    "extra debug/audit APK creation",
+    "uploads/deployment"
+  ]
+}

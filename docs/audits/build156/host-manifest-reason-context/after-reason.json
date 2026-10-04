@@ -1,0 +1,1613 @@
+{
+  "schema": 1,
+  "tests": [
+    {
+      "path": "tools/overlay-bridge-test.mjs",
+      "stage": "fast",
+      "reason": "Current isolated source fixture; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-adb-flow-audit.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-adb-flow.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-adb-vscreen-bridge.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-aidl-shim.ps1",
+      "stage": "windows",
+      "reason": "Windows fake SDK/shim source fixture; absolute Git Bash dependency, no real device or APK",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "powershell",
+        "git_bash"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements",
+      "platform": [
+        "windows"
+      ]
+    },
+    {
+      "path": "tools/test-alpha1-startup.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-alpha2-upgrade.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-android-computer-use.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-app-activity.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-architecture-boundaries.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-asset-deployment.py",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-attachment-store.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [
+        "{posixFixture}"
+      ],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "managed",
+        "native_host"
+      ],
+      "environment": {
+        "DSHA_TEST_NODE_MODULES": "{managedModules}"
+      }
+    },
+    {
+      "path": "tools/test-backup-engine.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39",
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-bridge-logic.ps1",
+      "stage": "windows",
+      "reason": "仅Windows的宿主源级/编译回归，不参与Linux快速层",
+      "args": [
+        "-ToolchainRoot",
+        "{toolchainRoot}"
+      ],
+      "timeoutSeconds": 300,
+      "requires": [
+        "powershell",
+        "toolchains"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements",
+      "platform": [
+        "windows"
+      ]
+    },
+    {
+      "path": "tools/test-bridge-routes.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39",
+        "jdk17"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-bridge-token-compat.mjs",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-browser-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-browser-stream-resume.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-chat-render-performance.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "browser"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-ci-package.py",
+      "stage": "fast",
+      "reason": "Current isolated source fixture; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-client-combo-cache.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-composer-enter.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {
+        "DSHA_COMPOSER_CLIENT": "{rawConversationModule}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-conversation-materialized.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "current_archive",
+        "tar"
+      ],
+      "environment": {
+        "DSHA_RUNTIME_ARCHIVE": "{runtimeArchive}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-conversation-stop.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {
+        "DSHA_STOP_RUNTIME": "{raw}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-credential-paths.py",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-deepseek-messages-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "current_archive",
+        "tar"
+      ],
+      "environment": {
+        "DSHA_RUNTIME_ARCHIVE": "{runtimeArchive}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-device-script-selection.py",
+      "stage": "runtime",
+      "reason": "Pure CLI selection and redaction regression; subprocess calls are blocked, no Android device operations",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; no device operations"
+    },
+    {
+      "path": "tools/test-device-shell-policy.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-dns-compat-device.mjs",
+      "stage": "device",
+      "reason": "需要真实设备或ADB；本轮不运行",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-dns-compat.mjs",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-documents-parent.ps1",
+      "stage": "device",
+      "reason": "需要真实设备或ADB；本轮不运行",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-dsh-builtins.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "guide_fixture"
+      ],
+      "environment": {
+        "DSHA_TEST_GUIDE": "{guideFixture}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-dsh-sessions.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-dsha-ui-regressions.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-environment-data.py",
+      "stage": "history",
+      "reason": "Historical Python v1 original only; current NativeEnvironmentRebuild/MaintenanceDataSnapshot has separate JVM proof",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-gecko-model-navigation.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-generated-asset-directory.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-issue67-startup.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-legacy-preset-convert.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-lexical-claim-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "current_archive",
+        "tar"
+      ],
+      "environment": {
+        "DSHA_RUNTIME_ARCHIVE": "{runtimeArchive}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-mobile-auth.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-mobile-delete.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-mobile-gesture-guard.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-mobile-modal-behavior.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "browser"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-mobile-server-patches.mjs",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "node24",
+        "mobile_upstream"
+      ],
+      "environment": {
+        "DSHA_MOBILE_UPSTREAM_DIR": "{mobileUpstream}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-mobile-server-streams.mjs",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-mobile-update.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-native-plugin-manager.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "managed"
+      ],
+      "environment": {
+        "DSHA_RAW_RUNTIME": "{raw}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-notification-actions.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-office-fonts.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "managed"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-pdf-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [
+        "{modules}"
+      ],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-plugin-dependencies.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39",
+        "pnpm",
+        "node24"
+      ],
+      "environment": {
+        "DSHA_TEST_PNPM_CLI": "{pnpmCli}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-plugin-discovery.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39",
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-plugin-downloads.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-plugin-resolution-order.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "native_host"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-plugin-review.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-plugin-semver.cjs",
+      "stage": "fast",
+      "reason": "Differential semantics against exact lockfile semver7.8.1; argv2 is required, never use an unverified global package",
+      "args": [
+        "{rawSemver}"
+      ],
+      "timeoutSeconds": 300,
+      "requires": [
+        "node24",
+        "semver_reference"
+      ],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-plugin-states.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-plugin-transactions.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-profile-settings-cli.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "managed"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-profile-settings-review.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-proot-runtime-libs.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-queue-steer.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {
+        "DSHA_QUEUE_RUNTIME": "{raw}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-rc1-browser-behavior.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "browser"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-rc1-migration.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-rc1-settings-migration.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-recovery-agent.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-recovery-apk-assets.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-recovery-assets.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-recovery-browser-overlay.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [
+        "{recoveryAssets}"
+      ],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "generated_recovery"
+      ],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-recovery-profile-boot.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "browser"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-release-acceptance.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-release-evidence.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-release-names.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-restore-merge-plugins.py",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-restore-merge-wsdir.py",
+      "stage": "history",
+      "reason": "Retired guest restore-merge implementation, temp-only historical fixture; cannot prove current NativeBackup boundary",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-runtime-descriptor-inputs.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-runtime-fixture.mjs",
+      "stage": "support",
+      "reason": "Runtime selection/proof helper, imported by real tests; not an independent test",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-runtime-input-contract.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-runtime-proof.py",
+      "stage": "fast",
+      "reason": "Current isolated source fixture; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "python39",
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-runtime-publish-linux.mjs",
+      "stage": "linux",
+      "reason": "Real Linux host Node/renameat2/flock/parentfsync; separate WSL/native Linux invocation, does not claim Android/FUSE validation",
+      "args": [
+        "{linuxPublisher}"
+      ],
+      "timeoutSeconds": 600,
+      "requires": [
+        "linux_node",
+        "linux_publish_packages"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements",
+      "platform": [
+        "linux"
+      ],
+      "executor": "linux"
+    },
+    {
+      "path": "tools/test-runtime-publish.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-runtime-trial.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [
+        "{modules}",
+        "{fixture}"
+      ],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-session-interaction.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-source-text.py",
+      "stage": "fast",
+      "reason": "Current byte-exact source LF contract in isolated fixtures; no device or publish",
+      "args": [],
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 300
+    },
+    {
+      "path": "tools/test-startup-checkpoints.py",
+      "stage": "history",
+      "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-startup-diagnostics.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-startup-page-relay.mjs",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-startup-recovery.py",
+      "stage": "history",
+      "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-storage-json-proroot-dirent.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [
+        "{managedStorageModule}"
+      ],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "managed"
+      ],
+      "environment": {}
+    },
+    {
+      "path": "tools/test-subagent-touch.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw",
+        "browser",
+        "browser_react"
+      ],
+      "environment": {
+        "DSHA_REACT": "{reactReference}"
+      },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-ui-boundaries154.py",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-ui-colors.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-ui-language.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-update-flow.ps1",
+      "stage": "windows",
+      "reason": "仅Windows的宿主源级/编译回归，不参与Linux快速层",
+      "args": [
+        "-Sdk",
+        "{sdk}",
+        "-Cache",
+        "{gradleCache}",
+        "-Jdk",
+        "{jdk}",
+        "-Flavor",
+        "{flavor}"
+      ],
+      "timeoutSeconds": 300,
+      "requires": [
+        "powershell",
+        "toolchains",
+        "debug_classes"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements",
+      "platform": [
+        "windows"
+      ]
+    },
+    {
+      "path": "tools/test-verification-require.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-vscreen.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-web-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-web-drafts.mjs",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据",
+      "args": [
+        "--unit-only"
+      ],
+      "timeoutSeconds": 300,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-web-ui-host-fixtures.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "jdk17"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-workflow-compat-alias.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-vscreen-manager-http.py",
+      "stage": "runtime",
+      "reason": "Fresh main/standard release source compilation with current StandardRelease resources and BuildConfig, locked host dependencies, owned-state JUnit and real bounded loopback HTTP; no device, Gradle or APK generation",
+      "requires": [
+        "python39",
+        "jdk17",
+        "toolchains"
+      ],
+      "environment": {},
+      "timeoutSeconds": 300,
+      "args": [
+        "--jdk",
+        "{jdk}",
+        "--sdk",
+        "{sdk}",
+        "--gradle-home",
+        "{gradleHome}"
+      ]
+    },
+    {
+      "path": "tools/test-format-java-tree.py",
+      "stage": "fast",
+      "reason": "Exact six-source-set formatter inventory and package batch regression; no device or APK",
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 300,
+      "args": []
+    },
+    {
+      "path": "tools/test-low-preview-capability.mjs",
+      "stage": "fast",
+      "reason": "Current Java-embedded WebView capability probe and Low selection source check; no device",
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "timeoutSeconds": 300,
+      "args": []
+    },
+    {
+      "path": "tools/test-runtime-stop-recovery.py",
+      "stage": "runtime",
+      "reason": "Compile actual WebProcessManager adapter/stop algorithm and TrialRecovery with explicit kernel outcomes and real private JVM files; Android classes are dependency inputs",
+      "requires": [
+        "python39",
+        "jdk17",
+        "toolchains",
+        "debug_classes"
+      ],
+      "environment": {},
+      "timeoutSeconds": 180,
+      "args": [
+        "--jdk",
+        "{jdk}",
+        "--sdk",
+        "{sdk}",
+        "--gradle-home",
+        "{gradleHome}",
+        "--flavor",
+        "{flavor}"
+      ]
+    },
+    {
+      "path": "tools/test-credential-yaml-projection.mjs",
+      "stage": "runtime",
+      "reason": "Actual current Java credential projection versus locked rc2 LocalCredentialProvider writer/parser on isolated constructed credentials; no real values",
+      "requires": [
+        "node24",
+        "raw",
+        "jdk17"
+      ],
+      "environment": {
+        "JAVA_HOME": "{jdk}"
+      },
+      "timeoutSeconds": 600,
+      "args": []
+    },
+    {
+      "path": "tools/test-native-session-handshake.py",
+      "stage": "linux",
+      "reason": "Fresh compilation of the current C launcher and real Linux kernel birth/parent/session/guest handshake through explicit WSL Node inputs; no Android device claim, no WSL repair or downloads",
+      "requires": [
+        "python39",
+        "linux_node"
+      ],
+      "environment": {},
+      "timeoutSeconds": 120,
+      "args": [
+        "--linux-host",
+        "{linuxHost}",
+        "--native-inputs",
+        "{linuxNativeInputs}",
+        "--wsl-distro",
+        "{wslDistro}",
+        "--linux-tempdir",
+        "{linuxTempdir}",
+        "--work-directory",
+        "{fixture}"
+      ],
+      "cli": "Explicit verified Linux Node and prepared NDK/Ubuntu cross-build inputs on Windows; native Linux keeps cc/Python behavior tests"
+    },
+    {
+      "path": "tools/test-web-browser-fixture.py",
+      "stage": "fast",
+      "reason": "Compile the sole shared test HTTP server and execute real TCP page/client/report/download/redirect/truncation/cancellation checks",
+      "requires": [
+        "python39",
+        "jdk17"
+      ],
+      "environment": {},
+      "timeoutSeconds": 120,
+      "args": []
+    },
+    {
+      "path": "tools/test-retired-audit-contract.py",
+      "stage": "fast",
+      "reason": "Retired-original byte provenance and current debug/androidTest source/manifest structure only; no device execution",
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 120,
+      "args": []
+    },
+    {
+      "path": "tools/test-bridge-files.py",
+      "stage": "runtime",
+      "reason": "Current bridge/file policy JVM behaviors with explicit descriptor fixture and locked JUnit/Gson; no Android/FUSE process",
+      "requires": [
+        "python39",
+        "jdk17",
+        "toolchains"
+      ],
+      "environment": {},
+      "timeoutSeconds": 300,
+      "args": [
+        "--jdk",
+        "{jdk}",
+        "--gradle-home",
+        "{gradleHome}"
+      ]
+    },
+    {
+      "path": "tools/test-bridge-token-transport.py",
+      "stage": "fast",
+      "reason": "Active managed bridge client/help header-transport source gate only; real behaviors have separate Node/JVM fixtures",
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 120,
+      "args": []
+    },
+    {
+      "path": "tools/test-runtime-session.py",
+      "stage": "fast",
+      "reason": "Real Node/Python receipt consumption and filesystem tampering prove provisional reuse, parent/path scope and mandatory final complete-byte rejection",
+      "requires": [
+        "python39",
+        "node24"
+      ],
+      "environment": {},
+      "timeoutSeconds": 180,
+      "args": []
+    },
+    {
+      "path": "tools/test-core-boundaries.py",
+      "stage": "fast",
+      "reason": "Current source ownership boundaries only; lifecycle/LAN/launcher behavior is separately covered by JVM fixtures",
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 120,
+      "args": []
+    },
+    {
+      "path": "tools/test-ui-i18n.py",
+      "stage": "fast",
+      "reason": "Lexical UI scanner behavior on synthetic sources and isolated inventories; does not claim full screen internationalization",
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 300,
+      "args": []
+    },
+    {
+      "path": "tools/test-rc2-tooltips.mjs",
+      "stage": "runtime",
+      "reason": "Locked current rc2 React/Tooltip in a real browser with pointer, touch, scrolling and blur events",
+      "requires": [
+        "node24",
+        "raw",
+        "browser"
+      ],
+      "environment": {},
+      "timeoutSeconds": 600,
+      "args": []
+    },
+    {
+      "path": "tools/test-third-party-notices.py",
+      "stage": "fast",
+      "reason": "Current notice generator on isolated npm/JNI trees rejects metadata drift, missing notices and unknown native sources",
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 600,
+      "args": []
+    },
+    {
+      "path": "tools/test-native-session-build.py",
+      "stage": "fast",
+      "reason": "Explicit fake compiler verifies API23 JNI build inputs and command behavior; no production native rebuild",
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 600,
+      "args": []
+    },
+    {
+      "path": "tools/test-runtime-descriptor-source.py",
+      "stage": "fast",
+      "reason": "Current descriptor verifier on isolated filesystem: missing archive, changed CRLF bytes, launcher and identity mismatch",
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 600,
+      "args": []
+    },
+    {
+      "path": "tools/test-host-test-runner.py",
+      "stage": "fast",
+      "reason": "Actual child failures/timeouts, manifest coverage and private environment; explicit setup-error fixture",
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "timeoutSeconds": 120,
+      "args": []
+    },
+    {
+      "path": "tools/test-unit-test-runner.py",
+      "stage": "fast",
+      "reason": "Actual javac helper compilation, JDK argument-file quoting and compile-failure cleanup; explicit launcher fixture",
+      "requires": [
+        "python39",
+        "jdk17"
+      ],
+      "environment": {},
+      "timeoutSeconds": 180,
+      "args": []
+    },
+    {
+      "path": "tools/test-native-device-policy.py",
+      "stage": "fast",
+      "reason": "Compile current native DeviceShellPolicy and execute protected-command rejection, allowed reads and SMS dry plans; no Android/device",
+      "requires": [
+        "python39",
+        "jdk17"
+      ],
+      "environment": {},
+      "timeoutSeconds": 180,
+      "args": []
+    },
+    {
+      "path": "tools/test-java-format.py",
+      "stage": "fast",
+      "reason": "Pinned JDK17 formatter/token/compilation fixture; no device",
+      "requires": [
+        "python39",
+        "jdk17"
+      ],
+      "environment": {
+        "JAVA_HOME": "{jdk}"
+      },
+      "timeoutSeconds": 300,
+      "args": []
+    }
+  ],
+  "historicalExcluded": [
+    {
+      "originalPath": "tools/test-tooltips.mjs",
+      "retainedPath": "tools/history/root-build156/tools/test-tooltips.mjs",
+      "reason": "Exact old 0.1.5 Tooltip fixture; current rc2 behavior has an independent browser test"
+    }
+  ]
+}

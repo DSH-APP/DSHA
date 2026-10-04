@@ -1,5 +1,8 @@
 # 插件下载、文件导入与 npm 修复
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 两版发布文件已替换到 F:\DSHA_RESTART\release，文件名和版本名不变，版本码从 109 升到 110。
 证书仍为原发布证书，环境版本保持 9，不触发重新解压。
 

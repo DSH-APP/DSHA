@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "tool": "google-java-format",
+  "version": "1.22.0",
+  "artifactSha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f",
+  "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\r\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+  "mode": "write",
+  "files": [
+    {
+      "file": "app/src/debug/java/com/deepseekharness/app/OwnedAuditFiles.java",
+      "beforeSha256": "c2a9cb7b6785252fe8d3481914cd9af05f3a99392a2488d079e5564cefb605b0",
+      "formattedSha256": "90431bcf2acd203cbe69df822066a891a768f94ab420424b808cefacec8fe9e6",
+      "javaTokenSha256": "dbd8726aaec2b380659b16bbddb3f78505be0fdfa6e316a41352f92c735cb753",
+      "needsFormatting": true,
+      "diff": "--- app/src/debug/java/com/deepseekharness/app/OwnedAuditFiles.java (before)\n+++ app/src/debug/java/com/deepseekharness/app/OwnedAuditFiles.java (formatted)\n@@ -8,26 +8,29 @@\n \n /** Deletes only a named debug fixture directly beneath its supplied cache root. */\n public final class OwnedAuditFiles {\n-    private OwnedAuditFiles() { }\n-    public static void remove(File cacheRoot, File target, String prefix) throws IOException {\n-        File parent=cacheRoot.getCanonicalFile(),candidate=target.getAbsoluteFile();\n-        if (!candidate.getParentFile().getCanonicalFile().equals(parent)\n-                || !candidate.getName().startsWith(prefix) || prefix.isEmpty())\n-            throw new IOException(\"AUDIT_FIXTURE_OUTSIDE_CACHE\");\n-        erase(candidate);\n+  private OwnedAuditFiles() {}\n+\n+  public static void remove(File cacheRoot, File target, String prefix) throws IOException {\n+    File parent = cacheRoot.getCanonicalFile(), candidate = target.getAbsoluteFile();\n+    if (!candidate.getParentFile().getCanonicalFile().equals(parent)\n+        || !candidate.getName().startsWith(prefix)\n+        || prefix.isEmpty()) throw new IOException(\"AUDIT_FIXTURE_OUTSIDE_CACHE\");\n+    erase(candidate);\n+  }\n+\n+  private static void erase(File file) throws IOException {\n+    try {\n+      int mode = Os.lstat(file.getPath()).st_mode;\n+      if (OsConstants.S_ISDIR(mode)) {\n+        Os.chmod(file.getPath(), mode | 0700);\n+        File[] children = file.listFiles();\n+        if (children == null) throw new IOException(\"AUDIT_FIXTURE_UNREADABLE:\" + file);\n+        for (File child : children) erase(child);\n+      }\n+      if (!file.delete()) throw new IOException(\"AUDIT_FIXTURE_DELETE_FAILED:\" + file);\n+    } catch (ErrnoException error) {\n+      if (error.errno != OsConstants.ENOENT)\n+        throw new IOException(\"AUDIT_FIXTURE_STAT_FAILED:\" + file, error);\n     }\n-    private static void erase(File file) throws IOException {\n-        try {\n-            int mode=Os.lstat(file.getPath()).st_mode;\n-            if (OsConstants.S_ISDIR(mode)) {\n-                Os.chmod(file.getPath(),mode | 0700);\n-                File[] children=file.listFiles();\n-                if(children==null)throw new IOException(\"AUDIT_FIXTURE_UNREADABLE:\"+file);\n-                for(File child:children)erase(child);\n-            }\n-            if(!file.delete())throw new IOException(\"AUDIT_FIXTURE_DELETE_FAILED:\"+file);\n-        } catch (ErrnoException error) {\n-            if(error.errno!=OsConstants.ENOENT)throw new IOException(\"AUDIT_FIXTURE_STAT_FAILED:\"+file,error);\n-        }\n-    }\n+  }\n }\n"
+    },
+    {
+      "file": "tools/java-format/JavaTokenFingerprint.java",
+      "beforeSha256": "3006493f0d88b66ee4f7298f0a98437be3f84689688fe6365f5a5a30f06cdbe2",
+      "formattedSha256": "3006493f0d88b66ee4f7298f0a98437be3f84689688fe6365f5a5a30f06cdbe2",
+      "javaTokenSha256": "3ce477de8e7b06e7be78232324a07a629bb5ae9cc4f88c0fa2515827b5736d4a",
+      "needsFormatting": false,
+      "diff": ""
+    }
+  ],
+  "checks": {
+    "schema": 1,
+    "tool": "google-java-format",
+    "version": "1.22.0",
+    "artifactSha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\r\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+    "mode": "check",
+    "files": [
+      {
+        "file": "app/src/debug/java/com/deepseekharness/app/OwnedAuditFiles.java",
+        "beforeSha256": "90431bcf2acd203cbe69df822066a891a768f94ab420424b808cefacec8fe9e6",
+        "formattedSha256": "90431bcf2acd203cbe69df822066a891a768f94ab420424b808cefacec8fe9e6",
+        "javaTokenSha256": "dbd8726aaec2b380659b16bbddb3f78505be0fdfa6e316a41352f92c735cb753",
+        "needsFormatting": false,
+        "diff": ""
+      },
+      {
+        "file": "tools/java-format/JavaTokenFingerprint.java",
+        "beforeSha256": "3006493f0d88b66ee4f7298f0a98437be3f84689688fe6365f5a5a30f06cdbe2",
+        "formattedSha256": "3006493f0d88b66ee4f7298f0a98437be3f84689688fe6365f5a5a30f06cdbe2",
+        "javaTokenSha256": "3ce477de8e7b06e7be78232324a07a629bb5ae9cc4f88c0fa2515827b5736d4a",
+        "needsFormatting": false,
+        "diff": ""
+      }
+    ]
+  },
+  "officialDownloadComparison": {
+    "mavenSha1": "693d8fd04656886a2287cfe1d7a118c4697c3a57",
+    "githubReleaseSha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f",
+    "bytes": 3612615,
+    "githubPublishedDigest": null,
+    "mavenSha256Sidecar": "HTTP 404; no published SHA-256 claimed"
+  }
+}

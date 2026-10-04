@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """DSHA 插件包导入/导出/链接安装。末行 PLUGIN_RESULT JSON 是唯一操作结果。
-仅安装声明 dsh.bundle.patch 的发布包；安装依赖不执行 prepare/build 脚本。
+仅安装声明 dsh.bundle.patch 的发布包；0.2.0-rc2 按用户请求允许依赖生命周期脚本。
 """
 import importlib.util
 import json
@@ -45,7 +45,55 @@ class PluginCancelled(Exception):
 
 
 class PackageCommandTimeout(TimeoutError):
-    pass
+    def __init__(self, message, *, confirmed_exit=False):
+        super().__init__(message)
+        self.confirmed_exit = confirmed_exit
+
+
+class PackageCommandUnknown(RuntimeError):
+    """This exact child/pipe has not closed; never replay or remove its candidates."""
+    confirmed_exit = False
+
+
+_candidate_frames = threading.local()
+
+
+@contextlib.contextmanager
+def candidate_workspace(*, prefix, dir):
+    path = tempfile.mkdtemp(prefix=prefix, dir=dir)
+    node = os.lstat(path)
+    frame = dict(path=path, identity=(node.st_dev, node.st_ino), retained=False)
+    frames = getattr(_candidate_frames, 'frames', None)
+    if frames is None:
+        frames = _candidate_frames.frames = []
+    frames.append(frame)
+    try:
+        yield path
+    finally:
+        frames.remove(frame)
+        # Unknown descendants may still write this working directory. Do not rename it.
+        if not frame['retained']:
+            current = os.lstat(path)
+            if stat.S_ISDIR(current.st_mode) and (current.st_dev, current.st_ino) == frame['identity']:
+                shutil.rmtree(path)
+
+
+def _retain_package_candidates(cwd):
+    for frame in getattr(_candidate_frames, 'frames', []):
+        frame['retained'] = True
+        try:
+            node = os.lstat(frame['path'])
+            if not stat.S_ISDIR(node.st_mode) or (node.st_dev, node.st_ino) != frame['identity']:
+                continue
+            marker = os.path.join(frame['path'], '.dsha-package-command-unknown.json')
+            fd = os.open(marker, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+            with os.fdopen(fd, 'w', encoding='utf8') as stream:
+                json.dump({'status': 'unknown', 'workingDirectory': cwd,
+                           'action': 'confirm-owned-process-exit-before-recovery'}, stream)
+                stream.flush(); os.fsync(stream.fileno())
+        except OSError:
+            # Marker failure never authorizes deleting an unknown running candidate.
+            continue
 
 
 def task_file(suffix):
@@ -89,29 +137,150 @@ def committing(message):
         progress('committed', '本项变更已处理', cancellable=False)
 
 
-def run_package_command(argv, cwd, timeout=120):
-    check_cancel()
-    # 只终止本次启动的 npm/pnpm 子进程组；stdout/stderr 放临时文件避免管道填满。
-    with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
-        process = subprocess.Popen(argv, cwd=cwd, stdout=out, stderr=err, start_new_session=os.name != 'nt')
-        deadline = time.monotonic() + timeout
+class _PackageOutput:
+    LIMIT = 1024 * 1024
+    TAIL = 16384
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.head, self.tail = bytearray(), bytearray()
+        self.total = 0
+        self.changed = time.monotonic()
+        self.done = threading.Event()
+        self.error = None
+
+    def drain(self, stream):
         try:
-            while process.poll() is None:
-                check_cancel()
-                if time.monotonic() > deadline:
-                    raise PackageCommandTimeout('包管理操作超时，请检查网络后重试')
-                time.sleep(.15)
-        except Exception:
-            if os.name != 'nt':
+            while True:
+                value = stream.read1(8192)
+                if not value:
+                    break
+                with self.lock:
+                    self.total += len(value); self.changed = time.monotonic()
+                    self.head.extend(value[:max(0, self.LIMIT - len(self.head))])
+                    self.tail = (self.tail + value)[-self.TAIL:]
+        except Exception as error:
+            self.error = error
+        finally:
+            self.done.set()
+            stream.close()
+
+    def snapshot(self):
+        with self.lock:
+            return self.total, self.changed
+
+    def text(self, *, tail=False):
+        with self.lock:
+            value = bytes(self.head)
+            if tail and self.total > len(value):
+                value += b'\n[PACKAGE_OUTPUT_TRUNCATED]\n' + bytes(self.tail)
+            return value.decode('utf8', 'replace')
+
+
+def _package_group_identity(process):
+    if os.name == 'nt':
+        return None
+    try:
+        with open('/proc/%s/stat' % process.pid, encoding='ascii') as stream:
+            text = stream.read(8192)
+        after = text[text.rindex(')') + 1:].split()
+        if int(text.split(' (', 1)[0]) != process.pid or len(after) < 20:
+            return None
+        group, session, born = int(after[2]), int(after[3]), int(after[19])
+        return (process.pid, group, session, born) if group == process.pid and session == process.pid and born > 0 else None
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def _stop_package_process(process, identity, *, grace=3):
+    # Windows Popen terminates its owned handle. POSIX group signals require captured
+    # birth/session identity; unreadable/changed identity never falls back to bare PID.
+    if process.poll() is None:
+        if os.name == 'nt':
+            process.terminate()
+        elif identity and _package_group_identity(process) == identity:
+            try: os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError: pass
+        else:
+            return False
+    try:
+        process.wait(timeout=grace)
+        return True
+    except subprocess.TimeoutExpired:
+        if process.poll() is None:
+            if os.name == 'nt':
+                process.kill()
+            elif identity and _package_group_identity(process) == identity:
                 try: os.killpg(process.pid, signal.SIGKILL)
                 except ProcessLookupError: pass
             else:
-                process.kill()
-            process.wait()
-            raise
-        out.seek(0); err.seek(0)
-        return subprocess.CompletedProcess(argv, process.returncode, out.read(1024 * 1024).decode('utf-8', 'replace'),
-                                           err.read(1024 * 1024).decode('utf-8', 'replace'))
+                return False
+        try:
+            process.wait(timeout=grace)
+            return True
+        except subprocess.TimeoutExpired:
+            return False
+
+
+def run_package_command(argv, cwd, timeout=900, *, idle_timeout=120):
+    if not 0 < timeout <= 3600 or not 0 < idle_timeout <= 3600:
+        raise ValueError('PACKAGE_COMMAND_BUDGET')
+    check_cancel()
+    started = time.monotonic()
+    process = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, start_new_session=os.name != 'nt')
+    identity = _package_group_identity(process)
+    out, err = _PackageOutput(), _PackageOutput()
+    for capture, stream in ((out, process.stdout), (err, process.stderr)):
+        threading.Thread(target=capture.drain, args=(stream,), daemon=True).start()
+    deadline = started + timeout
+    last_report = started
+    failure = None
+    try:
+        while process.poll() is None:
+            check_cancel()
+            now = time.monotonic()
+            output, out_at = out.snapshot(); errors, err_at = err.snapshot()
+            if now >= deadline:
+                raise PackageCommandTimeout('包管理操作达到整体时限，候选未提交；请检查后再试')
+            if now - max(started, out_at, err_at) >= idle_timeout:
+                raise PackageCommandTimeout('包管理操作长时间没有新进展，候选未提交；请检查后再试')
+            if out.error or err.error:
+                raise OSError('PACKAGE_OUTPUT_READ_FAILED')
+            if now - last_report >= 1:
+                progress('dependencies', '包管理操作进行中：已收到 %d 字节输出，已等待 %d 秒' %
+                         (output + errors, int(now - started)))
+                last_report = now
+            time.sleep(min(.1, timeout / 10, idle_timeout / 10))
+    except BaseException as error:
+        failure = error
+        try:
+            closed = _stop_package_process(process, identity)
+        except (OSError, subprocess.SubprocessError):
+            closed = False
+        if not closed:
+            _retain_package_candidates(cwd)
+            raise PackageCommandUnknown('包管理进程退出尚未确认；已保留候选，不能自动重试') from error
+    # EOF is separate evidence from the exact child's exit: inherited pipes cannot
+    # block forever or license source fallback while a descendant is still producing.
+    drain_until = time.monotonic() + 1
+    while not (out.done.is_set() and err.done.is_set()) and time.monotonic() < drain_until:
+        time.sleep(.02)
+    if process.poll() is None or not (out.done.is_set() and err.done.is_set()):
+        _retain_package_candidates(cwd)
+        raise PackageCommandUnknown('包管理进程或输出管道尚未闭合；已保留候选，不能自动重试') from failure
+    if failure:
+        if isinstance(failure, PackageCommandTimeout):
+            failure.confirmed_exit = True
+        raise failure
+    if out.error or err.error:
+        raise OSError('PACKAGE_OUTPUT_READ_FAILED')
+    completed = subprocess.CompletedProcess(argv, process.returncode, out.text(), err.text(tail=True))
+    completed.confirmed_exit = True
+    completed.stdout_bytes = out.snapshot()[0]
+    completed.stderr_bytes = err.snapshot()[0]
+    completed.output_truncated = completed.stdout_bytes > out.LIMIT or completed.stderr_bytes > err.LIMIT
+    return completed
 
 
 def lifecycle():
@@ -349,11 +518,9 @@ def transactions():
     return _transactions
 
 
-def register_plugin(root, source, expected_version=None, *, reviewed=False, restoring=False):
+def register_plugin(root, source, expected_version=None, *, restoring=False):
     pkg = plugin_package(root)
     name = pkg["name"]
-    if not reviewed:
-        raise ValueError('插件必须先完成静态预览并确认，不能直接安装')
     prepare_dependencies(root, pkg, restoring=restoring)
     source = dependencies().source_label(source)
     dest = local(os.path.join(PLUGIN_SRC, name))
@@ -396,9 +563,14 @@ def register_plugin(root, source, expected_version=None, *, reviewed=False, rest
             marker = builtin.marker_path(name)
             previous_bundles = doc.get("dsh", {}).get("profile", {}).get("bundles", [])
             known = name in doc.get("dependencies", {}) or name in previous_bundles
-            enabled = restoring and not os.path.isfile(marker) and (not known or name in previous_bundles)
             if os.path.lexists(marker) and (os.path.islink(marker) or not os.path.isfile(marker)):
                 raise ValueError('插件停用标记类型异常，原件已保留')
+            # 只继承用户明确的禁用意图。旧版自动写入的待审阅标记不是用户选择。
+            legacy_review = False
+            if os.path.isfile(marker) and os.path.getsize(marker) == len(b'DSHA_REVIEW_REQUIRED\n'):
+                with open(marker, 'rb') as stream:
+                    legacy_review = stream.read() == b'DSHA_REVIEW_REQUIRED\n'
+            enabled = (legacy_review or not known or name in previous_bundles) and (not os.path.isfile(marker) or legacy_review)
             existed = os.path.lexists(dest)
             if existed and (os.path.islink(dest) or not os.path.isdir(dest)):
                 raise ValueError("插件目标目录类型异常：" + name)
@@ -410,8 +582,7 @@ def register_plugin(root, source, expected_version=None, *, reviewed=False, rest
             doc["dsh"]["profile"]["patchReload"] = "startup"
             doc.setdefault("dependencies", {})[name] = "link:" + os.path.join(PLUGIN_SRC, name).replace("\\", "/")
             sources[name] = source or dependencies().source_label(repository_url(pkg)) or sources.get(name, "")
-            marker_bytes = b'DSHA_REVIEW_REQUIRED\n' if not enabled and not os.path.lexists(marker) else None
-            plan = transaction.prepare(work, name, prepared, doc, sources, marker_bytes)
+            plan = transaction.prepare(work, name, prepared, doc, sources, None, remove_marker=legacy_review)
             transaction.boundary('prepared')
             try:
                 transaction.apply_file(work, 'marker', plan)
@@ -449,7 +620,7 @@ def cmd_import(archive, subdir="", source="", expected_versions=None):
         raise ValueError("所选插件包不存在")
     if os.path.getsize(archive) > MAX_DOWNLOAD:
         raise ValueError("插件包过大（上限 256 MiB）")
-    with tempfile.TemporaryDirectory(prefix="plugin-import-", dir=local(DSH_HOME)) as staging:
+    with candidate_workspace(prefix="plugin-import-", dir=local(DSH_HOME)) as staging:
         extract_archive(archive, staging)
         found = find_plugin_roots(staging, subdir)
         names, failures, seen = [], [], set()
@@ -485,17 +656,19 @@ def resolve_plugin_dir(name, discovered=None):
         # 同名实体或旧备份副本不能改变列表、导出或回退所看到的版本。
         directory = builtin.entity_dir(name)
         return local(directory) if directory else None
+    runtime = builtin.runtime_bundle_dir(name)
+    if runtime:
+        # Match dsh's authoritative installAnchor-before-configAnchor lookup.
+        # Shadowed user files remain in place, but are not the loaded candidate.
+        return runtime
     path = os.path.join(local(builtin.NODE_MODULES), name)
     if os.path.isfile(os.path.join(path, "package.json")):
         return os.path.realpath(path)
     if discovered is not None and name in discovered:
         return discovered[name]['directory']
-    directory = builtin.entity_dir(name)
+    directory = builtin.entity_dir(name, discovered)
     if directory:
         return local(directory)
-    path = os.path.join(local(builtin.NODE_MODULES), name)
-    if os.path.isfile(os.path.join(path, "package.json")):
-        return os.path.realpath(path)
     return None
 
 
@@ -508,12 +681,82 @@ def cmd_export(names, out):
     os.makedirs(os.path.dirname(out), exist_ok=True)
     total, count = 0, 0
     excluded = []
+    runtime_sources = []
 
-    def add_tree(archive, path, arc, ancestors):
+    def inside(root, value):
+        return os.path.commonpath([root, value]) == root
+
+    def add_tree(archive, path, arc, ancestors, runtime_source=None, graph=None):
         nonlocal total, count
         progress('export', '正在打包：' + arc, count)
         real = os.path.realpath(path)
         basename = os.path.basename(path)
+        if runtime_source is not None:
+            # Manual export is a portable package source, not a second system
+            # runtime archive. Declared dependencies are checked on import.
+            if basename == 'node_modules':
+                excluded.append(arc)
+                return
+            if os.path.commonpath([runtime_source, real]) != runtime_source:
+                raise ValueError('随 DSH 安装提供的插件含包外链接，不能作为源码导出：' + arc)
+        if graph is not None:
+            runtime_root = os.path.realpath(local('/usr/local/lib/node_modules/@deepseek-ai/dsh'))
+            if inside(runtime_root, real):
+                excluded.append(arc + ' (current managed runtime)')
+                return
+            owner = os.path.realpath(os.path.dirname(path))
+            node = graph['nodes'].get(owner)
+            if basename == 'node_modules' and node is not None:
+                # A shared node_modules alias is not an owned package tree.
+                # Materialize only the packages actually bound by this graph.
+                count += 1
+                if count > MAX_FILES:
+                    raise ValueError('导出内容过大，请减少所选插件')
+                header = tarfile.TarInfo(arc); header.type = tarfile.DIRTYPE; header.mode = 0o700
+                archive.addfile(header)
+                for alias, edge in sorted(node['dependencies'].items()):
+                    target = edge.get('target')
+                    if target:
+                        add_tree(archive, target, arc + '/' + alias, ancestors | {owner}, graph=graph)
+                bins = os.path.join(path, '.bin')
+                if os.path.isdir(bins) and inside(owner, os.path.realpath(bins)):
+                    add_tree(archive, bins, arc + '/.bin', ancestors | {owner}, graph=graph)
+                else:
+                    # Shared command pools may contain unrelated executables. Rebuild
+                    # only the command bindings of the dependencies exported above.
+                    commands = set()
+                    for alias, edge in sorted(node['dependencies'].items()):
+                        target = edge.get('target')
+                        if not target or inside(runtime_root, os.path.realpath(target)):
+                            continue
+                        package = read_json(os.path.join(target, 'package.json'))
+                        declared = package.get('bin') or {}
+                        if isinstance(declared, str):
+                            declared = {package['name'].split('/')[-1]: declared}
+                        if not isinstance(declared, dict):
+                            raise ValueError('插件依赖命令声明无效：' + alias)
+                        for command, relative in sorted(declared.items()):
+                            if not isinstance(command, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,213}', command) or not isinstance(relative, str) or not relative or os.path.isabs(relative) or '\\' in relative or ':' in relative:
+                                raise ValueError('插件依赖命令路径无效：' + alias)
+                            binary = os.path.realpath(os.path.join(target, relative))
+                            if not inside(os.path.realpath(target), binary) or not os.path.isfile(binary):
+                                raise ValueError('插件依赖命令超出包根或不存在：' + alias)
+                            binding = os.path.join(bins, command)
+                            if os.path.lexists(binding) and os.path.realpath(binding) != binary:
+                                continue
+                            if command in commands:
+                                continue
+                            commands.add(command)
+                            count += 1
+                            if count > MAX_FILES:
+                                raise ValueError('导出内容过大，请减少所选插件')
+                            header = tarfile.TarInfo(arc + '/.bin/' + command)
+                            header.type = tarfile.SYMTYPE; header.mode = 0o755
+                            header.linkname = '../' + alias + '/' + os.path.relpath(binary, target).replace(os.sep, '/')
+                            archive.addfile(header)
+                return
+            if not any(inside(root, real) for root in graph['nodes']):
+                raise ValueError('插件导出链接未归属源码或实际依赖：' + arc)
         if basename in ('.npmrc', '.yarnrc.yml', '.env', '.dsha-dependencies.json') or basename.startswith('.env.'):
             excluded.append(arc)
             return
@@ -537,7 +780,7 @@ def cmd_export(names, out):
             archive.addfile(info)
             for child in sorted(os.listdir(real)):
                 if child not in (".git", ".cache", "__pycache__", ".DS_Store"):
-                    add_tree(archive, os.path.join(real, child), arc + "/" + child, ancestors | {real})
+                    add_tree(archive, os.path.join(real, child), arc + "/" + child, ancestors | {real}, runtime_source, graph)
 
     try:
         with tarfile.open(out, "w:gz", dereference=True) as archive:
@@ -547,14 +790,24 @@ def cmd_export(names, out):
                 directory = resolve_plugin_dir(name)
                 if not directory:
                     raise ValueError("找不到插件实体：" + str(name))
-                add_tree(archive, directory, "plugins/" + name, set())
+                runtime = builtin.runtime_bundle_dir(name)
+                runtime_source = os.path.realpath(directory) if runtime and os.path.realpath(runtime) == os.path.realpath(directory) else None
+                if runtime_source is not None:
+                    runtime_sources.append(name)
+                graph = None if runtime_source is not None else dependencies().current(directory)
+                add_tree(archive, directory, "plugins/" + name, set(), runtime_source, graph)
+                if graph is not None and graph['sha256'] != dependencies().current(directory)['sha256']:
+                    raise ValueError('插件源码或依赖在导出期间变化，原件保留')
         if os.path.getsize(out) > MAX_DOWNLOAD:
             raise ValueError("导出包超过 256 MiB，请减少插件数量")
     except Exception:
         if os.path.isfile(out):
             os.remove(out)
         raise
-    result("ok", "插件包已生成；凭据配置未导出，原生锁文件保留，导入时重新核对内容" if excluded else "插件包已生成", path=out, excluded=excluded)
+    message = "插件包已生成；凭据配置未导出，原生锁文件保留，导入时重新核对内容" if excluded else "插件包已生成"
+    if runtime_sources:
+        message += '；随 DSH 安装提供的组件仅导出源码，导入时核对并安装依赖'
+    result("ok", message, path=out, excluded=excluded, runtimeSources=runtime_sources)
     return 0
 
 
@@ -564,6 +817,10 @@ def cmd_delete(name):
         raise ValueError("无效的插件名称")
     if name in builtin.OFFICIAL_BUNDLES or name in builtin.builtin_names():
         raise ValueError("官方核心和内置插件请使用禁用开关，不能删除")
+    runtime = builtin.runtime_bundle_dir(name)
+    directory = resolve_plugin_dir(name)
+    if runtime and directory and os.path.realpath(runtime) == os.path.realpath(directory):
+        raise ValueError("随 DSH 安装提供的插件请使用禁用开关，不能删除")
     with builtin.operation_lock(check_cancel), committing('正在删除插件：' + name):
         doc = builtin.read_manifest()
         if doc is None:
@@ -592,7 +849,7 @@ def cmd_delete(name):
                     # 固定原件和日志留在事务目录，下一次仅在维护屏障内恢复。
                     raise
                 raise
-    result("ok", "已删除 " + name + "；重启 Web 后停止加载。对话和其他插件保留。")
+    result("ok", "已移除 " + name + " 的加载入口；原件保留在数据页的保留区。重启 Web 后生效，对话和其他插件保留。")
     return 0
 
 
@@ -635,7 +892,7 @@ def download(url, target):
 
 
 def cmd_download(url, subdir="", source="", *, consume=None):
-    with tempfile.TemporaryDirectory(prefix="plugin-download-", dir=local(DSH_HOME)) as staging:
+    with candidate_workspace(prefix="plugin-download-", dir=local(DSH_HOME)) as staging:
         target = os.path.join(staging, "archive")
         download(url, target)
         return (consume or cmd_import)(target, subdir, source or url)
@@ -710,8 +967,18 @@ def cmd_list(message="插件状态已同步"):
     if not isinstance(sources, dict):
         sources = {}
     discovered = builtin.discover_plugins()
+    system_names = set(builtin.builtin_names())
+    disabled_names = []
+    modules = local(builtin.NODE_MODULES)
+    if os.path.isdir(modules):
+        for entry in os.listdir(modules):
+            if entry.startswith('@') and os.path.isdir(os.path.join(modules, entry)):
+                disabled_names.extend(entry + '/' + child[:-9] for child in os.listdir(os.path.join(modules, entry))
+                                      if child.endswith('.disabled'))
+            elif entry.endswith('.disabled'):
+                disabled_names.append(entry[:-9])
     names = list(dict.fromkeys(list(builtin.OFFICIAL_BUNDLES) + builtin.builtin_names()
-                              + list(deps) + bundles + list(discovered)))
+                              + list(deps) + bundles + list(discovered) + disabled_names))
     items = []
     updates = lifecycle().read(lifecycle().path('plugin-updates.json'), {})
     for name in names:
@@ -720,22 +987,28 @@ def cmd_list(message="插件状态已同步"):
         official = name in builtin.OFFICIAL_BUNDLES
         directory = resolve_plugin_dir(name, discovered)
         pkg = read_json(os.path.join(directory, "package.json"), {}) if directory else {}
-        if name not in builtin.OFFICIAL_BUNDLES and name not in builtin.builtin_names() \
+        runtime_directory = builtin.runtime_bundle_dir(name)
+        runtime_provided = bool(directory and runtime_directory and os.path.realpath(directory) == os.path.realpath(runtime_directory))
+        if name not in builtin.OFFICIAL_BUNDLES and name not in system_names \
                 and name not in bundles and not (pkg.get("dsh") or {}).get("bundle"):
             continue
-        items.append(dict(name=name, enabled=name in bundles, builtin=name in builtin.builtin_names(),
+        source = repository_url(pkg) if runtime_provided else sources.get(name, "") or repository_url(pkg)
+        updatable = bool(directory) and not official and name not in system_names and not runtime_provided \
+                    and lifecycle().can_check_updates(source)
+        items.append(dict(name=name, enabled=name in bundles, builtin=name in system_names or runtime_provided,
+                          runtimeProvided=runtime_provided,
                           official=official, available=official or directory is not None,
                           version=pkg.get("version", ""), description=pkg.get("description", ""),
-                          source=sources.get(name, "") or repository_url(pkg),
+                          source=source, updatable=updatable,
                           exportable=not official and directory is not None,
-                          deletable=not official and name not in builtin.builtin_names()
+                          deletable=not official and name not in system_names and not runtime_provided
                                     and (name in deps or name in bundles),
                           internal=official or name == 'dsh-app-integration',
                           detected=name in discovered and name not in deps and name not in bundles,
-                          location='、'.join(discovered.get(name, {}).get('locations', []))))
+                          location='随 DSH 安装提供' if runtime_provided else '、'.join(discovered.get(name, {}).get('locations', []))))
         update = updates.get(name, {})
-        previous = lifecycle().history_info(name) if not official and name not in builtin.builtin_names() else {}
-        items[-1].update(latestVersion=update.get('latestVersion', ''), updateAvailable=bool(update.get('available'))
+        previous = lifecycle().history_info(name) if not official and name not in system_names and not runtime_provided else {}
+        items[-1].update(latestVersion=update.get('latestVersion', ''), updateAvailable=not runtime_provided and bool(update.get('available'))
                          and update.get('installedVersion') == str(pkg.get('version', '')),
                          updatePreviewId=update.get('previewId', ''), updateMessage=update.get('message', '')
                          if update.get('installedVersion') == str(pkg.get('version', '')) else '',
@@ -763,7 +1036,7 @@ def cmd_npm(package, *, consume=None):
         raise ValueError("请使用 npm 包名或 包名@版本，例如 @作者/插件@1.0.0")
     if not shutil.which("npm"):
         raise ValueError("npm 尚未就绪，请关闭终端后重新打开")
-    with tempfile.TemporaryDirectory(prefix="plugin-npm-", dir=local(DSH_HOME)) as staging:
+    with candidate_workspace(prefix="plugin-npm-", dir=local(DSH_HOME)) as staging:
         progress('download', '正在获取 npm 发布包…')
         process = network().package_command(["npm", "pack", "--json", "--ignore-scripts", "--pack-destination", staging, "--", spec], cwd=staging,
                                             frozen=bool(match.group(2) and re.fullmatch(r'\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?(?:\+[A-Za-z0-9.-]+)?', match.group(2))))
@@ -784,13 +1057,18 @@ def main():
     args = sys.argv[1:]
     try:
         check_cancel()
-        # 一次容器启动内完成变更与状态读取；仍沿用原锁、审阅及提交边界。
+        if not args:
+            raise ValueError('不支持的插件操作')
+        # 一次容器启动内完成变更与状态读取；仍沿用原锁与事务提交边界。
         if args == ["refresh"]:
             with builtin.operation_lock(check_cancel):
                 progress('refresh', '正在检测已安装插件…', cancellable=False)
-                if builtin.register() != 0:
-                    raise ValueError('部分内置插件待修复，请检查环境')
+                # Registration and legacy migration belong to environment/Web
+                # preparation. Opening the list must not relink every runtime
+                # module, modify the profile, or hash all installed dependencies.
                 return cmd_list('插件检测完成；变更后重启 Web 生效')
+        if args == ["migrate-review-markers"]:
+            return lifecycle().migrate_legacy_reviews()
         if len(args) == 2 and args[0] in ('enable-list', 'disable-list'):
             name = args[1]
             if not builtin.valid_name(name):
@@ -798,15 +1076,25 @@ def main():
             with builtin.operation_lock(check_cancel):
                 enable = args[0] == 'enable-list'
                 progress('configure', '正在更新插件状态…', cancellable=False)
+                if enable and name not in builtin.OFFICIAL_BUNDLES and name not in builtin.builtin_names():
+                    directory = resolve_plugin_dir(name)
+                    if not directory:
+                        raise ValueError('找不到插件实体，请重新导入：' + name)
+                    package = plugin_package(directory)
+                    # The switch records intent. Check bytes/dependency graph at
+                    # the next Web load, where they are actually consumed.
+                    runtime = builtin.runtime_bundle_dir(name)
+                    if not runtime or os.path.realpath(runtime) != os.path.realpath(directory):
+                        lifecycle().queue_activation(name, '', package['version'])
                 if (builtin.enable_plugin(name) if enable else builtin.disable_plugin(name)) != 0:
-                    raise ValueError('插件状态更新失败，请检查配置或审阅状态')
+                    raise ValueError('插件状态更新失败，请检查配置和安装文件')
                 return cmd_list('已' + ('启用 ' if enable else '禁用 ') + name + '；重启 Web 后生效')
         if len(args) == 2 and args[0] == 'delete-list':
             if cmd_delete(args[1]) != 0:
                 return 1
             with builtin.operation_lock():
                 progress('refresh', '插件已删除，正在同步列表…', cancellable=False)
-                return cmd_list('已删除 ' + args[1] + '；重启 Web 后停止加载。对话和其他插件保留。')
+                return cmd_list('已移除 ' + args[1] + ' 的加载入口；原件保留在数据页的保留区，重启 Web 后生效。')
         if args[0] == "inspect" and len(args) == 2:
             return lifecycle().inspect(args[1])
         if args[0] == "install-preview" and len(args) == 3:
@@ -862,6 +1150,8 @@ def main():
             with builtin.operation_lock(check_cancel):
                 return cmd_list()
         raise ValueError("不支持的插件操作")
+    except PackageCommandUnknown as error:
+        result('unknown', str(error), candidateRetained=True, executionState='unknown')
     except PluginCancelled as error:
         result('cancelled', str(error))
     except urllib.error.HTTPError as error:

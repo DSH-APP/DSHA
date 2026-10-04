@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "scope": "changed website software preflight using real155 manifest/APKs and exact authenticated155 source files; NOT final156 or deployment",
+  "artifactVersionCode": 155,
+  "sourceArchiveSha256": "864df310ae80ea82b47efcfd46096e70c7e4bdcce8f6697a0b2bacb196277d32",
+  "selectedSourceFiles": [
+    {
+      "path": "app/build.gradle",
+      "sha256": "493ace63bb50da2ff802edecca967222ca00952c2ce50e99466d3835a724000a"
+    },
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/util/Constants.java",
+      "sha256": "6995782ae589466b75ddab92265a2b126b5110cb9220bbd2fe57aa4996b9799f"
+    },
+    {
+      "path": "tools/dsh-runtime/package.json",
+      "sha256": "4885ec233c3786b2ce17c396f64b3e922d3202b8a50a67a60e199c7d9e130b61"
+    },
+    {
+      "path": "app/src/main/assets/runtime-descriptor.json",
+      "sha256": "e876e87f8fe34d8923cec510f7ba2d821b04c73f7e0a39afcc3e2ca6fd74f051"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins.json",
+      "sha256": "1ee04fd9206e6a7c97c5491fd919f0eba2d212c8b2116eea85664a9105f31304"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "e0ddc2f4a383d900a26e3148a19c256e9dbe06585a274307509e9714636be0b1"
+    },
+    {
+      "path": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "sha256": "af7c54e2455383d010c0edb1f4fb266a367ea89b1d8517067cfd3c970ee9bddb"
+    },
+    {
+      "path": "app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "sha256": "17d70d59a332d59f002d5c6ef45fe0e66be774abd99e8ef4589456f7e43ea9c5"
+    },
+    {
+      "path": "agent-skills/device-shell/SKILL.md",
+      "sha256": "247a04d6ad0fe6ed15925e7e5e8e1467ddce268ab37e4a5f5486a5feb8bce125"
+    },
+    {
+      "path": "agent-skills/screen-ocr-operator/SKILL.md",
+      "sha256": "9435e0dff26b8199e16eb12ac434f2bfc6db1af73ccd7ba40d96a62b8772f8e7"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json",
+      "sha256": "3505503057538d15adf0a695aa7680e56330df4df7fb0558cc09d718da5b9c4f"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-task-notifier/package.json",
+      "sha256": "51d5ec8e62aba043507246c86e454f2e0552b02b5639ea32c031d3e9e0853820"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-status-overlay/package.json",
+      "sha256": "85d452eb38380a4fe60e92b800f8ea6409926e351fe264b3f01d9113b796dc15"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+      "sha256": "31e59a15aaa158d331c56510696f2b48955f1b089137c93b275a70b70d0a716f"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json",
+      "sha256": "886f2bf575e17c9dee7802c221db3a113f8045e7976b8b28ca4964832ed1225d"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-auto-review/package.json",
+      "sha256": "550eec82cfa16a7ea48d0cb57d2c5ce8a3e1dc9123277415f149d8d3d97ee573"
+    },
+    {
+      "path": "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/package.json",
+      "sha256": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa"
+    }
+  ],
+  "checks": [
+    {
+      "command": [
+        "scripts/build.mjs"
+      ],
+      "cwd": "website",
+      "exitCode": 0,
+      "log": "app/build/audit-build156/docs-website-preflight/check-1.log",
+      "logSha256": "8ffba68c67a1f2a35d192853f4c3366c593da5054de67f851dbdc05a57e030c0"
+    },
+    {
+      "command": [
+        "--test",
+        "scripts/site.test.mjs",
+        "scripts/interactions.test.mjs"
+      ],
+      "cwd": "website",
+      "exitCode": 0,
+      "log": "app/build/audit-build156/docs-website-preflight/check-2.log",
+      "logSha256": "16f7a0b6f368d084f5beac3484fc048839e21fc46b06e0e0350b50e87891dfbd"
+    }
+  ],
+  "result": "PASS"
+}

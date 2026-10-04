@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# DSHA_ADB_SCRIPT_VERSION=19
+# DSHA_ADB_SCRIPT_VERSION=20
 """设备 shell：原生白名单判定、有限时连接、发送后不重放、真实远端退出码。
 
 用法：adb-shell.py [--host 本机IP] [--port 端口] [--timeout 秒] [--su] 命令
@@ -30,14 +30,6 @@ TRANSPORT_TIMEOUT = 4.0
 CONNECT_TIMEOUT = 25.0
 COMMAND_TIMEOUT = 90.0
 
-# env 能启动任意程序，date/logcat/dumpsys 有写操作，均需确认。
-READONLY_CMDS = frozenset(('getprop', 'id', 'ps', 'df', 'free', 'uptime',
-    'whoami', 'ls', 'stat', 'wc', 'head', 'tail', 'grep', 'cat',
-    'md5sum', 'sha1sum', 'printenv', 'pwd', 'which', 'true', 'echo'))
-READONLY_SUB = {'pm': frozenset(('list', 'path', 'dump')),
-                'settings': frozenset(('get', 'list'))}
-
-
 class ConnectFail(Exception):
     """命令尚未发送，允许重新发现地址。"""
 
@@ -46,34 +38,11 @@ class ExecutionUnknown(Exception):
     """命令可能已执行，禁止自动重放。"""
 
 
-class ConfirmationError(Exception):
-    pass
-
 
 class ShellResult:
     def __init__(self, output, exit_code):
         self.output = output
         self.exit_code = exit_code
-
-
-def is_readonly_cmd(cmd):
-    # 不解释完整 shell 语法；展开、操作符和不明命令均需确认。
-    if not cmd.strip() or any(c in cmd for c in '><|;&$`\n\r(){}\\'):
-        return False
-    try:
-        parts = shlex.split(cmd)
-    except ValueError:
-        return False
-    if not parts:
-        return False
-    name = parts[0]
-    if '/' in name:
-        if not name.startswith('/system/bin/') or name.count('/') != 3:
-            return False
-        name = name.rsplit('/', 1)[-1]
-    if name in READONLY_SUB:
-        return len(parts) > 1 and parts[1] in READONLY_SUB[name]
-    return name in READONLY_CMDS
 
 
 def atomic_text(path, text):
@@ -321,50 +290,6 @@ def connect_with_retry(device_cls, signer_cls, cmd, port, host='',
     if result is not None:
         return result
     raise ConnectFail('命令尚未发送；请检查无线调试与配对授权。尝试记录：\n' + '\n'.join(errors[-8:]))
-
-
-def request_confirm(cmd, reason=''):
-    """一次请求一次决策；仅连接明确被拒绝时尝试另一地址族。"""
-    import errno
-    import urllib.request
-    import urllib.parse
-    import urllib.error
-    try:
-        with open('/root/.dsh/.bridge_token') as f:
-            token = f.read().strip()
-    except OSError:
-        token = ''
-    if not token:
-        raise ConfirmationError('BRIDGE_TOKEN_MISSING: 确认桥尚未就绪，请打开 DSHA 后重试')
-    display = cmd if not reason else cmd + '\n\n[理由] ' + reason
-    query = '/confirm?' + urllib.parse.urlencode({'cmd': display, 'force': '1'})
-    # 不继承代理环境；令牌只放头部，避免出现在 URL/错误日志。
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-    for host in ('127.0.0.1', '[::1]'):
-        try:
-            req = urllib.request.Request('http://' + host + ':3090' + query, headers={'X-Token': token})
-            with opener.open(req, timeout=65) as response:
-                body = response.read(65536).decode('utf-8')
-            try:
-                result = json.loads(body).get('result')
-            except (ValueError, AttributeError):
-                result = 'YES' if body.strip() == '{"result":YES}' else None
-            if result == 'YES':
-                return True
-            if result == 'NO':
-                raise ConfirmationError('CONFIRM_NOT_GRANTED: 未获确认（可能拒绝、超时或已有确认等待），命令未发送')
-            if result == '[UNAUTHORIZED]':
-                raise ConfirmationError('BRIDGE_UNAUTHORIZED: 桥鉴权失败，请重新启动 DSHA')
-            raise ConfirmationError('CONFIRM_NOT_GRANTED: ' + str(result or '桥返回无效响应')[:240])
-        except ConfirmationError:
-            raise
-        except urllib.error.URLError as e:
-            if isinstance(e.reason, OSError) and e.reason.errno == errno.ECONNREFUSED:
-                continue
-            raise ConfirmationError('BRIDGE_RESPONSE_LOST: 未收到确认结果，命令未发送；请回到 DSHA 检查确认提示') from e
-        except (TimeoutError, OSError, ValueError) as e:
-            raise ConfirmationError('CONFIRM_TIMEOUT: 确认等待超时或响应中断，命令未发送') from e
-    raise ConfirmationError('BRIDGE_UNREACHABLE: 3090 确认桥未监听，请打开 DSHA 后重试')
 
 
 def request_device_plan(cmd, use_su=False):

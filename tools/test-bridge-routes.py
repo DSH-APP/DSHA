@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""3090 桥的路由分发：剥掉查询串后精确匹配。
+"""3090 桥的路由分发：实际编译生产 Java 路由表并执行端点行为矩阵。
 
-HTTP 外层做源码接线检查；虚拟屏的纯路由判据由临时 JVM 夹具执行真实行为矩阵，
-不需要启动 Android 服务或设备能力。完整 Java 单测另覆盖同一纯逻辑入口。
+HTTP 门禁与处理器接线做窄源码顺序检查；完整 HTTP 端到端验收仍需 Android 服务。
 
 历史教训（1.1.x 支线 c2b58bc 记下来的）：`/app/overlay` 用 startsWith 就意味着
 `/app/overlayXXX` 也命中它，而 `/app/overlay/reply` 只是靠「写在前面」才没被吃掉
@@ -21,70 +20,90 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 JAVA = ROOT / 'app/src/main/java/com/deepseekharness/app/HttpShellService.java'
 
-# 这两组是命名空间；内部必须精确分发，未知子路径不得触发授权或动作。
-ALLOWED_PREFIXES = ('/app/ui/', '/app/vscreen/')
-# 凭据敏感端点：必须精确匹配。
-SENSITIVE = ('/app/readfile', '/app/export', '/app/share')
+class NativeBridgeRouteBehavior(unittest.TestCase):
+    """Compile and execute the production Java route selector against hostile paths."""
 
+    @classmethod
+    def setUpClass(cls):
+        cls.temp = tempfile.TemporaryDirectory(prefix='dsha-bridge-routes-')
+        cls.addClassCleanup(cls.temp.cleanup)
+        cls.java, javac = shutil.which('java'), shutil.which('javac')
+        if not cls.java or not javac:
+            raise RuntimeError('路由行为测试需要 JDK 17+ 的 java/javac')
+        probe = Path(cls.temp.name) / 'BridgeRouteProbe.java'
+        probe.write_text("""import com.deepseekharness.app.util.BridgeRoutes;
+public class BridgeRouteProbe {
+  public static void main(String[] args) {
+    for (String route : args) {
+      BridgeRoutes.Route result = BridgeRoutes.match(route);
+      System.out.println(result.name() + ":" + result.commandParameter());
+    }
+  }
+}""", encoding='utf-8')
+        subprocess.run([javac, '--release', '17', '-encoding', 'UTF-8', '-d', cls.temp.name,
+                        str(ROOT / 'app/src/main/java/com/deepseekharness/app/util/BridgeRoutes.java'),
+                        str(probe)], check=True, capture_output=True, text=True)
 
-class RouteDispatch(unittest.TestCase):
-    def setUp(self):
-        self.src = JAVA.read_text(encoding='utf-8')
+    def routes(self, *paths):
+        result = subprocess.run([self.java, '-cp', self.temp.name,
+                                 'BridgeRouteProbe', *paths],
+                                check=True, capture_output=True, text=True)
+        return result.stdout.splitlines()
 
-    def exact_routes(self):
-        return set(re.findall(r'\broute\.equals\("([^"]+)"\)', self.src))
+    def test_all_public_endpoints_and_command_metadata(self):
+        expected = {
+            '/device/vscreen/start': 'DEVICE_VSCREEN_START:true',
+            '/device/vscreen/commit': 'DEVICE_VSCREEN_COMMIT:false',
+            '/device/plan': 'DEVICE_PLAN:true',
+            '/device/execute': 'DEVICE_EXECUTE:true',
+            '/app/notify': 'NOTIFY:false', '/app/toast': 'TOAST:false',
+            '/app/readfile': 'READ_FILE:false', '/health': 'HEALTH:false',
+            '/app/ui/dump': 'UI:false', '/app/vscreen/status': 'VSCREEN:false',
+            '/app/device': 'DEVICE:false', '/app/apps': 'APPS:false',
+            '/app/launch': 'LAUNCH:false', '/app/clip': 'CLIP:false',
+            '/app/share': 'SHARE:false', '/app/open': 'OPEN:false',
+            '/app/vibrate': 'VIBRATE:false', '/app/ask': 'ASK:false',
+            '/app/version': 'VERSION:false', '/app/help': 'HELP:false',
+            '/app/plugins': 'PLUGINS:false', '/app/overlay': 'OVERLAY:false',
+            '/app/location': 'LOCATION:false', '/app/sensors': 'SENSORS:false',
+            '/app/sensor': 'SENSOR:false', '/app/torch': 'TORCH:false',
+            '/app/export': 'EXPORT:false', '/confirm': 'CONFIRM:true',
+            '/exec': 'EXEC:true',
+        }
+        self.assertEqual(list(expected.values()), self.routes(*expected))
 
-    def prefixes(self):
-        return set(re.findall(r'\broute\.startsWith\("([^"]+)"\)', self.src))
+    def test_sensitive_suffixes_and_unknown_namespaces_cannot_inherit_handlers(self):
+        invalid = (
+            '/app/readfileXXX', '/app/readfile/child', '/app/share2',
+            '/app/export/child', '/app/overlay/reply', '/app/sensorsXXX',
+            '/app/sensor/child', '/exec/child', '/device/execute/child',
+            '/app/ui', '/app/vscreen', '/app/ui%2fdump',
+            '/app/vscreen%2fstatus', '/app/ui-extra/tap',
+        )
+        self.assertEqual(['UNKNOWN:false'] * len(invalid), self.routes(*invalid))
 
-    def test_query_string_is_stripped_before_matching(self):
-        # 判据必须建立在剥掉查询串的路由上，?token=… 不该参与路由选择。
-        self.assertIn('String route = path.split("\\\\?", 2)[0];', self.src)
-
-    def test_no_app_route_matches_by_prefix(self):
-        for prefix in sorted(self.prefixes()):
-            self.assertIn(prefix, ALLOWED_PREFIXES,
-                          f"{prefix} 仍是前缀匹配：/x{prefix.lstrip('/')}XXX 也会命中它")
-
-    def test_no_legacy_starts_with_dispatch(self):
-        # path.startsWith(...) 是旧的写法：查询串没剥，又是前缀。
-        for m in re.finditer(r'path\.startsWith\("([^"]+)"\)', self.src):
-            self.fail(f'仍在用 path.startsWith 分发：{m.group(1)}')
-
-    def test_sensitive_endpoints_are_exact(self):
-        exact = self.exact_routes()
-        for route in SENSITIVE:
-            self.assertIn(route, exact,
-                          f'{route} 必须是精确路由：它决定凭据能否被读出')
-
-    def test_sensor_pair_is_not_collapsed_to_a_prefix(self):
-        # /app/sensors（列表）与 /app/sensor（读单个）名字互为前缀，
-        # 精确匹配后它俩是两条独立路由；合并成一个前缀就会恢复那个顺序依赖。
-        exact = self.exact_routes()
-        self.assertIn('/app/sensors', exact)
-        self.assertIn('/app/sensor', exact)
-
-    def test_ui_namespace_dispatches_on_exact_subroutes(self):
-        # appUi 内部也必须剥掉查询串再精确匹配：startsWith 会让 /app/ui/shotXXX
-        # 命中截屏，而截屏会把当前画面留到磁盘。
-        self.assertIn('String r = path.split("\\\\?", 2)[0];', self.src)
-        for sub in ('/app/ui/dump', '/app/ui/tap', '/app/ui/input', '/app/ui/key',
-                    '/app/ui/swipe'):
-            self.assertIn(f'r.equals("{sub}")', self.src, f'appUi 里 {sub} 不是精确匹配')
-        self.assertIn('r.equals("/app/ui/screenshot") || r.equals("/app/ui/shot")', self.src)
-        for m in re.finditer(r'path\.startsWith\("/app/ui', self.src):
-            self.fail('appUi 内部仍在用 path.startsWith 分发')
-
-    def test_vscreen_rejects_unknown_route_before_authorization(self):
-        handler = self.src.split('private String appVscreen(String path)', 1)[1].split('private int intParam', 1)[0]
-        self.assertIn('VirtualScreenRoutes.operation(route)', handler)
-        self.assertLess(handler.index('if (operation.isEmpty())'), handler.index('uiAuthorized('))
-        self.assertNotIn('endsWith(', handler)
-        manager = (ROOT / 'app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java').read_text(encoding='utf-8')
-        bridge = manager.split('public static String bridge(', 1)[1].split('private static JSONObject remember', 1)[0]
-        self.assertIn('VirtualScreenRoutes.operation(route)', bridge)
-        self.assertLess(bridge.index('if(name.isEmpty())'), bridge.index('switch(name)'))
-
+    def test_http_dispatch_keeps_protocol_and_auth_before_handlers(self):
+        src = JAVA.read_text(encoding='utf-8')
+        method = src.split('private void handle(Socket client, long headerDeadline)', 1)[1]
+        method = method.split('private String dispatch(', 1)[0]
+        self.assertLess(method.index('HttpProtocol.readHead('),
+                        method.index('BridgeRoutes.match(route)'))
+        self.assertLess(method.index('request.method.equals("POST")'),
+                        method.index('BridgeRoutes.match(route)'))
+        self.assertLess(method.index('BridgeCredentialAuth.authorized('),
+                        method.index('dispatch(selected, bridgeRequest)'))
+        self.assertLess(method.index('RuntimeTasks.begin()'),
+                        method.index('dispatch(selected, bridgeRequest)'))
+        self.assertIn('VscreenBridgeRequest.readPost(', src)
+        self.assertIn('ROUTE_HANDLERS.get(route)', src)
+        route_src = (ROOT / 'app/src/main/java/com/deepseekharness/app/util/BridgeRoutes.java').read_text(encoding='utf-8')
+        declared = set(re.findall(r'\b([A-Z_]+)\((?:true|false)\)',
+                                  route_src.split('private final boolean commandParameter;', 1)[0]))
+        registered = re.findall(r'routes\s*\.\s*put\s*\(\s*BridgeRoutes\.Route\.([A-Z_]+)', src)
+        self.assertEqual(len(registered), len(set(registered)), '每个路由只允许一个处理器')
+        handlers = set(registered)
+        self.assertEqual(declared - {'UNKNOWN'}, handlers,
+                         '新增路由必须注册实际处理器，UNKNOWN 只返回历史错误')
 
 class VirtualRouteBehavior(unittest.TestCase):
     @classmethod

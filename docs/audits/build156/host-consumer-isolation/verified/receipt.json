@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "status": "PASS_FOCUSED_LIVE_SESSION",
+  "sourceSha256": {
+    "tools/test-deepseek-messages-compat.mjs": "5a9598c82389447b1deaae30fc9a37cc16c0ff19864b09c15dfc7cdc5fbfa4af",
+    "tools/test-storage-json-proroot-dirent.mjs": "ae25ca23e790c9968f35bfbcc997cf33d54d5411532351dff3a63becca995388",
+    "tools/test-dsha-ui-regressions.py": "0558e19edcd59f9db7cbb93e21fa8f8fedc14de450d532b4551a768ed59e9d85",
+    "tools/verify-plugin-upgrade-gate.py": "992a66cdbc55bfd83cee4b4062c7b8d3e0596c186e2bb0dd0d31c2d8b6c77349"
+  },
+  "cacheConsumerSha256": {
+    "tools/run-host-tests.py": "d77133743581a09d9288fb2ba8dbfa086e80d8afb153f6ede4f0af03de8e96c4",
+    "tools/test-runtime-fixture.mjs": "586c14e4c800b31140698620bffee39e967c278eca1cd092737c4be9cf3dbc18",
+    "tools/test_runtime_fixture.py": "0913b6e25b32b46955183d9f4e2da3b6172e02cfa948e828570b6efd44a3c4b5",
+    "tools/runtime_fixture_proof.py": "76519c496cbb56bfafd393dc59fd39d029566d0ccc08366bc5379e653454c681",
+    "tools/runtime_fixture_session.py": "fa0b580566b7710d9f68ce3255ee00a06542cee651b58811149ec403454a4dbb"
+  },
+  "initialCompleteByteProofs": [
+    {
+      "kind": "raw",
+      "entries": 32880,
+      "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1",
+      "status": "PASS",
+      "seconds": 17.687
+    },
+    {
+      "kind": "managed",
+      "entries": 32889,
+      "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912",
+      "status": "PASS",
+      "seconds": 18.656
+    }
+  ],
+  "commands": [
+    {
+      "label": "deepseek-owned-probes",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-deepseek-messages-compat.mjs"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 4.578,
+      "log": "app/build/audit-build156/host-consumer-isolation-verified/deepseek-owned-probes.log",
+      "logSha256": "675d4dcf6a42188334211831a410d1233cbaa09f601ae6b50dc6371ff84d91f2"
+    },
+    {
+      "label": "storage-owned-probes",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-storage-json-proroot-dirent.mjs",
+        "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129\\node_modules\\@deepseek-ai\\dsh-storage-json\\lib\\index.js"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 2.937,
+      "log": "app/build/audit-build156/host-consumer-isolation-verified/storage-owned-probes.log",
+      "logSha256": "faed3cf298cc589397e896ac13b6d8204e5f58f3847a3288d02185302e799b7d"
+    },
+    {
+      "label": "actual-verifier-native-manager",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-native-plugin-manager.mjs"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 5.719,
+      "log": "app/build/audit-build156/host-consumer-isolation-verified/actual-verifier-native-manager.log",
+      "logSha256": "52de44688cd6c6a9d8fd0b18e971ff3daabb930ba1ba5c00c9fba954a79ab2ab"
+    },
+    {
+      "label": "actual-verifier-owned-builtin-guide",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "F:\\DSHA_RESTART\\tools\\test-dsh-builtins.mjs"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 0.078,
+      "log": "app/build/audit-build156/host-consumer-isolation-verified/actual-verifier-owned-builtin-guide.log",
+      "logSha256": "a5ab2a69f37da3b689631e4eb66bc588ce05f6bf9170974447bedcb8654a11ff"
+    },
+    {
+      "label": "restore-context-source-guards",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-dsha-ui-regressions.py"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 0.141,
+      "log": "app/build/audit-build156/host-consumer-isolation-verified/restore-context-source-guards.log",
+      "logSha256": "d20f0e4817cab241a9fccebe21d5f5e05c8f7ce09a0410d53e8e159e8462a849"
+    }
+  ],
+  "metadataAfterEveryConsumer": [
+    {
+      "label": "deepseek-owned-probes",
+      "kind": "raw",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "deepseek-owned-probes",
+      "kind": "managed",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "storage-owned-probes",
+      "kind": "raw",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "storage-owned-probes",
+      "kind": "managed",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "actual-verifier-native-manager",
+      "kind": "raw",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "actual-verifier-native-manager",
+      "kind": "managed",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "actual-verifier-owned-builtin-guide",
+      "kind": "raw",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "actual-verifier-owned-builtin-guide",
+      "kind": "managed",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "actual-verifier-builtin-owned-directory-cleanup",
+      "kind": "raw",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "actual-verifier-builtin-owned-directory-cleanup",
+      "kind": "managed",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "restore-context-source-guards",
+      "kind": "raw",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    },
+    {
+      "label": "restore-context-source-guards",
+      "kind": "managed",
+      "status": "PASS_EXACT_METADATA",
+      "changedMembers": [],
+      "rootUnchanged": true
+    }
+  ],
+  "scope": "One real live FixtureSession, actual current raw/managed trees and real native-manager/builtin/deepseek/managed-storage entries. Focused verifier helper branches execute their real child commands; complete APK/plugin release gate and Android acceptance remain separate.",
+  "finalCompleteByteProofs": [
+    {
+      "kind": "raw",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+      "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+      "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1",
+      "status": "PASS_FINAL_COMPLETE_BYTE_RECHECK"
+    },
+    {
+      "kind": "managed",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+      "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+      "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912",
+      "status": "PASS_FINAL_COMPLETE_BYTE_RECHECK"
+    }
+  ],
+  "finalSeconds": 36.234,
+  "sourcesStillSame": true
+}

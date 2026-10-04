@@ -9,6 +9,8 @@ import shutil
 import subprocess
 from pathlib import Path
 import tempfile
+import tarfile
+import types
 import unittest
 from unittest.mock import patch
 
@@ -72,6 +74,24 @@ class DiscoveryTest(unittest.TestCase):
         self.assertEqual(str(web.resolve()), self.manager.resolve_plugin_dir('test-plugin'))
         self.assertEqual('2.0.0', self.items()['test-plugin']['version'])
 
+    def test_update_query_capability_is_independent_of_delete_permission(self):
+        directory = self.plugin('root/node_modules', '@author/detected')
+        package = json.loads((directory / 'package.json').read_text())
+        package['repository'] = {'url': 'https://github.com/author/detected'}
+        (directory / 'package.json').write_text(json.dumps(package))
+        found = self.items()['@author/detected']
+        self.assertTrue(found['updatable']); self.assertFalse(found['deletable'])
+        self.assertTrue(found['detected'])
+        package['repository']['url'] = 'https://example.invalid/fixed.tgz'
+        (directory / 'package.json').write_text(json.dumps(package))
+        self.assertFalse(self.items()['@author/detected']['updatable'])
+        for source, expected in [('npm:@author/detected@1.0.0', True),
+                                 ('https://github.com/author/detected/releases/latest', True),
+                                 ('https://github.com/author/detected/tree/main/subdir', True),
+                                 ('https://github.com/author/detected/archive/sha.tgz', False),
+                                 ('restored:original-dependency-group', False), ('', False)]:
+            self.assertEqual(expected, self.manager.lifecycle().can_check_updates(source), source)
+
     def test_toggle_keeps_npm_specification_and_files(self):
         web = self.plugin('root/.dsh/profiles/web/node_modules')
         doc = json.loads(self.manifest.read_text())
@@ -82,12 +102,87 @@ class DiscoveryTest(unittest.TestCase):
             self.assertEqual(0, self.builtin.disable_plugin('test-plugin'))
             self.assertTrue((web / 'package.json').is_file())
             self.assertFalse(self.items()['test-plugin']['enabled'])
-            self.assertEqual(1, self.builtin.enable_plugin('test-plugin'))
-            with patch.object(self.builtin, '_native_review_approved', True, create=True):
-                self.assertEqual(0, self.builtin.enable_plugin('test-plugin'))
+            self.assertEqual(0, self.builtin.enable_plugin('test-plugin'))
         after = json.loads(self.manifest.read_text())
         self.assertEqual('^1.0.0', after['dependencies']['test-plugin'])
         self.assertIn('test-plugin', after['dsh']['profile']['bundles'])
+
+    def test_runtime_optional_bundle_resolves_and_toggles_without_fake_user_installation(self):
+        name = '@deepseek-ai/dsh-experimental-fixture-bundle'
+        runtime = self.plugin('usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules', name,
+                              version='0.2.0-rc.2')
+        doc = json.loads(self.manifest.read_text())
+        doc['dsh']['profile']['bundles'].append(name)
+        self.manifest.write_text(json.dumps(doc))
+        item = self.items()[name]
+        self.assertTrue(item['available']); self.assertTrue(item['runtimeProvided'])
+        self.assertFalse(item['deletable']); self.assertTrue(item['exportable'])
+        self.assertEqual('0.2.0-rc.2', item['version'])
+        self.assertEqual(runtime.resolve(), Path(self.manager.resolve_plugin_dir(name)).resolve())
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, self.builtin.disable_plugin(name))
+            self.assertFalse(self.items()[name]['enabled'], 'disabled optional bundle must remain visible')
+            self.assertEqual(0, self.builtin.enable_plugin(name))
+        after = json.loads(self.manifest.read_text())
+        self.assertIn(name, after['dsh']['profile']['bundles'])
+        self.assertNotIn(name, after['dependencies'])
+        self.assertFalse((self.manifest.parent / 'node_modules' / name).exists())
+        with self.assertRaisesRegex(ValueError, '不能删除'):
+            self.manager.cmd_delete(name)
+        self.assertTrue((runtime / 'package.json').is_file())
+        self.put(str(runtime.relative_to(self.root)) + '/node_modules/unrelated-system-library/private-byte', 'do not sweep runtime')
+        with patch.object(self.manager, 'result') as result, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, self.manager.cmd_export(json.dumps([name]), '/root/optional.tgz'))
+            self.assertEqual([name], result.call_args.kwargs['runtimeSources'])
+        with tarfile.open(self.root / 'root/optional.tgz') as archive:
+            exported = archive.getnames()
+            self.assertTrue(any(item.endswith('/package.json') for item in exported))
+            self.assertFalse(any('node_modules' in item or 'private-byte' in item for item in exported))
+
+    def test_refresh_is_read_only_and_discovers_only_once(self):
+        self.plugin('root/.dsh/profiles/web/node_modules')
+        before = self.manifest.read_bytes()
+        with patch.object(self.builtin, 'register', side_effect=AssertionError('refresh must not register')):
+            with patch.object(self.builtin, 'discover_plugins', wraps=self.builtin.discover_plugins) as discover:
+                with patch('sys.argv', ['plugin-manager.py', 'refresh']), contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(0, self.manager.main())
+                self.assertEqual(1, discover.call_count)
+        self.assertEqual(before, self.manifest.read_bytes())
+
+    def test_busy_guest_lock_has_a_budget_and_never_terminates_another_process(self):
+        fake=types.SimpleNamespace(LOCK_EX=1,LOCK_NB=2,LOCK_UN=8,flock=lambda *_:(_ for _ in ()).throw(BlockingIOError()))
+        with patch.object(self.builtin.os,'name','posix'),patch.dict('sys.modules',{'fcntl':fake}):
+            with self.assertRaisesRegex(TimeoutError,'PLUGIN_LOCK_TIMEOUT'):
+                with self.builtin.operation_lock(timeout=0):self.fail('lock must not enter')
+
+    def test_install_anchor_runtime_bundle_wins_over_same_name_user_copy(self):
+        name = '@deepseek-ai/dsh-experimental-shadow-fixture'
+        runtime = self.plugin('usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules', name, '0.2.0-rc.2')
+        user = self.plugin('root/.dsh/profiles/web/node_modules', name, '9.0.0-user-edit')
+        original = self.put(str(user.relative_to(self.root)) + '/user-edit.js', 'preserve my shadowed edit')
+        doc = json.loads(self.manifest.read_text())
+        doc['dependencies'][name] = '9.0.0-user-edit'
+        doc['dsh']['profile']['bundles'].append(name)
+        self.manifest.write_text(json.dumps(doc))
+        item = self.items()[name]
+        self.assertEqual(runtime.resolve(), Path(self.manager.resolve_plugin_dir(name)).resolve())
+        self.assertEqual(runtime.resolve(), Path(self.builtin.entity_dir(name)).resolve())
+        self.assertTrue(item['runtimeProvided']); self.assertTrue(item['builtin'])
+        self.assertEqual('0.2.0-rc.2', item['version']); self.assertFalse(item['deletable'])
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, self.builtin.disable_plugin(name))
+            self.assertEqual(0, self.builtin.enable_plugin(name))
+        self.assertEqual('preserve my shadowed edit', original.read_text())
+        self.assertEqual('9.0.0-user-edit', json.loads((user / 'package.json').read_text())['version'])
+        self.assertEqual('9.0.0-user-edit', json.loads(self.manifest.read_text())['dependencies'][name])
+
+    def test_enable_switch_does_not_hash_entire_dependency_graph(self):
+        self.plugin('root/.dsh/profiles/web/node_modules')
+        with patch.object(self.manager.dependencies(), 'current', side_effect=AssertionError('defer graph to load')):
+            with patch('sys.argv', ['plugin-manager.py', 'enable-list', 'test-plugin']), contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(0, self.manager.main())
+        entry = self.manager.lifecycle().activation_state()['entries']['test-plugin']
+        self.assertEqual('queued', entry['status']); self.assertEqual('', entry['fingerprint'])
 
     def test_combined_disable_and_delete_report_real_final_state_without_touching_siblings(self):
         web=self.plugin('root/.dsh/profiles/web/node_modules')
@@ -102,7 +197,8 @@ class DiscoveryTest(unittest.TestCase):
             self.assertFalse(rows['test-plugin']['enabled']);self.assertTrue(rows['sibling-plugin']['enabled'])
             self.assertTrue((web/'package.json').is_file())
         with patch('sys.argv',['plugin-manager.py','enable-list','test-plugin']), contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(1,self.manager.main(),'合并入口也不能绕过第三方审阅')
+            self.assertEqual(0,self.manager.main(),'合并入口应可直接启用第三方插件')
+            self.assertEqual('queued',self.manager.lifecycle().activation_state()['entries']['test-plugin']['status'])
         with patch('sys.argv',['plugin-manager.py','delete-list','test-plugin']), patch.object(self.manager,'result') as result, contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(0,self.manager.main())
             self.assertNotIn('test-plugin',[r['name'] for r in result.call_args.kwargs['items']])
@@ -170,6 +266,20 @@ class DiscoveryTest(unittest.TestCase):
         self.assertNotIn('dsh-web-mobile', after['dependencies'])
         self.assertNotIn('dsh-web-mobile', after['dsh']['profile']['bundles'])
 
+    def test_missing_signed_entity_does_not_skip_healthy_registration(self):
+        current=self.plugin('root','dsha-device-shell-guide','1.0.0')
+        # Host cannot create symlinks; use a real isolated copy as the stand-in,
+        # then report its resolution through the same prepared managed path.
+        def link(name,directory):
+            target=self.root/'root/.dsh/profiles/web/node_modules'/name
+            shutil.copytree(self.root/'root/dsha-device-shell-guide',target,dirs_exist_ok=True)
+            return True
+        with patch.object(self.builtin,'builtin_names',return_value=['dsh-device-shell-guide','dsh-web-mobile']),patch.object(self.builtin,'ensure_symlink',side_effect=link),contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(1,self.builtin.register())
+        after=json.loads(self.manifest.read_text())
+        self.assertIn('dsh-device-shell-guide',after['dsh']['profile']['bundles']);self.assertNotIn('dsh-web-mobile',after['dsh']['profile']['bundles'])
+        self.assertIn('BUILTIN_REGISTER_PARTIAL',output.getvalue());self.assertTrue((current/'package.json').is_file())
+
     def test_disabled_marker_wins_over_stale_bundle_dependency_and_entity(self):
         old = self.plugin('root/.dsh/profiles/web/node_modules', 'dsh-web-mobile', version='1.0.0')
         (old / 'user-byte').write_text('preserve disabled old bytes', encoding='utf-8')
@@ -223,9 +333,7 @@ class DiscoveryTest(unittest.TestCase):
             raise
         original = self.plugin('root/.dsh/profiles/tui/node_modules')
         with contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(1, self.builtin.enable_plugin('test-plugin'))
-            with patch.object(self.builtin, '_native_review_approved', True, create=True):
-                code = self.builtin.enable_plugin('test-plugin')
+            code = self.builtin.enable_plugin('test-plugin')
         self.assertEqual(0, code)
         item = self.items()['test-plugin']
         self.assertTrue(item['enabled']); self.assertTrue(item['deletable'])

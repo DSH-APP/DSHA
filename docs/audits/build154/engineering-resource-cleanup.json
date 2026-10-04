@@ -1,0 +1,2398 @@
+{
+  "schema": 1,
+  "basis": "Actual existing Release Lint UnusedResources plus current all-source/tool/XML reference validation; source snapshots retained",
+  "deletedFiles": [
+    {
+      "path": "app/src/main/res/drawable/dot_active.xml",
+      "sha256": "f71c832601595349bc168d61fd2233bd3bf1eb9064519e1774c9b6c0088367a4",
+      "retainedSource": "tools/history/engineering/resources/drawable/dot_active.xml"
+    },
+    {
+      "path": "app/src/main/res/drawable/dot_inactive.xml",
+      "sha256": "af0610a2f8a46fab7d5df356f785865e511c2933980337f8866980d2d5459329",
+      "retainedSource": "tools/history/engineering/resources/drawable/dot_inactive.xml"
+    },
+    {
+      "path": "app/src/main/res/drawable/ic_ui_info.xml",
+      "sha256": "939327639042761e7d84469bafab13e5bdfccdba019e585341b6ee0bcbc3db4c",
+      "retainedSource": "tools/history/engineering/resources/drawable/ic_ui_info.xml"
+    },
+    {
+      "path": "app/src/main/res/drawable/progress_determinate.xml",
+      "sha256": "b54d04ad0f37dbbee180b85efa6ee542a2cccd6a3b3d0bdc3656716dccd4e21d",
+      "retainedSource": "tools/history/engineering/resources/drawable/progress_determinate.xml"
+    },
+    {
+      "path": "app/src/main/res/layout/dialog_remind_backup.xml",
+      "sha256": "2c14d261464cc8423811b04b77b9b61677c3f0f5f1df7c7cbcc52fb0d992e53b",
+      "retainedSource": "tools/history/engineering/resources/layout/dialog_remind_backup.xml"
+    },
+    {
+      "path": "app/src/main/res/drawable/bg_device_tint.xml",
+      "sha256": "9e0a54caec7ed44e219d8c88482e603c6692927b8666d5817a1acefbdb25fe29",
+      "retainedSource": "tools/history/engineering/resources/drawable/bg_device_tint.xml",
+      "basis": "Fresh actual ReleaseLint and no production/test reference"
+    }
+  ],
+  "removedResources": [
+    {
+      "type": "string",
+      "name": "alpha_community",
+      "path": "app/src/main/res/values/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "alpha_models",
+      "path": "app/src/main/res/values/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "alpha_models_hint",
+      "path": "app/src/main/res/values/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "alpha_runtime_options",
+      "path": "app/src/main/res/values/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "alpha_runtime_options_hint",
+      "path": "app/src/main/res/values/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "color",
+      "name": "logo_bot",
+      "path": "app/src/main/res/values/colors.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "color",
+      "name": "panel_bottom",
+      "path": "app/src/main/res/values/colors.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "color",
+      "name": "panel_outline",
+      "path": "app/src/main/res/values/colors.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "color",
+      "name": "panel_top",
+      "path": "app/src/main/res/values/colors.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "dimen",
+      "name": "gap_block",
+      "path": "app/src/main/res/values/dimens.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "dimen",
+      "name": "input_height",
+      "path": "app/src/main/res/values/dimens.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "dimen",
+      "name": "page_pad_wide",
+      "path": "app/src/main/res/values/dimens.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "dimen",
+      "name": "progress_bold",
+      "path": "app/src/main/res/values/dimens.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "dimen",
+      "name": "progress_thin",
+      "path": "app/src/main/res/values/dimens.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "dimen",
+      "name": "text_display",
+      "path": "app/src/main/res/values/dimens.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "dimen",
+      "name": "text_hero",
+      "path": "app/src/main/res/values/dimens.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "api_credentials",
+      "path": "app/src/main/res/values/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "deepseek_api_key",
+      "path": "app/src/main/res/values/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "dns_hint",
+      "path": "app/src/main/res/values/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "dns_title",
+      "path": "app/src/main/res/values/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ubuntu_rootfs",
+      "path": "app/src/main/res/values/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "picture_in_picture_hint",
+      "path": "app/src/main/res/values/picture_in_picture_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "picture_in_picture_permission",
+      "path": "app/src/main/res/values/picture_in_picture_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "about_qq_button",
+      "path": "app/src/main/res/values/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_background",
+      "path": "app/src/main/res/values/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_channels",
+      "path": "app/src/main/res/values/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_files_title",
+      "path": "app/src/main/res/values/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_location",
+      "path": "app/src/main/res/values/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_maintenance",
+      "path": "app/src/main/res/values/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_permissions",
+      "path": "app/src/main/res/values/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_screen",
+      "path": "app/src/main/res/values/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_sensors",
+      "path": "app/src/main/res/values/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "nav_launch",
+      "path": "app/src/main/res/values/strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "nav_plugins",
+      "path": "app/src/main/res/values/strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "nav_settings",
+      "path": "app/src/main/res/values/strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "nav_terminal",
+      "path": "app/src/main/res/values/strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "style",
+      "name": "DshaCard",
+      "path": "app/src/main/res/values/styles.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "style",
+      "name": "DshaText.Display",
+      "path": "app/src/main/res/values/styles.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "style",
+      "name": "InstallStep",
+      "path": "app/src/main/res/values/styles.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "style",
+      "name": "Widget.DSHA.DangerButton",
+      "path": "app/src/main/res/values/styles.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_appearance",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_appearance_sub",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_automatic_backups",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_automatic_backups_sub",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_automation_storage",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_compatibility",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_current_app",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_data_options",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_download",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_encrypted_export",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_encrypted_hint",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_expand",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_filesharing",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_open_workbench",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_pair_tools",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_read_only_check",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_rebuild",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_report",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_rescue",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_rescue_sub",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_restore_hint",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_restore_preview",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_retained",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_retained_sub",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_review_hint",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_storage_space",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_storage_space_sub",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_workspace_hint",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_workspace_title",
+      "path": "app/src/main/res/values/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0000",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0004",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0008",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0009",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0014",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0019",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0022",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0027",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0032",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0033",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0034",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0035",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0036",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0037",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0038",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0040",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0041",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0042",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0043",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0044",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0045",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0048",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0051",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0052",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0056",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0058",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0059",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0061",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0064",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0065",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0068",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0069",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0070",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0071",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0072",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0073",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0074",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0075",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0076",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0077",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0082",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0083",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0085",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0086",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0087",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0088",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0091",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0092",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0093",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0096",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0097",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0098",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0099",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0100",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0101",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0105",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0108",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0110",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0111",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0112",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0113",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0114",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0115",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0116",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0117",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0119",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0122",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0123",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0124",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0127",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0129",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0130",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0131",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0132",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0139",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0140",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0141",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0143",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0144",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0147",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0148",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0149",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0150",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0151",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0152",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0153",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0154",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0155",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0156",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0157",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0160",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0161",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0162",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0163",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0165",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0166",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0167",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0168",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0169",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0172",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0174",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0175",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0176",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0180",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0183",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0184",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0186",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0187",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0188",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0189",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0190",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0192",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0193",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0194",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0195",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0196",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0197",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0198",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0199",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0200",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0203",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0204",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0205",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0206",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0207",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0208",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0210",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0213",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0214",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0216",
+      "path": "app/src/main/res/values/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "web_port_fallback_hint",
+      "path": "app/src/main/res/values/web_port.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "alpha_community",
+      "path": "app/src/main/res/values-en/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "alpha_models",
+      "path": "app/src/main/res/values-en/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "alpha_models_hint",
+      "path": "app/src/main/res/values-en/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "alpha_runtime_options",
+      "path": "app/src/main/res/values-en/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "alpha_runtime_options_hint",
+      "path": "app/src/main/res/values-en/alpha1_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "api_credentials",
+      "path": "app/src/main/res/values-en/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "deepseek_api_key",
+      "path": "app/src/main/res/values-en/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "dns_hint",
+      "path": "app/src/main/res/values-en/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "dns_title",
+      "path": "app/src/main/res/values-en/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ubuntu_rootfs",
+      "path": "app/src/main/res/values-en/dns_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "picture_in_picture_hint",
+      "path": "app/src/main/res/values-en/picture_in_picture_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "picture_in_picture_permission",
+      "path": "app/src/main/res/values-en/picture_in_picture_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "about_qq_button",
+      "path": "app/src/main/res/values-en/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_background",
+      "path": "app/src/main/res/values-en/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_channels",
+      "path": "app/src/main/res/values-en/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_files_title",
+      "path": "app/src/main/res/values-en/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_location",
+      "path": "app/src/main/res/values-en/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_maintenance",
+      "path": "app/src/main/res/values-en/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_permissions",
+      "path": "app/src/main/res/values-en/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_screen",
+      "path": "app/src/main/res/values-en/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "device_sensors",
+      "path": "app/src/main/res/values-en/refresh_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_appearance",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_appearance_sub",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_automatic_backups",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_automatic_backups_sub",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_automation_storage",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_compatibility",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_current_app",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_data_options",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_download",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_encrypted_export",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_encrypted_hint",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_expand",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_filesharing",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_open_workbench",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_pair_tools",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_read_only_check",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_rebuild",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_report",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_rescue",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_rescue_sub",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_restore_hint",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_restore_preview",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_retained",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_retained_sub",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_review_hint",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_storage_space",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_storage_space_sub",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_workspace_hint",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui2_workspace_title",
+      "path": "app/src/main/res/values-en/ui_iteration.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "nav_launch",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "nav_plugins",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "nav_settings",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "nav_terminal",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0000",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0004",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0008",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0009",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0014",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0019",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0022",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0027",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0032",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0033",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0034",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0035",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0036",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0037",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0038",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0040",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0041",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0042",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0043",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0044",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0045",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0048",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0051",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0052",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0056",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0058",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0059",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0061",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0064",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0065",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0068",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0069",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0070",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0071",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0072",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0073",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0074",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0075",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0076",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0077",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0082",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0083",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0085",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0086",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0087",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0088",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0091",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0092",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0093",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0096",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0097",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0098",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0099",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0100",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0101",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0105",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0108",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0110",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0111",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0112",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0113",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0114",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0115",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0116",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0117",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0119",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0122",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0123",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0124",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0127",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0129",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0130",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0131",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0132",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0139",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0140",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0141",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0143",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0144",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0147",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0148",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0149",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0150",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0151",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0152",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0153",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0154",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0155",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0156",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0157",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0160",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0161",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0162",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0163",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0165",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0166",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0167",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0168",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0169",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0172",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0174",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0175",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0176",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0180",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0183",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0184",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0186",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0187",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0188",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0189",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0190",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0192",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0193",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0194",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0195",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0196",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0197",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0198",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0199",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0200",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0203",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0204",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0205",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0206",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0207",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0208",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0210",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0213",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0214",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "ui_m0216",
+      "path": "app/src/main/res/values-en/ui_strings.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "web_port_fallback_hint",
+      "path": "app/src/main/res/values-en/web_port.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "color",
+      "name": "logo_bot",
+      "path": "app/src/main/res/values-night/colors.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "color",
+      "name": "panel_bottom",
+      "path": "app/src/main/res/values-night/colors.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "color",
+      "name": "panel_outline",
+      "path": "app/src/main/res/values-night/colors.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "color",
+      "name": "panel_top",
+      "path": "app/src/main/res/values-night/colors.xml",
+      "basis": "Actual ReleaseLint and current typed Java/XML references; catalog ID/menu ID declarations are not R.string usage."
+    },
+    {
+      "type": "string",
+      "name": "browser_description",
+      "path": "app/src/standard/res/values/edition.xml",
+      "basis": "Actual ReleaseLint and no source consumer; removed counterpart flavors/locales"
+    },
+    {
+      "type": "string",
+      "name": "browser_description",
+      "path": "app/src/standard/res/values-en/edition.xml",
+      "basis": "Actual ReleaseLint and no source consumer; removed counterpart flavors/locales"
+    },
+    {
+      "type": "string",
+      "name": "browser_description",
+      "path": "app/src/low/res/values/edition.xml",
+      "basis": "Actual ReleaseLint and no source consumer; removed counterpart flavors/locales"
+    },
+    {
+      "type": "string",
+      "name": "browser_description",
+      "path": "app/src/low/res/values-en/edition.xml",
+      "basis": "Actual ReleaseLint and no source consumer; removed counterpart flavors/locales"
+    }
+  ],
+  "retainedResources": []
+}

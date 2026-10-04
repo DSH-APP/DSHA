@@ -1,0 +1,394 @@
+[
+  {
+    "zh": "打不开，请手动访问：%s",
+    "en": "Could not open. Visit manually: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java"
+    ]
+  },
+  {
+    "zh": "打不开 QQ，请手动搜索群号：%s",
+    "en": "Could not open QQ. Search for group number: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java"
+    ]
+  },
+  {
+    "zh": "找不到开发者选项时，到关于手机连续点按系统版本号。系统或厂商未提供无线调试时，填写端口无法启用它。\n\n通常让地址与端口留空即可自动发现。配对端口来自 6 位码弹窗，连接端口来自无线调试主页面，两者不能互换。\n\n首次准备依赖可能较久；配对码失效时请重新获取。自动读码需要屏幕操作权限，手动输入无需此权限。",
+    "en": "If Developer options is missing, tap the build number repeatedly in About phone. Entering a port cannot enable Wireless debugging if your Android version or manufacturer does not provide it.\n\nUsually, leave address and port blank for automatic discovery. The pairing port comes from the 6-digit-code dialog; the connection port comes from the main Wireless debugging page. They are not interchangeable.\n\nInitial dependency preparation may take time. Get a fresh code if yours expires. Auto-read requires screen-control permission; manual entry does not.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ]
+  },
+  {
+    "zh": "ADB 操作未完成：%s",
+    "en": "ADB operation incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ]
+  },
+  {
+    "zh": "连接已验证，ADB 设备命令可用。\n\n%s",
+    "en": "Connection verified. ADB device commands are available.\n\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ]
+  },
+  {
+    "zh": "配对已完成，连接尚未验证。请检查连接端口后点「验证已有连接」，无需再次配对。\n\n%s",
+    "en": "Pairing is complete, but the connection is not yet verified. Check the connection port and tap Verify connection. There is no need to pair again.\n\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ]
+  },
+  {
+    "zh": "LAN 开关生效失败: %s",
+    "en": "Could not apply LAN setting: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "zh": "无法打开 Shizuku：%s",
+    "en": "Could not open Shizuku: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "zh": "正在重连无线调试…%s",
+    "en": "Reconnecting to Wireless debugging…%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "zh": "连接已验证 · 端口 %s%s",
+    "en": "Connection verified · Port %s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "zh": "配对密钥已保存，连接尚未验证。%s",
+    "en": "Pairing key saved. Connection not yet verified.%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "zh": "ADB 状态读取失败：%s",
+    "en": "Could not read ADB status: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "zh": "打开设置失败：%s",
+    "en": "Could not open settings: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "zh": "导出失败：%s",
+    "en": "Export failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
+    ]
+  },
+  {
+    "zh": "\n用户补充复现步骤：\n%s",
+    "en": "\nAdditional steps to reproduce:\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
+    ]
+  },
+  {
+    "zh": " · 总耗时 %s 秒%s%s",
+    "en": " · Total time %s s%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ]
+  },
+  {
+    "zh": " · 当前阶段 %s 秒",
+    "en": " · Current stage %s s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ]
+  },
+  {
+    "zh": "会停止 Web 并中断正在执行的任务，完整备份并校验配置、会话和本地插件，再重建环境并恢复数据。\n\n备份失败不切换环境，后续失败回切旧环境；安全备份和旧环境会保留并占用额外空间。额外安装的系统软件留在旧环境中。",
+    "en": "Stop the Web service and interrupt running tasks. Back up and verify settings, conversations and local plugins, then rebuild the environment and restore data.\n\nIf backup fails, the environment is unchanged. If a later step fails, the old environment is restored. The safety backup and old environment use additional space. Extra system software remains in the old environment.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ]
+  },
+  {
+    "zh": "无法打开维护页，可到数据与备份页查看任务：%s",
+    "en": "Could not open maintenance. Check the task in Backup & data: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ]
+  },
+  {
+    "zh": "拉起保活服务失败: %s",
+    "en": "Could not start the keep-alive service: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "zh": "\n\n本机 Web 地址（可长按复制）：\n%s",
+    "en": "\n\nLocal Web address (press and hold to copy):\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "zh": "检测到 %s 项异常，查看插件与恢复选项",
+    "en": "Detected %s issues; check plugins and recovery options",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "zh": "失败 %s/3，%s，查看恢复选项",
+    "en": "Failed %s/3，%s; see recovery options",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "zh": "复制失败：%s",
+    "en": "Copy failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "zh": "发现新版本 %s · %s",
+    "en": "New version available: %s · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "zh": "无法打开文件选择器，请检查系统文件应用：%s",
+    "en": "Unable to open the file picker. Check the system Files app: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "zh": "\n\n版本：%s%s%s%s%s%s",
+    "en": "\n\nVersion: %s%s%s%s%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "zh": "\n位置：%s",
+    "en": "\nLocation: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "zh": "\n来源：%s",
+    "en": "\nSource: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "zh": "\n上次检查版本：%s",
+    "en": "\nLast checked version: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "zh": "\n可回退：%s",
+    "en": "\nRollback available: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "zh": "PTY 启动失败：%s",
+    "en": "PTY startup failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+    ]
+  },
+  {
+    "zh": "关闭失败，会话仍保留：%s",
+    "en": "Close failed; session retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+    ]
+  },
+  {
+    "zh": "保留记录无法读取，原件未改动。\n%s",
+    "en": "Retained records are unreadable. Originals are unchanged.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+    ]
+  },
+  {
+    "zh": "…（输出过长已截断）\n%s",
+    "en": "…(long output truncated)\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalFragment.java"
+    ]
+  },
+  {
+    "zh": "关闭终端 %s",
+    "en": "Close terminal %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java"
+    ]
+  },
+  {
+    "zh": "无法安装：%s；可重试",
+    "en": "Cannot install: %s; retry available",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java"
+    ]
+  },
+  {
+    "zh": "正在下载 %s",
+    "en": "Downloading %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+    ]
+  },
+  {
+    "zh": "服务返回 HTTP %s",
+    "en": "Service returned HTTP %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+    ]
+  },
+  {
+    "zh": "已保存：%s",
+    "en": "Saved: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebDownloadModel.java"
+    ]
+  },
+  {
+    "zh": "标准版预览内核: %s",
+    "en": "Standard browser engine: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+    ]
+  },
+  {
+    "zh": "系统 WebView 初始化失败: %s",
+    "en": "System WebView initialization failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+    ]
+  },
+  {
+    "zh": "请更新或启用 Android System WebView / Chrome，也可以使用系统浏览器进入对话。",
+    "en": "Update or enable Android System WebView / Chrome, You can also open the conversation in a system browser.",
+    "uiFormat": false,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+    ]
+  },
+  {
+    "zh": "\n上次未完成：%s",
+    "en": "\nPreviously incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "zh": "⚠ 请求执行：%s",
+    "en": "⚠ Requested command: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ]
+  },
+  {
+    "zh": "悬浮条确认显示失败: %s",
+    "en": "Could not display overlay confirmation: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ]
+  },
+  {
+    "zh": "悬浮条更新失败: %s",
+    "en": "Could not update overlay: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ]
+  },
+  {
+    "zh": "悬浮条预览显示失败: %s",
+    "en": "Overlay preview failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ]
+  },
+  {
+    "zh": "悬浮条创建失败（权限被撤？）: %s",
+    "en": "Could not create overlay (permission may have been revoked): %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
+    ]
+  }
+]

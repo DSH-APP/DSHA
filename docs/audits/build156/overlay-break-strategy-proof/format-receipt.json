@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "tool": "google-java-format",
+  "version": "1.22.0",
+  "artifactSha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f",
+  "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\r\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+  "mode": "check",
+  "files": [
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+      "beforeSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "formattedSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+      "javaTokenSha256": "48a0b4549f0071b185fcb4bafad089b089842084a228926d871d117122428dda",
+      "needsFormatting": false,
+      "diff": ""
+    }
+  ]
+}

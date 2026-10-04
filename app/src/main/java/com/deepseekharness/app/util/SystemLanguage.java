@@ -27,131 +27,137 @@ import java.util.function.Supplier;
  */
 public final class SystemLanguage {
 
-    /** 锁存的系统语言；Application 初始化前可能只是暂时回退值。 */
-    private static volatile String cached;
-    private static volatile boolean initialized;
+  /** 锁存的系统语言；Application 初始化前可能只是暂时回退值。 */
+  private static volatile String cached;
 
-    private SystemLanguage() {
+  private static volatile boolean initialized;
+
+  private SystemLanguage() {}
+
+  /**
+   * 在进程最早时刻调用（{@code Application.onCreate} 最前面），
+   * 锁存真实系统语言。重复调用只生效第一次。
+   */
+  public static void initialize() {
+    initializeFromSystemTag(null);
+  }
+
+  /** Application 创建初期传入自身；低于 API 33 时自动走原有资源回退。 */
+  public static void initialize(Object context) {
+    if (!initialized) initializeFromSystemTag(localeManagerSystemTag(context));
+  }
+
+  /** 同一锁存路径供无 Android 的边界测试注入系统来源。 */
+  static void initializeFromSystemTag(String systemTag) {
+    if (initialized) return;
+    String chosen = systemTag != null && !systemTag.isEmpty() ? systemTag : detect();
+    if (chosen == null || chosen.isEmpty()) chosen = Locale.getDefault().toLanguageTag();
+    synchronized (SystemLanguage.class) {
+      if (initialized) return;
+      cached = chosen;
+      initialized = true;
     }
+  }
 
-    /**
-     * 在进程最早时刻调用（{@code Application.onCreate} 最前面），
-     * 锁存真实系统语言。重复调用只生效第一次。
-     */
-    public static void initialize() { initializeFromSystemTag(null); }
+  /**
+   * 系统首选语言的 BCP-47 标签。
+   *
+   * <p>已 {@link #initialize()} 过则返回锁存值（不受后续 {@code Locale.setDefault} 影响）；
+   * 未初始化时按需探测 —— 单测与异常路径仍能工作。
+   */
+  public static String tag() {
+    return tagWithDetector(SystemLanguage::detect);
+  }
 
-    /** Application 创建初期传入自身；低于 API 33 时自动走原有资源回退。 */
-    public static void initialize(Object context) {
-        if (!initialized) initializeFromSystemTag(localeManagerSystemTag(context));
+  /** Detector stays outside the publication lock; an initialized system value wins any late result. */
+  static String tagWithDetector(Supplier<String> detector) {
+    String value = cached;
+    if (value != null && !value.isEmpty()) return value;
+    String detected = detector.get();
+    if (detected == null || detected.isEmpty()) detected = Locale.getDefault().toLanguageTag();
+    synchronized (SystemLanguage.class) {
+      if (initialized) return cached;
+      value = cached;
+      if (value != null && !value.isEmpty()) return value;
+      // 仅作 Application.initialize 前的暂时值；真实系统服务仍可覆盖它。
+      cached = detected;
+      return detected;
     }
+  }
 
-    /** 同一锁存路径供无 Android 的边界测试注入系统来源。 */
-    static void initializeFromSystemTag(String systemTag) {
-        if (initialized) return;
-        String chosen = systemTag != null && !systemTag.isEmpty() ? systemTag : detect();
-        if (chosen == null || chosen.isEmpty()) chosen = Locale.getDefault().toLanguageTag();
-        synchronized (SystemLanguage.class) {
-            if (initialized) return;
-            cached = chosen;
-            initialized = true;
-        }
+  /** 仅供单测：清掉锁存值。 */
+  static void resetForTest() {
+    cached = null;
+    initialized = false;
+  }
+
+  /** Android 13+ 的 LocaleManager 系统语言，不读取本应用的 locales。 */
+  private static String localeManagerSystemTag(Object context) {
+    if (context == null) return null;
+    try {
+      Class<?> contextType = Class.forName("android.content.Context");
+      Class<?> managerType = Class.forName("android.app.LocaleManager");
+      Object manager =
+          contextType.getMethod("getSystemService", Class.class).invoke(context, managerType);
+      if (manager == null) return null;
+      Object locales = managerType.getMethod("getSystemLocales").invoke(manager);
+      if (locales == null) return null;
+      Object first = locales.getClass().getMethod("get", int.class).invoke(locales, 0);
+      return first instanceof Locale ? ((Locale) first).toLanguageTag() : null;
+    } catch (ReflectiveOperationException | RuntimeException | LinkageError unavailable) {
+      return null;
     }
+  }
 
-    /**
-     * 系统首选语言的 BCP-47 标签。
-     *
-     * <p>已 {@link #initialize()} 过则返回锁存值（不受后续 {@code Locale.setDefault} 影响）；
-     * 未初始化时按需探测 —— 单测与异常路径仍能工作。
-     */
-    public static String tag() {
-        return tagWithDetector(SystemLanguage::detect);
+  /** 旧 API 的资源探测；全部失败返回 null。 */
+  private static String detect() {
+    Object configuration = systemConfiguration();
+    if (configuration != null) {
+      String viaList = firstOfLocaleList(configuration);
+      if (viaList != null && !viaList.isEmpty()) return viaList;
+      String viaField = localeFieldTag(configuration);
+      if (viaField != null && !viaField.isEmpty()) return viaField;
     }
+    return null;
+  }
 
-    /** Detector stays outside the publication lock; an initialized system value wins any late result. */
-    static String tagWithDetector(Supplier<String> detector) {
-        String value = cached;
-        if (value != null && !value.isEmpty()) return value;
-        String detected = detector.get();
-        if (detected == null || detected.isEmpty()) detected = Locale.getDefault().toLanguageTag();
-        synchronized (SystemLanguage.class) {
-            if (initialized) return cached;
-            value = cached;
-            if (value != null && !value.isEmpty()) return value;
-            // 仅作 Application.initialize 前的暂时值；真实系统服务仍可覆盖它。
-            cached = detected;
-            return detected;
-        }
+  /**
+   * 取 {@code Resources.getSystem().getConfiguration()}。
+   *
+   * <p>用反射而非直接调用，是为了让本类在没有 Android 运行时的 JVM 单测里也能加载
+   * （找不到类就返回 null，由调用方回退）。
+   */
+  private static Object systemConfiguration() {
+    try {
+      Class<?> resources = Class.forName("android.content.res.Resources");
+      Object system = resources.getMethod("getSystem").invoke(null);
+      if (system == null) return null;
+      return resources.getMethod("getConfiguration").invoke(system);
+    } catch (Throwable unavailable) {
+      return null;
     }
+  }
 
-    /** 仅供单测：清掉锁存值。 */
-    static void resetForTest() { cached = null; initialized = false; }
-
-    /** Android 13+ 的 LocaleManager 系统语言，不读取本应用的 locales。 */
-    private static String localeManagerSystemTag(Object context) {
-        if (context == null) return null;
-        try {
-            Class<?> contextType = Class.forName("android.content.Context");
-            Class<?> managerType = Class.forName("android.app.LocaleManager");
-            Object manager = contextType.getMethod("getSystemService", Class.class).invoke(context, managerType);
-            if (manager == null) return null;
-            Object locales = managerType.getMethod("getSystemLocales").invoke(manager);
-            if (locales == null) return null;
-            Object first = locales.getClass().getMethod("get", int.class).invoke(locales, 0);
-            return first instanceof Locale ? ((Locale) first).toLanguageTag() : null;
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError unavailable) {
-            return null;
-        }
+  /** API 24+：{@code Configuration.getLocales().get(0)}。 */
+  private static String firstOfLocaleList(Object configuration) {
+    try {
+      Object locales = configuration.getClass().getMethod("getLocales").invoke(configuration);
+      if (locales == null) return null;
+      Locale first = (Locale) locales.getClass().getMethod("get", int.class).invoke(locales, 0);
+      return first == null ? null : first.toLanguageTag();
+    } catch (Throwable unavailable) {
+      // 兼容版 minSdk 23：API 23 上 getLocales() 不存在，继续走字段回退。
+      return null;
     }
+  }
 
-    /** 旧 API 的资源探测；全部失败返回 null。 */
-    private static String detect() {
-        Object configuration = systemConfiguration();
-        if (configuration != null) {
-            String viaList = firstOfLocaleList(configuration);
-            if (viaList != null && !viaList.isEmpty()) return viaList;
-            String viaField = localeFieldTag(configuration);
-            if (viaField != null && !viaField.isEmpty()) return viaField;
-        }
-        return null;
+  /** API 1 起可用：{@code Configuration.locale} 公开字段（API 24 起 deprecated）。 */
+  private static String localeFieldTag(Object configuration) {
+    try {
+      Object legacy = configuration.getClass().getField("locale").get(configuration);
+      return legacy instanceof Locale ? ((Locale) legacy).toLanguageTag() : null;
+    } catch (Throwable unavailable) {
+      return null;
     }
-
-    /**
-     * 取 {@code Resources.getSystem().getConfiguration()}。
-     *
-     * <p>用反射而非直接调用，是为了让本类在没有 Android 运行时的 JVM 单测里也能加载
-     * （找不到类就返回 null，由调用方回退）。
-     */
-    private static Object systemConfiguration() {
-        try {
-            Class<?> resources = Class.forName("android.content.res.Resources");
-            Object system = resources.getMethod("getSystem").invoke(null);
-            if (system == null) return null;
-            return resources.getMethod("getConfiguration").invoke(system);
-        } catch (Throwable unavailable) {
-            return null;
-        }
-    }
-
-    /** API 24+：{@code Configuration.getLocales().get(0)}。 */
-    private static String firstOfLocaleList(Object configuration) {
-        try {
-            Object locales = configuration.getClass().getMethod("getLocales").invoke(configuration);
-            if (locales == null) return null;
-            Locale first = (Locale) locales.getClass().getMethod("get", int.class).invoke(locales, 0);
-            return first == null ? null : first.toLanguageTag();
-        } catch (Throwable unavailable) {
-            // 兼容版 minSdk 23：API 23 上 getLocales() 不存在，继续走字段回退。
-            return null;
-        }
-    }
-
-    /** API 1 起可用：{@code Configuration.locale} 公开字段（API 24 起 deprecated）。 */
-    private static String localeFieldTag(Object configuration) {
-        try {
-            Object legacy = configuration.getClass().getField("locale").get(configuration);
-            return legacy instanceof Locale ? ((Locale) legacy).toLanguageTag() : null;
-        } catch (Throwable unavailable) {
-            return null;
-        }
-    }
+  }
 }

@@ -1,0 +1,47 @@
+{
+  "manifest": "docs/audits/build156/current-host-workspace-evidence/host-manifest.json",
+  "manifestSha256": "bac509ddbf6934757a2cd2ea0e313316891013eb11b48de10279c263716fb984",
+  "originalManifest": "app/build/audit-build156/host-workspace-final/manifest.json",
+  "status": "PASS_FOR_SELECTED_STAGES",
+  "registeredEntries": 123,
+  "executedEntries": 112,
+  "executedStages": {
+    "fast": 44,
+    "runtime": 63,
+    "windows": 3,
+    "linux": 2
+  },
+  "selectedStages": [
+    "fast",
+    "linux",
+    "runtime",
+    "windows"
+  ],
+  "packageHostExecuted": 0,
+  "excludedEntries": 11,
+  "failures": [],
+  "allExecutedExitCodesZero": true,
+  "runtimeFixtureVerification": [
+    {
+      "kind": "raw",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+      "markerSha256": "86259a7a0444af52b386a0b32600454616d26945763f429cf7b597f420bda2ef",
+      "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1",
+      "status": "PASS_FINAL_COMPLETE_BYTE_RECHECK"
+    },
+    {
+      "kind": "managed",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-7099d054e99d",
+      "markerSha256": "b702faf77448e3f79c268979fe4758af109145b5e42277cdf4fc7a33e0367627",
+      "contentDigest": "9e0b0963f2a9fec87d258b90f394c47678a1fd239e5e67cc1087ad446d4c234f",
+      "status": "PASS_FINAL_COMPLETE_BYTE_RECHECK"
+    }
+  ],
+  "softwarePackageEvidence": {
+    "path": "app/build/stability-acceptance/281e14af-8e44-40bc-93b8-7095838cef42/manifest.json",
+    "sha256": "bf028e270a30c6959ec816d9ca8f7b0bbaa63c423e64a609114574ec66156779",
+    "status": "PASS_WITH_EXPLICIT_DEVICE_GAPS",
+    "scope": "Separate current signed APK/assets/ELF/signature/plugin/recovery/Lint/JUnit/source gate, not a package stage run by this host runner. No private phone evidence imported."
+  },
+  "note": "Every recorded host log digest was rechecked before updating this audit. Coverage classes describe substrate; explicit peer/fake platform outcomes stay explicit and host execution does not replace Android acceptance."
+}

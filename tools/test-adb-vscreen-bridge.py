@@ -17,14 +17,14 @@ SPEC.loader.exec_module(adb)
 TICKET = '0123456789abcdef0123456789abcdef0123456789abcdef'
 SOURCE = '/data/app/com.dsh.client/base.apk'
 COMMAND = ('app_process -Djava.class.path=' + SOURCE + ' /system/bin '
-           'com.deepseekharness.app.vscreen.VirtualScreenCore --launch --port 8800')
+           'com.deepseekharness.app.vscreen.VirtualScreenCore --launch --port 8800 --package com.dsh.clienu')
 
 
 def plan(ticket=TICKET):
     return dict(version=1, kind='VIRTUAL_SCREEN',
                 argv=['app_process', '-Djava.class.path=' + SOURCE, '/system/bin',
-                      'com.deepseekharness.app.vscreen.VirtualScreenCore', '--launch', '--port', '8800'],
-                sourceApk=SOURCE, nativeAuthorization='managed-vscreen-start',
+                      'com.deepseekharness.app.vscreen.VirtualScreenCore', '--launch', '--port', '8800', '--package', 'com.dsh.clienu'],
+                sourceApk=SOURCE, selfPackage="com.dsh.clienu", nativeAuthorization='managed-vscreen-start',
                 nativeTicket=ticket, su=False)
 
 

@@ -17,16 +17,23 @@ try{for(const width of [393,920]){
   if(name==='@deepseek-ai/dsh-client-ui-primitives')return new Proxy({},{get:(_,key)=>props=>React.createElement('span',{'data-icon':key})});throw Error(name);
  });}};});
  await page.addScriptTag({content:source});
+ assert.equal(await page.evaluate(()=>typeof window.component?.testDropdown),'function','current component test export missing');
  await page.evaluate(()=>{
-  const state={byId:{parent:{id:'parent'}},subagentsByParent:{parent:{state:'ready',parentAvailable:true,entries:[{kind:'child',id:'child-1',label:'My subagent',mode:'continuable',activity:'inactive',hasChildren:false}]}}};
+  const state={byId:{parent:{id:'parent'}},projectionsBySession:{parent:{state:'idle',values:{subagentCatalog:[{kind:'child',id:'child-1',label:'My subagent',mode:'continuable',activity:'inactive',hasChildren:false}]},error:null}}};
   window.opened=[];window.catalogEvents=[];
-  ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(component.testDropdown,{rootSessionId:'parent',currentSessionId:'parent',variant:'count',useSessions:select=>select(state),openChild:address=>opened.push(address),refresh(){},setCatalogOpen:(id,open)=>catalogEvents.push([id,open]),t:(key,values)=>key+(values?.count??'')}));
+  ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(component.testDropdown,{rootSessionId:'parent',currentSessionId:'parent',variant:'count',useSessions:select=>select(state),useSessionStatus:select=>select(new Map()),openChild:address=>opened.push(address),openChildAside:address=>opened.push(address),refreshProjection(){},t:(key,values)=>key+(values?.count??'')}));
  });
- const trigger=page.locator('[data-dsha-lineage-trigger]');await trigger.tap();await page.locator('[role="tree"]').waitFor();
+ const trigger=page.locator('[data-dsha-lineage-trigger]');
+ try { await trigger.waitFor({timeout:5000}); } catch (error) { throw new Error(`Subagent trigger did not render: ${errors.join(' | ')}`,{cause:error}); }
+ await trigger.tap();await page.locator('[role="tree"]').waitFor();
  await page.waitForTimeout(250);assert.equal(await trigger.getAttribute('aria-expanded'),'true');
  await page.locator('[role="treeitem"]').tap();await page.locator('[role="tree"]').waitFor({state:'detached'});
  assert.deepEqual(await page.evaluate(()=>opened),[{parentSessionId:'parent',childSessionId:'child-1',mode:'continuable'}]);
  await trigger.tap();await page.locator('[role="tree"]').waitFor();await page.locator('#outside').tap();await page.waitForTimeout(300);assert.equal(await trigger.getAttribute('aria-expanded'),'false');
- await trigger.tap();await page.locator('[role="tree"]').waitFor();await trigger.tap();assert.equal(await trigger.getAttribute('aria-expanded'),'false');assert.deepEqual(errors,[]);
- await context.close();console.log(`Subagent ${width}px: single-tap open, child address, outside close and repeat toggle passed.`);
+ await trigger.tap();await page.locator('[role="tree"]').waitFor();await trigger.tap();
+ assert.equal(await trigger.getAttribute('aria-expanded'),'true');
+ assert.equal(await page.locator('[role="tree"]').count(),1);
+ await page.locator('#outside').tap();await page.locator('[role="tree"]').waitFor({state:'detached'});
+ assert.equal(await trigger.getAttribute('aria-expanded'),'false');assert.deepEqual(errors,[]);
+ await context.close();console.log(`Subagent ${width}px: single-tap open, child address, pinned repeat tap and outside close passed.`);
  }}finally{await browser.close();}

@@ -1,0 +1,30 @@
+{
+  "id": "D-PERF-04",
+  "files": {
+    "app/src/main/assets/plugin-manager.py": {
+      "sha256": "cd1c7c2f4b94e28290840d0b3695c40ab7e6729fd8199262f508051e85ab9732",
+      "bytes": 58673,
+      "crlfCount": 0
+    },
+    "app/src/main/assets/plugin-network.py": {
+      "sha256": "697044d33f7328140c047f75ad4f475c1e443d9c2d2c4e634c484b5607dc5a8b",
+      "bytes": 7640,
+      "crlfCount": 0
+    },
+    "app/src/main/assets/plugin-dependencies.py": {
+      "sha256": "f4c3fde9914fd27566839d172e96c9185f5d1148e33ca3983c6440efbfe4eef2",
+      "bytes": 23692,
+      "crlfCount": 0
+    },
+    "tools/test-plugin-downloads.py": {
+      "sha256": "b6aaceacba59b8fe01bcd49650524b7ae8ace58bee3b8b8e180c901306a44dbc",
+      "bytes": 19161,
+      "crlfCount": 0
+    }
+  },
+  "checks": [
+    "22 plugin-download tests PASS including real child hook counter exactly once after network failure and timeout; actual idle/overall/cancel/flood/unknown candidate identity/nested retention and read-only npm fallback proof",
+    "Real pnpm10.34.5 dependency regression10 tests:9 PASS,1 Windows actual-link privilege skip; local synthetic registry/open dependency lifecycle scripts/lock current bytes/rollback behavior preserved"
+  ],
+  "scope": "Actual isolated Windows children and locked pnpm/local synthetic registry; no phone/Gradle/APK"
+}

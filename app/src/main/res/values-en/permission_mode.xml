@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_mode_title">DSH permission policy</string>
+    <string name="permission_mode_full">Full access (current default)</string>
+    <string name="permission_mode_workspace">Workspace write</string>
+    <string name="permission_mode_readonly">Read only</string>
+    <string name="permission_mode_scope">Applies on the next start. This DSH policy does not isolate plugins from the app.</string>
+</resources>

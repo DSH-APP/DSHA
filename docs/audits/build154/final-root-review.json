@@ -1,0 +1,98 @@
+{
+  "scope": "One bounded read-only review of reviews/root ledger/workflows/CI scripts; no device or APK execution",
+  "issues": [
+    {
+      "id": "FINAL-ROOT-01",
+      "severity": "P1",
+      "status": "confirmed",
+      "files": [
+        "tools/host-tests.manifest.json",
+        "tools/test-update-process.py"
+      ],
+      "evidence": [
+        "test-update-process is classified fast, but its body invokes ADB am instrument/run-as and coordinates process termination on a fixed device",
+        "No script was executed by this review"
+      ],
+      "impact": "Linux source CI fails on missing fixture/tools; local fast runner can cross the current no-phone authorization boundary.",
+      "suggested_exact_fix": "Classify as device or history immediately; require explicit --adb/--serial and reviewed formal-app workflow before any future invocation. Do not include it in fast. Preserve historical source without claiming host-only coverage."
+    },
+    {
+      "id": "FINAL-ROOT-02",
+      "severity": "P1",
+      "status": "confirmed",
+      "files": [
+        "tools/host-tests.manifest.json",
+        "tools/run-host-tests.py"
+      ],
+      "evidence": [
+        "Current filesystem differs from manifest: missing test-asset-deployment.py, test-credential-paths.py, test-legacy-preset-convert.mjs, test-mobile-server-patches.mjs, test-mobile-server-streams.mjs, test-runtime-publish-linux.mjs, test-startup-page-relay.mjs, test-ui-boundaries154.py; stale test-agent-preset-switch.mjs",
+        "load_manifest rejects differences before running a stage"
+      ],
+      "impact": "Fast CI fails closed before useful checks. This is a gate blocker, not a demonstrated false PASS.",
+      "suggested_exact_fix": "Register each current entry with actual platform/runtime/argument requirements and remove/retire the stale path. Run --check-manifest without relaxing exact-set coverage."
+    },
+    {
+      "id": "FINAL-ROOT-03",
+      "severity": "P1",
+      "status": "implemented",
+      "files": [
+        "tools/prepare-test-runtime.py",
+        "tools/test_runtime_fixture.py",
+        "tools/test-runtime-fixture.mjs"
+      ],
+      "evidence": [
+        "prepare skips npm ci when raw marker exists, then recomputes moduleHashes from existing bytes and overwrites marker",
+        "moduleHashes covers only @deepseek-ai JS/package.json, omitting actual support modules and third-party dependencies"
+      ],
+      "impact": "Modified cached fixture bytes can be re-certified; corrupted support/dependency bytes can pass full fixture verification.",
+      "suggested_exact_fix": "Root assigned this reviewer the corrective implementation: new npm-ci trust-start schema with complete file/link membership proof, strict reuse checks before metadata refresh, legacy marker reinstall through npm ci, no proof regeneration for changed current-schema bytes.",
+      "implementationFiles": [
+        "tools/runtime_fixture_proof.py",
+        "tools/prepare-test-runtime.py",
+        "tools/test_runtime_fixture.py",
+        "tools/test-runtime-fixture.mjs",
+        "tools/test-runtime-proof.py"
+      ],
+      "checks": [
+        "10 meaningful tests: 9 PASS and 1 actual-symlink test skipped on this Windows host",
+        "Python producer reuse/tamper/legacy reinstall use isolated real FS and explicit fake installer only",
+        "Node/Python validators both detect third-party and support/binary changes, missing/extra members and old schema",
+        "No production runtime fixture generated; parent will run generator after archive refresh",
+        "Specialized JSON inputs are hashed/receipted without generic application; old tooltip version explicitly not applicable",
+        "Ordinary patch order follows active registry; exact builder-owned after forms verified without duplicate prepend"
+      ],
+      "residual": "Actual symlink fixture remains for POSIX CI; no same-user adversarial isolation claim. Trust starts at npm-ci lock integrity, not a signed proof file."
+    },
+    {
+      "id": "FINAL-ROOT-04",
+      "severity": "P2",
+      "status": "confirmed",
+      "files": [
+        ".github/workflows/ci-fast.yml",
+        "tools/host-tests.manifest.json"
+      ],
+      "evidence": [
+        "PR source job sets up JDK but runs no javac/JUnit or Gradle Java test task; fast host manifest contains Python/Node source/protocol tests only",
+        "Complete flavor Java tests/lint run only in manual package workflow"
+      ],
+      "impact": "A PR with uncompilable Java can pass source checks. This falls short of D-CI-01 planned fast Java coverage.",
+      "suggested_exact_fix": "Add a bounded compile/JUnit stage for supported pure/helper Java sources using tools/run-unit-tests.py with exact required dependencies, or a separate PR Java job with needed SDK/locked inputs; retain package workflow full two-flavor checks."
+    },
+    {
+      "id": "FINAL-ROOT-05",
+      "severity": "P2",
+      "status": "needs_disposition",
+      "files": [
+        "docs/audits/build154/reviews.json",
+        "docs/audits/build154/changes-ROOT.json"
+      ],
+      "evidence": [
+        "Root change ledger snapshot has no disposition for D-SEC-00/D-PROV-01/D-LIC-01/D-LIC-02/D-BRAND-01/D-PRIV-03/D-SEC-23/D-WEB-01/D-CI-01/D-CI-02/D-BUILD-01",
+        "This bounded review did not inspect production/doc implementations for those items"
+      ],
+      "impact": "The root ledger alone cannot support a claim that all 236 items are implemented or resolved.",
+      "suggested_exact_fix": "Before final delivery, add actual implementation files/checks or accepted/unverified reasons for each root-owned item. Do not infer missing code purely from missing ledger entries."
+    }
+  ],
+  "no_production_edits": true
+}

@@ -1,61 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <!--
+
   设计 token：间距 / 圆角 / 字号统一在这里定义，布局只引用不硬编码。
+
   之前各页面 padding 混用 12/18/24dp、字号混用 12~22sp，同一层级的元素
+
   在不同页面尺寸不一致，看起来"每页都是另一个 App"。
+
 -->
+
 <resources>
 
+
+
     <!-- ========== 间距（4 的倍数，形成节奏） ========== -->
+
     <!-- 页面左右边距：所有全屏页统一 -->
+
     <dimen name="page_pad">16dp</dimen>
+
     <!-- 居中式启动/引导页的宽边距（内容少，留白更多才不显空） -->
-    <dimen name="page_pad_wide">24dp</dimen>
+
+
+
     <!-- 卡片内部留白 -->
+
     <dimen name="card_pad">16dp</dimen>
+
     <!-- 区块之间（卡片与卡片、段与段） -->
+
     <dimen name="gap_section">16dp</dimen>
+
     <!-- 段内小节之间 -->
-    <dimen name="gap_block">14dp</dimen>
+
+
+
     <!-- 控件之间（按钮行、标签行） -->
+
     <dimen name="gap_control">10dp</dimen>
+
     <!-- 紧邻元素（标题与副标题、图标与文字） -->
+
     <dimen name="gap_tight">8dp</dimen>
+
     <dimen name="gap_hair">4dp</dimen>
 
+
+
     <!-- ========== 圆角阶梯 ========== -->
+
     <!-- 大容器：卡片、预览框 -->
+
     <dimen name="radius_card">18dp</dimen>
+
     <!-- 控件：按钮、输入框 -->
+
     <dimen name="radius_control">13dp</dimen>
+
     <!-- 小控件：标签、tab、小徽章 -->
+
     <dimen name="radius_small">10dp</dimen>
+
     <!-- 全圆：chip、进度条 -->
+
     <dimen name="radius_pill">999dp</dimen>
 
+
+
     <!-- ========== 字号阶梯 ========== -->
+
     <!-- 引导页大标题（只有欢迎页用，比 display 更有气势） -->
-    <dimen name="text_hero">28sp</dimen>
-    <dimen name="text_display">24sp</dimen>
+
+
+
+
+
     <dimen name="text_page_title">22sp</dimen>
+
     <dimen name="text_title">17sp</dimen>
+
     <dimen name="text_body">15sp</dimen>
+
     <dimen name="text_label">13sp</dimen>
+
     <dimen name="text_caption">12sp</dimen>
 
+
+
     <!-- ========== 控件尺寸 ========== -->
+
     <!-- 主按钮高度（拇指友好，48dp 是无障碍最小触达） -->
+
     <dimen name="btn_height">48dp</dimen>
+
     <!-- 次级/小按钮 -->
+
     <!-- 输入框高度 -->
-    <dimen name="input_height">48dp</dimen>
+
+
+
     <!-- 可点行/复选框的最小触达高度（无障碍下限） -->
+
     <dimen name="touch_min">44dp</dimen>
+
     <!-- 细进度条（启动/市场的忙碌指示） -->
-    <dimen name="progress_thin">3dp</dimen>
+
+
+
     <!-- 粗进度条（解压/下载的确定式进度） -->
-    <dimen name="progress_bold">6dp</dimen>
+
+
+
     <!-- 描边 -->
+
     <dimen name="stroke">1dp</dimen>
+
+
 
 </resources>

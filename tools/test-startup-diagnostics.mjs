@@ -45,7 +45,7 @@ const source = fs.readFileSync(path.join(assets, 'web-integration/startup.js'), 
 const reports = [], listeners = {};
 let mutation, currentDefinition, boot = null, composer = null;
 const document = { querySelector(selector) { return selector === '[data-dsh-boot]' ? boot : composer; }, getElementById(){return {children:[{}]};} };
-const context = {document, console:{info(line){reports.push(JSON.parse(line.slice(12)));}},
+const context = {document,location:{origin:'http://127.0.0.1:3087',pathname:'/'},__DSHA_PAGE_BINDING__:{nonce:'a'.repeat(32)},console:{info(line){reports.push(JSON.parse(line.slice(12)));}},
   CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},
   MutationObserver:class {constructor(callback){mutation=callback;} observe(){} disconnect(){this.stopped=true;}},
   addEventListener(type,callback){listeners[type]=callback;}, dispatchEvent(){}};
@@ -68,4 +68,12 @@ boot=null; composer={}; mutation();
 assert(reports.some(e=>e.type==='ready'));
 listeners.unhandledrejection({reason:new Error('later error')});
 assert.equal(reports.at(-1).fatal,false);
+assert(reports.every(e=>e.nonce==='a'.repeat(32)&&e.documentId===context.__dshaStartupDocumentId&&e.page==='http://127.0.0.1:3087/'));
+assert(reports.every((e,index)=>index===0||e.sequence>reports[index-1].sequence));
+// A legacy WebView can inject only after the official failed boot screen exists.
+const lateReports=[];const late={...context,__dshaStartupObserved:false,document:{querySelector(s){return s==='[data-dsh-boot]'?{textContent:'Failed to load plugins historical-failure'}:null;},getElementById(){return {children:[]};}},console:{info(line){lateReports.push(JSON.parse(line.slice(12)));}}};late.window=late;late.top=late;
+vm.runInNewContext(source,late);assert(lateReports.some(e=>e.fatal&&e.message.includes('historical-failure')));
+// A retained old runtime may already have installed the old unbound observer.
+const oldReports=[];const old={...late,__dshaStartupObserved:true,__dshaStartupObservationNonce:undefined,console:{info(line){oldReports.push(JSON.parse(line.slice(12)));}}};old.window=old;old.top=old;
+vm.runInNewContext(source,old);assert(oldReports.some(e=>e.fatal&&e.nonce==='a'.repeat(32)));
 console.log('PASS startup observer: named missing import, thrown module, one execution, browser factory/apply/rejection, boot failure, ready');

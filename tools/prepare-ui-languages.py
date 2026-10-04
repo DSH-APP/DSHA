@@ -1,11 +1,27 @@
 #!/usr/bin/env python3
 """从已审阅的中英文文案生成 Java 字典；不在运行时猜测或翻译用户内容。"""
+from source_text import write_text as write_source_text, matches_text
 import argparse,json,hashlib
 from pathlib import Path
+
+def format_signature(value):
+    """Match the product's bounded UiMessageFormat grammar, not arbitrary printf directives."""
+    signature=[];index=0
+    while index<len(value):
+        if value[index]!='%':index+=1;continue
+        index+=1
+        if index>=len(value) or value[index] not in 'sd%':
+            raise ValueError('UI_FORMAT_UNSUPPORTED: '+value)
+        if value[index]!='%':signature.append(value[index])
+        index+=1
+    return signature
 
 def generate(root,output):
     messages=json.loads((root/'tools/i18n/messages.json').read_text(encoding='utf-8'))
     translated=[item for item in messages if item['en']]
+    for item in translated:
+        if item.get('uiFormat') and format_signature(item['zh'])!=format_signature(item['en']):
+            raise ValueError('UI_FORMAT_ARGUMENT_MISMATCH: '+item['id'])
     unique={item['zh']:item['en'] for item in translated}
     lines=['package com.deepseekharness.app.util;','import java.util.*;',
            '/** 由 tools/prepare-ui-languages.py 生成，请修改文案目录。 */',
@@ -29,7 +45,7 @@ def generate(root,output):
     lines.append('}')
     target=output/'com/deepseekharness/app/util/UiMessages.java';target.parent.mkdir(parents=True,exist_ok=True)
     value='\n'.join(lines)+'\n'
-    if not target.exists() or target.read_text(encoding='utf-8')!=value:target.write_text(value,encoding='utf-8',newline='\n')
+    if not matches_text(target,value,encoding='utf-8'):write_source_text(target,value,encoding='utf-8')
     print(f'UI language catalog: {len(translated)}/{len(messages)} entries')
 
 if __name__=='__main__':

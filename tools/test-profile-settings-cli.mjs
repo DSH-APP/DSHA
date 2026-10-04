@@ -1,9 +1,10 @@
+import {testRuntime} from './test-runtime-fixture.mjs';
 import assert from 'node:assert/strict';
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,symlinkSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {spawn} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
-const runtime=resolve(process.env.DSHA_TEST_RUNTIME??JSON.parse(readFileSync('app/build/test-runtimes/current.json','utf8')).managed);
+const runtime=testRuntime('managed');
 const modules=join(runtime,'node_modules');
 const expectedVersion=JSON.parse(readFileSync(join(modules,'@deepseek-ai/dsh/package.json'))).version;
 const root=mkdtempSync(resolve('app/build/profile-settings-cli-'));

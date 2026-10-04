@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "path": "docs/releases/v0.1.7-alpha2-pre-release.md",
+      "retainedSource": "tools/history/documents/build156-before-alpha2-correction/docs/releases/v0.1.7-alpha2-pre-release.md",
+      "sha256": "159786dc3abb1cf8df303aa646f83dbf91064a471e996a8d1cdb3c2cdf6c3c0c",
+      "bytes": 4525,
+      "afterSha256": "accab68e32a43d7769dbdad19f679732f4b2eb168c6b0f2c564a66a2cdc6b3ec",
+      "scope": "exact pre-correction bytes preserved; original invalid values/warnings stay in public document; current correction appended only"
+    }
+  ],
+  "proof": {
+    "path": "docs/audits/build156/historical-alpha2-digest-recovery.json",
+    "sha256": "9c9071f42e7a04e384eaec30b2238e4631c7d531acb32c2e9a44765a448991db"
+  }
+}

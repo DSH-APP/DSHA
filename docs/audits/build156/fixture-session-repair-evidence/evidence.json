@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "status": "PASS_FOCUSED_REPAIR",
+  "originalIntegratedRun": {
+    "manifest": {
+      "path": "docs/audits/build156/fixture-session-repair-evidence/first-host-all-manifest.json",
+      "sha256": "24cb99b908ee9860119f54d8793ab802ea25b1eef9402ac12d14e1480e16ad3d"
+    },
+    "status": "FAILED",
+    "tests": 111,
+    "counts": {
+      "PASS": 14,
+      "FAILED": 30,
+      "FAILED_FIXTURE_INVALIDATED": 67
+    },
+    "rule": "Every invalidated or failed first-run entry needs a new complete integrated run; none is reused as PASS."
+  },
+  "regressions": {
+    "manifest": "docs/audits/build156/checks-tests-session-repair/manifest.json",
+    "sha256": "65efb52c29216e02a6c1c4d369f4fb4657a18ef27136d3e4482891583c141821",
+    "counts": {
+      "runtimeSessionPython312": 11,
+      "runtimeSessionPython311": 11,
+      "hostRunner": 8,
+      "runtimeProofRun": 15,
+      "runtimeProofActual": 14,
+      "runtimeProofWindowsSymlinkCapabilitySkip": 1,
+      "mobileAuth": 19
+    }
+  },
+  "actualRawManagedTrees": {
+    "path": "docs/audits/build156/fixture-session-repair-evidence/real-trees.json",
+    "sha256": "b4a248ebcf4b154e624ed44025f17498e177b6abff184b2a4ab92b7cfb895217"
+  },
+  "readOnlyFirstManagedDiagnostic": {
+    "path": "docs/audits/build156/fixture-session-repair-evidence/first-managed-diagnostic.json",
+    "sha256": "3d1d237c939021c50fcdabef2a8e3b7883c86325cfe4f1a532b7da12956ccc10"
+  },
+  "actualLinuxController": {
+    "path": "docs/audits/build156/fixture-session-repair-evidence/native-controller-manifest.json",
+    "sha256": "d9b4b09a9b3fedf87db747b56dcdf78e29e1fe6bf64378f5ae682495d3f45c45"
+  },
+  "actualLinuxControllerLog": {
+    "path": "docs/audits/build156/fixture-session-repair-evidence/native-controller.log",
+    "sha256": "760a916e82b3a9c9430b897b6ab4379bd6038ae71213515e23f52509e41270c4"
+  },
+  "consumerInputs": {
+    "tools/run-host-tests.py": "d77133743581a09d9288fb2ba8dbfa086e80d8afb153f6ede4f0af03de8e96c4",
+    "tools/test-runtime-fixture.mjs": "586c14e4c800b31140698620bffee39e967c278eca1cd092737c4be9cf3dbc18",
+    "tools/test_runtime_fixture.py": "0913b6e25b32b46955183d9f4e2da3b6172e02cfa948e828570b6efd44a3c4b5",
+    "tools/runtime_fixture_proof.py": "76519c496cbb56bfafd393dc59fd39d029566d0ccc08366bc5379e653454c681",
+    "tools/runtime_fixture_session.py": "fa0b580566b7710d9f68ce3255ee00a06542cee651b58811149ec403454a4dbb"
+  },
+  "scope": [
+    "Windows full device/inode/ns verification uses the exact pinned creator Python executable, live Node -> runner parent chain, marker, current consumer sources and env-only secret. No identity truncation.",
+    "Directory allocation length is canonicalized; directory identity/mtime/type and exact members remain bound. File payload size, hashes and final complete bytes remain mandatory.",
+    "Linux native controller freshly compiles current C source and uses true WSL /proc/isolated session behavior; this is Linux x86_64, separate from Android arm64 and physical-device evidence."
+  ]
+}

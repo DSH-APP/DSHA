@@ -1,0 +1,41 @@
+test_author_snapshot_claims_do_not_become_local_verification (__main__.DependenciesTest.test_author_snapshot_claims_do_not_become_local_verification) ... ok
+test_cache_identity_symlink_is_rejected_without_following_external_state (__main__.DependenciesTest.test_cache_identity_symlink_is_rejected_without_following_external_state) ... skipped 'symlink creation requires elevated privileges on Windows'
+test_cancel_during_resolution_does_not_create_a_verified_snapshot (__main__.DependenciesTest.test_cancel_during_resolution_does_not_create_a_verified_snapshot) ... ok
+test_changed_confirmation_tree_and_credential_bearing_lock_are_rejected (__main__.DependenciesTest.test_changed_confirmation_tree_and_credential_bearing_lock_are_rejected) ... ----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 62688)
+Traceback (most recent call last):
+  File "C:\Users\18768\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+  File "C:\Users\18768\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+  File "C:\Users\18768\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\socketserver.py", line 766, in __init__
+    self.handle()
+  File "C:\Users\18768\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\http\server.py", line 440, in handle
+    self.handle_one_request()
+  File "C:\Users\18768\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\http\server.py", line 428, in handle_one_request
+    method()
+  File "F:\DSHA_RESTART\tools\test-plugin-dependencies.py", line 74, in do_GET
+    self.send_error(404); return
+    ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\18768\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\http\server.py", line 492, in send_error
+    self.end_headers()
+  File "C:\Users\18768\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\http\server.py", line 542, in end_headers
+    self.flush_headers()
+  File "C:\Users\18768\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\http\server.py", line 546, in flush_headers
+    self.wfile.write(b"".join(self._headers_buffer))
+  File "C:\Users\18768\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\socketserver.py", line 845, in write
+    self._sock.sendall(b)
+ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。
+----------------------------------------
+ok
+test_corrupt_lock_cache_fails_without_replacing_existing_version (__main__.DependenciesTest.test_corrupt_lock_cache_fails_without_replacing_existing_version) ... ok
+test_missing_offline_package_preserves_current_tree_and_has_specific_error (__main__.DependenciesTest.test_missing_offline_package_preserves_current_tree_and_has_specific_error) ... ok
+test_unlocked_refresh_replaces_same_identity_cache (__main__.DependenciesTest.test_unlocked_refresh_replaces_same_identity_cache) ... ok
+test_unlocked_resolution_runs_dependency_hooks_without_plugin_source_hooks (__main__.DependenciesTest.test_unlocked_resolution_runs_dependency_hooks_without_plugin_source_hooks) ... ok
+test_unmanaged_pnpm_version_is_rejected_before_dependency_install (__main__.DependenciesTest.test_unmanaged_pnpm_version_is_rejected_before_dependency_install) ... ok
+test_verified_rollback_never_calls_package_manager (__main__.DependenciesTest.test_verified_rollback_never_calls_package_manager) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 12.662s
+
+OK (skipped=1)

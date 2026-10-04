@@ -1,0 +1,98 @@
+{
+  "runtime": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+  "host": "actual rc2 ShortcutReference + Modal",
+  "cases": [
+    {
+      "width": 320,
+      "height": 360,
+      "top": 12,
+      "bottom": 348,
+      "footerBottom": 348,
+      "viewport": 360,
+      "overflow": 0
+    },
+    {
+      "width": 360,
+      "height": 260,
+      "top": 12,
+      "bottom": 248,
+      "footerBottom": 248,
+      "viewport": 260,
+      "overflow": 0
+    },
+    {
+      "width": 800,
+      "height": 360,
+      "top": 12,
+      "bottom": 348,
+      "footerBottom": 348,
+      "viewport": 360,
+      "overflow": 0
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "top": 12,
+      "bottom": 612,
+      "footerBottom": 612,
+      "viewport": 800,
+      "overflow": 0
+    }
+  ],
+  "largeFont": {
+    "bottom": 308,
+    "footerBottom": 308
+  },
+  "visual": {
+    "top": 28,
+    "bottom": 294,
+    "footerBottom": 294
+  },
+  "gestures": {
+    "rows": [
+      {
+        "cause": "blur",
+        "owned": true,
+        "released": true
+      },
+      {
+        "cause": "hidden",
+        "owned": true,
+        "released": true
+      },
+      {
+        "cause": "uncancelable",
+        "owned": true,
+        "released": true
+      },
+      {
+        "cause": "multitouch",
+        "owned": true,
+        "released": true
+      },
+      {
+        "cause": "pointercancel",
+        "owned": true,
+        "released": true
+      }
+    ],
+    "disposed": {
+      "released": true,
+      "closed": true,
+      "inlineTransform": ""
+    }
+  },
+  "checks": [
+    "initial focus",
+    "touch",
+    "Tab",
+    "search/clear",
+    "accessibility tree",
+    "reopen",
+    "later automatic focus",
+    "owner cleanup",
+    "same-width resize",
+    "visualViewport keyboard"
+  ],
+  "errors": []
+}

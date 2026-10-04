@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "owner": "mobile_server154-final-drafts",
+  "phase": "final-source-frozen",
+  "items": [
+    {
+      "id": "D-RES-01",
+      "status": "mitigated-with-proof-bounded-collection",
+      "files": [
+        "app/src/main/assets/app-integration/client.js",
+        "tools/test-web-drafts.mjs",
+        "docs/audits/build154/draft-store-tests.txt"
+      ],
+      "current": "Recognize only the exact legacy/current image draft format and actual Blob sizes. Bound each store scan to512 records, proof-key scan to4096 keys, collection batch to32 records and at most256MiB. Collect only a known non-current record with an explicit superseding durable revision, or an exact same-origin successful mobile-delete receipt bound to the pre-request revision. All proof reads complete before mutation; missing/unknown revisions, unknown rows, unknown/unclosed references and failed reads stay. Each active reader/pending write publishes an independent lease before reading/changing revision; no lease timeout guesses. Other-page references deny overwriting that session. IDB readwrite transaction serializes record collection/capacity check/save. Empty initial or failed loads cannot erase a previously stored row; raced revisions do not restore stale images. Existing reading-position URL sanitization is unchanged.",
+      "checks": [
+        "node --test tools/test-web-drafts.mjs:21 PASS/0 fail/0 skip, including native Chromium IndexedDB transactions, actual Blob round-trip, quota, bounded deletion, unknown/forged byte declarations, missing proof, proof-read failure, unknown leases, same-session other-page reference, stale queued save, explicit empty save and real second-page upload reference",
+        "Actual same-origin fetch/delete proof bound to captured revision; concurrent revision change produces no deletion proof",
+        "The21 count contains9 existing/expanded VM tests,11 native store subtests and the native suite parent; no Android/model/device claim",
+        "node tools/test-web-drafts.mjs --unit-only:9 PASS and1 explicit native-store skip; fast scope does not claim native-store coverage",
+        "node --check and git diff --check PASS"
+      ],
+      "residual": [
+        "Missing/unknown/dead-page lease evidence is retained rather than expired by time. It can prevent automatic reclamation or saving; the existing storage warning tells the user to preserve original images. No unknown record is silently deleted to meet capacity.",
+        "A session missing from a loaded UI snapshot is never deletion proof. Unobserved historical deletion/legacy records without complete revision evidence remain; this is bounded safe reclamation, not a claim that all old cache bytes are garbage.",
+        "The deletion marker is a cooperative same-origin provenance aid, not isolation against authorized same-origin/same-UID code.",
+        "Headless Chromium evidence does not replace Android WebView/Gecko crash/quota/device acceptance."
+      ]
+    },
+    {
+      "id": "D-BUG-12",
+      "status": "retired-exact-original-source",
+      "files": [
+        "scripts/fix-corrupt-session.py",
+        "tools/history/engineering/scripts/fix-corrupt-session.py",
+        "tools/history/engineering/scripts/README.md",
+        "docs/audits/build154/engineering-retired-sources.json"
+      ],
+      "checks": [
+        "Old active CLI has no safe deployment/caller and is removed from scripts; exact historical source preserved, SHA25688e65b88cd083af7867971201e1cd3ebc9eb0eccad70ab2b973d4238d603c264",
+        "Historical README explicitly forbids following the original single-frame rewrite CLI advertisement; before-review/source receipt references remain historical",
+        "No decompression/recompression or user-session operation executed; maintained multi-frame/host repair and historical data readers unchanged"
+      ],
+      "residual": [
+        "Original tool remains readable only as historical evidence and must never be used as current repair proof."
+      ]
+    }
+  ],
+  "rootRegistration": {
+    "runtimeInputs": "app-integration tree already tracked; regenerate package proof/descriptor/generated APK asset copies after these final bytes",
+    "hostEntry": "test-web-drafts.mjs default full mode requires existing Playwright/Chromium; fast entry explicitly uses --unit-only; Root's full validation must also run default mode",
+    "newProductionFiles": []
+  },
+  "scope": "Only authorized integration client, existing draft test, retired script/history notes and audit records. No Gradle, extra APK, phone, model call or production user-data injection."
+}

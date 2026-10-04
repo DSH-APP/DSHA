@@ -1,5 +1,7 @@
 # build 131 真机补验：全新审计安装
 
+> build154 公开证据副本脱敏：已替换可识别设备序列号、私网地址与开发机路径；保留版本、日期、设备类型、统计及结论。原始 blob 与 SHA 保留在私有历史证据中，本次未改写原件，也不表示已清除过去公开副本。
+
 2026-09-14，用户要求继续真机验证。本记录追加本轮结果，不改写先前交付清单和历史验收证据。
 
 设备：Redmi M2012K10C，Android 13 / API 33，arm64，4 KiB 页，系统 WebView 116.0.5845.92。标准版随后同签名覆盖为兼容版，兼容版使用内置 Gecko 完成真实握手。两版均为 build 131 同源码的非调试独立审计包，包名 `com.dsh.client.stabilityaudit`；生产 `com.dsh.client` 未被安装、卸载或修改数据。
@@ -44,7 +46,7 @@
 机器索引：`app/build/device-followup-build131/summary.json`，含本轮审计包摘要、报告摘要、全部批次及重试记录。精确重跑入口：
 
 ```powershell
-python tools/run-backup-device-audit.py --serial fmuoeujvonizjj4d --package com.dsh.client.stabilityaudit --apk app/build/outputs/apk/standard/deviceAudit/app-standard-deviceAudit.apk --mode runtime
+python tools/run-backup-device-audit.py --serial <DEVICE_SERIAL> --package com.dsh.client.stabilityaudit --apk app/build/outputs/apk/standard/deviceAudit/app-standard-deviceAudit.apk --mode runtime
 ```
 
 构建沿用 `tools/device-backup-audit.init.gradle`，属性 `-Pdsha.auditPackage=com.dsh.client.stabilityaudit`，任务 `assembleStandardDeviceAudit` / `assembleLowDeviceAudit`；构建日志为 `app/build/device-followup-build131/audit-build.log`。其它模式见上表，兼容版使用对应 low 审计 APK。不得将包名改为正式应用。

@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "sourceFrozen": true,
+  "items": [
+    {
+      "id": "D-PERF-02",
+      "status": "fixed-host-verified",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java",
+        "app/src/main/java/com/deepseekharness/app/util/CoalescingPoller.java",
+        "app/src/main/java/com/deepseekharness/app/util/VirtualScreenRequestFence.java"
+      ],
+      "implementation": [
+        "Session LOCK only captures/commits identity and metadata; channel discovery, launch, HTTP, accessibility and close/resource calls run outside it.",
+        "Immutable connection/display revision plus existing grant/target supplier are checked before I/O and before metadata commit; late session/grant/generation/frame replies cannot overwrite current state.",
+        "Three preview owners share one single-thread scheduled producer; at most three owners, one pending decoded frame/main callback per owner; unchanged delivered frames avoid repeated decode. Real core observation heartbeat still refreshes.",
+        "Fair ordered action channel preserves caller ThreadLocal authorization and touch down/move/up order; stop/revoke state fence is independent of that channel."
+      ],
+      "checks": [
+        "Current 447 Java sources compile PASS; 17 related JUnit PASS.",
+        "5 actual loopback HTTP cases PASS: unlocked state monitor while blocked, late old session, changed authority/expected target, out-of-order frames, touch order and preservation of successful HTTP input acknowledgement without stale frame commit."
+      ],
+      "residual": [
+        "No phone/Gradle/APK ran in this agent. Host HTTP server supplies controlled protocol replies; no Android virtual display, su/ADB, Bitmap/WindowManager/Binder touch behavior is claimed tested.",
+        "FinalDelivery refreshed current StandardDebug resources separately, then this wrapper compiled the actual current 447 Java sources. Final complete both-flavor Gradle/Lint/APK gates remain owned by FinalDelivery.",
+        "An action already accepted before revocation can have an unknown platform effect; stale completion is rejected, and no action is replayed or switched to another channel.",
+        "Lifecycle/control I/O can still take its existing bounded network timeout; it never holds the state LOCK. The ordered mutation channel deliberately serializes real actions."
+      ]
+    },
+    {
+      "id": "D-CONC-02",
+      "status": "fixed-host-verified",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java",
+        "app/src/main/java/com/deepseekharness/app/util/CoalescingPoller.java",
+        "app/src/main/java/com/deepseekharness/app/util/VirtualScreenRequestFence.java"
+      ],
+      "implementation": [
+        "Overlay/foreground view entry points dispatch to main; internal view/style/preview mutations assert main.",
+        "Window/session/Activity callback epochs fence old posted actions, preview replies, stop/hide and configuration callbacks; teardown captures its own epoch rather than adopting a newer one.",
+        "Every preview lease closes its scheduled subscription, removes its main callback and recycles pending/late bitmap; panel detach clears drawable and recycles displayed bitmap. Activity pause/destroy closes lease and cancels gesture; queued native work fences owner/session.",
+        "Teardown clears old text/confirmation metadata before queueing UI resource release, so that cleanup cannot clear later requests. Stable main Handler avoids concurrent lazy initialization."
+      ],
+      "checks": [
+        "CoalescingPoller tests exercise real scheduled worker, blocked producer, owner cap, close/reopen fences, single producer and isolated failures.",
+        "Existing TouchGestureDispatch, VirtualScreenPolicy, VscreenBridgeRequest and manager one-shot revocation tests still pass in the 17-test selector.",
+        "Actual HTTP touch requests remain ordered. All modified UI Java compiled; no Android UI behavioral acceptance claimed."
+      ],
+      "residual": [
+        "No phone/Gradle/APK ran in this agent. Host HTTP server supplies controlled protocol replies; no Android virtual display, su/ADB, Bitmap/WindowManager/Binder touch behavior is claimed tested.",
+        "FinalDelivery refreshed current StandardDebug resources separately, then this wrapper compiled the actual current 447 Java sources. Final complete both-flavor Gradle/Lint/APK gates remain owned by FinalDelivery.",
+        "An action already accepted before revocation can have an unknown platform effect; stale completion is rejected, and no action is replayed or switched to another channel.",
+        "Lifecycle/control I/O can still take its existing bounded network timeout; it never holds the state LOCK. The ordered mutation channel deliberately serializes real actions."
+      ]
+    }
+  ],
+  "newProductionHelpers": [
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java",
+    "app/src/main/java/com/deepseekharness/app/util/CoalescingPoller.java",
+    "app/src/main/java/com/deepseekharness/app/util/VirtualScreenRequestFence.java"
+  ],
+  "testInputs": [
+    "app/src/test/java/com/deepseekharness/app/util/CoalescingPollerTest.java",
+    "app/src/test/java/com/deepseekharness/app/util/VirtualScreenRequestFenceTest.java",
+    "tools/test-vscreen-manager-http.py",
+    "tools/fixtures/vscreen-manager/ManagerHttpFixture.java",
+    "tools/vscreen-test-dependencies.json"
+  ],
+  "hostRegistration": {
+    "path": "tools/test-vscreen-manager-http.py",
+    "stage": "runtime",
+    "args": [
+      "--jdk",
+      "{jdk}",
+      "--sdk",
+      "{sdk}",
+      "--gradle-cache",
+      "{gradleCache}"
+    ],
+    "requires": [
+      "python39",
+      "jdk17",
+      "toolchains"
+    ],
+    "prerequisite": "current StandardDebug R.jar and actual Android/Gradle toolchain caches; no offline rootfs dependency",
+    "owner": "FinalDelivery registered the runtime entry"
+  },
+  "narrowOwnerLeaves": [
+    "HttpShellService only existing withBridgeTarget call gets the live+matchesTarget supplier; typed dispatcher/auth-health untouched.",
+    "VirtualScreenManager actual app_process launch appends --package ShellQuote.arg(app.getPackageName()) for G1 trusted PM identity protocol."
+  ],
+  "evidence": [
+    "docs/audits/build154/vscreen-concurrency-tests.txt",
+    "docs/audits/build154/vscreen-concurrency-source-diff.json"
+  ],
+  "sourceFreezeSha256": {
+    "app/src/main/java/com/deepseekharness/app/OverlayController.java": "aa7557f7db160e640ced111b279038226b3c4a19529783d9321da962ff155b15",
+    "app/src/main/java/com/deepseekharness/app/HttpShellService.java": "1ef2fbd959a4b81a4b54807db5f20f2692c7c6f3cc78ab9354e89b609144fbad",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java": "968c08536bfed61f1768fce5fccc2fb1975ae0f0b58d34cc9124a9b5265b6efe",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java": "4b4157ce32bdb1276d18d9a2b163a7c0fb5a3e3ca7ddc3f41506eb536f5aba13",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java": "6c86e1cb1ec6748684f65d8e0a7dbde04824d35a1c72330c621055b634aecea6",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java": "71367d36daec2d92095c133cdddb67d143db96619f4fd1b761b8c55ce260196c",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java": "c825263959accc8f7bb0409debda55ad06b9a5ea1583327c19547f3a2fc29cd8",
+    "app/src/main/java/com/deepseekharness/app/util/CoalescingPoller.java": "4fd6188965ae0c6cb41f9e8a7aa6a6d767d7fd8d47bb7655a1e082e4efb19106",
+    "app/src/main/java/com/deepseekharness/app/util/VirtualScreenRequestFence.java": "1fd44aa0062b760a1a1587d84d4c050fb12c9d8a847bb51517a0914e2bec0b1f",
+    "app/src/test/java/com/deepseekharness/app/util/CoalescingPollerTest.java": "9ffd4b078fdc79d52a6921cdbf6e6f609cf10bf8c742a20b8ad30c43d9636a04",
+    "app/src/test/java/com/deepseekharness/app/util/VirtualScreenRequestFenceTest.java": "b8c74f56187dd0cf7e92f2034451a54e351f2546d684fb73f0260d3925e2de8c",
+    "tools/test-vscreen-manager-http.py": "2e1232167518fd8427088a6386ca34a954c3c1aaa42cc38faa00a5b6753c286d",
+    "tools/fixtures/vscreen-manager/ManagerHttpFixture.java": "8e783b9acf0f42fb61300cd988c717b2502a49010a08d5e558523b6fdcf907a7",
+    "tools/vscreen-test-dependencies.json": "bd1963560f174870a6daeca33a468a4beb91216e9eebf453e1fac98c0725d9a4"
+  }
+}

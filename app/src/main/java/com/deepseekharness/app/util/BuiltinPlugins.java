@@ -6,10 +6,10 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 内置插件（rootfs 烘焙的 dsh-device-shell-guide 等四个）的纯逻辑：清单解析、
- * 实体目录命名、profile 注册状态判定。无 Android 依赖，可单测。
+ * 签名内置插件的纯逻辑：清单解析、
+ * 实体目录命名及系统插件归属。无 Android 依赖，可单测。
  *
- * <p>注册契约（与 assets/register-builtin-plugins.py、selftest.py 保持一致）：
+ * <p>注册契约来自 assets/builtin-plugins.json 与生成的 BuiltinPluginRegistry：
  * <ul>
  *   <li>web profile 的 {@code dsh.profile.bundles} 含插件名；</li>
  *   <li>{@code dependencies} 有 {@code link:/root/dsha-<name>} 声明；</li>
@@ -20,76 +20,58 @@ import java.util.List;
  */
 public final class BuiltinPlugins {
 
-    private BuiltinPlugins() {
-    }
+  private BuiltinPlugins() {}
 
-    /** 宿主核心继续参与启动和自检，用户列表只展示四个功能插件及第三方插件。 */
-    public static boolean internal(String name) {
-        return "@deepseek-ai/dsh-base".equals(name) || "@deepseek-ai/dsh-web-app".equals(name)
-                || "dsh-app-integration".equals(name);
-    }
+  /** 宿主核心参与启动和自检；用户列表遵循生成的可见插件名单。 */
+  public static boolean internal(String name) {
+    return BuiltinPluginRegistry.INTERNAL.contains(name);
+  }
 
-    /** 内置插件清单兜底（dsha-builtin.txt 缺失/精简包时的固定名单，与脚本 DEFAULT_BUILTINS 一致）。 */
-    public static final List<String> DEFAULT_BUILTINS = Collections.unmodifiableList(
-            Arrays.asList(
-                    "dsh-device-shell-guide",
-                    "dsh-task-notifier",
-                    "dsh-status-overlay",
-                    "dsh-web-mobile",
-                    "dsh-computer-use-android",
-                    "dsh-auto-review",
-                    "dsh-tool-vscreen"));
+  /** 内置插件清单兜底（dsha-builtin.txt 缺失/精简包时的固定名单，与脚本 DEFAULT_BUILTINS 一致）。 */
+  public static final List<String> DEFAULT_BUILTINS = BuiltinPluginRegistry.DEFAULT;
 
-    /** 当前签名 APK 独占的系统插件；旧 profile/归档不得提供同名源码。 */
-    public static final List<String> SIGNED_BUILTINS;
-    public static final List<String> SYSTEM_PLUGINS;
-    static {
-        List<String> names = new ArrayList<>(DEFAULT_BUILTINS);
-        names.add("dsh-app-integration");
-        SIGNED_BUILTINS = Collections.unmodifiableList(names);
-        List<String> system = new ArrayList<>(names);
-        system.add("@deepseek-ai/dsh-base");
-        system.add("@deepseek-ai/dsh-web-app");
-        SYSTEM_PLUGINS = Collections.unmodifiableList(system);
-    }
+  /** 当前签名 APK 独占的系统插件；旧 profile/归档不得提供同名源码。 */
+  public static final List<String> SIGNED_BUILTINS;
 
-    public static boolean system(String name) {
-        return SYSTEM_PLUGINS.contains(name);
-    }
+  public static final List<String> SYSTEM_PLUGINS;
 
-    /** 解析 dsha-builtin.txt 内容：每行一个插件名，跳过空行与 # 注释。 */
-    public static List<String> parseBuiltinNames(String content) {
-        List<String> out = new ArrayList<>();
-        if (content == null) return out;
-        for (String ln : content.split("\n")) {
-            String t = ln.trim();
-            if (t.isEmpty() || t.startsWith("#")) continue;
-            if (!out.contains(t)) out.add(t);
-        }
-        return out;
-    }
+  static {
+    List<String> names = new ArrayList<>(BuiltinPluginRegistry.SIGNED);
+    SIGNED_BUILTINS = Collections.unmodifiableList(names);
+    List<String> system = new ArrayList<>(names);
+    system.addAll(BuiltinPluginRegistry.OFFICIAL);
+    SYSTEM_PLUGINS = Collections.unmodifiableList(system);
+  }
 
-    /** 插件名 → 其实体目录（/root/dsha-<name>，兼容 dsh- 前缀命名）。 */
-    public static String entityDir(String pluginName) {
-        if (pluginName == null) return "";
-        if (pluginName.startsWith("dsh-")) {
-            return "/root/dsha-" + pluginName.substring(4);
-        }
-        return "/root/dsha-" + pluginName;
-    }
+  public static boolean system(String name) {
+    return SYSTEM_PLUGINS.contains(name);
+  }
 
-    /** 插件名对应的 web profile 内 node_modules 相对路径（用于查询链接是否就位）。 */
-    public static String profileNodeModulesRel(String pluginName) {
-        return "root/.dsh/profiles/web/node_modules/" + pluginName;
+  /** 解析 dsha-builtin.txt 内容：每行一个插件名，跳过空行与 # 注释。 */
+  public static List<String> parseBuiltinNames(String content) {
+    List<String> out = new ArrayList<>();
+    if (content == null) return out;
+    for (String ln : content.split("\n")) {
+      String t = ln.trim();
+      if (t.isEmpty() || t.startsWith("#")) continue;
+      if (!out.contains(t)) out.add(t);
     }
+    return out;
+  }
 
-    /** 该插件是否已列入 profile 的 dsh.profile.bundles。
-     *  只在 bundles 数组区域里找，避免被 dependencies 里的同名 link: 误判为已注册。 */
-    public static boolean inBundlesSection(String manifestJson, String pluginName) {
-        if (manifestJson == null || pluginName == null) return false;
-        int i = manifestJson.indexOf("\"bundles\"");
-        if (i < 0) return false;
-        int j = manifestJson.indexOf("]", i);
-        return j > i && manifestJson.substring(i, j).contains("\"" + pluginName + "\"");
+  /** 插件名 → 其实体目录（/root/dsha-<name>，兼容 dsh- 前缀命名）。 */
+  public static String entityDir(String pluginName) {
+    if (pluginName == null) return "";
+    String known = BuiltinPluginRegistry.guestDirectory(pluginName);
+    if (!known.isEmpty()) return known;
+    if (pluginName.startsWith("dsh-")) {
+      return "/root/dsha-" + pluginName.substring(4);
     }
+    return "/root/dsha-" + pluginName;
+  }
+
+  /** 插件名对应的 web profile 内 node_modules 相对路径（用于查询链接是否就位）。 */
+  public static String profileNodeModulesRel(String pluginName) {
+    return "root/.dsh/profiles/web/node_modules/" + pluginName;
+  }
 }

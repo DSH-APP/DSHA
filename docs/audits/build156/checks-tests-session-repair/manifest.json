@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "status": "PASS",
+  "tests": [
+    {
+      "name": "runtime-session-py312",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "tools/test-runtime-session.py"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 6.297,
+      "log": "docs/audits/build156/checks-tests-session-repair/runtime-session-py312.log",
+      "logSha256": "76a08001cb4fcb23023464a0f6d7e48426060bab17d1db1cd41d96564fcee5c5"
+    },
+    {
+      "name": "runtime-session-py311",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "tools/test-runtime-session.py"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 7.547,
+      "log": "docs/audits/build156/checks-tests-session-repair/runtime-session-py311.log",
+      "logSha256": "e82eff101b5573a6292f9995d78744215b4b1a4b7c44ed6eb6be28f65bfa06b6"
+    },
+    {
+      "name": "host-runner",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "tools/test-host-test-runner.py"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 1.656,
+      "log": "docs/audits/build156/checks-tests-session-repair/host-runner.log",
+      "logSha256": "be7a87d63cb2aba2665889c505381182e9b92ffd8e6f0f2fcf74e3fc09699e96"
+    },
+    {
+      "name": "runtime-proof",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "tools/test-runtime-proof.py"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 1.797,
+      "log": "docs/audits/build156/checks-tests-session-repair/runtime-proof.log",
+      "logSha256": "576ee5c95c119506fbb74df22e4724dcb1b6a763d520c5026691c78523f4ea70"
+    },
+    {
+      "name": "mobile-auth",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tools/test-mobile-auth.mjs"
+      ],
+      "exitCode": 0,
+      "status": "PASS",
+      "seconds": 0.094,
+      "log": "docs/audits/build156/checks-tests-session-repair/mobile-auth.log",
+      "logSha256": "ae3d0134a2d5d57b647f560c05602e552d7322396d61b7cedd41765ee7ff2438"
+    }
+  ],
+  "sourceSha256": {
+    "tools/run-host-tests.py": "d77133743581a09d9288fb2ba8dbfa086e80d8afb153f6ede4f0af03de8e96c4",
+    "tools/test-runtime-fixture.mjs": "586c14e4c800b31140698620bffee39e967c278eca1cd092737c4be9cf3dbc18",
+    "tools/test_runtime_fixture.py": "0913b6e25b32b46955183d9f4e2da3b6172e02cfa948e828570b6efd44a3c4b5",
+    "tools/runtime_fixture_proof.py": "76519c496cbb56bfafd393dc59fd39d029566d0ccc08366bc5379e653454c681",
+    "tools/runtime_fixture_session.py": "fa0b580566b7710d9f68ce3255ee00a06542cee651b58811149ec403454a4dbb",
+    "tools/test-runtime-session.py": "0f5cd57f51d55ab60a5309f33e14d5344554a7f5e1c2c6f1106b1961fb606d8f",
+    "tools/test-mobile-auth.mjs": "5f69834aac97df685943cd52eab6835e17b6733285e00ed9d846f1bfbb82f494",
+    "tools/test-native-session-handshake.py": "ad3507ee44a6bb126e30bbe6ac6e64fb67403269ac4eb3575b579d0e0da8ba32",
+    "tools/native-session/handshake-probe.mjs": "d493e66452571880ea978b2c806745c465b0b8d6b27a54c58048b634038f4086",
+    "tools/host-tests.manifest.json": "72c55ed043c2954617a9c5c8369f36c0fb40406048872f0673032f1bdd522f04"
+  },
+  "scope": "Actual isolated metadata/byte/child-process regressions on Windows. The symlink capability limitation in runtime-proof is explicitly recorded by unittest; no Android execution."
+}

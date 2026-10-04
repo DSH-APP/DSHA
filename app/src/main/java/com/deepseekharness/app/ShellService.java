@@ -14,7 +14,11 @@ extends IShellService.Stub {
     private final long timeoutMillis;
     private final java.util.Set<Process> processes = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
     private boolean closing;
+    private android.content.Context packageContext;
+    private com.deepseekharness.app.util.SelfPackageIdentity launchIdentity;
     public ShellService() { this(30_000); }
+    @androidx.annotation.Keep public ShellService(android.content.Context context){this(30_000);this.packageContext=context;}
+    ShellService(com.deepseekharness.app.util.SelfPackageIdentity identity){this(30_000);this.launchIdentity=identity;}
     /** 包内测试可缩短等待；Binder 入口始终使用默认的 30 秒。 */
     ShellService(long timeoutMillis) {
         if (timeoutMillis <= 0 || timeoutMillis > 30_000) throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("无效的命令期限"));
@@ -23,10 +27,16 @@ extends IShellService.Stub {
 
     @Override
     public String exec(String cmd) {
-        return DeviceShellExecutor.execute(cmd, this::executeArgv);
+        var plan=com.deepseekharness.app.util.DeviceShellPolicy.inspect(cmd);
+        try{return DeviceShellExecutor.execute(cmd,this::executeArgv,plan.kind==com.deepseekharness.app.util.DeviceShellPolicy.Kind.STOP?identity():null);}
+        catch(java.io.IOException error){return "[POLICY_BLOCKED] "+SensitiveData.redact(error.getMessage())+"\n[EXIT=126]";}
     }
     @Override public String execVirtualScreen(String command) {
-        return DeviceShellExecutor.executeVirtualScreen(command, this::executeArgv);
+        try{return DeviceShellExecutor.executeVirtualScreen(command,this::executeArgv,identity());}
+        catch(java.io.IOException error){return "[POLICY_BLOCKED] "+SensitiveData.redact(error.getMessage())+"\n[EXIT=126]";}
+    }
+    private com.deepseekharness.app.util.SelfPackageIdentity identity()throws java.io.IOException{
+        return launchIdentity!=null?launchIdentity:com.deepseekharness.app.runtime.PrivilegedPackageContext.callerIdentity(ShellService.class,packageContext);
     }
     @Override public void destroy() {
         java.util.List<Process> owned;

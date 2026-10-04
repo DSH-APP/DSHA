@@ -1,0 +1,243 @@
+{
+  "schema": 1,
+  "owner": "ROOT",
+  "phase": "implementation",
+  "items": [
+    {
+      "id": "D-CFG-01",
+      "status": "implemented",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/PermissionMode.java",
+        "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+      ],
+      "checks": [
+        "新增PermissionModeTest；全flavor编译/单测待冻结后执行"
+      ],
+      "current": "三档实际保存，统一default/非法值，完整访问保持默认",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-41",
+      "status": "implemented",
+      "files": [
+        "tools/verification_require.py",
+        "tools/verify-dsh-upgrade-apk.py",
+        "tools/verify-recovery-apk.py"
+      ],
+      "checks": [
+        "test-verification-require.py 2PASS",
+        "优化模式错误版本9 probe已从exit0变exit1"
+      ],
+      "current": "51处易删除assert改显式拒绝",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-39",
+      "status": "implemented",
+      "files": [
+        "tools/test-dsha-ui-regressions.py"
+      ],
+      "checks": [
+        "32/32 PASS"
+      ],
+      "current": "错误源码断言修正，保留现行真实JVM语言锁存测试",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-26",
+      "status": "implemented",
+      "files": [
+        "tools/run-unit-tests.py"
+      ],
+      "checks": [
+        "py_compile PASS；全量javac/JUnit待源冻结"
+      ],
+      "current": "编译全部辅助类，仅按Test类选择运行；TemporaryDirectory确保失败也收尾",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-32",
+      "status": "implemented",
+      "files": [
+        "tools/test-native-plugin-manager.mjs"
+      ],
+      "checks": [
+        "node --check PASS；真实Host待管理夹具刷新"
+      ],
+      "current": "OS临时目录与finally清理，不依赖app/build已存在",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-33",
+      "status": "implemented",
+      "files": [
+        "tools/test-plugin-transactions.py"
+      ],
+      "checks": [
+        "语法检查；功能回归待源冻结"
+      ],
+      "current": "隔离temp，默认清理，显式DSHA_KEEP_FIXTURES保留",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-36",
+      "status": "implemented",
+      "files": [
+        "tools/test-runtime-fixture.mjs"
+      ],
+      "checks": [
+        "selector语法检查，所有runtime回归待源冻结"
+      ],
+      "current": "raw与managed使用独立环境键和现有内容证明",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-30",
+      "status": "implemented",
+      "files": [
+        "tools/test-conversation-materialized.mjs",
+        "tools/test-chat-render-performance.mjs",
+        "tools/test-issue67-startup.mjs",
+        "tools/test-profile-settings-cli.mjs",
+        "tools/test-plugin-states.mjs",
+        "tools/test-queue-steer.mjs",
+        "tools/test-runtime-trial.mjs"
+      ],
+      "checks": [
+        "node --check PASS；真实rc2行为/性能待冻结"
+      ],
+      "current": "统一当前运行时/证明，捕获真实浏览器错误并设100消息预算",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-REPRO-01",
+      "status": "implemented",
+      "files": [
+        "tools/native-session/build.py",
+        "tools/native-session/build.ps1"
+      ],
+      "checks": [
+        "Windows NDK26r独立编译SHA与当前入库库完全相同0ab7a3c3..."
+      ],
+      "current": "跨平台锁定NDK/API/对齐，路径映射；Linux重编尚待执行，不声称跨平台实测完成",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-04",
+      "status": "implemented",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/ui/LanguageSettingsAudit.java"
+      ],
+      "checks": [
+        "源码边界核验；完整Java编译待冻结"
+      ],
+      "current": "脱敏后长度裁剪，避免越界",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-12",
+      "status": "implemented",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/ui/MultiTerminalLanguageAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/runtime/RuntimeStartupAudit.java"
+      ],
+      "checks": [
+        "完整编译待冻结"
+      ],
+      "current": "用当前TerminalSessionOwner只读表，不反射不存在字段",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-13",
+      "status": "implemented",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/ui/LogPanelAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/ui/PluginSortAudit.java",
+        "app/src/debug/java/com/deepseekharness/app/ui/LayoutAuditInstrumentation.java"
+      ],
+      "checks": [
+        "完整编译待冻结；无手机"
+      ],
+      "current": "保存原始system偏好而非解析语言",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-17",
+      "status": "implemented",
+      "files": [
+        "app/src/debug/java/com/deepseekharness/app/ui/BrowserCompatibilityAudit.java"
+      ],
+      "checks": [
+        "完整Java编译待冻结"
+      ],
+      "current": "实际PDF worker模块取签名recipe的module字段",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-05",
+      "status": "implemented",
+      "files": [
+        "tools/history/android-audits",
+        "app/src/debug/AndroidManifest.xml"
+      ],
+      "checks": [
+        "retired-audit-sources.json原件hash保留"
+      ],
+      "current": "退出会写用户配置的旧debug审计入口",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-08",
+      "status": "implemented",
+      "files": [
+        "tools/history/android-audits",
+        "app/src/debug/AndroidManifest.xml"
+      ],
+      "checks": [
+        "5个旧入口明确退休并保留源码"
+      ],
+      "current": "退出缺资产且先停止真实Web的旧入口",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-14",
+      "status": "implemented",
+      "files": [
+        "tools/history/android-audits",
+        "app/src/debug/AndroidManifest.xml"
+      ],
+      "checks": [
+        "原源码hash保留，不执行"
+      ],
+      "current": "退出公开导出真实日志的旧入口",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-15",
+      "status": "implemented",
+      "files": [
+        "tools/history/android-audits",
+        "app/src/debug/AndroidManifest.xml"
+      ],
+      "checks": [
+        "原源码hash保留，不执行"
+      ],
+      "current": "退出改名正式就绪标记的旧入口",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    },
+    {
+      "id": "D-TEST-18",
+      "status": "implemented",
+      "files": [
+        "tools/history/android-audits",
+        "app/src/debug/AndroidManifest.xml"
+      ],
+      "checks": [
+        "原源码hash保留，不执行"
+      ],
+      "current": "退出没有所需资产的旧tablet入口",
+      "residual": "最终软件门禁/交付尚未完成；未进行设备验收"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "exitCode": 0,
+  "sourceConfigurationSha256": "932012e93f9eddafb6a57d68a3488c4b51e164f453fcc61b231cd1c677d11cce",
+  "fixtureConfigurationSha256": "c6a13b4d4ecf73835d88f059fa6fa951a6394ff7e6e75eec761b98b8a648b41e",
+  "nginxBinarySha256": "398aee6abe32386a8f710df93e2f08d8b5e2d23f656e0fab18c3f8bc1a9d9a06",
+  "syntaxLogSha256": "1e6c64511df3431cc3c611f24cf85f60b444a452f39aec2143929b885ca88b9d",
+  "scope": "Current template; Windows nginx 1.28.3 syntax only with isolated existing fixture paths/certificate; no server started or deployment/live response checked",
+  "warning": "listen ssl http2 syntax is accepted by nginx 1.28.3 with deprecation warnings; production installed version remains unknown"
+}

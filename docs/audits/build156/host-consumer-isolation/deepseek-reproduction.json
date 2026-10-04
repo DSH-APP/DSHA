@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "status": "DIAGNOSIS_ONLY",
+  "originalHostReceiptUnavailable": "host-final ended and FixtureSession final cleanup removed its private receipt; these are newly captured read-only before/after metadata around an explicitly authorized actual consumer repro.",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.EXE",
+    "F:\\DSHA_RESTART\\tools\\test-deepseek-messages-compat.mjs"
+  ],
+  "startedUtc": "2026-10-03T15:34:04.331787+00:00",
+  "exitCode": 0,
+  "seconds": 13.89,
+  "narbDisableNativeCache": "1",
+  "logSha256": "675d4dcf6a42188334211831a410d1233cbaa09f601ae6b50dc6371ff84d91f2",
+  "diffs": {
+    "raw": {
+      "rootChanged": false,
+      "changedMemberCount": 1,
+      "records": [
+        {
+          "member": "node_modules/@deepseek-ai/dsh-llm-deepseek/lib",
+          "fields": {
+            "mtimeNs": {
+              "before": "1791041163400111300",
+              "after": "1791041653448127700"
+            }
+          }
+        }
+      ]
+    },
+    "managed": {
+      "rootChanged": false,
+      "changedMemberCount": 0,
+      "records": []
+    }
+  }
+}

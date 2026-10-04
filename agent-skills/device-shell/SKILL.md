@@ -1,80 +1,31 @@
 ---
 name: device-shell
-description: Use when you need to execute shell commands on an Android device from a Linux/proot environment. Covers the ADB channel and an optional local Shizuku HTTP shell bridge.
+description: 在 DSHA 的 Ubuntu 环境中使用应用管理的设备通道执行明确授权的 Android 操作，核对实际身份和结果。
 ---
 
-# Android Device Shell
+# 手机命令操作
 
-Run commands on an Android device from a Linux-based agent environment.
+版本从实际界面或发布清单读取，不依赖旧 rc 编号。Ubuntu 终端操作guest，设备操作使用「设备能力授权」中已启用并获授权的 Root、Shizuku 或 ADB 通道，由原生层在发送前选择。不要要求先配 ADB 才能使用已授权 Root/Shizuku，不用裸 adb 绕过入口。
 
-## Channel 1: ADB (recommended)
+先做只读核验：
 
-The device is reachable through ADB. Replace `<serial>` with the actual device serial shown by `adb devices`.
-
-```bash
-adb -s <serial> shell '<device shell command>'
+```sh
+/root/dsh-bin/adb-shell "id"
+/root/dsh-bin/adb-shell "getprop ro.product.model"
+/root/dsh-bin/adb-shell "getprop ro.build.version.release"
 ```
 
-Examples:
+按 id 的实际结果记录身份，不能假设总是 uid=2000 或 Android Root。连接未就绪时查看原生通道状态；错误、拒绝或结果未知时不换通道重放。
 
-```bash
-# identity / basic info
-adb -s <serial> shell 'id; getprop ro.product.model; getprop ro.build.version.release'
+普通 guest shell 的开放权限不代表可以绕过设备命令执行侧策略和敏感能力授权。不要用文本替换逃避限制。
 
-# list packages
-adb -s <serial> shell pm list packages
+确需调用本机桥时，凭据从受管私有请求头文件读取，不放 URL、命令参数、剪贴板或公开日志：
 
-# launch an app to foreground
-adb -s <serial> shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER <package>
-adb -s <serial> shell am start -n <resolved-component>
-
-# check current foreground app
-adb -s <serial> shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp'
-adb -s <serial> shell dumpsys activity activities | grep -E 'ResumedActivity'
+```sh
+curl --fail --silent --show-error --header '@/root/.dsh/.bridge_headers' \
+  --get 'http://127.0.0.1:3090/exec' --data-urlencode 'cmd=id'
 ```
 
-Notes:
+请求头文件缺失时先修复应用运行状态，不打印 token 排查。桥响应失败、取消和未知结果分别处理，不把空输出当成功。执行前明确目标设备和用户目标，执行后用只读查询核对效果。短信、屏幕等能力采用各自授权和运行代次，不从备份恢复设备许可。
 
-- ADB shell usually runs as `uid=2000(shell)`, not root.
-- Use `am`, `pm`, `input`, `dumpsys`, `getprop`, `cmd` for Android-specific operations.
-
-## Channel 2: Local Shizuku HTTP bridge
-
-Some Android host apps expose a local HTTP shell bridge. A common pattern is:
-
-```bash
-curl -sG 'http://127.0.0.1:<port>/exec' --data-urlencode 'cmd=<command>'
-```
-
-Response is JSON:
-
-```json
-{"result":"<command output>\n[EXIT=<code>]"}
-```
-
-If it returns a service-not-ready marker such as `[SHIZUKU_SERVICE_NOT_READY]`, the Shizuku UserService has not been bound yet. Restart the host app/service after granting Shizuku permission, then try again.
-
-## Channel 3: Termux environment (DSHA)
-
-When the agent runs inside **Termux** (not proot), destructive commands are
-**wrapped and require user confirmation**:
-
-- `rm`, `dd`, `mkfs*`, `fdisk`, `reboot`, `shutdown`, `halt`, `poweroff`,
-  `wipe`, `pm`, `sm`, `settings` are replaced by wrappers in `~/dsh-bin/`
-  (prepended to PATH by the DSHA launcher).
-- Running one triggers a `termux-dialog` confirmation popup on the device
-  ("DSHA 安全确认：模型试图执行 [...]"). The command **blocks** until the
-  user checks "允许" (allow) or cancels.
-- If rejected, or Termux:API (`termux-api` package) is not installed, the
-  wrapper exits non-zero. **Treat a non-zero exit as "user denied"** — do not
-  retry the same destructive command; ask the user or choose a safer path.
-
-Notes:
-
-- ADB shell usually runs as `uid=2000(shell)`, not root.
-- Use `am`, `pm`, `input`, `dumpsys`, `getprop`, `cmd` for Android-specific operations.
-
-## Decision guide
-
-- Prefer ADB when it is available; it is the most reliable channel.
-- Use the local HTTP bridge only after confirming it returns real command output.
+没有 Termux 通道、termux-dialog 或破坏性命令包装承诺。guest 与宿主同 Android UID，proot不是隔离恶意插件的独立安全边界。

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "stage": "final current source inventory",
+  "dynamicUiTextArgumentsForReview": 27,
+  "files": {
+    "app/src/main/java/com/deepseekharness/app/ShellService.java": [
+      {
+        "kind": "translated_fragment_concat",
+        "file": "app/src/main/java/com/deepseekharness/app/ShellService.java",
+        "signature": "UiText.text(\"\\n命令执行超时(\")+",
+        "line": 73,
+        "residual": "External decompiled Shizuku source is protected by the pinned formatter/source-origin contract; no product-owned caller translates command/user text."
+      }
+    ]
+  }
+}

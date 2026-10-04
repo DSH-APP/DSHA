@@ -1,0 +1,203 @@
+{
+  "schema": 1,
+  "status": "PASS",
+  "interpreter": {
+    "path": "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+    "version": "3.12.14"
+  },
+  "consumerInputs": {
+    "tools/run-host-tests.py": "d77133743581a09d9288fb2ba8dbfa086e80d8afb153f6ede4f0af03de8e96c4",
+    "tools/test-runtime-fixture.mjs": "586c14e4c800b31140698620bffee39e967c278eca1cd092737c4be9cf3dbc18",
+    "tools/test_runtime_fixture.py": "0913b6e25b32b46955183d9f4e2da3b6172e02cfa948e828570b6efd44a3c4b5",
+    "tools/runtime_fixture_proof.py": "76519c496cbb56bfafd393dc59fd39d029566d0ccc08366bc5379e653454c681",
+    "tools/runtime_fixture_session.py": "fa0b580566b7710d9f68ce3255ee00a06542cee651b58811149ec403454a4dbb"
+  },
+  "initialByteProofs": [
+    {
+      "kind": "raw",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+      "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+      "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1",
+      "entries": 32880,
+      "rootIdentity": {
+        "dev": "7707620078706453033",
+        "ino": "1125899909307947"
+      },
+      "status": "PASS_INITIAL_COMPLETE_BYTE_PROOF",
+      "seconds": 14.954
+    },
+    {
+      "kind": "managed",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+      "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+      "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912",
+      "entries": 32889,
+      "rootIdentity": {
+        "dev": "7707620078706453033",
+        "ino": "844424932778567"
+      },
+      "status": "PASS_INITIAL_COMPLETE_BYTE_PROOF",
+      "seconds": 26.547
+    }
+  ],
+  "children": [
+    {
+      "kind": "raw",
+      "language": "node",
+      "repeat": 0,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "--input-type=module",
+        "-e",
+        "const {testRuntime}=await import(process.argv[1]);console.log(testRuntime(process.argv[2]));",
+        "file:///F:/DSHA_RESTART/tools/test-runtime-fixture.mjs",
+        "raw"
+      ],
+      "exitCode": 0,
+      "status": "PASS_PROVISIONAL_METADATA_REUSE",
+      "seconds": 2.797,
+      "log": "app\\build\\audit-build156\\fixture-session-repaired-real-trees\\raw-node-0.log",
+      "logSha256": "2e1929695470c6120b98ad2bb839d9c46da3002ed870e971d4b9fb7ed98c639c"
+    },
+    {
+      "kind": "raw",
+      "language": "python",
+      "repeat": 0,
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "-c",
+        "import sys; from test_runtime_fixture import runtime; print(runtime(sys.argv[1]))",
+        "raw"
+      ],
+      "exitCode": 0,
+      "status": "PASS_PROVISIONAL_METADATA_REUSE",
+      "seconds": 2.438,
+      "log": "app\\build\\audit-build156\\fixture-session-repaired-real-trees\\raw-python-0.log",
+      "logSha256": "311646c2bbc4c587966e6e191a3df52a2409bd3b814df3f7f570e50c2f3d7196"
+    },
+    {
+      "kind": "managed",
+      "language": "node",
+      "repeat": 0,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "--input-type=module",
+        "-e",
+        "const {testRuntime}=await import(process.argv[1]);console.log(testRuntime(process.argv[2]));",
+        "file:///F:/DSHA_RESTART/tools/test-runtime-fixture.mjs",
+        "managed"
+      ],
+      "exitCode": 0,
+      "status": "PASS_PROVISIONAL_METADATA_REUSE",
+      "seconds": 2.812,
+      "log": "app\\build\\audit-build156\\fixture-session-repaired-real-trees\\managed-node-0.log",
+      "logSha256": "fd939b8d73bc7a628881e357820f14683e10b0ed5e1b8f4627d5cd231633bfd2"
+    },
+    {
+      "kind": "managed",
+      "language": "python",
+      "repeat": 0,
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "-c",
+        "import sys; from test_runtime_fixture import runtime; print(runtime(sys.argv[1]))",
+        "managed"
+      ],
+      "exitCode": 0,
+      "status": "PASS_PROVISIONAL_METADATA_REUSE",
+      "seconds": 2.516,
+      "log": "app\\build\\audit-build156\\fixture-session-repaired-real-trees\\managed-python-0.log",
+      "logSha256": "159969f709dd18f94b203cb57fd07de067fa484b40b01051e67babaa752c474a"
+    },
+    {
+      "kind": "raw",
+      "language": "node",
+      "repeat": 1,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "--input-type=module",
+        "-e",
+        "const {testRuntime}=await import(process.argv[1]);console.log(testRuntime(process.argv[2]));",
+        "file:///F:/DSHA_RESTART/tools/test-runtime-fixture.mjs",
+        "raw"
+      ],
+      "exitCode": 0,
+      "status": "PASS_PROVISIONAL_METADATA_REUSE",
+      "seconds": 2.782,
+      "log": "app\\build\\audit-build156\\fixture-session-repaired-real-trees\\raw-node-1.log",
+      "logSha256": "2e1929695470c6120b98ad2bb839d9c46da3002ed870e971d4b9fb7ed98c639c"
+    },
+    {
+      "kind": "raw",
+      "language": "python",
+      "repeat": 1,
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "-c",
+        "import sys; from test_runtime_fixture import runtime; print(runtime(sys.argv[1]))",
+        "raw"
+      ],
+      "exitCode": 0,
+      "status": "PASS_PROVISIONAL_METADATA_REUSE",
+      "seconds": 2.468,
+      "log": "app\\build\\audit-build156\\fixture-session-repaired-real-trees\\raw-python-1.log",
+      "logSha256": "311646c2bbc4c587966e6e191a3df52a2409bd3b814df3f7f570e50c2f3d7196"
+    },
+    {
+      "kind": "managed",
+      "language": "node",
+      "repeat": 1,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "--input-type=module",
+        "-e",
+        "const {testRuntime}=await import(process.argv[1]);console.log(testRuntime(process.argv[2]));",
+        "file:///F:/DSHA_RESTART/tools/test-runtime-fixture.mjs",
+        "managed"
+      ],
+      "exitCode": 0,
+      "status": "PASS_PROVISIONAL_METADATA_REUSE",
+      "seconds": 2.797,
+      "log": "app\\build\\audit-build156\\fixture-session-repaired-real-trees\\managed-node-1.log",
+      "logSha256": "fd939b8d73bc7a628881e357820f14683e10b0ed5e1b8f4627d5cd231633bfd2"
+    },
+    {
+      "kind": "managed",
+      "language": "python",
+      "repeat": 1,
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "-c",
+        "import sys; from test_runtime_fixture import runtime; print(runtime(sys.argv[1]))",
+        "managed"
+      ],
+      "exitCode": 0,
+      "status": "PASS_PROVISIONAL_METADATA_REUSE",
+      "seconds": 2.61,
+      "log": "app\\build\\audit-build156\\fixture-session-repaired-real-trees\\managed-python-1.log",
+      "logSha256": "159969f709dd18f94b203cb57fd07de067fa484b40b01051e67babaa752c474a"
+    }
+  ],
+  "scope": "Read-only current raw and managed trees. Every child is provisional until both mandatory final complete-byte proofs pass. No Android evidence.",
+  "finalByteProofs": [
+    {
+      "kind": "raw",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\raw",
+      "markerSha256": "41486764b5264d6c4e352c60ce3faf220968c34b1fa214c85dd33d9b668cb1f8",
+      "contentDigest": "74478788e5893fc57be865a87ee2955fd18443592e4c74155a9a0b9849d4e4a1",
+      "status": "PASS_FINAL_COMPLETE_BYTE_RECHECK"
+    },
+    {
+      "kind": "managed",
+      "directory": "F:\\DSHA_RESTART\\app\\build\\test-runtimes\\0.2.0-rc.2-win32-x64-a3cf19ad8320\\managed-3d702e2d2129",
+      "markerSha256": "8d5d3082aba494f751a26793e6d02c1f9ec637292bab5ddd810b43c42a720e98",
+      "contentDigest": "2d3d6f7b776f120e32e080f10a0b109a8a449b021c0392156f84fcbcd9f75912",
+      "status": "PASS_FINAL_COMPLETE_BYTE_RECHECK"
+    }
+  ],
+  "finalSeconds": 29.968
+}

@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "commands": [
+    {
+      "name": "javac",
+      "command": [
+        "F:/DSHA/_toolchains/jdk-17/bin/javac.exe",
+        "-J-Duser.language=en",
+        "-encoding",
+        "UTF-8",
+        "--release",
+        "17",
+        "-cp",
+        "C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\junit\\junit\\4.13.2\\8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12\\junit-4.13.2.jar;C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.hamcrest\\hamcrest-core\\1.3\\42a25dc3219429f0e5d060061f71acb49bf010a0\\hamcrest-core-1.3.jar",
+        "-d",
+        "F:\\DSHA_RESTART\\app\\build\\build156-build-updates\\classes",
+        "F:\\DSHA_RESTART\\app\\src\\main\\java\\com\\deepseekharness\\app\\util\\UpdatePolicy.java",
+        "F:\\DSHA_RESTART\\app\\src\\main\\java\\com\\deepseekharness\\app\\util\\UpdateLocations.java",
+        "F:\\DSHA_RESTART\\app\\src\\main\\java\\com\\deepseekharness\\app\\util\\UpdateRedirects.java",
+        "F:\\DSHA_RESTART\\app\\src\\main\\java\\com\\deepseekharness\\app\\util\\ResumableDownload.java",
+        "F:\\DSHA_RESTART\\app\\src\\main\\java\\com\\deepseekharness\\app\\util\\FileIntegrity.java",
+        "F:\\DSHA_RESTART\\app\\src\\main\\java\\com\\deepseekharness\\app\\util\\UiText.java",
+        "F:\\DSHA_RESTART\\app\\src\\main\\java\\com\\deepseekharness\\app\\util\\UiLanguagePreference.java",
+        "F:\\DSHA_RESTART\\app\\src\\main\\java\\com\\deepseekharness\\app\\util\\SystemLanguage.java",
+        "F:\\DSHA_RESTART\\app\\build\\build156-build-updates\\generated\\com\\deepseekharness\\app\\util\\UiMessages.java",
+        "F:\\DSHA_RESTART\\app\\src\\test\\java\\com\\deepseekharness\\app\\util\\UpdatePolicyTest.java",
+        "F:\\DSHA_RESTART\\app\\src\\test\\java\\com\\deepseekharness\\app\\util\\UpdateLocationsTest.java",
+        "F:\\DSHA_RESTART\\app\\src\\test\\java\\com\\deepseekharness\\app\\util\\UpdateRedirectsTest.java",
+        "F:\\DSHA_RESTART\\app\\src\\test\\java\\com\\deepseekharness\\app\\util\\ResumableDownloadTest.java"
+      ],
+      "exitCode": 0,
+      "log": "app/build/build156-build-updates/javac.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "junit",
+      "command": [
+        "F:/DSHA/_toolchains/jdk-17/bin/java.exe",
+        "-Dfile.encoding=UTF-8",
+        "-Duser.language=en",
+        "-cp",
+        "F:\\DSHA_RESTART\\app\\build\\build156-build-updates\\classes;C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\junit\\junit\\4.13.2\\8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12\\junit-4.13.2.jar;C:\\Users\\18768\\.gradle\\caches\\modules-2\\files-2.1\\org.hamcrest\\hamcrest-core\\1.3\\42a25dc3219429f0e5d060061f71acb49bf010a0\\hamcrest-core-1.3.jar",
+        "org.junit.runner.JUnitCore",
+        "com.deepseekharness.app.util.UpdatePolicyTest",
+        "com.deepseekharness.app.util.UpdateLocationsTest",
+        "com.deepseekharness.app.util.UpdateRedirectsTest",
+        "com.deepseekharness.app.util.ResumableDownloadTest"
+      ],
+      "exitCode": 0,
+      "log": "app/build/build156-build-updates/junit.log",
+      "sha256": "6aae993cb889ecae5d23348d188c9e2a363f21828f0a73d7283abac6a794fd6b"
+    }
+  ],
+  "sourceSha256": {
+    "app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java": "4c96ceac8a9298957e90e6f886e9394e4a65abe6512f28f374b912a6f21750d4",
+    "app/src/main/java/com/deepseekharness/app/util/UpdateLocations.java": "2580ee960e6ea587ac847080e58428d0f5bdd3a21fb6bae507bda0e3716347eb",
+    "app/src/main/java/com/deepseekharness/app/util/UpdateRedirects.java": "fede97ff36c3b0ab883c11b825610dd5bc7efc9512b67bd48779009ca013598b",
+    "app/src/main/java/com/deepseekharness/app/util/ResumableDownload.java": "f440f83c3af1cf27342c3a62addbf37eccd4a8e978b4fe3c6306bca0271a41fc",
+    "app/src/main/java/com/deepseekharness/app/util/FileIntegrity.java": "17ac5d39b1c8bfd882b9c36df9ad460d7c03838463ff2a2317e74295f225caac",
+    "app/src/main/java/com/deepseekharness/app/util/UiText.java": "a69dbff6ae18c5abf4b3afb510486d3e1c1af5934d6a7a84d92b15d9a90c3081",
+    "app/src/main/java/com/deepseekharness/app/util/UiLanguagePreference.java": "0a30e7e1603c1ef91eb96c246a640ca3ad51c42e7229e810855152e42a4efc6f",
+    "app/src/main/java/com/deepseekharness/app/util/SystemLanguage.java": "31babae64aad58fc73f578076f3e9834689466c2c11acaf867c8ddcaff4762ac",
+    "app/build/build156-build-updates/generated/com/deepseekharness/app/util/UiMessages.java": "829f1e56a1ece934969ddfc5bb224635e06a63b9d71bcbcd870ebde326f2a8a9",
+    "app/src/test/java/com/deepseekharness/app/util/UpdatePolicyTest.java": "949ca8bf7a1e093cdca95b49a2417897d78f4a9fa80d9d6e7bd9b8a088b80b75",
+    "app/src/test/java/com/deepseekharness/app/util/UpdateLocationsTest.java": "0fc03ce146e3f62f6a9d268ab9be3e3594e345648c8371d66bbabdb7914fb710",
+    "app/src/test/java/com/deepseekharness/app/util/UpdateRedirectsTest.java": "4bb47bb6257488a209f6ac7e53853ca2ad21f11bd7f1dc070605c514380f9b6c",
+    "app/src/test/java/com/deepseekharness/app/util/ResumableDownloadTest.java": "b51f7d3b255d2120294cccc5bef1d066d7737558b9528bda8b1f14adb222091d"
+  },
+  "scope": "Isolated JDK17/JUnit actual update policies, redirect transport and resume integrity; no Gradle or Android device."
+}

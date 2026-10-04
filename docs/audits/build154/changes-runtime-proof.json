@@ -1,0 +1,25 @@
+{
+  "owner": "G1-final-runtime-proof",
+  "items": [
+    {
+      "id": "FINAL-ROOT-03",
+      "related": "D-TEST-36",
+      "status": "implemented",
+      "files": [
+        "tools/runtime_fixture_proof.py",
+        "tools/prepare-test-runtime.py",
+        "tools/test_runtime_fixture.py",
+        "tools/test-runtime-fixture.mjs",
+        "tools/test-runtime-proof.py"
+      ],
+      "checks": [
+        "9 PASS, 1 actual POSIX-link test skipped on Windows",
+        "Normal verified raw reuse installs once; changed cached bytes fail without marker rewrite; legacy npm-ci refresh preserves original",
+        "Node/Python complete-tree consumers reject dependency/support/binary and member-set changes",
+        "Specialized old tooltip is hashed/receipted, not applied; active registry order and builder-owned prepend idempotence tested",
+        "node --check and py_compile PASS"
+      ],
+      "residual": "Root regenerates fresh schema2 raw/managed after current archive refresh; no actual generator/phone/APK execution in this subtask."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "owner": "G1-final-source-text",
+  "items": [
+    {
+      "id": "D-BUILD-01",
+      "status": "implemented",
+      "files": [
+        "tools/build-dsh-runtime.py",
+        "tools/prepare-backup-assets.py",
+        "tools/prepare-runtime-descriptor.py",
+        "tools/prepare-standard-assets.py",
+        "tools/prepare-recovery-assets.py",
+        "tools/prepare-ui-languages.py",
+        "tools/prepare-dsh-runtime.py",
+        "tools/generate-builtin-plugins.py",
+        "tools/generate-credential-paths.py",
+        "tools/prepare-runtime-tools.py",
+        "tools/prepare-test-runtime.py",
+        "tools/source_text.py",
+        "tools/test-source-text.py"
+      ],
+      "checks": [
+        "7 generated-text tests PASS including simulated Windows open translation",
+        "Actual UI/builtin/descriptor generators emit/repair exact LF; byte checks reject preexisting CRLF",
+        "Python3.9 syntax of helper PASS; all requested generator py_compile PASS",
+        "Runtime proof regression 9 PASS, 1 Windows POSIX-link skip"
+      ],
+      "current": "Python3.9-compatible source_text writer controls newline translation; binary/package source operations unchanged",
+      "residual": "No complete runtime/archive generation executed; parent refreshes exact recipe proofs after source freeze. Explicit package/patch recipe CR bytes are preserved, not normalized away."
+    }
+  ],
+  "registration": [
+    "Add tools/source_text.py to every relevant Gradle generator task inputs",
+    "build-dsh-runtime.recipe_inputs now includes source_text.py hash",
+    "prepare-standard-assets cache signature now includes text_writer_sha256",
+    "Register tools/test-source-text.py as fast host test; helper is source support, not executable test",
+    "generate-credential-paths.py already writes explicit UTF8 LF bytes and needs no writer change"
+  ]
+}

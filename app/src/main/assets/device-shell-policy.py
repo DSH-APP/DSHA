@@ -49,19 +49,31 @@ def checked(result):
     return result.output
 
 
+def sms_roots(rules):
+    roots = rules.get('smsReadRoots')
+    if (not isinstance(roots, list) or not roots or len(roots) > 32
+            or any(not isinstance(root, str) or not root.startswith('/')
+                   or '..' in root.split('/') or '\\' in root or '\0' in root for root in roots)):
+        raise Blocked('SMS_ROOTS_UNVERIFIED')
+    return [root.lower().strip('/').split('/') for root in roots]
+
+
 def sms_provider_path(path, rules):
-    package = re.escape(rules.get('smsProvider', 'com.android.providers.telephony').lower())
     normalized = posixpath.normpath(path.replace('\\', '/')).lower()
-    return re.fullmatch(r'^/data/(?:data|user/[0-9]+|user_de/[0-9]+)/' + package + r'(?:/.*)?$', normalized) is not None
+    if not normalized.startswith('/'):
+        return False
+    parts = normalized.strip('/').split('/') if normalized != '/' else []
+    return any(len(parts) >= len(root) and all(pattern == '*' or pattern == value
+               for pattern, value in zip(root, parts)) for root in sms_roots(rules))
 
 
-def sms_provider_descendant(path):
+def sms_provider_descendant(path, rules):
     normalized = posixpath.normpath(path.replace('\\', '/')).lower()
-    if (normalized in ('/', '/data', '/data/data', '/data/user', '/data/user_de')
-            or re.fullmatch(r'/data/user(?:_de)?/[0-9]+', normalized)):
-        return True
-    package = 'com\\.android\\.providers\\.telephony'
-    return re.fullmatch(r'^/data/(?:data|user/[0-9]+|user_de/[0-9]+)/' + package + r'(?:/.*)?$', normalized) is not None
+    if not normalized.startswith('/'):
+        return False
+    parts = normalized.strip('/').split('/') if normalized != '/' else []
+    return any(all(pattern == '*' or pattern == value for pattern, value in zip(root, parts))
+               for root in sms_roots(rules))
 
 
 def root_read_paths(plan):
@@ -122,12 +134,12 @@ def validate_root_reads(plan, shell):
     rules = plan.get('paths', {})
     recursive = root_read_may_descend(plan)
     for value in root_read_paths(plan):
-        if sms_provider_path(value, rules) or recursive and sms_provider_descendant(value):
+        if sms_provider_path(value, rules) or recursive and sms_provider_descendant(value, rules):
             raise Blocked('短信数据库仅允许经原生授权的当前用户 content query')
         path = normalize(value, rules) if value.startswith('/') else value
         resolved = checked(shell(argv_command(['readlink', '-f', '--', path]))).strip()
         if (not resolved.startswith('/') or '\n' in resolved or sms_provider_path(resolved, rules)
-                or recursive and sms_provider_descendant(resolved)):
+                or recursive and sms_provider_descendant(resolved, rules)):
             raise Blocked('Root 读取路径属于短信数据库或无法核验')
 
 
@@ -203,6 +215,9 @@ def validate_files(plan, shell):
 
 
 def stop_targets(plan, shell):
+    self_package = plan.get('selfPackage')
+    if not isinstance(self_package, str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+', self_package):
+        raise Blocked('SELF_PACKAGE_UNVERIFIED')
     # 连接可能花时间；真正停止前在该连接上重新获取全量分组，不沿用旧快照。
     apps = []
     groups = ''
@@ -223,8 +238,10 @@ def stop_targets(plan, shell):
         raise Blocked('应用归属冲突')
     plan['groups'] = groups
     by_name = {app['name']: app for app in apps}
+    if self_package not in by_name:
+        raise Blocked('SELF_PACKAGE_INVENTORY_MISSING')
     protected = {uid for app in apps if app['system'] or any(uid % 100000 < 10000 for uid in app['uids'])
-                 or app['name'] in ('com.dsh.client', 'moe.shizuku.privileged.api') for uid in app['uids']}
+                 or app['name'] in (self_package, 'moe.shizuku.privileged.api') for uid in app['uids']}
     requested = list(plan['operands'])
     if plan['argv'][0] == 'kill':
         rows = checked(shell(argv_command(['ps', '-A', '-o', 'PID,UID,NAME']))).splitlines()
@@ -258,7 +275,8 @@ def execute(plan, shell, result_class):
     if plan['kind'] == 'VIRTUAL_SCREEN':
         argv = plan.get('argv')
         source = plan.get('sourceApk')
-        if (not isinstance(argv, list) or len(argv) != 7 or argv[0] != 'app_process'
+        self_package = plan.get('selfPackage')
+        if (not isinstance(argv, list) or len(argv) != 9 or argv[0] != 'app_process'
                 or not isinstance(source, str) or not re.fullmatch(r'/data/app/[^\s]+\.apk', source)
                 or '..' in source.split('/') or '\\' in source or '//' in source
                 or argv[1] != '-Djava.class.path=' + source
@@ -266,13 +284,15 @@ def execute(plan, shell, result_class):
                 or argv[3] != 'com.deepseekharness.app.vscreen.VirtualScreenCore'
                 or argv[4:6] != ['--launch', '--port']
                 or not re.fullmatch(r'8[0-9]{3}', argv[6])
+                or not isinstance(self_package,str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+',self_package)
+                or argv[7:] != ['--package',self_package]
                 or plan.get('nativeAuthorization') != 'managed-vscreen-start'
                 or not re.fullmatch(r'[a-f0-9]{48}', str(plan.get('nativeTicket', '')))
                 or plan.get('su', False)):
             raise Blocked('虚拟屏启动参数无法核验')
         return shell(argv_command(argv))
-    if plan.get('su'):
-        validate_root_reads(plan, shell)
+    # ADB may itself be privileged; SMS file paths never bypass native query authorization.
+    validate_root_reads(plan, shell)
     if plan['kind'] == 'STOP':
         # 在当前连接再次刷新清单，先验证全部目标，再按包名停止。
         targets = stop_targets(plan, shell)
@@ -286,5 +306,16 @@ def execute(plan, shell, result_class):
     if plan['kind'] == 'FILE':
         validate_files(plan, shell)
         argv = [normalize(value, plan['paths']) if value in plan['operands'] else value for value in plan['argv']]
-        return shell(argv_command(argv))
+        source, package, uid = plan.get('sourceApk'), plan.get('selfPackage'), plan.get('selfUid')
+        if (not isinstance(source, str) or not re.fullmatch(r'/data/app/[^\s]+\.apk', source)
+                or '..' in source.split('/') or '\\' in source or '//' in source
+                or not isinstance(package, str) or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+', package)
+                or type(uid) is not int or uid < 10000
+                or not isinstance(argv, list) or not argv or argv[0] not in ('mkdir', 'touch', 'cp', 'mv', 'rm', 'rmdir')):
+            raise Blocked('FILE_EXECUTOR_IDENTITY_UNVERIFIED')
+        # 一次发送，当前 APK 在特权进程内重新解析 FILE 计划并固定父目录描述符。
+        # app_process/目录打开失败或结果未知均不得重放旧 cp/mv/rm。
+        helper = ['app_process', '-Djava.class.path=' + source, '/system/bin',
+                  'com.deepseekharness.app.DeviceFileCore', '--package', package, '--uid', str(uid), '--']
+        return shell(argv_command(helper + argv))
     return shell(argv_command(plan['argv']))

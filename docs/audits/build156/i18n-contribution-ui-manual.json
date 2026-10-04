@@ -1,0 +1,416 @@
+[
+  {
+    "id": "build156_ui_03c24ac15406",
+    "zh": "su：%s\n尚未验证 root 授权",
+    "en": "su: %s\nRoot authorization has not been verified",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_e329cacc3385",
+    "zh": "su：%s\nroot 通道已响应 · 设备命令仍受策略保护",
+    "en": "su: %s\nRoot channel responded; device commands remain protected by policy",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_ac3ea74b8c48",
+    "zh": "su：%s\nroot 授权或执行超时，请在 root 管理器查看 DSHA 授权",
+    "en": "su: %s\nRoot authorization or execution timed out. Check DSHA authorization in your root manager",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_ed7f3743b687",
+    "zh": "su：%s\nroot 授权或执行失败：%s",
+    "en": "su: %s\nRoot authorization or execution failed: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_4b95c3b48bb2",
+    "zh": "上次保存：%s（点按查看）",
+    "en": "Last saved: %s (tap to view)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_112ce05e3f70",
+    "zh": "已保存：Download/DSHA/%s\n点按此处查看日志",
+    "en": "Saved: Download/DSHA/%s\nTap here to view the log",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_51993246de55",
+    "zh": "已保存到所选位置：%s\n点按此处查看日志",
+    "en": "Saved to the selected location: %s\nTap here to view the log",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_a361e84bd02d",
+    "zh": "保存失败：%s\n可点「另存为」选择位置后重试。",
+    "en": "Save failed: %s\nChoose a location with Save as and retry.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_3c032dc388fa",
+    "zh": "正在%s，完成后再保存配置",
+    "en": "%s is in progress. Save settings after it finishes",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_643ed07db498",
+    "zh": "启动中…（%s）",
+    "en": "Starting… (%s)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_43f288fb6529",
+    "zh": "Web 鉴权失败，请点「进入」重试（%s）",
+    "en": "Web authentication failed. Tap Enter to retry (%s)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_e667da78b4d0",
+    "zh": "无法打开 Web 页面，请重试（%s）",
+    "en": "Unable to open the Web page. Retry (%s)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_11532a5068fe",
+    "zh": "局域网地址：%s\n点按查看或复制连接链接；流量未加密，请只在可信网络使用。",
+    "en": "LAN address: %s\nTap to view or copy the connection link. Traffic is unencrypted; use trusted networks.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_02a9b748a050",
+    "zh": "此链接包含访问凭据。局域网使用 HTTP，流量未加密，请只在可信网络使用并只分享给可信设备。\n\n%s",
+    "en": "This link contains access credentials. LAN access uses HTTP with unencrypted traffic. Use trusted networks and share only with trusted devices.\n\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_8e63f2492b8f",
+    "zh": "局域网连接链接",
+    "en": "LAN connection link",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_cafb535e7554",
+    "zh": "复制连接链接",
+    "en": "Copy connection link",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_ac545c188a71",
+    "zh": "连接已变化，请重新查看链接。",
+    "en": "The connection changed. View the link again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_00112fa60f70",
+    "zh": "下载源：%s",
+    "en": "Download source: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_5ad3f25c6750",
+    "zh": "已识别：%s",
+    "en": "Recognized: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_7b01444d1fcd",
+    "zh": "更新至 %s",
+    "en": "Update to %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_7b13fef3c475",
+    "zh": "回退至 %s",
+    "en": "Roll back to %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_33fd3161f343",
+    "zh": "备份任务进行中：%s · %s 项",
+    "en": "Backup in progress: %s · %s entries",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/AutomaticBackupActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_8ffe7cb7a9dc",
+    "zh": "原生授权即时生效；%s",
+    "en": "Native authorization applies immediately; %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_29aaf75d8f8a",
+    "zh": "%s · 本阶段 %s 秒 · 总计 %s 秒\n%s",
+    "en": "%s · Stage %s seconds · Total %s seconds\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_9e7973ee5cfe",
+    "zh": "%s\n兼容内核 Gecko 143",
+    "en": "%s\nCompatibility engine: Gecko 143",
+    "files": [
+      "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_2d1a1a4339c5",
+    "zh": "终端启动失败：%s",
+    "en": "Terminal failed to start: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_d567c72699c9",
+    "zh": "会话已结束（退出码 %s）",
+    "en": "Session ended (exit code %s)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_187a137d2aa9",
+    "zh": "终端 %s",
+    "en": "Terminal %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_1f5470c82f13",
+    "zh": "终端 %s · 关闭中…",
+    "en": "Terminal %s · Closing…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_5e63cd0f9d8a",
+    "zh": "切换到终端 %s",
+    "en": "Switch to terminal %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/TerminalTabBar.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_ff0e14faf4b0",
+    "zh": "请在插件管理中查看 %s 的安装和启用状态",
+    "en": "View the installation and enabled state of %s in plugin management",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginInstallActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_863a6f418934",
+    "zh": "下载并解析插件包后自动安装、启用。\n\n%s",
+    "en": "The plugin installs and enables automatically after download and validation.\n\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginInstallActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_74e8fd9be9e0",
+    "zh": "已显示 %s–%s / %s 条 · 第 %s 页",
+    "en": "Showing %s–%s / %s records · Page %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_0e8f96d9dc9d",
+    "zh": "Profile：%s\n请选择需要恢复的字段；未选字段保持当前值。\n%s",
+    "en": "Profile: %s\nSelect fields to restore. Unselected fields retain their current values.\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_0cf11b649796",
+    "zh": "已选择项目目录：%s",
+    "en": "Selected project folders: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_a0a18a738cb7",
+    "zh": "%s\n%s 项 · %s%s%s",
+    "en": "%s\n%s entries · %s%s%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_e32b54092981",
+    "zh": "%s\n\n版本：%s\n位置：%s\n来源：%s",
+    "en": "%s\n\nVersion: %s\nLocation: %s\nSource: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_9e14419dae4d",
+    "zh": "禁用 %s",
+    "en": "Disable %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_903ea2eef1bb",
+    "zh": "启用 %s",
+    "en": "Enable %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_19ad2582c70c",
+    "zh": "已释放 %s",
+    "en": "Freed %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_8bd36aab90bc",
+    "zh": "还没有可重新导出的私有验证副本。\n%s",
+    "en": "No private verified copies are available yet.\n%s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "build156_ui_d045a6d58749",
+    "zh": "尚未确认 Web 退出；进程身份无法核验，保留运行屏障。请查看诊断后重试停止。",
+    "en": "Web exit is unconfirmed and process identity cannot be verified. The execution barrier remains. Inspect diagnostics and retry stopping.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_0f31f993dbac",
+    "zh": "强制结束本次 Web？",
+    "en": "Force stop this Web process?",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_f150d6e93e4e",
+    "zh": "普通停止尚未确认 Web 退出。本次已核验进程属于 DSHA；强制结束可能中断正在写入的对话或文件。\n\n确认后只结束这次已核验的 Web 进程；身份或状态变化会拒绝执行。取消会保留现场与运行屏障。",
+    "en": "Normal stopping has not confirmed Web exit. This process was verified as belonging to DSHA. Force stopping may interrupt conversation or file writes.\n\nConfirmation applies only to this verified Web process. Identity or state changes reject the operation. Cancel keeps the process state and execution barrier.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_7210d42aa69e",
+    "zh": "强制结束",
+    "en": "Force stop",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_0072553a13aa",
+    "zh": "Web 状态或进程身份已变化，本次强制结束未执行。请重新停止后确认。",
+    "en": "Web state or process identity changed. Force stopping was not performed. Stop again and confirm.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build156_ui_ec22bb3f8e33",
+    "zh": "正在强制结束本次已核验的 Web…",
+    "en": "Force stopping this verified Web process…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  }
+]

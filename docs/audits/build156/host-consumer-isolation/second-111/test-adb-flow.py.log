@@ -1,0 +1,34 @@
+test_foreign_device_port_is_rejected_and_cleanup_always_runs (__main__.DiscoveryTest.test_foreign_device_port_is_rejected_and_cleanup_always_runs) ... ok
+test_service_loss_removes_stale_port (__main__.DiscoveryTest.test_service_loss_removes_stale_port) ... ok
+test_start_failure_still_closes_zeroconf (__main__.DiscoveryTest.test_start_failure_still_closes_zeroconf) ... ok
+test_budget_stops_connect_retries (__main__.FlowTest.test_budget_stops_connect_retries) ... ok
+test_changed_sensitive_plan_never_dispatches (__main__.FlowTest.test_changed_sensitive_plan_never_dispatches) ... ok
+test_confirmation_switch_never_bypasses_native_policy (__main__.FlowTest.test_confirmation_switch_never_bypasses_native_policy) ... ok
+test_connect_failure_can_retry_but_closes_failed_device (__main__.FlowTest.test_connect_failure_can_retry_but_closes_failed_device) ... ok
+test_current_sensitive_plan_checked_after_connect_before_single_send (__main__.FlowTest.test_current_sensitive_plan_checked_after_connect_before_single_send) ... ok
+test_exit_framing_handles_exit_exec_quotes_and_bytes (__main__.FlowTest.test_exit_framing_handles_exit_exec_quotes_and_bytes) ... ok
+test_internal_flag_never_bypasses_native_denial (__main__.FlowTest.test_internal_flag_never_bypasses_native_denial) ... ok
+test_invalid_pair_input_does_not_prepare_or_pair (__main__.FlowTest.test_invalid_pair_input_does_not_prepare_or_pair) ... ok
+test_keepalive_grants_only_native_actual_package_and_missing_identity_sends_nothing (__main__.FlowTest.test_keepalive_grants_only_native_actual_package_and_missing_identity_sends_nothing) ... ok
+test_library_type_error_never_reexecutes_without_timeouts (__main__.FlowTest.test_library_type_error_never_reexecutes_without_timeouts) ... ok
+test_main_unknown_result_nonzero_and_no_replay (__main__.FlowTest.test_main_unknown_result_nonzero_and_no_replay) ... ok
+test_main_uses_native_plan_and_propagates_nonzero_exit (__main__.FlowTest.test_main_uses_native_plan_and_propagates_nonzero_exit) ... ok
+test_missing_exit_marker_is_unknown_not_success (__main__.FlowTest.test_missing_exit_marker_is_unknown_not_success) ... ok
+test_native_denial_does_not_connect (__main__.FlowTest.test_native_denial_does_not_connect) ... ok
+test_pairing_warning_not_connection_success_or_repeated_pair (__main__.FlowTest.test_pairing_warning_not_connection_success_or_repeated_pair) ... ok
+test_real_remote_exit_is_returned (__main__.FlowTest.test_real_remote_exit_is_returned) ... ok
+test_root_authorization_required_even_with_confirmation_disabled (__main__.FlowTest.test_root_authorization_required_even_with_confirmation_disabled) ... ok
+test_root_still_requires_native_plan_when_authorized (__main__.FlowTest.test_root_still_requires_native_plan_when_authorized) ... ok
+test_script_and_wrapper_version_match_the_single_asset_contract (__main__.FlowTest.test_script_and_wrapper_version_match_the_single_asset_contract) ... ok
+test_sensitive_revalidation_failure_closes_without_send_or_retry (__main__.FlowTest.test_sensitive_revalidation_failure_closes_without_send_or_retry) ... ok
+test_sensitive_revocation_during_connect_prevents_dispatch (__main__.FlowTest.test_sensitive_revocation_during_connect_prevents_dispatch) ... ok
+test_timeout_after_dispatch_never_replays (__main__.FlowTest.test_timeout_after_dispatch_never_replays) ... ok
+test_verify_only_never_pairs (__main__.FlowTest.test_verify_only_never_pairs) ... ok
+test_lost_native_response_never_falls_back_to_adb (__main__.NativeRouteTest.test_lost_native_response_never_falls_back_to_adb) ... ok
+test_only_explicit_plan_can_trigger_adb (__main__.NativeRouteTest.test_only_explicit_plan_can_trigger_adb) ... ok
+test_root_or_shizuku_success_needs_no_adb_keys_or_dependencies (__main__.NativeRouteTest.test_root_or_shizuku_success_needs_no_adb_keys_or_dependencies) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.024s
+
+OK

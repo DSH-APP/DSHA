@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """把锁定的 npm Linux arm64 安装树转为 dsh 离线覆盖层，不执行第三方脚本。"""
+from source_text import write_text as write_source_text, matches_text
 import argparse
 import gzip
 import hashlib
@@ -28,6 +29,8 @@ CONVERSATION_MATERIALIZED_PATCH = HOOKS.parent / 'conversation-materialized-patc
 CONVERSATION_MATERIALIZED_MODULE = '@deepseek-ai/dsh-client-ui-conversation/lib/client.js'
 RC1_SETTINGS_PATCH = HOOKS.parent / 'rc1-settings-migration-patch.json'
 RC1_SETTINGS_MODULE = '@deepseek-ai/dsh-settings/lib/index.js'
+WORKSPACE_DIRECTORY_PATCH = HOOKS.parent / 'workspace-directory-policy-patch.json'
+WORKSPACE_DIRECTORY_MODULE = '@deepseek-ai/dsh-api-workspace-controller/lib/index.js'
 STORAGE_JSON_MODULE = '@deepseek-ai/dsh-storage-json/lib/index.js'
 SESSION_PERSISTENCE_JSONL_MODULE = '@deepseek-ai/dsh-session-persistence-jsonl/lib/index.js'
 LOCK_ROOT = HOOKS.parents[4] / 'tools/dsh-runtime'
@@ -37,13 +40,14 @@ PATCHES = {'@deepseek-ai/dsh-fs-local/lib/index.js': 'publishExclusive',
 
 
 def recipe_inputs():
-    paths = [Path(__file__), LOCK_ROOT / 'package.json', LOCK_ROOT / 'package-lock.json']
+    paths = [Path(__file__), Path(__file__).with_name('source_text.py'), LOCK_ROOT / 'package.json', LOCK_ROOT / 'package-lock.json']
     paths += [directory / name for directory in (HOOKS, SESSION_HOOKS, COMBO_HOOKS) for name in ('index.js', 'package.json')]
     paths.append(COMBO_PATCH)
     paths.append(DEEPSEEK_MESSAGES_PATCH)
     paths.append(LEXICAL_CLAIM_PATCH)
     paths.append(CONVERSATION_MATERIALIZED_PATCH)
     paths.append(RC1_SETTINGS_PATCH)
+    paths.append(WORKSPACE_DIRECTORY_PATCH)
     recipe = json.loads(DEEPSEEK_MESSAGES_PATCH.read_text(encoding='utf-8'))
     paths += [HOOKS.parent / patch['prependAsset'] for patch in recipe['patches'] if 'prependAsset' in patch]
     root = Path(__file__).resolve().parents[1]
@@ -53,6 +57,18 @@ def recipe_inputs():
 def patched_content(relative, data):
     """只修改固定版本的两个发布调用依赖，保留上游的校验、迁移及排他语义。"""
     name = relative.as_posix()
+    if name == WORKSPACE_DIRECTORY_MODULE:
+        text = data.decode('utf-8')
+        recipe = json.loads(WORKSPACE_DIRECTORY_PATCH.read_text(encoding='utf-8'))
+        expected = json.loads((LOCK_ROOT / 'package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
+        if recipe.get('version') != 1 or recipe.get('module') != name or recipe.get('dshVersion') != expected:
+            raise ValueError('Workspace directory policy target or DSH version changed')
+        if len(recipe.get('patches', [])) != 1:
+            raise ValueError('Workspace directory policy requires one locked source anchor')
+        patch = recipe['patches'][0]
+        if text.count(patch['before']) != 1 or patch['after'] in text:
+            raise ValueError('Workspace directory resolver source anchor changed')
+        return text.replace(patch['before'], patch['after']).encode('utf-8')
     if name == COMBO_MODULE:
         text = data.decode('utf-8')
         for patch in json.loads(COMBO_PATCH.read_text(encoding='utf-8'))['patches']:
@@ -430,11 +446,9 @@ var DshaRecordHints = class {
         if text.count(create_anchor) != 1:
             raise ValueError('会话 create 结构变化，必须重新检查')
         text = text.replace(create_anchor, create_replacement)
-        field_anchor = '''\tprivate readonly tracker;\n\t/**\n\t * Bounded LRU'''
         # The emitted JS has no private field declarations. Add the field next
         # to the tracker declaration in the class body instead.
         class_anchor = '''\ttracker = new JsonlBackendTracker(this.name);\n\tgenerationFormat;'''
-        class_replacement = '''\ttracker;\n\t/** DSHA_SESSION_DIRECT_HINTS_V1: cwd hints for durable sessions published here. */\n\tdshaSessionHints = new DshaSessionHints();\n\t/**\n\t * Bounded LRU'''
         if text.count(class_anchor) != 1:
             raise ValueError('会话后端 tracker 结构变化，必须重新检查')
         text = text.replace(class_anchor, '''\ttracker = new JsonlBackendTracker(this.name);\n\tdshaSessionHints = new DshaSessionHints();\n\tgenerationFormat;''')
@@ -592,6 +606,7 @@ def build(source, output, version):
                             or relative.as_posix() in (COMBO_MODULE, DEEPSEEK_MESSAGES_MODULE,
                                                        LEXICAL_CLAIM_MODULE, CONVERSATION_MATERIALIZED_MODULE,
                                                        STORAGE_JSON_MODULE,
+                                                       WORKSPACE_DIRECTORY_MODULE,
                                                        SESSION_PERSISTENCE_JSONL_MODULE,
                                                        '@deepseek-ai/dsh-session-format-v2-to-v3/lib/index.js') else None
                         if content is not None:
@@ -659,7 +674,7 @@ def build(source, output, version):
     finally:
         temporary.unlink(missing_ok=True)
     inputs = {'version': version, 'inputs': recipe_inputs(), 'archive_sha256': hashlib.sha256(output.read_bytes()).hexdigest()}
-    output.with_suffix('.inputs.json').write_text(json.dumps(inputs, indent=2) + '\n', encoding='utf-8')
+    write_source_text(output.with_suffix('.inputs.json'),json.dumps(inputs, indent=2) + '\n',encoding='utf-8')
     return {'version': version, 'files': count, 'unpacked_bytes': size,
             'archive_bytes': output.stat().st_size, 'sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
             'arm64_binaries': binaries,

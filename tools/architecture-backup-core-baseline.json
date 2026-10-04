@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "scope": "20 explicit Android coordinator/native-settings adapter edges. Five unnecessary business dependencies were removed; this baseline cannot reintroduce them. Pure file/format/transaction algorithms use explicit ports.",
+  "edges": [
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "type": "com.deepseekharness.app.core.HarnessController"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+      "type": "com.deepseekharness.app.core.RuntimeTasks"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+      "type": "com.deepseekharness.app.core.BackupTask"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+      "type": "com.deepseekharness.app.core.HarnessController"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+      "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+      "type": "com.deepseekharness.app.core.UpdateEngine"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.ConfigStore"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.EnvironmentMaintenance"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.HarnessController"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+      "type": "com.deepseekharness.app.core.RuntimeTasks"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+      "type": "com.deepseekharness.app.core.ConfigStore"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+      "type": "com.deepseekharness.app.core.ConfigStore"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/PostUpgradeCleanupService.java",
+      "type": "com.deepseekharness.app.core.HarnessController"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+      "type": "com.deepseekharness.app.core.ConfigStore"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+      "type": "com.deepseekharness.app.core.HarnessController"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+      "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/ProfileSettingsTransaction.java",
+      "type": "com.deepseekharness.app.core.RuntimeTasks"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+      "type": "com.deepseekharness.app.core.HarnessController"
+    },
+    {
+      "file": "app/src/main/java/com/deepseekharness/app/backup/StorageMaintenance.java",
+      "type": "com.deepseekharness.app.core.MaintenanceCoordinator"
+    }
+  ]
+}

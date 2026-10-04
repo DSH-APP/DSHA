@@ -1,0 +1,840 @@
+{
+  "schema": "dsha-device-fixture-review-v1",
+  "reviewedAt": "2026-10-04T09:27:35+08:00",
+  "reviewMode": "read_only_host_review_of_existing_new_standard_device_evidence",
+  "softwareChanged": false,
+  "fixtureChanged": false,
+  "deviceCommandsExecutedByReviewer": 0,
+  "scope": {
+    "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+    "apkBytes": 397302610,
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+    "flavor": "standard",
+    "minSdk": 30,
+    "targetSdk": 37,
+    "debuggable": false,
+    "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "androidRelease": 13,
+    "engine": "system WebView per final Standard artifact and operator",
+    "deviceOperator": "runtime exclusive lease",
+    "overlayAt": "2026-10-04T08:15:52.766285+08:00",
+    "fixture": "dsh-acceptance-156 0.0.156",
+    "originalNavigationDelayMs": 1500,
+    "fixtureTgzSha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+    "variant0_0_157Installed": false,
+    "topOrigin": "http://127.0.0.1:3080",
+    "firstSelectedEventAt": "2026-10-04T08:43:57.596+08:00",
+    "lastSelectedEventAt": "2026-10-04T08:55:05.396+08:00",
+    "bindingLimit": "Correlated preflight/successful overlay/post-install metadata and operator run. The owned JSONL has no APK/engine metadata event; exact WebView provider/binary version is not independently identified by it."
+  },
+  "cohortSelection": {
+    "collectionsRead": 4,
+    "declaredLogReferences": 8,
+    "uniqueLogsAfterShaDeduplication": 5,
+    "duplicateLogReferencesExcluded": 3,
+    "selectedCurrentStandardRuns": 1,
+    "excludedHistoricalRuns": 4,
+    "excludedHistoricalEvents": 58,
+    "historicalExcluded": [
+      {
+        "sha256": "bef95deb9cb1a0c6c2fbae46d13708ad35d136ccc0dd51a7f8639cb9798d9021",
+        "bytes": 498,
+        "events": 2,
+        "firstServerTime": "2026-10-04T08:05:42.480+08:00",
+        "lastServerTime": "2026-10-04T08:05:45.419+08:00",
+        "reason": "Pre-overlay Standard or Low run, excluded from current Standard results."
+      },
+      {
+        "sha256": "676127908d2a664681bccfa66b6dd98d6bc9e0753272dbf8af14ec55f8b775a7",
+        "bytes": 7364,
+        "events": 22,
+        "firstServerTime": "2026-10-04T04:04:21.517+08:00",
+        "lastServerTime": "2026-10-04T04:25:02.736+08:00",
+        "reason": "Pre-overlay Standard or Low run, excluded from current Standard results."
+      },
+      {
+        "sha256": "f4ec976b8c84150bb131eafec3ec1d91316f36d214d638bf8d46d5ad36294ef1",
+        "bytes": 2753,
+        "events": 9,
+        "firstServerTime": "2026-10-04T04:52:08.105+08:00",
+        "lastServerTime": "2026-10-04T04:56:05.619+08:00",
+        "reason": "Pre-overlay Standard or Low run, excluded from current Standard results."
+      },
+      {
+        "sha256": "257fb028414df671fa1815de9cfc4f1db948f56d1ba4f703b0a7d135c9adab73",
+        "bytes": 8207,
+        "events": 25,
+        "firstServerTime": "2026-10-04T06:20:44.188+08:00",
+        "lastServerTime": "2026-10-04T06:36:34.080+08:00",
+        "reason": "Pre-overlay Standard or Low run, excluded from current Standard results."
+      }
+    ]
+  },
+  "summary": {
+    "events": 25,
+    "ownedRuns": 1,
+    "pages": 4,
+    "requestIds": 6,
+    "audioNavigationScenariosSupported": 1,
+    "filesNavigationScenariosSupported": 1,
+    "freshAudioLiveThenEnded": 1,
+    "videoRejections": 1,
+    "mixedRejections": 1,
+    "differentPortAudioRejections": 1,
+    "successfulTwoFileBatches": 1,
+    "verifiedFileObjects": 2,
+    "requestedCasesReviewed": 7,
+    "requestedCasesSupported": 7,
+    "requestedCaseMissingEvidenceCount": 0,
+    "observedFailureMarkers": 0,
+    "currentStandardRequestedFixtureScope": "pass_observed",
+    "overallMicrophoneStatus": "partial_device_coverage",
+    "overallDeviceMatrixStatus": "partial_device_coverage"
+  },
+  "checks": [
+    {
+      "id": "audio-nav",
+      "result": "pass_observed",
+      "events0Based": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "operatorActions0Based": [
+        1187,
+        1188,
+        1189,
+        1190
+      ],
+      "screenshots": [
+        "lease-standard-audio-nav-real-prompt-0829",
+        "lease-standard-b-before-old-mic-result-0830",
+        "lease-standard-b-old-mic-result-drained-0831",
+        "lease-standard-b-fresh-audio-stopped-0832"
+      ],
+      "pageBReadyAt": "2026-10-04T08:46:12.606+08:00",
+      "pageBVisibleUnderOldPromptAt": "2026-10-04T08:46:13.918621+08:00",
+      "oldOneTimeGrantActionLoggedAt": "2026-10-04T08:50:00.929398+08:00",
+      "returnedBWithoutResultAt": "2026-10-04T08:50:03.322667+08:00",
+      "summary": "A actual audio request opened the Android permission prompt and scheduled the original1500ms navigation. B was loaded at08:46:12.606 and visibly beneath that still-pending prompt at08:46:13.918 and08:50:00.033. Old one-time grant returned to B without a result; R1 has no media-resolved and B has no unsolicited media event before fresh R2."
+    },
+    {
+      "id": "audio-fresh-b",
+      "result": "pass_observed",
+      "events0Based": [
+        5,
+        6,
+        7
+      ],
+      "screenshots": [
+        "lease-standard-b-fresh-audio-stopped-0832"
+      ],
+      "requestAt": "2026-10-04T08:50:06.992+08:00",
+      "liveAt": "2026-10-04T08:50:07.198+08:00",
+      "endedAt": "2026-10-04T08:50:07.206+08:00",
+      "summary": "A distinct B user click received one audio track live, then immediately ended it. No recording samples/device labels were stored."
+    },
+    {
+      "id": "video",
+      "result": "pass_observed",
+      "events0Based": [
+        8,
+        9
+      ],
+      "screenshots": [
+        "lease-standard-video-refused-0833"
+      ],
+      "summary": "B video-only request rejected with NotAllowedError and no media-resolved for that request."
+    },
+    {
+      "id": "mixed",
+      "result": "pass_observed",
+      "events0Based": [
+        10,
+        11
+      ],
+      "screenshots": [
+        "lease-standard-mixed-refused-0834"
+      ],
+      "summary": "B audio+video request rejected with NotAllowedError and no media-resolved for that request."
+    },
+    {
+      "id": "wrongport",
+      "result": "pass_observed",
+      "events0Based": [
+        12,
+        13,
+        14
+      ],
+      "screenshots": [
+        "lease-standard-wrong-port-child-ready-0835",
+        "lease-standard-wrong-port-refused-0836"
+      ],
+      "topOrigin": "http://127.0.0.1:3080",
+      "childOrigin": "http://127.0.0.1:44753",
+      "probe": {
+        "secureContext": true,
+        "mediaApi": true,
+        "microphonePolicyAllowed": true
+      },
+      "summary": "The different-port child was actually loaded, the user clicked its own audio button, and it rejected with NotAllowedError. All three availability/policy probes are true; this is not a failed-load/API-unavailable/browser-policy-denied substitute.",
+      "limit": "The Web API outcome matches the native origin policy; this run does not instrument the internal native PermissionRequest callback."
+    },
+    {
+      "id": "files-nav",
+      "result": "pass_observed",
+      "events0Based": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "operatorActions0Based": [
+        1216,
+        1219,
+        1220,
+        1221,
+        1222,
+        1227,
+        1228
+      ],
+      "screenshots": [
+        "lease-standard-files-nav-real-picker-0839",
+        "lease-standard-files-nav-old-selected-two-0840",
+        "lease-standard-files-nav-old-returned-0841",
+        "lease-standard-b-fresh-two-full-sha-0844"
+      ],
+      "pageBReadyAt": "2026-10-04T08:52:18.394+08:00",
+      "oldPickerStillPendingScreenshotAt": "2026-10-04T08:52:19.277179+08:00",
+      "oldPickerTwoSelectedAt": "2026-10-04T08:53:24.935211+08:00",
+      "oldPickerConfirmationActionLoggedAt": "2026-10-04T08:53:25.842322+08:00",
+      "returnedBWithoutResultAt": "2026-10-04T08:53:28.543205+08:00",
+      "freshBRequestAt": "2026-10-04T08:54:53.743+08:00",
+      "freshBTwoFileResultAt": "2026-10-04T08:55:02.388+08:00",
+      "oldRequestFileCallbackEventsObserved": 0,
+      "unsolicitedPageBFileEventsBeforeFreshRequest": 0,
+      "summary": "B loaded08:52:18.394 while the old picker was still pending; the pending-picker and two-selected screenshots precede the old confirmation at08:53:25.842 by about67seconds after B-ready. Returned B shows no result, R5 has no file-change/result, and no B file event occurs before distinct fresh R6. This satisfies the earlier-B prerequisite for this Standard case, independently of the incomplete Low picker case.",
+      "timingLimit": "Operator timestamps are logged around execution/capture; exact native callback instant and PC/device offset are not calibrated. The long lead and visible still-pending selector support order; absence is bounded to the recorded scenario."
+    },
+    {
+      "id": "multi-fresh-b",
+      "result": "pass_observed",
+      "events0Based": [
+        21,
+        22,
+        23
+      ],
+      "screenshots": [
+        "lease-standard-b-fresh-two-full-sha-0844"
+      ],
+      "summary": "Fresh B R6 receives the original owned52/63byte files, full SHA-256 and order0/1 exactly. This is a real chooser/File.arrayBuffer result."
+    }
+  ],
+  "ownedSentinelsInOrder": [
+    {
+      "name": "dsh-acceptance-156-a.txt",
+      "size": 52,
+      "sha256": "6015f0d76906328021f27c59003bda02eb3d78e07ec094173dcc8638554139af",
+      "order": 0,
+      "match": true
+    },
+    {
+      "name": "dsh-acceptance-156-b.txt",
+      "size": 63,
+      "sha256": "fd19dde3939b50dbd8b501855ddbe8262dbb42cfff5ae58ee8227acf0721ced3",
+      "order": 1,
+      "match": true
+    }
+  ],
+  "reviewedEventTimeline": [
+    {
+      "index0Based": 0,
+      "runAlias": "S-current",
+      "kind": "page-ready",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T08:43:57.596+08:00",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index0Based": 1,
+      "runAlias": "S-current",
+      "kind": "media-request",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T08:46:11.053+08:00",
+      "request": "R1",
+      "test": "audio"
+    },
+    {
+      "index0Based": 2,
+      "runAlias": "S-current",
+      "kind": "navigation-scheduled",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T08:46:11.059+08:00",
+      "request": "R1",
+      "test": "audio"
+    },
+    {
+      "index0Based": 3,
+      "runAlias": "S-current",
+      "kind": "page-hide",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T08:46:12.576+08:00",
+      "status": "all-owned-streams-stopped"
+    },
+    {
+      "index0Based": 4,
+      "runAlias": "S-current",
+      "kind": "page-ready",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:46:12.606+08:00",
+      "from": "P1/A",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index0Based": 5,
+      "runAlias": "S-current",
+      "kind": "media-request",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:50:06.992+08:00",
+      "from": "P1/A",
+      "request": "R2",
+      "test": "audio"
+    },
+    {
+      "index0Based": 6,
+      "runAlias": "S-current",
+      "kind": "media-resolved",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:50:07.198+08:00",
+      "from": "P1/A",
+      "request": "R2",
+      "test": "audio",
+      "status": "resolved",
+      "tracks": [
+        {
+          "kind": "audio",
+          "readyState": "live"
+        }
+      ]
+    },
+    {
+      "index0Based": 7,
+      "runAlias": "S-current",
+      "kind": "media-stopped",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:50:07.206+08:00",
+      "from": "P1/A",
+      "request": "R2",
+      "test": "audio",
+      "tracks": [
+        {
+          "kind": "audio",
+          "readyState": "ended"
+        }
+      ]
+    },
+    {
+      "index0Based": 8,
+      "runAlias": "S-current",
+      "kind": "media-request",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:50:13.055+08:00",
+      "from": "P1/A",
+      "request": "R3",
+      "test": "video"
+    },
+    {
+      "index0Based": 9,
+      "runAlias": "S-current",
+      "kind": "media-rejected",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:50:13.138+08:00",
+      "from": "P1/A",
+      "request": "R3",
+      "test": "video",
+      "status": "rejected",
+      "errorName": "NotAllowedError"
+    },
+    {
+      "index0Based": 10,
+      "runAlias": "S-current",
+      "kind": "media-request",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:50:19.129+08:00",
+      "from": "P1/A",
+      "request": "R4",
+      "test": "mixed"
+    },
+    {
+      "index0Based": 11,
+      "runAlias": "S-current",
+      "kind": "media-rejected",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:50:19.177+08:00",
+      "from": "P1/A",
+      "request": "R4",
+      "test": "mixed",
+      "status": "rejected",
+      "errorName": "NotAllowedError"
+    },
+    {
+      "index0Based": 12,
+      "runAlias": "S-current",
+      "kind": "frame-created",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:50:25.209+08:00",
+      "from": "P1/A",
+      "status": "waiting-for-actual-child-ready",
+      "frameOrigin": "http://127.0.0.1:44753"
+    },
+    {
+      "index0Based": 13,
+      "runAlias": "S-current",
+      "kind": "child-ready",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:50:25.241+08:00",
+      "from": "P1/A",
+      "status": "actual-child-loaded",
+      "probe": {
+        "secureContext": true,
+        "mediaApi": true,
+        "microphonePolicyAllowed": true
+      },
+      "frameOrigin": "http://127.0.0.1:44753"
+    },
+    {
+      "index0Based": 14,
+      "runAlias": "S-current",
+      "kind": "child-result",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:52:04.118+08:00",
+      "from": "P1/A",
+      "status": "rejected",
+      "errorName": "NotAllowedError",
+      "probe": {
+        "secureContext": true,
+        "mediaApi": true,
+        "microphonePolicyAllowed": true
+      },
+      "frameOrigin": "http://127.0.0.1:44753"
+    },
+    {
+      "index0Based": 15,
+      "runAlias": "S-current",
+      "kind": "page-hide",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T08:52:07.278+08:00",
+      "from": "P1/A",
+      "status": "all-owned-streams-stopped"
+    },
+    {
+      "index0Based": 16,
+      "runAlias": "S-current",
+      "kind": "page-ready",
+      "page": "P3/A",
+      "serverTime": "2026-10-04T08:52:09.307+08:00",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index0Based": 17,
+      "runAlias": "S-current",
+      "kind": "file-request",
+      "page": "P3/A",
+      "serverTime": "2026-10-04T08:52:16.463+08:00",
+      "request": "R5",
+      "test": "files-nav"
+    },
+    {
+      "index0Based": 18,
+      "runAlias": "S-current",
+      "kind": "navigation-scheduled",
+      "page": "P3/A",
+      "serverTime": "2026-10-04T08:52:16.472+08:00",
+      "request": "R5",
+      "test": "files"
+    },
+    {
+      "index0Based": 19,
+      "runAlias": "S-current",
+      "kind": "page-hide",
+      "page": "P3/A",
+      "serverTime": "2026-10-04T08:52:18.364+08:00",
+      "status": "all-owned-streams-stopped"
+    },
+    {
+      "index0Based": 20,
+      "runAlias": "S-current",
+      "kind": "page-ready",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T08:52:18.394+08:00",
+      "from": "P3/A",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index0Based": 21,
+      "runAlias": "S-current",
+      "kind": "file-request",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T08:54:53.743+08:00",
+      "from": "P3/A",
+      "request": "R6",
+      "test": "files"
+    },
+    {
+      "index0Based": 22,
+      "runAlias": "S-current",
+      "kind": "file-change",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T08:55:02.309+08:00",
+      "from": "P3/A",
+      "request": "R6",
+      "status": "received",
+      "count": 2
+    },
+    {
+      "index0Based": 23,
+      "runAlias": "S-current",
+      "kind": "file-result",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T08:55:02.388+08:00",
+      "from": "P3/A",
+      "request": "R6",
+      "status": "verified-owned-two-files",
+      "fileBatch": "ownedSentinelsInOrder"
+    },
+    {
+      "index0Based": 24,
+      "runAlias": "S-current",
+      "kind": "page-hide",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T08:55:05.396+08:00",
+      "from": "P3/A",
+      "status": "all-owned-streams-stopped"
+    }
+  ],
+  "sourceEvidence": {
+    "apkPreflight": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/apk-preflight.json",
+      "sha256": "2b2582536a4e74a2ca46118c108d895fa13549baeb5b1f2c31a32c7ab5b56cdc"
+    },
+    "installationResponse": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-install.txt",
+      "sha256": "c4aa470acafcf8576c15b0f0b5ae7e852d1ec5413372d0e6a9272e788e1306d3",
+      "success": true
+    },
+    "installedPackageMetadata": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-package-after.txt",
+      "sha256": "f696372fc91262fd51f91c0913310f863505694be90d419aea4e7d5e17fe2592"
+    },
+    "signatureAudit": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-signature.txt",
+      "sha256": "468045888f0c909dc9f076eadce7b8232e8e58534209cfbf713ba6430b12d6dc"
+    },
+    "ownedCurrentJsonl": {
+      "privateEvidenceGroup": "app/build/audit-build156/device-private/latest-retake-20261004/standard-collected/fixture",
+      "sha256": "188b999289d571d8b0337aeac2afc18ce60841fc4a64030ca726ccf871fd3e1e",
+      "bytes": 8330,
+      "events": 25,
+      "privateIdentifiersOmitted": true
+    },
+    "collectionManifests": [
+      {
+        "sha256": "fb5a3970a452e0316c397802340244d934aa6ca1293d1c2c73d8fb0491560d9f",
+        "bytes": 727,
+        "declaredFiles": 2
+      },
+      {
+        "sha256": "646b364d1844b66b1734b0c6f15a72da8abdbcc78ac4424722a8c5d6707c2647",
+        "bytes": 536,
+        "declaredFiles": 1
+      },
+      {
+        "sha256": "c92f80a908ccfc692a42c9e76c7ce9954fb5aac11e755e141f35d4216dab3385",
+        "bytes": 729,
+        "declaredFiles": 2
+      },
+      {
+        "sha256": "33ccbb4dc8b3af1ddb3706d41222e594abfbe059aec2b4634feaebb7ca5ec371",
+        "bytes": 923,
+        "declaredFiles": 3
+      }
+    ],
+    "operatorActionsPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "ad6771cbbe781a9f7a337845864bbdc24cc4ef01f4112f5b33b390661e1b9fdc",
+      "bytes": 175238,
+      "records": 1231,
+      "lastRecordIndex0Based": 1230,
+      "lastTime": "2026-10-04T08:55:07.191794+08:00",
+      "hashRecipe": "SHA256 of first 175238 bytes; later appended records do not change this prefix. Raw command args/input text omitted."
+    },
+    "screenshots": [
+      {
+        "id": "lease-standard-audio-nav-real-prompt-0829",
+        "privateEvidenceFile": "lease-standard-audio-nav-real-prompt-0829.png",
+        "sha256": "0b64fbce6b72cd3665c01c3126eadf1e1276037945c6d62ae15f2aec05061c16",
+        "bytes": 206460,
+        "operatorTime": "2026-10-04T08:46:13.918621+08:00",
+        "actionIndex0Based": 1187,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-b-before-old-mic-result-0830",
+        "privateEvidenceFile": "lease-standard-b-before-old-mic-result-0830.png",
+        "sha256": "162811e4654335cb7154ce30c6a20e862ac9a051e89cdf4299bcfa2b07fb45e8",
+        "bytes": 206379,
+        "operatorTime": "2026-10-04T08:50:00.033700+08:00",
+        "actionIndex0Based": 1188,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-b-old-mic-result-drained-0831",
+        "privateEvidenceFile": "lease-standard-b-old-mic-result-drained-0831.png",
+        "sha256": "7f0e0471c8a562198ee223f94d88f3306aea820f7f1bdfee36697440af8c16e1",
+        "bytes": 265931,
+        "operatorTime": "2026-10-04T08:50:03.322667+08:00",
+        "actionIndex0Based": 1190,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-b-fresh-audio-stopped-0832",
+        "privateEvidenceFile": "lease-standard-b-fresh-audio-stopped-0832.png",
+        "sha256": "cfb7990e1405cd6d01248965674cffcea7c4d1a4a8a2409e85b19dd9551db434",
+        "bytes": 296004,
+        "operatorTime": "2026-10-04T08:50:09.841744+08:00",
+        "actionIndex0Based": 1194,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-video-refused-0833",
+        "privateEvidenceFile": "lease-standard-video-refused-0833.png",
+        "sha256": "b565a2407d52f164d9f524a7189e4df4a9bc2289e73294ee9f3e98e39fdbb51c",
+        "bytes": 301018,
+        "operatorTime": "2026-10-04T08:50:15.858770+08:00",
+        "actionIndex0Based": 1198,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-mixed-refused-0834",
+        "privateEvidenceFile": "lease-standard-mixed-refused-0834.png",
+        "sha256": "cf887d173eddc33fc95c44c51565c5046b19b2ba77941de9ce517ae2fac3e8e2",
+        "bytes": 320787,
+        "operatorTime": "2026-10-04T08:50:21.957708+08:00",
+        "actionIndex0Based": 1202,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-wrong-port-child-ready-0835",
+        "privateEvidenceFile": "lease-standard-wrong-port-child-ready-0835.png",
+        "sha256": "69ac9bd4db44acad4bac78ec613bbf4eac0cc45b8cbd9a29ef2b26c17c59cb1c",
+        "bytes": 287208,
+        "operatorTime": "2026-10-04T08:50:28.119869+08:00",
+        "actionIndex0Based": 1206,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-wrong-port-refused-0836",
+        "privateEvidenceFile": "lease-standard-wrong-port-refused-0836.png",
+        "sha256": "7ae28d62f6a21db77c23d5b60901e9f8d2a8e2b556928bcabf1bdb38ecaad7d3",
+        "bytes": 251563,
+        "operatorTime": "2026-10-04T08:52:06.954093+08:00",
+        "actionIndex0Based": 1208,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-files-nav-real-picker-0839",
+        "privateEvidenceFile": "lease-standard-files-nav-real-picker-0839.png",
+        "sha256": "197b9fbcdbabea76c4be5447ae0adff6717d82597d27f226cff2fb985848105b",
+        "bytes": 112713,
+        "operatorTime": "2026-10-04T08:52:19.277179+08:00",
+        "actionIndex0Based": 1216,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-files-nav-old-selected-two-0840",
+        "privateEvidenceFile": "lease-standard-files-nav-old-selected-two-0840.png",
+        "sha256": "c1f36fe8cfde0236775f63562ed1fb8f1bb7a1daec06dbf3f637df881eb730e0",
+        "bytes": 111706,
+        "operatorTime": "2026-10-04T08:53:24.935211+08:00",
+        "actionIndex0Based": 1219,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-files-nav-old-returned-0841",
+        "privateEvidenceFile": "lease-standard-files-nav-old-returned-0841.png",
+        "sha256": "64c2ea42e43aee94a9dd000813101dda2af4e6c6e12d6d5e01abed00b172c812",
+        "bytes": 262329,
+        "operatorTime": "2026-10-04T08:53:28.543205+08:00",
+        "actionIndex0Based": 1221,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      },
+      {
+        "id": "lease-standard-b-fresh-two-full-sha-0844",
+        "privateEvidenceFile": "lease-standard-b-fresh-two-full-sha-0844.png",
+        "sha256": "321ce91566b770cdf127e3fcccc4a39dfeff82afa1718c3219bd5fc3c4815f97",
+        "bytes": 306500,
+        "operatorTime": "2026-10-04T08:55:05.037032+08:00",
+        "actionIndex0Based": 1228,
+        "visuallyReviewed": true,
+        "pixelsCopiedIntoPublicReport": false
+      }
+    ],
+    "sourceFiles": [
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/public/fixture.js",
+        "sha256": "6759c1deb9d97088cc4adc4a898d9317e10b0424b43756bc5818e4b8cb94f718"
+      },
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/public/frame.html",
+        "sha256": "2b06b082fb9608d4ef600d324a823978bd12e2c09c2e89f810a0be1b9930ada6"
+      },
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/lib/index.js",
+        "sha256": "02e49f6412d0a169e18dde5458c5adca5dce661ddf7d410243c2230f36dbdd04"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/collect-owned-fixture.py",
+        "sha256": "bd7f9e54d5373818707d77bcf4f5a11c59f9d947e5991820fc8c354092cab810"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+        "sha256": "7840af0876114e2bab29f6b9813689ee2e8c0c2e170369ed602f548d10f3e818"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/WebViewMicrophone.java",
+        "sha256": "543798a2dfb95672281cc72a8b48cef93fa653debe2ed6a7077edf944b9aba00"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/BrowserMicrophone.java",
+        "sha256": "9dd04ffbee671aac2bfddd0913381b5a8a6a95e8ec7d9527821d380d1662cb71"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/util/MicrophonePolicy.java",
+        "sha256": "3796dd328ffacb2f45b07e2a41240a2a479066ed8615ed6a27c8205bd5e81803"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java",
+        "sha256": "935ab0eeac035fc676b81d65e5a21a8026b4dcf2fa0d98c472a1dbdfbbba5b27"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/util/BrowserUploadRequestState.java",
+        "sha256": "06e7ed494f573e3e946d13a65efdc77bd5cf8edddee59bca840efb4fc4de0c6c"
+      }
+    ],
+    "frozenFixtureTgz": {
+      "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156.tgz",
+      "sha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+      "members": 9,
+      "allMembersByteMatchedFrozenSource": true
+    }
+  },
+  "validation": {
+    "command": "Read-only Python heredoc: all4collection declarations SHA/size/rows;8refs deduplicated into5logs and only currentStd selected;25event identities/timelines/real byte results;12screenshot SHA/action/visual matches; actual old prompt/selector confirmations; original9tgz members; currentStd signed release/preflight/overlay; prior reports preserved.",
+    "exitCode": 0,
+    "currentEventsReviewed": 25,
+    "historicalEventsExcluded": 58,
+    "screenshotDigestsAndVisualsChecked": 12,
+    "sourceFilesOnlyRead": 10
+  },
+  "oldEvidencePreserved": [
+    {
+      "path": "docs/audits/build156/device-final-low-gecko-fixture-review.json",
+      "sha256": "aba78cf6ab4802e74fceeb7492d706a230077eaf11b7112c43a4051c4618085d",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-final-standard-data-review.json",
+      "sha256": "184382c12b12373ab53f06806c2a4a241702199332c8f9f03956d597b71ffa93",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-final-standard-fixture-review-before-audio-nav.json",
+      "sha256": "d1e5f0c141a1812e756bfd491b578a53bb4bbc6c37924e7ce53fb9701d922fed",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-final-standard-fixture-review.json",
+      "sha256": "108867f71ab1e6b4b6d663cb118f3471dcc92d41cd538383aedd08984161efa7",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-low-exit-review.json",
+      "sha256": "fef1ab967a312e6debd60e86d5660222ed7510ee06f9c512dccaa35ddbfde84d",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-low-lan-background-review.json",
+      "sha256": "4810af4cb3ace9d26edb6452f5869638bfb381aa002b2987b17826d54873d452",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-low-lan-old-credential-review.json",
+      "sha256": "2d691fe833b51c52a394d45b171074830e863960092161d2df49fdac1b8621ab",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-low-plugin-maintenance-post-import-addendum.json",
+      "sha256": "df18413c81fc72d906a3c467aa60863d64e8fbb2406f4fdeb7c6181f7e69e9d2",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-low-plugin-maintenance-review.json",
+      "sha256": "d4d5734a972703298cd75d63e3e7ef2f33ddee45da9b7aa21c5121b0413e3927",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-low-screen-grant-review.json",
+      "sha256": "993223bd2d24072afbbb90bae081eca634c0b22c98f86168e685494b76432f65",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-standard-data-review.json",
+      "sha256": "69f59c546492f5964eeb0a422a5abba2726a421e0774b9b68c12ee12ada6a40d",
+      "unchanged": true
+    },
+    {
+      "path": "docs/audits/build156/device-standard-screen-grant-review.json",
+      "sha256": "a627ea5c49dba75b5e72c4006ba28b7704852c4919991201fc8a69c6e7076b7c",
+      "unchanged": true
+    }
+  ],
+  "hostEvidenceSeparate": {
+    "path": "app/build/audit-build156/device-fixtures/host-verification.json",
+    "sha256": "25aff0ef32b51143a6e2db24dfe5ebbc1f783cd3ad6209aee9dddbd779243a45",
+    "countsAsCurrentDeviceMediaEvidence": false
+  },
+  "limits": [
+    "This is the final c676 Standard Android13 WebView run; old5aeb Standard reports retain their old artifact binding and are not rewritten.",
+    "Seven requested fixture cases are observed; no general microphone, all-origin, all-cancel, WebView-version, Android6/7, Gecko or full device-matrix PASS is claimed.",
+    "Low Gecko files-nav-before-old-result and native wrong-origin attribution gaps remain in the separate Low report; current Standard results do not close them.",
+    "No sound samples are recorded. Fresh files are only the two fixed owned sentinels; provider failures, limits, duplicate URIs and descriptor endurance remain outside this run.",
+    "Independent Low historical commit-marker reading after this overlay is reported separately and is not counted as a new Standard installation transaction."
+  ],
+  "privacy": {
+    "rawPrivateJsonlOrScreenshotPixelsPublished": false,
+    "authOrCredentialValuesOrDeviceSerialPublished": false,
+    "privateRunPageRequestIdsPublished": false
+  }
+}

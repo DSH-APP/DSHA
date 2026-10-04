@@ -1,0 +1,9 @@
+test_batches_group_by_source_set_and_package_without_crossing_limit (__main__.FormatTreeTests.test_batches_group_by_source_set_and_package_without_crossing_limit) ... ok
+test_declared_machine_generated_sources_have_real_owners (__main__.FormatTreeTests.test_declared_machine_generated_sources_have_real_owners) ... ok
+test_inventory_has_exact_six_owned_sets_and_protected_exclusion (__main__.FormatTreeTests.test_inventory_has_exact_six_owned_sets_and_protected_exclusion) ... ok
+test_manifest_rejects_duplicates_and_non_string_entries (__main__.FormatTreeTests.test_manifest_rejects_duplicates_and_non_string_entries) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.477s
+
+OK

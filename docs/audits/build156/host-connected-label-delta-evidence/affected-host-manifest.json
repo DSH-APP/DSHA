@@ -1,0 +1,678 @@
+{
+  "schema": 2,
+  "requestedStage": "all",
+  "selectedStages": [
+    "fast",
+    "linux",
+    "runtime",
+    "windows"
+  ],
+  "status": "PASS_FOR_SELECTED_STAGES",
+  "tests": [
+    {
+      "path": "tools/test-architecture-boundaries.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-architecture-boundaries.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-architecture-boundaries.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.094,
+      "logSha256": "a9d2155ae07e410a24db922f748c04bd020b93e2658b332ce7087f26bc2c36f4"
+    },
+    {
+      "path": "tools/test-asset-deployment.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-asset-deployment.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-asset-deployment.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.609,
+      "logSha256": "7879656470664999999ce943684da4886044d3d8e921da764d09318d763c939b"
+    },
+    {
+      "path": "tools/test-generated-asset-directory.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-generated-asset-directory.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-generated-asset-directory.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.578,
+      "logSha256": "a8f308259c32bda7e90232466a11eb5df5b9bba6dc73bc6261a0eca955552593"
+    },
+    {
+      "path": "tools/test-vscreen-manager-http.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-vscreen-manager-http.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-vscreen-manager-http.py",
+        "--jdk",
+        "F:\\DSHA\\_toolchains\\jdk-17",
+        "--sdk",
+        "F:\\DSHA\\_toolchains\\android-sdk",
+        "--gradle-home",
+        "F:\\DSHA\\_toolchains\\gradle-user-home"
+      ],
+      "exitCode": 0,
+      "seconds": 19.516,
+      "logSha256": "efc68a8610a882a14d432373a3c853fedab75437217ab61d74885e85edbf1db3"
+    },
+    {
+      "path": "tools/test-core-boundaries.py",
+      "status": "PASS",
+      "log": "app\\build\\audit-build156\\host-connected-label-delta\\affected-host\\test-core-boundaries.py.log",
+      "command": [
+        "C:\\Users\\18768\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-core-boundaries.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.422,
+      "logSha256": "bd65e90d0ee55e7636b414b4c6d918d5b41357ab18d20a71596b02ffa9a4eb65"
+    }
+  ],
+  "excluded": [
+    {
+      "path": "tools/overlay-bridge-test.mjs",
+      "stage": "fast",
+      "reason": "Current isolated source fixture; no Android device operations"
+    },
+    {
+      "path": "tools/test-adb-flow-audit.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-adb-flow.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-adb-vscreen-bridge.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-aidl-shim.ps1",
+      "stage": "windows",
+      "reason": "Windows fake SDK/shim source fixture; absolute Git Bash dependency, no real device or APK"
+    },
+    {
+      "path": "tools/test-alpha1-startup.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-alpha2-upgrade.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-android-computer-use.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-app-activity.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-attachment-store.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-backup-engine.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-bridge-logic.ps1",
+      "stage": "windows",
+      "reason": "仅Windows的宿主源级/编译回归，不参与Linux快速层"
+    },
+    {
+      "path": "tools/test-bridge-routes.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-bridge-token-compat.mjs",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-browser-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-browser-stream-resume.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-chat-render-performance.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-ci-package.py",
+      "stage": "fast",
+      "reason": "Current isolated source fixture; no Android device operations"
+    },
+    {
+      "path": "tools/test-client-combo-cache.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-composer-enter.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-conversation-materialized.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-conversation-stop.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-credential-paths.py",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required"
+    },
+    {
+      "path": "tools/test-deepseek-messages-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-device-script-selection.py",
+      "stage": "runtime",
+      "reason": "Pure CLI selection and redaction regression; subprocess calls are blocked, no Android device operations"
+    },
+    {
+      "path": "tools/test-device-shell-policy.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-dns-compat-device.mjs",
+      "stage": "device",
+      "reason": "需要真实设备或ADB；本轮不运行"
+    },
+    {
+      "path": "tools/test-dns-compat.mjs",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-documents-parent.ps1",
+      "stage": "device",
+      "reason": "需要真实设备或ADB；本轮不运行"
+    },
+    {
+      "path": "tools/test-dsh-builtins.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-dsh-sessions.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-dsha-ui-regressions.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-environment-data.py",
+      "stage": "history",
+      "reason": "Historical Python v1 original only; current NativeEnvironmentRebuild/MaintenanceDataSnapshot has separate JVM proof"
+    },
+    {
+      "path": "tools/test-gecko-model-navigation.mjs",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-issue67-startup.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-legacy-preset-convert.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-lexical-claim-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-mobile-auth.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-mobile-delete.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-mobile-gesture-guard.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-mobile-modal-behavior.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-mobile-server-patches.mjs",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required"
+    },
+    {
+      "path": "tools/test-mobile-server-streams.mjs",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required"
+    },
+    {
+      "path": "tools/test-mobile-update.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-native-plugin-manager.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-notification-actions.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-office-fonts.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-pdf-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-plugin-dependencies.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-plugin-discovery.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-plugin-downloads.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-plugin-resolution-order.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-plugin-review.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-plugin-semver.cjs",
+      "stage": "fast",
+      "reason": "Differential semantics against exact lockfile semver7.8.1; argv2 is required, never use an unverified global package"
+    },
+    {
+      "path": "tools/test-plugin-states.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-plugin-transactions.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-profile-settings-cli.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-profile-settings-review.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-proot-runtime-libs.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-queue-steer.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-rc1-browser-behavior.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-rc1-migration.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-rc1-settings-migration.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-recovery-agent.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-recovery-apk-assets.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-recovery-assets.py",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-recovery-browser-overlay.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-recovery-profile-boot.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-release-acceptance.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-release-evidence.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-release-names.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-restore-merge-plugins.py",
+      "stage": "history",
+      "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据"
+    },
+    {
+      "path": "tools/test-restore-merge-wsdir.py",
+      "stage": "history",
+      "reason": "Retired guest restore-merge implementation, temp-only historical fixture; cannot prove current NativeBackup boundary"
+    },
+    {
+      "path": "tools/test-runtime-descriptor-inputs.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-runtime-fixture.mjs",
+      "stage": "support",
+      "reason": "Runtime selection/proof helper, imported by real tests; not an independent test"
+    },
+    {
+      "path": "tools/test-runtime-input-contract.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-runtime-proof.py",
+      "stage": "fast",
+      "reason": "Current isolated source fixture; no Android device operations"
+    },
+    {
+      "path": "tools/test-runtime-publish-linux.mjs",
+      "stage": "linux",
+      "reason": "Real Linux host Node/renameat2/flock/parentfsync; separate WSL/native Linux invocation, does not claim Android/FUSE validation"
+    },
+    {
+      "path": "tools/test-runtime-publish.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-runtime-trial.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-session-interaction.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-source-text.py",
+      "stage": "fast",
+      "reason": "Current byte-exact source LF contract in isolated fixtures; no device or publish"
+    },
+    {
+      "path": "tools/test-startup-checkpoints.py",
+      "stage": "history",
+      "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence"
+    },
+    {
+      "path": "tools/test-startup-diagnostics.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-startup-page-relay.mjs",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required"
+    },
+    {
+      "path": "tools/test-startup-recovery.py",
+      "stage": "history",
+      "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence"
+    },
+    {
+      "path": "tools/test-storage-json-proroot-dirent.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-subagent-touch.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-ui-boundaries154.py",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required"
+    },
+    {
+      "path": "tools/test-ui-colors.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-ui-language.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-update-flow.ps1",
+      "stage": "windows",
+      "reason": "仅Windows的宿主源级/编译回归，不参与Linux快速层"
+    },
+    {
+      "path": "tools/test-verification-require.py",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-vscreen.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-web-compat.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-web-drafts.mjs",
+      "stage": "fast",
+      "reason": "隔离宿主或纯源码/协议回归，无发布密钥、设备和真实用户数据"
+    },
+    {
+      "path": "tools/test-web-ui-host-fixtures.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-workflow-compat-alias.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations"
+    },
+    {
+      "path": "tools/test-format-java-tree.py",
+      "stage": "fast",
+      "reason": "Exact six-source-set formatter inventory and package batch regression; no device or APK"
+    },
+    {
+      "path": "tools/test-low-preview-capability.mjs",
+      "stage": "fast",
+      "reason": "Current Java-embedded WebView capability probe and Low selection source check; no device"
+    },
+    {
+      "path": "tools/test-runtime-stop-recovery.py",
+      "stage": "runtime",
+      "reason": "Compile actual WebProcessManager adapter/stop algorithm and TrialRecovery with explicit kernel outcomes and real private JVM files; Android classes are dependency inputs"
+    },
+    {
+      "path": "tools/test-credential-yaml-projection.mjs",
+      "stage": "runtime",
+      "reason": "Actual current Java credential projection versus locked rc2 LocalCredentialProvider writer/parser on isolated constructed credentials; no real values"
+    },
+    {
+      "path": "tools/test-native-session-handshake.py",
+      "stage": "linux",
+      "reason": "Fresh compilation of the current C launcher and real Linux kernel birth/parent/session/guest handshake through explicit WSL Node inputs; no Android device claim, no WSL repair or downloads"
+    },
+    {
+      "path": "tools/test-web-browser-fixture.py",
+      "stage": "fast",
+      "reason": "Compile the sole shared test HTTP server and execute real TCP page/client/report/download/redirect/truncation/cancellation checks"
+    },
+    {
+      "path": "tools/test-retired-audit-contract.py",
+      "stage": "fast",
+      "reason": "Retired-original byte provenance and current debug/androidTest source/manifest structure only; no device execution"
+    },
+    {
+      "path": "tools/test-bridge-files.py",
+      "stage": "runtime",
+      "reason": "Current bridge/file policy JVM behaviors with explicit descriptor fixture and locked JUnit/Gson; no Android/FUSE process"
+    },
+    {
+      "path": "tools/test-bridge-token-transport.py",
+      "stage": "fast",
+      "reason": "Active managed bridge client/help header-transport source gate only; real behaviors have separate Node/JVM fixtures"
+    },
+    {
+      "path": "tools/test-runtime-session.py",
+      "stage": "fast",
+      "reason": "Real Node/Python receipt consumption and filesystem tampering prove provisional reuse, parent/path scope and mandatory final complete-byte rejection"
+    },
+    {
+      "path": "tools/test-ui-i18n.py",
+      "stage": "fast",
+      "reason": "Lexical UI scanner behavior on synthetic sources and isolated inventories; does not claim full screen internationalization"
+    },
+    {
+      "path": "tools/test-rc2-tooltips.mjs",
+      "stage": "runtime",
+      "reason": "Locked current rc2 React/Tooltip in a real browser with pointer, touch, scrolling and blur events"
+    },
+    {
+      "path": "tools/test-third-party-notices.py",
+      "stage": "fast",
+      "reason": "Current notice generator on isolated npm/JNI trees rejects metadata drift, missing notices and unknown native sources"
+    },
+    {
+      "path": "tools/test-native-session-build.py",
+      "stage": "fast",
+      "reason": "Explicit fake compiler verifies API23 JNI build inputs and command behavior; no production native rebuild"
+    },
+    {
+      "path": "tools/test-runtime-descriptor-source.py",
+      "stage": "fast",
+      "reason": "Current descriptor verifier on isolated filesystem: missing archive, changed CRLF bytes, launcher and identity mismatch"
+    },
+    {
+      "path": "tools/test-host-test-runner.py",
+      "stage": "fast",
+      "reason": "Actual child failures/timeouts, manifest coverage and private environment; explicit setup-error fixture"
+    },
+    {
+      "path": "tools/test-unit-test-runner.py",
+      "stage": "fast",
+      "reason": "Actual javac helper compilation, JDK argument-file quoting and compile-failure cleanup; explicit launcher fixture"
+    },
+    {
+      "path": "tools/test-native-device-policy.py",
+      "stage": "fast",
+      "reason": "Compile current native DeviceShellPolicy and execute protected-command rejection, allowed reads and SMS dry plans; no Android/device"
+    },
+    {
+      "path": "tools/test-java-format.py",
+      "stage": "fast",
+      "reason": "Pinned JDK17 formatter/token/compilation fixture; no device"
+    },
+    {
+      "path": "tools/test-workspace-directory-policy.mjs",
+      "stage": "runtime",
+      "reason": "Actual locked rc2 workspace resolver transformed by the production builder, real WorkspaceRegistry/DomainFacility/JsonStorageBackend filesystem creation and durable reopen; explicit Linux/HOME and Session-list peers. Full current managed module/archive/recipe-byte equality required; no Android device inference."
+    }
+  ],
+  "runtimeFixtureVerification": [],
+  "failures": []
+}

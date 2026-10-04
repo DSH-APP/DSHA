@@ -1,0 +1,12 @@
+test_changed_bytes_with_restored_metadata_invalidate_the_whole_final_proof (__main__.RuntimeSessionTest.test_changed_bytes_with_restored_metadata_invalidate_the_whole_final_proof) ... ok
+test_changed_dependency_and_added_member_are_rejected_by_both_consumers (__main__.RuntimeSessionTest.test_changed_dependency_and_added_member_are_rejected_by_both_consumers) ... ok
+test_empty_consumer_scope_and_changed_current_input_do_not_skip_checks (__main__.RuntimeSessionTest.test_empty_consumer_scope_and_changed_current_input_do_not_skip_checks) ... ok
+test_full_bytes_are_checked_once_reused_by_real_children_and_rechecked_at_end (__main__.RuntimeSessionTest.test_full_bytes_are_checked_once_reused_by_real_children_and_rechecked_at_end) ... ok
+test_marker_rewrite_and_same_bytes_directory_replacement_do_not_reuse_proof (__main__.RuntimeSessionTest.test_marker_rewrite_and_same_bytes_directory_replacement_do_not_reuse_proof) ... ok
+test_standalone_selection_still_hashes_complete_tree_without_a_receipt (__main__.RuntimeSessionTest.test_standalone_selection_still_hashes_complete_tree_without_a_receipt) ... ok
+test_wrong_secret_stale_parent_and_arbitrary_receipt_path_fail_closed (__main__.RuntimeSessionTest.test_wrong_secret_stale_parent_and_arbitrary_receipt_path_fail_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 3.142s
+
+OK

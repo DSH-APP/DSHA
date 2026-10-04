@@ -1,0 +1,817 @@
+{
+  "group": "G5",
+  "items": [
+    {
+      "id": "D-DOC-02",
+      "status": "duplicate",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L300 段标题写“dsh 1.2-alpha 在 Android proot 下的兼容”，L380/L387-388 称注册“rootfs 烘焙的四个内置插件”；实际内置 dsh 为 0.2.0-rc.2（app/build.gradle:22），BuiltinPlugins.DEFAULT_BUILTINS 为 7 个，加 dsh-app-integration 共 8 个签名内置。",
+      "recommendation": "把 L300 改为不带版本号的“dsh 运行补丁（Android proot 兼容）”；L380/L387-388 改为“内置插件（名单以 BuiltinPlugins.DEFAULT_BUILTINS 与 dsha-builtin.txt 为准）”，不再写数量。与 D-DOC-08、D-DOC-14 同一轮改。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "sha256": "af7f6aa549b360cb7cb16b34c5dde3701bda83516c15f5e6b7b060a0d8dcc9f3"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "D-DOC-08",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-01",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "候选",
+      "current": "逐项核对：AppBridge 接口全库无实现/引用；ProotBootstrap.uninstall()、TarGzipExtractor.lastSkipped 无调用方；HttpShellService.confirmEnabled()/awaitConfirm() 为 private 且无调用；AdbBridge.grantSecureSettings 的局部变量 pkg=\"com.dsh.client\" 未使用；allow-root-shell/confirm-shell-* 标记只有 tools/test-adb-flow.py 读取；DangerShellGuard 无引用；EnvironmentMaintenance.cleanupCompleted 方法体为空但 Javadoc 称“回收已提交事务”，HarnessController:396 仍调用；validateRuntime(proot) 单参私有重载无调用（调用方均传 false）；deleteTree 在 main 外仅 debug 审计插桩调用；WorkspaceFragment.doRestore 无调用；WelcomeActivity.pages 未用；OverlayStyleDialog 仅被 debug LayoutAuditInstrumentation 使用，ConfigFragment.showOverlayStyleDialog 实际打开 OverlayFragment；VirtualScreenCore 中 tap/swipe/key 已在前面注入路径返回，argv switch 里这三个 case 不可达，且 swipe 时长下限两处不一致（0 vs 50）；inBundlesSection 只被单测调用；adb-shell.py 的 READONLY_CMDS/is_readonly_cmd/request_confirm 主流程不调用；agent-preset-patch.json 因 dshVersion 闸被跳过，相关 js/css 成死资产；adb-pair.py:113 写死 com.dsh.client。",
+      "recommendation": "按 D-ARCH-07/D-LEGACY-01 决策（无部署方的死代码删除）一次清理：删除 AppBridge、DangerShellGuard、ProotBootstrap.uninstall、lastSkipped、confirmEnabled/awaitConfirm、validateRuntime 单参重载、doRestore、WelcomeActivity.pages、OverlayStyleDialog（同步删 LayoutAuditInstrumentation 中对应用例）、VirtualScreenCore argv 分支中 tap/swipe/key 三个 case、adb-shell.py 的 READONLY_CMDS/is_readonly_cmd/request_confirm（同步改 tools/test-adb-flow.py、selftest.py:311，见 D-TEST-21）、allow-root-shell/confirm-shell-* 标记写入；cleanupCompleted 要么删除调用要么实现真实回收并修 Javadoc；inBundlesSection 若只为测试保留则标注 @VisibleForTesting 或删；adb-pair.py 改为由调用方传 --package（AdbBridge 用 context.getPackageName()），删除未用 pkg 变量；agent-preset 资产随 D-PATCH-01 的退役结论一并删除，test-agent-preset-switch.mjs 删除或接入 verify-stability.py。",
+      "files": [],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-03",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "候选",
+      "current": "脚本扫描 main/java 中“/** */ 后紧跟另一个 /**”的情形共 9 处，例如 HttpShellService.java:401“校验查询串/头中的 token”后紧跟 currentToken() 的 Javadoc，实际修饰的是 currentToken；L742“/app/toast”注释后紧跟屏幕操作注释和一段 // 分隔块。原 token 校验方法的注释已与方法分离。",
+      "recommendation": "逐处把孤立 Javadoc 移回所描述的方法或删除；HttpShellService:401 的说明移到真正的 token 校验方法上，并同步删除 L403-404 对 webserver-auth-patch.sh 的过时描述（见 D-DEAD-09③）。CI 加 javadoc -Xdoclint 或 checkstyle 的 DanglingJavadoc 检查。",
+      "files": [],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-04",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "类注释“隐私边界三层”第 1 层称清单 android:packageNames 限定 com.android.settings、别的应用连事件都收不到；实际 accessibility_service_config.xml 不设 packageNames（L3 注释明确说不限定），事件类型 typeWindowStateChanged|typeWindowContentChanged、canRetrieveWindowContent/canTakeScreenshot 均开启，系统会投递全部应用的事件。xml 注释本身与配置一致。",
+      "recommendation": "重写 DshaAccessibilityService 类注释：说明服务接收所有应用的窗口事件，隐私边界为①onAccessibilityEvent 除配对码窗口外直接返回②读屏/截屏仅在 /app/ui/* 调用时发生③截屏文件落盘位置与清理策略（与 D-PRIV-04 一起修正“不落盘”文案）。同时核对应用内隐私说明与商店说明不再引用“只限设置应用”。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+          "sha256": "cd183120953d7a1965b727c5f024310f42b42f0bd5b713601f6a5835af048a37"
+        },
+        {
+          "path": "app/src/main/res/xml/accessibility_service_config.xml",
+          "sha256": "6da36e88a83e3ecfef3f0b6538e46c2e8edf08bdfbbc50dc7708ca3acb9cfd8a"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-05",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "不恢复原生审阅。准确说明链接解析、实际摘要和事务校验后自动提交启用；保留用户禁用/安全模式意图。",
+      "recommendation": "不恢复原生审阅。准确说明链接解析、实际摘要和事务校验后自动提交启用；保留用户禁用/安全模式意图。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/PluginNavigation.java",
+          "sha256": "6ba1cb83eabe1be30d47bea7bf328d37fd63a7fb879b9e146adcbde975c2e795"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-06",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "update_changelog 点击回调把中英两份更新说明以 UiText.choose(\"DSHA \"+VERSION_NAME+...) 字符串字面量写在单行（该行 1185 字符，含 12 个 \\n）；与 docs/releases 下的发布说明是两份独立文本。",
+      "recommendation": "把更新日志移到资源：res/raw/changelog.md 与 res/raw-en/changelog.md（或 assets/changelog/<locale>.md），UpdateActivity 只读取并展示；发版脚本从 docs/releases/<版本>.md 摘要生成该文件，或优先使用更新清单的 notes 字段，本地文件作兜底。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java",
+          "sha256": "e2b244274182ec117ce2bdcae4c91ea1a8ff0c872e8387f042f7ed2aa9e31aa9"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-07",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "类注释称“骨架版只覆盖最关键的 API key 环境变量形态；完整版按原 SensitiveData 回填”；实际 redact 已有 7 条替换规则：PEM 私钥、Authorization/Cookie 头、查询串 token/api_key 等、KEY=value 形态、URL userinfo、Bearer、sk-/gh*_/github_pat_ 令牌。",
+      "recommendation": "把类注释改为列出当前覆盖的 7 类形态及已知不覆盖项（如任意自定义头、JSON 中非常规键名），并指向 SensitiveDataTest 作为规则清单的权威来源。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java",
+          "sha256": "a100e640a13729c319f063a910edaab5284ec74c3366f2b768410a871fd54f49"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-08",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "BuiltinPlugins 类注释称“rootfs 烘焙的 dsh-device-shell-guide 等四个”；DEFAULT_BUILTINS 列 7 个（device-shell-guide、task-notifier、status-overlay、web-mobile、computer-use-android、auto-review、tool-vscreen），再加 dsh-app-integration 共 8 个签名内置。ProotBootstrap 与 register-builtin-plugins.py 注释有同样过时说法。",
+      "recommendation": "三处注释统一改为不写数量，指向唯一名单来源（BuiltinPlugins.DEFAULT_BUILTINS + SYSTEM 插件 / dsha-builtin.txt）；名单本身的单一来源问题按 D-DUP-16 处理。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java",
+          "sha256": "9aebedcb845df9d5cf1c022876232f3a752763bcce58fe735b7b22ead87d5cd8"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-09",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "两个技能写死“DSHA 1.2.0-rc1.1 / dsh 0.1.2-rc.1”，前置条件只要求启用 ADB 并配对，身份预期为 uid=2000(shell)；实际 adb-shell.py:475-476 request_native_execution 由原生层先选 root/Shizuku，只在明确 ADB 计划时连接 ADB，身份可能是 root 或 Shizuku uid。build.mjs 下载页/归档名/FAQ 及 testedDsh/compatibleDsha 缺省值、install-page.mjs:9“DSHA rc1.3 或更新”仍是旧版本号体系。",
+      "recommendation": "重写两个 SKILL.md：去掉写死版本，前置条件改为“DSHA 设备通道就绪（root/Shizuku/ADB 任一，原生自动选择）”，身份校验改为“用 id 核验实际身份，不假设 uid=2000”，截图示例补清理步骤；build.mjs/install-page.mjs 的版本字段改从 app/build.gradle 或 website/data/catalog.mjs 单一来源读取；README 验证段同步。与 D-DUP-21 合并为单一技能源后由构建复制到 website。",
+      "files": [
+        {
+          "path": "website/scripts/install-page.mjs",
+          "sha256": "76076510fe506f90e0e03550af6d991e2c328f9735dede46252e97938954e2f6"
+        },
+        {
+          "path": "website/src/skills/device-shell/SKILL.md",
+          "sha256": "dbfac86cec7b8c2ed14218402562a1b2dc2395376936929dac1a827a45a7037d"
+        },
+        {
+          "path": "website/src/skills/screen-ocr-operator/SKILL.md",
+          "sha256": "8c6ccd0192dce244db5b361608bccf0c34c4cce45bdff0bde853eba552b28129"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-10",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "README准确描述公开147版本，但没有区分本地153源码；保留公开下载及用户历史主页说明，增加本地源码状态与准确构建指引，不伪造新版已经发布。",
+      "recommendation": "README准确描述公开147版本，但没有区分本地153源码；保留公开下载及用户历史主页说明，增加本地源码状态与准确构建指引，不伪造新版已经发布。",
+      "files": [
+        {
+          "path": "app/src/main/res/values/ui_iteration.xml",
+          "sha256": "55074569f96e12452c4751ea9a60e9deb7fe54cde27aedd99589195aa6f1f75b"
+        },
+        {
+          "path": "website/README.md",
+          "sha256": "7b095780b6fc9b5fcb4d116c10ce59e8dc36290dc8f1bb68f42aad5ce84ee867"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-11",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "NOTICES 写 dsh-mobile-nav v2.1.1、包名 @dsh-external/dsh-mobile-nav、许可位于 app/src/main/assets/mobile-nav/LICENSE（目录不存在）、“上游构建产物未作任何修改”并列 5 个 sha256（client.js 6c6ee969…）。实际内置 builtin-plugins/dsh-web-mobile 3.0.3，tools/apply-mobile-client-patches.mjs 对上游 client.js 做十余处替换与 CSS 注入，现内置 lib/client.js sha256 为 3e5568a4…。L5-7 仍写 DSH 0.1.6-alpha.2 与 libreoffice-kit@0.0.1/-wasm@0.0.1，锁文件为 0.1.2/0.1.1。migrateLegacyMobileAdapt 在 app/src 无匹配。",
+      "recommendation": "重写该节：组件名 dsh-web-mobile 3.0.3、上游 commit a094288883b3、上游 clientSha256（取 package.json dshaUpstream），说明“由 tools/apply-mobile-client-patches.mjs 打本地补丁”，并给出补丁后文件摘要；许可路径改为 builtin-plugins/dsh-web-mobile/LICENSE（确认存在）；DSH 依赖小节按 tools/dsh-runtime/package-lock.json 更新为 0.2.0-rc.2 及 libreoffice-kit 0.1.2/-wasm 0.1.1。最好由脚本从 package.json/锁文件生成 NOTICES 片段。",
+      "files": [
+        {
+          "path": "tools/apply-mobile-client-patches.mjs",
+          "sha256": "2c936d3e80597b97236dae3a4ef7a4b29904dd80fd8c11af3a394a08e054ffb5"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-12",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "附件要求只支持147起升级、恢复外链审阅与当前兼容/开放安装要求冲突；只收敛矛盾陈旧规范，保持历史读取。",
+      "recommendation": "附件要求只支持147起升级、恢复外链审阅与当前兼容/开放安装要求冲突；只收敛矛盾陈旧规范，保持历史读取。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+          "sha256": "bcf7760a53d8ddc7873aff69fa5e253224c9201d0c57e633d5ae83ca001b61e4"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-13",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "候选",
+      "current": "技能以 adb -s <serial> shell 为主要用法（L15-33），L46 的 curl 127.0.0.1:<port>/exec 示例不带 token，照抄必得 [UNAUTHORIZED]；“Termux 通道”描述的 ~/dsh-bin 包装 pm/sm/settings + termux-dialog 确认在现行实现中不存在；Notes 称 ADB shell 为 uid=2000 且段落重复。内置引导插件 index.js:48 明确禁止用裸 adb。README.md:314 指导用户 cp -r agent-skills/device-shell 直接使用。",
+      "recommendation": "与 D-DUP-21 一并处理：保留一个技能源（建议 website/src/skills 中文版修正后作为唯一源，agent-skills 由构建复制或删除），内容改为 /root/dsh-bin/adb-shell 与 /app/* 接口、token 通过 X-Token 头（配合 D-SEC-03）、通道自动选择、以 id 核验身份；删除 Termux 通道段与重复 Notes；README.md:314 改为指向修正后的技能。",
+      "files": [],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-02",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "现行宿主v5不调用backup-prepare/restore-merge。退役未部署脚本可行，已有旧归档读取与NativeBackup恢复能力必须保留。",
+      "recommendation": "现行宿主v5不调用backup-prepare/restore-merge。退役未部署脚本可行，已有旧归档读取与NativeBackup恢复能力必须保留。",
+      "files": [
+        {
+          "path": "app/src/main/assets/backup-prepare.py",
+          "sha256": "8fd9bc95f12d0e26d281349eca94e5a0a96da1aeaf6d9cc5528435070ae8bee2"
+        },
+        {
+          "path": "app/src/main/assets/restore-merge.py",
+          "sha256": "0fe3d18a01fbe133c9c166aba52f38022fbcd60db6ddd3381e3c6961d185c4d7"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+          "sha256": "07c4901a4c48db555b19826b24b2f246d903a8e6cea7ce9c84b7117f19b0b86c"
+        },
+        {
+          "path": "tools/prepare-standard-assets.py",
+          "sha256": "ceeec013da89864b5f371888b81d69d44612991807610c6ed264175f76f9594f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-14",
+      "status": "duplicate",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "docstring L5-6 只列 4 个插件，L56 注释“认出这四个内置插件”，而 L57-66 DEFAULT_BUILTINS 为 8 个；L384 return found 之后 L385 还有 return None，不可达。",
+      "recommendation": "docstring 与 L56 注释去掉数量与名单，指向 DEFAULT_BUILTINS；删除 L385 return None。",
+      "files": [
+        {
+          "path": "app/src/main/assets/register-builtin-plugins.py",
+          "sha256": "f44648db69bd7600233ba198e38f7308c0863aec460b51c512687a454db59ce8"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "D-DOC-08",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-03",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "整目录rglob确实打包死脚本；采用独立部署清单/用途白名单并核对全部APK读取，不能只用正则引用粗略裁掉许可或动态加载资源。",
+      "recommendation": "整目录rglob确实打包死脚本；采用独立部署清单/用途白名单并核对全部APK读取，不能只用正则引用粗略裁掉许可或动态加载资源。",
+      "files": [
+        {
+          "path": "app/src/main/assets/selftest.py",
+          "sha256": "e7bafe7566796e80ec37b74185e199b3c5e002c1187355f8080c23acd8e5dbaa"
+        },
+        {
+          "path": "tools/prepare-standard-assets.py",
+          "sha256": "ceeec013da89864b5f371888b81d69d44612991807610c6ed264175f76f9594f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-04",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L129-130 条件要求 argv 为 pnpm、存在 pnpm-lock.yaml 且 args 中没有 --no-frozen-lockfile；唯一走 package_command 的 pnpm 调用 plugin-dependencies.py:289 总是带 --no-frozen-lockfile，因此条件恒假；L131 过滤 --no-frozen-lockfile 在该条件下也是空操作。",
+      "recommendation": "删除 L129-133 分支，在 package_command 处加注释说明“依赖安装按用户策略不冻结锁文件”；若将来要恢复锁定安装，应在 plugin-dependencies.py 调用侧显式传参而非在网络层改写参数。",
+      "files": [
+        {
+          "path": "app/src/main/assets/plugin-dependencies.py",
+          "sha256": "4c76ff23db11b1cc7752280bf25222b0e871c15ec5685b47003b13f94cd44310"
+        },
+        {
+          "path": "app/src/main/assets/plugin-network.py",
+          "sha256": "cd3bbda46e9a4d62655dbaad95d803c2a9b4447ce1fe37815a47777806419b29"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-05",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L495-497 已检查 node_modules/<name>/package.json 并返回；L503-505 重复同一条件，中间分支不修改 path 或文件系统，故不可达。",
+      "recommendation": "删除 L503-505（保留 return None）。",
+      "files": [
+        {
+          "path": "app/src/main/assets/plugin-manager.py",
+          "sha256": "91cfe0279f384a2428e6addd339fa432cced61460f9cabd887965d441888f997"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-06",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "rootfs-confirm-install.sh 在 app/src 与 tools 中零部署（仅 scripts/ci/android-build.yml:27 用作离线 rootfs 缓存 key 的 hashFiles 输入）；DangerShellGuard 全库无引用，其注释仍描述 dsh-guard.sh 判据。现行 /confirm 只对 DeviceShellPolicy 判为 READ 的命令返回 YES（HttpShellService:563-567），即便旧守卫复活，rm 等包装也会被一律拒绝。",
+      "recommendation": "删除 rootfs-confirm-install.sh、DangerShellGuard.java，并从 android-build.yml 缓存 key 中移除（若该模板按 D-CI-01 重写则一并处理）；安全文档统一描述 DeviceShellPolicy（见 D-DOC-15）。",
+      "files": [
+        {
+          "path": "app/src/main/assets/rootfs-confirm-install.sh",
+          "sha256": "3b4a0c149fe871f812a7b0787edc3e36a709e299aed8dbb94345bea68932a0d0"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/DangerShellGuard.java",
+          "sha256": "ab919ecc550f20ee4ab92de72963363a5961503f96e9b351dbb1ea3ef3ce74a6"
+        },
+        {
+          "path": "scripts/ci/android-build.yml",
+          "sha256": "750a938ccd414d1e6f232b3b228a6863c4090d9313b35697b9c9df3fed556b3d"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-15",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "英文版 L97-103 称 dsh-guard.sh 拦截 rm -rf、块设备、ADB 卸载并交给用户决定；中文版 L105-114 已改为原生 DeviceShellPolicy 解析命令、拦截返回 [POLICY_BLOCKED]/126、/confirm 只对只读查询返回 YES。selftest.check_guard 仍以 /root/dsh-bin/.version 与 dsh-confirm.sh 判定守卫，现行运行时不生成这些文件。",
+      "recommendation": "按中文版重写 security-model.en.md 对应段落；selftest.py 随 D-DEAD-03 删除（若保留则 check_guard 改为调用 3090 的策略自检接口）。增加中英文档同步检查（标题结构一致）。",
+      "files": [
+        {
+          "path": "app/src/main/assets/selftest.py",
+          "sha256": "e7bafe7566796e80ec37b74185e199b3c5e002c1187355f8080c23acd8e5dbaa"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-07",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "脚本复核：4 个 drawable 在 app/src 全部源集与 tools 中无引用（WelcomeActivity 已改用 bg_ui2_dot）；dialog_remind_backup 仅出现在 androidTest ThemeInstrumentation:111 的布局测量列表；fragment_install.xml:128 的 install_crash 按钮（visibility=gone）无任何 R.id 绑定。build.gradle:76 minifyEnabled false，未开 shrinkResources。",
+      "recommendation": "删除 4 个 drawable、dialog_remind_backup.xml（同步从 ThemeInstrumentation 列表移除）、fragment_install.xml 中 install_crash 按钮及其仅被它使用的字符串 ui_m0152（先核实无其他引用）。与 D-DEAD-10 一起由 lint UnusedResources 门禁兜底。",
+      "files": [
+        {
+          "path": "app/build.gradle",
+          "sha256": "4657fc4605db002f8009a9208ddbfa3f9ab8ee024d86a3e136f4f342cb5cab55"
+        },
+        {
+          "path": "app/src/androidTest/java/com/deepseekharness/app/ui/ThemeInstrumentation.java",
+          "sha256": "928434f970bced590264fa61160dd0b204107ac5e7c55205df27b0c479b794e2"
+        },
+        {
+          "path": "app/src/main/res/layout/dialog_remind_backup.xml",
+          "sha256": "2c14d261464cc8423811b04b77b9b61677c3f0f5f1df7c7cbcc52fb0d992e53b"
+        },
+        {
+          "path": "app/src/main/res/layout/fragment_install.xml",
+          "sha256": "30f1e4d00da5b47842ae0c024397d0d55fd4a34c699fc70c7dfd05c4f2966dcd"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-08",
+      "status": "duplicate",
+      "severity": "P3",
+      "evidence": "候选",
+      "current": "脚本复核：refresh_strings.xml 9 条、dns_strings.xml 5 条、alpha1_strings.xml 5 条、picture_in_picture_strings.xml 2 条，共 21 条在全部源集与 tools 中无 R.string/@string/字面键名引用；values-en 有同名副本。",
+      "recommendation": "并入 D-DEAD-10 的资源清理：删除中英两份未用键，剩余在用键按功能重新归档。",
+      "files": [],
+      "tests": [],
+      "duplicate_of": "D-DEAD-10",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-16",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "候选",
+      "current": "历史报告加时间/版本横幅而不改写旧验收事实。",
+      "recommendation": "历史报告加时间/版本横幅而不改写旧验收事实。",
+      "files": [],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-17",
+      "status": "open",
+      "severity": "P1",
+      "evidence": "静态核实",
+      "current": "按当前开放依赖政策修正文档；依赖生命周期与插件自身source钩子分别如实记录，不夸大所有钩子都已执行。",
+      "recommendation": "按当前开放依赖政策修正文档；依赖生命周期与插件自身source钩子分别如实记录，不夸大所有钩子都已执行。",
+      "files": [
+        {
+          "path": "app/src/main/assets/plugin-dependencies.py",
+          "sha256": "4c76ff23db11b1cc7752280bf25222b0e871c15ec5685b47003b13f94cd44310"
+        },
+        {
+          "path": "tools/test-plugin-dependencies.py",
+          "sha256": "63a3c53b1d0eb72ceef4312ecc7f345d3e6ab21d36507b76396883a3214269aa"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-09",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "当前verify-plugin-upgrade-gate已调用test-startup-recovery.py，附件所称测试无入口不准确；生产Python checkpoint/recovery部署与执行职责仍需要退役审核，宿主历史v1读取必须保留。",
+      "recommendation": "当前verify-plugin-upgrade-gate已调用test-startup-recovery.py，附件所称测试无入口不准确；生产Python checkpoint/recovery部署与执行职责仍需要退役审核，宿主历史v1读取必须保留。",
+      "files": [
+        {
+          "path": "app/src/main/assets/startup-checkpoints.py",
+          "sha256": "3c96e772631d9bbfe12375261f16aa1dd7832365fee895e908b7da93ae4a9b1a"
+        },
+        {
+          "path": "app/src/main/assets/startup-recovery.py",
+          "sha256": "6c307f6ec62aecb1ddb31f57e1588baf9dc262d157185bc6f2f233461ba4d20e"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/ManagedRuntimeLayout.java",
+          "sha256": "9409e9140db26478c92a6f54a9833d2e7590fa6430976672bee3d4b62f86b56b"
+        },
+        {
+          "path": "scripts/ci/android-build.yml",
+          "sha256": "750a938ccd414d1e6f232b3b228a6863c4090d9313b35697b9c9df3fed556b3d"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-10",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "本次正则复核（R.string/@string/字面键名，含 values 内交叉引用）：ui_strings.xml 216 条中 128 条无引用、ui_iteration.xml 153 条中 29 条、web_port.xml 1/1、refresh_strings.xml 9/14、dns_strings.xml 5/8、alpha1_strings.xml 5/7、picture_in_picture_strings.xml 2/9；部分未用文案已与现行为矛盾（ui_m0040“默认最新 RC”、ui2_review_hint 与自动启用相反）。styles/dimens/colors 未用项沿用台账结论未逐一复核。代码中存在 getIdentifier 调用（ThemeInstrumentation、LayoutPreviewActivity，均查 layout），不影响字符串判定。build.gradle 未开 shrinkResources，无 lint UnusedResources 门禁。",
+      "recommendation": "在 CI 跑 ./gradlew lint 取 UnusedResources 清单，按清单批量删除中英两份未用资源（包括 D-DEAD-07、D-DEAD-08 列项）；app/build.gradle release 构建开启 shrinkResources（需同时开 minifyEnabled，或先只做 lint 门禁避免引入混淆风险）；lint.xml 将 UnusedResources 设为 error。",
+      "files": [
+        {
+          "path": "app/build.gradle",
+          "sha256": "4657fc4605db002f8009a9208ddbfa3f9ab8ee024d86a3e136f4f342cb5cab55"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-18",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "候选",
+      "current": "android-standard.md 称“当前预览版为 1.2.0-rc1.2（versionCode 111）”并链接 rc1.2 发布说明；community-standard-feedback.md:28 称“Web UI 由 GeckoView 呈现、Android 8+”。现行为 build150/内置 dsh 0.2.0-rc.2，标准版 Android 11+ 系统 WebView。",
+      "recommendation": "android-standard.md 去掉“当前版本”句，改为指向 README/发布页的版本来源；community-standard-feedback.md 加历史横幅或改写 L28 为“标准版使用系统 WebView、Android 11+；Low 版 GeckoView、Android 6+”。与 D-DOC-16 同一批处理。",
+      "files": [],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-19",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "候选",
+      "current": "当前文件63位摘要可静态确认，回填须取可验证原包或官方sidecar；拿不到证据则明确录入错误，禁止补猜缺失字符。",
+      "recommendation": "当前文件63位摘要可静态确认，回填须取可验证原包或官方sidecar；拿不到证据则明确录入错误，禁止补猜缺失字符。",
+      "files": [],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-20",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "候选",
+      "current": "Linux CI配置和宿主Linux夹具可本轮实现；设备矩阵、线上连续5次CI及真机证据不能由本地检查推导。Windows开发保持支持，生成物实际字节必须跨平台一致。",
+      "recommendation": "Linux CI配置和宿主Linux夹具可本轮实现；设备矩阵、线上连续5次CI及真机证据不能由本地检查推导。Windows开发保持支持，生成物实际字节必须跨平台一致。",
+      "files": [],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-21",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "指南要求每轮运行 tools/pure-logic-test.sh、archive-e2e-test.sh、restore-scope-test.sh，及 tools/pack-local.sh——四个文件均不存在；代码地图中的 PluginController、PluginSpec、PublicDirs、ArchiveProbe、PatchToggle 在 app/src 中无对应类；HarnessController 实在 core/ 且 995 行（指南称约 6200 行）；坑 8 称容器以 --kill-on-exit 启动，ContainerRuntime.java:18 注释说明 argv 不带该参数；L299 称推 git tag 触发 CI 构建发布，而 .github/workflows 只有 star-history.yml。",
+      "recommendation": "重写接手指南：测试入口改为 python3 tools/run-unit-tests.py / ./gradlew test / tools/verify-stability.py；代码地图由脚本按目录生成或删去行数；坑 8 改为“proroot 不带 --kill-on-exit，停止需按进程组/已核验 PID（参见 D-RT-13 决策：二次确认后仅对已核验身份的本应用 Web 进程 SIGKILL）”；CI 段在 D-CI-01 落地后按真实 workflow 描述。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+          "sha256": "7c252597e8d55f83b617890de3d936b2f4f27c999cddb753598ca59ffc6c506f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-11",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "prepare-dsh-alpha-runtime.sh 锁 DSH 0.1.2-alpha.2/pnpm 11.7.0，只在 ci-make-offline-bundle.sh:5 注释中被提及、无执行方，docs/upgrade-dsh-0.1.5-alpha.1.md:46 已称其为旧流程存档但脚本头无弃用标注；L217 对整个 tar 列表用 '(^|/)(packages/|apps/)' 正则判坏条目，会误伤依赖包内合法目录。generate-update-fixtures.py 无调用方，默认 --version-code 114、输出 app/build/rc13-update-fixtures、build-tools 36.0.0、java.exe/keytool.exe（Windows 专用），对 build150 生成的“valid”样本实为降级包。",
+      "recommendation": "按第六节“无部署方的死脚本删除”决策删除 prepare-dsh-alpha-runtime.sh 并修正 ci-make-offline-bundle.sh:5 注释；generate-update-fixtures.py 若仍需要，改为从 app/build.gradle 读取 versionCode、跨平台查找 java/keytool、build-tools 版本取自 gradle 配置，否则删除。",
+      "files": [
+        {
+          "path": "scripts/ci-make-offline-bundle.sh",
+          "sha256": "1d906b85fbbdf4599f5305f499bf8b624e5b8cbc413cec87dad56746b1cf3f9f"
+        },
+        {
+          "path": "scripts/generate-update-fixtures.py",
+          "sha256": "b41db6c371e70ddab1d114031a4046cddd701be3debb4032c60b7b35e03b3f68"
+        },
+        {
+          "path": "scripts/prepare-dsh-alpha-runtime.sh",
+          "sha256": "2e1dd857cca254fa8ddea1c594344fa7f937b7a9db0fdcc06d49cc158a86610d"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-22",
+      "status": "open",
+      "severity": "P2",
+      "evidence": "静态核实",
+      "current": "provision-builtin-plugins.sh 由 ci-make-offline-bundle.sh:89-107 在构建离线 rootfs 时执行，向 /root/.dsh 的 home patch 追加 persistent-bash 工具描述：“adb-shell 唯一可用通道，uid=2000，已配对”“Shizuku 桥备用 curl 127.0.0.1:3090/exec”（无 token）。仅在找不到 dsha-device-guide-bash 标记时追加，App 侧 app/src/main 中没有该标记的刷新逻辑。",
+      "recommendation": "删除该 home patch 注入段，设备通道说明统一由内置 dsh-device-shell-guide 插件提供（可随 APK 更新）；若必须保留，文案改为“通道由原生层自动选择，用 id 核验身份；3090 调用需带 X-Token”，并改为带版本号标记（如 dsha-device-guide-bash-v2），由 App 启动时的受管配置迁移替换旧段。注意 ci-make-offline-bundle.sh 本身已过时（D-BUILD-02/D-CI-01），需确认现行离线包是否仍由它生成。",
+      "files": [
+        {
+          "path": "scripts/ci-make-offline-bundle.sh",
+          "sha256": "1d906b85fbbdf4599f5305f499bf8b624e5b8cbc413cec87dad56746b1cf3f9f"
+        },
+        {
+          "path": "scripts/provision-builtin-plugins.sh",
+          "sha256": "f4dae923012b25c4061aa773c814195b78f41bac744f51a5a05fb415914cf50f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-12",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "TarRepro 全仓仅自身引用；L42-46 对 PAX 头（x/K）只读取后丢弃、不解析 path（生产实现有 parsePaxPath），L51 直接 new File(dest,name) 无路径穿越校验，也不复刻 safeSymlinkTarget 的绝对→相对转换。",
+      "recommendation": "删除 TarRepro.java；需要复现时改为写调用 TarGzipExtractor 的 JVM 单测或小型 main（复用生产代码）。",
+      "files": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+          "sha256": "6d69fce5a2e18ade06a099de8cef2f047043219056219ef468e32f230c686dd6"
+        },
+        {
+          "path": "tools/TarRepro.java",
+          "sha256": "a01874d60e6f4879244c0959c88a50503278a15fb58c218d2d394450d4468ce1"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-13",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "全仓（排除 docs/audits）无引用；L25 PREFIX 指向 dsh 包内 node_modules，与 rc.2 覆盖层布局不符；L54-62 只跳过目录，链接条目经 extractfile 当普通文件处理，且不校验 tgz 完整性。",
+      "recommendation": "删除该脚本；原生模块注入以 tools/build-dsh-runtime.py 的锁定覆盖层流程为唯一入口。",
+      "files": [
+        {
+          "path": "tools/inject-arm64-natives.py",
+          "sha256": "8f9af620e97b7c9ec0d068c1fa6f6780807faaca17eab538c45b603cf37cd592"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-23",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "README L34-35 写目标 aarch64-linux-android26、common-page-size=16384，L36 附近给 SHA-256 411e90…；build.ps1:1 默认 MinApi 23、:62 common-page-size=4096；L5 现行哈希 0c6b8775… 与 jniLibs/arm64-v8a/libtermux.so 实测 sha256 一致。重编命令写死 F:/DSHA/_toolchains 路径。",
+      "recommendation": "重写“重编命令”段：以 build.ps1 默认参数为准（API 23、max-page-size=16384、common-page-size=4096），只保留 L5 现行哈希，旧哈希移入“历史”小节；NDK 路径改为 $env:ANDROID_NDK_HOME 示例。",
+      "files": [
+        {
+          "path": "tools/termux-jni/README.md",
+          "sha256": "c29a880a9d7014d58b125bd57e6f7a52a4bae4bda64e76dd22a2819382f521ca"
+        },
+        {
+          "path": "tools/termux-jni/build.ps1",
+          "sha256": "259b5f77bfe0d744894b33bcda122edc2f0929e127fea28666991e3dd9c2e002"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-14",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "L433 field_anchor、L437 class_replacement 只定义不使用；L440 实际用内联字符串替换 tracker 声明，内联版本与 class_replacement 内容不同（不含 Bounded LRU 注释块）。",
+      "recommendation": "删除两个未用变量；若需保留说明，把 L440 的内联替换串提为具名变量并只保留一份。",
+      "files": [
+        {
+          "path": "tools/build-dsh-runtime.py",
+          "sha256": "f15e89ceef0b00c6930146301d0417e34fef5118ffafac9239a7b64d0b6d2341"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-24",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "候选",
+      "current": "修复前文档重复不是新的架构结论；保留历史，注明当前必须看build154复核报告。",
+      "recommendation": "修复前文档重复不是新的架构结论；保留历史，注明当前必须看build154复核报告。",
+      "files": [],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DEAD-15",
+      "status": "open",
+      "severity": "P3",
+      "evidence": "静态核实",
+      "current": "grep 'pnpm-env-fix' 仅命中自身（L18 日志路径）与 docs/proroot-experiment-plan.md；RuntimeTools/ProotBootstrap/managed-runtime-inputs.json 均不部署。功能已由插件依赖安装的 --config.package-import-method=copy 取代。脚本改写全局 /root/.npmrc，L50-56 对 pnpm store tmp 无锁 rm -rf。",
+      "recommendation": "删除该脚本，docs/proroot-experiment-plan.md 标历史；纳入 D-DEAD-03 的资产部署门禁。",
+      "files": [
+        {
+          "path": "app/src/main/assets/plugin-dependencies.py",
+          "sha256": "4c76ff23db11b1cc7752280bf25222b0e871c15ec5685b47003b13f94cd44310"
+        },
+        {
+          "path": "app/src/main/assets/pnpm-env-fix.sh",
+          "sha256": "61003026497d645efdbe66a61a6896cebceae73d1296f5d0c78f0983c4351350"
+        },
+        {
+          "path": "tools/prepare-standard-assets.py",
+          "sha256": "ceeec013da89864b5f371888b81d69d44612991807610c6ed264175f76f9594f"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    },
+    {
+      "id": "D-DOC-25",
+      "status": "open",
+      "severity": "P1",
+      "evidence": "静态核实",
+      "current": "网站静态数据确为公开147。本轮同步本地源码构建数据及本地交付版本，未经本轮明确部署动作不声称dsha.cc上线或GitHub Release已更新。",
+      "recommendation": "网站静态数据确为公开147。本轮同步本地源码构建数据及本地交付版本，未经本轮明确部署动作不声称dsha.cc上线或GitHub Release已更新。",
+      "files": [
+        {
+          "path": "app/build.gradle",
+          "sha256": "4657fc4605db002f8009a9208ddbfa3f9ab8ee024d86a3e136f4f342cb5cab55"
+        },
+        {
+          "path": "website/README.md",
+          "sha256": "7b095780b6fc9b5fcb4d116c10ce59e8dc36290dc8f1bb68f42aad5ce84ee867"
+        },
+        {
+          "path": "website/data/catalog.mjs",
+          "sha256": "da543bbb5b6db4e27055b6d7448ef45a38d73847cea6225949369cee6fa53289"
+        },
+        {
+          "path": "website/deploy/PUBLISHING.md",
+          "sha256": "06c04311c2906e202d9af8adae8410c6ee0f60b9d393a78dad77f89966602f56"
+        },
+        {
+          "path": "website/scripts/site.test.mjs",
+          "sha256": "aa013d28687be975e04558f209bfdb29036665e40f8cade9c7ad62bcd8086cf8"
+        }
+      ],
+      "tests": [],
+      "duplicate_of": "",
+      "sourceBaseline": "150",
+      "reviewBaseline": "153",
+      "implementation": "pending"
+    }
+  ]
+}

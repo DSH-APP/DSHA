@@ -1,0 +1,775 @@
+{
+  "schema": "dsha-device-fixture-review-v1",
+  "reviewedAt": "2026-10-04T06:46:16+08:00",
+  "reviewMode": "read_only_host_review_of_existing_device_evidence",
+  "softwareChanged": false,
+  "deviceCommandsExecutedByReviewer": 0,
+  "scope": {
+    "deviceOperator": "runtime exclusive lease",
+    "artifact": "new official Low build156 retake",
+    "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+    "apkBytes": 473097048,
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+    "minSdk": 23,
+    "targetSdk": 37,
+    "debuggable": false,
+    "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "androidRelease": 13,
+    "engine": "Gecko explicitly selected, saved, then reopened by device operator",
+    "engineSelectionAt": "2026-10-04T06:17:07.637903+08:00",
+    "engineSaveConfirmationAt": "2026-10-04T06:17:22.443461+08:00",
+    "authenticatedWebUiReadyScreenshotAt": "2026-10-04T06:20:44.067247+08:00",
+    "fixture": "dsh-acceptance-156 0.0.156",
+    "fixtureEntry": "/a156",
+    "fixtureTgzSha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+    "topOrigin": "http://127.0.0.1:3080",
+    "overlayAt": "2026-10-04T06:14:39.173661+08:00",
+    "firstSelectedEventAt": "2026-10-04T06:20:44.188+08:00",
+    "lastSelectedEventAt": "2026-10-04T06:36:34.080+08:00",
+    "bindingLimit": "APK preflight, successful overlay, post-install package metadata, and explicit Gecko selection/save/reopen are correlated with the device operator run. Owned JSONL has no APK/engine metadata row, and the exact engine binary version is not independently measured by it."
+  },
+  "cohortSelection": {
+    "collectionDeclaredRuns": 3,
+    "selectedCurrentLowRuns": 1,
+    "excludedHistoricalStandardRuns": 2,
+    "selectedBy": "The one new 25-event owned run beginning 06:20:44.188 after the 06:14:39 new Low overlay and 06:17 Gecko selection/save; private source IDs are omitted.",
+    "wallClockCutoffClarification": "Only 6 of the selected 25 events occur after 06:31:00. The lease-low ...0631 screenshot is timestamped 06:20:44.067. Earlier audio evidence is retained only because it is part of this same post-overlay Low run, not from the historical Standard runs.",
+    "historicalExcluded": [
+      {
+        "sha256": "f4ec976b8c84150bb131eafec3ec1d91316f36d214d638bf8d46d5ad36294ef1",
+        "bytes": 2753,
+        "events": 9,
+        "firstServerTime": "2026-10-04T04:52:08.105+08:00",
+        "lastServerTime": "2026-10-04T04:56:05.619+08:00",
+        "reason": "Historical Standard owned run, excluded from every Low device count and conclusion."
+      },
+      {
+        "sha256": "676127908d2a664681bccfa66b6dd98d6bc9e0753272dbf8af14ec55f8b775a7",
+        "bytes": 7364,
+        "events": 22,
+        "firstServerTime": "2026-10-04T04:04:21.517+08:00",
+        "lastServerTime": "2026-10-04T04:25:02.736+08:00",
+        "reason": "Historical Standard owned run, excluded from every Low device count and conclusion."
+      }
+    ]
+  },
+  "summary": {
+    "ownedRuns": 1,
+    "events": 25,
+    "pages": 4,
+    "requestIds": 6,
+    "successfulTwoFileBatches": 1,
+    "verifiedFileObjects": 2,
+    "freshAudioLiveThenEnded": 1,
+    "audioNavigationScenariosSupported": 1,
+    "videoRejections": 1,
+    "mixedRejections": 1,
+    "differentPortRejectionsObserved": 1,
+    "differentPortNativeAttributionGap": 1,
+    "filesNavigationEvidenceGap": 1,
+    "requestedCasesReviewed": 7,
+    "casesSupported": 5,
+    "casesWithMissingEvidence": 2,
+    "observedFailureMarkers": 0,
+    "overallMicrophoneStatus": "partial_device_coverage",
+    "overallDeviceMatrixStatus": "partial_device_coverage"
+  },
+  "sourceEvidence": {
+    "apkPreflight": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/apk-preflight.json",
+      "sha256": "2b2582536a4e74a2ca46118c108d895fa13549baeb5b1f2c31a32c7ab5b56cdc",
+      "bytes": 905,
+      "time": "2026-10-04T06:14:21.173796+08:00",
+      "signedV1V2V3": true
+    },
+    "overlayAction": {
+      "index0Based": 682,
+      "time": "2026-10-04T06:14:39.173661+08:00",
+      "action": "latest-official-overlay",
+      "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3"
+    },
+    "installationResponse": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-install.txt",
+      "sha256": "c4aa470acafcf8576c15b0f0b5ae7e852d1ec5413372d0e6a9272e788e1306d3",
+      "successful": true
+    },
+    "installedPackageMetadata": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-package-after.txt",
+      "sha256": "2036a4198d3f59e2b75f2d5b145ac9c7ba2264a5d0ae5f80437d2bc46c3a97fc"
+    },
+    "signatureAudit": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-signature.txt",
+      "sha256": "92eb0d6789c16b5cb6b2d2f945ef5cdaf77a1473b4ab9fa22dc1bd55deea7e24"
+    },
+    "ownedJsonl": {
+      "privateEvidenceGroup": "app/build/audit-build156/device-private/latest-retake-20261004/low-collected",
+      "sha256": "257fb028414df671fa1815de9cfc4f1db948f56d1ba4f703b0a7d135c9adab73",
+      "bytes": 8207,
+      "events": 25,
+      "privateIdentifiersOmitted": true
+    },
+    "collectionManifest": {
+      "sha256": "33ccbb4dc8b3af1ddb3706d41222e594abfbe059aec2b4634feaebb7ca5ec371",
+      "bytes": 923,
+      "declaredFiles": 3,
+      "allDeclaredDigestSizeAndRowCountsMatched": true
+    },
+    "operatorActionsPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "6723dde5686faecbbf991d3c1abdc8a9184e777fb54259f4b33573c6bb23a9fc",
+      "bytes": 110908,
+      "records": 783,
+      "firstRecordIndex": 0,
+      "lastRecordIndex": 782,
+      "lastTime": "2026-10-04T06:36:34.304183+08:00",
+      "hashRecipe": "SHA256 of the first 110908 bytes (783 complete records). Later appended rows do not affect this prefix; raw command arguments/text and unrelated row bodies are omitted."
+    },
+    "fixtureTgz": {
+      "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156.tgz",
+      "sha256": "595abc59edaddd48ae5108830fe50a5fe9f3edb0643233a9b330fc5c91a180e9",
+      "bytes": 9687,
+      "members": 9,
+      "allPackagedMembersMatchedFrozenPublicSourceBytes": true
+    },
+    "sourceFiles": [
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/public/fixture.js",
+        "sha256": "6759c1deb9d97088cc4adc4a898d9317e10b0424b43756bc5818e4b8cb94f718"
+      },
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/public/frame.html",
+        "sha256": "2b06b082fb9608d4ef600d324a823978bd12e2c09c2e89f810a0be1b9930ada6"
+      },
+      {
+        "path": "app/build/audit-build156/device-fixtures/dsh-acceptance-156/lib/index.js",
+        "sha256": "02e49f6412d0a169e18dde5458c5adca5dce661ddf7d410243c2230f36dbdd04"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/collect-owned-fixture.py",
+        "sha256": "bd7f9e54d5373818707d77bcf4f5a11c59f9d947e5991820fc8c354092cab810"
+      },
+      {
+        "path": "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+        "sha256": "0fd4c70f7ac3ff9ea850804fa2e85d0e4abc5b2126cb10bb20bb64242f44a40a"
+      },
+      {
+        "path": "app/src/low/java/com/deepseekharness/app/ui/GeckoMicrophoneDelegate.java",
+        "sha256": "6a2b2755e72fadddf5345f284dbcd247b962d54fb1acf3dd7c435d6a5dfdbebb"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/BrowserMicrophone.java",
+        "sha256": "9dd04ffbee671aac2bfddd0913381b5a8a6a95e8ec7d9527821d380d1662cb71"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/util/MicrophonePolicy.java",
+        "sha256": "3796dd328ffacb2f45b07e2a41240a2a479066ed8615ed6a27c8205bd5e81803"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/util/MicrophoneRequestGate.java",
+        "sha256": "3af86b6c491f17bfb7fe1b0263f8365bf1a7e8fc266c603dcda907e85d387468"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/util/BrowserUploadRequestState.java",
+        "sha256": "06e7ed494f573e3e946d13a65efdc77bd5cf8edddee59bca840efb4fc4de0c6c"
+      },
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java",
+        "sha256": "935ab0eeac035fc676b81d65e5a21a8026b4dcf2fa0d98c472a1dbdfbbba5b27"
+      }
+    ],
+    "screenshots": [
+      {
+        "id": "lease-low-gecko-selected-0624",
+        "path": "app/build/audit-build156/device-private/lease-low-gecko-selected-0624.png",
+        "sha256": "a95f9e14be31829081024ad955f08d4c2f7027a6584e6d5e1656d365dec0c0d5",
+        "bytes": 238252,
+        "actionIndex0Based": 694,
+        "operatorTime": "2026-10-04T06:17:07.637903+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-gecko-saved-0625",
+        "path": "app/build/audit-build156/device-private/lease-low-gecko-saved-0625.png",
+        "sha256": "c9428dc82d9790bd22800dbeffce9e3c7510f838267c4474c10bd27996ad599f",
+        "bytes": 301728,
+        "actionIndex0Based": 696,
+        "operatorTime": "2026-10-04T06:17:22.443461+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-gecko-web-ready-0631",
+        "path": "app/build/audit-build156/device-private/lease-low-gecko-web-ready-0631.png",
+        "sha256": "25abd3ebe561ffdc30eee4c98f3d1925df751abee8c5f887961353a2c78c26d1",
+        "bytes": 114067,
+        "actionIndex0Based": 706,
+        "operatorTime": "2026-10-04T06:20:44.067247+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-audio-nav-request-prompt-0637",
+        "path": "app/build/audit-build156/device-private/lease-low-audio-nav-request-prompt-0637.png",
+        "sha256": "935fd7176ec6a6b6fb7eba0dc431e8d61d262abd2dba728e8b92348594b524c1",
+        "bytes": 204790,
+        "actionIndex0Based": 721,
+        "operatorTime": "2026-10-04T06:23:53.845085+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-audio-nav-before-old-grant-0638",
+        "path": "app/build/audit-build156/device-private/lease-low-audio-nav-before-old-grant-0638.png",
+        "sha256": "5d65a5c74eb44d44f24052cbc42ccb3d9e2178149a79db1acf70540a45d2c589",
+        "bytes": 211077,
+        "actionIndex0Based": 722,
+        "operatorTime": "2026-10-04T06:24:20.716953+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-audio-nav-old-result-0639",
+        "path": "app/build/audit-build156/device-private/lease-low-audio-nav-old-result-0639.png",
+        "sha256": "297f7d3631f884eceb28958aaa7c27406d27cfe82e6d659178ada017959b709f",
+        "bytes": 277551,
+        "actionIndex0Based": 724,
+        "operatorTime": "2026-10-04T06:24:41.583761+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-b-new-audio-result-0641",
+        "path": "app/build/audit-build156/device-private/lease-low-b-new-audio-result-0641.png",
+        "sha256": "47c844f35e3163af8e75af2f3d4a49ea980ba3b86f278a7613b02ce1cfd7aeb9",
+        "bytes": 310254,
+        "actionIndex0Based": 729,
+        "operatorTime": "2026-10-04T06:25:22.875402+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-video-denied-0643",
+        "path": "app/build/audit-build156/device-private/lease-low-video-denied-0643.png",
+        "sha256": "aab09444a25eadca9cd4d3a17d8c3bc35206b7b06c109dd69688d0eddb81e06e",
+        "bytes": 312386,
+        "actionIndex0Based": 734,
+        "operatorTime": "2026-10-04T06:26:16.274571+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-mixed-denied-0645",
+        "path": "app/build/audit-build156/device-private/lease-low-mixed-denied-0645.png",
+        "sha256": "4ab66eff909ae9e8e0c7005a0a84be046ed6441b85b7942938d3bf8badd83805",
+        "bytes": 331961,
+        "actionIndex0Based": 739,
+        "operatorTime": "2026-10-04T06:26:51.170672+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-wrong-port-child-0647",
+        "path": "app/build/audit-build156/device-private/lease-low-wrong-port-child-0647.png",
+        "sha256": "9b987a9281b16dc3f0e8fa43c0f1b75cc0080e32e5c722c8e0e6c9997dd10e53",
+        "bytes": 300874,
+        "actionIndex0Based": 744,
+        "operatorTime": "2026-10-04T06:27:31.677953+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-wrong-port-denied-0648",
+        "path": "app/build/audit-build156/device-private/lease-low-wrong-port-denied-0648.png",
+        "sha256": "dd06573c83d26e9144cd5d09326ff393bb2da8655fb4fe0648a27a59d49dd0cd",
+        "bytes": 264959,
+        "actionIndex0Based": 746,
+        "operatorTime": "2026-10-04T06:28:10.228592+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-files-nav-two-selected-0658",
+        "path": "app/build/audit-build156/device-private/lease-low-files-nav-two-selected-0658.png",
+        "sha256": "c2aeb5622cfcae51faac35d70e232a3382696bb3e89bbdf74644355a41047689",
+        "bytes": 110745,
+        "actionIndex0Based": 772,
+        "operatorTime": "2026-10-04T06:33:45.527015+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-files-nav-returned-0659",
+        "path": "app/build/audit-build156/device-private/lease-low-files-nav-returned-0659.png",
+        "sha256": "25b460757acfdc77d50f0f19bbe71589220cafd51d650f91d0196899344900bc",
+        "bytes": 283314,
+        "actionIndex0Based": 774,
+        "operatorTime": "2026-10-04T06:34:08.891809+08:00",
+        "visuallyReviewed": true
+      },
+      {
+        "id": "lease-low-b-two-file-bytes-result-0662",
+        "path": "app/build/audit-build156/device-private/lease-low-b-two-file-bytes-result-0662.png",
+        "sha256": "490ce79536cf5b0f1b32a33ec709322a094f3f3475a8ba92abb115ee87fa7e71",
+        "bytes": 347447,
+        "actionIndex0Based": 781,
+        "operatorTime": "2026-10-04T06:35:28.008500+08:00",
+        "visuallyReviewed": true
+      }
+    ]
+  },
+  "ownedSentinelsInOrder": [
+    {
+      "name": "dsh-acceptance-156-a.txt",
+      "size": 52,
+      "sha256": "6015f0d76906328021f27c59003bda02eb3d78e07ec094173dcc8638554139af",
+      "order": 0,
+      "match": true
+    },
+    {
+      "name": "dsh-acceptance-156-b.txt",
+      "size": 63,
+      "sha256": "fd19dde3939b50dbd8b501855ddbe8262dbb42cfff5ae58ee8227acf0721ced3",
+      "order": 1,
+      "match": true
+    }
+  ],
+  "checks": [
+    {
+      "id": "audio-nav",
+      "result": "pass_observed",
+      "events0Based": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "operatorActions0Based": [
+        720,
+        721,
+        722,
+        723,
+        724,
+        728,
+        729
+      ],
+      "screenshots": [
+        "lease-low-audio-nav-request-prompt-0637",
+        "lease-low-audio-nav-before-old-grant-0638",
+        "lease-low-audio-nav-old-result-0639",
+        "lease-low-b-new-audio-result-0641"
+      ],
+      "pageBReadyAt": "2026-10-04T06:23:53.461+08:00",
+      "pageBVisibleUnderOldAndroidPromptAt": "2026-10-04T06:24:20.716953+08:00",
+      "oldOneTimeGrantActionLoggedAt": "2026-10-04T06:24:39.859605+08:00",
+      "returnedBWithoutResultScreenshotAt": "2026-10-04T06:24:41.583761+08:00",
+      "summary": "A audio request R1 opened the actual Android microphone prompt and scheduled navigation. B loaded at 06:23:53.461 and is visibly beneath the still-pending old prompt at 06:24:20.716. Old one-time grant was tapped at 06:24:39.859; returned B shows no result. R1 has no media-resolved; B has no unsolicited media event before distinct fresh R2. The pending-system-grant navigation case is supported in this Low Gecko run.",
+      "limit": "The precise internal old callback is not instrumented; absence is bounded to the recorded run and screenshots."
+    },
+    {
+      "id": "audio-fresh-b",
+      "result": "pass_observed",
+      "events0Based": [
+        5,
+        6,
+        7
+      ],
+      "screenshots": [
+        "lease-low-b-new-audio-result-0641"
+      ],
+      "requestAt": "2026-10-04T06:25:20.828+08:00",
+      "liveAt": "2026-10-04T06:25:20.870+08:00",
+      "endedAt": "2026-10-04T06:25:20.872+08:00",
+      "summary": "A separate user-triggered B audio request R2 received one live audio track and immediately stopped it to ended. No recording samples or device labels were collected."
+    },
+    {
+      "id": "video",
+      "result": "pass_observed",
+      "events0Based": [
+        8,
+        9
+      ],
+      "screenshots": [
+        "lease-low-video-denied-0643"
+      ],
+      "summary": "B video-only request rejected with NotAllowedError and no media-resolved for that request."
+    },
+    {
+      "id": "mixed",
+      "result": "pass_observed",
+      "events0Based": [
+        10,
+        11
+      ],
+      "screenshots": [
+        "lease-low-mixed-denied-0645"
+      ],
+      "summary": "B audio+video request rejected with NotAllowedError and no media-resolved for that request."
+    },
+    {
+      "id": "wrongport",
+      "result": "device_evidence_missing",
+      "events0Based": [
+        12,
+        13,
+        14
+      ],
+      "screenshots": [
+        "lease-low-wrong-port-child-0647",
+        "lease-low-wrong-port-denied-0648"
+      ],
+      "observedWebApiOutcome": "actual child loaded and audio rejected with NotAllowedError",
+      "topOrigin": "http://127.0.0.1:3080",
+      "childOrigin": "http://127.0.0.1:37057",
+      "probe": {
+        "secureContext": true,
+        "mediaApi": true,
+        "microphonePolicyAllowed": "unavailable"
+      },
+      "summary": "The child did load and the actual audio request was rejected. Gecko provided no permissionsPolicy/featurePolicy allowsFeature evidence, so browser policy rejection cannot be excluded. The rejection is recorded, but native origin-denial attribution is not counted as PASS.",
+      "missingEvidence": "Independent evidence that the child media request reached the native origin gate, or equivalent proof excluding browser-policy denial."
+    },
+    {
+      "id": "files-nav",
+      "result": "device_evidence_missing",
+      "events0Based": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "operatorActions0Based": [
+        759,
+        772,
+        773,
+        774
+      ],
+      "screenshots": [
+        "lease-low-files-nav-two-selected-0658",
+        "lease-low-files-nav-returned-0659"
+      ],
+      "oldPickerConfirmationActionLoggedAt": "2026-10-04T06:34:07.115015+08:00",
+      "oldPageHideAt": "2026-10-04T06:34:07.146+08:00",
+      "pageBReadyAt": "2026-10-04T06:34:07.229+08:00",
+      "returnedBScreenshotAt": "2026-10-04T06:34:08.891809+08:00",
+      "scheduledToPageBReadyMs": 193380,
+      "oldRequestFileCallbackEventsObserved": 0,
+      "summary": "The old picker was confirmed at operator time 06:34:07.115, while A-hide is logged at 06:34:07.146 and B-ready only at 06:34:07.229. No B-under-pending-picker screenshot exists; navigation was delayed about 193 seconds after scheduling, consistent with a paused document timer. Returned B has no result, but this does not exercise an old result returning to an already-loaded B and cannot close that stale file callback requirement.",
+      "missingEvidence": "Actual B-ready and visible B established while the original system picker is still pending, followed by its old result returning without delivery to B.",
+      "timingLimit": "PC/device clocks are not separately calibrated; the small confirmation/B-ready difference is not treated as a measured native callback latency. The required earlier B evidence is absent independently of that arithmetic.",
+      "softwareDefectClaimed": false
+    },
+    {
+      "id": "multi-fresh-b",
+      "result": "pass_observed",
+      "events0Based": [
+        21,
+        22,
+        23
+      ],
+      "operatorActions0Based": [
+        775,
+        780,
+        781
+      ],
+      "screenshots": [
+        "lease-low-b-two-file-bytes-result-0662"
+      ],
+      "summary": "A distinct fresh B request R6 returned both owned sentinel File byte contents, size 52/63 and full SHA-256 in selection order 0/1. This positive chooser result is separate from the missing old-picker navigation scenario."
+    }
+  ],
+  "reviewedEventTimeline": [
+    {
+      "index0Based": 0,
+      "runAlias": "L1",
+      "kind": "page-ready",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T06:20:44.188+08:00",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index0Based": 1,
+      "runAlias": "L1",
+      "kind": "media-request",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T06:23:51.843+08:00",
+      "request": "R1",
+      "test": "audio"
+    },
+    {
+      "index0Based": 2,
+      "runAlias": "L1",
+      "kind": "navigation-scheduled",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T06:23:51.861+08:00",
+      "request": "R1",
+      "test": "audio"
+    },
+    {
+      "index0Based": 3,
+      "runAlias": "L1",
+      "kind": "page-hide",
+      "page": "P1/A",
+      "serverTime": "2026-10-04T06:23:53.380+08:00",
+      "status": "all-owned-streams-stopped"
+    },
+    {
+      "index0Based": 4,
+      "runAlias": "L1",
+      "kind": "page-ready",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:23:53.461+08:00",
+      "from": "P1/A",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index0Based": 5,
+      "runAlias": "L1",
+      "kind": "media-request",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:25:20.828+08:00",
+      "from": "P1/A",
+      "request": "R2",
+      "test": "audio"
+    },
+    {
+      "index0Based": 6,
+      "runAlias": "L1",
+      "kind": "media-resolved",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:25:20.870+08:00",
+      "from": "P1/A",
+      "request": "R2",
+      "test": "audio",
+      "status": "resolved",
+      "tracks": [
+        {
+          "kind": "audio",
+          "readyState": "live"
+        }
+      ]
+    },
+    {
+      "index0Based": 7,
+      "runAlias": "L1",
+      "kind": "media-stopped",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:25:20.872+08:00",
+      "from": "P1/A",
+      "request": "R2",
+      "test": "audio",
+      "tracks": [
+        {
+          "kind": "audio",
+          "readyState": "ended"
+        }
+      ]
+    },
+    {
+      "index0Based": 8,
+      "runAlias": "L1",
+      "kind": "media-request",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:26:14.135+08:00",
+      "from": "P1/A",
+      "request": "R3",
+      "test": "video"
+    },
+    {
+      "index0Based": 9,
+      "runAlias": "L1",
+      "kind": "media-rejected",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:26:14.238+08:00",
+      "from": "P1/A",
+      "request": "R3",
+      "test": "video",
+      "status": "rejected",
+      "errorName": "NotAllowedError"
+    },
+    {
+      "index0Based": 10,
+      "runAlias": "L1",
+      "kind": "media-request",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:26:49.134+08:00",
+      "from": "P1/A",
+      "request": "R4",
+      "test": "mixed"
+    },
+    {
+      "index0Based": 11,
+      "runAlias": "L1",
+      "kind": "media-rejected",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:26:49.162+08:00",
+      "from": "P1/A",
+      "request": "R4",
+      "test": "mixed",
+      "status": "rejected",
+      "errorName": "NotAllowedError"
+    },
+    {
+      "index0Based": 12,
+      "runAlias": "L1",
+      "kind": "frame-created",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:27:29.655+08:00",
+      "from": "P1/A",
+      "status": "waiting-for-actual-child-ready",
+      "frameOrigin": "http://127.0.0.1:37057"
+    },
+    {
+      "index0Based": 13,
+      "runAlias": "L1",
+      "kind": "child-ready",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:27:29.698+08:00",
+      "from": "P1/A",
+      "status": "actual-child-loaded",
+      "probe": {
+        "secureContext": true,
+        "mediaApi": true
+      },
+      "frameOrigin": "http://127.0.0.1:37057"
+    },
+    {
+      "index0Based": 14,
+      "runAlias": "L1",
+      "kind": "child-result",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:28:08.133+08:00",
+      "from": "P1/A",
+      "status": "rejected",
+      "errorName": "NotAllowedError",
+      "probe": {
+        "secureContext": true,
+        "mediaApi": true
+      },
+      "frameOrigin": "http://127.0.0.1:37057"
+    },
+    {
+      "index0Based": 15,
+      "runAlias": "L1",
+      "kind": "page-hide",
+      "page": "P2/B",
+      "serverTime": "2026-10-04T06:28:56.434+08:00",
+      "from": "P1/A",
+      "status": "all-owned-streams-stopped"
+    },
+    {
+      "index0Based": 16,
+      "runAlias": "L1",
+      "kind": "page-ready",
+      "page": "P3/A",
+      "serverTime": "2026-10-04T06:29:46.220+08:00",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index0Based": 17,
+      "runAlias": "L1",
+      "kind": "file-request",
+      "page": "P3/A",
+      "serverTime": "2026-10-04T06:30:53.844+08:00",
+      "request": "R5",
+      "test": "files-nav"
+    },
+    {
+      "index0Based": 18,
+      "runAlias": "L1",
+      "kind": "navigation-scheduled",
+      "page": "P3/A",
+      "serverTime": "2026-10-04T06:30:53.849+08:00",
+      "request": "R5",
+      "test": "files"
+    },
+    {
+      "index0Based": 19,
+      "runAlias": "L1",
+      "kind": "page-hide",
+      "page": "P3/A",
+      "serverTime": "2026-10-04T06:34:07.146+08:00",
+      "status": "all-owned-streams-stopped"
+    },
+    {
+      "index0Based": 20,
+      "runAlias": "L1",
+      "kind": "page-ready",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T06:34:07.229+08:00",
+      "from": "P3/A",
+      "status": "loaded-no-permission-request"
+    },
+    {
+      "index0Based": 21,
+      "runAlias": "L1",
+      "kind": "file-request",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T06:34:41.215+08:00",
+      "from": "P3/A",
+      "request": "R6",
+      "test": "files"
+    },
+    {
+      "index0Based": 22,
+      "runAlias": "L1",
+      "kind": "file-change",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T06:35:26.269+08:00",
+      "from": "P3/A",
+      "request": "R6",
+      "status": "received",
+      "count": 2
+    },
+    {
+      "index0Based": 23,
+      "runAlias": "L1",
+      "kind": "file-result",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T06:35:26.277+08:00",
+      "from": "P3/A",
+      "request": "R6",
+      "status": "verified-owned-two-files",
+      "fileBatch": "ownedSentinelsInOrder"
+    },
+    {
+      "index0Based": 24,
+      "runAlias": "L1",
+      "kind": "page-hide",
+      "page": "P4/B",
+      "serverTime": "2026-10-04T06:36:34.080+08:00",
+      "from": "P3/A",
+      "status": "all-owned-streams-stopped"
+    }
+  ],
+  "validation": {
+    "command": "Read-only Python heredoc: verify all 3 declared owned logs against collection SHA/size/rows; select only current Low run; assert page/request/media/navigation/file byte predicates; correlate overlay/Gecko selection/old grants/new requests with operator records; hash-match and visually review 14 selected screenshots; verify original tgz 9 public members and current source hashes; assert Standard report stays byte-identical.",
+    "exitCode": 0,
+    "jsonlEventsReviewedForLow": 25,
+    "historicalEventsExcluded": 31,
+    "screenshotDigestsMatched": 14,
+    "screenshotImagesVisuallyReviewed": 14,
+    "tgzMembersByteMatched": 9,
+    "sourceFilesOnlyRead": 11
+  },
+  "standardEvidencePreserved": {
+    "path": "docs/audits/build156/device-final-standard-fixture-review.json",
+    "sha256": "108867f71ab1e6b4b6d663cb118f3471dcc92d41cd538383aedd08984161efa7",
+    "unchangedByThisReview": true,
+    "notReboundToNewApk": true
+  },
+  "hostEvidenceSeparate": {
+    "path": "app/build/audit-build156/device-fixtures/host-verification.json",
+    "sha256": "25aff0ef32b51143a6e2db24dfe5ebbc1f783cd3ad6209aee9dddbd779243a45",
+    "scope": "Desktop SDK/route/client/file hashing checks only; no device media permission requests in that host run.",
+    "countsAsLowDeviceMediaEvidence": false
+  },
+  "interpretationLimits": [
+    "This report covers only the new Low APK digest and one observed Android 13 Gecko run. minSdk 23 is not Android 6/7 runtime acceptance.",
+    "Audio live-to-ended and one pending-system-grant A-to-B case are supported; recorded sound quality, all cancel permutations, all origins and the full device matrix are not claimed.",
+    "Different-port Web API rejection is observed, but absence of Gecko policy API leaves native origin attribution missing.",
+    "The files-nav timer did not establish B while the old picker was pending. Fresh B two-file success does not close that old callback evidence gap.",
+    "Old Standard logs present in the collection are explicitly excluded; the prior Standard report retains its original APK binding."
+  ],
+  "privacy": {
+    "publicContent": "Owned fixture names, counts, full byte digests, deidentified page/request labels, timestamps and source references only. Raw private JSONL, screenshot images, device serial, credentials, operator command arguments and input text are not copied into this report.",
+    "recordedAudioBytes": 0,
+    "uploadedFileContentBytes": 0,
+    "realUserFileContentsInOwnedFixtureReport": false
+  }
+}

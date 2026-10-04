@@ -1,0 +1,32 @@
+[
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+    "retainedSource": "tools/history/android-audits/com/deepseekharness/app/core/Rc21AttachmentAudit.java",
+    "sha256": "43f8c205a0151637ab079233f9d9f04c7473315062786f0d71b8b4d9b78b6f47",
+    "reason": "退休不受维护或会修改真实环境/公开日志的debug手工审计；当前交付禁止额外审计APK。历史源码保留，不执行。"
+  },
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+    "retainedSource": "tools/history/android-audits/com/deepseekharness/app/runtime/TabletEnvironmentAudit.java",
+    "sha256": "571ea622953a0e4902226bf700bfe850e946683527ea6d4465898ebc0da56c63",
+    "reason": "退休不受维护或会修改真实环境/公开日志的debug手工审计；当前交付禁止额外审计APK。历史源码保留，不执行。"
+  },
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/ui/RecoveryEntryAudit.java",
+    "retainedSource": "tools/history/android-audits/com/deepseekharness/app/ui/RecoveryEntryAudit.java",
+    "sha256": "4738882d38ea085d1c02a73fd49cd81c3e6bae66e9fb791479e32887137de0a2",
+    "reason": "退休不受维护或会修改真实环境/公开日志的debug手工审计；当前交付禁止额外审计APK。历史源码保留，不执行。"
+  },
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/ui/InstallSettingsAudit.java",
+    "retainedSource": "tools/history/android-audits/com/deepseekharness/app/ui/InstallSettingsAudit.java",
+    "sha256": "412daab1d95aa00f324bc2e91b0fbafaae96dadcecd4f6d180c6a1d1c9fac362",
+    "reason": "退休不受维护或会修改真实环境/公开日志的debug手工审计；当前交付禁止额外审计APK。历史源码保留，不执行。"
+  },
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/ui/UiPolishAudit.java",
+    "retainedSource": "tools/history/android-audits/com/deepseekharness/app/ui/UiPolishAudit.java",
+    "sha256": "6c0471fbb0a43e2e857e08b6acf103207eaee9cad765f45186a52e5797054a65",
+    "reason": "退休不受维护或会修改真实环境/公开日志的debug手工审计；当前交付禁止额外审计APK。历史源码保留，不执行。"
+  }
+]

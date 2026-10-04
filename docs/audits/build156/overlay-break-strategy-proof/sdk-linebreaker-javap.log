@@ -1,0 +1,167 @@
+Classfile jar:file:///F:/DSHA/_toolchains/android-sdk/platforms/android-37.0/android.jar!/android/graphics/text/LineBreaker.class
+  Last modified Jan 1, 2008; size 1602 bytes
+  SHA-256 checksum f9d1045eca167fb80cd9d0255a04fb0c263e174c2304297cff721c35d58c2e3c
+  Compiled from "LineBreaker.java"
+public class android.graphics.text.LineBreaker
+  minor version: 0
+  major version: 52
+  flags: (0x0021) ACC_PUBLIC, ACC_SUPER
+  this_class: #14                         // android/graphics/text/LineBreaker
+  super_class: #2                         // java/lang/Object
+  interfaces: 0, fields: 9, methods: 2, attributes: 2
+Constant pool:
+   #1 = Methodref          #2.#3          // java/lang/Object."<init>":()V
+   #2 = Class              #4             // java/lang/Object
+   #3 = NameAndType        #5:#6          // "<init>":()V
+   #4 = Utf8               java/lang/Object
+   #5 = Utf8               <init>
+   #6 = Utf8               ()V
+   #7 = Class              #8             // java/lang/RuntimeException
+   #8 = Utf8               java/lang/RuntimeException
+   #9 = String             #10            // Stub!
+  #10 = Utf8               Stub!
+  #11 = Methodref          #7.#12         // java/lang/RuntimeException."<init>":(Ljava/lang/String;)V
+  #12 = NameAndType        #5:#13         // "<init>":(Ljava/lang/String;)V
+  #13 = Utf8               (Ljava/lang/String;)V
+  #14 = Class              #15            // android/graphics/text/LineBreaker
+  #15 = Utf8               android/graphics/text/LineBreaker
+  #16 = Utf8               BREAK_STRATEGY_BALANCED
+  #17 = Utf8               I
+  #18 = Utf8               ConstantValue
+  #19 = Integer            2
+  #20 = Utf8               BREAK_STRATEGY_HIGH_QUALITY
+  #21 = Integer            1
+  #22 = Utf8               BREAK_STRATEGY_SIMPLE
+  #23 = Integer            0
+  #24 = Utf8               HYPHENATION_FREQUENCY_FULL
+  #25 = Utf8               HYPHENATION_FREQUENCY_NONE
+  #26 = Utf8               HYPHENATION_FREQUENCY_NORMAL
+  #27 = Utf8               JUSTIFICATION_MODE_INTER_CHARACTER
+  #28 = Utf8               JUSTIFICATION_MODE_INTER_WORD
+  #29 = Utf8               JUSTIFICATION_MODE_NONE
+  #30 = Utf8               Code
+  #31 = Utf8               LineNumberTable
+  #32 = Utf8               LocalVariableTable
+  #33 = Utf8               this
+  #34 = Utf8               Landroid/graphics/text/LineBreaker;
+  #35 = Utf8               computeLineBreaks
+  #36 = Utf8               (Landroid/graphics/text/MeasuredText;Landroid/graphics/text/LineBreaker$ParagraphConstraints;I)Landroid/graphics/text/LineBreaker$Result;
+  #37 = Utf8               measuredPara
+  #38 = Utf8               Landroid/graphics/text/MeasuredText;
+  #39 = Utf8               constraints
+  #40 = Utf8               Landroid/graphics/text/LineBreaker$ParagraphConstraints;
+  #41 = Utf8               lineNumber
+  #42 = Utf8               RuntimeInvisibleAnnotations
+  #43 = Utf8               Landroid/annotation/NonNull;
+  #44 = Utf8               RuntimeInvisibleParameterAnnotations
+  #45 = Utf8               SourceFile
+  #46 = Utf8               LineBreaker.java
+  #47 = Utf8               InnerClasses
+  #48 = Class              #49            // android/graphics/text/LineBreaker$Result
+  #49 = Utf8               android/graphics/text/LineBreaker$Result
+  #50 = Utf8               Result
+  #51 = Class              #52            // android/graphics/text/LineBreaker$ParagraphConstraints
+  #52 = Utf8               android/graphics/text/LineBreaker$ParagraphConstraints
+  #53 = Utf8               ParagraphConstraints
+  #54 = Class              #55            // android/graphics/text/LineBreaker$Builder
+  #55 = Utf8               android/graphics/text/LineBreaker$Builder
+  #56 = Utf8               Builder
+{
+  public static final int BREAK_STRATEGY_BALANCED;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 2
+
+  public static final int BREAK_STRATEGY_HIGH_QUALITY;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 1
+
+  public static final int BREAK_STRATEGY_SIMPLE;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 0
+
+  public static final int HYPHENATION_FREQUENCY_FULL;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 2
+
+  public static final int HYPHENATION_FREQUENCY_NONE;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 0
+
+  public static final int HYPHENATION_FREQUENCY_NORMAL;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 1
+
+  public static final int JUSTIFICATION_MODE_INTER_CHARACTER;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 2
+
+  public static final int JUSTIFICATION_MODE_INTER_WORD;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 1
+
+  public static final int JUSTIFICATION_MODE_NONE;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 0
+
+  android.graphics.text.LineBreaker();
+    descriptor: ()V
+    flags: (0x0000)
+    Code:
+      stack=3, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: new           #7                  // class java/lang/RuntimeException
+         7: dup
+         8: ldc           #9                  // String Stub!
+        10: invokespecial #11                 // Method java/lang/RuntimeException."<init>":(Ljava/lang/String;)V
+        13: athrow
+      LineNumberTable:
+        line 19: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      14     0  this   Landroid/graphics/text/LineBreaker;
+
+  public android.graphics.text.LineBreaker$Result computeLineBreaks(android.graphics.text.MeasuredText, android.graphics.text.LineBreaker$ParagraphConstraints, int);
+    descriptor: (Landroid/graphics/text/MeasuredText;Landroid/graphics/text/LineBreaker$ParagraphConstraints;I)Landroid/graphics/text/LineBreaker$Result;
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=3, locals=4, args_size=4
+         0: new           #7                  // class java/lang/RuntimeException
+         3: dup
+         4: ldc           #9                  // String Stub!
+         6: invokespecial #11                 // Method java/lang/RuntimeException."<init>":(Ljava/lang/String;)V
+         9: athrow
+      LineNumberTable:
+        line 21: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      10     0  this   Landroid/graphics/text/LineBreaker;
+            0      10     1 measuredPara   Landroid/graphics/text/MeasuredText;
+            0      10     2 constraints   Landroid/graphics/text/LineBreaker$ParagraphConstraints;
+            0      10     3 lineNumber   I
+    RuntimeInvisibleAnnotations:
+      0: #43()
+        android.annotation.NonNull
+    RuntimeInvisibleParameterAnnotations:
+      parameter 0:
+        0: #43()
+          android.annotation.NonNull
+      parameter 1:
+        0: #43()
+          android.annotation.NonNull
+      parameter 2:
+}
+SourceFile: "LineBreaker.java"
+InnerClasses:
+  public static #50= #48 of #14;          // Result=class android/graphics/text/LineBreaker$Result of class android/graphics/text/LineBreaker
+  public static #53= #51 of #14;          // ParagraphConstraints=class android/graphics/text/LineBreaker$ParagraphConstraints of class android/graphics/text/LineBreaker
+  public static final #56= #54 of #14;    // Builder=class android/graphics/text/LineBreaker$Builder of class android/graphics/text/LineBreaker

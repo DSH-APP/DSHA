@@ -1,5 +1,8 @@
 # proroot 容器运行时抽象层 —— 实施计划
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 状态：计划阶段（抽象层骨架已落地，尚未接通 proroot）
 制定日期：2026-08-24
 

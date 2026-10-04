@@ -1,0 +1,1031 @@
+{
+  "schema": 1,
+  "sealedSourceDelta": [
+    {
+      "path": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+      "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+      "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a"
+    }
+  ],
+  "entries": [
+    {
+      "entry": "tools/overlay-bridge-test.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-adb-flow-audit.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-adb-flow.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-adb-vscreen-bridge.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-aidl-shim.ps1",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-android-computer-use.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-app-activity.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-architecture-boundaries.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "production_source_byte_reader_changed",
+      "changedSourceInputs": [
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+      ],
+      "reason": "Direct full production Java read: reviewed controller-construction/ownership inventory.",
+      "rerunInThisSupplement": true
+    },
+    {
+      "entry": "tools/test-asset-deployment.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "production_source_byte_reader_changed",
+      "changedSourceInputs": [
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+      ],
+      "reason": "Direct current-project production Java read through asset_deployment.verify_reader_contracts literal-reader inventory.",
+      "rerunInThisSupplement": true
+    },
+    {
+      "entry": "tools/test-attachment-store.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-backup-engine.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-bridge-logic.ps1",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-bridge-routes.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-bridge-token-compat.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-browser-compat.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-browser-stream-resume.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-chat-render-performance.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-ci-package.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-client-combo-cache.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-composer-enter.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-conversation-materialized.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-conversation-stop.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-credential-paths.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-deepseek-messages-compat.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-device-script-selection.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-device-shell-policy.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-dns-compat.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-dsh-builtins.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-dsh-sessions.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-dsha-ui-regressions.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-generated-asset-directory.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "production_source_byte_reader_changed",
+      "changedSourceInputs": [
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+      ],
+      "reason": "Transitive full production Java read: prepare-standard-assets subprocess invokes asset_deployment.verify_reader_contracts with actual ROOT while using owned asset fixture output.",
+      "rerunInThisSupplement": true
+    },
+    {
+      "entry": "tools/test-issue67-startup.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-legacy-preset-convert.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-lexical-claim-compat.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-mobile-auth.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-mobile-delete.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-mobile-gesture-guard.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-mobile-modal-behavior.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-mobile-server-patches.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-mobile-server-streams.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-mobile-update.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-native-plugin-manager.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-notification-actions.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-office-fonts.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-pdf-compat.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-plugin-dependencies.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-plugin-discovery.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-plugin-downloads.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-plugin-resolution-order.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-plugin-review.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-plugin-semver.cjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-plugin-states.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-plugin-transactions.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-profile-settings-cli.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-profile-settings-review.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-proot-runtime-libs.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-queue-steer.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-rc1-browser-behavior.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-rc1-migration.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-rc1-settings-migration.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-recovery-agent.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-recovery-apk-assets.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-recovery-assets.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-recovery-browser-overlay.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-recovery-profile-boot.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-release-acceptance.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-release-evidence.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-release-names.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-runtime-descriptor-inputs.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-runtime-input-contract.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-runtime-proof.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-runtime-publish-linux.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-runtime-publish.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-runtime-trial.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-session-interaction.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-source-text.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-startup-diagnostics.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-startup-page-relay.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-storage-json-proroot-dirent.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-subagent-touch.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-ui-boundaries154.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-ui-colors.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-ui-language.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-update-flow.ps1",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-verification-require.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-vscreen.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-web-compat.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-web-drafts.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-web-ui-host-fixtures.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-workflow-compat-alias.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-vscreen-manager-http.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "production_source_byte_reader_changed",
+      "changedSourceInputs": [
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+      ],
+      "reason": "Actual current full main/standard source compilation includes DeviceGrantsFragment; selected owned-state JUnit25 and real loopback HTTP6 execute separate VScreen behaviors.",
+      "rerunInThisSupplement": true
+    },
+    {
+      "entry": "tools/test-format-java-tree.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-low-preview-capability.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-runtime-stop-recovery.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-credential-yaml-projection.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-native-session-handshake.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-web-browser-fixture.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-retired-audit-contract.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-bridge-files.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-bridge-token-transport.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-runtime-session.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-core-boundaries.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "production_source_byte_reader_changed",
+      "changedSourceInputs": [
+        "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+      ],
+      "reason": "Direct full main/UI Java read: runtime/UI boundaries, mutable state and constructor-owner guards.",
+      "rerunInThisSupplement": true
+    },
+    {
+      "entry": "tools/test-ui-i18n.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-rc2-tooltips.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-third-party-notices.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-native-session-build.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-runtime-descriptor-source.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-host-test-runner.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-unit-test-runner.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-native-device-policy.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-java-format.py",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    },
+    {
+      "entry": "tools/test-workspace-directory-policy.mjs",
+      "originalExecution": "PASS",
+      "originalReceipt": "app/build/audit-build156/host-workspace-final/manifest.json",
+      "classification": "no_changed_direct_or_transitive_production_source_content_identified",
+      "changedSourceInputs": [],
+      "reason": "Its reviewed selected source/artifact/canonical-runtime/catalog inputs did not change in the sealed1507-source delta. Filename-only inventories and isolated synthetic source fixtures do not consume the changed Java body. Existing Android compiled classes used as declaration-only dependencies are not claimed byte-identical.",
+      "rerunInThisSupplement": false
+    }
+  ],
+  "scope": "Source-content impact review of original112 entries with identified full-tree direct/transitive readers; no claim of dynamic complete I/O tracing or unchanged cached classpath binary byte inventory."
+}

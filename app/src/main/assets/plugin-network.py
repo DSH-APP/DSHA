@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""插件市场的网络策略；仅改变只读下载，不执行安装钩子或重放正式提交。"""
+"""插件市场的网络策略；仅负责只读下载与有限换源，不重放正式提交。"""
 import concurrent.futures
 import os
 import re
@@ -114,6 +114,15 @@ class Network:
     def package_command(self, argv, cwd, *, frozen=False, offline=False):
         registries = [] if offline else self.registries()
         choices = registries or [None]
+        # Only a read-only npm publication download can retry. Dependency install
+        # may already have run pnpmfile/lifecycle hooks or mutated a lock/candidate,
+        # even when its final diagnostic looks like an ordinary network error.
+        separator = argv.index('--') if '--' in argv else len(argv)
+        safe_pack = len(argv) > 1 and argv[:2] == ['npm', 'pack'] \
+            and '--ignore-scripts' in argv[:separator] \
+            and not any(arg in ('--ignore-scripts=false', '--config.ignore-scripts=false') for arg in argv[:separator])
+        if not safe_pack:
+            choices = choices[:1]
         prefix = '--config.' if argv[0] == 'pnpm' else '--'
         tuning = [prefix + 'fetch-retries=1', prefix + 'fetch-retry-mintimeout=1000',
                   prefix + 'fetch-retry-maxtimeout=3000', prefix + 'fetch-timeout=60000']
@@ -126,23 +135,20 @@ class Network:
             # npm pack 的 -- 之后是包名；网络参数必须放在分隔符之前。
             at = args.index('--') if '--' in args else len(args)
             args[at:at] = options
-            if index and argv[0] == 'pnpm' and os.path.isfile(os.path.join(cwd, 'pnpm-lock.yaml')):
-                args = [arg for arg in args if arg != '--no-frozen-lockfile']
-                if '--frozen-lockfile' not in args:
-                    args.append('--frozen-lockfile')
+            # Source fallback keeps the caller's explicit lock policy unchanged.
             if registry:
                 label = 'npm 官方源' if registry == OFFICIAL else 'npmmirror 镜像'
                 self.g['progress']('network', '正在下载插件及依赖：' + label)
             try:
                 result = self.g['run_package_command'](args, cwd=cwd)
-            except TimeoutError:
-                # runner 已终止并回收本次临时包管理进程；整项超时也可有限换源。
+            except TimeoutError as error:
+                # Missing/unknown exit proof is never inferred from exception type.
                 self.g['check_cancel']()
-                if index + 1 == len(choices):
+                if not safe_pack or not getattr(error, 'confirmed_exit', False) or index + 1 == len(choices):
                     raise
                 self.g['progress']('network', '当前 npm 源不可用，正在切换备用源…')
                 continue
-            if result.returncode == 0 or index + 1 == len(choices):
+            if result.returncode == 0 or index + 1 == len(choices) or not getattr(result, 'confirmed_exit', False):
                 return result
             text = (result.stderr or '') + '\n' + (result.stdout or '')
             # 只重试临时目录的读取失败。完整性、锁冲突、权限及脚本错误不换源。

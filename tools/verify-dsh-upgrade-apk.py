@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """从实际 APK 验证新版 dsh、发布补丁、内置插件及减重资产摘要。"""
+from verification_require import require
 import argparse
 import hashlib
 import json
@@ -13,18 +14,35 @@ from test_runtime_fixture import runtime as verified_runtime
 PREFIX = 'usr/local/lib/node_modules/@deepseek-ai/dsh'
 
 
+def verify_builtin_plugins(apk, expected):
+    registry = json.loads(apk.read('assets/builtin-plugins.json'))
+    require(registry == expected and registry.get('schema') == 1, 'APK 内置插件名单与签名源不符')
+    plugins = {}
+    for row in registry['plugins']:
+        name = row['name']
+        require(name not in plugins, 'APK 内置插件名单重复')
+        tree = 'app-integration' if name == 'dsh-app-integration' else 'builtin-plugins/' + name
+        package = json.loads(apk.read('assets/' + tree + '/package.json'))
+        require(package.get('name') == name and isinstance(package.get('version'), str)
+                and package['version'], 'APK 内置插件包名或版本错误：' + name)
+        require(apk.getinfo('assets/' + tree + '/' + row['entrypoint']).file_size > 0,
+                'APK 内置插件缺少声明入口：' + name)
+        plugins[name] = package['version']
+    return plugins
+
+
 def verify(path):
     root = Path(__file__).resolve().parent.parent
     dsh_version = json.loads((root / 'tools/dsh-runtime/package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
     expected_runtime_sha256 = hashlib.sha256((root / 'app/src/main/assets/dsh-runtime.bin').read_bytes()).hexdigest()
     with zipfile.ZipFile(path) as apk:
         version = apk.read('assets/offline-rootfs.version').decode().strip()
-        assert version == '10', '环境版本错误'
+        require((version == '10'), '环境版本错误')
         digest = hashlib.sha256()
         with apk.open('assets/offline-rootfs.bin') as stream:
             for chunk in iter(lambda: stream.read(1048576), b''):
                 digest.update(chunk)
-        assert digest.hexdigest() == apk.read('assets/offline-rootfs.sha256').decode().strip()
+        require((digest.hexdigest() == apk.read('assets/offline-rootfs.sha256').decode().strip()), 'VERIFICATION_FAILED')
         wanted = {
             PREFIX + '/package.json': ('"version": "' + dsh_version + '"').encode(),
             PREFIX + '/node_modules/@deepseek-ai/dsh-fs-local/lib/index.js': b'DSHA_ATOMIC_PUBLISH_V1',
@@ -58,7 +76,7 @@ def verify(path):
         frontend = runtime / '@deepseek-ai/dsh-web-frontend/dist'
         entry_match = re.search(r'src="\./(assets/index-[^"?]+\.js)',
                                 (frontend / 'index.html').read_text(encoding='utf-8'))
-        assert entry_match is not None, '锁定网页入口无法识别'
+        require((entry_match is not None), '锁定网页入口无法识别')
         frontend_entry = entry_match.group(1)
         for name, entry in [('dsh-client-ui-sidebar-documentpreview', 'lib/client.js'),
                             ('dsh-client-ui-deliverables', 'lib/client.js'),
@@ -78,18 +96,18 @@ def verify(path):
         assets = ['offline-rootfs.bin']
         runtime_sha256 = None
         if 'assets/offline-rootfs.layout' in apk.namelist():
-            assert apk.read('assets/offline-rootfs.layout').strip() == b'split-runtime-v1'
+            require((apk.read('assets/offline-rootfs.layout').strip() == b'split-runtime-v1'), 'VERIFICATION_FAILED')
             assets.append('dsh-runtime.bin')
             runtime_sha256 = hashlib.sha256(apk.read('assets/dsh-runtime.bin')).hexdigest()
-            assert runtime_sha256 == apk.read('assets/dsh-runtime.sha256').decode().strip()
-            assert runtime_sha256 == expected_runtime_sha256, 'APK 没有打入当前生成的 dsh-runtime.bin'
+            require((runtime_sha256 == apk.read('assets/dsh-runtime.sha256').decode().strip()), 'VERIFICATION_FAILED')
+            require((runtime_sha256 == expected_runtime_sha256), 'APK 没有打入当前生成的 dsh-runtime.bin')
         seen = set()
         for asset in assets:
             with apk.open('assets/' + asset) as stream, tarfile.open(fileobj=stream, mode='r|gz') as archive:
                 for item in archive:
                     name = item.name.removeprefix('./').rstrip('/')
                     if not item.isdir():
-                        assert name not in seen, '两个归档含重复运行时文件：' + name
+                        require((name not in seen), '两个归档含重复运行时文件：' + name)
                         seen.add(name)
                     if item.isfile():
                         expanded += item.size
@@ -97,55 +115,53 @@ def verify(path):
                         expected = wanted.pop(name)
                         content = archive.extractfile(item).read()
                         for marker in expected if isinstance(expected, tuple) else (expected,):
-                            assert marker in content, name + ': ' + marker.decode(errors='replace')
+                            require((marker in content), name + ': ' + marker.decode(errors='replace'))
                     if name in untouched:
-                        assert hashlib.sha256(archive.extractfile(item).read()).hexdigest() == untouched.pop(name), name
+                        require((hashlib.sha256(archive.extractfile(item).read()).hexdigest() == untouched.pop(name)), name)
                     if name in legacy_workflow_aliases:
-                        assert item.issym(), '旧工作流包名必须是只读兼容链接：' + name
-                        assert item.linkname == legacy_workflow_aliases.pop(name), name
+                        require((item.issym()), '旧工作流包名必须是只读兼容链接：' + name)
+                        require((item.linkname == legacy_workflow_aliases.pop(name)), name)
                     if name.startswith('usr/local/lib/node_modules/') and not name.startswith((PREFIX+'/', 'usr/local/lib/node_modules/npm/')):
-                        assert item.issym() or item.isdir(), '新版运行时之外有重复全局依赖：' + name
+                        require((item.issym() or item.isdir()), '新版运行时之外有重复全局依赖：' + name)
                         aliases += int(item.issym())
-                    assert not name.startswith(('root/dsha-device-shell-guide/', 'root/dsha-task-notifier/',
-                                                'root/dsha-status-overlay/', 'root/dsha-web-mobile/')), '混入旧版内置插件'
-        assert not wanted, str(wanted)
-        assert not untouched, '新版功能模块缺失：' + str(untouched)
-        assert not legacy_workflow_aliases, '缺少旧工作流包名兼容链接：' + str(legacy_workflow_aliases)
-        assert aliases > 100, '缺少共享依赖别名'
-        assert expanded == int(apk.read('assets/offline-rootfs.bytes'))
+                    require((not name.startswith(('root/dsha-device-shell-guide/', 'root/dsha-task-notifier/',
+                                                'root/dsha-status-overlay/', 'root/dsha-web-mobile/'))), '混入旧版内置插件')
+        require((not wanted), str(wanted))
+        require((not untouched), '新版功能模块缺失：' + str(untouched))
+        require((not legacy_workflow_aliases), '缺少旧工作流包名兼容链接：' + str(legacy_workflow_aliases))
+        require((aliases > 100), '缺少共享依赖别名')
+        require((expanded == int(apk.read('assets/offline-rootfs.bytes'))), 'VERIFICATION_FAILED')
         tools_lock = json.loads((Path(__file__).resolve().parent / 'ubuntu-tools/packages.lock.json').read_text())
         packages = {Path(row['Filename']).name: row['SHA256'] for row in tools_lock['packages']}
         with apk.open('assets/ubuntu-tools.bin') as stream, tarfile.open(fileobj=stream, mode='r|gz') as tools:
             for member in tools:
                 if member.name.endswith('.deb'):
-                    assert member.isfile() and member.name in packages, '离线工具归档存在未知软件包'
-                    assert hashlib.sha256(tools.extractfile(member).read()).hexdigest() == packages.pop(member.name)
-        assert not packages, 'APK 缺少锁定的 Ubuntu 软件包'
-        assert b'dpkg --configure' in apk.read('assets/install-ubuntu-tools.sh')
-        plugins = {}
-        for name in ('dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile', 'dsh-tool-vscreen'):
-            package = json.loads(apk.read('assets/builtin-plugins/' + name + '/package.json'))
-            plugins[name] = package['version']
+                    require((member.isfile() and member.name in packages), '离线工具归档存在未知软件包')
+                    require((hashlib.sha256(tools.extractfile(member).read()).hexdigest() == packages.pop(member.name)), 'VERIFICATION_FAILED')
+        require((not packages), 'APK 缺少锁定的 Ubuntu 软件包')
+        require((b'dpkg --configure' in apk.read('assets/install-ubuntu-tools.sh')), 'VERIFICATION_FAILED')
+        plugins = verify_builtin_plugins(
+            apk, json.loads((root / 'app/src/main/assets/builtin-plugins.json').read_text(encoding='utf-8')))
         client = apk.read('assets/app-integration/client.js')
-        assert b'resolveDraftAttachments' in client and b'createDrafts(id,files)' in client
-        assert b'draftImages(' not in client and b'closeDetails()' not in client
-        assert b'runner.listPlugins(agent)' in apk.read('assets/app-integration/runtime-plugins.js')
-        assert b'dynamicCordisRunner' in apk.read('assets/app-integration/index.js')
-        assert b'validate_graph' in apk.read('assets/backup-plugin-graph.py')
-        assert b'REPLACED_TOOLS' in apk.read('assets/environment-data.py')
+        require((b'resolveDraftAttachments' in client and b'createDrafts(id,files)' in client), 'VERIFICATION_FAILED')
+        require((b'draftImages(' not in client and b'closeDetails()' not in client), 'VERIFICATION_FAILED')
+        require((b'runner.listPlugins(agent)' in apk.read('assets/app-integration/runtime-plugins.js')), 'VERIFICATION_FAILED')
+        require((b'dynamicCordisRunner' in apk.read('assets/app-integration/index.js')), 'VERIFICATION_FAILED')
+        require((b'validate_graph' in apk.read('assets/backup-plugin-graph.py')), 'VERIFICATION_FAILED')
+        require('assets/environment-data.py' not in apk.namelist(), 'APK 仍部署已退役的旧个人数据写入器')
         mobile = apk.read('assets/builtin-plugins/dsh-web-mobile/lib/client.js')
         # v3.0.0 owns the right-panel opener through its host selector and
         # files-panel helper instead of calling the old sidebarRight service
         # directly. Keep checking the actual v3 contract and the built-in
         # session menu/delete path.
-        assert b'data-sidebar-right-expand' in mobile and b'function openFilesPanel' in mobile
-        assert b'installSessionMenuDelete' in mobile
-        assert b'connection.requestRejection' in apk.read('assets/builtin-plugins/dsh-web-mobile/lib/index.js')
-        assert 'assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js' in apk.namelist()
-        assert b'NARB_DISABLE_NATIVE_CACHE' in apk.read('assets/dsha-runtime-env.sh')
+        require((b'data-sidebar-right-expand' in mobile and b'function openFilesPanel' in mobile), 'VERIFICATION_FAILED')
+        require((b'installSessionMenuDelete' in mobile), 'VERIFICATION_FAILED')
+        require((b'connection.requestRejection' in apk.read('assets/builtin-plugins/dsh-web-mobile/lib/index.js')), 'VERIFICATION_FAILED')
+        require(('assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js' in apk.namelist()), 'VERIFICATION_FAILED')
+        require((b'NARB_DISABLE_NATIVE_CACHE' in apk.read('assets/dsha-runtime-env.sh')), 'VERIFICATION_FAILED')
         migration = apk.read('assets/rc1-migration.py')
-        assert b'RESTORED_SETTINGS_IMPORTED_FOR_RETRY' in migration
-        assert b'legacy-agent-presets' in migration
+        require((b'RESTORED_SETTINGS_IMPORTED_FOR_RETRY' in migration), 'VERIFICATION_FAILED')
+        require((b'legacy-agent-presets' in migration), 'VERIFICATION_FAILED')
         return dict(apk=str(path), dsh=dsh_version, environment=version, plugins=plugins,
                     preservedOfficialFeatures=preserved_features,
                     sharedModuleAliases=aliases, expandedBytes=expanded, ubuntuToolPackages=len(tools_lock['packages']),

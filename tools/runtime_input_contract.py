@@ -32,6 +32,10 @@ def load(root):
             raise ValueError('RUNTIME_INPUT_LIST: ' + key)
         for value in values:
             relative(value)
+    generators=spec.get('generatorSources', [])
+    if not isinstance(generators,list) or len(set(generators))!=len(generators):
+        raise ValueError('RUNTIME_GENERATOR_SOURCE_LIST')
+    for value in generators:relative(value)
     return spec
 
 
@@ -73,4 +77,6 @@ def launcher_paths(root, spec=None):
         for path in directory.rglob('*' + suffix):
             key = path.relative_to(root / JAVA).as_posix() if suffix == '.java' else path.relative_to(root).as_posix()
             result[key] = _file(root, path.relative_to(root).as_posix())
+    for name in spec.get('generatorSources', []):
+        result['generator:'+name]=_file(root,name)
     return dict(sorted(result.items()))

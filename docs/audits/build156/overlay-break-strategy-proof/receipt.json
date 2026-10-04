@@ -1,0 +1,197 @@
+{
+  "schema": 1,
+  "status": "PASS_SDK37_CONSTANT_INLINE",
+  "source": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+  "sourceSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+  "sourceBeforeSha256": "4d886a65e9bc0a3d91e38efbcc838e87dfb396f038d1fcf0f90b0e559649e30c",
+  "authorizedChangeCount": 2,
+  "symbol": "android.graphics.text.LineBreaker.BREAK_STRATEGY_SIMPLE",
+  "constantValue": 0,
+  "sdk": {
+    "androidJar": "F:\\DSHA\\_toolchains\\android-sdk\\platforms\\android-37.0\\android.jar",
+    "androidJarSha256": "bf1b4387cc7ca94fc6ef684f040d9d16fbf16248e181819f020736ea2053f177",
+    "apiVersionsSha256": "9fd47aaab29946a5f5d179797365b2d04e38132d2e7e942f5ea8504e41e6c8e5",
+    "annotationsSha256": "d0dad2a1fc88b4d89b5ff85a7687a1dea7700900225a2765177efdc0700bb85c",
+    "apiMetadata": {
+      "android/graphics/text/LineBreaker": {
+        "class": {
+          "name": "android/graphics/text/LineBreaker",
+          "since": "29"
+        },
+        "members": [
+          {
+            "name": "BREAK_STRATEGY_SIMPLE"
+          }
+        ]
+      },
+      "android/text/StaticLayout$Builder": {
+        "class": {
+          "name": "android/text/StaticLayout$Builder",
+          "since": "23"
+        },
+        "members": [
+          {
+            "name": "setBreakStrategy(I)Landroid/text/StaticLayout$Builder;"
+          }
+        ]
+      },
+      "android/widget/TextView": {
+        "class": {
+          "name": "android/widget/TextView",
+          "since": "1"
+        },
+        "members": [
+          {
+            "name": "setBreakStrategy(I)V",
+            "since": "23"
+          }
+        ]
+      }
+    },
+    "actualIntDefAnnotations": [
+      {
+        "member": "android.text.StaticLayout.Builder android.text.StaticLayout.Builder setBreakStrategy(int) 0",
+        "xml": "<item name=\"android.text.StaticLayout.Builder android.text.StaticLayout.Builder setBreakStrategy(int) 0\">\n    <annotation name=\"androidx.annotation.IntDef\">\n      <val name=\"value\" val=\"{android.graphics.text.LineBreaker.BREAK_STRATEGY_SIMPLE, android.graphics.text.LineBreaker.BREAK_STRATEGY_HIGH_QUALITY, android.graphics.text.LineBreaker.BREAK_STRATEGY_BALANCED}\" />\n    </annotation>\n  </item>\n  "
+      },
+      {
+        "member": "android.widget.TextView void setBreakStrategy(int) 0",
+        "xml": "<item name=\"android.widget.TextView void setBreakStrategy(int) 0\">\n    <annotation name=\"androidx.annotation.IntDef\">\n      <val name=\"value\" val=\"{android.graphics.text.LineBreaker.BREAK_STRATEGY_SIMPLE, android.graphics.text.LineBreaker.BREAK_STRATEGY_HIGH_QUALITY, android.graphics.text.LineBreaker.BREAK_STRATEGY_BALANCED}\" />\n    </annotation>\n  </item>\n  "
+      }
+    ]
+  },
+  "commands": [
+    {
+      "argv": [
+        "F:\\DSHA\\_toolchains\\jdk-17\\bin\\java.exe",
+        "-version"
+      ],
+      "exitCode": 0,
+      "log": "docs/audits/build156/overlay-break-strategy-proof/java-version.log",
+      "sha256": "2c05c59b13a701146c37d79936303eb8080cd353e096756dfab1cd833a306423"
+    },
+    {
+      "argv": [
+        "F:\\DSHA\\_toolchains\\jdk-17\\bin\\javap.exe",
+        "-J-Duser.language=en",
+        "-J-Duser.country=US",
+        "-J-Dfile.encoding=UTF-8",
+        "-classpath",
+        "F:\\DSHA\\_toolchains\\android-sdk\\platforms\\android-37.0\\android.jar",
+        "-verbose",
+        "android.graphics.text.LineBreaker"
+      ],
+      "exitCode": 0,
+      "log": "docs/audits/build156/overlay-break-strategy-proof/sdk-linebreaker-javap.log",
+      "sha256": "a58baaa4cdfb2da60d6afb3863ceaee26e7a74a749450b0737bf7c9e893503d0"
+    },
+    {
+      "argv": [
+        "F:\\DSHA\\_toolchains\\jdk-17\\bin\\javac.exe",
+        "-J-Duser.language=en",
+        "-J-Duser.country=US",
+        "-J-Dfile.encoding=UTF-8",
+        "--release",
+        "17",
+        "-encoding",
+        "UTF-8",
+        "-classpath",
+        "F:\\DSHA\\_toolchains\\android-sdk\\platforms\\android-37.0\\android.jar",
+        "-d",
+        "C:\\Users\\18768\\AppData\\Local\\Temp\\dsha-build156-constant-ozu9mi2m",
+        "C:\\Users\\18768\\AppData\\Local\\Temp\\dsha-build156-constant-ozu9mi2m\\BreakStrategyInlineProbe.java"
+      ],
+      "exitCode": 0,
+      "log": "docs/audits/build156/overlay-break-strategy-proof/javac.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "F:\\DSHA\\_toolchains\\jdk-17\\bin\\javap.exe",
+        "-J-Duser.language=en",
+        "-J-Duser.country=US",
+        "-J-Dfile.encoding=UTF-8",
+        "-classpath",
+        "C:\\Users\\18768\\AppData\\Local\\Temp\\dsha-build156-constant-ozu9mi2m",
+        "-c",
+        "-verbose",
+        "BreakStrategyInlineProbe"
+      ],
+      "exitCode": 0,
+      "log": "docs/audits/build156/overlay-break-strategy-proof/probe-javap.log",
+      "sha256": "787dcdd30e0823d5202133faa9d2a56d049ee0622c911e2d82c002d53d904ae4"
+    },
+    {
+      "argv": [
+        "F:\\DSHA\\_toolchains\\jdk-17\\bin\\java.exe",
+        "-Duser.language=en",
+        "-Duser.country=US",
+        "-Dfile.encoding=UTF-8",
+        "-classpath",
+        "F:\\DSHA\\_toolchains\\android-sdk\\build-tools\\36.0.0\\lib\\d8.jar",
+        "com.android.tools.r8.D8",
+        "--min-api",
+        "23",
+        "--lib",
+        "F:\\DSHA\\_toolchains\\android-sdk\\platforms\\android-37.0\\android.jar",
+        "--output",
+        "C:\\Users\\18768\\AppData\\Local\\Temp\\dsha-build156-constant-ozu9mi2m\\dex",
+        "C:\\Users\\18768\\AppData\\Local\\Temp\\dsha-build156-constant-ozu9mi2m\\BreakStrategyInlineProbe.class"
+      ],
+      "exitCode": 0,
+      "log": "docs/audits/build156/overlay-break-strategy-proof/d8-min-api23.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "formatCommand": [
+    "python",
+    "-B",
+    "tools/format-java.py",
+    "--check",
+    "--files",
+    "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+    "--java",
+    "F:\\DSHA\\_toolchains\\jdk-17\\bin\\java.exe",
+    "--offline",
+    "--report",
+    "app/build/java-format/ui-overlay-break-strategy156.json"
+  ],
+  "formatExitCode": 0,
+  "formatReceiptSha256": "cabbb5ef608fc02c50225dc5aca269e7fffb404041b1d326de5db6e75fa6538b",
+  "formatReceipt": {
+    "schema": 1,
+    "tool": "google-java-format",
+    "version": "1.22.0",
+    "artifactSha256": "16b2a1ee938686c8b1d88abf19eb83dfd0d623cee9de6fc6d09980214f816d3f",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\r\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\r\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)",
+    "mode": "check",
+    "files": [
+      {
+        "file": "app/src/main/java/com/deepseekharness/app/OverlayController.java",
+        "beforeSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+        "formattedSha256": "b5b6a9184ccbfc54752b81aa2647e0d5939f6040599fb7f4f5fcc0d4bbbee794",
+        "javaTokenSha256": "48a0b4549f0071b185fcb4bafad089b089842084a228926d871d117122428dda",
+        "needsFormatting": false,
+        "diff": ""
+      }
+    ]
+  },
+  "bytecode": {
+    "sha256": "ec6f86c9e37b404d5633e859e8641deb6dbd1106dc5df80d538c694d39b20824",
+    "iconst_0": 2,
+    "getstatic": 0,
+    "runtimeInstructionsReferencingLineBreaker": 0,
+    "unusedLineBreakerConstantPoolClassEntry": true
+  },
+  "dex": {
+    "tool": "F:\\DSHA\\_toolchains\\android-sdk\\build-tools\\36.0.0\\lib\\d8.jar",
+    "toolSha256": "4097ff9c46c185c6e7214da7fe9b1befb5adeea5cc9ca349270e0249904f9240",
+    "minApi": 23,
+    "sha256": "54a59fe05b022be7220e47eec311ef7e933efc7d59832fc37cb5b104fa22cfd3",
+    "lineBreakerReferences": 0
+  },
+  "conclusion": "JDK17 compiled both actual SDK37 APIs with literal zero, without executable API29 LineBreaker field/class access. javac retains an unused owner Class entry, which SDK D8 removes: the minAPI23 DEX has no LineBreaker name/reference at all. Both target APIs exist from API23. The production change consists of the same two constant expressions only.",
+  "missingEvidence": [
+    "Actual Low release DEX/APK and fresh two-flavor Release Lint are deferred to the root integrated build.",
+    "No API23 physical-device rendering or interaction was performed by this proof."
+  ]
+}

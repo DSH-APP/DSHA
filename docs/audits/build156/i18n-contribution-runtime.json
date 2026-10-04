@@ -1,0 +1,268 @@
+[
+  {
+    "zh": "运行工具准备失败：%s",
+    "en": "Runtime tools could not be prepared: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java"
+    ]
+  },
+  {
+    "zh": "推文件进容器失败: %s",
+    "en": "Could not copy the file into the container: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java"
+    ]
+  },
+  {
+    "zh": "从容器取文件失败: %s",
+    "en": "Could not copy the file out of the container: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeDataTransfers.java"
+    ]
+  },
+  {
+    "zh": "Ubuntu Python 安装失败: %s",
+    "en": "Ubuntu Python installation failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RootfsInstaller.java",
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java"
+    ]
+  },
+  {
+    "zh": "离线 pnpm 安装失败: %s",
+    "en": "Bundled pnpm installation failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RootfsInstaller.java",
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java"
+    ]
+  },
+  {
+    "zh": "停止隔离检查进程未完成：%s",
+    "en": "The isolated trial process has not stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
+    ]
+  },
+  {
+    "zh": "停止 Web 未完成：%s",
+    "en": "Web has not stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
+    ]
+  },
+  {
+    "zh": "PDF 兼容适配未应用，原文件保留：%s",
+    "en": "PDF compatibility was not applied; the original file is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+    ]
+  },
+  {
+    "zh": "网页脚本拼接优化未应用，原文件保留：%s",
+    "en": "Script combination was not applied; the original file is retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+    ]
+  },
+  {
+    "zh": "检查未完成：%s",
+    "en": "The check did not finish: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallTask.java"
+    ]
+  },
+  {
+    "zh": "proroot 运行时缺 %s",
+    "en": "The proroot runtime is missing %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java"
+    ]
+  },
+  {
+    "zh": "内置 npm 文件缺失：%s-cli.js",
+    "en": "Bundled npm file is missing: %s-cli.js",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+    ]
+  },
+  {
+    "zh": "缺 %s 个运行时文件（%s 等）",
+    "en": "Missing %s runtime files (including %s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java"
+    ]
+  },
+  {
+    "zh": "ERROR: 命令执行超时（%s 秒），已请求停止本次进程",
+    "en": "ERROR: Command timed out after %s seconds; stopping has been requested",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestCommandOutput.java"
+    ]
+  },
+  {
+    "zh": "基础工具安装失败（退出码 %s），请查看上方软件源/网络输出",
+    "en": "Basic tools installation failed (exit code %s); check the repository and network output above",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/BasicToolsInstaller.java"
+    ]
+  },
+  {
+    "zh": "退出码 %s：\n%s",
+    "en": "Exit code %s:\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java"
+    ]
+  },
+  {
+    "zh": "无法查询终端会话（errno=%s），请稍后重试",
+    "en": "Could not query the terminal session (errno=%s); try again later",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/TerminalProcessCloser.java"
+    ]
+  },
+  {
+    "zh": "命令超时（%s 秒），当前步骤未完成，请重新检查",
+    "en": "Command timed out after %s seconds; this step is incomplete and needs to be checked again",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallProcess.java"
+    ]
+  },
+  {
+    "zh": "跳过 · %s：%s",
+    "en": "Skipped · %s: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallTask.java"
+    ]
+  },
+  {
+    "zh": "已读取离线包 %s MiB",
+    "en": "Read %s MiB from the bundled archive",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ]
+  },
+  {
+    "zh": "已按需修复 %s 步，并通过复验",
+    "en": "Repaired %s steps as needed and verified them again",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ]
+  },
+  {
+    "zh": "检查第 %s 步：%s",
+    "en": "Checking step %s: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ]
+  },
+  {
+    "zh": "%s：失败（退出码 %s）",
+    "en": "%s: failed (exit code %s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ]
+  },
+  {
+    "zh": "%s：通过",
+    "en": "%s: passed",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ]
+  },
+  {
+    "zh": "容器探测退出码 %s，检查未完整执行",
+    "en": "Container probe exited with code %s; the checks did not finish",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java"
+    ]
+  },
+  {
+    "zh": "检查 Web 进程失败（PID %s，errno=%s）",
+    "en": "Could not inspect the Web process (PID %s, errno=%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
+    ]
+  },
+  {
+    "zh": "无法核验本应用进程（PID %s）：%s",
+    "en": "Could not verify this app process (PID %s): %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java"
+    ]
+  },
+  {
+    "zh": "内置插件脚本执行失败: %s",
+    "en": "The bundled plugin helper failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java"
+    ]
+  },
+  {
+    "zh": "rc1 数据迁移保护失败：%s",
+    "en": "Legacy migration protection failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java"
+    ]
+  },
+  {
+    "zh": "插件管理脚本执行失败: %s",
+    "en": "The plugin manager failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java"
+    ]
+  },
+  {
+    "zh": "proot 路径: %s\nnativeLibDir: %s\nruntimeMode: %s\nrootfs exec: %s\n",
+    "en": "proot path: %s\nnativeLibDir: %s\nruntimeMode: %s\nrootfs exec: %s\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java"
+    ]
+  },
+  {
+    "zh": "命令执行超时（%s 秒），已请求停止本次进程",
+    "en": "Command timed out after %s seconds; stopping has been requested",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java"
+    ]
+  },
+  {
+    "zh": "安装步骤失败（%s）：%s",
+    "en": "Installation stage failed (%s): %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/InstallFailure.java"
+    ]
+  }
+]

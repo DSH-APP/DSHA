@@ -1,0 +1,13 @@
+file:///F:/DSHA_RESTART/tools/test-runtime-fixture.mjs:64
+  if(rootStat.isSymbolicLink()||!rootStat.isDirectory()||rootStat.dev.toString()!==record.metadata?.root?.dev||rootStat.ino.toString()!==record.metadata?.root?.ino)throw Error('TEST_FIXTURE_SESSION_ROOT_CHANGED');
+                                                                                                                                                                          ^
+
+Error: TEST_FIXTURE_SESSION_ROOT_CHANGED
+    at verifyRuntimeSession (file:///F:/DSHA_RESTART/tools/test-runtime-fixture.mjs:64:171)
+    at testRuntime (file:///F:/DSHA_RESTART/tools/test-runtime-fixture.mjs:95:7)
+    at file:///F:/DSHA_RESTART/tools/test-queue-steer.mjs:8:50
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at async node:internal/modules/esm/loader:643:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.18.0

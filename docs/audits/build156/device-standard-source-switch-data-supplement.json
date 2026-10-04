@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "artifact": "standard-source-switch-exact-file-data-supplement",
+  "result": "SELECTED_PERSONAL_STATE_UNCHANGED_WITH_ACTIVATION_RECORD_DIFFERENCE",
+  "priorFrozenResult": {
+    "file": "docs/audits/build156/device-final-standard-owned-v5-fd-data-review.json",
+    "sha256": "c276f9446cc98fb631bbd4357944d991f1250971a6fc05ff5c1162346efdbe53",
+    "modified": false,
+    "scope": "Earlier v5/FD and1225-record capture remain at their recorded boundaries, not after this run."
+  },
+  "installedApk": {
+    "flavor": "standard",
+    "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+    "sameOfficialC676Artifact": true
+  },
+  "laterRun": {
+    "sourceSelectionsVisuallyObserved": [
+      "npm official",
+      "npmmirror",
+      "auto"
+    ],
+    "oneHealthyPinnedHttpsInstall": "Official deepseek-ai/deepseek-harness decoration template pinned5badb15009ae1756c3afe0ae0cef1faafc290ccc, @local/my-decoration",
+    "actualUiObserved": "Installed and enabled automatically; native confirmed loaded1.0.0; normal remove; necessary normal restart READY/proot; clean client page after removal.",
+    "sourcePreferenceReturnedTo": "auto",
+    "separateNpmOfficialMirrorNetworkFetchMatrixProved": false,
+    "networkScopeLimit": "One pinned official HTTPS package installation in the observed source-switch workflow, not separate successfulnpm fetches from every source or full network matrix."
+  },
+  "captureBoundary": {
+    "baselineSnapshotSha256": "3bfd6aeaa3bc0f9f0b8955a7f0836e641c1c66d0453fa5d86a126e09e6ba5e06",
+    "afterCapturedAtEpoch": 1791087148.2885673,
+    "afterCapturedAtLocal": "2026-10-04T12:12:28.288567+08:00",
+    "selectedExactFiles": 9,
+    "directoryScans": 0,
+    "bodyCopies": 0,
+    "fileWritesByCollector": 0
+  },
+  "roles": [
+    {
+      "role": "credential",
+      "readResult": "READ_ONLY_DIGEST_COMPLETE",
+      "sameTypeModeSize": true,
+      "samePayloadSha256": true,
+      "sameFullRecordedMetadataAndPayload": true
+    },
+    {
+      "role": "web-profile-manifest",
+      "readResult": "READ_ONLY_DIGEST_COMPLETE",
+      "sameTypeModeSize": true,
+      "samePayloadSha256": true,
+      "sameFullRecordedMetadataAndPayload": true
+    },
+    {
+      "role": "web-profile-layer",
+      "readResult": "READ_ONLY_DIGEST_COMPLETE",
+      "sameTypeModeSize": true,
+      "samePayloadSha256": true,
+      "sameFullRecordedMetadataAndPayload": true
+    },
+    {
+      "role": "plugin-sources",
+      "readResult": "READ_ONLY_DIGEST_COMPLETE",
+      "sameTypeModeSize": true,
+      "samePayloadSha256": true,
+      "sameFullRecordedMetadataAndPayload": true
+    },
+    {
+      "role": "plugin-activation",
+      "readResult": "READ_ONLY_DIGEST_COMPLETE",
+      "sameTypeModeSize": true,
+      "samePayloadSha256": false,
+      "sameFullRecordedMetadataAndPayload": false
+    },
+    {
+      "role": "workspace-registry",
+      "readResult": "READ_ONLY_DIGEST_COMPLETE",
+      "sameTypeModeSize": true,
+      "samePayloadSha256": true,
+      "sameFullRecordedMetadataAndPayload": true
+    },
+    {
+      "role": "existing-session-1",
+      "readResult": "READ_ONLY_DIGEST_COMPLETE",
+      "sameTypeModeSize": true,
+      "samePayloadSha256": true,
+      "sameFullRecordedMetadataAndPayload": true
+    },
+    {
+      "role": "existing-session-2",
+      "readResult": "READ_ONLY_DIGEST_COMPLETE",
+      "sameTypeModeSize": true,
+      "samePayloadSha256": true,
+      "sameFullRecordedMetadataAndPayload": true
+    },
+    {
+      "role": "existing-session-3",
+      "readResult": "READ_ONLY_DIGEST_COMPLETE",
+      "sameTypeModeSize": true,
+      "samePayloadSha256": true,
+      "sameFullRecordedMetadataAndPayload": true
+    }
+  ],
+  "unchangedRolesCount": 8,
+  "changedRole": {
+    "role": "plugin-activation",
+    "typeModeSizeUnchanged": true,
+    "payloadSha256Changed": true,
+    "classification": "Known operational plugin activation record after normal install/load/remove lifecycle.",
+    "semanticBodyCollected": false,
+    "onlySelectedEntryChangedProved": false
+  },
+  "retentionClaim": "The selected credential, two web-profile files, plugin sources, workspace registry and three existing-session files match final1225 in type/mode/size/hash. No new unselected roots or sessions were scanned.",
+  "ending": {
+    "normalOwnedPluginRemoved": true,
+    "sourcePreferenceRestoredToAuto": true,
+    "noPermissionOrOtherSettingChangesRecorded": true,
+    "threeExactTinyOwnedFilesCleanupRecorded": true,
+    "endingAt": "2026-10-04T12:15:24.698346+08:00"
+  },
+  "privateEvidence": [
+    {
+      "artifact": "exact-nine-file-after-result.json",
+      "sha256": "24600a52ff99b6affc2bcf2c828bb6e147b9b46b24ed064fe8b6160d8701843e"
+    },
+    {
+      "artifact": "supplement-pull-original.json",
+      "sha256": "24600a52ff99b6affc2bcf2c828bb6e147b9b46b24ed064fe8b6160d8701843e"
+    },
+    {
+      "artifact": "tiny-owned-cleanup.json",
+      "sha256": "2aae2ea843070a714f5c46dcb8f729d97188603155fe0c8d3be9fd77b8bf3d67"
+    },
+    {
+      "artifact": "ending-private.json",
+      "sha256": "ac4f8c44a6645d1143c7b31eacd2b4729a6364bd6651153eb00c5289dffdce0a"
+    },
+    {
+      "artifact": "collect-source-switch-supplement.py",
+      "sha256": "f1b1487053c2f45f6ee4d6a6617b9b4aff491e9d4c76eb9dc7de9c103ab878d5"
+    },
+    {
+      "artifact": "lease-standard-source-official-selected-1028.png",
+      "sha256": "0008c20547caeee9857b8c606b9589318f2968d1a46be6cb0aa3d86676a2521a",
+      "capturedAt": "2026-10-04T11:58:38.026239+08:00"
+    },
+    {
+      "artifact": "lease-standard-source-mirror-selected-1029.png",
+      "sha256": "6c6fa320ee7f1c0bb16136308b665337ad6de106db8ba1207783360be2f7a2f4",
+      "capturedAt": "2026-10-04T11:58:39.867244+08:00"
+    },
+    {
+      "artifact": "lease-standard-source-auto-restored-1030.png",
+      "sha256": "8c992abf9ff389ae6df9aefef2bb3ee355ec57723bc4cd394fb3e7c46175c2ea",
+      "capturedAt": "2026-10-04T11:58:41.818754+08:00"
+    },
+    {
+      "artifact": "lease-standard-https-installed-auto-1035.png",
+      "sha256": "fe7220740f84a534c1c6d4c01486fb6aa3d803b5eaef9d0353915f2fe2de3a39",
+      "capturedAt": "2026-10-04T12:02:55.220926+08:00"
+    },
+    {
+      "artifact": "lease-standard-https-confirmed-loaded-current-1040.png",
+      "sha256": "5a8917174952804494e4a5cdceb475fbe192bbdf9183d6bb5f637366b6e8c77f",
+      "capturedAt": "2026-10-04T12:06:15.235104+08:00"
+    },
+    {
+      "artifact": "lease-standard-https-normally-removed-current-1042.png",
+      "sha256": "dabc081ab46165a268832e63d1b4193b4e3ab84dee5d6d96234b7337724db9e9",
+      "capturedAt": "2026-10-04T12:09:07.534875+08:00"
+    },
+    {
+      "artifact": "lease-standard-https-normal-restart-after-remove-1044.png",
+      "sha256": "c227a37c07a2ebeb9e8b2d7cf5619a142c391d13068fcf47fae60bd3865aab2f",
+      "capturedAt": "2026-10-04T12:10:24.733262+08:00"
+    },
+    {
+      "artifact": "lease-standard-source-only-clean-client-after-remove-1045.png",
+      "sha256": "821aa26dab3b02c751af41abce51c4c76a8f37858685cdcb65d5c0aff0c83564",
+      "capturedAt": "2026-10-04T12:11:30.931104+08:00"
+    }
+  ],
+  "limits": [
+    "This supplement covers only9previously-existing files and this one healthy source-switch/pinned-HTTPS lifecycle.",
+    "Plugin activation metadata changed; its body was not captured, so exact entry-level changes are not inferred.",
+    "Original149 supplied no old-chat sample. Unchanged current session files do not establish a historical conversation matrix.",
+    "No new full-root scan, FD/backup rerun, restore, temporary APK, permission change or production edit.",
+    "Later cleanup after this sampling does not extend the captured data comparison."
+  ],
+  "privacy": "No token, serial, credential digest, user content/path, session/workspace ID or raw configuration scalar published."
+}

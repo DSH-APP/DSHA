@@ -1,0 +1,13 @@
+✔ 普通回车、Shift+Enter 与没有 keydown 的 IME 换行交给编辑器，不提交 (1.7473ms)
+✔ Ctrl/Cmd+Enter 保留显式快捷提交，长按不连续发送 (0.531ms)
+✔ 组合输入与 keyCode 229 不触发提交，包括 Shift/快捷键 (0.6089ms)
+✔ 候选菜单的 Enter 仍能选中项目，Shift+Enter 不抢菜单 (0.531ms)
+✔ 锁定输入不能由快捷键绕过，软键盘明确显示换行 (0.7026ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7.7164

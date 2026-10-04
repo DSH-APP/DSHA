@@ -1,0 +1,9 @@
+test_all_public_endpoints_and_command_metadata (__main__.NativeBridgeRouteBehavior.test_all_public_endpoints_and_command_metadata) ... ok
+test_http_dispatch_keeps_protocol_and_auth_before_handlers (__main__.NativeBridgeRouteBehavior.test_http_dispatch_keeps_protocol_and_auth_before_handlers) ... ok
+test_sensitive_suffixes_and_unknown_namespaces_cannot_inherit_handlers (__main__.NativeBridgeRouteBehavior.test_sensitive_suffixes_and_unknown_namespaces_cannot_inherit_handlers) ... ok
+test_actual_java_dispatch_rejects_nested_suffixed_and_unknown_paths (__main__.VirtualRouteBehavior.test_actual_java_dispatch_rejects_nested_suffixed_and_unknown_paths) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.213s
+
+OK

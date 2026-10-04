@@ -1,0 +1,14 @@
+[
+  {
+    "path": "tools/control-functional-audit.py",
+    "retainedSource": "tools/history/build156/obsolete-device-audits/control-functional-audit.py",
+    "sha256": "92965eb1b339d81b028307880ca208acbd86f0b2b7c0e1529ff85522eda2a691",
+    "reason": "Retired unreachable legacy device audit construction/control; no active reader, no execution or replacement APK."
+  },
+  {
+    "path": "tools/device-backup-audit.init.gradle",
+    "retainedSource": "tools/history/build156/obsolete-device-audits/device-backup-audit.init.gradle",
+    "sha256": "2282eb856cc737563c2168f8ffd3fb8824a3774e7085cfb4a77ed7c5aff9e36b",
+    "reason": "Retired unreachable legacy device audit construction/control; no active reader, no execution or replacement APK."
+  }
+]

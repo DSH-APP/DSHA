@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "status": "WAITING_FOR_FRESH_BUILD156_REPORTS",
+  "build": 156,
+  "sourceFloor": {
+    "path": "tools/i18n/messages.json",
+    "mtimeUtc": "2026-10-03T15:58:26.012528+00:00"
+  },
+  "reportFreshness": [
+    {
+      "flavor": "standard",
+      "path": "app/build/reports/lint-results-standardRelease.xml",
+      "sha256": "f87d7ce8246aa4f221ea534af0734e15236d035c5dd3a3b9192c4d687aaae024",
+      "mtimeUtc": "2026-10-03T15:34:37.865874+00:00",
+      "freshRelativeToProductionInputs": false
+    },
+    {
+      "flavor": "low",
+      "path": "app/build/reports/lint-results-lowRelease.xml",
+      "sha256": "c9b82f775502bd00d4811cb6c5314942891d10387eee4e41d30fc020c061f1f5",
+      "mtimeUtc": "2026-10-03T10:24:43.070059+00:00",
+      "freshRelativeToProductionInputs": false
+    }
+  ],
+  "finalCounts": null,
+  "note": "The existing reports may be build155; their counts are not this build156 final classification."
+}

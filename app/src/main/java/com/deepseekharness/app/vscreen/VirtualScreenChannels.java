@@ -11,39 +11,65 @@ import java.util.List;
 
 /** 复用 DSHA 的设备能力授权；结果未知时调用方不得换通道重放。 */
 final class VirtualScreenChannels {
-    private VirtualScreenChannels() { }
+  private VirtualScreenChannels() {}
 
-    static List<VirtualScreenChannel> all() {
-        List<VirtualScreenChannel> channels = new ArrayList<>();
-        channels.add(new VirtualScreenChannel() {
-            public String id() { return "root"; }
-            public boolean available(Context c) { return RootShell.enabled(c) && RootShell.present(); }
-            public String start(Context c, String command) { return RootShell.execVirtualScreen(c, command); }
-        });
-        channels.add(new VirtualScreenChannel() {
-            public String id() { return "shizuku"; }
-            public boolean available(Context c) { return ShizukuShell.hasPermission(); }
-            public String start(Context c, String command) { return ShizukuShell.execVirtualScreen(command); }
-        });
-        channels.add(new VirtualScreenChannel() {
-            public String id() { return "adb"; }
-            public boolean available(Context c) { return DeviceBridgeService.isAdbEnabled(c); }
-            public String start(Context c, String command) {
-                String ticket=VirtualScreenManager.adbLaunchTicketFor(command);
-                return ticket.isEmpty()?"[POLICY_BLOCKED] Native virtual-screen launch ticket missing\n[EXIT=126]"
-                        :AdbBridge.executeVirtualScreen(c,command,ticket);
-            }
-        });
-        return channels;
-    }
+  static List<VirtualScreenChannel> all() {
+    List<VirtualScreenChannel> channels = new ArrayList<>();
+    channels.add(
+        new VirtualScreenChannel() {
+          public String id() {
+            return "root";
+          }
 
-    static VirtualScreenChannel find(String id) {
-        for (VirtualScreenChannel channel : all()) if (channel.id().equals(id)) return channel;
-        return null;
-    }
+          public boolean available(Context c) {
+            return RootShell.enabled(c) && RootShell.present();
+          }
 
-    static VirtualScreenChannel choose(Context context) {
-        for (VirtualScreenChannel channel : all()) if (channel.available(context)) return channel;
-        return null;
-    }
+          public String start(Context c, String command) {
+            return RootShell.execVirtualScreen(c, command);
+          }
+        });
+    channels.add(
+        new VirtualScreenChannel() {
+          public String id() {
+            return "shizuku";
+          }
+
+          public boolean available(Context c) {
+            return ShizukuShell.hasPermission();
+          }
+
+          public String start(Context c, String command) {
+            return ShizukuShell.execVirtualScreen(command);
+          }
+        });
+    channels.add(
+        new VirtualScreenChannel() {
+          public String id() {
+            return "adb";
+          }
+
+          public boolean available(Context c) {
+            return DeviceBridgeService.isAdbEnabled(c);
+          }
+
+          public String start(Context c, String command) {
+            String ticket = VirtualScreenManager.from(c).adbLaunchTicketFor(command);
+            return ticket.isEmpty()
+                ? "[POLICY_BLOCKED] Native virtual-screen launch ticket missing\n[EXIT=126]"
+                : AdbBridge.executeVirtualScreen(c, command, ticket);
+          }
+        });
+    return channels;
+  }
+
+  static VirtualScreenChannel find(String id) {
+    for (VirtualScreenChannel channel : all()) if (channel.id().equals(id)) return channel;
+    return null;
+  }
+
+  static VirtualScreenChannel choose(Context context) {
+    for (VirtualScreenChannel channel : all()) if (channel.available(context)) return channel;
+    return null;
+  }
 }

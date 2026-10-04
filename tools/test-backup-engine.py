@@ -62,6 +62,20 @@ class LocalDeviceCredentialsTest(unittest.TestCase):
         self.assertFalse(any("anonymous-user-id" in n for n in names),
                          ".anonymous-user-id 是本机标识，不能进备份")
 
+    def test_shared_machine_policy_excludes_atomic_headers_without_excluding_user_projects(self):
+        for name in ('.bridge_headers','.bridge_token.retained-123','.bridge_status.atomic-123','.dsha-web.identity'):
+            self.put('.dsh/'+name,'local-machine-original')
+        self.put('.dsh/sessions/.sessions-trash/old/event.trash','trash-original')
+        self.put('.dsh/my-project/.sessions-trash/user.txt','user-original')
+        self.put('.dsh/my-project/.env','explicit-project-original')
+        engine.make_backup(self.root,self.archive,'full')
+        with tarfile.open(self.archive) as tar:
+            names=tar.getnames()
+            self.assertFalse(any(name.startswith(('.dsh/.bridge_', '.dsh/.dsha-web.identity', '.dsh/sessions/.sessions-trash')) for name in names))
+            self.assertIn('.dsh/my-project/.sessions-trash/user.txt',names)
+            self.assertIn('.dsh/my-project/.env',names)
+        self.assertEqual('trash-original',(self.root/'.dsh/sessions/.sessions-trash/old/event.trash').read_text())
+
     def test_credentials_keep_user_keys_but_drop_local_record(self):
         self.put(".dsh/.credentials.yaml", "version: 1\nrefs:\n  DEEPSEEK_API_KEY: sk-user-key\n"
                  "records:\n  client-connection/browser-session:\n    kind: grant\n"
@@ -84,16 +98,38 @@ class LocalDeviceCredentialsTest(unittest.TestCase):
         self.assertIn("other-provider/token", body, "不能误删非本机记录")
         self.assertNotIn("client-connection/browser-session", body)
 
-    def test_trim_is_pure_text_and_tolerates_odd_input(self):
-        # 解析不了也要给出可用结果，不能抛异常让备份整个失败
+    def test_valid_empty_and_unrelated_yaml_is_preserved(self):
         for text in ["", "version: 1\n", "records:\n", "refs:\n  A: b\n"]:
             trimmed, removed = engine.trim_local_records(text)
             self.assertEqual([], removed)
             self.assertEqual(text, trimmed)
 
+    def test_flow_indent_and_escaped_local_record_keys_are_removed(self):
+        for text in ['records:\n  client-connection/browser-session: {secret: synthetic}\n',
+                     'records:\n    client-connection/browser-session:\n      secret: synthetic\n',
+                     'records: {"client-connection/browser-session": {secret: synthetic}}\n']:
+            trimmed,removed=engine.trim_local_records(text)
+            self.assertEqual(['client-connection/browser-session'],removed)
+            self.assertNotIn('synthetic',trimmed)
+
+    def test_unsupported_yaml_alias_or_structure_blocks_export(self):
+        for text in ['records: [secret]\n','records: {a: x, a: y}\n','refs: &shared {secret: x}\nrecords: *shared\n','records: [unterminated']:
+            with self.assertRaisesRegex(ValueError,'CREDENTIAL_TRIM_FAILED'):
+                engine.trim_local_records(text)
+
 
 
 class BackupTest(unittest.TestCase):
+    def test_legacy_transition_export_does_not_copy_workspace_secrets_or_process_log(self):
+        self.put('deepseek-harness/.env','DEEPSEEK_API_KEY=unselected-workspace-secret\nOTHER=private\n')
+        self.put('deepseek-harness/dsh-web.log','process-output-private-content')
+        engine.make_backup(self.root,self.archive,'full')
+        with tarfile.open(self.archive) as archive:
+            self.assertFalse(any(name.startswith('.dsha-workdir/') for name in archive.getnames()))
+            self.assertNotIn('.dsh/.dsha-apikey',archive.getnames())
+        self.assertIn('unselected-workspace-secret',(self.root/'deepseek-harness/.env').read_text())
+        self.assertEqual('process-output-private-content',(self.root/'deepseek-harness/dsh-web.log').read_text())
+
     def test_offline_api_key_is_injected_only_when_native_config_allows_it(self):
         # 离线安装没有 workdir/.env；备份侧必须把 Android 原生配置里的
         # 明确允许导出的 key 写入可移植文件，且不能把源树残留的旧文件偷渡出去。
@@ -173,8 +209,56 @@ class BackupTest(unittest.TestCase):
                 after = self.contents(self.root / ".dsh")
                 selected = engine.SCOPES[scope]
                 for name, data in before.items():
-                    self.assertEqual(data if selected is None or name.split('/')[0] in selected else b"changed", after[name])
+                    top=name.split('/')[0]
+                    expected=b"changed" if engine.machine_name(top) else data if selected is None or top in selected else b"changed"
+                    self.assertEqual(expected, after[name])
                     self.put(".dsh/" + name, data)
+
+    def test_historical_archive_machine_tokens_do_not_replace_current_machine_records(self):
+        self.put('.dsh/.bridge_token','current-machine-token')
+        self.put('.dsh/.bridge_headers','current-machine-header')
+        self.put('.dsh/.bridge_status.atomic-one','current-machine-status')
+        self.put('.dsh/plugin-safe-mode.json','{"active":true}')
+        self.pack([('.dsh/sessions/restored.jsonl','restored-session'),('.dsh/.bridge_token','archive-machine-token'),('.dsh/.bridge_headers','archive-machine-header'),('.dsh/plugin-safe-mode.json','{"active":false}')])
+        engine.restore_archive(self.root,self.archive,'full')
+        self.assertEqual('current-machine-token',(self.root/'.dsh/.bridge_token').read_text())
+        self.assertEqual('current-machine-header',(self.root/'.dsh/.bridge_headers').read_text())
+        self.assertEqual('current-machine-status',(self.root/'.dsh/.bridge_status.atomic-one').read_text())
+        self.assertEqual('{"active":true}',(self.root/'.dsh/plugin-safe-mode.json').read_text())
+        self.assertEqual('restored-session',(self.root/'.dsh/sessions/restored.jsonl').read_text())
+
+    def test_full_restore_does_not_publish_historical_plaintext_key_or_guess_native_config(self):
+        self.put('.dsh/.dsha-apikey','old-active-unknown-key')
+        self.pack([('.dsh/sessions/restored.jsonl','restored'),('.dsh/.dsha-apikey','archive-key-needs-explicit-native-selection')])
+        original=self.archive.read_bytes()
+        result=engine.restore_archive(self.root,self.archive,'full')
+        self.assertIsNone(result['nativeConfig'])
+        self.assertFalse((self.root/'.dsh/.dsha-apikey').exists())
+        self.assertEqual(original,self.archive.read_bytes())
+        self.assertTrue(any((Path(previous)/'.dsha-apikey').is_file() and (Path(previous)/'.dsha-apikey').read_text()=='old-active-unknown-key' for previous in result['previous']))
+
+    def test_partial_restore_keeps_unselected_active_key_and_never_returns_it_as_native_config(self):
+        for scope in ('sessions','plugins','settings'):
+            with self.subTest(scope=scope):
+                self.put('.dsh/.dsha-apikey','unselected-active-original')
+                engine.make_backup(self.root,self.archive,scope)
+                original=self.archive.read_bytes()
+                result=engine.restore_archive(self.root,self.archive,scope)
+                self.assertIsNone(result['nativeConfig'])
+                self.assertEqual('unselected-active-original',(self.root/'.dsh/.dsha-apikey').read_text())
+                self.assertEqual(original,self.archive.read_bytes())
+                selected={'sessions':'.dsh/sessions/restored.jsonl','plugins':'.dsh/profiles/web/package.json','settings':'.dsh/settings.yaml'}[scope]
+                self.pack([(selected,'{}' if scope=='plugins' else 'scoped-data'),('.dsh/.dsha-apikey','unselected-archive-key')])
+                with self.assertRaisesRegex(ValueError,'超出声明范围'):
+                    engine.restore_archive(self.root,self.archive,scope)
+                self.assertEqual('unselected-active-original',(self.root/'.dsh/.dsha-apikey').read_text())
+
+    def test_native_call_graph_has_no_automatic_active_file_key_fallback(self):
+        source=Path(__file__).resolve().parents[1]/'app/src/main/java/com/deepseekharness/app/BackupManager.java'
+        java=source.read_text(encoding='utf-8')
+        self.assertNotIn('syncApiKeyFromRootfs(',java)
+        self.assertNotIn('saveApiKey(',java)
+        self.assertIn('importBackupSettings(',java)
 
     def test_inventory_rejects_modified_member(self):
         engine.make_backup(self.root, self.archive, "full")

@@ -1,0 +1,50 @@
+[
+  {
+    "zh": "应急 DSH 未就绪：%s",
+    "en": "Recovery DSH is not ready: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java"
+    ]
+  },
+  {
+    "zh": "应急进程退出尚未确认：%s",
+    "en": "Recovery process exit is unconfirmed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java"
+    ]
+  },
+  {
+    "zh": "正在校验应急安装包 (%s/%s)…",
+    "en": "Verifying recovery archive (%s/%s)…",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
+    ]
+  },
+  {
+    "zh": "正在准备应急环境 (%s/%s)…",
+    "en": "Preparing recovery runtime (%s/%s)…",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
+    ]
+  },
+  {
+    "zh": "已保留的应急运行时约 %s；应急会话约 %s。原件保留，未自动删除。",
+    "en": "Retained recovery runtimes: approximately %s; recovery sessions: approximately %s. Originals are retained; no automatic deletion was performed.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
+    ]
+  },
+  {
+    "zh": "正在核验应急文件 (%s/%s)…",
+    "en": "Verifying recovery files (%s/%s)…",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
+    ]
+  }
+]

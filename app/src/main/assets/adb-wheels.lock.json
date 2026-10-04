@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "archiveSha256": "173000bd60f8d58f90f988320b9b675540806139da9eae64ea78a0e6ecf5d9d4",
+  "wheels": {
+    "adb_shell_wifi-0.5.0-py3-none-any.whl": "231d4c608f2631ddb2df55bdc7ea111c43275277d04fcbc791f8b613dfaa391a",
+    "aiofiles-25.1.0-py3-none-any.whl": "abe311e527c862958650f9438e859c1fa7568a141b22abcd015e120e86a85695",
+    "async_timeout-5.0.1-py3-none-any.whl": "39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c",
+    "cffi-2.1.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl": "68e62fe11f30d5ca8289242866f0a5291402d8529ca2178ab8afc5c9694ae890",
+    "cryptography-50.0.0-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl": "fd9192b7b70c573d7f214eb1ae35e00d359f6f5e4b27c7e21e30de1fc6204645",
+    "ifaddr-0.2.0-py3-none-any.whl": "085e0305cfe6f16ab12d72e2024030f5d52674afad6911bb1eee207177b8a748",
+    "pip-26.2.1-py3-none-any.whl": "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e",
+    "pyasn1-0.6.4-py3-none-any.whl": "deda9277cfd454080ec40b207fb6df82206a3a2688735233cdcd8d3d565f088b",
+    "pycparser-3.0-py3-none-any.whl": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+    "pyopenssl-26.4.0-py3-none-any.whl": "f0eb0cb2d581d3ad2b9c489468485e7f2ab6727d08401bcf9d824c3caddf3c1c",
+    "rsa-4.9.1-py3-none-any.whl": "68635866661c6836b8d39430f97a996acbd61bfa49406748ea243539fe239762",
+    "setuptools-84.0.0-py3-none-any.whl": "51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670",
+    "spake2_cffi-1.0.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "72267aa5bc611528235f274c3b261cb4650c71a65ecf7dbfe181960798588769",
+    "typing_extensions-4.16.0-py3-none-any.whl": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+    "zeroconf-0.150.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "e17a3adc2e4e425c59a1f2a72e289706ec6655fead4d5287f23e1748663df7dc"
+  }
+}

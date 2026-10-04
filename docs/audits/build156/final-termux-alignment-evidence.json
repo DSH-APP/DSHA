@@ -1,0 +1,209 @@
+{
+  "schema": 1,
+  "status": "PASS_CURRENT_APK_TERMUX_STATIC_ALIGNMENT",
+  "run": "5e2d5521-beb5-4775-b87e-85a074b4aade",
+  "softwareManifest": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+    "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626"
+  },
+  "scope": "Read-only actual5e2 signed APK bytes matched the completed software manifest; only selected libtermux static alignment, not physical16KiB acceptance",
+  "apks": [
+    {
+      "flavor": "standard",
+      "apk": "app/build/outputs/apk/standard/release/app-standard-release.apk",
+      "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+      "member": "lib/arm64-v8a/libtermux.so",
+      "memberSha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+      "equalsCurrentOwnedJni": true,
+      "source": "app/src/main/jniLibs/arm64-v8a/libtermux.so",
+      "segments": [
+        {
+          "type": "PT_LOAD",
+          "flags": 4,
+          "offset": 0,
+          "virtualAddress": 0,
+          "fileSize": 5288,
+          "memorySize": 5288,
+          "alignment": 16384
+        },
+        {
+          "type": "PT_LOAD",
+          "flags": 5,
+          "offset": 5288,
+          "virtualAddress": 21672,
+          "fileSize": 4264,
+          "memorySize": 4264,
+          "alignment": 16384
+        },
+        {
+          "type": "PT_LOAD",
+          "flags": 6,
+          "offset": 9552,
+          "virtualAddress": 42320,
+          "fileSize": 776,
+          "memorySize": 776,
+          "alignment": 16384
+        },
+        {
+          "type": "PT_GNU_RELRO",
+          "flags": 4,
+          "offset": 9552,
+          "virtualAddress": 42320,
+          "fileSize": 776,
+          "memorySize": 2736,
+          "alignment": 1
+        }
+      ],
+      "pLoadAlignmentMinimum": 16384,
+      "offsetAddressCongruentAt16KiB": true,
+      "relroPageMappings": [
+        {
+          "pageSize": 4096,
+          "relroMappedStart": 40960,
+          "relroMappedLimit": 45056,
+          "loadMappedRanges": [
+            [
+              0,
+              8192
+            ],
+            [
+              20480,
+              28672
+            ],
+            [
+              40960,
+              45056
+            ]
+          ],
+          "fullyMapped": true
+        },
+        {
+          "pageSize": 16384,
+          "relroMappedStart": 32768,
+          "relroMappedLimit": 49152,
+          "loadMappedRanges": [
+            [
+              0,
+              16384
+            ],
+            [
+              16384,
+              32768
+            ],
+            [
+              32768,
+              49152
+            ]
+          ],
+          "fullyMapped": true
+        }
+      ],
+      "integratedElfReceipt": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/standard-elf.json",
+      "integratedElfReceiptSha256": "6a6468432126a3641306eb6069d19bdc442b16125031dcbfba76e66a2fa1efec",
+      "integratedUnaligned16KiB": 0,
+      "integratedRelroOutsideLoad": 0
+    },
+    {
+      "flavor": "low",
+      "apk": "app/build/outputs/apk/low/release/app-low-release.apk",
+      "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+      "member": "lib/arm64-v8a/libtermux.so",
+      "memberSha256": "0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147",
+      "equalsCurrentOwnedJni": true,
+      "source": "app/src/main/jniLibs/arm64-v8a/libtermux.so",
+      "segments": [
+        {
+          "type": "PT_LOAD",
+          "flags": 4,
+          "offset": 0,
+          "virtualAddress": 0,
+          "fileSize": 5288,
+          "memorySize": 5288,
+          "alignment": 16384
+        },
+        {
+          "type": "PT_LOAD",
+          "flags": 5,
+          "offset": 5288,
+          "virtualAddress": 21672,
+          "fileSize": 4264,
+          "memorySize": 4264,
+          "alignment": 16384
+        },
+        {
+          "type": "PT_LOAD",
+          "flags": 6,
+          "offset": 9552,
+          "virtualAddress": 42320,
+          "fileSize": 776,
+          "memorySize": 776,
+          "alignment": 16384
+        },
+        {
+          "type": "PT_GNU_RELRO",
+          "flags": 4,
+          "offset": 9552,
+          "virtualAddress": 42320,
+          "fileSize": 776,
+          "memorySize": 2736,
+          "alignment": 1
+        }
+      ],
+      "pLoadAlignmentMinimum": 16384,
+      "offsetAddressCongruentAt16KiB": true,
+      "relroPageMappings": [
+        {
+          "pageSize": 4096,
+          "relroMappedStart": 40960,
+          "relroMappedLimit": 45056,
+          "loadMappedRanges": [
+            [
+              0,
+              8192
+            ],
+            [
+              20480,
+              28672
+            ],
+            [
+              40960,
+              45056
+            ]
+          ],
+          "fullyMapped": true
+        },
+        {
+          "pageSize": 16384,
+          "relroMappedStart": 32768,
+          "relroMappedLimit": 49152,
+          "loadMappedRanges": [
+            [
+              0,
+              16384
+            ],
+            [
+              16384,
+              32768
+            ],
+            [
+              32768,
+              49152
+            ]
+          ],
+          "fullyMapped": true
+        }
+      ],
+      "integratedElfReceipt": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/low-elf.json",
+      "integratedElfReceiptSha256": "bfd084806ced7d84d53fd5e40ca36d260c32555cb761898ff0d0a589710eb535",
+      "integratedUnaligned16KiB": 0,
+      "integratedRelroOutsideLoad": 0
+    }
+  ],
+  "verificationNotes": "Current PT_LOAD/RELRO page coverage at4KiB and16KiB validated. Exact281 previous3 documents preserved under before-accessibility-status; no source/SDK/APK/phone mutation.",
+  "missingEvidence": [
+    {
+      "kind": "device",
+      "detail": "Physical16KiB kernel loading and old/OEM terminal/renderer matrix remain unverified by ELF metadata."
+    }
+  ]
+}

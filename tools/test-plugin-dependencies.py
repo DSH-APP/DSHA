@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""真实 pnpm 10.34.5 + 本机合成 registry；不读取用户 npm 凭据，不执行插件脚本。"""
+"""真实 pnpm 10.34.5 + 本机合成 registry；依赖脚本在隔离暂存目录执行。"""
 import base64
 import contextlib
 import hashlib
@@ -106,9 +106,12 @@ class DependenciesTest(unittest.TestCase):
         self.manager = importlib.util.module_from_spec(spec); spec.loader.exec_module(self.manager)
         original = self.manager.run_package_command
         self.commands = []
+        self.work_contents = []
 
         def run(arguments, cwd, timeout=120):
             self.commands.append(list(arguments))
+            if arguments[0] == 'pnpm' and 'install' in arguments:
+                self.work_contents.append(sorted(path.name for path in Path(cwd).iterdir()))
             if arguments[0] == 'pnpm':
                 arguments = [NODE, PNPM, *arguments[1:]]
             return original(arguments, cwd, timeout)
@@ -133,18 +136,39 @@ class DependenciesTest(unittest.TestCase):
     def prepare(self, root, pkg, **options):
         return self.manager.prepare_dependencies(str(root), pkg, hashlib.sha256(b'owned synthetic archive').hexdigest(), **options)
 
-    def test_native_lock_freezes_transitive_resolution_after_registry_changes(self):
+    def test_unlocked_resolution_runs_dependency_hooks_without_plugin_source_hooks(self):
         first, pkg = self.plugin('first'); snapshot = self.prepare(first, pkg)
         self.assertEqual('locked', snapshot['state']); self.assertEqual('10.34.5', snapshot['managerVersion'])
         self.assertEqual({'1.0.0'}, {entry['version'] for entry in snapshot['resolved']})
+        install = next(command for command in self.commands if 'install' in command)
+        self.assertIn('--no-frozen-lockfile', install)
+        self.assertIn('--config.dangerously-allow-all-builds=true', install)
+        self.assertIn('--config.ignore-scripts=false', install)
+        self.assertIn('--config.ignore-dep-scripts=false', install)
+        self.assertEqual('executed', self.sentinel.read_text(encoding='utf8'))
+        self.assertNotIn('.pnpmfile.cjs', self.work_contents[0])
+        self.assertNotIn('.npmrc', self.work_contents[0])
         self.registry.newer = True
         second, pkg = self.plugin('second'); again = self.prepare(second, pkg, offline=True)
         self.assertEqual(snapshot['lockSha256'], again['lockSha256'])
         self.assertEqual({'1.0.0'}, {entry['version'] for entry in again['resolved']})
-        self.assertIn('--frozen-lockfile', next(command for command in reversed(self.commands) if 'install' in command))
-        self.assertFalse(self.sentinel.exists())
+        self.assertIn('--no-frozen-lockfile', next(command for command in reversed(self.commands) if 'install' in command))
         self.assertNotIn('owned-registry-secret', (second / '.dsha-dependencies.json').read_text())
         self.assertNotIn('owned-registry-secret', (second / 'pnpm-lock.yaml').read_text())
+
+    def test_unlocked_refresh_replaces_same_identity_cache(self):
+        first, pkg = self.plugin('first'); initial = self.prepare(first, pkg)
+        self.registry.newer = True
+        refreshed_root, refreshed_pkg = self.plugin('refreshed')
+        refreshed = self.prepare(refreshed_root, refreshed_pkg)
+        refreshed_install = next(command for command in reversed(self.commands) if 'install' in command)
+        self.assertNotIn('--prefer-offline', refreshed_install)
+        self.assertEqual({'1.1.0'}, {entry['version'] for entry in refreshed['resolved']})
+        cache = next((self.home / 'plugin-dependency-locks').glob('*/state.json'))
+        state = json.loads(cache.read_text(encoding='utf8'))
+        self.assertEqual(refreshed['lockSha256'], state['lockSha256'])
+        lock = cache.parent / 'pnpm-lock.yaml'
+        self.assertEqual(refreshed['lockSha256'], self.dependencies.validate_lock(str(lock)))
 
     def test_corrupt_lock_cache_fails_without_replacing_existing_version(self):
         first, pkg = self.plugin('first'); snapshot = self.prepare(first, pkg)
@@ -153,6 +177,17 @@ class DependenciesTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '缓存记录不一致'):
             self.prepare(second, pkg)
         self.assertEqual(snapshot['treeSha256'], self.dependencies.inspect(str(first))['treeSha256'])
+
+    @unittest.skipIf(os.name == 'nt', 'symlink creation requires elevated privileges on Windows')
+    def test_cache_identity_symlink_is_rejected_without_following_external_state(self):
+        first, pkg = self.plugin('first'); self.prepare(first, pkg)
+        identity = next((self.home / 'plugin-dependency-locks').iterdir())
+        outside = self.root / 'outside-cache'; outside.mkdir()
+        identity.rename(outside / 'moved')
+        identity.symlink_to(outside / 'moved', target_is_directory=True)
+        second, pkg = self.plugin('second')
+        with self.assertRaisesRegex(ValueError, '缓存记录路径异常'):
+            self.prepare(second, pkg)
 
     def test_missing_offline_package_preserves_current_tree_and_has_specific_error(self):
         first, pkg = self.plugin('first'); snapshot = self.prepare(first, pkg)
@@ -163,13 +198,41 @@ class DependenciesTest(unittest.TestCase):
             self.prepare(second, pkg, offline=True)
         self.assertEqual(snapshot['treeSha256'], self.dependencies.inspect(str(first))['treeSha256'])
 
+    def test_author_snapshot_claims_do_not_become_local_verification(self):
+        root,pkg=self.plugin('author-claims',False)
+        tree,packages=self.dependencies.tree(str(root))
+        claims={'format':1,'state':'locked','managerVersion':'spoofed-999','integrity':'fully trusted',
+                'manifestSha256':hashlib.sha256((root/'package.json').read_bytes()).hexdigest(),
+                'treeSha256':tree,'resolved':packages,'lockSha256':''}
+        (root/'.dsha-dependencies.json').write_text(json.dumps(claims),encoding='utf8')
+        with patch.object(self.manager,'run_package_command',side_effect=AssertionError('no dependencies')):
+            snapshot=self.prepare(root,pkg)
+        self.assertEqual('no-dependencies',snapshot['state']);self.assertEqual('not-executed',snapshot['managerVersion'])
+        self.assertEqual('locked',snapshot['authorClaims']['state']);self.assertEqual('spoofed-999',snapshot['authorClaims']['managerVersion'])
+        inspected=self.dependencies.inspect(str(root))
+        self.assertEqual('tree-verified',inspected['state']);self.assertEqual('not-executed',inspected['managerVersion'])
+
     def test_verified_rollback_never_calls_package_manager(self):
         first, pkg = self.plugin('first'); self.prepare(first, pkg)
         with patch.object(self.manager, 'run_package_command', side_effect=AssertionError('rollback must not resolve dependencies')):
-            self.assertEqual('locked', self.prepare(first, pkg, restoring=True)['state'])
+            self.assertEqual('tree-verified-lock-present', self.prepare(first, pkg, restoring=True)['state'])
         legacy, pkg = self.plugin('legacy', False)
         with patch.object(self.manager, 'run_package_command', side_effect=AssertionError('legacy rollback must not resolve dependencies')):
             self.assertEqual('legacy-unknown', self.prepare(legacy, pkg, restoring=True)['state'])
+
+    def test_unmanaged_pnpm_version_is_rejected_before_dependency_install(self):
+        root, pkg = self.plugin('wrong-pnpm')
+        original = self.manager.run_package_command
+
+        def run(arguments, cwd, timeout=120):
+            if arguments == ['pnpm', '--version']:
+                return subprocess.CompletedProcess(arguments, 0, '11.0.0\n', '')
+            return original(arguments, cwd, timeout)
+
+        with patch.object(self.manager, 'run_package_command', side_effect=run):
+            with self.assertRaisesRegex(ValueError, '需要 10.34.5'):
+                self.prepare(root, pkg)
+        self.assertFalse((root / '.dsha-dependencies.json').exists())
 
     def test_changed_confirmation_tree_and_credential_bearing_lock_are_rejected(self):
         first, pkg = self.plugin('first', False); self.prepare(first, pkg)

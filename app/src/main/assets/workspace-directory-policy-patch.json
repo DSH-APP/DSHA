@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.0-rc.2",
+  "module": "@deepseek-ai/dsh-api-workspace-controller/lib/index.js",
+  "patches": [
+    {
+      "before": "async function defaultWorkspaceDirectory(documentsDirectory, signal, internals = {}) {\n\tconst platform = internals.platform ?? process.platform;\n\tconst paths = platform === \"win32\" ? win32 : posix;\n\tsignal.throwIfAborted();\n\tlet directory = documentsDirectory;\n\tif (directory === void 0) {",
+      "after": "async function defaultWorkspaceDirectory(documentsDirectory, signal, internals = {}) {\n\tconst platform = internals.platform ?? process.platform;\n\tconst paths = platform === \"win32\" ? win32 : posix;\n\tsignal.throwIfAborted();\n\tlet directory = documentsDirectory;\n\t/* DSHA_PRIVATE_WORKSPACE_DOCUMENTS_V1 */\n\tif (directory === void 0 && platform === \"linux\"\n\t\t&& process.env.DSHA_WORKSPACE_DOCUMENTS === \"/root/Documents\"\n\t\t&& (internals.home ?? homedir()) === \"/root\") directory = \"/root/Documents\";\n\tif (directory === void 0) {"
+    }
+  ]
+}
+

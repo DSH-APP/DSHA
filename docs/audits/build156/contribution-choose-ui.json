@@ -1,0 +1,74 @@
+[
+  {
+    "zh": "未完成的操作：%s\n最后记录阶段：%s\n\n%s\n\n原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。",
+    "en": "Incomplete operation: %s\nLast recorded stage: %s\n\n%s\n\nOriginal state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or enter the limited interface to export readable copies.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+    ]
+  },
+  {
+    "zh": "最近手动备份：%s\n%s",
+    "en": "Latest manual backup: %s\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "zh": "\n最近自动副本：%s",
+    "en": "\nLatest automatic copy: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "zh": "发现已有备份：\n%s\n\n先核验内容和实际范围，确认后才会恢复。",
+    "en": "A backup was found:\n%s\n\nIts contents and actual scope are verified before you confirm a restore.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "zh": "\n另有 %s 个备份无法自动读取，可手动选择。",
+    "en": "\n%s other backups cannot be read automatically; you can choose one manually.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "zh": "%s 将从加载路径移除；原件保留在数据页的保留区。对话、其他插件和外部源码目录保留。",
+    "en": "%s will be removed from the loading path. Originals remain in the retained data area. Conversations, other plugins and external source folders are preserved.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "zh": "应急网页无法加载：%s",
+    "en": "Cannot load the emergency page: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RecoveryWebActivity.java"
+    ]
+  },
+  {
+    "zh": "DSHA v%s · MIT 许可",
+    "en": "DSHA v%s · MIT License",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "zh": "跟随系统 · %s",
+    "en": "Follow system · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  }
+]

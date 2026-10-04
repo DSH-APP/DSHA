@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "origin": "Exact previous bytes reconstructed by reversing only the authorized four changes; current tools were not rolled back. Original failure manifests/logs independently preserve the observations.",
+  "files": [
+    {
+      "path": "tools/test-deepseek-messages-compat.mjs",
+      "oldBytes": "docs/audits/build156/host-consumer-isolation/original-tool-bytes/test-deepseek-messages-compat.mjs",
+      "oldSha256": "f7a2c682213dfd6e3097d6652ca73acd4a470b1ad4a0a2c270748aedb06c55c3",
+      "currentSha256": "5a9598c82389447b1deaae30fc9a37cc16c0ff19864b09c15dfc7cdc5fbfa4af"
+    },
+    {
+      "path": "tools/test-storage-json-proroot-dirent.mjs",
+      "oldBytes": "docs/audits/build156/host-consumer-isolation/original-tool-bytes/test-storage-json-proroot-dirent.mjs",
+      "oldSha256": "313e08f519539314f3a8ec6e99b1a8511e40a269e7d69a856ad2fa6c236ccb07",
+      "currentSha256": "ae25ca23e790c9968f35bfbcc997cf33d54d5411532351dff3a63becca995388"
+    },
+    {
+      "path": "tools/test-dsha-ui-regressions.py",
+      "oldBytes": "docs/audits/build156/host-consumer-isolation/original-tool-bytes/test-dsha-ui-regressions.py",
+      "oldSha256": "3b3e772b2a1b0c3fc2795336396874a8a4313882e82849ff31ef6f43bcbedc24",
+      "currentSha256": "0558e19edcd59f9db7cbb93e21fa8f8fedc14de450d532b4551a768ed59e9d85"
+    },
+    {
+      "path": "tools/verify-plugin-upgrade-gate.py",
+      "oldBytes": "docs/audits/build156/host-consumer-isolation/original-tool-bytes/verify-plugin-upgrade-gate.py",
+      "oldSha256": "cd50d8e5e0e0e50f0447bd0cc1c70205837bf726862cbf73b2110cd1187768c7",
+      "currentSha256": "992a66cdbc55bfd83cee4b4062c7b8d3e0596c186e2bb0dd0d31c2d8b6c77349"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "scope": "Exactly three chosen incomplete choose expressions converted to complete UiText.format templates; independent complete paragraphs were left unchanged.",
+  "sourceHashes": {
+    "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java": "1fa41b13960c5f0ff040a39db9f7399ca76cbb5ccb1c15e7a1efd5c8be255b4c",
+    "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java": "5d3d4ff417ef108ffb88ad994169fb4661c3e4e858b2959cf19b2b71cb50aac9"
+  },
+  "contribution": "docs/audits/build156/contribution-choose-data.json",
+  "compileReceipt": "app/build/audit-build156/data-choose/receipt.json",
+  "formatReceipt": "app/build/java-format/data-choose-final.json",
+  "checks": [
+    "JDK17 exact two-source Android37/AndroidX compilation PASS",
+    "Six existing UiTextTest + two targeted current central-catalog raw parameter tests:8 PASS",
+    "Formatter exact Java token equivalence on two files PASS",
+    "BackupManager read-only review: all restore token calls use current controller.context()"
+  ],
+  "limits": [
+    "No Gradle, APK or phone operation; UI owns central catalog/scanner and root owns final full tests."
+  ]
+}

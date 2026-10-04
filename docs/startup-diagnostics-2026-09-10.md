@@ -1,5 +1,8 @@
 # 启动诊断、兼容恢复与附件图标修订
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 适用于标准版和 low，仍为版本码 115、dsh 0.1.5-alpha.2、Ubuntu 基础环境 10。内置移动界面仅增加本地 CSS 修订，版本为 2.4.0-dsha.2。
 
 ## 处理的问题

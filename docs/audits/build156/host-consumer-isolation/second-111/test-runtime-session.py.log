@@ -1,0 +1,16 @@
+test_changed_bytes_with_restored_metadata_invalidate_the_whole_final_proof (__main__.RuntimeSessionTest.test_changed_bytes_with_restored_metadata_invalidate_the_whole_final_proof) ... ok
+test_changed_dependency_and_added_member_are_rejected_by_both_consumers (__main__.RuntimeSessionTest.test_changed_dependency_and_added_member_are_rejected_by_both_consumers) ... ok
+test_creator_interpreter_path_and_bytes_are_required_by_both_consumers (__main__.RuntimeSessionTest.test_creator_interpreter_path_and_bytes_are_required_by_both_consumers) ... ok
+test_directory_allocation_length_is_canonical_but_file_size_remains_bound (__main__.RuntimeSessionTest.test_directory_allocation_length_is_canonical_but_file_size_remains_bound) ... ok
+test_empty_consumer_scope_and_changed_current_input_do_not_skip_checks (__main__.RuntimeSessionTest.test_empty_consumer_scope_and_changed_current_input_do_not_skip_checks) ... ok
+test_full_bytes_are_checked_once_reused_by_real_children_and_rechecked_at_end (__main__.RuntimeSessionTest.test_full_bytes_are_checked_once_reused_by_real_children_and_rechecked_at_end) ... ok
+test_full_device_and_inode_bits_are_bound_without_truncation (__main__.RuntimeSessionTest.test_full_device_and_inode_bits_are_bound_without_truncation) ... ok
+test_marker_rewrite_and_same_bytes_directory_replacement_do_not_reuse_proof (__main__.RuntimeSessionTest.test_marker_rewrite_and_same_bytes_directory_replacement_do_not_reuse_proof) ... ok
+test_standalone_selection_still_hashes_complete_tree_without_a_receipt (__main__.RuntimeSessionTest.test_standalone_selection_still_hashes_complete_tree_without_a_receipt) ... ok
+test_windows_worker_requires_actual_node_parent_and_pinned_executable (__main__.RuntimeSessionTest.test_windows_worker_requires_actual_node_parent_and_pinned_executable) ... ok
+test_wrong_secret_stale_parent_and_arbitrary_receipt_path_fail_closed (__main__.RuntimeSessionTest.test_wrong_secret_stale_parent_and_arbitrary_receipt_path_fail_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 6.286s
+
+OK

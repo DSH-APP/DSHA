@@ -24,7 +24,7 @@ public final class AuditDocumentProvider extends ContentProvider {
         com.deepseekharness.app.DeviceAuditSupport.requireIsolated(context);
         File owned=directory.getCanonicalFile(), files=context.getFilesDir().getCanonicalFile();
         if (!owned.getParentFile().equals(files) || !owned.getName().matches("device-workflow-[a-f0-9-]{36}")) throw new IOException("TEST_DESTINATION_PATH");
-        String id=UUID.randomUUID().toString(), name="DSHA-data-v5-"+id+".dshbak";
+        String id=UUID.randomUUID().toString(), name="DSHA-data-v5-"+id+".tar.gz";
         DOCUMENTS.put(id,new Document(new File(owned,name),name,behavior));
         return Uri.parse("content://"+context.getPackageName()+".deviceaudit/"+id);
     }
@@ -33,7 +33,7 @@ public final class AuditDocumentProvider extends ContentProvider {
         if (value==null) throw new FileNotFoundException("TEST_DOCUMENT_UNKNOWN"); return value;
     }
     @Override public boolean onCreate() { return true; }
-    @Override public String getType(Uri uri) { return "application/octet-stream"; }
+    @Override public String getType(Uri uri) { return "application/gzip"; }
     @Override public Cursor query(Uri uri,String[] projection,String selection,String[] args,String order) {
         try {
             Document value=document(uri);

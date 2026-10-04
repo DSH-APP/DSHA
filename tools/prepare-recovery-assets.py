@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """为正式 APK 准备固定应急资产；任何输入变化均显式核验，不自动更新运行时锁。"""
+from source_text import write_text as write_source_text, matches_text
 import argparse
 import hashlib
 import json
@@ -152,10 +153,10 @@ def prepare(output, shared_assets):
                     overlays=overlays, overlayInputs=overlay_inputs,
                     agentSha256=digest(agent), profileHashes=profiles, launcherHashes=launchers)
     identity = hashlib.sha256(json.dumps(contract, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
-    (output / 'recovery-runtime.json').write_text(json.dumps(dict(id=identity, **contract), ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf8')
+    write_source_text(output / 'recovery-runtime.json',json.dumps(dict(id=identity, **contract), ensure_ascii=False, separators=(',', ':')) + '\n',encoding='utf8')
     # 物理位置不进入运行时内容身份；相同字节复用不会使已有应急舱失效。
-    (output / 'recovery-asset-locations.json').write_text(json.dumps(
-        dict(schema=1, runtimeId=identity, archives=locations), separators=(',', ':')) + '\n', encoding='utf8')
+    write_source_text(output / 'recovery-asset-locations.json',json.dumps(
+        dict(schema=1, runtimeId=identity, archives=locations), separators=(',', ':')) + '\n',encoding='utf8')
     expected = {'recovery-runtime.json', 'recovery-asset-locations.json'}
     expected.update(row['asset'] for row in overlays)
     expected.update(row['asset'] for row in locations if row['source'] == row['asset'])

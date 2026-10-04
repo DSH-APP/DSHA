@@ -1,0 +1,473 @@
+{
+  "schema": "dsha-device-exit-snapshot-review-v1",
+  "reviewedAt": "2026-10-04T11:52:40+08:00",
+  "reviewMode": "host_only_fresh_final_standard_exit_and_network_off_evidence",
+  "softwareChanged": false,
+  "deviceCommandsByReviewer": 0,
+  "scope": {
+    "flavor": "standard",
+    "packageName": "com.dsh.client",
+    "versionCode": 156,
+    "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+    "minSdk": 30,
+    "targetSdk": 37,
+    "debuggable": false,
+    "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+    "signerCertificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+    "androidReleaseReportedByOperator": 13,
+    "finalStandardReturnTime": "2026-10-04T10:51:25+08:00",
+    "captureTime": "2026-10-04T11:45:44.610012+08:00",
+    "deviceOperator": "runtime under parent-authorized exclusive lease",
+    "bindingBasis": "New actual Standard-return overlay receipt, same release signer/digest and final package metadata/capture. This review does not inherit Low or old 5aeb no-crash coverage.",
+    "latestRecordedChildSystemExitPreserved": true
+  },
+  "summary": {
+    "status": "no_new_main_process_crash_marker_in_finite_final_standard_snapshots",
+    "historicalOwnJavaFatalEvents": 2,
+    "currentDateJavaFatalMarkersObserved": 0,
+    "currentDateNativeFatalSignalMarkersObserved": 0,
+    "currentDateAnrMarkersObserved": 0,
+    "exitHistoryRecords": 16,
+    "actualVersion156OverlayBoundaries": 4,
+    "installationTransitionExitRecords": 10,
+    "existing0836PermissionChangeMainExitRecords": 1,
+    "postFinalReturnMainProcessExitsObserved": 0,
+    "postFinalReturnIsolatedWebviewSystemExitsObserved": 1,
+    "crashNativeCrashOrAnrExitReasonRecordsObserved": 0,
+    "allProcessExitsAbsent": false,
+    "universalNoCrashGuarantee": false,
+    "finalLanToggleOffSaveAndNewTcpRefusedObserved": true
+  },
+  "sourceEvidence": {
+    "finalStandardReturnReceipt": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-return-final/receipt.json",
+      "sha256": "294db3bb7ecde0a1cde94db9004deb9de5dca942e1e72d11a13d3f85a9aeb76f",
+      "bytes": 713
+    },
+    "finalReturnPackageMetadata": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-return-final/after-private.txt",
+      "sha256": "a2cf92d53e5bdb93e634b26d1867d7ba6dc651eb6ad1fd07900a0608d4fee103",
+      "bytes": 13491
+    },
+    "finalPackageMetadata": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/final-device-state/package-private.txt",
+      "sha256": "75e3ef06af514f3113fe3a7278366b834bb8d4fea5fad273115d4bab057aa456",
+      "bytes": 16387
+    },
+    "captureMetadata": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/final-device-state/capture-private.json",
+      "sha256": "ba3358875a6dacd38362edba17e9bd5089cb7792b60ad44242f7efda6ba186a6",
+      "bytes": 456,
+      "captureAt": "2026-10-04T11:45:44.610012+08:00",
+      "uidFilterAndNoClearDescribedByCaptureScope": true,
+      "exactLogcatUidFilterAndNoLogClearExecutionAttribution": "runtime reports actual current-own-package UID logcat filter without clearing; reviewer reads newly captured final files only, never invokes collection commands.",
+      "exitHistoryContainsOwnChildren": true,
+      "rawCaptureScopeAndPrivateIdentifiersOmitted": true
+    },
+    "finalCrashBuffer": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/final-device-state/app-crash-buffer-private.txt",
+      "sha256": "df7f57cc57ee74a4aa4ad8d94d8d8831bfecd68ac06e291b9034b39c6b3d8edf",
+      "bytes": 10243,
+      "freshFinalArtifactRead": true,
+      "historicalEvents": [
+        {
+          "logTimestamp": "09-27 06:31:20.086",
+          "processCategory": "own_main_app",
+          "exceptionTypes": [
+            "android.app.ForegroundServiceStartNotAllowedException"
+          ],
+          "classification": "historical_before_four_current_overlays"
+        },
+        {
+          "logTimestamp": "09-29 18:04:57.921",
+          "processCategory": "own_main_app",
+          "exceptionTypes": [
+            "java.lang.IllegalStateException"
+          ],
+          "classification": "historical_before_four_current_overlays"
+        }
+      ],
+      "currentDateJavaFatal": false,
+      "currentDateNativeFatalSignal": false,
+      "currentDateAnr": false,
+      "rawStacksPublished": false,
+      "note": "Current final buffer bytes happen to equal an earlier historical-content buffer. Freshness comes from the actual final collection/capture provenance, not from reusing the earlier file as a PASS."
+    },
+    "finalExitHistory": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/final-device-state/app-exit-info-private.txt",
+      "sha256": "61bc4643a75d5507bea4a93c59d7f97245b43bec125a3cd9199484d77a2adcdf",
+      "bytes": 6307,
+      "classifiedRecords": [
+        {
+          "recordIndex0Based": 0,
+          "timestamp": "2026-10-04T11:44:40.560+08:00",
+          "processCategory": "webview_isolated_child",
+          "reasonNumber": 13,
+          "reasonName": "OTHER KILLS BY SYSTEM",
+          "status": 0,
+          "classification": "recorded_isolated_webview_system_exit",
+          "overlayBoundaryId": null,
+          "period": "after_final_standard_return",
+          "installPackageLIMarker": false,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 1,
+          "timestamp": "2026-10-04T10:51:25.293+08:00",
+          "processCategory": "own_app_child",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "final_standard_return_overlay",
+          "period": "final_standard_overlay_transition",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 2,
+          "timestamp": "2026-10-04T10:51:25.249+08:00",
+          "processCategory": "own_main_app",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "final_standard_return_overlay",
+          "period": "final_standard_overlay_transition",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 3,
+          "timestamp": "2026-10-04T10:51:25.248+08:00",
+          "processCategory": "own_app_child",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "final_standard_return_overlay",
+          "period": "final_standard_overlay_transition",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 4,
+          "timestamp": "2026-10-04T10:51:25.247+08:00",
+          "processCategory": "own_app_child",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "final_standard_return_overlay",
+          "period": "final_standard_overlay_transition",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 5,
+          "timestamp": "2026-10-04T10:36:30.667+08:00",
+          "processCategory": "own_main_app",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "second_low_overlay",
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 6,
+          "timestamp": "2026-10-04T10:29:10.404+08:00",
+          "processCategory": "webview_isolated_child",
+          "reasonNumber": 13,
+          "reasonName": "OTHER KILLS BY SYSTEM",
+          "status": 0,
+          "classification": "recorded_isolated_webview_system_exit",
+          "overlayBoundaryId": null,
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": false,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 7,
+          "timestamp": "2026-10-04T08:55:07.723+08:00",
+          "processCategory": "webview_isolated_child",
+          "reasonNumber": 13,
+          "reasonName": "OTHER KILLS BY SYSTEM",
+          "status": 0,
+          "classification": "recorded_isolated_webview_system_exit",
+          "overlayBoundaryId": null,
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": false,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 8,
+          "timestamp": "2026-10-04T08:36:43.606+08:00",
+          "processCategory": "own_main_app",
+          "reasonNumber": 8,
+          "reasonName": "PERMISSION CHANGE",
+          "status": 0,
+          "classification": "earlier_first_standard_permission_change",
+          "overlayBoundaryId": null,
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": false,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 9,
+          "timestamp": "2026-10-04T08:15:50.949+08:00",
+          "processCategory": "own_app_child",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "first_standard_overlay",
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 10,
+          "timestamp": "2026-10-04T08:15:50.692+08:00",
+          "processCategory": "own_main_app",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "first_standard_overlay",
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 11,
+          "timestamp": "2026-10-04T08:15:50.688+08:00",
+          "processCategory": "own_app_child",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "first_standard_overlay",
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 12,
+          "timestamp": "2026-10-04T08:15:50.685+08:00",
+          "processCategory": "own_app_child",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "first_standard_overlay",
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 13,
+          "timestamp": "2026-10-04T07:28:09.571+08:00",
+          "processCategory": "own_app_child",
+          "reasonNumber": 1,
+          "reasonName": "EXIT_SELF",
+          "status": 0,
+          "classification": "recorded_own_child_self_exit",
+          "overlayBoundaryId": null,
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": false,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 14,
+          "timestamp": "2026-10-04T06:14:37.391+08:00",
+          "processCategory": "own_main_app",
+          "reasonNumber": 10,
+          "reasonName": "USER REQUESTED",
+          "status": 0,
+          "classification": "package_overlay_closes_previous_process",
+          "overlayBoundaryId": "first_low_overlay",
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": true,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        },
+        {
+          "recordIndex0Based": 15,
+          "timestamp": "2026-10-04T05:43:10.504+08:00",
+          "processCategory": "webview_isolated_child",
+          "reasonNumber": 13,
+          "reasonName": "OTHER KILLS BY SYSTEM",
+          "status": 0,
+          "classification": "recorded_isolated_webview_system_exit",
+          "overlayBoundaryId": null,
+          "period": "before_final_standard_return",
+          "installPackageLIMarker": false,
+          "rawProcessIdsUidsDescriptionsAndTracePathsOmitted": true
+        }
+      ],
+      "rawProcessUidPidDescriptionTraceFieldsPublished": false
+    },
+    "fourActualOverlayBoundaries": [
+      {
+        "id": "first_low_overlay",
+        "targetFlavor": "low",
+        "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+        "versionCode": 156,
+        "packageUpdateTime": "2026-10-04T06:14:37+08:00",
+        "packageMetadata": {
+          "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-package-after.txt",
+          "sha256": "2036a4198d3f59e2b75f2d5b145ac9c7ba2264a5d0ae5f80437d2bc46c3a97fc",
+          "bytes": 13588
+        },
+        "installReceipt": {
+          "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-install.txt",
+          "sha256": "c4aa470acafcf8576c15b0f0b5ae7e852d1ec5413372d0e6a9272e788e1306d3",
+          "bytes": 38
+        }
+      },
+      {
+        "id": "first_standard_overlay",
+        "targetFlavor": "standard",
+        "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+        "versionCode": 156,
+        "packageUpdateTime": "2026-10-04T08:15:50+08:00",
+        "packageMetadata": {
+          "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-package-after.txt",
+          "sha256": "f696372fc91262fd51f91c0913310f863505694be90d419aea4e7d5e17fe2592",
+          "bytes": 13491
+        },
+        "installReceipt": {
+          "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-install.txt",
+          "sha256": "c4aa470acafcf8576c15b0f0b5ae7e852d1ec5413372d0e6a9272e788e1306d3",
+          "bytes": 38
+        }
+      },
+      {
+        "id": "second_low_overlay",
+        "targetFlavor": "low",
+        "apkSha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+        "versionCode": 156,
+        "packageUpdateTime": "2026-10-04T10:36:30+08:00",
+        "operatorReceiptTime": "2026-10-04T10:36:33.624384+08:00",
+        "receipt": {
+          "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-nav0-once/receipt.json",
+          "sha256": "acfaa4c3c24790d8d6a155c8b23071b2c94a94cfcf5b9842289183d3e2e76c14",
+          "bytes": 695
+        },
+        "packageMetadata": {
+          "path": "app/build/audit-build156/device-private/latest-retake-20261004/low-nav0-once/after-private.txt",
+          "sha256": "20be388a01574e6ce343a0a10765154830d819fac4706084a7747bd2c8659aea",
+          "bytes": 13649
+        }
+      },
+      {
+        "id": "final_standard_return_overlay",
+        "targetFlavor": "standard",
+        "apkSha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+        "versionCode": 156,
+        "packageUpdateTime": "2026-10-04T10:51:25+08:00",
+        "operatorReceiptTime": "2026-10-04T10:51:28.020011+08:00",
+        "receipt": {
+          "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-return-final/receipt.json",
+          "sha256": "294db3bb7ecde0a1cde94db9004deb9de5dca942e1e72d11a13d3f85a9aeb76f",
+          "bytes": 713
+        },
+        "packageMetadata": {
+          "path": "app/build/audit-build156/device-private/latest-retake-20261004/standard-return-final/after-private.txt",
+          "sha256": "a2cf92d53e5bdb93e634b26d1867d7ba6dc651eb6ad1fd07900a0608d4fee103",
+          "bytes": 13491
+        }
+      }
+    ],
+    "finalOperatorActionPrefix": {
+      "path": "app/build/audit-build156/device-private/actions.jsonl",
+      "sha256": "17c9ac8d72f01175a77b97394b4f9730c2262411f6ac273e8ae50a10470a5cf1",
+      "bytes": 246003,
+      "records": 1734,
+      "lastIndex0Based": 1733,
+      "lastTime": "2026-10-04T11:44:41.481787+08:00",
+      "hashRecipe": "Exact 1734 original complete JSONL byte records through the final preceding action. Later appends excluded; no raw arguments published."
+    }
+  },
+  "classification": {
+    "historicalJavaFatal": "09-27 foreground-service-start restriction and 09-29 IllegalStateException are kept as historical own-main FATALs. They are not new c676-return failures.",
+    "fourOverlayTransitions": "All four actual Low/Standard replace installations retain APK versionCode 156 and E7E3; installPackageLI exits close earlier main/child processes at each replacement boundary.",
+    "existingPermissionChange": "08:36:43.606 main reason 8/PERMISSION CHANGE belongs to the first new Standard period microphone Deny→Ask change after operator normal terminal/Web closure. It is before the final return and does not show a new permission-change kill in the final period.",
+    "newFinalPeriodChildExit": "11:44:40.560 is an observed isolated WebView child OTHER KILLS BY SYSTEM/status0 after final Standard return. Its cause is not diagnosed from this broad reason, and it is not relabeled as main Java FATAL, all-zero exits, or universal browser stability.",
+    "currentMain": "No post-return own-main exit record or CRASH/CRASH_NATIVE/ANR reason occurs in this retained finite history.",
+    "otherPriorChildren": "Earlier isolated WebView system exits and an own-child EXIT_SELF remain classified by their recorded reasons; no source-level cause or every-child clean shutdown is invented."
+  },
+  "finalRestoredSettingsObservations": {
+    "microphoneRecordAudioGrantedInFinalPackage": false,
+    "microphoneStateMeaningAttribution": "Operator reports overlay-natural Ask state; final package granted=false is directly checked. No new final-period permission-change record is observed.",
+    "accessibilityOwnServiceOffOthersRetained": "Operator-reported ordinary final UI restoration; not independently read from package dump or used as a crash absence proof.",
+    "removedTwoOwnedPluginsHealthyBackupFdAndWebReady": "Other operator-owned scenario evidence exists separately; not revalidated or borrowed to turn these snapshots into all-matrix PASS."
+  },
+  "finalNetworkOff": {
+    "status": "pass_observed_bounded_listener_unreachable_case",
+    "ordinaryNativeUiLanOffAndSaveScreenshotFingerprints": [
+      {
+        "path": "app/build/audit-build156/device-private/lease-final-standard-lan-restored-off-1016.png",
+        "sha256": "f264f66519ffa17b343b795ac9dac9447ace3c9c146bd8e7d4371bbdbe135475",
+        "bytes": 229892,
+        "actionIndex0Based": 1709,
+        "operatorTime": "2026-10-04T11:37:41.279001+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false,
+        "semanticLanOffSaveAttribution": "runtime/root normal final UI observation"
+      },
+      {
+        "path": "app/build/audit-build156/device-private/lease-final-standard-lan-off-save-confirmed-1017.png",
+        "sha256": "ef3820bdd0536aea07c7efeb9a5440873ed99c72081dc6fd420680cf25dd4b74",
+        "bytes": 284181,
+        "actionIndex0Based": 1711,
+        "operatorTime": "2026-10-04T11:37:43.446865+08:00",
+        "pixelsPublished": false,
+        "visuallyReviewedByThisReviewer": false,
+        "semanticLanOffSaveAttribution": "runtime/root normal final UI observation"
+      }
+    ],
+    "newTcpObservation": {
+      "path": "app/build/audit-build156/device-private/latest-retake-20261004/final-device-state/network-off-observation-private.json",
+      "sha256": "8b6969182f065495c9cd5cedc0d6773ca8b49356883784d06eaa23a80614d722",
+      "bytes": 161,
+      "authenticationNotSent": true,
+      "reachable": false,
+      "errorClass": "ConnectionRefusedError",
+      "targetHostPortAndPrivateInputsPublished": false
+    },
+    "executionAttribution": "Runtime actually opened a new unauthenticated TCP connection to the same RNDIS LAN port after ordinary OFF+Save. Reviewer checks receipt/metadata/hash, does not connect to the phone.",
+    "doesNotClaimEveryInterfaceOrPortClosed": true,
+    "doesNotClaimAnHttp401Result": true
+  },
+  "checks": [
+    {
+      "command": "PowerShell $reviewScript | python -: new final Standard overlay/signer/digest/metadata156 binding; 4 grouped installPackageLI boundaries; 16 retained exit records; 2 historical Java FATALs and current-date Java/native/ANR markers; one new isolated child system exit kept; 08:36 permission event separated;final micfalse;actual OFF/save action hashes+fresh unauthenticated TCP refusal;exact 1734 action prefix",
+      "exitCode": 0,
+      "exitRecordsChecked": 16,
+      "overlayBoundariesChecked": 4,
+      "nativeOrJavaCurrentDateFailureMarkers": 0,
+      "currentFinalMainExitRecords": 0,
+      "currentFinalIsolatedChildSystemExitRecords": 1,
+      "productionSourceTestsBuildsOrChanges": 0,
+      "newDeviceCommandsByReviewer": 0
+    }
+  ],
+  "interpretationLimits": [
+    "This conclusion is confined to the fresh 11:45 final capture and Standard c676 run after the 10:51 return. It does not reuse Low/old 5aeb files as new final-period evidence.",
+    "Finite crash buffer and retained exit history cannot prove universal no-crash stability, every native/tombstone occurrence, every guest process or long-term behavior.",
+    "The one final-period isolated child system exit is preserved and not asserted harmless from reason 13 alone. No observed main-process crash marker is the bounded conclusion.",
+    "All actual installation metadata remains versionCode 156; a nav/fixture label containing 157 is not treated as a different APK version.",
+    "Settings restoration, successful owned-plugin/backup/FD/WebReady scenarios are operator observations with separate evidence. This exit review does not independently verify those transactions.",
+    "ConnectionRefused after LAN OFF is one actual fresh TCP negative observation on the existing RNDIS endpoint, not a universal network/IPv6/other-port shutdown or an HTTP auth response."
+  ],
+  "privacy": {
+    "deviceSerialPidUidPublished": false,
+    "rawCrashStackOrExitDescriptionPublished": false,
+    "privateLanHostUrlTokenCookiePublished": false,
+    "rawScreenshotsOrUserContentPublished": false,
+    "rawCommandArgumentsPublished": false
+  }
+}

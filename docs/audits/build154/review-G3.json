@@ -1,0 +1,1915 @@
+{
+  "schema": 1,
+  "group": "G3",
+  "reviewedSourceBuild": 153,
+  "targetAuditBuild": 154,
+  "reviewDate": "2026-10-03 Asia/Shanghai",
+  "input": "D:\\qq\\文件\\DSHA-deliverables-20261002\\DSHA-deliverables-20261002\\work\\G3.json",
+  "inputSha256": "1576105df7b7d9c3001cf9ffdc1018f92d3dff51bfd85dc0142937ab8f1bee73",
+  "scope": "52项逐条当前源码复核；只写审计报告，不改生产代码，不操作手机。附件另一会话决策不作为当前授权。",
+  "policyPreserved": [
+    "插件免审阅且依赖/生命周期开放",
+    "终端shell开放",
+    "裸PID不强杀",
+    "旧原件/数据保留",
+    "外部无密码tar.gz与内部自动副本加密",
+    "应急写入原生确认"
+  ],
+  "statusCounts": {
+    "open": 43,
+    "accepted_policy": 3,
+    "requires_device_evidence": 1,
+    "already_fixed": 2,
+    "not_applicable": 3
+  },
+  "sourceSnapshotSha256": {
+    "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java": "b730add1db78f6a8298d621a3b2e4f063e9b523e619e824bcfd2ef7a4ebb5611",
+    "app/src/main/java/com/deepseekharness/app/util/WebPidIdentity.java": "297561f0b7b2e308e4cdb2c81da19264be537ca85da4418cdad69f5195bf333d",
+    "app/src/main/java/com/deepseekharness/app/util/ProcessIdentity.java": "eda09bf49cc57106c769441ca243b890b7ea2b12786bcf8a1fa9331796e1ebe9",
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java": "79238d4c177c782f01d9f93289081259a057722ee6c642be67db3bfa4fa471b7",
+    "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java": "d712151cee1883a94aa6a91d355c45175ebd25c48f70d83f49a40d1cd23376d2",
+    "app/src/main/assets/agent-preset-patch.json": "98025f90d8039cd4e329906a86c24ca9e9c805635c19a28d1eb359dad6ac2c08",
+    "app/src/main/assets/models-navigation-patch.json": "d8d15c308c0c09a1a861d27a9e4b05bc4665ee6a57bcf153b6d8c4f4b80f4cc8",
+    "app/src/main/assets/web-integration/tooltip-patch.json": "49fab8986400d0b4a177a8c1a93028796394bfcab573811af0114634cd31eeba",
+    "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java": "e1e272cfbe98cd39cbaf89851320ef0c93fc699fe11108eac6ddd0a5132b811f",
+    "tools/prepare-test-runtime.py": "f6fbf185c1f9904a99c422c9b7ab49bcb521c320fbf4c443a332ea25f6624b75",
+    "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java": "bf165b0078e804710b8fa362a30b0e0053a42d35a7ec111e3084e1f9ed73acf3",
+    "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java": "af7f6aa549b360cb7cb16b34c5dde3701bda83516c15f5e6b7b060a0d8dcc9f3",
+    "app/src/main/java/com/deepseekharness/app/util/BackupScope.java": "8702b3ade6d8a5b2a060c139fc04831ae354d59d891960bdde87d6320b015ebd",
+    "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java": "5bee97a731a617d3a105023f6733559c790d577f1e1854fddcf32d48a1a969d0",
+    "app/src/main/assets/backup-engine.py": "3c7a5e1299eac636085bd86796443b6f3d73dda9daac4e992351f0769ada1b81",
+    "app/src/main/java/com/deepseekharness/app/backup/HostPendingTransactions.java": "578d9437ceec811019534cee436efb6980881181c6524197b01b36e539d67eec",
+    "app/src/main/java/com/deepseekharness/app/backup/RestoreStaging.java": "5f94804af1cfebd2f979b9737476ce67c7ca8222219baca6b0bd01d01fe6e10a",
+    "app/src/main/java/com/deepseekharness/app/backup/ConfigurationSnapshots.java": "f7e139d6a1ab865ff364c1c43435aacc4f78523bab81c936fe413e70ba1e7eb2",
+    "app/src/main/java/com/deepseekharness/app/core/HarnessController.java": "bcf7760a53d8ddc7873aff69fa5e253224c9201d0c57e633d5ae83ca001b61e4",
+    "app/src/main/java/com/deepseekharness/app/backup/LegacyBackupImporter.java": "309ca9507585cc1ad5a28b5c081e1bc80e735ee575322c81adbb5830e7d37d13",
+    "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java": "e215e2b65506544ba7b41434e9d1a0002a9b6e26dc26103a32ada74efc822c53",
+    "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java": "78ba6a384293452d2ab53fc3d219ca967f5d19fc182262152c5915eb14d17de4",
+    "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java": "6d69fce5a2e18ade06a099de8cef2f047043219056219ef468e32f230c686dd6",
+    "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java": "53c686c824a8559b8101f92fe90499ca3f70e11a9045a9001f3ae72ab88352d2",
+    "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java": "bb942e420f57cc2199667062986bb4d5b95dca0514f1d919a6f13f5c2dac7bcc",
+    "app/src/main/java/com/deepseekharness/app/backup/PasswordFreeBackupExport.java": "d999a6dedad547fe583ac4addafc55f073d3d98fb934b38cfd859a7107daaf06",
+    "app/src/main/java/com/deepseekharness/app/backup/PortableBackupEnvelope.java": "4eab2d18058fafd6f96fc97aaf389c04be52e8f0263aa07c582d930c25f0b2dd",
+    "app/src/main/java/com/deepseekharness/app/backup/BackupArchive.java": "d58794ee9fb99724fb3e264cc6621cdde63eb13dc882a4756858a3e15a51619a",
+    "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java": "162d3dfda6c4ee98c93f9d889b866943b506cdf2fa4a2986a74f99ff99dc12ee",
+    "app/src/main/java/com/deepseekharness/app/backup/VerifiedBackupCopy.java": "284e335c5d089e2efc51bcd75c6d2ada6ac3c058abf7c369e904e710047a9036",
+    "app/src/main/java/com/deepseekharness/app/backup/NativePluginGraph.java": "f5a14716bfec7798506e1b54ba15684c93532408bde72f33ce41b9fddbeb6b65",
+    "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java": "aee6ec555ac8310a9cea923d7965ebed6b4a2cc05870b61e893a82dc62034f48",
+    "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java": "74d60d62a7ed4b752b1f904023f4165ad6695307c5b53aea6c3b6dce40c12325",
+    "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java": "b968f06fc9ba5b7567e454f80dd3157b2d4bda99487a4b24a57b2d4c05c9805a",
+    "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java": "bbab9cc5df9815d7573240ea60e46a76f0831918d8ac651c17229083a4fab66f",
+    "app/src/main/java/com/deepseekharness/app/backup/SystemPluginState.java": "709794c60bbe76bfc076c3b473980799745d62220e58b9222883a82b83753bb1",
+    "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java": "9d009edfe41d2e45316ef1b76bba9bad9c8c3996fc4234268088951debd650e9",
+    "app/src/main/java/com/deepseekharness/app/backup/CurrentManagedPackages.java": "591516c9002a7a8069b890379f4502d777895adb32714bf256adf8299047eab7",
+    "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java": "7c252597e8d55f83b617890de3d936b2f4f27c999cddb753598ca59ffc6c506f",
+    "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java": "7ce9c745f90e242ef1a4eec9be891f07029e47607729bebd8bc3333444849fe5",
+    "app/src/main/assets/plugin-transactions.py": "aa36d2acf5e07287b27b43b26e1d924485428986ce30e36574597d165db3c496",
+    "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java": "335aa410f5aafd0b6c25f318d37b63c5ae540e6201342f413728059941b5c1c6",
+    "app/src/main/java/com/deepseekharness/app/HttpShellService.java": "9b31fb2ef224f1af727aa35df5caf22a2d83dc32827e7cf6543f2533c49017b8",
+    "app/src/main/java/com/deepseekharness/app/BackupManager.java": "07c4901a4c48db555b19826b24b2f246d903a8e6cea7ce9c84b7117f19b0b86c",
+    "app/src/main/java/com/deepseekharness/app/core/BackupTask.java": "4dec362fc0792d8c800baaf4955137488fd98bf72023dcb7b13c9a25e1a3fe33",
+    "app/src/main/java/com/deepseekharness/app/backup/HostMaintenancePending.java": "68ce766fdd15fc41946d76d5120e244fbdd269f6d9e330d5eeb8fcc8d9e849e2",
+    "app/src/main/assets/environment-data.py": "157c142ff226fc53db1ae242e12d98f294e4b686bee39d103f235d9ba585299a",
+    "tools/verify-dsh-upgrade-apk.py": "ff51ceae3017a007065ac2b29efbb41c835884562b0d2bcbf16da846324d3483",
+    "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java": "fff3efa8c50bd4b43fb10757d9a5f988ece2084318911f114f11954dc0cca86d",
+    "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java": "51a2e0f6a3aa0298460192f670d5c600a92c635e372c2675ffe97d4099642585",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java": "2f952a820a487b4cb6955f1879397988acb158bff4931b5e17cd9d5fd61fa64d",
+    "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java": "00917822a1505f8c732e1449c98738486b6a796604c4a7a0589ddfc19b6e26b2",
+    "app/src/main/java/com/deepseekharness/app/util/BackupFileNames.java": "f73bd6fcd7ae15d452565e24441682f582750b92db0c810ec098f9a25f137c18",
+    "app/src/main/java/com/deepseekharness/app/HarnessService.java": "1353baa7ca19a496dcaae4a5a4080dfd2162f7f61c66e8f344d97d57bc0c8af3",
+    "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java": "e4c49f1ae00fec963f5f575efc3d8435a49f555f5d1982b1427d48f4f849dfdc",
+    "app/src/main/java/com/deepseekharness/app/recovery/RecoveryService.java": "fea50dd7685297a6ad9434c3b9175b15702e783e64d309dc8e5041d132dc3cb8",
+    "app/src/main/java/com/deepseekharness/app/util/InstallProcess.java": "3e89e2ca416c39203d9fe4ea00e187ff34630526c66a433f6fd50c7ca0ed8ec7",
+    "app/src/main/java/com/deepseekharness/app/util/BoundedProcessRunner.java": "a3b5781abd4775abd9c7ee00de74d39739ed7f0ebb736c55e07ebc6c8f301d17",
+    "app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java": "922bf64e1d4797065697f0e79902cd5fae9cea6a0c1426e17d3a5e26b17c608e",
+    "website/src/skills/device-shell/SKILL.md": "dbfac86cec7b8c2ed14218402562a1b2dc2395376936929dac1a827a45a7037d",
+    "agent-skills/device-shell/SKILL.md": "164319af3762a3c01f16421d9370aeb6df2dd798526d4983caa7c435cf5d390d",
+    "website/data/catalog.mjs": "da543bbb5b6db4e27055b6d7448ef45a38d73847cea6225949369cee6fa53289",
+    "app/src/debug/assets/web-state-fixture.html": "52578517a4e0d3feb0b17f7021886a101000deffb09dda3b8b4d2162bfed07dd",
+    "app/src/androidTest/assets/web-state-fixture.html": "89646d1144cc80a477514d3a9cbd252fd02f3623ea296c30bd6d1cd112d9dfc9",
+    "app/src/main/assets/register-builtin-plugins.py": "f44648db69bd7600233ba198e38f7308c0863aec460b51c512687a454db59ce8",
+    "app/src/main/assets/plugin-manager.py": "91cfe0279f384a2428e6addd339fa432cced61460f9cabd887965d441888f997",
+    "app/src/main/assets/heal-sessions.py": "ab2a4c44f7585ac75e927acc6d344804164cbe5ee5c677696b0377d7deec86ab",
+    "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java": "8689cbf95488f41da7df20658729b8aaa25af6b52e19b59e3cce7cdae071a1d8",
+    "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js": "68ffd80fe0ff46ad4ce1d630388696a7dc21000a31932d268397132b2f6127b2",
+    "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js": "a52432b6bd2a9db67d4e4ddf82a3162a594f3719d932641ad3fa5e2e5165c11d",
+    "app/src/main/java/com/deepseekharness/app/backup/FileBackupSource.java": "c357f08c73bb3e7b5121e8ef15d870b0dd4eb4ed45b25120cdefdb0d1bf7dc09",
+    "app/src/main/assets/plugin-lifecycle.py": "9fb0d6161e862c0f50235a1f182abff0e28394246b2b9171dfb2f92ad61e20f0",
+    "app/src/main/assets/plugin-dependencies.py": "4c76ff23db11b1cc7752280bf25222b0e871c15ec5685b47003b13f94cd44310",
+    "app/src/main/java/com/deepseekharness/app/ui/WebPageScripts.java": "3540578acbba351229c882b89fbd76d80c5056a7355bb9bbab6c96b716ee6aaf",
+    "tools/smoke-dsh-runtime.mjs": "2abb72bd708e3596871604d328c583eec1425173446edce22dc32d167ecbac58",
+    "tools/test-gecko-model-navigation.mjs": "8fce7b499dbc640951a70d2a3163047936d45a505c344000e3bc892139d43d89",
+    "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json": "b75fd151c07e345e26ad0e0ff9177d5c51ee29d59340ef32323219bf180f508b",
+    "tools/test-mobile-update.mjs": "a7f1fef34d450c2acf822b66a7fa332fe4fcde6afb7f287440cac5eea43ce09f",
+    "app/src/main/assets/selftest.py": "e7bafe7566796e80ec37b74185e199b3c5e002c1187355f8080c23acd8e5dbaa",
+    "app/src/main/java/com/deepseekharness/app/util/RuntimeTrialOutputPolicy.java": "b3fac7f7b971439ef6374fd8c3bd44b22aa512476cd8c23f5d196ed6518e309f",
+    "scripts/fix-corrupt-session.py": "88e65b88cd083af7867971201e1cd3ebc9eb0eccad70ab2b973d4238d603c264"
+  },
+  "items": [
+    {
+      "id": "D-DUP-01",
+      "title": "受管 node_modules 别名枚举在 installedManagedPaths 与 stage 中复制两份",
+      "status": "open",
+      "severity": "P2",
+      "area": "runtime",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+          "line": 84,
+          "anchor": "private List<String> installedManagedPaths() throws IOException {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+          "line": 104,
+          "anchor": "List<String> stage(File stage, Consumer<String> progress) throws IOException {",
+          "kind": "current_source"
+        }
+      ],
+      "current": "installedManagedPaths 与 stage 仍分别枚举 scope/global/bin 别名及四个标记；错误文案与路径前缀策略也分叉。",
+      "recommendation": "仅抽共用路径枚举与标记常量，保留 staging/installed 不同根；先做集合等价夹具再改。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java"
+      ],
+      "tests": [
+        "未运行新测试；建议同一 rootfs scoped/alias 夹具验证暂存与健康路径集合等价。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java:84-101; ManagedRuntimeAssets.java:124-133",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-02",
+      "title": "/proc/<pid>/stat 解析与 /proc 遍历在多个类中各自实现",
+      "status": "open",
+      "severity": "P2",
+      "area": "runtime",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/WebPidIdentity.java",
+          "line": 9,
+          "anchor": "public static WebPidIdentity parse(String stat, int expectedPid) {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/ProcessIdentity.java",
+          "line": 37,
+          "anchor": "private static ProcessIdentity parse(String stat, int pid) {",
+          "kind": "current_source"
+        }
+      ],
+      "current": "WebPidIdentity 与 ProcessIdentity 两个 stat 解析器仍在；字段索引目前均正确，差异主要是 parent/session 范围与状态语义，并非已证实误杀。",
+      "recommendation": "抽共享 stat 值对象/只读 Proc seam；保留不同调用方身份、EPERM 与停止屏障政策，不按裸 PID 强杀。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/WebPidIdentity.java",
+        "app/src/main/java/com/deepseekharness/app/util/ProcessIdentity.java"
+      ],
+      "tests": [
+        "未运行新测试；现有 ProcessIdentity/WebPidIdentity 测试需补 comm 括号、缺字段与 Z/X/x 差分。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/util/WebPidIdentity.java:9-21; util/ProcessIdentity.java:3-8; runtime/WebProcessManager.java:91,146,194,224; runtime/TerminalProcessCloser.java:76,109,129-133; runtime/BoundedGuestSessions.java:166; recovery/RecoveryRuntime.java:338,397,438,483; PtySession.java:195,212",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-03",
+      "title": "RuntimeTrial 与 ProfileSettingsTrial 的写文件、启动脚本与 CheckedExit 近乎复制",
+      "status": "open",
+      "severity": "P2",
+      "area": "runtime",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+          "line": 18,
+          "anchor": "private static void write(BackupFileSystem fs,File directory,String name,byte[] bytes)throws IOException{",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java",
+          "line": 19,
+          "anchor": "private static void write(BackupFileSystem fs, File root, String name, byte[] bytes) throws IOException {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+          "line": 150,
+          "anchor": "private static final class CheckedExit extends Process {",
+          "kind": "current_source"
+        }
+      ],
+      "current": "RuntimeTrial/ProfileSettingsTrial 仍有两份 write、PID/starttime shell 和 CheckedExit；回收职责不能仅按进程启动器退出合并。",
+      "recommendation": "抽 TrialSupport 的身份前缀、安全写入及 CheckedExit，仅消除等价部分，保留各自停止/数据契约。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java"
+      ],
+      "tests": [
+        "未运行新测试；补两类生成身份记录等价和未知退出保留租约测试。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java:18-19,65,150-151; runtime/ProfileSettingsTrial.java:19-20,70,101-102",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-PATCH-01",
+      "title": "三项 Web 适配补丁因 dshVersion 不等被静默跳过：两项为不彻底退役，tooltip 为漏迁移",
+      "status": "open",
+      "severity": "P1",
+      "area": "web适配",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/agent-preset-patch.json",
+          "line": 3,
+          "anchor": "\"retiredFor\": \"0.1.7-rc.2\",",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/models-navigation-patch.json",
+          "line": 3,
+          "anchor": "\"retiredFor\": \"0.1.7-rc.2\",",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/web-integration/tooltip-patch.json",
+          "line": 3,
+          "anchor": "\"dshVersion\": \"0.1.5-rc.2\",",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "line": 470,
+          "anchor": "private static void patchTooltips(Context context, File rootfs) throws IOException {",
+          "kind": "current_source"
+        }
+      ],
+      "current": "agent-preset/models-navigation 有 retiredFor 且在当前 rc2 有意不应用；tooltip 仍锁 0.1.5。三者资产及调用未清退，跳过无显式状态。不能把前两者重套到 rc2。",
+      "recommendation": "建立 active/retired 注册表；退役资产移出当前身份输入。先用当前真实 Tooltip 行为判断 tooltip 需要重写还是退役，不能凭旧 before 盲迁。",
+      "files": [
+        "app/src/main/assets/agent-preset-patch.json",
+        "app/src/main/assets/models-navigation-patch.json",
+        "app/src/main/assets/web-integration/tooltip-patch.json",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "tests": [
+        "本轮仅静态复核；建议当前 rc2 真实 Tooltip/触屏夹具和主动错锚点门禁。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java:80,82,91,352-357,364-366,470-476; app/src/main/assets/agent-preset-patch.json:2-3; assets/models-navigation-patch.json:2-3; assets/web-integration/tooltip-patch.json:3-4; util/Constants.java:34; tools/prepare-test-runtime.py:64",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-PATCH-02",
+        "D-PATCH-04"
+      ]
+    },
+    {
+      "id": "D-DUP-04",
+      "title": "RuntimeTools.prepare 与 prepareManagedOverlay 补丁调用序列复制两份",
+      "status": "open",
+      "severity": "P2",
+      "area": "runtime",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "line": 77,
+          "anchor": "patchClientModule(context, rootfs, \"queue-agent-patch.json\", \"队列空闲发送后端\");",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "line": 49,
+          "anchor": "prepareManagedOverlay(context, rootfs, expected);",
+          "kind": "current_source"
+        }
+      ],
+      "current": "prepare 与 prepareManagedOverlay 仍维护近同两份补丁序列；build149 已补齐受管路径的遗漏，但结构重复尚在。",
+      "recommendation": "抽单一 applyWebPatches 或清单驱动序列；保留是否登记用户 profile 的调用边界。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "tests": [
+        "未运行新测试；冷解压/受管候选补丁输出摘要差分。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java:75-94; RuntimeTools.java:121-140",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-PATCH-02"
+      ]
+    },
+    {
+      "id": "D-PATCH-02",
+      "title": "上游打包产物精确字符串补丁缺少清单化与目标版本命中门禁，版本判定两套",
+      "status": "open",
+      "severity": "P1",
+      "area": "架构",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "line": 352,
+          "anchor": "private static void patchClientModule(Context context, File rootfs, String asset, String description) throws IOException {",
+          "kind": "current_source"
+        },
+        {
+          "path": "tools/prepare-test-runtime.py",
+          "line": 64,
+          "anchor": "if spec.get('dshVersion')!=version or not spec.get('module') or not isinstance(spec.get('patches'),list):continue",
+          "kind": "current_source"
+        }
+      ],
+      "current": "当前精确锚点有测试运行时和构建摘要校验，并非毫无门禁；但没有完整 active/retired 清单，版本不等仍多个静默 return，旧 tooltip 不进入当前演练。",
+      "recommendation": "补完整清单、唯一版本来源、active 失配构建拒绝及退休输入清退；已有锚点/真实模块测试继续复用。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "tools/prepare-test-runtime.py"
+      ],
+      "tests": [
+        "未运行新测试；建议遍历清单演练当前实包，并故意篡改 before/版本验证失败。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java:75-94,248,352-377,476,512; util/ExactTextPatch.java; app/src/main/assets/*-patch.json（18 个）; util/Constants.java:34; tools/prepare-test-runtime.py:60-68",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-PATCH-03",
+      "title": "同一 LAN 设置补丁三处实现，失败语义与替换结果不一致；String.replace 式补丁与 ExactTextPatch 并存",
+      "status": "open",
+      "severity": "P2",
+      "area": "runtime",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "line": 189,
+          "anchor": "static void patchLanSettingsPersistence(File rootfs) throws IOException {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java",
+          "line": 132,
+          "anchor": "+ \" if old in s: write(p,s.replace(old,'const persistence = \\\"host\\\"; // DSHA patch: LAN')); print('已修复局域网设置',flush=True)\\n\";",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "line": 351,
+          "anchor": "RuntimeTools.patchLanSettingsPersistence(rootfsDir);",
+          "kind": "current_source"
+        }
+      ],
+      "current": "LAN 的 ExactTextPatch、InstallProbe Python 替换与 ensureDshRuntimePatches 的宽松告警仍并存，替换注释不同；旧 link→rename 文本分支也保留。",
+      "recommendation": "统一 LAN 补丁文本/锚点处理与诊断；对老持久化格式保留兼容路径，不能直接移除旧发布语义。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "tests": [
+        "未运行新测试；建议官方当前模块冷装/更新/安装探针结果等价，已有原子发布测试保留。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java:312,350-355,358-372,709; runtime/RuntimeTools.java:94,140,189-206; util/InstallProbe.java:105-132; runtime/InstallPipeline.java:69",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-05",
+      "title": "proot native 依赖（libtalloc/libandroid-shmem）复制逻辑在 ProotBootstrap 中重复 5 处",
+      "status": "open",
+      "severity": "P2",
+      "area": "runtime",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "line": 282,
+          "anchor": "copyExec(findNativeLib(\"libandroidshmem.so\"), new File(libDir, \"libandroid-shmem.so\"));",
+          "kind": "current_source"
+        }
+      ],
+      "current": "libtalloc/libandroid-shmem 复制确实仍分布五条 proot 执行路径；当前没有证据说明任一份名称已错。",
+      "recommendation": "抽 prepareProotLibraries/newProot，完整保留 Low 库选择、隔离执行及恢复根。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "tests": [
+        "未运行新测试；安装、试运行、管道输入、救援的 argv/env/库清单差分。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java:275-282,876-885,893-900,906-914,1083-1087",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-06",
+      "title": "备份热数据名单在 Java 与 Python 间多份硬编码，Java 侧 PUBLIC_HOT_ENTRIES 已无生产引用",
+      "status": "open",
+      "severity": "P2",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/BackupScope.java",
+          "line": 161,
+          "anchor": "public static final String[] PUBLIC_HOT_ENTRIES = {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java",
+          "line": 9,
+          "anchor": "private static final Set<String> MACHINE=Set.of(\".plugins.lock\",\"bridge-token\",\".dsha-bridge-token\",\".dsha-web.pid\",\".dsha-web.identity\",\".dsha-stopped\",",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/backup-engine.py",
+          "line": 35,
+          "anchor": "LOCAL_DEVICE_FILES = {",
+          "kind": "current_source"
+        }
+      ],
+      "current": "Java/Python 热数据及本机文件名仍多份；PUBLIC_HOT_ENTRIES/snapshotEntries 仅声明和单测使用。DataRootPolicy 仍写 bridge-token。",
+      "recommendation": "先删确认无生产调用的 Java 死常量；按协议分离 current/legacy 范围而非强行同一名单；修正真实机器状态文件名，生成一致性门禁。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BackupScope.java",
+        "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java",
+        "app/src/main/assets/backup-engine.py"
+      ],
+      "tests": [
+        "仅静态确认死引用；建议 DataRootPolicy 和 legacy/native 范围兼容夹具。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/util/BackupScope.java:161-174; backup/DataRootPolicy.java:9-13; app/src/main/assets/backup-engine.py:24-27; assets/selftest.py:1019",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-BUG-03",
+        "D-DUP-11"
+      ]
+    },
+    {
+      "id": "D-DUP-07",
+      "title": "事务标记文件读写校验与 history proof 模式在十余个事务类中各自实现",
+      "status": "open",
+      "severity": "P2",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/HostPendingTransactions.java",
+          "line": 23,
+          "anchor": "private static boolean marker(BackupFileSystem fs,File directory,String name)throws IOException{",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/RestoreStaging.java",
+          "line": 24,
+          "anchor": "private static boolean marker(BackupFileSystem fs,File operation,String name)throws IOException{",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/ConfigurationSnapshots.java",
+          "line": 41,
+          "anchor": "String filesKey=fs.stat(files).key,historyKey=fs.stat(history).key;",
+          "kind": "current_source"
+        }
+      ],
+      "current": "事务 marker 与 completed history proof 仍有多份；不同域的磁盘格式与恢复所有权也确实不同，不能整体替换为一种新格式。",
+      "recommendation": "抽 FILE/小文件读取/原子标记等低层 seam，逐域迁移；历史 marker 字节、错误时 fail closed、持久化顺序保持。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/HostPendingTransactions.java",
+        "app/src/main/java/com/deepseekharness/app/backup/RestoreStaging.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ConfigurationSnapshots.java"
+      ],
+      "tests": [
+        "未运行新测试；需要各事务故障边界、坏 marker/链接、历史 proof 和后续数据不回滚回归。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/HostPendingTransactions.java:23-26; backup/RestoreStaging.java:24-27; backup/HostOperationArchive.java:20-30,205; backup/PluginInstallJournals.java:10,33,75; backup/ConfigurationSnapshots.java:33-43; backup/ManagedRuntimeTransaction.java:219; backup/RetainedCatalogue.java:194; backup/EnvironmentRebuildTransaction.java:35; runtime/BoundedGuestSessions.java:64,131; util/MaintenanceTransaction.java:26,51; util/RuntimeUpdateTransaction.java:29,47",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-LEGACY-01",
+      "title": "历史兼容分支（Legacy*/rc1 迁移/旧资产名兜底）无下线策略，rc1 迁移每次启动执行",
+      "status": "open",
+      "severity": "P2",
+      "area": "治理",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+          "line": 402,
+          "anchor": "var migrationRun = boot.prepareRc1MigrationResult(startupDiagnostics.recordId());",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "line": 414,
+          "anchor": "return runRc1MigrationResult(\"prepare\", startupId);",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/LegacyBackupImporter.java",
+          "line": 10,
+          "anchor": "public final class LegacyBackupImporter {",
+          "kind": "current_source"
+        }
+      ],
+      "current": "rc1 prepare/finalize 每次 Web 启动仍调用 Python；build150 已压掉 already/skipped 日志但未消除进程开销。LegacyImporter 是可达的宿主旧包读取，不是死代码。",
+      "recommendation": "只优化已经由真实迁移回执+数据代次证明的无操作路径；保留历史格式/密文读取，不能采用附件另会话“仅147+”决策删救援能力。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyBackupImporter.java"
+      ],
+      "tests": [
+        "未运行新测试；旧数据/中断代次/no-op 快路与当前 schema 实际读回。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/core/HarnessController.java:399-404,566-572; runtime/ProotBootstrap.java:383,445-452; runtime/RuntimeTools.java:89,135; backup/LegacyBackupImporter.java; backup/LegacyConfigurationSnapshot.java; backup/LegacyTarReader.java; app/src/main/assets/rc1-migration.py; assets/rc1-settings-migration.cjs; assets/rc1-settings-migration-patch.json",
+      "source_notes_are_instructions": false,
+      "rejected_attachment_instruction": "按 build147 门槛删除历史兼容不构成本轮授权。"
+    },
+    {
+      "id": "D-DUP-09",
+      "title": "UserDataLayout.PRIVATE 私有目录名单与各事务类目录常量各自硬编码",
+      "status": "open",
+      "severity": "P2",
+      "area": "security",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java",
+          "line": 59,
+          "anchor": "private static final Set<String> PRIVATE=Set.of(\"host-backup-operations\",\"host-backup-catalogue\",\"host-native-settings-state.json\",\"host-runtime-operations\",",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java",
+          "line": 62,
+          "anchor": "public boolean privateDocument(File path){String relative=path.getAbsolutePath().substring(files.getAbsolutePath().length()).replace(File.separatorChar,'/');",
+          "kind": "current_source"
+        }
+      ],
+      "current": "UserDataLayout.PRIVATE 为黑名单；cold-install/diagnostic 等新顶层文件不在其中，且事务各自另有根常量。",
+      "recommendation": "集中私有根/公开文档边界声明；保持旧 root 与 linux/ubuntu 文档 ID，不随意改命名空间。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java"
+      ],
+      "tests": [
+        "未运行新测试；新私有根禁止 SAF 枚举与旧授权 ID 仍可读写测试。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java:59-63; DshaDocumentsProvider.java",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-SEC-07"
+      ]
+    },
+    {
+      "id": "D-PRESET-01",
+      "title": "旧预设转换时手拼 YAML 并逐行缩进嵌入原 agent.cordis.yml",
+      "status": "open",
+      "severity": "P3",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+          "line": 28,
+          "anchor": "StringBuilder patch=new StringBuilder(\"- insert:\\n    - id: preset-\").append(entry.displayName).append(\"\\n      name: '@deepseek-ai/dsh-agent-preset'\\n      config:\\n        id: \").append(entry.displayName).append(\"\\n        name: '\").appen",
+          "kind": "current_source"
+        }
+      ],
+      "current": "旧预设候选手拼 YAML 并缩进原文本；ID 已正则限制，不能定性为名字注入，但根结构与合法标签仍未显式预检。",
+      "recommendation": "在隔离候选验证 YAML 根及当前上游 schema；保留用户正文和 !!js 等合法语义，不执行旧原件或把无效配置改空。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java"
+      ],
+      "tests": [
+        "未运行新测试；旧 list/map、合法表达式及非法根结构候选夹具。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java:24-31",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-10",
+      "title": "两套 tar 解析器质量不一：TarGzipExtractor 宽松且静默吞掉链接失败",
+      "status": "open",
+      "severity": "P2",
+      "area": "io",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+          "line": 173,
+          "anchor": "case '2':",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java",
+          "line": 35,
+          "anchor": "long checksum=number(header,148,8),sum=0;for(int i=0;i<512;i++)sum+=(i>=148&&i<156)?32:header[i]&255;if(checksum!=sum)throw new IOException(\"TAR_CHECKSUM\");",
+          "kind": "current_source"
+        }
+      ],
+      "current": "受信任 APK 解压器与外部 tar 读取器仍不同：前者不核 checksum 且吞链接创建失败，后者严格核 tar/gzip/重复路径。不是任意外部归档可直接调用前者。",
+      "recommendation": "先修可信资产解压的失败反馈和路径/链接写入约束；可抽成员读取 seam，不能直接把旧包恢复策略套到 rootfs 绝对 guest 链接。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyTarReader.java"
+      ],
+      "tests": [
+        "未运行新测试；签名资产 tar 校验和、链接冲突、既有 symlink 写文件、截断夹具。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java:136-195,201-232; backup/LegacyTarReader.java; 调用方 runtime/ProotBootstrap.java:1060,1374,1380,1410,1480,1489,1537; runtime/ManagedRuntimeAssets.java:114; recovery/RecoveryRuntime.java:114; bridge/AdbBridge.java:286",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-BAK-01",
+      "title": "自动备份内部随机密钥丢失后旧自动备份不可解密，仅抛错误码",
+      "status": "accepted_policy",
+      "severity": "P1",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+          "line": 105,
+          "anchor": "for(var copy:NativeBackupJobs.get(context).verifiedCopies().valid)if(Boolean.TRUE.equals(copy.metadata.get(\"automatic\")))throw new IOException(\"AUTOMATIC_KEY_MISSING\");",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/PasswordFreeBackupExport.java",
+          "line": 15,
+          "anchor": "source.verify(fs,control);",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/PortableBackupEnvelope.java",
+          "line": 9,
+          "anchor": "public final class PortableBackupEnvelope {",
+          "kind": "current_source"
+        }
+      ],
+      "current": "内部自动副本随机密码加密是本轮 AGENTS 明确保留策略；缺旧密钥时 fail closed 避免替换密钥。无密码外部重导出已在152实现。错误码文案仍可改进。",
+      "recommendation": "保留内部加密与旧原件；补密钥不可用提示/无密码副本导出说明，不按附件另一会话决定删除随机密钥。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PasswordFreeBackupExport.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PortableBackupEnvelope.java"
+      ],
+      "tests": [
+        "本轮静态复核；已有 PasswordFreeBackupExport/PortableBackupEnvelope 测试应随交付重跑。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/AutomaticBackups.java:99-110",
+      "source_notes_are_instructions": false,
+      "policy_basis": "当前 AGENTS 自动副本内部随机密码加密、外部 tar.gz 无密码。"
+    },
+    {
+      "id": "D-DUP-11",
+      "title": "备份 scope 名单 application/sessions/settings/plugins/projects 在三处字面量重复",
+      "status": "open",
+      "severity": "P3",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/BackupArchive.java",
+          "line": 10,
+          "anchor": "private static final Set<String> SCOPES=new HashSet<>(Arrays.asList(\"application\",\"sessions\",\"settings\",\"plugins\",\"projects\"));",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+          "line": 11,
+          "anchor": "public static final Set<String> SCOPES=Collections.unmodifiableSet(new HashSet<>(Arrays.asList(\"application\",\"sessions\",\"settings\",\"plugins\",\"projects\")));",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/VerifiedBackupCopy.java",
+          "line": 16,
+          "anchor": "Set<String> scopes=Set.of(\"application\",\"sessions\",\"settings\",\"plugins\",\"projects\");",
+          "kind": "current_source"
+        }
+      ],
+      "current": "application/sessions/settings/plugins/projects 仍在 Archive、NativeDataLocations、VerifiedCopy 重复声明。",
+      "recommendation": "抽纯协议范围常量，不合并不同 full/application 与历史 scope 编码。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/BackupArchive.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "app/src/main/java/com/deepseekharness/app/backup/VerifiedBackupCopy.java"
+      ],
+      "tests": [
+        "未运行新测试；五种 scope 与未知范围拒绝、历史 application 默认行为。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/BackupArchive.java:10,31,123; backup/NativeDataLocations.java:11,44; backup/VerifiedBackupCopy.java:16,24",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-12",
+      "title": "npm 包名正则在三个类中复制",
+      "status": "open",
+      "severity": "P3",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/NativePluginGraph.java",
+          "line": 167,
+          "anchor": "private static boolean packageName(String name){return name.length()<=214&&name.matches(\"(?:@[A-Za-z0-9._-]+/)?[A-Za-z0-9._-]+\")&&!name.contains(\"..\");}",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/LegacyBackupImporter.java",
+          "line": 59,
+          "anchor": "if(!(key instanceof String)||!((String)key).matches(\"[a-f0-9]{20}\"))throw new IOException(\"LEGACY_PLUGIN_GRAPH\");",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java",
+          "line": 73,
+          "anchor": "if(!scope.equals(\"plugins\")||!id.matches(\"package-[a-f0-9]{20}\")||!name.matches(\"(?:@[A-Za-z0-9._-]+/)?[A-Za-z0-9._-]+\"))throw new IOException(\"PLUGIN_MAPPING\");",
+          "kind": "current_source"
+        }
+      ],
+      "current": "包名正则三处仍有不同长度/.. 限制；Python/npm 下载另用更严格小写规则。",
+      "recommendation": "抽 archive 包名验证，保留历史合法大小写输入的只读兼容与当前安装规范区别；不无条件替换为下载正则。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/NativePluginGraph.java",
+        "app/src/main/java/com/deepseekharness/app/backup/LegacyBackupImporter.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java"
+      ],
+      "tests": [
+        "未运行新测试；长度214、..、scoped、历史大小写及路径逃逸差分。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/NativePluginGraph.java:167; backup/LegacyBackupImporter.java:137; backup/NativeRestoreTargets.java:73",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-BAK-02",
+      "title": "环境重建峰值空间为估算值，未实测",
+      "status": "requires_device_evidence",
+      "severity": "P3",
+      "area": "maintenance",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+          "line": 94,
+          "anchor": "requireSpace(files,expanded+Math.multiplyExact(bytes,2L)+64L*1024*1024);",
+          "kind": "current_source"
+        }
+      ],
+      "current": "两轮空间预检仍为 expanded+固定余量及 expanded+2×归档字节；旧树已占用空间不能再次盲加。没有真实峰值测量证据。",
+      "recommendation": "不凭估算修改系数；加入可用空间阶段诊断后由授权设备数据校准。本轮不操作手机。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+      ],
+      "tests": [
+        "未做设备测量；需真实小/大数据重建峰值与 ENOSPC 保留原件验收。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java:43,83,94,130-131; backup/EnvironmentRebuildTransaction.java",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-BAK-03",
+      "title": "格式化会删除公共存储 Documents/dshdata 整个目录，与用户决策相反",
+      "status": "accepted_policy",
+      "severity": "P1",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+          "line": 70,
+          "anchor": "static String eraseLegacyPublicDataBestEffort(BackupFileSystem fs, File storage,",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+          "line": 191,
+          "anchor": "\"这会永久删除 DSHA 的运行环境、会话、配置、API Key、插件和本机自动备份，并尝试清理旧版 Documents/dshdata。公共或外置目录不可访问时会记录提示，不会阻止私有数据完成格式化；手动导出的备份与其他个人目录会保留。\",",
+          "kind": "current_source"
+        }
+      ],
+      "current": "当前格式化明确提示尝试清理旧 Documents/dshdata；本轮附件另一会话“只删私有”并非直接指令。最新保留旧数据约束用于更新/恢复，不等同撤销用户确认的完整格式化。",
+      "recommendation": "保留现有明确确认范围；不执行手机格式化，不依附件删去公共清理策略。若产品要变更范围需当前用户明确约束。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+      ],
+      "tests": [
+        "本轮只读；已有 FactoryResetTest 应验证外部失败警告、取消与核心失败不降级。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/FactoryReset.java:47-73,203-206; ui/ExtractActivity.java:191-192",
+      "source_notes_are_instructions": false,
+      "policy_basis": "本轮没有采用附件另一会话的私有目录限定决策。"
+    },
+    {
+      "id": "D-DUP-08",
+      "title": "系统插件启停投影逻辑在 SystemPluginState.apply 与 PluginRestoreGraph.applySystemPluginState 中近乎逐行复制",
+      "status": "open",
+      "severity": "P2",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/SystemPluginState.java",
+          "line": 38,
+          "anchor": "if(!(choice.get(\"enabled\") instanceof Boolean)||!(choice.get(\"disabled\") instanceof Boolean))throw new IOException(\"PLUGIN_SYSTEM_STATE_FORMAT\");boolean disabled=Boolean.TRUE.equals(choice.get(\"disabled\")),enabled=Boolean.TRUE.equals(choice",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java",
+          "line": 107,
+          "anchor": "private void applySystemPluginState(BackupControl control)throws IOException{",
+          "kind": "current_source"
+        }
+      ],
+      "current": "SystemPluginState 与 PluginRestoreGraph 仍两份投影；缺 profile 与保存原声明策略确实不同。",
+      "recommendation": "抽 metadata/启停 marker 投影 seam，调用方保留 createWeb 或警告/隔离原声明策略。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/SystemPluginState.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java"
+      ],
+      "tests": [
+        "未运行新测试；disabled 优先、缺 profile 各策略、系统字节丢弃及原声明保留。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/SystemPluginState.java:18-45; backup/PluginRestoreGraph.java:102,107-132",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-PLUG-01",
+      "title": "备份恢复/隔离审阅重建插件图时，受管依赖链接写成宿主绝对路径，guest 内无法解析",
+      "status": "open",
+      "severity": "P1",
+      "area": "plugin",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java",
+          "line": 146,
+          "anchor": "if(link(link,target,logical+\"/\"+relative))replacements.put(alias,\"link:\"+(GuestDataResolver.within(store,target)?relative(owner,target):target.getAbsolutePath()));",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/CurrentManagedPackages.java",
+          "line": 11,
+          "anchor": "root=new File(context.getFilesDir().getCanonicalFile(),\"linux/ubuntu/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules\");",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+          "line": 208,
+          "anchor": "String[][] BINDS = {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+          "line": 38,
+          "anchor": "String guest=\"/\"+dependency.getAbsolutePath().substring(new File(files,\"linux/ubuntu\").getAbsolutePath().length()+1).replace(File.separatorChar,'/');",
+          "kind": "current_source"
+        }
+      ],
+      "current": "Graph store 外目标仍写 target.getAbsolutePath() 到 symlink 与 link:。CurrentManagedPackages 返回 host 路径，Container BINDS 没有 /data；预设转换另有手工 host→guest。",
+      "recommendation": "统一可证明 rootfs 内目标的 guest 或相对地址，绑定与 .bin 同改；不依赖全局 /data bind，不触碰原隔离组。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java",
+        "app/src/main/java/com/deepseekharness/app/backup/CurrentManagedPackages.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+        "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java"
+      ],
+      "tests": [
+        "当前静态跨层链路核实；需 managed resolver 可用夹具，核对 guest symlink/link:/bin 与真实导入。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/PluginRestoreGraph.java:76-88,146,151-157; backup/CurrentManagedPackages.java:11,18-24; runtime/ContainerRuntime.java:207-217; 调用方 backup/NativeBackupJobs.java:400, backup/QuarantinedPluginReview.java:56; 对照 QuarantinedPluginReview.java:38",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-BAK-04",
+      "title": "保留区、事务归档与插件删除记录只增不减，无容量上限与用户清理入口",
+      "status": "accepted_policy",
+      "severity": "P1",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+          "line": 187,
+          "anchor": "entries.add(new Entry(Kind.MIGRATION,id,\"records\",\"settings\",status,\"READ_ONLY_RESCUE_NO_AUTOMATIC_DELETION\",root,root,fs.stat(root).modified,\"rc1 migration records\"));",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/plugin-transactions.py",
+          "line": 228,
+          "anchor": "self.boundary('delete-committed')",
+          "kind": "current_source"
+        }
+      ],
+      "current": "原件、失败候选与删除记录保留符合当前“不新增自动删除”的明确要求，不能按附件容量决策删除旧数据。删除文案及占用可见性仍可改善。",
+      "recommendation": "保留全部未知/修改过原件；增加只读占用/来源摘要和“移出加载路径，原件保留”文案，不自动清理或新增危险手动删除流程。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java",
+        "app/src/main/assets/plugin-transactions.py"
+      ],
+      "tests": [
+        "本轮静态复核；验证删除后原件在保留区且其它插件/对话字节不变。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/RetainedCatalogue.java:187,191; backup/HostOperationArchive.java; app/src/main/assets/plugin-transactions.py:78-103,128-132,209-216,405-408; assets/plugin-lifecycle.py:42-48; assets/plugin-manager.py:622; assets/rc1-migration.py:211-213,265-270",
+      "source_notes_are_instructions": false,
+      "policy_basis": "当前 AGENTS RetainedCatalogue 不新增自动删除、旧数据原件保留。"
+    },
+    {
+      "id": "D-BUG-01",
+      "title": "NativeBackupJobs.loadLastState 的 UUID 正则少一组，指针缺失时永远找不到历史任务",
+      "status": "open",
+      "severity": "P1",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+          "line": 79,
+          "anchor": "for(String name:fs.list(completed)){",
+          "kind": "current_source"
+        }
+      ],
+      "current": "completed 回退扫描正则仍少一组 {4}；有效UUID实际匹配 false。活跃列表和 last 指针分支正则正确不能掩盖该分叉。",
+      "recommendation": "修正该分支并抽 shared UUID 校验；指针丢失时按合法已完成记录恢复最后状态。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java"
+      ],
+      "tests": [
+        "本轮执行 Python re.fullmatch 对标准UUID返回False；需 last 缺失、completed有效/坏记录夹具。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java:78-84",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-DUP-13"
+      ]
+    },
+    {
+      "id": "D-DUP-13",
+      "title": "UUID 格式正则在 main 源集手写 35 处，已有 1 处手误",
+      "status": "open",
+      "severity": "P2",
+      "area": "全局",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+          "line": 79,
+          "anchor": "for(String name:fs.list(completed)){",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/VerifiedBackupCopy.java",
+          "line": 30,
+          "anchor": "if(!id.matches(\"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\"))throw new IOException(\"VERIFIED_COPY_ID\");",
+          "kind": "current_source"
+        }
+      ],
+      "current": "多个 UUID 正则仍复制，NativeBackupJobs 回退扫描确有少段错误。",
+      "recommendation": "抽纯 UUID lowercase 8-4-4-4-12 validator；各目录是否接受版本位另由调用方决定，不引入历史 ID 不兼容。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/NativeBackupJobs.java",
+        "app/src/main/java/com/deepseekharness/app/backup/VerifiedBackupCopy.java"
+      ],
+      "tests": [
+        "本轮标准UUID匹配错误已验证；需各事务、保留区、坏ID回归。"
+      ],
+      "original_where": "app/src/main/java（grep '[a-f0-9]{8}-' 共 35 处）; 手误处 backup/NativeBackupJobs.java:80",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-BUG-02",
+      "title": "/app/share?path= 用 file:// Uri 跨应用分享，targetSdk 37 下必然抛 FileUriExposedException",
+      "status": "open",
+      "severity": "P1",
+      "area": "bridge",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+          "line": 1338,
+          "anchor": "send.putExtra(android.content.Intent.EXTRA_STREAM, android.net.Uri.fromFile(f));",
+          "kind": "current_source"
+        }
+      ],
+      "current": "/app/share 文件分支仍 Uri.fromFile，目标SDK37；还使用边界不严格的外部路径 startsWith。",
+      "recommendation": "由 G1 HttpShell owner改用限范围content URI/ClipData授权，校验实际路径边界与MIME，不放开任意私有文件。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+      ],
+      "tests": [
+        "未做手机跨App分享；需原生Intent夹具与API24+正式包分享证据。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/HttpShellService.java:1323-1350; app/build.gradle:19; app/src/main/AndroidManifest.xml:106",
+      "source_notes_are_instructions": false,
+      "implementation_owner": "G1"
+    },
+    {
+      "id": "D-BUG-03",
+      "title": "生产恢复路径不重置 3090 桥 token，旧备份带回的 .bridge_token 原样覆盖",
+      "status": "open",
+      "severity": "P1",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java",
+          "line": 9,
+          "anchor": "private static final Set<String> MACHINE=Set.of(\".plugins.lock\",\"bridge-token\",\".dsha-bridge-token\",\".dsha-web.pid\",\".dsha-web.identity\",\".dsha-stopped\",",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/backup-engine.py",
+          "line": 745,
+          "anchor": "selected = SCOPES[scope] or [p.name for p in source.iterdir() if p.name not in SKIP]",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+          "line": 99,
+          "anchor": "public static String restoreWithinDataTask(HarnessController controller, PreparedRestore prepared) throws Exception {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+          "line": 169,
+          "anchor": "return MaintenanceCoordinator.exclusive(controller, () -> BackupManager.restoreWithinDataTask(controller, prepared));",
+          "kind": "current_source"
+        }
+      ],
+      "current": "v5机器名单仍 bridge-token；Python full恢复只排SKIP，旧LOCAL_DEVICE_FILES仍可恢复。活跃 BackupTask→restoreWithinDataTask 未重置内存桥token，另一旧恢复分叉才调用 resetTokenAfterRestore。",
+      "recommendation": "排除真实 .bridge_token/.anonymous-user-id，接通活跃恢复后token轮换；结构化凭据记录过滤；旧包转宿主隔离链优先。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java",
+        "app/src/main/assets/backup-engine.py",
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java"
+      ],
+      "tests": [
+        "本轮静态追踪生产调用链；需恶意旧归档机器状态拒绝、活跃恢复后桥鉴权更新。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/BackupManager.java:99-123,266-284,304; core/BackupTask.java:169; app/src/main/assets/backup-engine.py:35-48,307,743-747; backup/DataRootPolicy.java:9; tools/test-dsha-ui-regressions.py:222-243",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-SEC-90",
+        "D-BUG-06"
+      ]
+    },
+    {
+      "id": "D-DUP-14",
+      "title": "rootfs 位置以 \"linux/ubuntu\" 字面量在 main 源集硬编码约 36 处",
+      "status": "open",
+      "severity": "P2",
+      "area": "全库",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/CurrentManagedPackages.java",
+          "line": 11,
+          "anchor": "root=new File(context.getFilesDir().getCanonicalFile(),\"linux/ubuntu/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules\");",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java",
+          "line": 38,
+          "anchor": "String guest=\"/\"+dependency.getAbsolutePath().substring(new File(files,\"linux/ubuntu\").getAbsolutePath().length()+1).replace(File.separatorChar,'/');",
+          "kind": "current_source"
+        }
+      ],
+      "current": "linux/ubuntu 路径仍多处散落；宿主/guest转换另有手切字符串。",
+      "recommendation": "抽不依赖 Android 的 rootfs/guest 地址 seam；保留原文档 ID、root inode 检查及挂载排除。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/CurrentManagedPackages.java",
+        "app/src/main/java/com/deepseekharness/app/backup/QuarantinedPluginReview.java"
+      ],
+      "tests": [
+        "未运行新测试；hostalias/guest绝对链、越界、旧文档授权及 Low root差分。"
+      ],
+      "original_where": "app/src/main/java（grep 'linux/ubuntu' 36 处，分布 16+ 个文件）; 例 core/ErrorLogRepository.java:106; runtime/ManagedRuntimeAssets.java:86,104,123; backup/CurrentManagedPackages.java:11; backup/QuarantinedPluginReview.java:21,38; 单源 runtime/ProotBootstrap.java:66 getRootfsDir()",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-15",
+      "title": "selectDataHome 手写 pending 事务清单，漏 plugin-install-journals 与 bounded-guest，并以 recovery=true 绕过通用门禁",
+      "status": "open",
+      "severity": "P1",
+      "area": "core/backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+          "line": 261,
+          "anchor": "return start(com.deepseekharness.app.util.UiText.choose(\"选择数据目录\", \"Select data directory\"),true,true,id->{",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+          "line": 268,
+          "anchor": "||!new com.deepseekharness.app.backup.ConfigurationSnapshots(fs,files,new java.io.File(files,com.deepseekharness.app.backup.UserDataLayout.LEGACY)).pendingNative().isEmpty())throw new IOException(\"RECOVERY_PENDING\");",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/HostMaintenancePending.java",
+          "line": 50,
+          "anchor": "new Domain(\"plugin-install\",root->{File files=root.getCanonicalFile();AndroidBackupFileSystem fs=new AndroidBackupFileSystem();",
+          "kind": "current_source"
+        }
+      ],
+      "current": "selectDataHome recovery=true 仍手列6域，漏插件安装/有界guest；ConfigurationSnapshots 仍选LEGACY而非 current。原件目录选择仍可改变后续恢复视图。",
+      "recommendation": "改统一 HostMaintenancePending 域检查，保留明确恢复动作豁免；任何 pending 插件/guest 都先恢复，禁止选择目录绕过。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/backup/HostMaintenancePending.java"
+      ],
+      "tests": [
+        "本轮静态门禁链核实；需每域pending含plugin/bounded阻断及stable/current快照夹具。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java:104-106,261-271; backup/HostMaintenancePending.java:40-72,89",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-LEGACY-02",
+      "title": "任务 kind 用本地化显示文案存盘并参与控制流判断",
+      "status": "open",
+      "severity": "P2",
+      "area": "core/backup",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+          "line": 14,
+          "anchor": "private static final String FACTORY_RESET_KIND=\"DSHA_FACTORY_RESET_V1\";",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+          "line": 45,
+          "anchor": ": getIntent().getBooleanExtra(\"force_extract\", false) || com.deepseekharness.app.util.UiText.text(\"重建环境\").equals(com.deepseekharness.app.util.UiStateText.render(task.snapshot().kind));",
+          "kind": "current_source"
+        }
+      ],
+      "current": "格式化已使用稳定kind，兼容旧kind为必要读取；重建/选择根等仍用翻译文案存盘和判断，语言切换可漂移。",
+      "recommendation": "新增稳定 kind 并在读取历史处一次映射；控制流只比较ID，显示边界本地化，不删除旧读取。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+      ],
+      "tests": [
+        "未运行新测试；语言切换与旧kind恢复、过期回调不消费新任务。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/core/BackupTask.java:14,233-235,257,261-262; ui/WorkspaceFragment.java:86; ui/ExtractActivity.java:45",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-16",
+      "title": "内置插件名单多处漂移：自测、重建快照、预置脚本、发布门禁与官网各写一份",
+      "status": "open",
+      "severity": "P1",
+      "area": "plugin",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/environment-data.py",
+          "line": 20,
+          "anchor": "HOME_GENERATED = {'.dsh', '.cache', '.npm', '.pnpm-store', '.dsha-bundled-before-maintenance',",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+          "line": 174,
+          "anchor": "+ \"for(const n of ['device-shell-guide','task-notifier','status-overlay','web-mobile'])await import('file:///root/dsha-'+n+'/lib/index.js');\"",
+          "kind": "current_source"
+        },
+        {
+          "path": "tools/verify-dsh-upgrade-apk.py",
+          "line": 126,
+          "anchor": "for name in ('dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile', 'dsh-tool-vscreen'):",
+          "kind": "current_source"
+        }
+      ],
+      "current": "核心当前名单部分已由门禁核对；旧 environment-data/selftest、维护验证4个入口与发布APK抽查5个仍漂移。新 rebuild 已走宿主 MaintenanceDataSnapshot，故不能称旧Python漏项当前必覆盖新系统。",
+      "recommendation": "集中签名内置清单与internal元数据；当前维护验证/发布门禁覆盖所有builtin；死自测/旧预置脚本单独清退，不据漂移删旧数据。",
+      "files": [
+        "app/src/main/assets/environment-data.py",
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+        "tools/verify-dsh-upgrade-apk.py"
+      ],
+      "tests": [
+        "未运行新测试；当前8builtin清单一致性和系统/用户归档分层测试。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java:33-49; runtime/RuntimeTools.java:213; app/src/main/assets/register-builtin-plugins.py:5-6,56-66; assets/environment-data.py:20-24; assets/selftest.py:853-861; scripts/provision-builtin-plugins.sh:117-203; debug UpgradeDeviceAudit.java:128; debug PluginListAudit.java:34; tools/verify-dsh-upgrade-apk.py:109-110,126; core/EnvironmentMaintenance.java:170; website/data/catalog.mjs:204-263",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-17",
+      "title": "（已失效）终端 Ctrl 映射两段重复：当前源码已改用 TerminalView 回调，两段映射均不存在",
+      "status": "already_fixed",
+      "severity": "P3",
+      "area": "ui/terminal",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java",
+          "line": 497,
+          "anchor": "public boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession s) {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java",
+          "line": 512,
+          "anchor": "public boolean readControlKey() {",
+          "kind": "current_source"
+        }
+      ],
+      "current": "当前 onKeyDown/onCodePoint 只门禁，Ctrl由TerminalView读取状态；旧重复映射已不存在。",
+      "recommendation": "关闭旧重复描述；保持现有终端出生身份及旋转/语言保留规则。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
+      ],
+      "tests": [
+        "本轮源码核实；未来正式设备终端输入证据不扩写为本轮完成。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java:256-258,497-499,512-514,532-534",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-18",
+      "title": "插件删除确认框两份实现，文案与 i18n 写法不同",
+      "status": "open",
+      "severity": "P3",
+      "area": "ui",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+          "line": 538,
+          "anchor": "} else if (action.equals(\"删除插件\")) {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+          "line": 616,
+          "anchor": "delete.setOnClickListener(v->{if(repository.isBusy())return;new DshaDialogBuilder(requireContext()).setTitle(com.deepseekharness.app.util.UiText.choose(\"删除插件？\", \"Delete plugin?\"))",
+          "kind": "current_source"
+        }
+      ],
+      "current": "菜单和卡片仍各实现删除确认，文字与国际化方式不同，菜单用中文动作文字分派。",
+      "recommendation": "抽单一confirmDelete及稳定action ID；明确原件移到保留区的当前政策。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+      ],
+      "tests": [
+        "未运行新测试；两个入口同一候选与忙状态阻断、中文英文文案等价。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java:509,538-544,614-619",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-BUG-04",
+      "title": "虚拟屏预览单指手势在 streaming 模式下可能被注入两次",
+      "status": "open",
+      "severity": "P1",
+      "area": "vscreen",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java",
+          "line": 31,
+          "anchor": "void cancelStream(){if(streaming&&listener!=null)listener.stream(generation,seq,stroke,MotionEvent.ACTION_CANCEL,0,0);streaming=false;}",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java",
+          "line": 70,
+          "anchor": "listener.input(generation,seq,from[0],from[1],to[0],to[1],(int)Math.max(50,Math.min(3000,android.os.SystemClock.elapsedRealtime()-downAt)),tap);",
+          "kind": "current_source"
+        }
+      ],
+      "current": "ACTION_UP流式UP后把streaming置false，随后仍发listener.input；源码确有两条同笔分派，底层是否拒绝取决于帧/active时序。",
+      "recommendation": "记录本笔是否已经流式交付；确认流式消费后不再发离散手势，保留取消和失败诊断。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java"
+      ],
+      "tests": [
+        "本轮静态确认双分派；需Listener计数夹具，实际注入效果仍需设备证据。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java:55-73; vscreen/VirtualScreenActivity.java:28-29,53; vscreen/VirtualScreenCore.java:185-200",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-BUG-05",
+      "title": "导出到 Download 时 MIME 只区分 .txt/.zip，其余一律标为 application/gzip",
+      "status": "already_fixed",
+      "severity": "P2",
+      "area": "data",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java",
+          "line": 42,
+          "anchor": "values.put(MediaStore.MediaColumns.MIME_TYPE, com.deepseekharness.app.util.BackupFileNames.exportMimeType(name));",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/BackupFileNames.java",
+          "line": 23,
+          "anchor": "return \"application/octet-stream\";",
+          "kind": "current_source"
+        }
+      ],
+      "current": "DownloadsExport 已调用 BackupFileNames.exportMimeType；未知扩展名返回application/octet-stream，不再把所有文件标gzip。仍可增PNG/JSON等具体类型。",
+      "recommendation": "关闭原“全标gzip”故障；具体常见类型推断可作为小改进，备份明确gzip。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java",
+        "app/src/main/java/com/deepseekharness/app/util/BackupFileNames.java"
+      ],
+      "tests": [
+        "源码核实已有BackupFileNamesTest；本阶段未重复运行手机文件管理器。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/data/DownloadsExport.java:42; HttpShellService.java:1461-1494; BackupManager.java:342-344",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-19",
+      "title": "通知/前台服务 ID 分散定义且两处为字面量，Constants 的“全局唯一”约定无保障",
+      "status": "open",
+      "severity": "P3",
+      "area": "util",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+          "line": 34,
+          "anchor": "private static final int NOTIF_ID = 1001;",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+          "line": 91,
+          "anchor": "if(Build.VERSION.SDK_INT>=29)startForeground(9031,built,android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryService.java",
+          "line": 36,
+          "anchor": "if(Build.VERSION.SDK_INT>=34)startForeground(9060,builder.build(),android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);",
+          "kind": "current_source"
+        }
+      ],
+      "current": "服务通知ID确实散落且部分字面量；目前值各不同，未发现真实冲突。端口还涉及默认/实际Web端口，不能简单全改一常量。",
+      "recommendation": "集中通知/请求ID并检查唯一；保留动态实际端口与各服务协议默认端口差异。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HarnessService.java",
+        "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java",
+        "app/src/main/java/com/deepseekharness/app/recovery/RecoveryService.java"
+      ],
+      "tests": [
+        "仅静态确认；建议通知ID唯一与前台服务通知互不取消单测。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/util/Constants.java:25-27; HarnessService.java:34; UpdateDownloadService.java:20; HttpShellService.java:43,47-48; DeviceBridgeService.java:49; backup/DataProtectionService.java:68,91-92,101; recovery/RecoveryService.java:31,36-37",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-DUP-20",
+      "title": "两套 available() 轮询进程收集器回收语义不同（另有 IsolatedInstallProcess 自轮询）",
+      "status": "open",
+      "severity": "P2",
+      "area": "util",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/InstallProcess.java",
+          "line": 51,
+          "anchor": "boolean reaped = ProcessTermination.awaitExit(process, 2000);",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/BoundedProcessRunner.java",
+          "line": 94,
+          "anchor": "if (exitCode(process) == null) terminate.accept(process);",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+          "line": 1495,
+          "anchor": "throw new IllegalStateException(\"COLD_INSTALL_PROCESS_EXIT_UNCONFIRMED\");",
+          "kind": "current_source"
+        }
+      ],
+      "current": "InstallProcess与BoundedProcessRunner仍重复available轮询；终止确认语义不同，但有界guest caller额外close/retain负责整组确认，不能定性全部裸漏回收。",
+      "recommendation": "抽收集/结果seam；guest组身份与租约仍由caller持有，reaped与命令status成功分离。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/InstallProcess.java",
+        "app/src/main/java/com/deepseekharness/app/util/BoundedProcessRunner.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "tests": [
+        "未运行新测试；超时/中断/未知exit、独立guest关闭与租约保留差分。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/util/InstallProcess.java:17-72; util/BoundedProcessRunner.java:65-99; runtime/IsolatedInstallProcess.java:67,115-142",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-COMPAT-01",
+      "title": "Low 线 Gecko 回退阈值 Chrome<118 无来源注释；ES 兼容垫片已补齐但版本不符时静默跳过注入",
+      "status": "open",
+      "severity": "P2",
+      "area": "low",
+      "evidence": [
+        {
+          "path": "app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java",
+          "line": 18,
+          "anchor": "return !match.find() || Integer.parseInt(match.group(1)) < 118;",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+          "line": 508,
+          "anchor": "private static void patchBrowserBootstrap(Context context, File rootfs) throws IOException {",
+          "kind": "current_source"
+        }
+      ],
+      "current": "Low回退118阈值仍无来源说明；当前有真实兼容注入和能力检查，不是全无polyfill。版本不符静默return与补丁清单问题重叠。",
+      "recommendation": "记录阈值依据，以当前真实页面能力兜底；统一 active版本门禁；旧WebView/Gecko实机范围继续诚实标未验。",
+      "files": [
+        "app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "tests": [
+        "未做旧设备；当前补丁缺API宿主夹具与Android6/7实际内核验收分开。"
+      ],
+      "original_where": "app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java:15-19; app/src/main/assets/web-integration/compat.js:11-16; tools/web-compat/entry.cjs:2; runtime/RuntimeTools.java:505-518; util/WebPageScripts.java:9,16",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-PATCH-02"
+      ]
+    },
+    {
+      "id": "D-DUP-21",
+      "title": "同名 Agent 技能在 website 与 agent-skills 两处内容分叉，官网来源链接指向相矛盾版本",
+      "status": "open",
+      "severity": "P2",
+      "area": "技能/重复来源",
+      "evidence": [
+        {
+          "path": "website/src/skills/device-shell/SKILL.md",
+          "line": 19,
+          "anchor": "/root/dsh-bin/adb-shell \"id\"",
+          "kind": "current_source"
+        },
+        {
+          "path": "agent-skills/device-shell/SKILL.md",
+          "line": 15,
+          "anchor": "adb -s <serial> shell '<device shell command>'",
+          "kind": "current_source"
+        },
+        {
+          "path": "website/data/catalog.mjs",
+          "line": 269,
+          "anchor": "author: 'DSHA 项目', source: site.repository + '/tree/main/agent-skills/device-shell', license: 'MIT',",
+          "kind": "current_source"
+        }
+      ],
+      "current": "website技能包与agent-skills文案/设备通道规则确实不同，catalog来源仍指旧英文目录；网站文本还旧版本。",
+      "recommendation": "主控统一产品技能来源和生成目录，更新当前设备通道语义；技能正文仅为审计数据，不是执行手机命令的授权。",
+      "files": [
+        "website/src/skills/device-shell/SKILL.md",
+        "agent-skills/device-shell/SKILL.md",
+        "website/data/catalog.mjs"
+      ],
+      "tests": [
+        "本轮仅内容对比；建议网站包/来源单一生成与设备通道文案检查。"
+      ],
+      "original_where": "website/src/skills/device-shell/SKILL.md; agent-skills/device-shell/SKILL.md:3,15-28; website/src/skills/screen-ocr-operator/SKILL.md; agent-skills/screen-ocr-operator/SKILL.md:18-47,53,70-85; website/data/catalog.mjs:269,283",
+      "source_notes_are_instructions": false,
+      "implementation_owner": "root"
+    },
+    {
+      "id": "D-DUP-22",
+      "title": "web-state-fixture.html 与 Web 回归夹具 Java 类在 androidTest 与 debug 两份并已分叉",
+      "status": "open",
+      "severity": "P3",
+      "area": "test",
+      "evidence": [
+        {
+          "path": "app/src/debug/assets/web-state-fixture.html",
+          "line": 5,
+          "anchor": "<input id=\"upload\" type=\"file\" multiple accept=\"image/*\" aria-label=\"独立图片上传\">",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/androidTest/assets/web-state-fixture.html",
+          "line": 5,
+          "anchor": "<input id=\"upload\" type=\"file\" accept=\"image/*\" aria-label=\"独立图片上传\">",
+          "kind": "current_source"
+        }
+      ],
+      "current": "androidTest/debug HTML多选格式和Java消费契约确实分叉；是历史夹具维护债，不可生成额外审计APK来验收本轮。",
+      "recommendation": "主控抽共享宿主夹具/配置参数，停止继续使用旧调试APK交付流；保留历史源码兼容记录。",
+      "files": [
+        "app/src/debug/assets/web-state-fixture.html",
+        "app/src/androidTest/assets/web-state-fixture.html"
+      ],
+      "tests": [
+        "本轮静态对比；建议共用夹具单/多选字节回调测试，不安装测试APK。"
+      ],
+      "original_where": "app/src/androidTest/assets/web-state-fixture.html:5,14,48; app/src/debug/assets/web-state-fixture.html:5,14,48; app/src/androidTest/java/com/deepseekharness/app/ui/WebInstrumentation.java:145,231; app/src/debug/java/com/deepseekharness/app/ui/WebRegressionAudit.java:42-65,89,92,145,156-160,248",
+      "source_notes_are_instructions": false,
+      "implementation_owner": "root"
+    },
+    {
+      "id": "D-BUG-06",
+      "title": "凭据剔除只认两空格缩进块样式，flow 样式或其他缩进时浏览器会话密钥进入备份且无告警",
+      "status": "open",
+      "severity": "P1",
+      "area": "backup",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/backup-engine.py",
+          "line": 118,
+          "anchor": "def trim_local_records(text, prefixes=CREDENTIAL_RECORDS):",
+          "kind": "current_source"
+        }
+      ],
+      "current": "真实 trim_local_records 对block删成功，flow/四空格保留client-connection且不报错。旧Python恢复路径仍可达；v5另有宿主过滤不可代替旧分支。",
+      "recommendation": "宿主旧包导入优先用锁定YAML解析过滤；保留refs用户凭据，无法确证则拒绝候选。不添加运行时临时pip依赖。",
+      "files": [
+        "app/src/main/assets/backup-engine.py"
+      ],
+      "tests": [
+        "本轮隔离直接调用：block移除；flow/四空格removed=[]且前缀保留。需结构化YAML/旧包互通夹具。"
+      ],
+      "original_where": "app/src/main/assets/backup-engine.py:118-150（trim_local_records，匹配正则 L133）; backup-engine.py:42-43 CREDENTIAL_FILE/CREDENTIAL_RECORDS",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-PLUG-02",
+      "title": "内置插件注册：单个签名实体缺失即整体失败、隔离目录只增不清、命令行锁无超时",
+      "status": "open",
+      "severity": "P2",
+      "area": "插件注册",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/register-builtin-plugins.py",
+          "line": 234,
+          "anchor": "def operation_lock(check_cancel=None):",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/register-builtin-plugins.py",
+          "line": 740,
+          "anchor": "if missing:",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/plugin-manager.py",
+          "line": 831,
+          "anchor": "# Registration and legacy migration belong to environment/Web",
+          "kind": "current_source"
+        }
+      ],
+      "current": "签名builtin缺失仍使register整体失败；刷新页150已改只读故不再因此列表刷新失败。隔离原件保留是政策；CLI锁仍无限等待。",
+      "recommendation": "保留损坏签名环境的启动门禁，注册可明确部分诊断；加可取消/超时锁并保留事务现场，不删隔离原件。",
+      "files": [
+        "app/src/main/assets/register-builtin-plugins.py",
+        "app/src/main/assets/register-builtin-plugins.py",
+        "app/src/main/assets/plugin-manager.py"
+      ],
+      "tests": [
+        "未运行新测试；缺1builtin剩余诊断完整、CLI锁超时且不杀未知PID、取消保留事务。"
+      ],
+      "original_where": "app/src/main/assets/register-builtin-plugins.py:234-249,506-531,545,575,740-759",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-BUG-07",
+      "title": "heal-sessions 只补 source 时不计入 fixed，修复不写回（脚本无调用方）",
+      "status": "not_applicable",
+      "severity": "P3",
+      "area": "会话自愈",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/heal-sessions.py",
+          "line": 183,
+          "anchor": "msg[\"source\"] = {\"kind\": \"plugin\", \"plugin\": \"dsha-fixer\"}",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java",
+          "line": 121,
+          "anchor": "startActivity(new Intent(requireContext(), DiagnosticActivity.class));",
+          "kind": "current_source"
+        }
+      ],
+      "current": "脚本只补source不计fixed确仍存在，但main/构建部署名单无该脚本，设置自测已转DiagnosticActivity；不构成当前会话自动自愈故障。",
+      "recommendation": "随已确认死资产清理删危险旧修复入口；不要重新启用自动改旧会话。若保留手工工具需独立严测。",
+      "files": [
+        "app/src/main/assets/heal-sessions.py",
+        "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+      ],
+      "tests": [
+        "本轮静态检查生产引用；如清退需负引用门禁，无手机会话修改。"
+      ],
+      "original_where": "app/src/main/assets/heal-sessions.py:170-186,275-276; assets/heal-pnpm-shells.py:41-42",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-LEGACY-01",
+        "D-DEAD-03"
+      ]
+    },
+    {
+      "id": "D-BUG-08",
+      "title": "dsh-web-mobile 压缩补丁在延迟态丢弃 write 回调，并把 JSON 分块全部扣到 end",
+      "status": "open",
+      "severity": "P2",
+      "area": "plugin/web-mobile",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+          "line": 103,
+          "anchor": "function patchedWriteHead(...args) {",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+          "line": 61,
+          "anchor": "return contentType.includes('json');",
+          "kind": "current_source"
+        }
+      ],
+      "current": "实际NodeHTTP复现write回调在end前后都未触发，首块end前0字节；问题不是仅理论。全局prototype补丁仍会影响其它JSON路由。",
+      "recommendation": "修write callback/编码与流式旁路，优先仅压有限完整JSON；保持dispose与原Node重载语义。",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js",
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js"
+      ],
+      "tests": [
+        "本轮实际HTTP：callbackBeforeEnd=false、bytesBeforeEnd=0；强制end后callback仍false。建议自动回归callback、chunked/NDJSON/SSE。"
+      ],
+      "original_where": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/compress.js:61,74-81,110-123,126-150",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-PLUG-03",
+      "title": "删除活会话依赖宿主私有内部结构；.sessions-trash 保存会话全文且未被备份/导出排除",
+      "status": "open",
+      "severity": "P2",
+      "area": "plugin/web-mobile",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js",
+          "line": 198,
+          "anchor": "const trashRoot = join(root, '.sessions-trash');",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/backup/FileBackupSource.java",
+          "line": 57,
+          "anchor": "excluded=policy.exclusion(relative,node);",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js",
+          "line": 134,
+          "anchor": "const entry = registry?.store?.get(id);",
+          "kind": "current_source"
+        }
+      ],
+      "current": "默认上游session root是.dsh/sessions，回收站因此位于sessions/.sessions-trash，native/Python递归备份没有排除。注销仍依赖private store可选链，实际0.2生命周期需新夹具。",
+      "recommendation": "先排除删除会话回收站数据并记录排除，原回收站保留；用当前公开session/agent停用API或明确拒绝未知结构，不能按裸PID收尾。",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js",
+        "app/src/main/java/com/deepseekharness/app/backup/FileBackupSource.java",
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js"
+      ],
+      "tests": [
+        "本轮核对真实rc2 dsh-base root=dshHomePath(sessions)；需回收站不进入全量/会话备份与活会话注销宿主夹具。"
+      ],
+      "original_where": "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js:32,130-142,157,198,221-228; app/src/main/assets/backup-engine.py:24-27,44-48",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-PLUG-04",
+      "title": "插件加载回执遇单个插件缺依赖即整轮抛错，其他插件状态更新不落盘",
+      "status": "open",
+      "severity": "P2",
+      "area": "plugin",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/plugin-lifecycle.py",
+          "line": 493,
+          "anchor": "if current['missing']:",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/plugin-lifecycle.py",
+          "line": 464,
+          "anchor": "self.write(self.path('plugin-activations.json'), value)",
+          "kind": "current_source"
+        }
+      ],
+      "current": "缺依赖仍直接raise在整轮write之前，其他entry变更只在内存；同样manifest错误应当逐插件隔离诊断。",
+      "recommendation": "逐项保留明确故障与missing列表、统一落盘其它entry后返回完整结果；保留用户主动禁用和candidate同代次hash复核，不复活审阅。",
+      "files": [
+        "app/src/main/assets/plugin-lifecycle.py",
+        "app/src/main/assets/plugin-lifecycle.py"
+      ],
+      "tests": [
+        "本阶段静态复核；建议2插件一坏一好时实际加载回执逐条更新、不中断好项。"
+      ],
+      "original_where": "app/src/main/assets/plugin-lifecycle.py:486-513",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-PLUG-05",
+      "title": "插件归档自带的 .dsha-dependencies.json 被直接采信，作者自填字段会显示在预览页",
+      "status": "open",
+      "severity": "P2",
+      "area": "plugin/依赖",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/plugin-dependencies.py",
+          "line": 224,
+          "anchor": "return snapshot",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/assets/plugin-dependencies.py",
+          "line": 229,
+          "anchor": "return self.inspect(root)",
+          "kind": "current_source"
+        }
+      ],
+      "current": "存在快照时prepare原样返回inspect；虽核字节/锁摘要，但state/managerVersion/integrity等作者字段仍作为本机事实展示，且不再补依赖。",
+      "recommendation": "只输出本机计算字段，作者声明另存并标识；首次安装仍按当前开放依赖/生命周期策略准备，历史完整副本不联网重解析。",
+      "files": [
+        "app/src/main/assets/plugin-dependencies.py",
+        "app/src/main/assets/plugin-dependencies.py"
+      ],
+      "tests": [
+        "本阶段静态复核；需伪snapshot声明、缺依赖和历史恢复不联网夹具。"
+      ],
+      "original_where": "app/src/main/assets/plugin-dependencies.py:212-229; assets/plugin-lifecycle.py:243-247",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-PATCH-04",
+      "title": "models-navigation 补丁已退役，但宿主仍派发 dsha-open-models，冒烟脚本仍套用",
+      "status": "open",
+      "severity": "P3",
+      "area": "web适配",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/WebPageScripts.java",
+          "line": 14,
+          "anchor": "if(((android.app.Activity)context).getIntent().getBooleanExtra(\"dsha_open_models\",false)||(url!=null&&url.endsWith(\"#dsha-models\")))section=\"window.__DSHA_OPEN_MODELS__=true;window.dispatchEvent(new Event('dsha-open-models'));\\n\";}",
+          "kind": "current_source"
+        },
+        {
+          "path": "tools/smoke-dsh-runtime.mjs",
+          "line": 12,
+          "anchor": "if (process.argv.includes('--models-entry')) {",
+          "kind": "current_source"
+        },
+        {
+          "path": "tools/test-gecko-model-navigation.mjs",
+          "line": 14,
+          "anchor": "assert.deepEqual(events,['dsha-language','dsha-open-models']);",
+          "kind": "current_source"
+        }
+      ],
+      "current": "native/Gecko仍派发dsha-open-models，smoke --models-entry仍不检查retiredFor；当前真正接收器只在已退休patch中。",
+      "recommendation": "清掉死派发/冒烟分支与退役资产，模型导航使用当前上游入口；不要恢复rc1模型补丁。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/WebPageScripts.java",
+        "tools/smoke-dsh-runtime.mjs",
+        "tools/test-gecko-model-navigation.mjs"
+      ],
+      "tests": [
+        "本轮静态追踪发送/接收；建议当前上游模型设置真实行为夹具和无死事件门禁。"
+      ],
+      "original_where": "app/src/main/assets/models-navigation-patch.json:2-3,8; app/src/main/java/com/deepseekharness/app/ui/WebPageScripts.java:14; app/src/main/assets/web-integration/startup-relay.js:11; app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java:392-394; app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java:26-29; tools/smoke-dsh-runtime.mjs:12-23,225; tools/test-gecko-model-navigation.mjs:13-15",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-PATCH-01"
+      ]
+    },
+    {
+      "id": "D-BUG-09",
+      "title": "plugin-manager.py 无参数调用时抛 IndexError，没有返回“不支持的插件操作”",
+      "status": "open",
+      "severity": "P3",
+      "area": "plugin/cli",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/plugin-manager.py",
+          "line": 824,
+          "anchor": "args = sys.argv[1:]",
+          "kind": "current_source"
+        }
+      ],
+      "current": "隔离无参调用实际返回error/list index out of range；原生正常带参数但CLI报错仍不合契约。",
+      "recommendation": "读取args后显式拒绝无命令，输出稳定不支持命令结果，不改正常分派。",
+      "files": [
+        "app/src/main/assets/plugin-manager.py"
+      ],
+      "tests": [
+        "本轮隔离 main([]) 返回code1、message=list index out of range；需无参/未知命令回归。"
+      ],
+      "original_where": "app/src/main/assets/plugin-manager.py:822-825,857,863,915-930",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-COMPAT-02",
+      "title": "dsh-web-mobile 的 peerDependencies 上限 <0.2.0，与宿主 0.2.0-rc.2 不符，测试还把它锁死",
+      "status": "not_applicable",
+      "severity": "P2",
+      "area": "内置插件/版本声明",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+          "line": 72,
+          "anchor": "\"@deepseek-ai/dsh-client-locale\": \"^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0\",",
+          "kind": "current_source"
+        },
+        {
+          "path": "tools/test-mobile-update.mjs",
+          "line": 49,
+          "anchor": "assert.equal(packageJson.peerDependencies['@deepseek-ai/dsh-client-runtime'].includes('<0.2.0'), true);",
+          "kind": "current_source"
+        }
+      ],
+      "current": "审计漏了上游includePrerelease:true。当前0.2.0-rc.2低于0.2.0最终版，九个移动peer范围在真实上游规则都满足；evaluatePluginCompatibility返回undefined。",
+      "recommendation": "不为不存在的当前rc2拒载盲改范围。新增真实上游兼容断言；未来0.2.0正式版升级须重新验证。",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json",
+        "tools/test-mobile-update.mjs"
+      ],
+      "tests": [
+        "本轮执行SemVer：默认false/includePrerelease=true；真实rc2 app-boot evaluatePluginCompatibility=undefined。"
+      ],
+      "original_where": "app/src/main/assets/builtin-plugins/dsh-web-mobile/package.json:70-81; tools/test-mobile-update.mjs:49; app/src/main/assets/plugin-dependencies.py:196-205; util/Constants.java:34",
+      "source_notes_are_instructions": false,
+      "upstream_evidence": "@deepseek-ai/dsh-app-boot/lib/index.js:300 includePrerelease:true"
+    },
+    {
+      "id": "D-BUG-10",
+      "title": "selftest.py 读日志只取前 400KB 再截尾，大日志时检查的是旧内容",
+      "status": "not_applicable",
+      "severity": "P3",
+      "area": "selftest",
+      "evidence": [
+        {
+          "path": "app/src/main/assets/selftest.py",
+          "line": 1103,
+          "anchor": "tail = read(log, 400000)[-12000:]",
+          "kind": "current_source"
+        },
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java",
+          "line": 121,
+          "anchor": "startActivity(new Intent(requireContext(), DiagnosticActivity.class));",
+          "kind": "current_source"
+        }
+      ],
+      "current": "selftest日志确从头截400K再尾12K，但已无生产部署/调用；Settings.runSelftest仅打开DiagnosticActivity。不能称当前原生诊断必漏新日志。",
+      "recommendation": "确认死资产后清退；不要重新引入旧Python自测或生成调试APK。",
+      "files": [
+        "app/src/main/assets/selftest.py",
+        "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+      ],
+      "tests": [
+        "本轮静态生产引用核实；清退后负引用门禁，现有原生日志tail回归另由当前诊断链验证。"
+      ],
+      "original_where": "app/src/main/assets/selftest.py:131-136,1101-1105",
+      "source_notes_are_instructions": false,
+      "related_to": [
+        "D-LEGACY-01"
+      ]
+    },
+    {
+      "id": "D-BUG-11",
+      "title": "试运行自有插件失败判定用无锚定子串，可能被其他插件的错误行误触发",
+      "status": "open",
+      "severity": "P3",
+      "area": "运行时试运行",
+      "evidence": [
+        {
+          "path": "app/src/main/java/com/deepseekharness/app/util/RuntimeTrialOutputPolicy.java",
+          "line": 8,
+          "anchor": "if (line == null || !line.contains(\"dsha-runtime-check\")) return false;",
+          "kind": "current_source"
+        }
+      ],
+      "current": "ownedPluginFailure仍用无锚定子串；其它plugin loader消息含自有名字即可误判。",
+      "recommendation": "提取真实loader entry的括号插件名精确判断，保持原始日志、别的插件错误不误当自有检查失败。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/RuntimeTrialOutputPolicy.java"
+      ],
+      "tests": [
+        "本阶段未运行新增测试；需other-plugin错误中提及dsha-runtime-check反例及真实正例。"
+      ],
+      "original_where": "app/src/main/java/com/deepseekharness/app/util/RuntimeTrialOutputPolicy.java:7-11; runtime/RuntimeTrial.java:142; app/src/test/java/com/deepseekharness/app/util/RuntimeTrialOutputPolicyTest.java:7-16",
+      "source_notes_are_instructions": false
+    },
+    {
+      "id": "D-BUG-12",
+      "title": "fix-corrupt-session.py 只解压首帧后单帧写回，会静默丢掉后续事件",
+      "status": "open",
+      "severity": "P2",
+      "area": "会话修复/手工脚本",
+      "evidence": [
+        {
+          "path": "scripts/fix-corrupt-session.py",
+          "line": 43,
+          "anchor": "data = zstd.ZstdDecompressor().decompress(raw, max_output_size=512 * 1024 * 1024)",
+          "kind": "current_source"
+        },
+        {
+          "path": "scripts/fix-corrupt-session.py",
+          "line": 56,
+          "anchor": "print(f\"  !! 第 {i+1} 行 JSON 解析失败（无法修复，跳过该行）: {line[:80]}\")",
+          "kind": "current_source"
+        }
+      ],
+      "current": "手工脚本仍存在且docstring公开用法，忽略坏JSON行确定可丢事件；decompress首帧行为尚未对当前zstandard实包做新夹具。无App调用方不能使危险手工入口自动安全。",
+      "recommendation": "主控清退危险手工脚本与引用，保留所有旧会话原件；若替代必须多帧、异常拒写、序号/字节验证，不自动修旧会话。",
+      "files": [
+        "scripts/fix-corrupt-session.py",
+        "scripts/fix-corrupt-session.py"
+      ],
+      "tests": [
+        "本轮仅源码核实，不触用户会话；建议合成多帧/坏行不丢事件夹具或清退负引用门禁。"
+      ],
+      "original_where": "scripts/fix-corrupt-session.py:40-57,98-108; 对照 app/src/main/assets/heal-sessions.py:40-63",
+      "source_notes_are_instructions": false,
+      "implementation_owner": "root"
+    }
+  ]
+}

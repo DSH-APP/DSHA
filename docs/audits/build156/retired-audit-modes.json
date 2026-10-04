@@ -1,0 +1,9 @@
+[
+  {
+    "path": "app/src/debug/java/com/deepseekharness/app/ui/BrowserCompatibilityAudit.java",
+    "mode": "header",
+    "retainedSource": "tools/history/build156/obsolete-audit-modes/BrowserCompatibilityAudit.java",
+    "sha256": "36d71b3441008eb2dc17ef83c9efac1ccf667535819d2379cc3b23a7ee5d8fa1",
+    "reason": "Old rc1 custom heading/menu expectations conflict with rc2 read-only upstream ownership; header mode now RETIRED/CANCELED before obtaining controller or touching data."
+  }
+]

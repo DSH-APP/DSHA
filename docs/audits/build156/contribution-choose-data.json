@@ -1,0 +1,26 @@
+[
+  {
+    "zh": "%s 项 · %s",
+    "en": "%s items · %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/backup/DataProtectionService.java"
+    ]
+  },
+  {
+    "zh": "旧环境清理暂缓，原件保留：%s",
+    "en": "Old environment cleanup was deferred; originals retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "\n旧事务归档暂缓，原件保留：%s",
+    "en": "\nOld transaction archival deferred; originals retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  }
+]

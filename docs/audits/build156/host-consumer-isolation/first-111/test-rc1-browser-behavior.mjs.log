@@ -1,0 +1,60 @@
+{
+  "status": "PASS",
+  "engine": "151.0.7922.34",
+  "lexical": {
+    "errors": [],
+    "split": [
+      {
+        "text": "/test ",
+        "style": "color: var(--dsw-alias-state-business-primary)",
+        "key": "2"
+      },
+      {
+        "text": "内容",
+        "style": "",
+        "key": "3"
+      }
+    ],
+    "composed": [
+      {
+        "text": "/test ",
+        "style": "color: var(--dsw-alias-state-business-primary)",
+        "key": "2"
+      },
+      {
+        "text": "内容输入法",
+        "style": "",
+        "key": "3"
+      }
+    ],
+    "unclaimed": [
+      {
+        "text": "/test 内容输入法",
+        "style": "",
+        "key": "2"
+      }
+    ]
+  },
+  "materialized": {
+    "visible": {
+      "key": "stable",
+      "target": "messages",
+      "visibility": "visible",
+      "text": "retained"
+    },
+    "hidden": {
+      "key": "stable",
+      "target": "messages",
+      "visibility": "hidden",
+      "text": "retained"
+    },
+    "repeatedSame": true,
+    "restored": {
+      "key": "stable",
+      "target": "messages",
+      "visibility": "visible",
+      "text": "new"
+    },
+    "reset": []
+  }
+}

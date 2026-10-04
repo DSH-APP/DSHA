@@ -1,0 +1,282 @@
+[
+  {
+    "zh": "缺少备份支持脚本：%s",
+    "en": "Missing backup support script: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ]
+  },
+  {
+    "zh": "%s\n%s\n文件数：%d\n解压内容：%s\n来自版本：%s%s%s\n\n恢复会先停止 Web。当前数据会保留为 .pre-restore-*，恢复失败自动回滚；完成后可手动启动 Web。",
+    "en": "%s\n%s\nFiles: %d\nExtracted contents: %s\nSource version: %s%s%s\n\nRestore stops Web first. Current data is retained as .pre-restore-* and restore failures roll back. Start Web manually afterward.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ]
+  },
+  {
+    "zh": "%s\n文件数：%d",
+    "en": "%s\nFiles: %d",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ]
+  },
+  {
+    "zh": "恢复完成：%s%s%s",
+    "en": "Restore complete: %s%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+    ]
+  },
+  {
+    "zh": "文件不存在或软链接目标已失效：%s",
+    "en": "File is missing or its symbolic-link target is no longer valid: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java"
+    ]
+  },
+  {
+    "zh": "文件不存在：%s",
+    "en": "File does not exist: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java"
+    ]
+  },
+  {
+    "zh": "运行时更新未完成，原运行时及个人数据已保留：\n%s\n%s",
+    "en": "Runtime update did not complete; the previous runtime and personal data were retained:\n%s\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "\n部分旧运行时待下次清理：%s",
+    "en": "\nSome old runtimes await a later cleanup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "dsh 与内置插件更新完成；Ubuntu、个人目录、会话、配置和第三方插件保持原位。%s",
+    "en": "dsh and built-in plugins updated; Ubuntu, personal folders, sessions, configuration and third-party plugins stayed in place.%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "正在解压内置环境… %s",
+    "en": "Extracting the bundled environment… %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "环境重建未完成，原件及宿主数据副本已保留：\n%s\n%s",
+    "en": "Environment rebuild did not complete; originals and host data snapshots were retained:\n%s\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "可用空间不足：本阶段预计需要 %s，当前可用 %s。原环境保持原位，请释放空间后重试。",
+    "en": "Insufficient free space: this stage is estimated to need %s; %s is available. The previous environment stays in place. Free some space and retry.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "新环境第 %d 步检查失败：%s",
+    "en": "New environment step %d verification failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "新环境运行校验失败，将保留并回切原环境。\n%s",
+    "en": "New environment runtime verification failed; the previous environment will be retained and restored.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "待清理目录不属于本应用：%s",
+    "en": "Directory selected for cleanup does not belong to this app: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "无法读取待清理目录：%s",
+    "en": "Cannot read the directory selected for cleanup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "无法清理旧文件：%s",
+    "en": "Cannot remove the old file: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "中断的运行时更新已回切；个人目录、会话和配置保持原位。\n%s",
+    "en": "Interrupted runtime update rolled back; personal folders, sessions and configuration stayed in place.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "中断的维护已回滚；安全备份、旧环境及失败的新环境均已保留。\n%s",
+    "en": "Interrupted maintenance rolled back; the safety backup and both environment trees were retained.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "zh": "WHEELS_CACHE_READY: 补齐 %d 个，原版已在位 %d 个，保留修改版 %d 个，保留额外 wheel %d 个%s%s",
+    "en": "WHEELS_CACHE_READY: Added %d, bundled originals %d, modified files retained %d, extra wheels retained %d%s%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "WHEELS_JAVA_EXTRACTED: 已校验并安装 %d 个 wheel，源缓存全部保留",
+    "en": "WHEELS_JAVA_EXTRACTED: Verified and installed %d wheels; all source caches retained",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "文件大小无效：%s",
+    "en": "Invalid file size: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "条目路径冲突：%s",
+    "en": "Entry path conflict: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "CRC/长度校验失败：%s",
+    "en": "CRC/length verification failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "与 %s 的文件冲突：%s；请选择需要使用的版本",
+    "en": "File conflicts with %s: %s; select the version you need",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "WHEELS_CACHE_INVALID: %s：%s。源缓存已保留，未用 APK 覆盖。请先备份该文件并移出 wheels 目录，再重试补缺；自定义 wheel 请提供有效版本。",
+    "en": "WHEELS_CACHE_INVALID: %s: %s. The source cache was retained. Back up this file and move it out of the wheels directory before retrying. Provide a valid version for a custom wheel.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "无法发布 Python 文件：%s",
+    "en": "Cannot publish the Python file: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "目录是符号链接，已保留且未写入：%s",
+    "en": "The directory is a symbolic link; retained without writing: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "目录位置已有其他条目，已保留：%s",
+    "en": "Another entry occupies the directory location; retained: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "临时目录清理失败：%s",
+    "en": "Temporary directory cleanup failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/AdbWheelCache.java"
+    ]
+  },
+  {
+    "zh": "维护路径不在预期私有目录：%s",
+    "en": "Maintenance path is outside the expected private directory: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/MaintenanceTransaction.java"
+    ]
+  },
+  {
+    "zh": "维护阶段已存在：%s",
+    "en": "Maintenance stage already exists: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/MaintenanceTransaction.java"
+    ]
+  },
+  {
+    "zh": "运行时维护路径不安全：%s",
+    "en": "Unsafe runtime maintenance path: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/RuntimeUpdateTransaction.java"
+    ]
+  },
+  {
+    "zh": "运行时阶段已存在：%s",
+    "en": "Runtime stage already exists: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/RuntimeUpdateTransaction.java"
+    ]
+  },
+  {
+    "zh": "新运行时缺少文件：%s",
+    "en": "New runtime is missing a file: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/RuntimeUpdateTransaction.java"
+    ]
+  }
+]

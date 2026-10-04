@@ -1,102 +1,25 @@
 ---
 name: screen-ocr-operator
-description: Use when you need to see and operate an Android screen through an OCR/vision model plus ADB. Optimized commander workflow: one model plan, batch ADB execution, minimal round-trips, verify at milestones.
+description: 使用 DSHA 已授权的原生读屏与截图工具定位界面，核对目标和坐标后执行用户要求的手机操作。
 ---
 
-# Screen OCR Operator (Commander Mode)
+# 读屏与截图操作
 
-Act as the commander: **you** issue ADB commands, **the vision model** looks at screenshots and returns a concrete operation plan. The goal is to finish screen tasks with the fewest possible screenshot/OCR round-trips.
+使用实际应用所提供的 Android 工具与能力状态。通道可以是 Root、Shizuku 或 ADB，不假设身份为 uid=2000，不把guest root当Android Root。
 
-## Roles
+先核对屏幕、方向、目标应用和授权。优先使用 mcp__dsha-android__android_screenshot 的原生 PNG 结果及当前读屏接口；能否使用取决于实际系统、服务和本次授权，不能从Standard/Low名称推导全设备支持。
 
-- **Commander (you)**: capture screenshots, call the vision model, execute ADB taps/input, verify.
-- **Eyes (vision model)**: OCR the screen, identify UI elements, return coordinates and steps.
-- **Hands (ADB)**: `input tap`, `input text`, `input keyevent`, `am start`, etc.
+根据图片和实际界面树定位后点击、滑动、输入。截图坐标、虚拟屏坐标和主屏必须对应；PiP、键盘、悬浮窗可能遮挡，不能只按旧 XML 坐标。目标不可核验或已改变时停止，不伪报完成。
 
-## Key optimization rules
+活动配对或持续无障碍服务期间不使用uiautomator dump，避免抑制其它服务。授权绑定运行代次；停止、断连、重启或手动撤销后重新核对，不继承旧授权。
 
-1. **Ask the model for a complete plan, not a single action.**
-   - Give the model the task + current screenshot.
-   - Ask it to return a JSON list of actions with coordinates:
-     ```json
-     {
-       "actions": [
-         {"type": "tap", "x": 630, "y": 1090},
-         {"type": "text", "value": "hello"},
-         {"type": "key", "key": "ENTER"}
-       ],
-       "verify": "expected screen after actions"
-     }
-     ```
-2. **One model call per meaningful milestone.**
-   - Don't screenshot + OCR after every tap.
-   - Only re-ask when the next step depends on a changed screen or after a risky action.
-3. **Use Android APIs for deterministic checks first.**
-   - `dumpsys window | grep mCurrentFocus` → which app is foreground.
-   - `dumpsys input_method | grep mInputShown` → is keyboard open.
-   - `uiautomator dump` → native UI nodes/bounds when available.
-   - These are faster and more reliable than OCR for state checks.
-4. **Shrink screenshots before sending to the model.**
-   - Capture full screen, then downscale to max width ~720px and save as JPEG quality ~80.
-   - Smaller payload = much faster API round-trip.
-5. **Batch ADB commands.**
-   - Combine independent shell commands into one `adb shell` invocation.
-   - Keep sleeps short (`sleep 0.5`–`1`) and only wait when the UI actually needs time.
-6. **Verify at the end (or at major checkpoints).**
-   - Final screenshot + one model confirmation is usually enough.
-   - For long tasks, verify after each phase, not after every tap.
+只读信息走当前受管入口：
 
-## Fast workflow
-
-```bash
-# 1. Capture and compress
-adb -s <serial> exec-out screencap -p > /tmp/screen.png
-python3 - <<'PY'
-from PIL import Image
-im = Image.open('/tmp/screen.png').convert('RGB')
-w = 720
-h = round(im.height * w / im.width)
-im.resize((w, h)).save('/tmp/screen.jpg', 'JPEG', quality=80)
-PY
-
-# 2. Send to the vision model for a plan
-# Use an OpenAI-compatible chat/completions API with image support.
-# Prompt example:
-#   "这是 Android 截图。任务：<goal>。请返回 JSON：
-#    {\"actions\":[{\"type\":\"tap\",\"x\":...,\"y\":...}, ...], \"verify\":\"...\"}
-#    坐标基于原图 <width>x<height>。"
-
-# 3. Execute actions from the JSON plan
-adb -s <serial> shell input tap <x> <y>
-adb -s <serial> shell input text '<text>'
-adb -s <serial> shell input keyevent 66
-
-# 4. Verify with one final screenshot + model
-adb -s <serial> exec-out screencap -p > /tmp/final.png
-# send /tmp/final.png to the model: "是否达到预期？请描述当前屏幕。"
+```sh
+/root/dsh-bin/adb-shell "id"
+/root/dsh-bin/adb-shell "getprop ro.product.model"
 ```
 
-## IME / typing fast path
+不以裸adb或其它通道重放未知结果。敏感应用和确认窗口采用原生执行点限制，不替用户确认维护写入。
 
-With a Chinese IME, no need to switch to English mode. Type English characters directly, then press Enter once to submit/send; the IME will not convert the text to Chinese.
-
-```bash
-adb -s <serial> shell "input text 'hello'" # quote on the remote shell
-adb -s <serial> shell input keyevent 66    # press Enter once to send
-```
-
-If a field already contains wrong text, clear it with `KEYCODE_MOVE_END` + repeated `KEYCODE_DEL`, or reopen the app.
-
-## Vision model API reference (generic)
-
-- Endpoint: your configured OpenAI-compatible `chat/completions` endpoint.
-- Model: `<YOUR_VISION_MODEL>` (e.g., a multimodal/OCR-capable model).
-- Auth: `Authorization: Bearer <YOUR_API_KEY>`
-- Multimodal content: `image_url` with `data:image/jpeg;base64,...`
-
-## When to use this skill
-
-- Opening an app and interacting with a chat/search field.
-- Reading what is on the phone screen.
-- Locating buttons/input boxes when `uiautomator` cannot see them.
-- Verifying that a UI action actually succeeded.
+不把截图、密钥、配对码或对话写公开取证目录。临时图只清理本次工具明确创建的文件，不批量删除用户Pictures/Downloads/历史原件。核对结果后报告实际完成情况。

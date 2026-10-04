@@ -1,0 +1,610 @@
+[
+  {
+    "zh": "3090 桥绑定失败：%s",
+    "en": "3090 bridge bind failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "设备桥端口 3090 被占用，设备工具暂不可用；Web 可独立启动。关闭占用端口的其他实例后重试：%s",
+    "en": "Device bridge port 3090 is in use. Device tools are temporarily unavailable; Web can still start. Close the other instance using this port and retry: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "3090 的 IPv6 附加监听不可用：%s",
+    "en": "Additional IPv6 listener on 3090 unavailable: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "在【%s】里：%s  # 这类应用涉及支付或隐私，每次都需要你确认",
+    "en": "In [%s]: %s  # Payment or privacy-sensitive apps require confirmation every time",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "%s  # 本次 DSH 运行期间有效，可在设备能力授权中随时撤销",
+    "en": "%s  # Valid for this DSH run. Revoke anytime in Device permissions",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "点击「%s」",
+    "en": "Tap “%s”",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "点击坐标 (%s,%s)",
+    "en": "Tap coordinates (%s,%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "在输入框里填入「%s」",
+    "en": "Type into the input field: “%s”",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "按下系统按键 %s",
+    "en": "Press system key %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "滑动屏幕 (%s,%s)→(%s,%s)",
+    "en": "Swipe screen (%s,%s)→(%s,%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "BRIDGE_PROTOCOL=%s\nBRIDGE_AUTH=header-x-token\nAPP_VERSION=%s\nAPP_CODE=%s\nHINT=端点清单见 /app/help；判版本请用 >= 而不是 ==\n",
+    "en": "BRIDGE_PROTOCOL=%s\nBRIDGE_AUTH=header-x-token\nAPP_VERSION=%s\nAPP_CODE=%s\nHINT=See /app/help for endpoints; compare versions using >= rather than ==\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=%s）\n凭据由宿主写入 /root/.dsh/.bridge_headers；使用 curl -H @/root/.dsh/.bridge_headers，不把 token 写进 URL 或命令参数。\n带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\n\n== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\n读屏  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → 每行「[序号] \"文字\" 可点击 中心=(x,y) 区域=l,t,r,b」\n点按  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=设置\" -H @/root/.dsh/.bridge_headers\n      → 优先按文字点：控件位置随滚动/动画变，文字不变。没有文字才用 ?x=&y=\n输入  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=内容\" -H @/root/.dsh/.bridge_headers\n      → 填到当前焦点框；没有焦点先 tap 一下输入框\n按键  /app/ui/key?name=back  （back/home/recents/notifications/quicksettings/lock）\n滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n截屏  /app/ui/screenshot   → 存 PNG 到应用截图目录并返回路径（不回 base64）\n节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n\n== 独立虚拟屏（Android 11+；每次输入必须带最新 frameSeq）==\n/app/vscreen/create?orientation=portrait|landscape  创建虚拟屏\n/app/vscreen/status  查询 displayId、尺寸和 frameSeq\n/app/vscreen/launch?package=com.example.app  启动已安装应用\n/app/vscreen/see  获取最新预览；tap/swipe/type/key 必须携带该 frameSeq\n/app/vscreen/close  关闭并回收虚拟屏\n\n== 设备与应用 ==\n/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n/app/launch?pkg=com.tencent.mm  启动应用\n/app/clip                       读剪贴板（需 App 在前台，系统限制）\n/app/clip + text=…              写剪贴板\n/app/readfile?path=/…          读取绝对路径的目录或文本，仍受 Android 权限限制；凭据区（.dsh/.ssh/.android）不可读\n设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n\n== 与用户交互 ==\n/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n/app/notify?title=… + text=…      通知栏\n/app/toast + text=…               App 内提示\n/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n/app/share（text= 或 path=）      分享到其它应用\n/app/open?url=https://…           打开链接\n/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA；凭据区不可导出\n建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n产出报告用 /app/export，别只留在容器里。\n\n== 传感器与位置（默认关闭，需用户在配置页勾选）==\n/app/location（加 fresh=1 强制重新定位，可能等数秒）\n/app/sensors 列表 · /app/sensor?name=light 读值\n（light 环境光 lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation 姿态四元数 / steps 开机后步数）\n/app/torch?on=1 手电\n这三类返回 DISABLED（用户没开该能力）或 NO_PERMISSION（没授系统权限）时，\n照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n\n== 元信息 ==\n/app/version                          桥协议版本 + App 版本（特性检测用）\n/app/help                             本清单\n\n== 插件状态 ==\n/app/plugins                          读回上次上报的加载状态\n/app/plugins?loaded=a,b&failed=c      上报（插件侧用）\n\n== 设备 shell（自动选择 root / Shizuku / ADB）==\n/root/dsh-bin/adb-shell \"命令\"        用 id 核验实际身份\n包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n短信只允许当前 Android 用户的 content query --uri content://sms，默认关闭；设置 → 设备能力授权可开启或撤销。\n短信预授权可能返回正文及验证码；不允许发送、修改或删除，Android 仍可拒绝访问。Shizuku 不执行此敏感查询。\n仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n设置 → 设备能力授权中连接可用通道，别反复试同一条命令。\n不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n\n== root（--su）==\n已启用并经 root 管理器授权的 su 可直接执行，无需 ADB 配对；其次使用 Shizuku，再使用 ADB。\n--su 仅在明确需要 root 时使用，须先在设备能力授权页允许；同一设备保护策略始终生效。\n[EXECUTION_UNKNOWN] 表示命令可能已执行，先核对实际状态，不能切换通道或自动重放。\n",
+    "en": "DSHA 3090 bridge endpoints (BRIDGE_PROTOCOL=%s）\nThe host writes credentials to /root/.dsh/.bridge_headers. Use curl -H @/root/.dsh/.bridge_headers; keep tokens out of URLs and command arguments.\nFor parameters containing Chinese text or spaces, use -G --data-urlencode instead of encoding the URL manually.\n\n== Screen control (accessibility service; no ADB/Shizuku required) ==\nRead screen  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → Each line: [index] \"text\" clickable center=(x,y) bounds=l,t,r,b\nTap  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=Settings\" -H @/root/.dsh/.bridge_headers\n      → Prefer tapping by text: positions change with scrolling and animation. Use ?x=&y= only when no text is available.\nInput  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=content\" -H @/root/.dsh/.bridge_headers\n      → Types into the focused field. Tap an input field first if none is focused.\nKey  /app/ui/key?name=back  (back/home/recents/notifications/quicksettings/lock)\nSwipe  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\nScreenshot  /app/ui/screenshot   → save a PNG in the app's screenshot folder and return its path (not base64)\nAfter each tap or input, dump the screen again before deciding the next step. Do not tap repeatedly from memory.\n\n== Independent virtual display (Android 11+; each input requires the latest frameSeq) ==\n/app/vscreen/create?orientation=portrait|landscape  Create a virtual display\n/app/vscreen/status  Query displayId, size and frameSeq\n/app/vscreen/launch?package=com.example.app  Launch an installed application\n/app/vscreen/see  Get the latest preview; tap/swipe/type/key must include its frameSeq\n/app/vscreen/close  Close and release the virtual display\n\n== Device & apps ==\n/app/device                     Model / Android / battery / network / display / storage / memory\n/app/apps                       Installed apps, separated into user and system apps; filter with q/limit/user=1\n/app/launch?pkg=com.tencent.mm  Launch app\n/app/clip                       Read clipboard (app must be in foreground; Android restriction)\n/app/clip + text=…              Write clipboard\n/app/readfile?path=/…          Read a directory or text at an absolute path, subject to Android permissions; credential directories (.dsh/.ssh/.android) cannot be read\nUse the protected device shell below for device file writes. Ordinary Download files are writable; DCIM/Pictures/Android/data/obb remain read-only.\n\n== User interaction ==\n/app/ask?options=Continue|Cancel + q=…  Ask in a blocking dialog (up to three options)\n/app/notify?title=… + text=…      Notification\n/app/toast + text=…               In-app toast\n/app/vibrate?ms=300               Vibrate (notify the user after a long task)\n/app/share (text= or path=)      Share to another app\n/app/open?url=https://…           Open URL\n/app/export?path=/root/report.md  Export an artifact to Download/DSHA; credential directories cannot be exported\nUse /app/ask when a decision is needed, and notify or vibrate when a long task finishes.\nUse /app/export to deliver reports; do not leave them only in the container.\n\n== Sensors & location (off by default; enable in Configuration) ==\n/app/location (fresh=1 forces a new fix; may take a few seconds)\n/app/sensors lists sensors · /app/sensor?name=light reads a value\n(light: ambient lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation quaternion / steps since boot)\n/app/torch?on=1 Flashlight\nWhen these APIs return DISABLED (feature off) or NO_PERMISSION (system permission missing),\nTell the user exactly where to enable it. Do not retry; retrying cannot turn the setting on.\n\n== Metadata ==\n/app/version                          Bridge protocol + app version (feature detection)\n/app/help                             This endpoint list\n\n== Plugin status ==\n/app/plugins                          Read last reported loading status\n/app/plugins?loaded=a,b&failed=c      Report status (for plugins)\n\n== Device shell (selects root / Shizuku / ADB automatically) ==\n/root/dsh-bin/adb-shell \"command\"        Use id to verify the actual identity\nIf the wrapper is missing: python3 /root/.dsh/adb-shell.py \"command\"\nSMS queries only allow content query --uri content://sms for the current Android user. Off by default; enable or revoke in Device permissions.\nPreauthorized SMS queries may return message bodies and verification codes. Sending, editing and deleting are blocked; Android may still deny access. Shizuku does not run this sensitive query.\nOnly recognized single commands are allowed, including directory reads and ordinary file operations on explicit paths. Scripts, pipes, redirects and unknown commands are blocked.\nRoot and system directories are read-only. Block devices/partitions, SELinux changes, system setting writes, mounts and firmware flashing are blocked.\nRefresh the complete user/system app list before stopping processes. Ordinary user apps may be stopped; system apps and essential processes are protected.\nUse the full package name with am force-stop / killall / pkill -x. A positive PID with kill is checked against its UID before stopping by package name.\nPolicy blocks return [POLICY_BLOCKED]/126. Root and legacy confirmation switches cannot override them. Do not use another interpreter or the UI to bypass a block.\nIf a connection or pairing error occurs, first check whether the app-level APIs above can perform the task. Only if a shell is essential, ask the user to open\nSettings → Device permissions to connect an available channel. Do not keep retrying the same command.\nDo not use /root/dsh-bin/adb or bare adb; those are guarded wrappers and will fail.\n\n== root（--su）==\nWhen su is enabled and authorized by the root manager, commands run directly without ADB pairing. Otherwise, Shizuku is used before ADB.\nUse --su only when root is explicitly required and enabled in Device permissions. The same device protection policy always applies.\n[EXECUTION_UNKNOWN] means the command may have executed. Verify the actual state before proceeding; do not switch connections or replay automatically.\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "插件加载失败：%s",
+    "en": "Plugin loading failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "FORBIDDEN: 路径无法解析（%s）",
+    "en": "FORBIDDEN: Could not resolve path (%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "NOT_FOUND_OR_NO_PERMISSION: 路径不存在或 Android 未授予读取权限：%s",
+    "en": "NOT_FOUND_OR_NO_PERMISSION: Path does not exist or Android denied read access: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "[APP_LIST_UNAVAILABLE] Android 未提供完整应用清单；设备停止操作会通过 ADB/Shizuku 重新读取。可用设备命令分别查询 pm list packages -U -3 和 pm list packages -U -s。原因：%s",
+    "en": "[APP_LIST_UNAVAILABLE] Android did not provide a complete app list. Device stop operations will fetch it again through ADB/Shizuku.Use supported device commands to query pm list packages -U -3 and pm list packages -U -s separately. Reason: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "OK: 已打开 %s",
+    "en": "OK: Opened %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "OK: 震动 %sms",
+    "en": "OK: Vibrating %sms",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "模型试图在设备上执行：\n%s\n\n是否允许？",
+    "en": "The model wants to run on the device:\n%s\n\nAllow this?",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "确认弹窗弹出失败，仍可从通知确认：%s",
+    "en": "Could not show confirmation dialog; confirmation remains available from the notification: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "无前台界面且通知权限被拒，确认必然超时拒绝：%s",
+    "en": "No foreground page and notification permission denied; confirmation will time out and be denied: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "模型试图执行：%s",
+    "en": "The model wants to run: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 读屏失败：%s",
+    "en": "[ERR] Screen read failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 屏幕上找不到可点击的「%s」（先用 dump 看看实际文字）",
+    "en": "[ERR] No clickable text found on screen: “%s” (use dump to inspect the actual text first)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "OK 已点击「%s」",
+    "en": "OK Tapped “%s”",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 点击失败：%s",
+    "en": "[ERR] Tap failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "OK 已输入 %s 个字符",
+    "en": "OK Entered %s characters",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 输入失败：%s",
+    "en": "[ERR] Input failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 不认识的按键「%s」（可用：back/home/recents/notifications/quicksettings/lock）",
+    "en": "[ERR] Unknown key “%s” (available: back/home/recents/notifications/quicksettings/lock)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "OK 已发送 %s",
+    "en": "OK Sent %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 系统拒绝了 %s",
+    "en": "[ERR] Android denied %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 按键失败：%s",
+    "en": "[ERR] Key press failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 手势未被接受（%s）",
+    "en": "[ERR] Gesture not accepted (%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 手势超时（%s）",
+    "en": "[ERR] Gesture timed out (%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "OK 已%s",
+    "en": "OK %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 手势被取消（%s，可能被其它手势打断）",
+    "en": "[ERR] Gesture canceled (%s, possibly interrupted by another gesture)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 手势失败：%s",
+    "en": "[ERR] Gesture failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 截屏需要 Android 11 及以上（当前 API %s）",
+    "en": "[ERR] Screenshots require Android 11+ (current API %s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 保存截屏失败：%s",
+    "en": "[ERR] Could not save screenshot: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 截屏失败：%s",
+    "en": "[ERR] Screenshot failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 建不了目录 %s",
+    "en": "[ERR] Could not create directory %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "OK 截屏已保存：%s（%sx%s）",
+    "en": "OK Screenshot saved: %s(%sx%s)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 写截屏文件失败：%s",
+    "en": "[ERR] Could not write screenshot file: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "LAN 代理已启动：0.0.0.0:%s -> 127.0.0.1:%s",
+    "en": "LAN proxy started: 0.0.0.0:%s -> 127.0.0.1:%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/LanProxyService.java"
+    ]
+  },
+  {
+    "zh": "接收连接失败：%s",
+    "en": "Could not accept connection: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/LanProxyService.java"
+    ]
+  },
+  {
+    "zh": "LAN 代理绑定失败：%s",
+    "en": "LAN proxy bind failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/LanProxyService.java"
+    ]
+  },
+  {
+    "zh": "连接来自 %s",
+    "en": "Connection from %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/LanProxyService.java"
+    ]
+  },
+  {
+    "zh": "SCRIPTS_FAILED: ADB 脚本更新未完成\n%s",
+    "en": "SCRIPTS_FAILED: ADB script update is incomplete\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "GLIBC_PY_INSTALL_FAIL: 无法安装 Ubuntu Python3，请先修复基础环境\n%s",
+    "en": "GLIBC_PY_INSTALL_FAIL: Could not install Ubuntu Python3. Repair the base environment first.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "SETUP_FAILED: 安装后验证未通过，请检查以下输出\n%s",
+    "en": "SETUP_FAILED: Post-installation verification failed. Check the output below.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "WHEELS_INJECT_FAIL: %s；已有缓存原样保留，未用 APK 覆盖",
+    "en": "WHEELS_INJECT_FAIL: %s; existing cache preserved and not overwritten by the APK",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "WRITE_SECURE_SETTINGS 授权结果: %s",
+    "en": "WRITE_SECURE_SETTINGS authorization result: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "KEEPALIVE_WARN: 连接已验证，但自动恢复授权未完成；重启后可能需手动打开无线调试\n%s",
+    "en": "KEEPALIVE_WARN: Connection verified, but automatic recovery is not authorized. You may need to enable Wireless debugging manually after restart.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "WRITE_SECURE_SETTINGS 授权失败: %s",
+    "en": "WRITE_SECURE_SETTINGS authorization failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "端口发现未启动（错误 %s），可手动填写端口",
+    "en": "Port discovery did not start (error %s), enter the port manually if needed",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "一个服务解析失败（错误 %s），继续查找本机端口…",
+    "en": "A service could not be resolved (error %s), continuing to search for the local port…",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "端口发现失败：%s",
+    "en": "Port discovery failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+    ]
+  },
+  {
+    "zh": "NOT_FOUND: %s（该应用没有启动入口或未安装）",
+    "en": "NOT_FOUND: %s(app has no launch activity or is not installed)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ]
+  },
+  {
+    "zh": "OK: 已启动 %s",
+    "en": "OK: Launched %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ]
+  },
+  {
+    "zh": "OK: 已写入剪贴板（%s 字）",
+    "en": "OK: Clipboard updated (%s characters)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ]
+  },
+  {
+    "zh": "%s…（已截断）",
+    "en": "%s…(truncated)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ]
+  },
+  {
+    "zh": "ERROR: 剪贴板操作失败：%s",
+    "en": "ERROR: Clipboard operation failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ]
+  },
+  {
+    "zh": "%s主线程尚未执行，已取消本次剪贴板操作；可重试",
+    "en": "%sThe main thread had not started this clipboard operation, so it was canceled. You can retry.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ]
+  },
+  {
+    "zh": "禁止设备分区、SELinux、系统属性、挂载或刷机操作：%s",
+    "en": "Partition, SELinux, system property, mount and firmware operations are blocked: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java"
+    ]
+  },
+  {
+    "zh": "不认识的命令不执行：%s",
+    "en": "Unrecognized command blocked: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java"
+    ]
+  },
+  {
+    "zh": "受保护目录只读：%s",
+    "en": "Protected directory is read-only: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java"
+    ]
+  },
+  {
+    "zh": "系统、关键或未识别应用不可结束：%s",
+    "en": "System, essential or unidentified apps cannot be stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java"
+    ]
+  },
+  {
+    "zh": "系统关键进程或归属不明的 PID 不可结束：%s",
+    "en": "Essential system processes or PIDs with unknown ownership cannot be stopped: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeviceAppPolicy.java"
+    ]
+  },
+  {
+    "zh": "启动敏感应用：%s",
+    "en": "Launch sensitive application: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
+    ]
+  },
+  {
+    "zh": "操作独立虚拟屏：%s",
+    "en": "Operate independent virtual display: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "zh": "点按 (%d,%d)",
+    "en": "Tap (%d,%d)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "滑动 (%d,%d)→(%d,%d)",
+    "en": "Swipe (%d,%d)→(%d,%d)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 无障碍服务未开启。请让用户在 DSHA「设置 → 设备能力授权」点「设置屏幕操作」，或到系统设置 → 无障碍 → DSHA 配对助手 打开。",
+    "en": "[ERR] Accessibility is off. Ask the user to open DSHA Settings → Device permissions → Screen control, or enable DSHA Pairing Assistant in Android Settings → Accessibility.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 截屏被系统拒绝（错误码 %d，太频繁了，隔一秒再试）",
+    "en": "[ERR] Screenshot rejected by the system (error %d; too frequent, wait a second before retrying)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "[ERR] 截屏被系统拒绝（错误码 %d）",
+    "en": "[ERR] Screenshot rejected by the system (error %d)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+    ]
+  },
+  {
+    "zh": "显示 %d 个；Android 返回 %d 个可见应用。系统可能限制可见范围；结束应用前会另行核对完整清单。",
+    "en": "Showing %d apps; Android returned %d visible apps. The system may restrict visibility; the complete inventory is checked again before stopping an app.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  }
+]

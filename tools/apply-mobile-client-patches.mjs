@@ -8,6 +8,31 @@ export const upstreamCommit = 'a094288883b343e848d7f9cf302d73ad8ed4794b';
 export const upstreamClientHash = '88bfc7b315249cbe8a4fcbcaf41854cce3a8480a5b98a7bdb063ba78b1ae9a19';
 const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+// Host modules are whole-module replacements because the upstream buffered
+// stream and private-registry lifecycle must be replaced together. Exact
+// commit bytes plus named public export anchors pin that review boundary.
+export const upstreamServerHashes = {
+  'compress.js': '3009046f4bc490318830d56dacdb012fa0467d2b8fe63671f0d31bda1fa7c21a',
+  'delete-session.js': 'bd09d85745941e2561b5bd2f3f4d336ded4a054db615747b70362b4a4dbbb015',
+  'index.js': '6ca04f6ce174d6629ae1826cfe61ae313c6388b85f64229448900a75356d4e62',
+};
+const serverAnchors = {
+  'compress.js': 'export function installResponseCompression()',
+  'delete-session.js': 'export async function deleteSession(deps, sessionId)',
+  'index.js': 'export function apply(ctx)',
+};
+export function applyMobileServerPatch(name, bytes) {
+  if (!(name in upstreamServerHashes)) throw new Error('unknown mobile server module: ' + name);
+  const output = readFileSync(path.join(project, 'tools/mobile-server', name));
+  // Idempotent over the canonical patched output, with no partial re-patch.
+  if (bytes.equals(output)) return output;
+  const source = bytes.toString('utf8');
+  if (createHash('sha256').update(bytes).digest('hex') !== upstreamServerHashes[name]
+      || source.split(serverAnchors[name]).length !== 2)
+    throw new Error('mobile server source differs from fixed commit/anchor: ' + name);
+  return output;
+}
+
 export function applyMobileClientPatches(bytes) {
   if (createHash('sha256').update(bytes).digest('hex') !== upstreamClientHash)
     throw new Error('上游 client 字节不匹配固定 commit；请重新审阅补丁');
@@ -92,6 +117,18 @@ export function applyMobileClientPatches(bytes) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [input, action = '--check'] = process.argv.slice(2);
+  if (input === '--server') {
+    const [directory, serverAction = '--check'] = process.argv.slice(3);
+    if (!directory || !['--check', '--write'].includes(serverAction)) throw new Error('用法: node tools/apply-mobile-client-patches.mjs --server <固定上游lib目录> [--check|--write]');
+    for (const name of Object.keys(upstreamServerHashes)) {
+      const patched = applyMobileServerPatch(name, readFileSync(path.join(directory, name)));
+      const output = path.join(project, 'app/src/main/assets/builtin-plugins/dsh-web-mobile/lib', name);
+      if (serverAction === '--write') writeFileSync(output, patched);
+      else if (!readFileSync(output).equals(patched)) throw new Error('移动服务产物与锁定补丁不符: ' + name);
+    }
+    console.log('移动服务补丁与上游指纹核验通过: ' + upstreamCommit);
+    process.exit(0);
+  }
   if (!input || !['--check', '--write'].includes(action)) throw new Error('用法: node tools/apply-mobile-client-patches.mjs <上游lib/client.js> [--check|--write]');
   const patched = applyMobileClientPatches(readFileSync(input));
   const output = path.join(project, 'app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/client.js');

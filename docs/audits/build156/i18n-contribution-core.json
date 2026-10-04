@@ -1,0 +1,354 @@
+[
+  {
+    "zh": "前台服务未获系统允许：%s",
+    "en": "The system did not allow the foreground service: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+    ]
+  },
+  {
+    "zh": "onStartCommand startForeground 失败：%s",
+    "en": "onStartCommand startForeground failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+    ]
+  },
+  {
+    "zh": "[保活] 取锁失败（不致命）：%s",
+    "en": "[Keepalive] Power lease unavailable (nonfatal): %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HarnessService.java"
+    ]
+  },
+  {
+    "zh": "备份成功，归档与导出文件已校验。\n%s",
+    "en": "Backup succeeded; the archive and exported file were verified.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/BackupTask.java"
+    ]
+  },
+  {
+    "zh": "确认恢复将停止 Web，并中断正在执行的任务。\n\n%s",
+    "en": "Confirming restore will stop Web and interrupt running tasks.\n\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/BackupTask.java"
+    ]
+  },
+  {
+    "zh": "正在%s，完成后可重新生成报告。",
+    "en": "%s is in progress; regenerate the report when it finishes.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ]
+  },
+  {
+    "zh": "修复失败：%s\n",
+    "en": "Repair failed: %s\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ]
+  },
+  {
+    "zh": "诊断未完成：%s",
+    "en": "Diagnostics incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ]
+  },
+  {
+    "zh": "无法开始诊断：%s",
+    "en": "Cannot start diagnostics: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ]
+  },
+  {
+    "zh": "\n建议操作\n证书或 npm 异常：点击「修复证书与 npm」。\n文件选择无返回：到插件页使用「其他文件选择器」。\n第三方插件导致启动失败：使用启动页的安全启动，再逐个恢复插件。\n存储不足：清理下载目录后重试，避免重新解压整个环境。\n\n隐私范围：未读取 API 配置、对话、终端命令或系统完整日志；没有自动上传此报告。可在下面补充复现步骤后复制或导出。\n",
+    "en": "\nSuggested actions\nCertificate or npm errors: select “Repair certificates and npm”.\nFile picker returns nothing: use “Other file picker” on the Plugins page.\nA third-party plugin prevents startup: use Safe startup, then restore plugins one at a time.\nLow storage: clear the downloads directory and retry; avoid extracting the entire environment again.\n\nPrivacy scope: this report did not read API settings, conversations, terminal commands, or complete system logs, and was not uploaded automatically. Add reproduction steps below before copying or exporting it.\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
+    ]
+  },
+  {
+    "zh": "无法启动安装任务：%s",
+    "en": "Cannot start the installation task: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/InstallRepository.java"
+    ]
+  },
+  {
+    "zh": "任务异常：%s",
+    "en": "Task exception: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/InstallRepository.java"
+    ]
+  },
+  {
+    "zh": "任务失败：%s",
+    "en": "Task failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/InstallRepository.java"
+    ]
+  },
+  {
+    "zh": "无法确认后台进程退出，保留环境保护：%s",
+    "en": "Cannot confirm the background process exited; environment protection remains: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/RuntimeTasks.java"
+    ]
+  },
+  {
+    "zh": "正在%s，请稍后再打开终端或发送命令",
+    "en": "%s is in progress; open the terminal or send commands after it finishes.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/SimpleTerminalBackend.java"
+    ]
+  },
+  {
+    "zh": "正在执行环境任务，请稍后再打开终端或发送命令",
+    "en": "An environment task is in progress; open the terminal or send commands after it finishes.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/SimpleTerminalBackend.java"
+    ]
+  },
+  {
+    "zh": "终端尚未停止，保留会话与环境保护：%s",
+    "en": "The terminal has not stopped; its session and environment protection remain: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/TerminalSessionOwner.java"
+    ]
+  },
+  {
+    "zh": "最近启动失败\n%s\n%s\n\n%s\n\n=== 进程输出 ===\n",
+    "en": "Latest startup failure\n%s\n%s\n\n%s\n\n=== Process output ===\n",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java"
+    ]
+  },
+  {
+    "zh": "部分旧环境待清理：%s",
+    "en": "Some older environments still need cleanup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ]
+  },
+  {
+    "zh": "插件注册失败：%s",
+    "en": "Plugin registration failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ]
+  },
+  {
+    "zh": "内置插件未完整注册，请先修复环境：%s",
+    "en": "Built-in plugins were not fully registered; repair the environment first: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ]
+  },
+  {
+    "zh": "rc1 迁移快照未完成，已阻止导入；原件保留。请检查存储权限和空间后重试：%s",
+    "en": "rc1 snapshots are incomplete; import is blocked and originals are retained. Check storage access and space, then retry: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ]
+  },
+  {
+    "zh": "本次配置快照暂不可用：%s",
+    "en": "Configuration snapshot unavailable for this start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java"
+    ]
+  },
+  {
+    "zh": "运行方式：%s",
+    "en": "Runtime mode: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "启动未完成：%s",
+    "en": "Startup incomplete: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "启动排队失败：%s",
+    "en": "Cannot queue startup: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "本次实际运行方式：%s",
+    "en": "Runtime mode used for this start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "3090 桥启动失败：%s",
+    "en": "Bridge 3090 failed to start: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "启动失败：%s",
+    "en": "Startup failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "兼容重试失败：%s",
+    "en": "Compatibility retry failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "停止旧 Web 失败：%s",
+    "en": "Failed to stop the previous Web process: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "停用插件失败：%s",
+    "en": "Failed to disable the plugin: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "dsh web 进程已创建 → 127.0.0.1:%s（等待鉴权链接…）",
+    "en": "The dsh web process was created → 127.0.0.1:%s (waiting for its authentication link…)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "%s 进程退出，退出码 %s（鉴权后）",
+    "en": "%s process exited with code %s (after authentication)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "%s 进程退出，退出码 %s（鉴权前）",
+    "en": "%s process exited with code %s (before authentication)",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "首选 Web 端口已占用：%s",
+    "en": "Preferred Web port is in use: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "实际 Web 端口：%s",
+    "en": "Active Web port: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
+    ]
+  },
+  {
+    "zh": "上次任务因进程退出而中断，未自动重试。请先处理未完成的维护或重新选择备份。\n%s",
+    "en": "The previous task was interrupted when the process exited and was not retried automatically. Resolve unfinished maintenance or select the backup again.\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/BackupTaskState.java"
+    ]
+  },
+  {
+    "zh": "Web 鉴权链接已失效（HTTP %s），请重新启动服务后进入",
+    "en": "Web authentication link expired (HTTP %s); restart the service before opening it.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ]
+  },
+  {
+    "zh": "Web 服务尚未就绪（HTTP %s），请稍后重试",
+    "en": "The Web service is not ready (HTTP %s); retry later.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ]
+  },
+  {
+    "zh": "Web 鉴权响应异常（HTTP %s），请查看启动日志",
+    "en": "Unexpected Web authentication response (HTTP %s); review the startup log.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ]
+  },
+  {
+    "zh": "Web 未接受登录凭据（HTTP %s），请重试或重新启动服务",
+    "en": "Web did not accept the login credential (HTTP %s); retry or restart the service.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ]
+  },
+  {
+    "zh": "Web 页面尚不可用（HTTP %s），请查看启动日志",
+    "en": "The Web page is unavailable (HTTP %s); review the startup log.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DshAuthSession.java"
+    ]
+  },
+  {
+    "zh": "配置已重置，对话及原生凭据保留。重置前配置原件：\n%s",
+    "en": "Configuration reset; conversations and native credentials retained. Original configuration:\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/HostConfigService.java"
+    ]
+  }
+]

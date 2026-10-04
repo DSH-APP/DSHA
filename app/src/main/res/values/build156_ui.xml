@@ -1,0 +1,24 @@
+<resources>
+    <string name="ui_lan_unencrypted">局域网使用 HTTP，流量未加密。请只在可信网络使用，并只向可信设备分享连接链接。</string>
+    <string name="ui_brand_dsh" translatable="false">DSH</string>
+    <string name="ui_brand_github" translatable="false">GitHub</string>
+    <string name="ui_brand_shizuku" translatable="false">Shizuku</string>
+    <string name="ui_terminal_pty" translatable="false">PTY</string>
+    <string name="ui_terminal_ubuntu_pty" translatable="false">Ubuntu · PTY</string>
+    <string name="ui_terminal_prompt" translatable="false">#&#160;</string>
+    <string name="ui_font_smaller" translatable="false">A−</string>
+    <string name="ui_font_larger" translatable="false">A+</string>
+    <string name="ui_status_dot" translatable="false">●</string>
+    <string name="ui_status_unavailable" translatable="false">—</string>
+    <string name="ui_welcome_counter">%1$d / 7</string>
+    <string name="ui_welcome_initial_counter">1 / 7</string>
+    <string name="ui_language_title">语言 / Language</string>
+    <string name="ui_adb_host_label">设备地址（留空自动发现）</string>
+    <string name="ui_adb_port_label">配对端口（留空自动发现）</string>
+    <string name="ui_adb_code_label">配对码（6 位数字）</string>
+    <string name="ui_api_key_replacement_label">新的 API Key（留空保持原记录）</string>
+    <plurals name="plugin_count">
+        <item quantity="one">共 %d 个插件</item>
+        <item quantity="other">共 %d 个插件</item>
+    </plurals>
+</resources>

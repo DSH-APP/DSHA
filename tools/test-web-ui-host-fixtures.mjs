@@ -12,7 +12,7 @@ const temp = mkdtempSync(path.join(tempRoot, 'dsha-web-ui-fixture-'));
 try {
   const source = path.join(project, 'app/src/main/java/com/deepseekharness/app/util');
   const fixture = path.join(project, 'tools/fixtures/WebUiHostFixture.java');
-  const compile = spawnSync('javac', ['-d', temp, path.join(source, 'WebUploadSessionBudget.java'),
+  const compile = spawnSync('javac', ['-encoding', 'UTF-8', '-d', temp, path.join(source, 'WebUploadSessionBudget.java'),
     path.join(source, 'RecoveryLocalePolicy.java'), fixture], { encoding: 'utf8' });
   assert.equal(compile.status, 0, `javac failed:\n${compile.stdout}\n${compile.stderr}`);
   const run = spawnSync('java', ['-cp', temp, 'WebUiHostFixture'], { encoding: 'utf8' });

@@ -1,0 +1,15 @@
+✔ AAAA refusal retries IPv4 once, preserving all/options without mutation (1.9427ms)
+✔ normal IPv6 and explicit IPv6/IPv4 are not downgraded (2.0962ms)
+✔ NXDOMAIN/argument errors and failed fallback keep errors, no retry loop (0.9959ms)
+✔ promise API and promisify retain result shape (0.4846ms)
+✔ native opt-out and duplicate preload are stable (0.7315ms)
+✔ default callback signature, native return value and callback exactly once (1.0485ms)
+﹣ native libuv/getaddrinfo fixture compiles and preserves one HTTP request (0.0514ms) # Real LD_PRELOAD boundary requires a Linux host
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 11.0033

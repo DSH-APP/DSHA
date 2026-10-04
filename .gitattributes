@@ -1,5 +1,26 @@
 # 容器内运行的脚本必须保持 LF：CRLF 会让 proot 容器里的 bash/python 报错（上游 issue #45）
-* text=auto
+* text=auto eol=lf
+*.so binary
+*.bin binary
+*.jar binary
+*.aar binary
+*.gz binary
+*.tgz binary
+*.zip binary
+*.apk binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.pdf binary
+*.js text eol=lf
+*.cjs text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.txt text eol=lf
+*.c text eol=lf
+*.h text eol=lf
 *.sh text eol=lf
 *.py text eol=lf
 *.yml text eol=lf
@@ -11,3 +32,5 @@
 *.properties text eol=lf
 *.xml text eol=lf
 *.aidl text eol=lf
+# 退休原件必须覆盖后面的按扩展名规则，Git 不得改写原始换行字节。
+tools/history/** -text -eol

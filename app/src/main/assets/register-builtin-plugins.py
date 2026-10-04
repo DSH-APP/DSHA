@@ -17,7 +17,7 @@ dsh-web-mobile）的实体随离线 rootfs 烘焙在 /root/dsha-*，但 dsh 只�
   python3 register-builtin-plugins.py --enable 名字   # 启用：加回 bundles + 建链
   python3 register-builtin-plugins.py --disable 名字  # 禁用：移出 bundles + 摘链 + 写禁用标记
 
-注册契约（与 selftest.py / fix-stale-bundles.sh 保持一致）：
+注册名单与实体路径由签名 builtin-plugins.json 唯一声明；注册契约为：
   1. profiles/web/package.json 的 dsh.profile.bundles 含插件名；
   2. dependencies 有 link: 声明（pnpm 重装/加插件时不会把内置链接摘掉）；
   3. profiles/web/node_modules/<name> 是指向 /root/dsha-* 的符号链接。
@@ -53,20 +53,22 @@ WORKSPACE = os.path.join(PROFILE, "pnpm-workspace.yaml")
 NODE_MODULES = os.path.join(PROFILE, "node_modules")
 REPAIR_LOG = os.path.join(DSH_HOME, "repair-builtin.log")
 
-# 兜底清单：dsha-builtin.txt 缺失（精简包/手改）时仍能认出这四个内置插件
-DEFAULT_BUILTINS = (
-    "dsh-device-shell-guide",
-    "dsh-task-notifier",
-    "dsh-status-overlay",
-    "dsh-web-mobile",
-    "dsh-computer-use-android",
-    "dsh-auto-review",
-    "dsh-tool-vscreen",
-    "dsh-app-integration",
-)
+def _registry():
+    path = Path(__file__).with_name('builtin-plugins.json')
+    value = json.loads(path.read_text(encoding='utf-8'))
+    if value.get('schema') != 1 or not isinstance(value.get('plugins'), list):
+        raise ValueError('BUILTIN_REGISTRY_FORMAT')
+    rows = value['plugins']; official = value.get('officialBundles', [])
+    names = [row.get('name') for row in rows + official]
+    if len(set(names)) != len(names) or any(not isinstance(name, str) or not re.fullmatch(r'(?:@[a-z0-9._-]+/)?[a-z0-9._-]+', name) for name in names):
+        raise ValueError('BUILTIN_REGISTRY_NAME')
+    return rows, official
 
-# web profile 的官方核心（dsh 的 PROFILE_TEMPLATES.web），新建 profile 时打底
-OFFICIAL_BUNDLES = ("@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app")
+
+_REGISTRY_ROWS, _OFFICIAL_ROWS = _registry()
+DEFAULT_BUILTINS = tuple(row['name'] for row in _REGISTRY_ROWS)
+OFFICIAL_BUNDLES = tuple(row['name'] for row in _OFFICIAL_ROWS)
+BUILTIN_DIRECTORIES = {row['name']: row['guestDirectory'] for row in _REGISTRY_ROWS}
 
 PROFILE_PATCH_TEMPLATE = (
     "# Your patch layer for this dsh profile, applied after every bundle layer:\n"
@@ -142,7 +144,7 @@ def runtime_links_stamp():
         if os.path.isdir(base):
             paths.extend(os.path.join(base, name) for name in os.listdir(base) if name.startswith('@'))
     for name in DEFAULT_BUILTINS:
-        managed = local('/root/dsha-' + name.removeprefix('dsh-'))
+        managed = local(BUILTIN_DIRECTORIES[name])
         paths.extend([managed, os.path.join(managed, 'package.json'), os.path.join(managed, 'node_modules')])
     stamp = []
     for path in sorted(paths):
@@ -214,7 +216,7 @@ def repair_runtime_modules():
     candidates['@deepseek-ai/dsh'] = package
     count = 0
     for name in DEFAULT_BUILTINS:
-        managed = local('/root/dsha-' + name.removeprefix('dsh-'))
+        managed = local(BUILTIN_DIRECTORIES[name])
         modules = os.path.join(managed, 'node_modules')
         if os.path.isfile(os.path.join(managed, 'package.json')):
             count += int(ensure_relative_link(modules, bundled))
@@ -231,7 +233,7 @@ def repair_runtime_modules():
 
 
 @contextmanager
-def operation_lock(check_cancel=None):
+def operation_lock(check_cancel=None, timeout=120):
     """所有 DSHA 插件清单写入共用锁；进程退出由系统释放。"""
     os.makedirs(local(DSH_HOME), exist_ok=True)
     # 锁放在 .dsh 外，恢复整个 .dsh 时不会换掉正在使用的锁 inode。
@@ -239,6 +241,7 @@ def operation_lock(check_cancel=None):
     with open(os.path.join(data_root, ".dsha-data.lock"), "a") as lock:
         if os.name != "nt":
             import fcntl
+            deadline = time.monotonic() + max(0, timeout)
             while True:
                 if check_cancel:
                     check_cancel()
@@ -246,6 +249,8 @@ def operation_lock(check_cancel=None):
                     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
                     break
                 except BlockingIOError:
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError('PLUGIN_LOCK_TIMEOUT；未更改插件或终止其他进程')
                     time.sleep(0.1)
         try:
             if os.path.isfile(os.path.join(data_root, ".dsha-restore-journal.json")):
@@ -256,18 +261,53 @@ def operation_lock(check_cancel=None):
                 fcntl.flock(lock, fcntl.LOCK_UN)
 
 
-def entity_dir(name):
+def runtime_bundle_dir(name):
+    """Match dsh's install anchor without treating its packages as user installs."""
+    if not valid_name(name):
+        return None
+    runtime = local('/usr/local/lib/node_modules/@deepseek-ai/dsh')
+    candidate = os.path.join(runtime, 'node_modules', name)
+    directory = os.path.realpath(candidate)
+    try:
+        if os.path.commonpath([os.path.realpath(runtime), directory]) != os.path.realpath(runtime):
+            return None
+        manifest = os.path.join(directory, 'package.json')
+        if os.path.getsize(manifest) > 1024 * 1024:
+            return None
+        with open(manifest, encoding='utf-8') as stream:
+            package = json.load(stream)
+        patch = package.get('dsh', {}).get('bundle', {}).get('patch')
+        patches = [patch] if isinstance(patch, str) else patch
+        if package.get('name') != name or not isinstance(patches, list) or not patches:
+            return None
+        for item in patches:
+            if not isinstance(item, str) or not item or os.path.isabs(item) or '\\' in item:
+                return None
+            resolved = os.path.realpath(os.path.join(directory, item))
+            if os.path.commonpath([directory, resolved]) != directory or not os.path.isfile(resolved):
+                return None
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+    return candidate
+
+
+def entity_dir(name, discovered=None):
     """内置插件名 → 其实体目录（/root/dsha-*），找不到（官方核心/第三方）返回 None。"""
     if not valid_name(name):
         return None
     system = name in builtin_names()
     if system:
-        managed = '/root/dsha-' + name.removeprefix('dsh-')
+        managed = BUILTIN_DIRECTORIES[name]
         if os.path.isfile(local(os.path.join(managed, 'package.json'))):
             return managed
         # 签名系统插件只能来自当前 APK 刷新的受管实体。旧 profile 里的同名
         # 实体副本、plugin-src 草稿和全局包都不能抢在它前面。
         return None
+    # Official dsh resolveBundleDir checks installAnchor first. A same-name
+    # user copy must not be displayed/checked as the bytes Web will execute.
+    installed = runtime_bundle_dir(name)
+    if installed:
+        return installed
     if not system:
         active = os.path.join(NODE_MODULES, name)
         if os.path.isfile(local(os.path.join(active, "package.json"))):
@@ -276,7 +316,7 @@ def entity_dir(name):
     if os.path.isfile(local(os.path.join(imported, "package.json"))):
         return imported
     if name.startswith("@"):
-        found = discover_plugins().get(name)
+        found = (discover_plugins() if discovered is None else discovered).get(name)
         return found["directory"] if found else None
     cands = ["/root/" + name, "/root/dsha-" + name]
     if name.startswith("dsh-"):
@@ -284,7 +324,7 @@ def entity_dir(name):
     for c in cands:
         if os.path.isfile(local(os.path.join(c, "package.json"))):
             return c
-    found = discover_plugins().get(name)
+    found = (discover_plugins() if discovered is None else discovered).get(name)
     return found["directory"] if found else None
 
 
@@ -359,17 +399,29 @@ def is_disabled(name):
     return os.path.isfile(marker_path(name))
 
 
+_builtin_names_cache = None
+
+
 def builtin_names():
     """当前签名内置清单；固定清单永远是下限，文件只能追加合法名称。"""
+    global _builtin_names_cache
+    try:
+        info = os.stat(BUILTIN_LIST)
+        stamp = (info.st_dev, info.st_ino, info.st_mtime_ns, info.st_ctime_ns, info.st_size)
+    except OSError:
+        stamp = None
+    if _builtin_names_cache is not None and _builtin_names_cache[0] == stamp:
+        return list(_builtin_names_cache[1])
     names = list(DEFAULT_BUILTINS)
     try:
         with open(BUILTIN_LIST, encoding="utf-8") as f:
             for line in f:
                 name = line.strip()
-                if name and not name.startswith("#") and valid_name(name) and name not in names:
+                if name in DEFAULT_BUILTINS and name not in names:
                     names.append(name)
     except OSError:
         pass
+    _builtin_names_cache = (stamp, tuple(names))
     return names
 
 
@@ -502,6 +554,10 @@ def ensure_symlink(name, d):
     """保证 profiles/web/node_modules/<name> 是指向实体目录的链接。返回 True=改动了。"""
     link = os.path.join(local(NODE_MODULES), name)
     target = local(d)
+    if os.path.abspath(link) == os.path.abspath(target):
+        # Existing user installs are already at this lookup location. Building
+        # a relative alias to itself would turn an old absolute link into a loop.
+        return False
     os.makedirs(os.path.dirname(link), exist_ok=True)
     if os.path.lexists(link):
         try:
@@ -553,13 +609,12 @@ def remove_link(name):
 
 def enable_plugin(name):
     """--enable：清禁用标记、加回 bundles、重建链接（官方核心无标记/链接，只改 bundles）。"""
-    if name not in OFFICIAL_BUNDLES and name not in builtin_names() and not globals().get('_native_review_approved', False):
-        print('BUILTIN_REGISTER_FAIL: 请在原生插件界面审阅并确认启用')
-        return 1
     lines = ["== " + time.strftime("%Y-%m-%d %H:%M:%S") + " 启用 " + name]
     try:
         existing_web = os.path.isfile(os.path.join(local(NODE_MODULES), name, "package.json"))
         d = entity_dir(name)
+        runtime = runtime_bundle_dir(name)
+        runtime_provided = bool(d and runtime and os.path.realpath(local(d)) == os.path.realpath(runtime))
         if d is None and name not in OFFICIAL_BUNDLES:
             link = os.path.join(local(NODE_MODULES), name, "package.json")
             if not os.path.isfile(link):
@@ -575,9 +630,9 @@ def enable_plugin(name):
         if name not in bundles:
             doc.setdefault("dsh", {}).setdefault("profile", {})["bundles"] = bundles + [name]
             changed = True
-        if d is not None and ensure_symlink(name, d):
+        if d is not None and not runtime_provided and ensure_symlink(name, d):
             changed = True
-        if d is not None:
+        if d is not None and not runtime_provided:
             active = os.path.join(local(NODE_MODULES), name)
             if (not os.path.isfile(os.path.join(active, "package.json"))
                     or name in builtin_names()
@@ -706,7 +761,8 @@ def register():
         lines.append('签名内置插件实体缺失：%s' % ', '.join(missing))
         _write_log(lines, ok=False)
         print('BUILTIN_REGISTER_FAIL: 签名内置插件实体缺失：%s' % ', '.join(missing))
-        return 1
+        # Register the healthy signed entities as well, while keeping the
+        # nonzero result that prevents an incomplete environment from booting.
 
     # 禁用标记优先于历史 manifest/bundle。覆盖安装可能留下旧 bundle、旧 link:
     # 依赖和 profile 中的实体副本；先把它们从加载路径收敛，再注册启用项。
@@ -749,9 +805,9 @@ def register():
         lines.append("尊重禁用标记跳过：%s" % ", ".join(skipped))
     if not present:
         lines.append("内置插件均已禁用，无需注册")
-        _write_log(lines, ok=True)
-        print("BUILTIN_REGISTER_OK: 无待注册内置插件（已禁用 %s）" % ", ".join(skipped))
-        return 0
+        _write_log(lines, ok=not missing)
+        print(("BUILTIN_REGISTER_PARTIAL" if missing else "BUILTIN_REGISTER_OK") + ": 无待注册内置插件（已禁用 %s）" % ", ".join(skipped))
+        return 1 if missing else 0
 
     changed = []
     try:
@@ -805,9 +861,9 @@ def register():
     else:
         lines.append("内置插件注册均已就绪，无需改动")
 
-    _write_log(lines, ok=True)
-    print("BUILTIN_REGISTER_OK: %d 个内置插件注册就绪" % len(present))
-    return 0
+    _write_log(lines, ok=not missing)
+    print(("BUILTIN_REGISTER_PARTIAL" if missing else "BUILTIN_REGISTER_OK") + ": %d 个内置插件注册就绪" % len(present))
+    return 1 if missing else 0
 
 
 def _write_log(lines, ok):

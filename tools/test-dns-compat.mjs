@@ -1,4 +1,7 @@
-import {readFileSync} from 'node:fs';
+import {readFileSync, mkdtempSync, rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join, resolve} from 'node:path';
+import {execFileSync} from 'node:child_process';
 import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -56,3 +59,23 @@ test('default callback signature, native return value and callback exactly once'
   await new Promise((resolve,reject)=>{const result=f.dns.lookup('api.example',(e,a,family)=>{count++;try{assert.equal(e,null);assert.equal(a,'192.0.2.42');assert.equal(family,4);resolve();}catch(error){reject(error);}});assert.equal(result,'native-request');});
   assert.equal(count,1);
 });
+
+test('native libuv/getaddrinfo fixture compiles and preserves one HTTP request',
+  {skip:process.platform!=='linux'?'Real LD_PRELOAD boundary requires a Linux host':false},()=>{
+    const folder=mkdtempSync(join(tmpdir(),'dsha-dns-native-'));
+    try {
+      const library=join(folder,'dns-compat-fixture.so');
+      execFileSync(process.env.CC||'cc',['-std=c11','-shared','-fPIC','-O2','-nostdlib',
+        '-Wl,--build-id=none',resolve('tools/dns-compat-fixture.c'),'-o',library],
+        {stdio:'pipe',timeout:30000});
+      for(const mode of ['auto','native']){
+        const env={...process.env,LD_PRELOAD:library,DSHA_DNS_MODE:mode};
+        delete env.NODE_OPTIONS;
+        const output=execFileSync(process.execPath,['--require',
+          resolve(process.env.DSHA_DNS_COMPAT_SOURCE||'app/src/main/assets/dns-compat.cjs'),
+          resolve('tools/test-dns-compat-device.mjs')],{env,encoding:'utf8',timeout:30000});
+        assert.match(output,new RegExp(`DNS_NATIVE_BOUNDARY_PASS mode=${mode}`));
+        assert.match(output,mode==='auto'?/HTTP_requests=1/:/HTTP_requests=0/);
+      }
+    } finally {rmSync(folder,{recursive:true,force:true});}
+  });

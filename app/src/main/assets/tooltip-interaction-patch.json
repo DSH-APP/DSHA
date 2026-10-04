@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.0-rc.2",
+  "module": "@deepseek-ai/dsh-web-frontend/dist/assets/index-5SrrfWpU.js",
+  "patches": [
+    {
+      "before": "se=j.useCallback(()=>{re(),ie.current={hover:!1,focus:!1},Ce()},[re,Ce]);U6",
+      "after": "se=j.useCallback(()=>{re(),ie.current={hover:!1,focus:!1},Ce()},[re,Ce]);/* DSHA_TOOLTIP_DISMISS_RC2_V1 */j.useEffect(()=>{if(!Y)return;const dshaClose=E=>{if(E?.type===\"scroll\"&&E.target!==window&&F.current?.contains(E.target))return;se()},dshaPointer=()=>{if(!x)se()},dshaKey=E=>{if(E.key===\"Escape\"&&!x)se()},dshaHidden=()=>{if(document.hidden)se()};document.addEventListener(\"scroll\",dshaClose,!0),document.addEventListener(\"pointerdown\",dshaPointer,!0),document.addEventListener(\"keydown\",dshaKey),document.addEventListener(\"visibilitychange\",dshaHidden),window.addEventListener(\"blur\",dshaClose);return()=>{document.removeEventListener(\"scroll\",dshaClose,!0),document.removeEventListener(\"pointerdown\",dshaPointer,!0),document.removeEventListener(\"keydown\",dshaKey),document.removeEventListener(\"visibilitychange\",dshaHidden),window.removeEventListener(\"blur\",dshaClose)}},[se,Y,x]);U6"
+    }
+  ]
+}

@@ -184,15 +184,6 @@ class FlowTest(unittest.TestCase):
         for raw in ['MARK=0', '\nMARK=256\n', '\nOTHER=0\n', '\nMARK=0\ntruncated']:
             with self.assertRaises(adb.ExecutionUnknown): adb.parse_shell_result(raw, 'MARK=')
 
-    def test_readonly_classifier_rejects_writing_tools_and_shell_syntax(self):
-        for command in ['env input tap 10 10', 'logcat -c', 'date -s 20260101.000000',
-                        'dumpsys battery set level 9', 'find / -exec id {} +',
-                        'input tap 10 10', 'echo x > /sdcard/f', 'cat $(id)',
-                        '/data/local/tmp/id', 'pm uninstall example.app', 'settings put global foo 1']:
-            self.assertFalse(adb.is_readonly_cmd(command), command)
-        for command in ['id', '/system/bin/getprop ro.product.model', 'pm list packages', 'settings get global foo']:
-            self.assertTrue(adb.is_readonly_cmd(command), command)
-
     def main_fakes(self, command, root=False, disabled=False, blocked=False):
         mods = {'adb_shell_wifi': types.ModuleType('adb_shell_wifi'),
                 'adb_shell_wifi.adb_device': types.SimpleNamespace(AdbDeviceTls=self.Device),
@@ -204,17 +195,15 @@ class FlowTest(unittest.TestCase):
         self.native_plan = self.stack.enter_context(patch.object(adb, 'request_native_execution',
             side_effect=adb.policy.Blocked('策略拒绝') if blocked else None,
             return_value={'version': 1, 'kind': 'READ', 'argv': ['id'], 'su': root}))
-        self.stack.enter_context(patch.object(adb.os.path, 'isfile', side_effect=lambda p: p in (adb.KEY, adb.KEYPUB)
-                or (root and p.endswith('allow-root-shell')) or (disabled and p.endswith('confirm-shell-disabled'))))
+        self.stack.enter_context(patch.object(adb.os.path, 'isfile', side_effect=lambda p: p in (adb.KEY, adb.KEYPUB)))
 
     def test_main_uses_native_plan_and_propagates_nonzero_exit(self):
         self.main_fakes(['id'])
         self.remote_exit = 5
-        with patch.object(adb, 'request_confirm', return_value=True) as confirm, contextlib.redirect_stdout(io.StringIO()) as out:
+        with contextlib.redirect_stdout(io.StringIO()) as out:
             result = adb.main()
         self.assertEqual(5, result)
         self.assertTrue(out.getvalue().endswith('[EXIT=5]\n'))
-        confirm.assert_not_called()
         self.native_plan.assert_called_once_with('id', False, True)
         wrapper = (ASSETS / 'adb-setup.sh').read_text(encoding='utf-8').split("cat > /root/dsh-bin/adb-shell <<'EOF'", 1)[1].split('\nEOF', 1)[0]
         self.assertNotIn('dsh-confirm.sh', wrapper)
@@ -222,7 +211,7 @@ class FlowTest(unittest.TestCase):
 
     def test_native_denial_does_not_connect(self):
         self.main_fakes(['input tap 10 10'], blocked=True)
-        with patch.object(adb, 'request_confirm', side_effect=adb.ConfirmationError('BUSY')), contextlib.redirect_stdout(io.StringIO()):
+        with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(126, adb.main())
         self.assertEqual([], self.events)
 
@@ -233,16 +222,14 @@ class FlowTest(unittest.TestCase):
 
     def test_root_still_requires_native_plan_when_authorized(self):
         self.main_fakes(['--su', 'id'], root=True, disabled=True)
-        with patch.object(adb, 'request_confirm', return_value=True) as confirm, contextlib.redirect_stdout(io.StringIO()):
+        with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(0, adb.main())
-        confirm.assert_not_called()
         self.native_plan.assert_called_once_with('id', True, True)
 
     def test_confirmation_switch_never_bypasses_native_policy(self):
         self.main_fakes(['id'], disabled=True)
-        with patch.object(adb, 'request_confirm') as confirm, contextlib.redirect_stdout(io.StringIO()):
+        with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(0, adb.main())
-        confirm.assert_not_called()
         self.native_plan.assert_called_once_with('id', False, True)
 
     def test_internal_flag_never_bypasses_native_denial(self):
@@ -257,30 +244,6 @@ class FlowTest(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(125, adb.main())
         self.assertIn('EXECUTION_UNKNOWN:', out.getvalue())
-
-    def test_confirmation_timeout_does_not_issue_a_second_request(self):
-        with patch.object(adb, 'open', return_value=io.StringIO('fake-token')):
-            opener = Mock()
-            opener.open.side_effect = urllib.error.URLError(TimeoutError())
-            with patch.object(urllib.request, 'build_opener', return_value=opener):
-                with self.assertRaises(adb.ConfirmationError): adb.request_confirm('input tap 10 10')
-            self.assertEqual(1, opener.open.call_count)
-
-    def test_confirmation_strict_json_and_address_fallback(self):
-        response = Mock()
-        response.__enter__ = Mock(return_value=response)
-        response.__exit__ = Mock(return_value=False)
-        response.read.return_value = b'{"result":"YES"}'
-        opener = Mock()
-        opener.open.side_effect = [urllib.error.URLError(ConnectionRefusedError(errno.ECONNREFUSED, 'refused')), response]
-        with patch.object(adb, 'open', side_effect=lambda *a: io.StringIO('fake-token')), patch.object(urllib.request, 'build_opener', return_value=opener):
-            self.assertTrue(adb.request_confirm('input tap 10 10'))
-            self.assertEqual(2, opener.open.call_count)
-            self.assertNotIn('fake-token', opener.open.call_args.args[0].full_url)
-            opener.open.side_effect = None
-            opener.open.return_value = response
-            response.read.return_value = b'{"result":"NO","extra":"YES"}'
-            with self.assertRaises(adb.ConfirmationError): adb.request_confirm('input tap 10 10')
 
     def test_pairing_warning_not_connection_success_or_repeated_pair(self):
         with patch.object(pair.sys, 'argv', ['adb-pair.py', '--code', '123456', '--port', '39000']), \
@@ -307,14 +270,28 @@ class FlowTest(unittest.TestCase):
                 self.assertEqual(2, pair.main())
         pair.ensure_key.assert_not_called()
 
-    def test_script_and_wrapper_version_match_java(self):
+    def test_script_and_wrapper_version_match_the_single_asset_contract(self):
         source = (ROOT / 'app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java').read_text(encoding='utf-8')
-        version = re.search(r'SCRIPT_VERSION = "([0-9]+)"', source).group(1)
+        version = (ASSETS/'adb-script-version').read_text(encoding='ascii').strip()
+        self.assertRegex(version, r'^[0-9]+$')
         for file in ['adb-shell.py', 'adb-pair.py', 'adb-setup.sh', 'dsha-device-shell.sh']:
             markers = re.findall(r'^# DSHA_ADB_SCRIPT_VERSION=([0-9]+)$', (ASSETS / file).read_text(encoding='utf-8'), re.M)
             self.assertTrue(markers, file)
             self.assertTrue(all(value == version for value in markers), file)
-        self.assertIn("grep -q '^# DSHA_ADB_SCRIPT_VERSION=", source)
+        self.assertIn('bundledDeviceScriptsMatch()', source)
+        self.assertNotIn('SCRIPT_VERSION =', source)
+
+    def test_keepalive_grants_only_native_actual_package_and_missing_identity_sends_nothing(self):
+        mods={'adb_shell_wifi.adb_device':types.SimpleNamespace(AdbDeviceTls=self.Device),
+              'adb_shell_wifi.auth.sign_pythonrsa':types.SimpleNamespace(PythonRSASigner=self.Signer)}
+        with patch.dict(sys.modules,mods), patch.object(pair.sys,'argv',['adb-pair.py','--grant-keepalive']), \
+                patch.object(adb,'request_device_plan',return_value={'version':1,'kind':'READ','selfPackage':'com.dsh.clienu'}) as identity, \
+                patch.object(adb,'connect_with_retry',return_value=types.SimpleNamespace(output='done',exit_code=0)) as send, \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0,pair.main());identity.assert_called_once_with('id',False)
+            self.assertEqual(['/system/bin/pm','grant','com.dsh.clienu','android.permission.WRITE_SECURE_SETTINGS'],__import__('shlex').split(send.call_args.args[2]))
+            send.reset_mock();identity.return_value={'version':1,'kind':'READ'}
+            self.assertEqual(1,pair.main());send.assert_not_called()
 
 
 class NativeRouteTest(unittest.TestCase):

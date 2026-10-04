@@ -1,0 +1,566 @@
+{
+  "schema": 1,
+  "baselineBuild": 153,
+  "owner": "G2",
+  "items": [
+    {
+      "id": "D-RT-17",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        "未发现uninstall调用方，已删除API和仅其使用的递归删除helper",
+        "后续完整编译确认"
+      ],
+      "residual": "环境重建/格式化仍由既有事务执行。"
+    },
+    {
+      "id": "D-RT-15",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/util/BundledRootfsAsset.java"
+      ],
+      "checks": [
+        "BundledRootfsAssetTest:固定assets路径/根目录诱饵/不同压缩名/目录条目"
+      ],
+      "residual": "历史归档reader未修改；最终APK资产审计由root执行。"
+    },
+    {
+      "id": "D-RT-05",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+        "app/src/main/java/com/deepseekharness/app/util/DiagnosticFailures.java"
+      ],
+      "checks": [
+        "DiagnosticFailuresTest:8条上限、首失败保留、操作/类名/原因、脱敏及不可变快照",
+        "RuntimeHostPortsTest兼容与真实选择错误仍传播"
+      ],
+      "residual": "DiagnosticRepository旧字符串接口现在呈现详细摘要，不改变sink不阻断策略。"
+    },
+    {
+      "id": "D-RT-03",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/UserDataBindings.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        "UserDataBindingsTest:显式域绑定与错误rootfs零写入",
+        "独立恢复明确null domain，不推导父节点/不绑定正式数据"
+      ],
+      "residual": "后续生产全编译与源码门禁；框架alias的lstat/canonical边界继续严格。"
+    },
+    {
+      "id": "D-RT-08",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        "ContainerRuntimeEnvironmentTest:low loader/env/NEEDED缺失失败、不可变bind",
+        "test-proot-runtime-libs.py扩展cold准备，两runtime无条件准备NEEDED",
+        "rt.applyEnv错误传播，PTY转显式失败",
+        "copyExec signed NEEDED cache now repairs corrupt/same-size bytes atomically, validates source size, propagates write/mode/sync failure"
+      ],
+      "residual": "No native binary changed; host lib/ELF checks do not claim Android matrix."
+    },
+    {
+      "id": "D-IO-01",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java",
+        "app/src/main/assets/runtime-patches.json",
+        "app/src/main/java/com/deepseekharness/app/util/ManagedPatchChain.java"
+      ],
+      "checks": [
+        "ManagedPatchChainTest + actual raw rc2 registry integration: 3 PASS; full module repair/idempotence/no partial fallback"
+      ],
+      "residual": "Retired recipes kept for historical evidence but not executed; final archive proof owned by root."
+    },
+    {
+      "id": "D-ARCH-03",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+        "app/src/main/java/com/deepseekharness/app/DshaApp.java"
+      ],
+      "checks": [
+        "production no runtime to ui reference; BrowserProbe injected via application composition; G3 merged three explicit maintenance calls"
+      ],
+      "residual": "Full runtime trial/browser suite will be run by root; device renderer matrix not claimed."
+    },
+    {
+      "id": "D-API-03",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/LaunchSpec.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeLauncher.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/core/HarnessController.java"
+      ],
+      "checks": [
+        "RuntimeLauncherTest: API key in environment only, named options immutable, malformed env rejected"
+      ],
+      "residual": "Interactive command text remains user input; no argv secret is added by current Web launch."
+    },
+    {
+      "id": "D-IO-03",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeAssetFiles.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "checks": [
+        "RuntimeAssetFilesTest: atomic real files/idempotence/directory preservation/lexical authority: 3 PASS"
+      ],
+      "residual": "Android descriptor-open parent guards preserved; Linux inode proof separate from Windows filesystem fixture."
+    },
+    {
+      "id": "D-HEUR-01",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/WebProcSel.java"
+      ],
+      "checks": [
+        "WebProcSelTest: 11 PASS; exact Node/web and known script positions; grep/vim/echo/user Node no false positives"
+      ],
+      "residual": "Signal policy remains stricter maySignalWeb plus birth identity; unknown PID never signalled."
+    },
+    {
+      "id": "D-HEUR-02",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java"
+      ],
+      "checks": [
+        "heuristic keyword owner lines now RELATED_PLUGIN_LOG only, cannot enter confirmed issues; javac PASS"
+      ],
+      "residual": "Structured observer/browser fatal issues still block; full root diagnostics tests pending."
+    },
+    {
+      "id": "D-RES-02",
+      "status": "fixed",
+      "files": [
+        "app/src/main/assets/rc1-migration.py",
+        "tools/test-rc1-migration.py"
+      ],
+      "checks": [
+        "21 tests successful; low-space zero snapshot, three identical failures no snapshot growth, changed input independent generation, ordinary complete fast path no scan"
+      ],
+      "residual": "2 symlink tests skipped by Windows privilege; source originals/corrupt/partial snapshots retained; full Linux proof still pending."
+    },
+    {
+      "id": "D-RT-14",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/AndroidGroups.java",
+        "app/src/main/java/com/deepseekharness/app/util/AndroidGroupMap.java"
+      ],
+      "checks": [
+        "AndroidGroupMapTest: 3 PASS actual Android user/app UID, actual supplementary GIDs, precise existing fields/idempotence"
+      ],
+      "residual": "Optional group preparation failure now records diagnostics; actual ROM group visibility not claimed."
+    },
+    {
+      "id": "D-RT-12",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java",
+        "app/src/main/java/com/deepseekharness/app/util/BoundedOutputDrain.java"
+      ],
+      "checks": [
+        "BoundedOutputDrainTest: 256KiB/pass, bounded redacted tail, no blocking read absent output: 2 PASS; production compile"
+      ],
+      "residual": "Unknown guest close still retains same process lease; no model requests in host fixture."
+    },
+    {
+      "id": "D-ARCH-01",
+      "status": "implemented_pending_integration",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebOutputSession.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebStopCoordinator.java",
+        "app/src/main/java/com/deepseekharness/app/core/HarnessController.java"
+      ],
+      "checks": [
+        "StartupPipeline/WebOutputSession/WebStopCoordinator tests: 8 PASS; credentials first/failure short circuit/safe profile/stale generation/EOF is not exit/no token logging/confirmed stop"
+      ],
+      "residual": "Controller remains single lifecycle, generation, queue and fallback owner; full root behavior/architecture proof pending."
+    },
+    {
+      "id": "D-RT-16",
+      "status": "implemented_pending_full_validation",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/ColdInstallTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/util/ColdInstallPackages.java"
+      ],
+      "checks": [
+        "ColdInstallTransactionTest: 6 PASS fresh-data reject/unknown guest/mode save failure/no ready/all publish boundaries/candidate modified/full success; standalone production compile",
+        "Cold crash/restart + tracked session barrier:8 cold +7 bounded tests PASS; G3 host domain/format/recover integration done",
+        "Ready-marker failure restores5key prefs+tree; commitfalse/rollback failure leaves pending; cross-process restore typed values; STABLE/data-location presence cannot use cold path; whole-invocation mode freeze"
+      ],
+      "residual": "Root full build/Lint/ELF/current fixture checks only. No phone. Unknown untracked guest remains blocked; incomplete/modified failed candidates retained with space preflight."
+    },
+    {
+      "id": "D-RT-04",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestScripts.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/BasicToolsInstaller.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "checks": [
+        "200+KiB signed script stdin fixture/no argv growth; ADB host atomic publication avoids STABLE bind mv EBUSY;19 install/script/stage JUnit +31 ADB Python PASS"
+      ],
+      "residual": "Final registry must include all4scripts+script-version; root owns input registration."
+    },
+    {
+      "id": "D-RT-09",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/InstallStage.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallFailure.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/InstallPipeline.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java"
+      ],
+      "checks": [
+        "Historical1-6 enum IDs/stable redacted failure reason; original InstallPipeline/InstallProbe in19 PASS"
+      ],
+      "residual": "UI legacy int API preserved; original error reason never blankettranslated."
+    },
+    {
+      "id": "D-RT-13",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/BoundedGuestSessions.java"
+      ],
+      "checks": [
+        "Readonly everyrecord id/state/reason; later bad log stillblocks;7 JUnit PASS"
+      ],
+      "residual": "Native reap is deletion owner; proc denial remainsunknown."
+    },
+    {
+      "id": "D-FS-01",
+      "status": "fixed",
+      "files": [
+        "app/src/main/assets/runtime-fs/index.js",
+        "tools/test-runtime-publish-linux.mjs"
+      ],
+      "checks": [
+        "Real Linux24.12.0/musl + locked native packages:9 assertions PASS:100 files/one lock,32 concurrent/singlewinner,constantinode,EEXIST/source,cancel,attachmentdirsymlink,locksymlinkreject,parentfsync"
+      ],
+      "residual": "Linux host evidence, not Android FUSE/device matrix; root final archive recopy."
+    },
+    {
+      "id": "D-RT-19",
+      "status": "fixed_with_retention_policy",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java",
+        "app/src/main/java/com/deepseekharness/app/recovery/RecoveryStoragePlan.java"
+      ],
+      "checks": [
+        "Complete neverlaunched frozen candidate binds runtimeId/rootkey/wholetreedigest; extra/modified/launched/active/incomplete retained;3 realfile JUnit PASS; bounded readonly occupancy"
+      ],
+      "residual": "Incomplete/modified originals and sessions never age/countdeleted; insufficient-space message reports retained sizes; UI/export wiring remains root/G3."
+    },
+    {
+      "id": "D-ADB-01",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+        "tools/test-adb-flow.py"
+      ],
+      "checks": [
+        "Removed3 unread deadflagwrites/misleading mocks;31 policyroute tests PASS"
+      ],
+      "residual": "Historical flag bytes retained; native policy is current authority."
+    },
+    {
+      "id": "D-RT-10",
+      "status": "implemented_pending_full_validation",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/WebStopCoordinator.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/IsolatedInstallProcess.java",
+        "app/src/main/java/com/deepseekharness/app/util/EnvironmentTaskGate.java",
+        "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java"
+      ],
+      "checks": [
+        "Typed stop/fullconfirmation; isolated state synchronized/backoff; ADB worker immediateunknown while exactProcess lease retained;12 gate/ADB JUnit PASS"
+      ],
+      "residual": "No bare PID force; no optional manualforce UI; existing identitypolicy/exactProcess graceful stop retained."
+    },
+    {
+      "id": "D-RT-07",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ContainerRuntime.java"
+      ],
+      "checks": [
+        "Both runtimes record BIND_SKIPPED missing/inaccessible without blocking unrelated local chat; immutable shared bind list"
+      ],
+      "residual": "Actual ROM shared-storage grants remain device evidence, no guessed permission success."
+    },
+    {
+      "id": "D-API-01",
+      "status": "fixed_at_supported_boundary",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/WebProcessManager.java",
+        "app/src/main/java/com/deepseekharness/app/core/WebStopCoordinator.java",
+        "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java",
+        "app/src/main/java/com/deepseekharness/app/core/HarnessController.java"
+      ],
+      "checks": [
+        "New StopResult status/code/detail + core stop coordinator full guest/owned-launcher confirmation; historical String stop delegates to typed result"
+      ],
+      "residual": "Private legacy stop script details stay human diagnostics; historical public text API retained."
+    },
+    {
+      "id": "D-API-02",
+      "status": "fixed_runtime_owned",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestPreparationFailure.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        "Runtime preparation adapters now compare enum failure types, not getMessage text; outward historic codes preserved"
+      ],
+      "residual": "Other source owners must finish non-runtime message comparisons."
+    },
+    {
+      "id": "D-ARCH-04",
+      "status": "implemented_pending_architecture_gate",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeLauncher.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/LaunchSpec.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RootfsInstaller.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/AndroidGroups.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/GuestScripts.java",
+        "app/src/main/java/com/deepseekharness/app/backup/ColdInstallTransaction.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java"
+      ],
+      "checks": [
+        "Real argv/env/process factory, signed guest tool installer, group adaptation and fresh transaction split; zero duplicate startRootfs boolean builders; core public APIs preserved"
+      ],
+      "residual": "Root full import+FQ layer proof, formatter and release checks required; no line-count score used as closure."
+    },
+    {
+      "id": "D-DEP-01",
+      "status": "fixed_runtime_owned",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java"
+      ],
+      "checks": [
+        "Runtime recipe/descriptor/package JSON parsed by strict bounded BackupJson before JSONObject value access; JSON/text/assets2MiB/32MiB budgets"
+      ],
+      "residual": "org.json writing/view DTOs remain; other owners retain archive/schema strict readers."
+    },
+    {
+      "id": "D-ARCH-02",
+      "status": "constrained_runtime_ports_remaining_ui_to_root",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeHostPorts.java",
+        "app/src/main/java/com/deepseekharness/app/core/HarnessController.java"
+      ],
+      "checks": [
+        "Settings immutable, provider one-time installed at DshaApp composition, invocation ThreadLocal snapshot; no additional service locator; controller remains single lifecycle owner"
+      ],
+      "residual": "UI/vscreen global state and remaining app composition are root/G1 scope, not declared fully solved by this child."
+    },
+    {
+      "id": "D-DEAD-09",
+      "status": "runtime_layout_retired_scripts_removed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ManagedRuntimeLayout.java"
+      ],
+      "checks": [
+        "No production Java execution of startup-recovery.py/startup-checkpoints.py; removed managed layout entries; ConfigurationSnapshots historical v1 reader retained"
+      ],
+      "residual": "Root owns removal from manifest; sibling handles history script relocation/test paths."
+    },
+    {
+      "id": "D-FORMAT-UI-RETIREMENT",
+      "status": "fixed",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/DataFormatEvidence.java"
+      ],
+      "checks": [
+        "6 DataFormatEvidence tests in final53 PASS; old/current retired UI hash irrelevant, all core archive/session/persona hashes mandatory/exact; unknown never promoted"
+      ],
+      "residual": "Runtime rollback still requires static/runtime trial and identity/closed proof; different package archive never authorized."
+    },
+    {
+      "id": "D-API-08",
+      "status": "fixed",
+      "files": [
+        "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs",
+        "app/src/main/java/com/deepseekharness/app/util/VscreenBridgeRequest.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/test/java/com/deepseekharness/app/util/VscreenBridgeRequestTest.java",
+        "tools/test-vscreen.mjs"
+      ],
+      "checks": [
+        "Node current13-tool schema/request/response-envelope test PASS",
+        "Actual production VscreenBridgeRequest operation dispatcher + real loopback HTTP buffered head/body +16000 Chinese text + oversize/truncation/duplicate-JSON/ambiguous-query checks:JUnit4 PASS",
+        "Standalone JDK17 compilation of current HttpShellService/VirtualScreenManager/request against StdRelease/G1/Android dependencies PASS"
+      ],
+      "residual": "No Android device operations or full Gradle by G2; actual virtual display/device authorization still needs separately scoped device evidence. Existing X-Token, current DSH generation/grant revision, target-package/current-window and frame/generation validation remain enforced; old GET editor operation read compatibility retained; POST length128KiB/deadline10s and fixed four routes, no global header budget expansion."
+    },
+    {
+      "id": "D-PERF-04",
+      "status": "implemented_pending_final_gate",
+      "files": [
+        "app/src/main/assets/plugin-manager.py",
+        "app/src/main/assets/plugin-network.py",
+        "app/src/main/assets/plugin-dependencies.py",
+        "tools/test-plugin-downloads.py"
+      ],
+      "checks": [
+        "22 plugin-download tests PASS including real child hook counter exactly once after network failure and timeout; actual idle/overall/cancel/flood/unknown candidate identity/nested retention and read-only npm fallback proof",
+        "Real pnpm10.34.5 dependency regression10 tests:9 PASS,1 Windows actual-link privilege skip; local synthetic registry/open dependency lifecycle scripts/lock current bytes/rollback behavior preserved"
+      ],
+      "current": "Whole900s/idle120s independent package budgets; pipe draining bounds stdout/stderr1MiB each plus16KiB error tail; byte-count progress avoids echoing arbitrary hook text. Dependency install executes once without mirror replay. Only explicit npm pack --ignore-scripts can try one alternate after confirmed exact child exit and pipe closure. Unknown exit keeps original numbered temporary candidates and reports unknown; POSIX group signals require captured birth/session identity, otherwise unknown without bare PID fallback. Closed candidates cleanup normally. plugin-dependencies only changes its work context to the manager candidate owner.",
+      "residual": "Host Windows real-process/pnpm evidence is not Android guest/process/proc/FUSE evidence. Existing native owned-guest close/work lease barriers remain authority; unknown candidate markers cannot claim guest closure. Final source-wide/archive/descriptor/APK gates remain root-owned. Lifecycle scripts/pnpmfile intentionally stay allowed; timeout does not undo their arbitrary permitted side effects."
+    },
+    {
+      "id": "D-DUP-01",
+      "status": "implemented_pending_final_gate",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ManagedRuntimePaths.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java",
+        "app/src/test/java/com/deepseekharness/app/util/ManagedRuntimePathsTest.java"
+      ],
+      "current": "One enumeration supplies ManagedRuntimeLayout base paths, scoped/global/binary alias traversal and four marker names to health and stage. Explicit listedRoot/currentRoot retain live-root alias ownership; stage never substitutes itself for the live current root. Stage writes values through the shared marker enum only after complete enumeration.",
+      "checks": [
+        "4 meaningful ManagedRuntimePaths tests in23-JVM batch PASS:two distinct roots exact expected set equivalence; missing new alias accepted; regular/user-owned current alias excluded and original preserved; unreadable scope/link/npm alias rejected",
+        "Actual Android-dependent ManagedRuntimeAssets integration javac PASS"
+      ],
+      "residual": "Alias view fixture explicitly models link shape on Windows; no Android FS/proc or alias-race proof. No parent authority/canonicalization broadening; final managed plan/archive/descriptor gates remain root-owned."
+    },
+    {
+      "id": "D-DUP-02",
+      "status": "implemented_pending_final_gate",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ProcStat.java",
+        "app/src/main/java/com/deepseekharness/app/util/WebPidIdentity.java",
+        "app/src/main/java/com/deepseekharness/app/util/ProcessIdentity.java",
+        "app/src/test/java/com/deepseekharness/app/util/ProcStatTest.java"
+      ],
+      "current": "Both identity adapters consume one bounded immutable stat parser; PID/state/parent/group/session/birth fields parsed once. UID, known Process class/parent/session, executable/signal permission, EPERM handling and stop barriers remain existing caller policy. Missing/malformed/zero birth is unknown; malformed numeric identity cannot be accepted by the Web adapter.",
+      "checks": [
+        "4 new ProcStat + existing WebPidIdentity/ProcessIdentity tests included in23-JVM PASS: nested comm, zero kernel parent vs owned-child gate, wrong parent/session, reused PID, denied/truncated/invalid stat, exited state and owned session semantics",
+        "Actual identity source javac PASS"
+      ],
+      "residual": "Read-only parser has no proc traversal/UID authority or signal API; actual Android nondebug/ROM proc identity matrix not performed. Malformed parent/group/session now conservatively unknown rather than Web accepting a partially invalid stat."
+    },
+    {
+      "id": "D-DUP-03",
+      "status": "implemented_pending_final_gate",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TrialSupport.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProfileSettingsTrial.java",
+        "app/src/test/java/com/deepseekharness/app/runtime/TrialSupportTest.java"
+      ],
+      "current": "Both trials delegate equivalent BackupFS parent/create/close/sync writing, PID+birth shell prefix and CheckedExit mechanics to TrialSupport. Each keeps its own HOME/nonce env, profile/data sources, auth/storage/render/result checks, stop/readiness/fallback/closed journals. Exact launcher exit alone never releases work: injected original WebProcessManager.confirmTrackedTrialStopped must affirm guest closure. Stop actions preserve each old error handling.",
+      "checks": [
+        "4 TrialSupport tests included in23-JVM PASS: live/exited launcher and denied/unconfirmed guest; current exact object/streams/owned stop only; interrupted wait then confirmed guest; real file create/no overwrite/parent-link/sync failure; actual Git/MSYS Bash prefix execution vs PID and shell field20",
+        "Production RuntimeTrial/ProfileSettingsTrial/TrialSupport integration javac PASS"
+      ],
+      "residual": "Windows Git/MSYS stat is synthetic and may have zero birth; shell fixture verifies mechanics while ProcStat correctly refuses zero, never claims Linux/Android identity proof. Git Bash test explicitly skips when unavailable on Windows; Linux uses actual host bash. No phone/Gradle/model request or browser trial performed by this batch."
+    }
+  ],
+  "checksExecuted": [
+    "JDK17独立javac+JUnit:11 tests PASS（打包/手机未执行）",
+    "architecture/proot-runtime-libs源码门禁PASS",
+    "G2 additional standalone javac/JUnit: 22 PASS + 16 PASS",
+    "rc1 migration Python:21 tests,19 passed,2 Windows link privilege skips",
+    "Additional JUnit:19 install/script/stage,12 gate/ADB,15 cold/guest,3 recovery storage PASS",
+    "ADB Python31 PASS",
+    "Real Linux publisher9 assertions/100 sequential/32 concurrent PASS; node/native provenance app/build/audit-build154/linux-host",
+    "Final integrated G2 host batch89 PASS; later53 focused tests PASS; final20 cold/ports/scripts PASS",
+    "Architecture/proot-runtime-libs gates PASS",
+    "Owner Lint fixes: ByteArrayOutputStream charset API33 removed; SuspiciousIndentation normalized",
+    "D-API-08 Node PASS; actual loopback/production dispatcher JUnit4 PASS; integrated HttpShellService/VirtualScreenManager javac PASS",
+    "D-PERF-04 packages22 PASS + actual pnpm dependencies9 PASS/1 Windows link skip",
+    "D-DUP01/02/03:23 JUnit PASS including12 new helper behavior tests+old identity policies; all8 current main sources Android-dependent javac PASS"
+  ],
+  "inProgress": [
+    "Root complete flavors/current native test fixture/Release Lint/ELF/signature gates",
+    "Root/sibling specialized fixture selectors + historical tooltip classification",
+    "Root docs/formatter/Git/release packaging"
+  ],
+  "stage": "production_frozen_for_root_release_validation",
+  "transferred": {
+    "root": [
+      "Global UI/vscreen/static state",
+      "i18n/a11y/layout/formatter",
+      "Deployment/manifest/descriptors/version/generated inputs",
+      "Specialized test-runtime producer and full CI/release"
+    ],
+    "G1": [
+      "security bridge/Tar/privacy/device policy/platform evidence"
+    ],
+    "G3": [
+      "backup/plugin graphs/services/legacy bridges/progress/compression/hooks budgets",
+      "Cold recover4param and PrivateRoots integration already merged"
+    ]
+  },
+  "newSourceInputs": [
+    "core/StartupPipeline.java",
+    "core/WebOutputSession.java",
+    "core/WebStopCoordinator.java",
+    "runtime/LaunchSpec.java",
+    "runtime/RuntimeLauncher.java",
+    "runtime/RuntimeLauncherAssets.java",
+    "runtime/RuntimeAssetFiles.java",
+    "runtime/RootfsInstaller.java",
+    "runtime/AndroidGroups.java",
+    "runtime/GuestScripts.java",
+    "runtime/GuestPreparationFailure.java",
+    "recovery/RecoveryStoragePlan.java",
+    "backup/ColdInstallTransaction.java",
+    "util/ManagedPatchChain.java",
+    "util/DiagnosticFailures.java",
+    "util/BundledRootfsAsset.java",
+    "util/AndroidGroupMap.java",
+    "util/BoundedOutputDrain.java",
+    "util/InstallStage.java",
+    "util/InstallFailure.java",
+    "util/VscreenBridgeRequest.java",
+    "util/ManagedRuntimePaths.java",
+    "util/ProcStat.java",
+    "runtime/TrialSupport.java"
+  ],
+  "assetInputs": [
+    "runtime-patches.json",
+    "builtin-plugins.json",
+    "runtime-tools.json",
+    "bridge-token-compat.cjs",
+    "adb-script-version -> root/.dsh/script-version",
+    "adb-pair.py/adb-setup.sh now managed alongside adb-shell.py/device-shell-policy.py",
+    "runtime-fs/index.js",
+    "rootfs-confirm-install.sh",
+    "rc1-migration.py",
+    "builtin-plugins/dsh-tool-vscreen/lib/server.cjs",
+    "plugin-manager.py",
+    "plugin-network.py",
+    "plugin-dependencies.py"
+  ],
+  "retiredDeployments": [
+    "agent-preset-patch.json",
+    "models-navigation-patch.json",
+    "startup-recovery.py",
+    "startup-checkpoints.py"
+  ],
+  "noRootGeneratedFilesEdited": true
+}

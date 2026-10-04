@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "status": "PASS_EXACT_LATEST_SOURCE_BEFORE",
+  "softwareManifest": "F:\\DSHA_RESTART\\app\\build\\stability-acceptance\\5e2d5521-beb5-4775-b87e-85a074b4aade\\manifest.json",
+  "softwareManifestSha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+  "sourceSnapshot": "F:\\DSHA_RESTART\\app\\build\\stability-acceptance\\5e2d5521-beb5-4775-b87e-85a074b4aade\\source-sha256.json",
+  "sourceSnapshotSha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222",
+  "sourceCount": 1507
+}

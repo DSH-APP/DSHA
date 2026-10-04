@@ -1,5 +1,8 @@
 # rc2.1 备份/升级专项基线（2026-09-13）
 
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+
+
 HEAD: dca04aed7c1a1468827a953bfd6295fc3ca44170，main。开始时已有 #65、Bash 就绪检查、独立 Python 维护工具等未提交修改；完整差异保存在 app/build/backup-upgrade-baseline/preexisting.patch。本轮不回滚、不提交、不发布、不操作手机。
 
 - 当前实际备份写入格式是 tar.gz / manifest formatVersion 4（脚本开头注释为 v3，不能据此推断）；支持旧 v1/v2/v3/v4，个人项目迁移另用 version 1 清单。

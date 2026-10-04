@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "originalIntegrationFailure": {
+    "path": "app/build/stability-acceptance/a0f64585-d508-4c69-b1d5-cfb5d313f6de/gradle-verification.log",
+    "sha256": "e54249a4d7e1306009fb72ffb6e6cd045ca3c5948e9c4576fcfc2eb42ca821a2",
+    "retained": true
+  },
+  "sourceSha256": {
+    "app/src/debug/java/com/deepseekharness/app/core/MaintenanceFixtureInstrumentation.java": "833c66787309dfb99a0ece4bbfa6d81de9b89bae6d7cbdc14945fa86f3d6750d",
+    "app/src/debug/java/com/deepseekharness/app/ui/InstallAuditInstrumentation.java": "2bfab7972506a10f891b5abf07b51ae87ec1eeeb88d968496fee93d9d4a607d6",
+    "app/src/debug/java/com/deepseekharness/app/core/Rc21RecoveryAudit.java": "6f312ada746feda230420bf5a7665f61530b1934ac822e34ec538e636a6e3cb9",
+    "app/src/debug/java/com/deepseekharness/app/ui/WebBrowserAudit.java": "56c0093bebb0434f6de44fa6f1c7155fcd5938f74d2de78aba8eea97646681a6"
+  },
+  "repairs": [
+    "Read current EnvironmentRebuildTransaction with explicit AndroidBackupFileSystem and actual intent.json journal.",
+    "Pass AndroidBackupFileSystem to legacy pending-install transaction guard.",
+    "Use actual MaintenanceDataSnapshot.capture/restore and check owned project bytes on reopening the private snapshot.",
+    "Separate Intent creation from void setClipData; all single/multiple/invalid URI assertions retained."
+  ],
+  "format": {
+    "report": "docs/audits/build156/tests-integration-repair/tests-build156-integration-repair-check.json",
+    "files": 13,
+    "changed": 0,
+    "tokenPreservation": "exact Java token hashes checked by pinned formatter"
+  },
+  "focusedChecks": [
+    {
+      "path": "tools/test-web-browser-fixture.py",
+      "status": "PASS",
+      "log": "docs\\audits\\build156\\checks-tests-integration-repair\\test-web-browser-fixture.py.log",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-web-browser-fixture.py"
+      ],
+      "exitCode": 0,
+      "seconds": 1.062,
+      "logSha256": "aee873735f7bbda09380972feb5b6edb6cb44f0995d6ddf7923f3c5b4687eb15"
+    },
+    {
+      "path": "tools/test-retired-audit-contract.py",
+      "status": "PASS",
+      "log": "docs\\audits\\build156\\checks-tests-integration-repair\\test-retired-audit-contract.py.log",
+      "command": [
+        "C:\\Users\\18768\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-B",
+        "F:\\DSHA_RESTART\\tools\\test-retired-audit-contract.py"
+      ],
+      "exitCode": 0,
+      "seconds": 0.312,
+      "logSha256": "57e73eb3af750efc3219416a2b2781fa98a09c51f2b951d8f965e9427049cf34"
+    }
+  ],
+  "narrowSdkCompilation": {
+    "status": "FAILED_DEPENDENCY_CLOSURE",
+    "logs": [
+      "docs/audits/build156/tests-integration-repair/javac.log",
+      "docs/audits/build156/tests-integration-repair/javac-current.log"
+    ],
+    "details": "Missing generated/debug and main UI dependency inputs in ad-hoc javac; retained and not counted PASS. Parent authorized complete second Gradle to validate the actual classpath."
+  },
+  "deferredIntegratedChecks": [
+    "Root complete second Gradle current Standard/Low verification."
+  ],
+  "scope": "Debug/test source repair and token-preserving formatting only; no Gradle, phone, ADB, APK, production source, host manifest or runtime descriptor mutation by this lane."
+}

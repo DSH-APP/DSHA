@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "id": "D-ARCH-02",
+  "phase": "vscreen_application_ownership",
+  "sourceFrozen": true,
+  "reviewedAt": "2026-10-03T15:06:48Z",
+  "currentDisposition": "fixed_current_source",
+  "softwareChanges": [
+    "DshaApp (core owner) lazily owns one VirtualScreenManager through ApplicationOwner. from(Context) resolves the existing application and throws when absent/cyclic; no global current/cached/default manager.",
+    "Manager context is the normalized Application; LOCK/ACTIONS/worker/random/epoch/token/channel/generation/port/tickets/clock/authorization thread-locals and heartbeat are per instance. Production facade consumers resolve or hold this owner.",
+    "Preview poller, foreground/overlay UI state and node/editor tree cache are owned by this manager. UI Activity remains weakly tracked, with existing main-thread forwarding and lifecycle detach/bitmap cleanup.",
+    "Existing request snapshots, one-shot ADB admission, immediate revoke, ordered actions and old close fences are preserved. Snapshot includes the actual manager owner; stop/revoke do not locate another static session.",
+    "Context-free screen revocation/token reset callers now carry their real owner Context, including the one legacy BackupManager restore call; standalone privileged VirtualScreenCore remains a separate process/RPC authority.",
+    "Root-requested HttpShellService four protocol/search lowercase conversions use Locale.ROOT; display formatting was not mechanically changed."
+  ],
+  "checks": [
+    {
+      "command": "python tools/test-vscreen-manager-http.py --jdk F:/DSHA/_toolchains/jdk-17 --sdk F:/DSHA/_toolchains/android-sdk --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+      "result": "PASS current main/standard release production sources compiled against SDK37/current standardRelease R/fresh UiMessages/locked dependencies; 25 selected JUnit and six actual loopback HTTP scenarios passed",
+      "scope": "actual_current_sdk_source_compile_and_jvm_loopback_behavior"
+    },
+    {
+      "command": "python tools/test-core-boundaries.py",
+      "result": "PASS nine structure checks; from(Context) fail-closed delegates to DshaApp ApplicationOwner; no mutable static state in five owned virtual-screen collaborators",
+      "scope": "source_bound_structure_only"
+    },
+    {
+      "command": "python tools/test-bridge-routes.py",
+      "result": "PASS four current route and wiring checks",
+      "scope": "compiled_route_behavior_and_source_wiring"
+    },
+    {
+      "command": "python tools/test-bridge-files.py --jdk F:/DSHA/_toolchains/jdk-17 --gradle-home F:/DSHA/_toolchains/gradle-user-home",
+      "result": "PASS 71 current production pure behavior cases with fresh catalogue",
+      "scope": "actual_jvm_behavior"
+    },
+    {
+      "command": "python tools/format-java.py --check --offline --java F:/DSHA/_toolchains/jdk-17/bin/java.exe --files app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenChannels.java app/src/main/java/com/deepseekharness/app/HttpShellService.java app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java app/src/main/java/com/deepseekharness/app/ForegroundActivity.java app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java app/src/main/java/com/deepseekharness/app/BackupManager.java app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerRevocationTest.java app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerOwnershipTest.java --report app/build/java-format/bridge156-vscreen-final-check.json",
+      "result": "PASS pinned GJF 1.22.0, 15 explicit Java files, zero formatting changes, exact Java tokens preserved",
+      "scope": "format_and_token_fingerprint"
+    }
+  ],
+  "behaviorCases": [
+    "Actual DshaApp getter/current manager factory shares identity across application wrappers; missing and cyclic roots fail closed; retained manager context is the Application rather than wrapper/Activity.",
+    "Two isolated managers do not share locks, action channel, worker, authorization thread-local, ticket authority, clock or node cache; one owner cannot authorize/commit another ticket.",
+    "Blocked revoke worker still immediately invalidates old ticket; later cleanup cannot invalidate a replacement generation; asynchronous callbacks do not affect another owner.",
+    "Actual delayed HTTP keeps state LOCK available; stale manager snapshot, old grant and expected target results cannot commit; out-of-order frames cannot regress metadata.",
+    "Concurrent real HTTP down/move/up retains one action order; old real input result remains truthful while stale observation cannot render.",
+    "Actual two-owner bearer/generation HTTP isolation; delayed old close keeps new token/generation/node cache and supplies an obsolete fence to UI callback, so new UI cannot be cleared."
+  ],
+  "missingEvidence": [
+    {
+      "kind": "device",
+      "detail": "Host owner fixtures bypass Android framework construction explicitly and UI callback effects are recorded rather than rendered. Real VirtualDisplay, accessibility/window lifecycle, overlay, Root/Shizuku/ADB permissions and installed formal APK behavior require root device acceptance."
+    }
+  ],
+  "deferredIntegratedChecks": [
+    "Root final both-flavor Gradle tests/Lint/APK/descriptor/signing and formal device acceptance bind this final source. This lane did not run Gradle, sign, install, operate ADB or a phone."
+  ],
+  "independentCoreBoundary": "VirtualScreenCore is a standalone privileged app_process main with one authenticated RPC lifecycle; it does not use DshaApp service lookup. Its process isolation/identity/stop contract is retained, not a claim that every internal static implementation is architecturally mandatory.",
+  "changedProductionFiles": [
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenChannels.java",
+    "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+    "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+    "app/src/main/java/com/deepseekharness/app/ForegroundActivity.java",
+    "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+    "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java",
+    "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+    "app/src/main/java/com/deepseekharness/app/DshaApp.java"
+  ],
+  "changedTestFiles": [
+    "app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerRevocationTest.java",
+    "app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerOwnershipTest.java",
+    "tools/fixtures/vscreen-manager/ManagerHttpFixture.java",
+    "tools/test-vscreen-manager-http.py"
+  ],
+  "newProductionJava": [],
+  "newTestJava": [
+    "app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerOwnershipTest.java"
+  ],
+  "sourceFingerprints": {
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java": "e5436d57e9d5c2a9ae70027814d3c069e1c27a4bdf80d54f00684e07ad0d76da",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java": "699a37edf8cedd6095bb774c5e8cbadf2608fa00e16ed29955e168ce72e767e4",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java": "965c05b10887afa929bd2b8f2bc4d109554cc998ce4b61d0131e6afe04aef0eb",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java": "48d8847c58524fe93f7c9ac2f877170827ac7941b2f1b36af3fca8f14c524077",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java": "5d1fd763cb36b7b95c1ef9aa5dbac28d051bb2b7f53c73f9be7815ac689e503d",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java": "d9e7998f2391fdfba5be3b761119d7d788c7ac7337f8980fc98c6f75d688b6c8",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenChannels.java": "bd10a0e53c763c245ccc99762aa6050e2a56bfb07f7a72fa40f35f541730ea9c",
+    "app/src/main/java/com/deepseekharness/app/HttpShellService.java": "4d5db1e8e379443319233ec287a1525289b4397d857c6bd0b97b6c9abb0cd3e7",
+    "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java": "ecdac4a70ee3c8deea4ce872c65c80890daa8735b5ad9a6548cd8062d575a7f5",
+    "app/src/main/java/com/deepseekharness/app/ForegroundActivity.java": "ac3e26cde5b0e71e3248943231133ba35ffbae0f4c6b19271d28617fa8ee5a25",
+    "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+    "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java": "8f3761c290ce00c838c0e594a13942a2b0bc44011049e27522834f2c639b122f",
+    "app/src/main/java/com/deepseekharness/app/BackupManager.java": "d72d1aad7712cee4f95681d4b02c712af9646533feb3ace3868829ebf08d1db5",
+    "app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerRevocationTest.java": "e6e618b62eb073ec3c374076ea293edec372fe3e7ffbbf14765c2fb42ca2e373",
+    "app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerOwnershipTest.java": "1aec3b148008d13037405e8a549f8c776b650cd784e95d5fb9c7da7d293f321e",
+    "tools/fixtures/vscreen-manager/ManagerHttpFixture.java": "340c0fae18f51dc6cc9ca3e696ee70e21beb6ff849db7036877b58219a67f2bc",
+    "tools/test-vscreen-manager-http.py": "9ced61b9e60adedd65cb4ca5f96bf3ad3e52e25643f79f5cbfe26c5f26e3e907",
+    "app/src/main/java/com/deepseekharness/app/DshaApp.java": "0b46dc99a11735f356fb8e6b0771f09a2af3ca9ae2da4bcb0ad94b7ac454162a"
+  },
+  "tokenFingerprints": {
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java": "c98b6cb9a4886cfe2d79af5cc1518cba5fbca9c099191c594bf7b47d969f5527",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java": "a337a8c3e46c6a9d3b1aef45fd5bc31d87a7cc52e564ec4b7e8f2228982ceddc",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java": "6cc9a088a61f946d175b581f6560a8f360c9c0150772ede00636c8d3b4791bdb",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java": "ac6428d89b4cd3d135375d55c94744807d1c691d09a45d9fb8b326ae450c60e3",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAccessibility.java": "79a3541f1a6d3c1c5af84b5816d91cee27e6ed242c1ef4685c1231d7e40bd30e",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java": "1af53970711a4773fb6074c66e7559e1b0fcc755fae5623833dd18708a467685",
+    "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenChannels.java": "42cd09c089ef9aca1d06407380f5746d2904430eb98a0504107a6552426f8d54",
+    "app/src/main/java/com/deepseekharness/app/HttpShellService.java": "e3541316b821b898c7548a746accf15091584d45272bd116a7332676306f5139",
+    "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java": "ad26c44494d1db55db6b3c1e4db8dcae1289bb537a23502e82a17ef9ec4af7d0",
+    "app/src/main/java/com/deepseekharness/app/ForegroundActivity.java": "9cfb27a17cc892fe8c9c4010cf931b37b8c6ef7b837afd0d04be27359c529e7e",
+    "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java": "57df7440222b53922c73a88ea5683e24f27c4b29c74554843a97920da4dc10a4",
+    "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java": "1dc1df0aa9699a56661323cd9e86f23319970b0d4c8eb0e5ad8c2e09c76c9720",
+    "app/src/main/java/com/deepseekharness/app/BackupManager.java": "c55873e92beed3f67df22ed6f00f785045a3beb0559c952cf805b78e2ab55184",
+    "app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerRevocationTest.java": "aa263884e782ee5b5467b7a93bc4af2812743d4bc2e4023e11f533db41884310",
+    "app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenManagerOwnershipTest.java": "713284633dcdc0568e5ce0ce1c942c517086b86f092bf5e491db8bfd9a60c112"
+  }
+}

@@ -1,0 +1,930 @@
+{
+  "group": "G1",
+  "source": "work/G1.json",
+  "source_sha256": "904210f6ab02950ed12fd4689634571f37514773b9bcff97407d39032c593ee4",
+  "source_item_count": 39,
+  "reviewed_item_count": 39,
+  "complete": true,
+  "against_build": 153,
+  "read_only_production": true,
+  "no_device_operations": true,
+  "statuses": {
+    "open": 35,
+    "requires_device_evidence": 3,
+    "accepted_policy": 1
+  },
+  "items": [
+    {
+      "id": "D-SEC-01",
+      "title": "TarGzipExtractor 链接越界校验为纯文本归一，不解析已解出的链接链",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "TarGzipExtractor.java:166-175 普通文件经 writeFile；201-236 链接只做 Compat.normalizePosix 文本判断；240-258 FileOutputStream 直接打开。",
+        "所有已核调用是 APK 随包资产，不据此声称存在用户归档直接攻击面。"
+      ],
+      "current": "词法链接目标检查与 FileOutputStream 跟随链接仍在；输入目前只见签名随包资产。报告 a→.. 例子会被拒绝，真正需回归的是 a→.、b→a/.. 的链式解析及已有目标链接。",
+      "recommendation": "与 G2 D-IO-02 合并实施，拒绝经过链接的文件写路径；兼容 Ubuntu bin→usr/bin 等合法 guest 绝对链接，实际链接/权限失败带路径和类型抛出，等价链接可核验幂等；不要复用分叉 TarRepro 当证明。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/TarGzipExtractor.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ManagedRuntimeAssets.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-02",
+      "title": "宿主按 rootfs 相对路径读写容器文件时跟随 guest 可控符号链接",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "ProotBootstrap.java:552-596 containerFile/pushFileIntoContainer/pullFileFromContainer 仍无 NOFOLLOW。",
+        "不能把 rootfs/guest 与本应用同 UID 的授权终端描述为安全沙箱。"
+      ],
+      "current": "containerFile 仍直接 new File(rootfsDir, rel)，push/pull 用普通文件流；既有 guest 目标链接可被宿主写入跟随，属于防误覆盖缺口而非同 UID 隔离漏洞。",
+      "recommendation": "引入保持 guest 链接语义的宿主安全文件边界，受管写目标逐级拒绝链接并绑定打开描述符；临时原子发布，读取核对目标身份，保留坏原件。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/core/EnvironmentDataBackup.java",
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-00",
+      "title": "安全模型文档与实现不符且缺正式威胁模型/信任边界",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "security-model.md:133 仍声明禁用生命周期脚本及 pnpmfile。",
+        "plugin-dependencies.py 存在 dangerously-allow-all-builds=true/ignore-scripts=false；AGENTS 当前明确允许。"
+      ],
+      "current": "中英文安全文档仍写依赖安装禁用生命周期脚本，与当前明确开放钩子的实现和 AGENTS 覆盖条款冲突；已有同 UID 边界文档，报告称完全缺失不准确。",
+      "recommendation": "修正文档并增补资产、主体、同 UID/loopback/LAN 信任边界及控制分类；明确自动插件安装/执行钩子是当前授权策略，不采纳附件另一会话的审阅确认要求。",
+      "files": [
+        "docs/security-model.md",
+        "docs/security-model.en.md",
+        "AGENTS.md",
+        "app/src/main/assets/plugin-dependencies.py"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-ADB-01",
+      "title": "AdbBridge 写入的 allow-root-shell/confirm-shell-* 标记文件无读取方（死代码）",
+      "source_severity": "P3",
+      "status": "open",
+      "evidence": [
+        "AdbBridge.java:214-216 setFlag；test-adb-flow.py:208 仍 mock allow-root-shell/confirm-shell-disabled。"
+      ],
+      "current": "AdbBridge 仍写三个旧标记，adb-shell 无读取方；测试仍模拟这些标记。真实授权在原生偏好及设备命令策略。",
+      "recommendation": "删除无读方写入及脱节测试模拟；残留只作为已知受管标记处理，不自动删未知用户文件。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+        "app/src/main/assets/adb-shell.py",
+        "tools/test-adb-flow.py"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-03",
+      "title": "桥 token 可经查询串传递，官方引导与多个内置插件把 token 放进 URL/命令行",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "HttpShellService.java:483-491 支持 query/header。",
+        "computer-use server.cjs:31、notifier index.js:39、vscreen server.cjs:20、device-shell-guide index.js:16 仍传 query。"
+      ],
+      "current": "桥仍接受 query token；四个内置客户端/指南仍在 URL 中传递 token。隐私风险确实存在，但任何新 header 示例也不能把秘密直接展开进 curl argv。",
+      "recommendation": "内置 Node fetch 改 X-Token header；shell 示例用受保护 header/config 文件（如 -H @file）避免 token 进入 URL 与 argv；服务端兼容策略须明确且不得破坏 Web/LAN 首帧鉴权；同 G2 STABLE token 根修复协调。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/assets/builtin-plugins/dsh-computer-use-android/lib/server.cjs",
+        "app/src/main/assets/builtin-plugins/dsh-device-shell-guide/lib/index.js",
+        "app/src/main/assets/builtin-plugins/dsh-task-notifier/lib/index.js",
+        "app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-04",
+      "title": "屏幕操作敏感应用判定靠包名子串黑名单且判定与执行间存在 TOCTOU，/app/launch 无授权闸",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "HttpShellService.java:764-800 敏感判定/uiAuthorized；1271-1283 appLaunch 无该闸。",
+        "DshaAccessibilityService.java uiTapText 重新 activeWindow，uiInput 仍回退 findEditable。"
+      ],
+      "current": "敏感包名子串判定、授权时/执行时重新取窗口的间隙与无焦点输入回退仍存在；appLaunch 不经屏幕授权。真实错点/输入效果需设备证据。",
+      "recommendation": "授权绑定目标显示与窗口包名，操作时在同一节点树再次核对；缺焦点不猜输入目标。敏感启动与虚拟屏策略合并处理，不能将新 nonce 当作同 UID 沙箱。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-PROV-01",
+      "title": "ShellService.java 文件头标注 CFR 反编译，代码来源不明",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "ShellService.java:1-3 CFR 注释仍在；exec 调用 DeviceShellExecutor，destroy 仅 uid 0/2000 System.exit。"
+      ],
+      "current": "CFR 标注仍在，但标注本身不能证明侵权、外部反编译来源或当前实现许可不兼容。实现已大量使用仓库自己的执行器。",
+      "recommendation": "先核对 Git 来源/授权说明；必要时基于公开 API 自写等价服务并记录来源，保留当前设备策略、30 秒期限与仅特权进程 destroy 行为；不作未经证据的法律定性。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ShellService.java",
+        "THIRD_PARTY_NOTICES.md"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-05",
+      "title": "局域网模式为明文 HTTP，首访 token 在 URL 中并被显示/复制到剪贴板",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "LaunchFragment.java:384-405 展示 token URL、ClipData.newPlainText 和完整地址 Toast。",
+        "LanAuth.stripTokenFromUrl 已实现，不能称首次 token 永不剥离；LAN 纯 HTTP 无保密性。"
+      ],
+      "current": "LAN 明文 HTTP 是既有功能并已部分说明；完整 token 仍在地址文本、剪贴板及 Toast，cookie 有较长有效期。不得把“HTTP 存在”自动当成授权变更。",
+      "recommendation": "保留 LAN 功能，先修剪贴板敏感标记和不回显 token 的 Toast/日志，补实际明文风险说明及会话失效测试；TLS/配对机制属后续明确设计，不强行改变当前入口。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
+        "app/src/main/java/com/deepseekharness/app/LanProxyService.java",
+        "app/src/main/java/com/deepseekharness/app/LanAuth.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-ROOT-01",
+      "title": "su 可执行文件只查 4 个硬编码路径",
+      "source_severity": "P2",
+      "status": "requires_device_evidence",
+      "evidence": [
+        "RootShell.java:21-25 只检测四个固定路径；此轮未操作手机。"
+      ],
+      "current": "固定四个 su 路径仍在；未提供 KernelSU/APatch 真机或实际安装路径证据，不能确认所列新增路径存在或该设备受影响。",
+      "recommendation": "可抽取可测试的查找顺序并核对官方/实际路径；不得盲目从不可信 PATH 运行 su；设备矩阵验证留待授权。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/RootShell.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-06",
+      "title": "特权进程先校验路径再执行 cp/mv/rm，共享存储存在跨 App TOCTOU",
+      "source_severity": "P2",
+      "status": "requires_device_evidence",
+      "evidence": [
+        "DeviceShellExecutor.java:43-47 validateFiles 后 runner.run 路径重新解析；131-160 已有 canonical 与逐级 lstat 拒链。"
+      ],
+      "current": "validateFiles 与外部 cp/mv/rm 存在静态检查/执行间隙，但普通 Android 共享存储是否允许攻击者创建相关 symlink/mount 及真实竞争利用尚未核验，不能直接报告已被绕过。",
+      "recommendation": "宿主临时目录可做路径替换夹具；优先以固定父描述符执行危险写操作，保留保护范围；实际 FUSE/SELinux 可利用性需后续设备证据。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-LIC-01",
+      "title": "THIRD_PARTY_NOTICES 缺 Shizuku、Termux AAR、core-js、sharp/libvips 等条目",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "build.gradle:260-268 Shizuku 两版本和 Termux AAR；NOTICES 未覆盖 Shizuku 且 cua-driver 许可说明简化。"
+      ],
+      "current": "NOTICES 漏 Shizuku 与终端 AAR 等精确组件说明，运行时许可集合未对应实际打包内容。不能只按 npm 锁中的所有平台包推断实际分发。",
+      "recommendation": "主控按实际 Gradle/APK/runtime 内容生成版本和许可清单，补随附文本及来源；GPL/LGPL/MPL 义务作为需专门确认的分发事项，不作本次法律结论。",
+      "files": [
+        "THIRD_PARTY_NOTICES.md",
+        "app/build.gradle",
+        "tools/dsh-runtime/package-lock.json",
+        "app/src/main/assets/licenses"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-07",
+      "title": "SAF DocumentsProvider 可浏览/读取 rootfs 内桥 token、.credentials.yaml、.env",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "DshaDocumentsProvider.java:70-74 仅依赖 privateDocument；MANAGE_DOCUMENTS+URI grant 是现有门禁。",
+        "UserDataLayout.PRIVATE 不含这些凭据文件；当前实际 Java 夹具 saf_hides_bridge_token=false、saf_hides_credentials=false。"
+      ],
+      "current": "SAF 授权与文档路径边界确实存在，不是任意外部 App 无授权读取；但用户授予目录树后 privateDocument 不隐藏桥 token/credentials 等文件，与桥拒绝策略不一致。",
+      "recommendation": "共用精确凭据/机器状态策略，列目录隐藏与 open/create/rename 等入口都复核逻辑和解析路径，保留既有 opaque document IDs 及合法用户文件访问。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DshaDocumentsProvider.java",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java",
+        "app/src/main/java/com/deepseekharness/app/util/BridgePathPolicy.java"
+      ],
+      "tests": [
+        {
+          "kind": "current_source_jvm_fixture",
+          "result": "reproduced",
+          "artifact": "app/build/audit154-G1/current-probe.txt",
+          "note": "只使用新建临时目录，未读取用户凭据。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-08",
+      "title": "旧版恢复从 .dsha-apikey 回填 Keystore 后不删除明文文件",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "BackupManager.java:315-327 成功 saveApiKey 后无清理；NativeDataLocations.java 已 skip .dsha-apikey。"
+      ],
+      "current": "旧恢复 syncApiKeyFromRootfs 成功后仍留下明文 .dsha-apikey；新 v5 已不把它作为普通设置导出。",
+      "recommendation": "仅对确定为已生成活跃投影的普通文件，在 Keystore 保存+读回一致且 inode/路径核验后撤除；失败/未知原件必须保留或隔离，不能采纳附件“回填失败也直接删除”的建议。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-NET-01",
+      "title": "全应用 usesCleartextTraffic=true，未用 network_security_config 限定 localhost",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "AndroidManifest application usesCleartextTraffic=true，无 networkSecurityConfig。"
+      ],
+      "current": "全局 cleartext 标志仍为 true，无 NSC 文件；外部 http 不受该平台配置约束的可能性尚在，不能假定限制宿主就限制 guest Node。",
+      "recommendation": "宿主按实际 localhost/页面导航需要限制 cleartext，并验证 Standard/Low 兼容；Gecko 与 guest 需要各自的边界，不声称 NSC 能隔离原生容器网络。",
+      "files": [
+        "app/src/main/AndroidManifest.xml",
+        "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+        "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-01",
+      "title": "错误日志导出声称未读对话文件，但附带 dsh-web.log 尾部 256KiB 且仅正则脱敏",
+      "source_severity": "P2",
+      "status": "requires_device_evidence",
+      "evidence": [
+        "ErrorLogRepository.java:104-115 读取最多 256 KiB 运行日志并整体 redact；对话文件未直接遍历并不证明日志无片段。"
+      ],
+      "current": "默认诊断导出确实附 dsh-web.log 尾部且只做尽力正则脱敏；“日志实际包含哪些对话/工具片段”未取得真实样本，不据源码推断已泄露用户对话。",
+      "recommendation": "立即把说明改为真实附带范围与尽力脱敏，使用合成含 token/密钥日志夹具；可设计选择/预览运行日志，真实样本审阅需后续授权，不能操作手机取样。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/ErrorLogRepository.java",
+        "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未在手机复现。"
+        }
+      ]
+    },
+    {
+      "id": "D-UPD-01",
+      "title": "更新清单无签名，信任仅靠 HTTPS+清单内 sha256，pageUrl/notes 可被清单任意指定",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "UpdatePolicy.Release.valid 仅 https(url/pageUrl)；UpdateEngine.java:350-367 严格比较安装 APK 的签名。",
+        "当前 Java 夹具证明 https() 对任意合规 HTTPS 主机返回 true。"
+      ],
+      "current": "feed 无签名，pageUrl 只要求 HTTPS；APK 安装仍核对包名、版本、flavor、minSDK 和历史签名证书集合，不能声称伪造清单可直接安装异签名包。附件“用户接受不签名”不是本轮授权。",
+      "recommendation": "先限制发布页到实际官方域/仓库并限长纯文本说明，保持证书验证；记录元数据信任边界，独立清单签名或密钥轮换另需设计，不从附件决策推断已接受。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+        "app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java",
+        "app/src/main/java/com/deepseekharness/app/ui/UpdateActivity.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-UPD-02",
+      "title": "更新下载重定向只校验 https，不限定主机",
+      "source_severity": "P3",
+      "status": "open",
+      "evidence": [
+        "UpdateEngine.java:374-393 每跳仅 UpdatePolicy.https；ResumableDownload 的整体 SHA 和 Range 处理不受此项影响。"
+      ],
+      "current": "最多六跳 HTTPS 重定向仍不限定主机；这是连接/可用性/隐私边界，不是绕过最终哈希与 APK 签名。",
+      "recommendation": "按实际分发及 CDN 配置限制跳转域，保持每跳 TLS/超时和断点整体核验；用注入 transport 测试恶意跳转，不进行真实不可信下载。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/UpdateEngine.java",
+        "app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java",
+        "app/src/main/java/com/deepseekharness/app/util/ResumableDownload.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-09",
+      "title": "API key 以 export 拼进 bash -c 命令串，出现在 /proc/<pid>/cmdline",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "HarnessController.java:240-246 拼接 export DEEPSEEK_API_KEY；479 传 execRootfs；应急已有 environment 传入模式可参考。"
+      ],
+      "current": "runCoreCommand 仍将实际 API Key 拼到 export/bash -c 命令串；ShellQuote 防注入不等于防 argv 泄露，同 UID 环境变量本来也可读。",
+      "recommendation": "通过 ProcessBuilder 环境传递凭据，校验各 runtime 透传并避免将 env/debug 记录输出；不宣称环境变量在同 UID 内保密。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
+        "app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java",
+        "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-CFG-01",
+      "title": "沙箱档位无界面入口，两条导入路径缺省值不一致（'default' 疑似非法）",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "ConfigStore.java:261 danger-full-access 默认，331 导入缺省与367 prepareHostSettings 缺省不同。",
+        "报告 util/PortablePreferenceProjection 路径已过期，当前类在 backup 包。"
+      ],
+      "current": "danger-full-access 是当前明确默认策略，不能作为漏洞修改；但 prepareHostSettings 的 permissionMode 缺省仍为 default，读取/投影也无三档归一，非法输入一致性问题尚在。",
+      "recommendation": "统一合法枚举与当前明确的默认行为，拒绝/归一非法值，保留已有三档；是否增加 UI 入口属于功能设计，不借此收紧已授权终端。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/core/ConfigStore.java",
+        "app/src/main/java/com/deepseekharness/app/backup/PortablePreferenceProjection.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-10",
+      "title": "外部链接一键安装并启用插件且执行生命周期脚本，无原生确认",
+      "source_severity": "P0",
+      "status": "accepted_policy",
+      "evidence": [
+        "PluginInstallActivity onCreate 就绪后 inspect；PluginRepository 自动 confirmPreview/install-preview；依赖脚本明确开放。",
+        "本轮父任务明确禁止恢复插件审阅流程，优先于附件第六节。"
+      ],
+      "current": "自动解析、安装和启用、开放依赖钩子均由当前用户/AGENTS 明确要求；外部调用链与风险存在，但不能采纳附件另一会话要求重新审阅/确认的决策。",
+      "recommendation": "保留免审阅安装。只修格式、路径、摘要、事务一致性及来源透明说明；文档如实说明第三方代码可用同 UID 权限执行，不能宣传为沙箱安全认证。",
+      "files": [
+        "AGENTS.md",
+        "app/src/main/java/com/deepseekharness/app/ui/PluginInstallActivity.java",
+        "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java",
+        "app/src/main/assets/plugin-dependencies.py"
+      ],
+      "tests": [
+        {
+          "kind": "policy_alignment",
+          "result": "accepted_policy",
+          "note": "保留已有实际包路径/摘要/事务测试；不用改变免审阅契约测试来重新加门槛。"
+        }
+      ]
+    },
+    {
+      "id": "D-BRAND-01",
+      "title": "对外仓库地址/域名/群号分散硬编码，且两处指向迁移前旧仓库",
+      "source_severity": "P3",
+      "status": "open",
+      "evidence": [
+        "AboutDialog.java:13、ConfigFragment.java:250、website/src/app.js:127 旧仓库；AboutFragment.java:17 用当前仓库。"
+      ],
+      "current": "AboutDialog、ConfigFragment 与官网投稿链接仍指迁移前仓库，其他入口用当前仓库，集中配置未完成。报告的两个 website 根脚本在当前树不在所列位置。",
+      "recommendation": "主控集中当前对外入口；保留 README 受用户要求保护的历史介绍、作者链接与历史报告，不采用全仓删旧作者名的粗糙验收。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java",
+        "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java",
+        "app/src/main/java/com/deepseekharness/app/ui/AboutFragment.java",
+        "website/src/app.js"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-11",
+      "title": "配置页把解密后的 API key 明文填入 EditText 且未关闭实例状态保存",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "ConfigFragment.java:82/93/101 回填 requireValue；fragment_config.xml 的 key 字段缺 saveEnabled=false。"
+      ],
+      "current": "配置页仍把解密密钥回填 EditText，布局未显式 saveEnabled=false；是否系统实际持久化 password 文本需设备证据，不能当作已泄露到磁盘。",
+      "recommendation": "最小关闭视图状态保存，改为已保存状态+空白替换输入，保存其他设置不清空暂不可读凭据；保持 CredentialRead 四态语义。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java",
+        "app/src/main/res/layout/fragment_config.xml",
+        "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-13",
+      "title": "页面任意脚本可伪造启动致命事件，触发跳转启动恢复页",
+      "source_severity": "P3",
+      "status": "open",
+      "evidence": [
+        "WebPreviewActivity.java:443-451 同源前缀消息；StartupDiagnostics.pageEvent 在已经 ready 时 fatal 返回 false，但未 ready 不核观测来源 nonce。"
+      ],
+      "current": "同源诊断事件在启动未 ready 时可由页面脚本伪造；pageEvent 已有 browserReady 与 generation 守卫，报告“运行中可随时反复跳恢复”的泛化不成立。",
+      "recommendation": "保持明确真实启动故障自动恢复契约。启动观测来源/一次性状态绑定作为可靠性加固；不能把同源 nonce 当成隔离恶意插件的安全边界。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java",
+        "app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java",
+        "app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-14",
+      "title": "虚拟屏动作按主屏前台包判定敏感应用，敏感应用闸被旁路",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "HttpShellService.java:875-885 appVscreen 仍复用 uiAuthorized(action)，其读取主屏包；未传目标显示/包。"
+      ],
+      "current": "appVscreen 仍调用只看主屏 currentPackage 的 uiAuthorized；目标显示/launch 包没有绑定，因此代码上的策略错位尚在。是否可运行具体敏感 App、读取其内容仍需设备证据。",
+      "recommendation": "同 D-SEC-04 实施显示/包身份绑定，launch 用目标包，后续动作复核虚拟屏顶层包；see/tree 在敏感/未知目标按真实授权处理，不拿主屏 DSHA 代替。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java",
+        "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenCore.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-02",
+      "title": "SensitiveData.redact 依赖字段名/固定前缀，无前缀密钥漏脱敏且每次现编译正则",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "SensitiveData.java:12-21 多次 replaceAll，仅若干字段与固定前缀；当前 JVM probe 两种合成样例均未被 redact。"
+      ],
+      "current": "正则每次编译且不能覆盖无字段名 AIza/JWT 等；当前实际源码夹具证明合成值不变。任何正则都不能保证任意秘密全量脱敏。",
+      "recommendation": "预编译已知模式；对注册的已知秘密做明确替换并限制生命周期，诊断采集尽量减少内容；改绝对保证文案为尽力脱敏，未知令牌不能当已安全。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/SensitiveData.java",
+        "docs/1.2-upgrade-report.md"
+      ],
+      "tests": [
+        {
+          "kind": "current_source_jvm_fixture",
+          "result": "reproduced",
+          "artifact": "app/build/audit154-G1/current-probe.txt",
+          "note": "只使用合成字符串，不含真实秘密。"
+        }
+      ]
+    },
+    {
+      "id": "D-NET-02",
+      "title": "resolv.conf 缺 nameserver 时硬编码追加 8.8.8.8 与 223.5.5.5，两处重复且无配置",
+      "source_severity": "P3",
+      "status": "open",
+      "evidence": [
+        "ResolverConfig.java:19 只在缺 nameserver 时追加；InstallProbe.java:120 有重复片段。"
+      ],
+      "current": "无有效 nameserver 时仍在 ResolverConfig/InstallProbe 两份逻辑写固定公共回落 DNS；它是兼容策略并非已证明用户 DNS 被强制覆盖。",
+      "recommendation": "保留显式已有 nameserver/search/options 与用户 DNS 模式，集中回落定义/如实说明；若采用系统 LinkProperties 地址需可验证且有有限回退，不扩展成所有流量隧道。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/ResolverConfig.java",
+        "app/src/main/java/com/deepseekharness/app/util/InstallProbe.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-15",
+      "title": "桥路径拒绝表 /root/.dsha- 前缀条目失效，且工作区 .env 可经 /app/export 落公共目录",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "BridgePathPolicy DENIED 包含 /root/.dsha- 但 startsWithPath 仅 exact 或 prefix+/；probe internal_pid/workspace_env 拒绝值均为 false。"
+      ],
+      "current": "路径段匹配不能实现 /root/.dsha- 文件名前缀，工作区 .env 也不在拒绝表；实际当前 Java 夹具两条都允许。",
+      "recommendation": "精确区分路径前缀与文件名模式，共用凭据/机器状态规则，同时核对原始逻辑与解析后路径；保留用户合法工作文件导出，不粗封整个 rootfs 或改文档 ID。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/BridgePathPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/test/java/com/deepseekharness/app/util/BridgePathPolicyTest.java"
+      ],
+      "tests": [
+        {
+          "kind": "current_source_jvm_fixture",
+          "result": "reproduced",
+          "artifact": "app/build/audit154-G1/current-probe.txt",
+          "note": "行为是防误导出与外部桥输入边界，不宣称阻止已授权同 UID shell。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-16",
+      "title": "full 备份无条件把工作区 .env 与未脱敏 dsh-web.log 打进导出到 Download 的归档",
+      "source_severity": "P0",
+      "status": "open",
+      "evidence": [
+        "backup-engine.py:320-326 full 直接 copy .env/log；BackupTask.backup 保留调用。",
+        "WorkspaceFragment 当前进入 NativeDataActivity，默认 v5 NativeDataLocations 不自动添加整个 workdir；用户选定项目/DSH 自有凭据可包含敏感数据已有说明。"
+      ],
+      "current": "旧 BackupManager→backup-engine 的 full 仍原样带工作区 .env 和运行日志；默认 UI 已迁宿主 v5，不能把旧链描述为当前所有备份入口，更不能把用户授权的无密码导出本身判为 P0。",
+      "recommendation": "G3 owner 处理遗留写链：默认旧导出不带运行日志/未选择的原生凭据，旧格式只保留经验证读取；当前 v5 不丢用户明确选择的项目原件，排除原生 Key 与包含其他项目秘密的界限如实说明。",
+      "files": [
+        "app/src/main/assets/backup-engine.py",
+        "app/src/main/java/com/deepseekharness/app/BackupManager.java",
+        "app/src/main/java/com/deepseekharness/app/core/BackupTask.java",
+        "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-17",
+      "title": "阅读位置记录把含查询串的 URL 写入 localStorage，可能持久化 ?token=",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "client.js:151-152 存完整 search，195 用完整 search 比较；首帧 auth URL 与实际后续 location 未做本轮真机读取。"
+      ],
+      "current": "阅读位置仍直接保存 pathname+search；正常首帧 DSH 是否立即剥 token 未核实，不能宣称已有真实 Web token 泄露。保存逻辑本身无敏感参数保证。",
+      "recommendation": "仅保存导航身份所需 pathname/明确白名单参数，并对旧读入值也剥敏感查询；用浏览器合成 URL 夹具验证，不靠猜测首帧时序。",
+      "files": [
+        "app/src/main/assets/app-integration/client.js",
+        "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-18",
+      "title": "插件导出 dereference 跟随链接，非内置插件可把包外文件打进导出包",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "plugin-manager.py:cmd_export/add_tree runtime_source is None 时无 commonpath 限制；.credentials 和真实桥 token 不在 basename 排除集。"
+      ],
+      "current": "所有第三方导出的 add_tree 会 realpath+deref，包内约束仅 runtime_source 分支；源码上可把工作区包外链接带入导出，真实机上未演示。",
+      "recommendation": "统一包根边界/链接图规则与排除报告；依赖组不能简单一刀切删除，先辨明受支持包装/依赖导出结构，异常停导出并保留原插件。",
+      "files": [
+        "app/src/main/assets/plugin-manager.py",
+        "tools/test-plugin-discovery.py"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-19",
+      "title": "root 读取短信库拦截不含 /data_mirror 绑定挂载路径",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "当前 probe root_read_mirror_sms_allowed=true、root_recursive_mirror_allowed=true；DeviceShellExecutor 同样依赖这两个路径判据。"
+      ],
+      "current": "Java 与 Python 短信 provider 路径规则都未覆盖 /data_mirror；实际 Java plan 接受镜像路径 cat/find。实际 Root/SELinux 能否读取仍未操作手机核实。",
+      "recommendation": "补已知 SMS 镜像路径及祖先规则并做双方一致性夹具；仅原生授权的严格当前用户 content query 保持可用；不要因此开放任意 root 内容提供者或系统命令。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java",
+        "app/src/main/assets/device-shell-policy.py",
+        "app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java"
+      ],
+      "tests": [
+        {
+          "kind": "current_source_jvm_fixture",
+          "result": "reproduced_policy_gap",
+          "artifact": "app/build/audit154-G1/current-probe.txt",
+          "note": "证明规则接受而非证明已从手机读取短信；后者 requires_device_evidence。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-20",
+      "title": "selftest.py check_backup 把共享存储文件名拼进 bash -lc，存在命令注入",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "selftest.py:1249 仅替换空格后传 bash -lc；当前Java selftest.py 引用仅 BuiltinPlugins 注释，Settings 自检为原生实现。"
+      ],
+      "current": "selftest.py 的文件名 shell 拼接确实不安全；当前原生自检未找到部署/调用该 Python 脚本的活跃链，风险属旧/手动复活脚本，不是当前入口已被利用。",
+      "recommendation": "与 G2 D-DEAD-03 协调移除无部署资产或改为 argv/tarfile 读取；不删除用户环境里的未知历史文件。应保留原生自检并避免新审计 APK。",
+      "files": [
+        "app/src/main/assets/selftest.py",
+        "app/src/main/java/com/deepseekharness/app/util/BuiltinPlugins.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-21",
+      "title": "v5 备份机器状态名单写错桥 token 文件名，.bridge_token 会作为普通设置进入备份",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "当前 JVM fixture backup_excludes_real_bridge_token=false、backup_excludes_anonymous_id=false；HttpShellService 使用真实 .bridge_token。"
+      ],
+      "current": "MACHINE 仍列旧错误名称，真实 .bridge_token 和匿名 ID 不在集合；v5 NativeDataLocations 对未知子项按 settings 归档，因此两种布局应统一排除。",
+      "recommendation": "加入真实名称并保持旧别名兼容，共用机器状态/凭据常量和排除清单；同时修 G2 STABLE token 根绑定，测试本机授权状态不可从归档恢复。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java",
+        "app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java",
+        "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
+        "app/src/test/java/com/deepseekharness/app/backup/DataRootPolicyTest.java"
+      ],
+      "tests": [
+        {
+          "kind": "current_source_jvm_fixture",
+          "result": "reproduced",
+          "artifact": "app/build/audit154-G1/current-probe.txt",
+          "note": "只验证名称判据，实际归档流程需追加宿主夹具，未导出用户数据。"
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-03",
+      "title": "公开文档与测试脚本硬编码开发者 ADB 序列号、私网地址与本机路径",
+      "source_severity": "P3",
+      "status": "open",
+      "evidence": [
+        "test-update-process.py:14-15 固定工具路径和设备；上述 docs 可见相同设备/本机字段，此复核输出不再复制其实际值。"
+      ],
+      "current": "已确认公开历史文档与设备脚本含固定序列号、私网地址及具体开发路径；报告未证明这些值导致远程控制或密钥材料泄漏，属于隐私/可迁移性卫生。",
+      "recommendation": "主控对新增交付证据做脱敏，设备脚本通过参数/环境明确选择并无设备时失败；保留历史事实但去可识别值，不运行设备脚本。",
+      "files": [
+        "tools/test-update-process.py",
+        "docs/1.2-upgrade-report.md",
+        "docs/build131-device-followup.md",
+        "docs/adb-flow-audit.md"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-22",
+      "title": "系统 Auto Backup/设备迁移整目录纳入 user-data-v5/，STABLE 布局下凭据随之离机",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "data_extraction_rules 的 cloud/device-transfer 与 xml-v28 都 include user-data-v5/，无子项 exclude；UserDataLayout.STABLE=user-data-v5/dsh 并整体 bind /root/.dsh。"
+      ],
+      "current": "STABLE 整目录 include 确实覆盖凭据/本机状态；cloud 的传输加密要求不能替代文件排除，device-transfer 与 v28 规则也存在不对称。尚未声称已检查实际系统迁移包。",
+      "recommendation": "系统规则对 LEGACY/STABLE 使用对称数据白名单或共享明确排除，尤其真实 .bridge_token/匿名ID/明文凭据及本机授权记录；自动本机副本的宿主内部加密与用户无密码 tar.gz 策略保持不变。",
+      "files": [
+        "app/src/main/res/xml/data_extraction_rules.xml",
+        "app/src/main/res/xml-v28/backup_rules.xml",
+        "app/src/main/res/xml/backup_rules.xml",
+        "app/src/main/java/com/deepseekharness/app/backup/UserDataLayout.java"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-PRIV-04",
+      "title": "无障碍说明承诺“不落盘”，但截屏 PNG 长期写入外部私有目录无清理",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "DshaAccessibilityService.java:674起 saveShot 写 Pictures/DSHA PNG，mcp 分支随后再读文件。",
+        "accessibility_desc/config 注释仍写不落盘/不单独保存。"
+      ],
+      "current": "屏幕说明仍承诺不落盘，但 saveShot 对普通/MCP 都先写外部私有 PNG，未找到轮换/删除；路径私有不等于不存在或不长期保存。",
+      "recommendation": "同步中英文说明为实际按请求采集/保存；MCP 可内存编码且保留普通文件截图用途，文件需明确保留/可控清理，不能为修文案破坏截图工具。",
+      "files": [
+        "app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java",
+        "app/src/main/res/values/strings.xml",
+        "app/src/main/res/values-en/ui_strings.xml",
+        "app/src/main/res/xml/accessibility_service_config.xml"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-SEC-23",
+      "title": "发布证书为 Android debug keystore，构建缺省口令回落为公开值 android",
+      "source_severity": "P1",
+      "status": "open",
+      "evidence": [
+        "build.gradle:45-61 默认口令/alias与println仍在；无证据显示 keystore 已进仓库或现已外泄。"
+      ],
+      "current": "历史 E7E3 发布证书必须保持以覆盖安装，这是明确要求；构建仍默认公开口令/alias 并打印绝对路径。CFR/debug 文件名不证明证书或私钥已泄露，不能擅自换签名。",
+      "recommendation": "主控去缺省口令回落与路径日志，环境缺配置时正式构建明确失败；私钥管理可加强，轮换须单独设计签名谱系与兼容验收，当前仍用 E7E3。",
+      "files": [
+        "app/build.gradle",
+        "tools/generate-release-manifest.py"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-LIC-02",
+      "title": "GPL-2.0 proot 随所有 flavor 分发，但许可全文只在 low flavor",
+      "source_severity": "P2",
+      "status": "open",
+      "evidence": [
+        "main licenses 当前只有四项；proot-COPYING 在 low；NOTICES 标准 proot 段写上游主页，low 才固定版本。"
+      ],
+      "current": "标准源集含 proot 二进制，main/licenses 未有 proot 全文，low 有；NOTICES 标准段无精确对应源码版本，talloc 仅合并列名。不是已作出的法律违规结论。",
+      "recommendation": "主控按实际分发组件补 main 许可、固定源码/构建来源与对应说明，两个 flavor/APK 都核验；许可义务保留专门审查，不改变历史签名/运行二进制来掩盖问题。",
+      "files": [
+        "app/src/main/jniLibs/arm64-v8a",
+        "app/src/main/assets/licenses",
+        "app/src/low/assets/licenses/proot-COPYING.txt",
+        "THIRD_PARTY_NOTICES.md"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    },
+    {
+      "id": "D-WEB-01",
+      "title": "官网 Nginx 下载 location 内 add_header 导致 HSTS/CSP 等 server 级安全头不继承",
+      "source_severity": "P3",
+      "status": "open",
+      "evidence": [
+        "server 级 HSTS/CSP/Referrer-Policy；下载 location 仅 Content-Disposition/X-Content-Type-Options。",
+        "尚无本轮实际服务器响应证据，部署效果另需确认。"
+      ],
+      "current": "下载 location 自己声明 add_header 而未复制 server 级全部安全头；静态配置不符合统一安全头意图。未读取服务器实际配置/响应，不能称部署已缺头。",
+      "recommendation": "共用安全头片段或显式重复，nginx -t 与受控配置测试后再由主控按授权部署验证；不直接改服务器。",
+      "files": [
+        "website/deploy/nginx-dsha-https.conf"
+      ],
+      "tests": [
+        {
+          "kind": "static_review",
+          "result": "reviewed",
+          "note": "当前源码只读核对；未操作手机。"
+        }
+      ]
+    }
+  ],
+  "interpretation": "源码缺口与设备可利用性分别说明；不承继附件另一会话的策略决策，不将候选升级为手机已复现。"
+}

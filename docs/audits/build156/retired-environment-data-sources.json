@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "lane": "legacy",
+  "purpose": "Actual unused guest writer and Java wrapper removed from current compilation and deployment; historical reader contracts remain unchanged.",
+  "sources": [
+    {
+      "source": "app/src/main/assets/environment-data.py",
+      "saved": "tools/history/build156/unused-assets/environment-data.py",
+      "sha256": "157c142ff226fc53db1ae242e12d98f294e4b686bee39d103f235d9ba585299a",
+      "bytes": 19011,
+      "reason": "No production caller of EnvironmentDataBackup remains. Current rebuild snapshots and restores data through the host filesystem and EnvironmentRebuildTransaction; historical rollback renames roots without this Python execution."
+    },
+    {
+      "source": "app/src/main/java/com/deepseekharness/app/core/EnvironmentDataBackup.java",
+      "saved": "tools/history/build156/java/core/EnvironmentDataBackup.java",
+      "sha256": "01cd0056045072e11b3c92c57bb9a958296d75d69cf2b42e29af20bd3b66d3a4",
+      "bytes": 6710,
+      "reason": "No production caller of EnvironmentDataBackup remains. Current rebuild snapshots and restores data through the host filesystem and EnvironmentRebuildTransaction; historical rollback renames roots without this Python execution."
+    }
+  ]
+}

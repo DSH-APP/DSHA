@@ -1,0 +1,76 @@
+name: Sign verified package and prepare draft
+on:
+  workflow_dispatch:
+    inputs:
+      package_run_id:
+        description: Successful ci-package run for exactly the selected source commit
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sign:
+    environment: release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify toolchain against source configuration
+        id: toolchain
+        run: python3 tools/ci-toolchain.py --github-output
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.toolchain.outputs.java }}
+      - name: Read selected completed run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_RUN: ${{ inputs.package_run_id }}
+        run: |
+          [[ "$PACKAGE_RUN" =~ ^[0-9]+$ ]] || exit 1
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PACKAGE_RUN" > "$RUNNER_TEMP/package-run.json"
+          python3 tools/check-release-prerequisites.py
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: UNSIGNED-NOT-FOR-INSTALLATION
+          path: ${{ runner.temp }}/verified-package
+          run-id: ${{ inputs.package_run_id }}
+          github-token: ${{ github.token }}
+      - name: Bind run, source and APK checksums before accessing signing key
+        id: package
+        run: python3 tools/verify-ci-package.py --run "$RUNNER_TEMP/package-run.json" --artifacts "$RUNNER_TEMP/verified-package"
+      - name: Android signing tools
+        run: sdkmanager "build-tools;${{ steps.toolchain.outputs.buildTools }}"
+      - name: Historical certificate and all three signing schemes
+        env:
+          KEY_BASE64: ${{ secrets.DSHA_PUBLISH_KEYSTORE_BASE64 }}
+          DSHA_KEYSTORE_PASSWORD: ${{ secrets.DSHA_KEYSTORE_PASSWORD }}
+          DSHA_KEY_PASSWORD: ${{ secrets.DSHA_KEY_PASSWORD }}
+          DSHA_KEY_ALIAS: ${{ secrets.DSHA_KEY_ALIAS }}
+          STANDARD_APK: ${{ steps.package.outputs.standard }}
+          LOW_APK: ${{ steps.package.outputs.low }}
+        run: |
+          umask 077
+          export DSHA_KEYSTORE="$RUNNER_TEMP/dsha-publish.keystore"
+          trap 'rm -f -- "$DSHA_KEYSTORE"' EXIT
+          printf '%s' "$KEY_BASE64" | base64 --decode > "$DSHA_KEYSTORE"
+          python3 tools/sign-release-apks.py --apks "$STANDARD_APK" "$LOW_APK" --output "$RUNNER_TEMP/signed-release" --java-home "$JAVA_HOME" --sdk "$ANDROID_HOME"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SIGNED-HISTORICAL-CERTIFICATE
+          path: ${{ runner.temp }}/signed-release
+          if-no-files-found: error
+      - name: Prepare draft bound to this source commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python3 -c 'import re,pathlib; print(re.search(r"versionName\s+\"([^\"]+)\"",pathlib.Path("app/build.gradle").read_text())[1])')
+          git archive --format=zip HEAD > "$RUNNER_TEMP/signed-release/DSHA-source.zip"
+          printf 'Source commit: %s\n\nSuccessful unsigned software/package receipt and E7E3 v1/v2/v3 signature verified. Physical device acceptance is separate; do not infer a device matrix from this workflow.\n' "$GITHUB_SHA" > "$RUNNER_TEMP/release-notes.md"
+          gh release create "v$version" "$RUNNER_TEMP/signed-release/"* --draft --target "$GITHUB_SHA" --title "DSHA $version" --notes-file "$RUNNER_TEMP/release-notes.md"

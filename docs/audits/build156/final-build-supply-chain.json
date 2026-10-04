@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "phase": "build156_after_accessibility_status_readonly_supply_chain",
+  "checkedAt": "2026-10-03T22:33:00.605760+00:00",
+  "status": "PASS_CURRENT_LOCAL_SOURCE_AND_TWO_APKS",
+  "receipts": [
+    {
+      "path": "docs/audits/build156/final-supply-input-checks.json",
+      "sha256": "952f60d44ece1bd35536fda0c5852b3060d8c2a25e97af84dfc96eec421c3880"
+    },
+    {
+      "path": "docs/audits/build156/final-apk-supply-checks.json",
+      "sha256": "4f7361be8931535c0037e3c50a5df814b49bbc7146f07be2f939c4749210d348"
+    }
+  ],
+  "boundSoftwareReceipt": {
+    "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/manifest.json",
+    "sha256": "922ed65d2d1bb7ff6985503d8811072a5921789a3bf2e004957799bcdc6fc626",
+    "status": "PASS_WITH_EXPLICIT_DEVICE_GAPS",
+    "sameActualApkDigests": true,
+    "junit": {
+      "Standard": {
+        "tests": 1195,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 4
+      },
+      "Low": {
+        "tests": 1195,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 4
+      }
+    },
+    "validatedCommandLogs": 35,
+    "rawSourceSnapshot": {
+      "path": "app/build/stability-acceptance/5e2d5521-beb5-4775-b87e-85a074b4aade/source-sha256.json",
+      "sha256": "ed38f7cd9e3b4499b81eed5241feaef6f9e1e2055f0d1ca018dad79275c76222"
+    },
+    "currentSourceStillMatchesSnapshot": true,
+    "singleSourceDiffFrom281": [
+      {
+        "path": "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java",
+        "beforeSha256": "678f24a5118021e485f4a4cc5ed593d07d6d858f660ecb28289cc7fde3a14fa2",
+        "afterSha256": "8d900f7529dcb017956c6be1eea0984e773b9c4822251fa8dd380fbf1f0baf0a"
+      }
+    ]
+  },
+  "runtimeId": "fdd8fc14ce4d00ada7948a570db4588c2fb088a8ade389c74f6555b553b470a2",
+  "dshArchiveSha256": "3ddafc8f83fec8f13b9dfec7d51686af1d1aa82771e8dd0a65efb913d03b7bbb",
+  "dshArchiveBytes": 122692708,
+  "recovery": {
+    "runtimeId": "90b86cb94761ed5852299f45236c1b7c08d40b7838cf74162189df18abcb9fff",
+    "archives": [
+      {
+        "asset": "recovery-rootfs.bin",
+        "physicalSource": "app/build/generated/standardAssets/offline-rootfs.bin",
+        "sha256": "b9fe8a0460bc0d0e96f1cec0d65d46c9ff71a10c6a8d05a390b732a81d30cef3",
+        "deduplicated": true
+      },
+      {
+        "asset": "recovery-dsh-runtime.bin",
+        "physicalSource": "app/build/generated/recoveryAssets/recovery-dsh-runtime.bin",
+        "sha256": "d8acb0467e5d909ed39454fa63be837ec5548e3a256d76c00687b3ddbf6e8857",
+        "deduplicated": false
+      }
+    ],
+    "physicalMapExcludedFromContentId": "id computed from recovery-runtime.json alone",
+    "files": 20603
+  },
+  "apks": [
+    {
+      "flavor": "standard",
+      "path": "app/build/outputs/apk/standard/release/app-standard-release.apk",
+      "sha256": "c676b13df75c5110ec479ad9b7cafc1dc2ffd4891d9958c756b20621f510d11a",
+      "bytes": 397302610,
+      "package": "com.dsh.client",
+      "versionCode": 156,
+      "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2",
+      "minSdk": 30,
+      "abi": [
+        "arm64-v8a"
+      ],
+      "debuggable": false,
+      "signerCertificateSha256Set": [
+        "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+      ],
+      "verifiedSchemes": [
+        "v1",
+        "v2",
+        "v3"
+      ]
+    },
+    {
+      "flavor": "low",
+      "path": "app/build/outputs/apk/low/release/app-low-release.apk",
+      "sha256": "37aa049341d474a34d74381e3f917482f610105f96388a6f594cc28087cd99b3",
+      "bytes": 473097048,
+      "package": "com.dsh.client",
+      "versionCode": 156,
+      "versionName": "0.2.7-20261003.1944-dsh0.2.0-rc.2low",
+      "minSdk": 23,
+      "abi": [
+        "arm64-v8a"
+      ],
+      "debuggable": false,
+      "signerCertificateSha256Set": [
+        "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5"
+      ],
+      "verifiedSchemes": [
+        "v1",
+        "v2",
+        "v3"
+      ]
+    }
+  ],
+  "nativeSourceBinding": {
+    "actualMembers": 38,
+    "standardMembers": 12,
+    "lowMembers": 26,
+    "lockedGeckoAarSha256": "aa5474e296440bd2ec51bc2129dfa00db8a5de679810d15a87bdf3d99c28a4a1",
+    "originToMergedExact": true,
+    "strippedToApkExact": true,
+    "packagingChangesRecorded": true,
+    "changedBySymbolStrippingMembers": 12
+  },
+  "scope": {
+    "sourceEditedByLaneForThisRevalidation": false,
+    "supplyVerifierSigningPerformed": false,
+    "supplyVerifierGradleExecuted": false,
+    "softwareValidationRunPerformedByLane": true,
+    "softwareVerifierGradleExecuted": true,
+    "softwareVerifierUsedExistingFormalE7E3Key": true,
+    "newKeyGenerated": false,
+    "debugOrAuditApkGenerated": false,
+    "releaseCopied": false,
+    "phoneOperatedByLane": false,
+    "hostedCI": "not_executed",
+    "protectedReleaseEnvironment": "not_inspected",
+    "originalExternalCodeAndBinaryRights": "Unproven original provenance/revision and rights remain unknown",
+    "deviceAcceptance": "Separate actual current c676/37aa Root device evidence required; preserved old 5aeb/f8c8 device evidence does not validate these new APK bytes"
+  },
+  "preservedBeforeAccessibilityStatus": {
+    "preservationReceipt": {
+      "path": "app/build/audit-build156/history/before-accessibility-status/preservation-receipt.json",
+      "sha256": "16f7bfb6c1d0a54abd7038cdfcc6ce0da36c5e443cd2ded1f126378d6de3da06"
+    },
+    "verifiedPreservedFiles": 729,
+    "oldDeviceReferencedSupplyReceipt": {
+      "path": "app/build/audit-build156/history/before-accessibility-status/docs/audits/build156/final-apk-supply-checks.json",
+      "sha256": "deb65791a984f0aa6cf7aad210a757fb0fe889625138554dd71ab156cb5b9931"
+    },
+    "apks": [
+      {
+        "flavor": "standard",
+        "path": "app/build/audit-build156/history/before-accessibility-status/app/build/outputs/apk/standard/release/app-standard-release.apk",
+        "sha256": "5aeb44638757a6b814f00546f0186041b8fe10a8cfd0ef4d472cbd13e3bb746b",
+        "preservedOriginalBytes": true
+      },
+      {
+        "flavor": "low",
+        "path": "app/build/audit-build156/history/before-accessibility-status/app/build/outputs/apk/low/release/app-low-release.apk",
+        "sha256": "f8c83d78ae4b2fe3c94295e2d5f3a262caddc5a5ac07f91e739c2ac1959875ed",
+        "preservedOriginalBytes": true
+      }
+    ],
+    "scope": "Historical source, software and device evidence remains bound only to its original APK bytes"
+  },
+  "preservedBeforeWorkspacePolicyApks": [
+    {
+      "path": "app/build/audit-build156/history/before-workspace-policy/app/build/outputs/apk/standard/release/app-standard-release.apk",
+      "sha256": "ea08a6cbe5fe2d95047be2bde90c7cf82fd4ecca0e96bd04a3b180e0ed9bb4e4",
+      "preservedOriginalBytes": true
+    },
+    {
+      "path": "app/build/audit-build156/history/before-workspace-policy/app/build/outputs/apk/low/release/app-low-release.apk",
+      "sha256": "9a67696006be4df8d822a3d3b1a416b5b34ba758471c9fc2521e3bbb874dd521",
+      "preservedOriginalBytes": true
+    }
+  ]
+}

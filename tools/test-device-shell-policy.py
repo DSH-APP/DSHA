@@ -14,6 +14,7 @@ spec.loader.exec_module(policy)
 RULES = dict(protected=['/dcim', '/pictures', '/android/data', '/android/obb'],
              aliases=['/sdcard', '/mnt/sdcard', '/storage/self/primary', '/mnt/user/0/primary'],
              smsProvider='com.android.providers.telephony',
+             smsReadRoots=['/data/data/com.android.providers.telephony', '/data/user/*/com.android.providers.telephony', '/data/user_de/*/com.android.providers.telephony', '/data_mirror/data_ce/*/*/com.android.providers.telephony', '/data_mirror/data_de/*/*/com.android.providers.telephony', '/mnt/expand/*/user/*/com.android.providers.telephony', '/mnt/expand/*/user_de/*/com.android.providers.telephony'],
              storage=r'^/storage/(?:emulated/[0-9]+|[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4})(/.*)?$', temporary='/data/local/tmp')
 
 
@@ -42,12 +43,13 @@ class PolicyTest(unittest.TestCase):
         return result('executed')
 
     def plan(self, kind, argv, paths):
-        return dict(version=1, kind=kind, argv=argv, operands=paths, paths=RULES)
+        return dict(version=1, kind=kind, argv=argv, operands=paths, paths=RULES,
+                    selfPackage="com.dsh.client", selfUid=12346, sourceApk='/data/app/com.dsh.client/base.apk')
 
     def execute(self, plan): return policy.execute(plan, self.shell, lambda text, code: result(text, code))
 
     def no_mutations(self):
-        self.assertFalse(any(c.startswith(('/system/bin/rm ', '/system/bin/cp ', '/system/bin/mv ', '/system/bin/am ', '/system/bin/touch ')) for c in self.sent), self.sent)
+        self.assertFalse(any(c.startswith(('/system/bin/rm ', '/system/bin/cp ', '/system/bin/mv ', '/system/bin/am ', '/system/bin/touch ', '/system/bin/app_process ')) for c in self.sent), self.sent)
 
     def test_aliases_and_protected_children(self):
         for alias in RULES['aliases']:
@@ -89,12 +91,52 @@ class PolicyTest(unittest.TestCase):
         for path in ('/data/local/tmp/a/b', '/data/local/tmp/a'):
             self.metadata[path] = result('MISSING\n')
         self.execute(self.plan('FILE', ['mkdir', '-p', '/data/local/tmp/a/b'], ['/data/local/tmp/a/b']))
-        self.assertEqual('/system/bin/mkdir -p /data/local/tmp/a/b', self.sent[-1])
+        self.assertEqual(['mkdir', '-p', '/data/local/tmp/a/b'], shlex.split(self.sent[-1])[9:])
+        self.assertIn('com.deepseekharness.app.DeviceFileCore', self.sent[-1])
 
     def test_copy_readonly_source_allowed_and_execution_paths_normalized(self):
         plan = self.plan('FILE', ['cp', '/sdcard/DCIM/photo', '/sdcard/Download/a'], ['/sdcard/DCIM/photo', '/sdcard/Download/a'])
         self.execute(plan)
-        self.assertEqual('/system/bin/cp /storage/emulated/0/DCIM/photo /storage/emulated/0/Download/a', self.sent[-1])
+        self.assertEqual(['cp', '/storage/emulated/0/DCIM/photo', '/storage/emulated/0/Download/a'], shlex.split(self.sent[-1])[9:])
+        self.assertEqual(1, sum('com.deepseekharness.app.DeviceFileCore' in sent for sent in self.sent))
+
+    def test_file_helper_identity_invalid_never_dispatches(self):
+        plan = self.plan('FILE', ['touch', '/data/local/tmp/a'], ['/data/local/tmp/a'])
+        for change in ({'sourceApk': '/sdcard/attacker.apk'}, {'sourceApk': '/data/app/../attacker.apk'},
+                       {'selfPackage': ''}, {'selfUid': True}, {'selfUid': 2000}, {'argv': ['app_process']}):
+            self.sent.clear()
+            with self.assertRaises(policy.Blocked): self.execute(dict(plan, **change))
+            self.no_mutations()
+
+    def test_file_helper_failure_is_returned_once_without_shell_fallback(self):
+        plan = self.plan('FILE', ['touch', '/data/local/tmp/a'], ['/data/local/tmp/a'])
+        original = self.shell
+        def failed(command):
+            if 'com.deepseekharness.app.DeviceFileCore' in command:
+                self.sent.append(command)
+                return result('PRIVILEGED_PACKAGE_CONTEXT_UNAVAILABLE', 126)
+            return original(command)
+        reply = policy.execute(plan, failed, result)
+        self.assertEqual(126, reply.exit_code)
+        self.assertEqual(1, sum('com.deepseekharness.app.DeviceFileCore' in sent for sent in self.sent))
+        self.assertFalse(any(sent.startswith('/system/bin/touch ') for sent in self.sent))
+
+    def test_file_helper_unknown_result_is_not_replayed(self):
+        plan = self.plan('FILE', ['touch', '/data/local/tmp/a'], ['/data/local/tmp/a'])
+        original = self.shell
+        def lost(command):
+            if 'com.deepseekharness.app.DeviceFileCore' in command:
+                self.sent.append(command)
+                raise TimeoutError('synthetic dispatch result unknown')
+            return original(command)
+        with self.assertRaises(TimeoutError): policy.execute(plan, lost, result)
+        self.assertEqual(1, sum('com.deepseekharness.app.DeviceFileCore' in sent for sent in self.sent))
+
+    def test_file_helper_quotes_user_paths_as_data(self):
+        path = '/data/local/tmp/space ; $name'
+        self.execute(self.plan('FILE', ['touch', path], [path]))
+        argv = shlex.split(self.sent[-1])
+        self.assertEqual(['touch', path], argv[9:])
 
     def test_read_arguments_are_quoted_data(self):
         self.execute(self.plan('READ', ['echo', 'a; rm -rf /'], []))
@@ -140,17 +182,17 @@ class PolicyTest(unittest.TestCase):
                 plan['su'] = True
                 with self.assertRaises(policy.Blocked): self.execute(plan)
                 self.assertFalse(any(sent == '/system/bin/find /' or sent.startswith('/system/bin/cp ') for sent in self.sent))
-        self.assertFalse(policy.sms_provider_descendant('/data/user/0/com.example.app'))
-        self.assertFalse(policy.sms_provider_descendant('/data/data/com.example.app'))
+        self.assertFalse(policy.sms_provider_descendant('/data/user/0/com.example.app', RULES))
+        self.assertFalse(policy.sms_provider_descendant('/data/data/com.example.app', RULES))
 
     def test_typed_virtual_screen_requires_ticket_and_exact_managed_source(self):
         source = '/data/app/com.dsh.client/base.apk'
         ticket = '0123456789abcdef0123456789abcdef0123456789abcdef'
         plan = dict(version=1, kind='VIRTUAL_SCREEN', argv=['app_process', '-Djava.class.path=' + source,
-            '/system/bin', 'com.deepseekharness.app.vscreen.VirtualScreenCore', '--launch', '--port', '8800'],
-            sourceApk=source, nativeAuthorization='managed-vscreen-start', nativeTicket=ticket, su=False)
+            '/system/bin', 'com.deepseekharness.app.vscreen.VirtualScreenCore', '--launch', '--port', '8800', '--package', 'com.dsh.clienu'],
+            sourceApk=source, selfPackage="com.dsh.clienu", nativeAuthorization='managed-vscreen-start', nativeTicket=ticket, su=False)
         self.execute(plan)
-        self.assertEqual('/system/bin/app_process -Djava.class.path=/data/app/com.dsh.client/base.apk /system/bin com.deepseekharness.app.vscreen.VirtualScreenCore --launch --port 8800', self.sent[-1])
+        self.assertEqual('/system/bin/app_process -Djava.class.path=/data/app/com.dsh.client/base.apk /system/bin com.deepseekharness.app.vscreen.VirtualScreenCore --launch --port 8800 --package com.dsh.clienu', self.sent[-1])
         self.sent.clear()
         for change in (
                 {'nativeTicket': ''}, {'nativeAuthorization': 'generic'}, {'su': True},
@@ -194,8 +236,26 @@ class PolicyTest(unittest.TestCase):
             with self.assertRaises(policy.Blocked): self.execute(plan)
         self.assertEqual([], self.sent)
 
+    def test_mirror_and_adopted_sms_paths_cannot_be_read_or_walked(self):
+        for path in ('/data_mirror/data_ce/null/0/com.android.providers.telephony/databases/mmssms.db',
+                     '/data_mirror/data_de/null/10/com.android.providers.telephony/databases/mmssms.db-wal',
+                     '/mnt/expand/fixture/user/0/com.android.providers.telephony/databases/mmssms.db'):
+            self.assertTrue(policy.sms_provider_path(path, RULES))
+            with self.assertRaises(policy.Blocked): self.execute(dict(self.plan('READ', ['cat', path], []), su=True))
+        for path in ('/data_mirror', '/data_mirror/data_ce', '/data_mirror/data_ce/null', '/data_mirror/data_ce/null/0', '/mnt/expand/fixture/user/0'):
+            with self.assertRaises(policy.Blocked): self.execute(dict(self.plan('READ', ['find', path], []), su=True))
+        self.assertEqual([], self.sent)
+
+    def test_sms_paths_consume_native_root_table_without_python_mirror(self):
+        rules = dict(RULES, smsReadRoots=['/vendor/private/*/sms-provider'])
+        self.assertTrue(policy.sms_provider_path('/vendor/private/10/sms-provider/database', rules))
+        self.assertTrue(policy.sms_provider_descendant('/vendor/private', rules))
+        self.assertFalse(policy.sms_provider_path('/vendor/private/10/other', rules))
+        with self.assertRaises(policy.Blocked):
+            policy.sms_provider_path('/data/local/tmp/file', dict(RULES, smsReadRoots=None))
+
     def test_multiple_android_users_and_cloned_apps(self):
-        self.users = 'package:example.app uid:12345,99912345\n'
+        self.users = 'package:example.app uid:12345,99912345\npackage:com.dsh.client uid:13333,99913333\n'
         self.systems = 'package:android uid:1000,99901000\n'
         self.ps = 'PID UID NAME\n42 99912345 example.app\n43 99901000 system_server\n'
         self.execute(self.plan('STOP', ['kill', '42'], ['42']))
@@ -205,6 +265,16 @@ class PolicyTest(unittest.TestCase):
         self.no_mutations()
         self.users += 'package:example.shared uid:22222,99901000\n'
         with self.assertRaises(policy.Blocked): self.execute(self.plan('STOP', ['am', 'force-stop', 'example.shared'], ['example.shared']))
+
+    def test_actual_clone_identity_protects_its_uid_and_missing_identity_never_stops(self):
+        self.users = 'package:example.app uid:12345\npackage:com.dsh.clienu uid:12346,99912346\npackage:shared.app uid:99912346\n'
+        for target in ('com.dsh.clienu', 'shared.app'):
+            plan=self.plan('STOP',['am','force-stop',target],[target]);plan['selfPackage']='com.dsh.clienu'
+            with self.assertRaises(policy.Blocked):self.execute(plan)
+            self.no_mutations()
+        self.sent.clear();plan=self.plan('STOP',['am','force-stop','example.app'],['example.app']);plan.pop('selfPackage')
+        with self.assertRaises(policy.Blocked):self.execute(plan)
+        self.assertEqual([],self.sent)
 
 
 if __name__ == '__main__': unittest.main(verbosity=2)

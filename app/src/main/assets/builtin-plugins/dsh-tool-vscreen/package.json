@@ -14,6 +14,6 @@
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-mcp-client": "0.1.7-rc.2"
+    "@deepseek-ai/dsh-mcp-client": "0.2.0-rc.2"
   }
 }
