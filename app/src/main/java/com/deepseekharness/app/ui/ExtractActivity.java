@@ -254,10 +254,7 @@ public class ExtractActivity extends AppCompatActivity {
           com.deepseekharness.app.util.UiText.format(
               "未完成的操作：%s\n最后记录阶段：%s\n\n%s\n\n原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。",
               com.deepseekharness.app.util.UiStateText.render(s.kind),
-              s.lastStage.isEmpty()
-                  ? com.deepseekharness.app.util.UiText.choose(
-                      "旧记录未提供；请查看维护日志", "Not available in the old record; inspect maintenance logs")
-                  : com.deepseekharness.app.util.UiStateText.render(s.lastStage),
+              stageLabel(s.lastStage),
               com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail)));
     boolean incomplete =
         mine && s.status == BackupTaskState.Status.SUCCEEDED && !ready && !formatTask;
@@ -425,5 +422,15 @@ public class ExtractActivity extends AppCompatActivity {
   protected void onPause() {
     main.removeCallbacks(refresh);
     super.onPause();
+  }
+
+  private static String stageLabel(String lastStage) {
+    if (lastStage == null || lastStage.isEmpty())
+      return com.deepseekharness.app.util.UiText.choose(
+          "旧记录未提供；请查看维护日志", "Not available in the old record; inspect maintenance logs");
+    String rendered = com.deepseekharness.app.util.UiStateText.render(lastStage);
+    return rendered.length() > 160
+        ? com.deepseekharness.app.util.LogCompactor.compactReason(rendered, 240)
+        : rendered;
   }
 }
