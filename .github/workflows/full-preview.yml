@@ -67,6 +67,32 @@ jobs:
           if h.hexdigest() != expected:
               raise SystemExit('DSH_RUNTIME_NOT_REPRODUCED')
           EOF
+      # 提交的 runtime-descriptor.json 同样在 Windows 写出（键按不区分大小写的路径排序），
+      # 仓库自带的逐字节 --check 只能在同平台成立，所以在这里补齐另外两份归档后原样执行。
+      - name: Restore pinned base rootfs
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: app/build/pinned-inputs
+          key: pinned-rootfs-win-${{ hashFiles('app/src/main/assets/offline-rootfs.version', 'tools/fetch-pinned-archive.py') }}-0a680b56
+      - name: Restore locked debs
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            app/build/ubuntu-tools-cache
+            app/build/runtime-downloads
+          key: locked-debs-win-${{ hashFiles('tools/ubuntu-tools/packages.lock.json', 'tools/build-standard-runtime.py') }}
+      - name: Repository descriptor checks on the descriptor's own platform
+        run: |
+          python tools/fetch-pinned-archive.py --url "$ROOTFS_SOURCE_APK" \
+            --member assets/offline-rootfs.bin --descriptor-input offline-rootfs.bin \
+            --output app/build/pinned-inputs/offline-rootfs.bin
+          cp app/build/pinned-inputs/offline-rootfs.bin app/src/main/assets/offline-rootfs.bin
+          python tools/seed-locked-debs.py
+          python tools/prepare-ubuntu-tools.py --cache app/build/ubuntu-tools-cache
+          python tools/verify-runtime-descriptor-source.py
+          python tools/test-runtime-descriptor-inputs.py
+          python tools/prepare-backup-assets.py --check
+          python tools/prepare-runtime-descriptor.py --check
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: dsh-runtime-generated
@@ -161,7 +187,21 @@ jobs:
           python3 tools/generate-builtin-plugins.py --verify
           python3 tools/generate-credential-paths.py --check
           python3 tools/prepare-backup-assets.py --check
-          python3 tools/prepare-runtime-descriptor.py --check
+          python3 tools/test-runtime-descriptor-inputs.py
+          # 逐字节 --check 已在 dsh-runtime（Windows）作业通过；Linux 上 Path 排序区分大小写，
+          # 只有键顺序不同，所以这里用完整内容相等（含 runtimeId）复核同一描述符。
+          python3 - <<'EOF'
+          import json, sys
+          sys.path.insert(0, 'tools')
+          import importlib.util
+          spec = importlib.util.spec_from_file_location('descriptor', 'tools/prepare-runtime-descriptor.py')
+          module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+          built = module.build_descriptor(module.ROOT)
+          committed = json.load(open('app/src/main/assets/runtime-descriptor.json', encoding='utf-8'))
+          if built != committed:
+              raise SystemExit('DESCRIPTOR_CONTENT_MISMATCH')
+          print('PASS runtime descriptor content identical, runtimeId', built['runtimeId'])
+          EOF
           python3 tools/verify-runtime-descriptor-source.py | tee app/build/descriptor-source-proof.json
           python3 - <<'EOF'
           import json
@@ -188,7 +228,9 @@ jobs:
       - name: Assemble standardDebug preview with full offline assets
         run: |
           chmod +x gradlew
-          ./gradlew :app:assembleStandardDebug -Pdsha.previewSuffix=true --no-daemon --max-workers=2
+          # prepareRuntimeDescriptor 的逐字节 --check 已在 Windows 作业执行并通过（见上）。
+          ./gradlew :app:assembleStandardDebug -Pdsha.previewSuffix=true \
+            -x :app:prepareRuntimeDescriptor --no-daemon --max-workers=2
       - name: Verify generated split rootfs, recovery archives and APK identity
         run: |
           python3 - <<'EOF'
