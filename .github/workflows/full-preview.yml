@@ -139,8 +139,24 @@ jobs:
             exit 1
           fi
           git status --porcelain --untracked-files=no
+      - name: Digest table for every CI asset
+        run: |
+          python3 - <<'EOF'
+          import hashlib, json, pathlib
+          a = pathlib.Path('app/src/main/assets')
+          d = json.load(open(a / 'runtime-descriptor.json'))['inputs']
+          for name in ['offline-rootfs.bin', 'dsh-runtime.bin', 'ubuntu-tools.bin', 'pnpm-runtime.bin',
+                       'python-support.bin', 'glibc-python.tar.gz', 'adb-wheels.tar.gz', 'ca-certificates.crt']:
+              p = a / name
+              got = hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else None
+              want = d.get(name)
+              print('%-22s %10s %s %s' % (name, p.stat().st_size if p.is_file() else '-', got,
+                    'n/a' if want is None else ('OK' if got == want else 'MISMATCH want ' + want)))
+          print(open(a / 'ubuntu-tools.inputs.json').read())
+          EOF
       - name: Verify every archive against pinned descriptors
         run: |
+          python3 tools/verify-runtime-descriptor-source.py
           python3 tools/prepare-runtime-tools.py --check
           python3 tools/generate-builtin-plugins.py --verify
           python3 tools/generate-credential-paths.py --check
