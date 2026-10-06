@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 对齐 DSH 深色：底 #151517，卡片 #1B1B1C，主色 #7AAAFF -->
+    <!-- 对齐 DSH 深色：底 #151517，卡片 #1B1B1C，主色 #7AAAFF；涟漪与 err 按 4.5 对比度要求微调 -->
     <color name="primary">#7AAAFF</color>
     <color name="primary_dark">#5686FE</color>
     <color name="accent_on">#0F1115</color>
@@ -13,14 +13,14 @@
     <color name="text_muted">#979DA6</color>
     <color name="ok">#4ED17E</color>
     <color name="warn">#F7AD31</color>
-    <color name="err">#F25A5A</color>
+    <color name="err">#F46666</color>
     <color name="preview">#0F1115</color>
     <color name="logo_top">#283142</color>
     <color name="ok_bg">#233C2C</color>
     <color name="warn_bg">#27241F</color>
-    <color name="ripple">#337AAAFF</color>
+    <color name="ripple">#137AAAFF</color>
     <color name="primary_ripple">#20FFFFFF</color>
     <color name="error_on">#1A0F0F</color>
     <color name="disabled">#232324</color>
-    <color name="err_bg">#1AF25A5A</color>
+    <color name="err_bg">#1AF46666</color>
 </resources>

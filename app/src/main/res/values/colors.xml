@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 对齐 DSH dsw-static / dsw-alias 变量（日间）。text_muted 略深于网页 caption，以满足 4.5 对比度。 -->
-    <color name="primary">#4176E6</color>
+    <!-- 对齐 DSH dsw-static / dsw-alias 变量（日间）。主色、ok/warn 与禁用底按 tools/test-ui-colors.py 的 4.5 对比度要求略加深/提亮。 -->
+    <color name="primary">#225FE2</color>
     <color name="primary_dark">#2F4C8F</color>
     <color name="accent_on">#FFFFFF</color>
     <color name="surface">#F9FAFB</color>
@@ -11,8 +11,8 @@
     <color name="text">#0F1115</color>
     <color name="text_secondary">#61666B</color>
     <color name="text_muted">#5C6168</color>
-    <color name="ok">#15803D</color>
-    <color name="warn">#B45309</color>
+    <color name="ok">#147C3B</color>
+    <color name="warn">#AF5109</color>
     <color name="err">#C81E1E</color>
     <color name="preview">#F5F6F7</color>
     <!-- Termux 的默认 ANSI 前景色是白色；终端背景必须固定为深色。 -->
@@ -21,9 +21,9 @@
     <color name="logo_top">#EDF3FE</color>
     <color name="ok_bg">#E6FAED</color>
     <color name="warn_bg">#FEF5E7</color>
-    <color name="ripple">#1A4176E6</color>
+    <color name="ripple">#08225FE2</color>
     <color name="primary_ripple">#1F000000</color>
     <color name="error_on">#FFFFFF</color>
-    <color name="disabled">#E1E5EE</color>
+    <color name="disabled">#EEF0F4</color>
     <color name="err_bg">#14C81E1E</color>
 </resources>
