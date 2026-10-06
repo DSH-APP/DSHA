@@ -638,7 +638,8 @@ public class LaunchFragment extends Fragment {
         .setTitle(com.deepseekharness.app.util.UiText.text("局域网连接链接"))
         .setMessage(
             com.deepseekharness.app.util.UiText.format(
-                "此链接包含访问凭据。局域网使用 HTTP，流量未加密，请只在可信网络使用并只分享给可信设备。\n\n%s", address))
+                "此链接包含访问凭据。局域网使用 HTTP，流量未加密，请只在可信网络使用并只分享给可信设备。DSH 重启或关闭局域网访问后，旧链接会失效，请重新复制。\n\n%s",
+                address))
         .setNegativeButton(android.R.string.cancel, null)
         .setPositiveButton(
             com.deepseekharness.app.util.UiText.text("复制连接链接"),

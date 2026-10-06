@@ -97,6 +97,11 @@ public class InstallFragment extends Fragment {
     view.findViewById(R.id.install_environment_recovery)
         .setOnClickListener(
             v -> startActivity(new Intent(requireContext(), StartupRecoveryActivity.class)));
+    ((TextView) view.findViewById(R.id.install_storage_help))
+          .setText(com.deepseekharness.app.util.UiText.text("首次安装测速"));
+    view.findViewById(R.id.install_storage_help)
+        .setOnClickListener(
+              v -> startActivity(new Intent(requireContext(), ColdSetupSpeedActivity.class)));
 
     view.findViewById(R.id.install_btn).setOnClickListener(v -> start(false, 0));
     view.findViewById(R.id.install_repair).setOnClickListener(v -> start(true, 0));

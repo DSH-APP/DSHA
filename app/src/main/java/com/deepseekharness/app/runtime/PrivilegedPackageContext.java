@@ -156,6 +156,41 @@ public final class PrivilegedPackageContext {
     }
   }
 
+  /** Android 11 的独立虚拟屏进程只需要系统 Context，不执行 ROM 的 systemMain/attach 钩子。 */
+  public static Context virtualScreenContext() throws IOException {
+    if (android.os.Build.VERSION.SDK_INT != 30) return systemContext();
+    int uid = android.os.Process.myUid();
+    if (uid != 0 && uid != 2000) throw new IOException("PRIVILEGED_CALLER_REQUIRED");
+    try {
+      if (Looper.getMainLooper() == null) {
+        if (Looper.myLooper() != null) throw new IOException("PRIVILEGED_MAIN_LOOPER_UNAVAILABLE");
+        Looper.prepareMainLooper();
+      }
+      if (Looper.myLooper() != Looper.getMainLooper())
+        throw new IOException("PRIVILEGED_MAIN_LOOPER_MISMATCH");
+      synchronized (LOCK) {
+        if (systemContext != null) return systemContext;
+        Class<?> type = Class.forName("android.app.ActivityThread");
+        Object thread = type.getMethod("currentActivityThread").invoke(null);
+        if (thread == null) {
+          var constructor = type.getDeclaredConstructor();
+          constructor.setAccessible(true);
+          thread = constructor.newInstance();
+          field(type, "mSystemThread").setBoolean(thread, true);
+          field(type, "sCurrentActivityThread").set(null, thread);
+        }
+        Context result = (Context) type.getMethod("getSystemContext").invoke(thread);
+        if (result == null || result.getPackageManager() == null)
+          throw new IOException("PRIVILEGED_PACKAGE_MANAGER_MISSING");
+        systemContext = result;
+        return result;
+      }
+    } catch (Throwable failure) {
+      throw new IOException(
+          com.deepseekharness.app.util.PrivilegedContextFailure.describe(30, failure), failure);
+    }
+  }
+
   private static Context systemContextInternal() throws IOException {
     Context cached = systemContext;
     if (cached != null) return cached;

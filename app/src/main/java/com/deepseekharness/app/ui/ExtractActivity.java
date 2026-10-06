@@ -257,7 +257,8 @@ public class ExtractActivity extends AppCompatActivity {
               s.lastStage.isEmpty()
                   ? com.deepseekharness.app.util.UiText.choose(
                       "旧记录未提供；请查看维护日志", "Not available in the old record; inspect maintenance logs")
-                  : com.deepseekharness.app.util.UiStateText.render(s.lastStage),
+                  : com.deepseekharness.app.util.LogCompactor.compactReason(
+                      com.deepseekharness.app.util.UiStateText.render(s.lastStage), 240),
               com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail)));
     boolean incomplete =
         mine && s.status == BackupTaskState.Status.SUCCEEDED && !ready && !formatTask;

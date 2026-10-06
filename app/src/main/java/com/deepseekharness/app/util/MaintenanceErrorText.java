@@ -2,7 +2,7 @@ package com.deepseekharness.app.util;
 
 /**
  * 把维护事务的稳定错误码转换成可执行的提示，同时保留错误码供诊断页检索。
- * 未登记的正文原样返回，避免把第三方插件或用户输出误翻译。
+ * 未登记的正文只压缩展示副本，原文不翻译、不改写。
  */
 public final class MaintenanceErrorText {
   private MaintenanceErrorText() {}
@@ -14,7 +14,10 @@ public final class MaintenanceErrorText {
           "当前步骤被系统拒绝访问，尚不能判断是文件权限还是进程核验失败。请保持 DSHA 在前台，先点“恢复中断维护”重试；应用会保留原件，不会把失败显示成已恢复。\nPermission denied",
           "The system denied access during this step. Keep DSHA in the foreground and retry Recover interrupted maintenance; originals stay protected and a failed recovery is never shown as complete.\nPermission denied");
     String code = value.matches("[A-Z_0-9]{2,100}") ? value : "";
-    if (code.isEmpty()) return UiStateText.render(value);
+    if (code.isEmpty()) {
+      String rendered = UiStateText.render(value);
+      return rendered.length() > 800 ? LogCompactor.compactReason(rendered, 1200) : rendered;
+    }
     String message =
         switch (code) {
           case "RUNTIME_RETENTION_LIMIT",

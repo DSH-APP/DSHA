@@ -314,7 +314,9 @@ public final class StartupDiagnostics {
     try {
       java.io.File file = new java.io.File(context.getFilesDir(), "last-startup-failure.log");
       return file.isFile()
-          ? SensitiveData.redact(com.deepseekharness.app.util.TextLogTail.read(file, 384 * 1024))
+          ? com.deepseekharness.app.util.LogCompactor.compact(
+              SensitiveData.redact(com.deepseekharness.app.util.TextLogTail.read(file, 384 * 1024)),
+              16000)
           : com.deepseekharness.app.util.UiText.text("暂无保留的失败记录\n");
     } catch (Exception error) {
       return com.deepseekharness.app.util.UiText.text("失败记录暂不可读\n");

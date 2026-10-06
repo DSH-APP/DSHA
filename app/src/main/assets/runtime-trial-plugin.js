@@ -48,8 +48,16 @@ try{
 }finally{if(unit)await unit.close();await backend.close()}
 `;
 export async function apply(ctx){
+ try{await initialize(ctx)}catch(error){console.error('DSHA_TRIAL_PLUGIN_CHECK_FAILED',error);throw error}
+}
+async function initialize(ctx){
  const nonce=process.env.DSHA_RUNTIME_TRIAL_NONCE,home=process.env.DSH_HOME;
  if(!nonce||!/^[a-f0-9]{32}$/.test(nonce)||!home)throw Error('Invalid isolated runtime trial');
+ const stage=value=>{
+  process.stdout.write('DSHA_TRIAL_NATIVE_STAGE '+value+'\n');
+  process.stdout.write('DSHA_TRIAL_TIME '+value+' '+Math.floor(performance.now())+'\n');
+ };
+ stage('storage');
  const file=join(home,'trial-data','probe.json');mkdirSync(join(home,'trial-data'),{recursive:true});
  const payload=JSON.stringify({nonce,kind:'dsha-owned-trial'});writeFileSync(file,payload,{flag:'wx',mode:0o600});const fd=openSync(file,'r+');try{fsyncSync(fd)}finally{closeSync(fd)};
  const read=readFileSync(file,'utf8');if(read!==payload)throw Error('Trial write/read mismatch');
@@ -81,6 +89,7 @@ export async function apply(ctx){
  // 该路径也由 rootfs 直接解析。fresh-process 检查仍然是独立 Node 进程，
  // 这里只修复其启动边界，不放宽任何读取或 nonce 校验。
  const trialNode=process.platform==='win32'?process.execPath:'/usr/local/bin/node';
+ stage('fresh');
  const child=spawnSync(trialNode,['--input-type=module','--eval',freshReopenSource],{encoding:'utf8',timeout:20000,maxBuffer:64*1024,windowsHide:true,env:{...process.env,DSHA_TRIAL_STORAGE_ENTRY:entry,DSHA_TRIAL_STORAGE_ROOT:backendRoot,DSHA_TRIAL_STORAGE_DESCRIPTOR:JSON.stringify(descriptor),DSHA_TRIAL_STORAGE_NONCE:nonce,DSHA_TRIAL_STORAGE_RECORD_KEYS:JSON.stringify({items:['probe']})}});
  diagnostic.freshProcess={status:child.error?'spawn-error_'+errorCode(child.error):child.signal?'signal_'+child.signal:child.status!==0?'exit_'+child.status:child.stdout==='DSHA_TRIAL_FRESH_REOPEN_OK\n'?'match':'token-mismatch',stdoutBytes:typeof child.stdout==='string'?child.stdout.length:0,stderrBytes:typeof child.stderr==='string'?child.stderr.length:0};
  if(diagnostic.freshProcess.status!=='match'){captureDirectories(diagnostic,unitDir,tableDir);failKv('Trial KV fresh-process reopen mismatch',diagnostic)}
@@ -88,6 +97,7 @@ export async function apply(ctx){
  // 会话 header 没有 cwd，DSH 的 sessionQuery 会在插件加载时把它判为
  // “session … not found”。用完整、可持久化的 header 建立真实会话，再
  // 通过持久化服务按同一 id 重开，验证跨进程以外的会话契约。
+ stage('session');
  const sessionId=randomUUID();
  const sample=Session.create(sessionId,[],{version:4,id:sessionId,createdAt:Date.now(),cwd:process.cwd(),isSeeded:false});
  const writer=await ctx.sessionPersistence.create(sample.header);
@@ -106,4 +116,5 @@ export async function apply(ctx){
  }}));
  const client=readFileSync(new URL('./page.js',import.meta.url),'utf8').replace('__DSHA_TRIAL_NONCE__',nonce).replace('__DSHA_TRIAL_HOME__',JSON.stringify(process.env.HOME));
  ctx.on('webserver/index-inject',rows=>rows.push({kind:'script',placement:'head',text:client}));
+ stage('plugin-ready');
 }

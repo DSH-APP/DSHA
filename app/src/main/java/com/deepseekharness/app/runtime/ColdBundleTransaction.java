@@ -59,15 +59,31 @@ final class ColdBundleTransaction {
           staged.requireColdCandidate();
           if (staged.preparedColdRuntime == null) throw new IOException("COLD_POSTCHECK_REQUIRED");
           transaction.selectionBefore(boot.hostPorts().snapshotColdSelection());
+          boot.extractionStage(
+              onProgress,
+              com.deepseekharness.app.util.UiText.choose(
+                  "核对完整安装文件…", "Checking complete installation files…"));
           transaction.prepared(boot::requireColdClosed);
           var mode = staged.preparedColdRuntime;
+          boot.extractionStage(
+              onProgress,
+              com.deepseekharness.app.util.UiText.choose(
+                  "确认安装文件并提交…", "Confirming and publishing installation files…"));
           transaction.publish(
               boot::requireColdClosed,
               () ->
                   boot.hostPorts()
-                      .successfulColdRuntime(boot.rootfsDir, mode.mode, mode.packageSlotSha),
+                      .prepareColdRuntime(
+                          boot.rootfsDir,
+                          mode.mode,
+                          mode.packageSlotSha,
+                          boot.expectedRuntimeDescriptor().id()),
               boot::markOfflineExtracted,
               () -> transaction.restoreSelection(boot.hostPorts()::restoreColdSelection));
+          boot.extractionStage(
+              onProgress,
+              com.deepseekharness.app.util.UiText.choose(
+                  "安装文件已提交", "Installation files published"));
         } catch (IOException | RuntimeException failure) {
           try {
             transaction.failed(boot::requireColdClosed);

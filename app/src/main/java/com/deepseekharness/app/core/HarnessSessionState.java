@@ -17,6 +17,8 @@ public final class HarnessSessionState {
             return thread;
           });
   final ConcurrentHashMap<Long, WebLifecycleController.WebRun> runs = new ConcurrentHashMap<>();
+  final java.util.concurrent.CopyOnWriteArraySet<Runnable> readyWebPageListeners =
+      new java.util.concurrent.CopyOnWriteArraySet<>();
   volatile WebLifecycleController.WebRun currentRun;
   Future<?> stopTask;
   WebRecovery recovery;

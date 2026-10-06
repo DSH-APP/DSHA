@@ -12,6 +12,7 @@ final class ArchiveFileBoundary {
   final byte[] copyBuffer = new byte[262144];
   final Map<String, LegacyTarReader.Member> links = new LinkedHashMap<>();
   final Map<String, Integer> directories = new LinkedHashMap<>();
+  final BackupControl control = new BackupControl(null);
 
   ArchiveFileBoundary(BackupFileSystem fs, File granted) throws IOException {
     this.fs = fs;
@@ -34,6 +35,7 @@ final class ArchiveFileBoundary {
   File target(String path, boolean parents) throws IOException {
     verify();
     BackupLimits.path(path);
+    if (fs instanceof TrustedAssetFileSystem trusted) return trusted.target(path, parents);
     File at = root;
     String[] parts = path.split("/");
     for (int i = 0; i < parts.length - 1; i++) {
@@ -59,24 +61,60 @@ final class ArchiveFileBoundary {
   }
 
   void file(LegacyTarReader.Member m, InputStream data) throws IOException {
+    if (fs instanceof TrustedAssetFileSystem trusted) {
+      try (var entry = trusted.fileEntry(m.path)) {
+        writeFile(m, data);
+      }
+    } else writeFile(m, data);
+  }
+
+  private void writeFile(LegacyTarReader.Member m, InputStream data) throws IOException {
     File out = target(m.path, true);
     var before = fs.stat(out);
     if (!before.type.equals("MISSING") && !before.type.equals("FILE"))
       throw new IOException("TAR_FILE_CONFLICT:" + m.path + ":" + before.type);
-    File staged = new File(out.getParentFile(), ".dsha-tar-part-" + UUID.randomUUID());
+    // 全新候选成员以 EXCL/NOFOLLOW 独占创建，失败只删除本次 inode。
+    // 已有成员仍使用 staged + previous 回切，不能截断原件来节省改名。
+    File staged =
+        before.type.equals("MISSING")
+            ? out
+            : new File(out.getParentFile(), ".dsha-tar-part-" + UUID.randomUUID());
+    BackupFileSystem.Node owned = null;
+    boolean published = false;
     try {
-      try (OutputStream stream = fs.create(staged)) {
-        long bytes = 0;
-        int n;
-        while ((n = data.read(copyBuffer)) != -1) {
-          bytes = BackupLimits.add(bytes, n, m.size);
-          stream.write(copyBuffer, 0, n);
+      boolean small =
+          before.type.equals("MISSING")
+              && m.size >= 0
+              && m.size <= TrustedAssetFileSystem.SMALL_FILE_BYTES
+              && fs instanceof TrustedAssetFileSystem trusted
+              && trusted.supportsSmallFiles();
+      int smallBytes = small ? readSmallFile(m, data) : 0;
+      OutputStream opened =
+          small
+              ? ((TrustedAssetFileSystem) fs)
+                  .prepareSmallFile(staged, copyBuffer, smallBytes, m.mode)
+              : fs instanceof TrustedAssetFileSystem trusted
+                  ? trusted.createWithMode(staged, m.mode)
+                  : fs.create(staged);
+      try (OutputStream stream = opened) {
+        owned =
+            opened instanceof TrustedAssetFileSystem.CreatedFile created
+                ? created.identity
+                : fs.stat(staged);
+        if (!owned.type.equals("FILE")) throw new IOException("TAR_CREATED_FILE_TYPE:" + m.path);
+        if (!small) {
+          long bytes = 0;
+          int n;
+          while ((n = data.read(copyBuffer)) != -1) {
+            bytes = BackupLimits.add(bytes, n, m.size);
+            stream.write(copyBuffer, 0, n);
+          }
+          if (bytes != m.size) throw new IOException("TAR_TRUNCATED:" + m.path);
         }
-        if (bytes != m.size) throw new IOException("TAR_TRUNCATED:" + m.path);
       }
       verify();
-      if (!before.same(fs.stat(out))) throw new IOException("TAR_TARGET_CHANGED:" + m.path);
       if (before.type.equals("FILE")) {
+        if (!before.same(fs.stat(out))) throw new IOException("TAR_TARGET_CHANGED:" + m.path);
         File previous = new File(out.getParentFile(), ".dsha-tar-previous-" + UUID.randomUUID());
         fs.move(out, previous);
         try {
@@ -86,13 +124,35 @@ final class ArchiveFileBoundary {
           throw error;
         }
         fs.delete(previous);
-      } else fs.move(staged, out);
-      fs.mode(out, m.mode);
+      } else {
+        var now = fs.stat(out);
+        if (!now.type.equals("FILE") || now.device != owned.device || !now.key.equals(owned.key))
+          throw new IOException("TAR_TARGET_CHANGED:" + m.path);
+      }
+      if (!(fs instanceof TrustedAssetFileSystem)) fs.mode(out, m.mode);
       fs.syncDirectory(out.getParentFile());
       verify();
+      published = true;
     } finally {
-      if (fs.stat(staged).type.equals("FILE")) fs.delete(staged);
+      if (!published && owned != null) {
+        var remaining = fs.stat(staged);
+        if (remaining.type.equals("FILE")
+            && remaining.device == owned.device
+            && remaining.key.equals(owned.key)) fs.delete(staged);
+      }
     }
+  }
+
+  private int readSmallFile(LegacyTarReader.Member m, InputStream data) throws IOException {
+    int bytes = 0, n;
+    // 多留一个字节沿用正文预算检查；共享提取缓冲，不为每个短成员分配数组。
+    while ((n = data.read(copyBuffer, bytes, (int) m.size + 1 - bytes)) != -1) {
+      control.check();
+      bytes = (int) BackupLimits.add(bytes, n, m.size);
+    }
+    if (bytes != m.size) throw new IOException("TAR_TRUNCATED:" + m.path);
+    control.check();
+    return bytes;
   }
 
   String resolve(String name, String raw, boolean hard) throws IOException {
@@ -128,9 +188,13 @@ final class ArchiveFileBoundary {
   }
 
   void finish() throws IOException {
-    for (var link : links.values()) resolve(link.path, link.target, link.type.equals("HARDLINK"));
+    for (var link : links.values()) {
+      control.check();
+      resolve(link.path, link.target, link.type.equals("HARDLINK"));
+    }
     for (var link : links.values()) {
       try {
+        control.check();
         File out = target(link.path, true);
         String resolved = resolve(link.path, link.target, link.type.equals("HARDLINK"));
         File to = resolved.isEmpty() ? root : new File(root, resolved);
@@ -165,14 +229,18 @@ final class ArchiveFileBoundary {
             "TAR_LINK_FAILURE:" + link.path + ":" + link.type + ":" + error.getMessage(), error);
       }
     }
+    if (fs instanceof TrustedAssetFileSystem trusted) trusted.finishFiles();
     List<String> paths = new ArrayList<>(directories.keySet());
     paths.sort((a, b) -> Integer.compare(b.length(), a.length()));
     for (String path : paths)
       try {
+        control.check();
         fs.mode(target(path, false), directories.get(path));
       } catch (IOException error) {
         throw new IOException("TAR_DIRECTORY_MODE:" + path + ":" + error.getMessage(), error);
       }
+    control.check();
+    if (fs instanceof TrustedAssetFileSystem trusted) trusted.finishDirectoryModes();
     verify();
   }
 }

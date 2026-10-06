@@ -7,6 +7,7 @@ import path from 'node:path';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 import vm from 'node:vm';
 import {randomUUID} from 'node:crypto';
+import {spawnSync} from 'node:child_process';
 
 const repository=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const selected = path.join(testRuntime('raw'), 'node_modules');
@@ -42,6 +43,29 @@ function trialContext(backend){
  };
 }
 try{
+ await test('private_trial_preload_preserves_real_cli_main_and_other_options',async()=>{
+  // Run the exact production option-consumption prelude with real Node --import
+  // and locked official bin.js. ARM64 native calls remain device-only evidence.
+  const source=await fs.readFile(path.join(repository,'app/src/main/assets/runtime-trial-entry.js'),'utf8');
+  const boundary=source.indexOf('\ntry {');assert.ok(boundary>0);
+  const preload=path.join(owned,'trial-preload.mjs'),other=path.join(owned,'other-preload.mjs');
+  await fs.writeFile(preload,source.slice(0,boundary));
+  await fs.writeFile(other,"process.stderr.write('DSHA_TEST_OTHER_PRELOAD_READY\\n');\n");
+  const rest='--import='+pathToFileURL(other).href+' --conditions=dsha-trial-host-check';
+  const child=spawnSync(process.execPath,[path.join(modules,'@deepseek-ai/dsh/lib/bin.js'),'--version'],{encoding:'utf8',timeout:15000,windowsHide:true,env:{...process.env,NODE_OPTIONS:'--import='+pathToFileURL(preload).href+' '+rest}});
+  assert.equal(child.error,undefined);assert.equal(child.status,0,child.stderr);
+  assert.equal(child.stdout,'0.2.0-rc.2\n');assert.equal(child.stderr,'DSHA_TEST_OTHER_PRELOAD_READY\n');
+ });
+ await test('private_trial_preload_is_not_inherited_by_fresh_storage_child',async()=>{
+  const preload=path.join(owned,'trial-preload.mjs'),other=path.join(owned,'other-preload.mjs'),probe=path.join(owned,'child-probe.mjs');
+  await fs.writeFile(probe,"import {spawnSync} from 'node:child_process';\nif((process.env.NODE_OPTIONS||'')!==process.env.DSHA_TEST_OPTIONS_AFTER)throw Error('OPTIONS_CHANGED');\nconst child=spawnSync(process.execPath,['--eval',\"process.stdout.write('DSHA_TRIAL_FRESH_REOPEN_OK\\\\n')\"],{encoding:'utf8',env:process.env});\nif(child.error||child.status!==0)throw Error('CHILD_FAILED');process.stdout.write(child.stdout);process.stderr.write(child.stderr);\n");
+  for(const rest of ['', '--import='+pathToFileURL(other).href+' --conditions=dsha-trial-host-check']){
+   const child=spawnSync(process.execPath,[probe],{encoding:'utf8',timeout:15000,windowsHide:true,env:{...process.env,NODE_OPTIONS:'--import='+pathToFileURL(preload).href+' '+rest,DSHA_TEST_OPTIONS_AFTER:rest}});
+   assert.equal(child.error,undefined);assert.equal(child.status,0,child.stderr);
+   assert.equal(child.stdout,'DSHA_TRIAL_FRESH_REOPEN_OK\n');
+   assert.equal(child.stderr,rest?'DSHA_TEST_OTHER_PRELOAD_READY\nDSHA_TEST_OTHER_PRELOAD_READY\n':'');
+  }
+ });
  await test('android_health_gate_requires_fresh_process_reopen',async()=>{
   const host=await fs.readFile(path.join(repository,'app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java'),'utf8');
   const bootstrap=await fs.readFile(path.join(repository,'app/src/main/java/com/deepseekharness/app/runtime/ProotBootstrap.java'),'utf8');

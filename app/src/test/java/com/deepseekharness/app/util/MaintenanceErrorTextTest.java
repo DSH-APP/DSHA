@@ -4,6 +4,17 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class MaintenanceErrorTextTest {
+  @org.junit.Test
+  public void longOutputShowsActualFailureRatherThanUnpackNoise() {
+    String text =
+        "Unpacking lib\n".repeat(100)
+            + "ldconfig.real: cache rename failed: Read-only file system\n"
+            + "Unpacking lib\n".repeat(100);
+    String summary = MaintenanceErrorText.render(text);
+    assertTrue(summary.contains("Read-only file system"));
+    assertTrue(summary.length() <= 1200);
+  }
+
   @Test
   public void retentionAndRecoveryCodesExplainNextAction() {
     assertTrue(MaintenanceErrorText.render("RUNTIME_RETENTION_LIMIT").contains("保留数据"));

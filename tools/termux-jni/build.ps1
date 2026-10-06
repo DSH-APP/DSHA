@@ -106,9 +106,9 @@ $symbols = & "$toolBin/llvm-nm.exe" --dynamic --defined-only --format=posix $out
 if ($LASTEXITCODE -ne 0) { throw 'JNI 符号读取失败。' }
 $actual = @($symbols | ForEach-Object { ($_ -split '\s+')[0] } | Sort-Object)
 $expected = @(@('close', 'createSubprocess', 'setPtyUTF8Mode', 'setPtyWindowSize', 'waitFor') |
-    ForEach-Object { "Java_com_termux_terminal_JNI_$_" }) + 'Java_com_deepseekharness_app_runtime_NativeProcess_sessionId'
+    ForEach-Object { "Java_com_termux_terminal_JNI_$_" }) + @('Java_com_deepseekharness_app_runtime_NativeProcess_sessionId', 'Java_com_deepseekharness_app_runtime_NativeStorage_flushFiles', 'Java_com_deepseekharness_app_runtime_NativeStorage_verifyDirectoryIdentities', 'Java_com_deepseekharness_app_runtime_NativeStorage_prepareSmallFileBytes', 'Java_com_deepseekharness_app_runtime_NativeStorage_finishSmallFileBytes', 'Java_com_deepseekharness_app_runtime_NativeStorage_closeSmallFileDescriptor', 'Java_com_deepseekharness_app_runtime_NativeStorage_statChildrenBatchBytes', 'Java_com_deepseekharness_app_runtime_NativeStorage_readSmallBatchBytes')
 $expected = @($expected | Sort-Object)
-if (@(Compare-Object $expected $actual).Count -ne 0) { throw 'JNI 导出集合不符合 v0.118.0。' }
+if (@(Compare-Object $expected $actual).Count -ne 0) { throw 'JNI 导出集合不符合固定 PTY 与 DSHA 扩展。' }
 New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
 $sameOutput = (Test-Path -LiteralPath $destination) -and
     ((Get-FileHash -Algorithm SHA256 -LiteralPath $output).Hash -eq

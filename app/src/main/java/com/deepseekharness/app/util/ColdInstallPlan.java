@@ -14,6 +14,7 @@ public final class ColdInstallPlan {
 
   public enum Mode {
     PROROOT("proroot", false),
+    PROROOT_DYNAMIC("proroot", false),
     PROOT("proot", false),
     PROOT_COMPAT("proot", true);
     public final String runtime;
@@ -22,6 +23,10 @@ public final class ColdInstallPlan {
     Mode(String runtime, boolean noSeccomp) {
       this.runtime = runtime;
       this.noSeccomp = noSeccomp;
+    }
+
+    public boolean staticLoader(boolean configured) {
+      return this == PROROOT_DYNAMIC ? false : configured;
     }
   }
 
@@ -79,7 +84,10 @@ public final class ColdInstallPlan {
   /** At most three probes and one package installation; no retry after package writes. */
   public static Mode run(List<Mode> modes, Runner runner, Recorder recorder)
       throws IOException, InterruptedException {
-    if (modes.isEmpty() || modes.size() > 3 || modes.stream().distinct().count() != modes.size())
+    if (modes.isEmpty()
+        || modes.size() > 3
+        || modes.contains(Mode.PROROOT_DYNAMIC)
+        || modes.stream().distinct().count() != modes.size())
       throw new IllegalArgumentException("COLD_RUNTIME_PLAN");
     for (Mode mode : modes) {
       Observation probe = runner.run(mode, true);
@@ -95,6 +103,54 @@ public final class ColdInstallPlan {
       return mode;
     }
     throw new IOException("COLD_RUNTIME_PROBE_FAILED");
+  }
+
+  /** 已在制备时完成真实 dpkg；本机只试运行一次核对，不再安装第二遍。 */
+  public static Mode runConfigured(List<Mode> modes, Runner runner, Recorder recorder)
+      throws IOException, InterruptedException {
+    return runConfigured(modes, false, runner, recorder);
+  }
+
+  /** 仅未显式选方式的首次签名覆盖层可尝试修复静态 loader 的已确认特定退出。 */
+  public static boolean allowDynamicLoaderRetry(
+      boolean freshCandidate, boolean automatic, boolean forceProot, boolean staticLoader) {
+    return freshCandidate && automatic && !forceProot && staticLoader;
+  }
+
+  public static Mode runConfigured(
+      List<Mode> modes, boolean allowDynamicLoaderRetry, Runner runner, Recorder recorder)
+      throws IOException, InterruptedException {
+    if (modes.isEmpty()
+        || modes.size() > 3
+        || modes.contains(Mode.PROROOT_DYNAMIC)
+        || modes.stream().distinct().count() != modes.size())
+      throw new IllegalArgumentException("COLD_RUNTIME_PLAN");
+    for (Mode mode : modes) {
+      Observation result = runner.run(mode, true);
+      recorder.record(mode, true, result);
+      if (!result.exited) throw new IOException("COLD_INSTALL_PROCESS_EXIT_UNCONFIRMED");
+      if (result.ready(PROBE_READY) && result.ready(INSTALL_READY)) return mode;
+      if (allowDynamicLoaderRetry && mode == Mode.PROROOT && staticSignalStackFailure(result)) {
+        Observation dynamic = runner.run(Mode.PROROOT_DYNAMIC, true);
+        recorder.record(Mode.PROROOT_DYNAMIC, true, dynamic);
+        if (!dynamic.exited) throw new IOException("COLD_INSTALL_PROCESS_EXIT_UNCONFIRMED");
+        if (dynamic.ready(PROBE_READY) && dynamic.ready(INSTALL_READY)) return Mode.PROROOT_DYNAMIC;
+      }
+    }
+    throw new IOException("COLD_CONFIGURED_CHECK_FAILED");
+  }
+
+  private static boolean staticSignalStackFailure(Observation result) {
+    String output = result.output;
+    return result.exited
+        && !result.timedOut
+        && result.exitCode == 139
+        && output != null
+        && output.contains("Fatal glibc error")
+        && output.contains("sysconf_sigstksz")
+        && (output.contains("minsigstksz") || output.contains("minsigstacksize"))
+        && output.contains("assertion failed")
+        && (output.contains("!= 0") || output.contains("!=0"));
   }
 
   public static void applyEnvironment(Map<String, String> environment, Mode mode) {

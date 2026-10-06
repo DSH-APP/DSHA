@@ -15,7 +15,8 @@ import xml.etree.ElementTree as ET
 import zipfile
 from test_runtime_fixture import runtime as verified_runtime
 from release_acceptance import requirements as acceptance_requirements, validate as validate_acceptance, baseline_from_receipt
-from release_names import apk_filename
+from release_names import apk_delivery_path, delivery_receipt_path, source_directory, release_staging_directory
+from release_layout import checked_path, source_snapshot_path
 
 ROOT=Path(__file__).resolve().parents[1]
 CERT=json.loads((ROOT/'ci/release-identity.json').read_text(encoding='utf-8'))['certificateSha256']
@@ -77,15 +78,41 @@ def publish_apks(apks):
         source=Path(item['path'])
         if not source.is_file() or digest(source)!=item['sha256']:
             raise ValueError('DELIVERY_APK_CHANGED')
-        target=ROOT/'release'/apk_filename(item['flavor'], ROOT)
+        target=apk_delivery_path(item['flavor'], ROOT)
         target.parent.mkdir(parents=True,exist_ok=True)
         if not target.exists() or digest(target)!=item['sha256']:
-            temporary=target.with_name(target.name+'.part-'+str(uuid.uuid4()))
-            shutil.copyfile(source,temporary)
-            if digest(temporary)!=item['sha256']:raise RuntimeError('Delivery copy mismatch')
-            temporary.replace(target)
-        target.with_suffix('.apk.sha256').write_text(item['sha256']+'  '+target.name+'\n',encoding='ascii',newline='\n')
+            temporary=release_staging_directory(ROOT)/(target.name+'.part-'+str(uuid.uuid4()))
+            temporary.parent.mkdir(parents=True,exist_ok=True)
+            try:
+                shutil.copyfile(source,temporary)
+                if digest(temporary)!=item['sha256']:raise RuntimeError('Delivery copy mismatch')
+                temporary.replace(target)
+            finally:
+                if temporary.exists():temporary.unlink()
+        checksum=checked_path(target.with_suffix('.apk.sha256'),ROOT)
+        checksum.write_text(item['sha256']+'  '+target.name+'\n',encoding='ascii',newline='\n')
         item['deliveredPath']=str(target)
+
+
+def store_delivery_receipt(report):
+    """Keep durable source evidence and delivery JSON outside the APK directory."""
+    codes={item['versionCode'] for item in report['apks']}
+    if len(codes)!=1:raise ValueError('DELIVERY_VERSION_CODE')
+    code=codes.pop()
+    snapshot=report['sourceSnapshot'];source=source_snapshot_path(snapshot['path'],snapshot['sha256'],ROOT)
+    target=checked_path(source_directory(code,ROOT)/'source-sha256.json',ROOT)
+    target.parent.mkdir(parents=True,exist_ok=True)
+    if target.exists():
+        if digest(target)!=snapshot['sha256']:raise ValueError('DELIVERY_SOURCE_DESTINATION_CONFLICT')
+    else:
+        with source.open('rb') as incoming,target.open('xb') as outgoing:
+            shutil.copyfileobj(incoming,outgoing)
+        if digest(target)!=snapshot['sha256']:raise ValueError('DELIVERY_SOURCE_COPY_CHANGED')
+    report['sourceSnapshot']={**snapshot,'path':str(target),'verificationPath':str(source.resolve())}
+    destination=delivery_receipt_path(code,ROOT)
+    destination.parent.mkdir(parents=True,exist_ok=True)
+    destination.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+    return destination
 
 
 def validate_software_receipt(report,current):
@@ -130,8 +157,7 @@ def deliver_from_receipt(path,evidence,baseline):
     report['device']={'status':'MATCHED_EXTERNAL_EVIDENCE','package':'com.dsh.client',
                       'evidence':str(evidence.resolve()),'sha256':digest(evidence)}
     report['deliveredAt']=datetime.datetime.now(datetime.timezone.utc).isoformat()
-    destination=path.parent/('delivery-'+str(uuid.uuid4())+'.json')
-    destination.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+    destination=store_delivery_receipt(report)
     print(json.dumps({'status':report['status'],'report':str(destination)},ensure_ascii=False))
     return 0
 
@@ -324,6 +350,8 @@ def main():
         report['status']='INCOMPLETE_OR_FAILED';report['failure']=str(error)
     report['finishedAt']=datetime.datetime.now(datetime.timezone.utc).isoformat()
     target=report_dir/'manifest.json';target.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+    if args.deliver and report['status']=='PASS_FOR_EXECUTED_SCOPE':
+        target=store_delivery_receipt(report)
     print(json.dumps({'status':report['status'],'report':str(target)},ensure_ascii=False))
     return 1 if report['status']=='INCOMPLETE_OR_FAILED' else 0
 

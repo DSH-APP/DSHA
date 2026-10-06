@@ -62,6 +62,7 @@
     "runtime-descriptor.json",
     "runtime-patches.json",
     "runtime-tools.json",
+    "runtime-trial-entry.js",
     "runtime-trial-page.js",
     "runtime-trial-plugin.js",
     "session-interaction-patch.json",
@@ -70,6 +71,8 @@
     "tooltip-entry-patch.json",
     "tooltip-interaction-patch.json",
     "ubuntu-tools.bin",
+    "ubuntu-tools.layout",
+    "ubuntu-tools.manifest.json",
     "workspace-directory-policy-patch.json"
   ],
   "packagedTrees": [
@@ -181,6 +184,7 @@
       "method": "asset(name)",
       "contract": "Known isolated trial page/plugin.",
       "assets": [
+        "runtime-trial-entry.js",
         "runtime-trial-page.js",
         "runtime-trial-plugin.js"
       ]

@@ -33,6 +33,7 @@ public final class PrivateRoots {
           "recovery-maintenance-tools",
           "bounded-guest-active",
           "cold-install-operations",
+          "cold-install-probes",
           "cold-install-diagnostics.txt",
           "diagnostic-events.txt",
           "diagnostic-events.1.txt",

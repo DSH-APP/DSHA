@@ -65,7 +65,8 @@ public final class RuntimeTrial {
       return verifyOnce(context, proot, control, requested, browserProbe);
     } catch (TrialExit error) {
       // verifyOnce 的 finally 已核验 guest 全部退出并解除本轮工作锁；未确认退出会以另一异常阻止此处。
-      if (!WebRuntimeFallback.shouldRetry(
+      if (!error.closed
+          || !WebRuntimeFallback.shouldRetry(
               requested, false, error.hadAuth, false, !control.isCancelled(), error.code)
           || RuntimeWorkPort.hasOtherTasks()) throw error;
       control.report("TRIAL_COMPATIBILITY_RETRY", 0, 0);
@@ -112,6 +113,7 @@ public final class RuntimeTrial {
             .getBytes(StandardCharsets.UTF_8));
     TrialSupport.write(fs, root, "plugin/index.js", asset(context, "runtime-trial-plugin.js"));
     TrialSupport.write(fs, root, "plugin/page.js", asset(context, "runtime-trial-page.js"));
+    TrialSupport.write(fs, root, "runtime-entry.mjs", asset(context, "runtime-trial-entry.js"));
     TrialSupport.write(
         fs,
         root,
@@ -162,9 +164,12 @@ public final class RuntimeTrial {
     Renderer browser = null;
     Map<String, Object> proof = null;
     Output captured = null;
+    Throwable primaryFailure = null;
+    long hostStarted = System.nanoTime();
+    Map<String, Long> hostTimings = new LinkedHashMap<>();
     try {
       String command =
-          "export DSH_HOME="
+          "set -e; export DSH_HOME="
               + ShellQuote.arg(guest + "/home")
               + "; export HOME="
               + ShellQuote.arg(guest + "/isolated-user-home")
@@ -173,7 +178,19 @@ public final class RuntimeTrial {
               + "; export BROWSER=true; export DSH_CONFIRM=1; unset DEEPSEEK_API_KEY; cd "
               + ShellQuote.arg(guest)
               + "; "
+              + "export DSHA_TRIAL_DSH_VERSION="
+              + ShellQuote.arg(Constants.DSH_VERSION)
+              + "; export DSHA_TRIAL_PNPM_VERSION="
+              + ShellQuote.arg(com.deepseekharness.app.BuildConfig.BUNDLED_PNPM_VERSION)
+              + "; export DSHA_TRIAL_BUILTIN_ENTRIES="
+              + ShellQuote.arg(builtinEntries())
+              + "; "
               + TrialSupport.identityPrefix()
+              + "set -e; curl --version; git --version; id -Gn; "
+              + "python3 -B -c 'import ssl,sqlite3,readline,tarfile,zipfile; ssl.create_default_context(); assert sqlite3.sqlite_version'; "
+              + "export NODE_OPTIONS="
+              + ShellQuote.arg("--import=" + guest + "/runtime-entry.mjs ")
+              + "\"${NODE_OPTIONS-}\"; "
               + "exec /usr/local/bin/node /usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js --profile "
               + profile
               + " --no-open --host 127.0.0.1 --port 0";
@@ -191,10 +208,12 @@ public final class RuntimeTrial {
         wait.check();
         output.drain();
         if (ProcessTermination.exited(process)) throw output.exited();
-        report(control, started, "TRIAL_STARTING");
+        if (output.nativeStage.isEmpty()) report(control, started, "TRIAL_STARTING");
+        else control.report(output.nativeStage, 0, 0);
         pause(150);
       }
       DshAuthUrl.Parsed url = output.auth;
+      if (!output.nativeReady) throw new IOException("TRIAL_NATIVE_MODULES_UNCONFIRMED");
       int port = URI.create(url.loopbackBaseUrl).getPort();
       DshAuthSession.Result exchange;
       wait =
@@ -216,6 +235,7 @@ public final class RuntimeTrial {
       } while (!exchange.ready() && !ProcessTermination.exited(active));
       if (!exchange.ready()) throw new IOException("TRIAL_AUTHENTICATION_FAILED");
       Map<String, Object> status;
+      markHost(hostTimings, "rendererStart", hostStarted);
       wait =
           new com.deepseekharness.app.util.TrialWaitBudget(
               com.deepseekharness.app.util.TrialWaitBudget.Phase.RENDERING);
@@ -245,15 +265,20 @@ public final class RuntimeTrial {
           }
           if (browser == null)
             try {
+              markHost(hostTimings, "browserOpenStart", hostStarted);
               browser =
                   browserProbe.open(
                       context, url.authUrl, url.loopbackBaseUrl, exchange.cookie, control);
+              markHost(hostTimings, "browserOpenEnd", hostStarted);
             } catch (Exception error) {
               if (error instanceof InterruptedException) Thread.currentThread().interrupt();
               throw new IOException("TRIAL_BROWSER_UNAVAILABLE", error);
             }
           browser.check();
-          if (Boolean.TRUE.equals(status.get("renderer"))) break;
+          if (Boolean.TRUE.equals(status.get("renderer"))) {
+            markHost(hostTimings, "rendererConfirmed", hostStarted);
+            break;
+          }
         }
         report(control, started, "TRIAL_RENDERING");
         pause(350);
@@ -264,6 +289,8 @@ public final class RuntimeTrial {
       proof.put("port", (long) port);
       proof.put("confirmedAt", System.currentTimeMillis());
       proof.put("runtimeMode", runtimeMode);
+      proof.put("nodeStageMillis", new LinkedHashMap<>(output.nativeTimings));
+      proof.put("pnpmValidation", "locked-package-entry-syntax");
       for (String name :
           List.of(
               "assets",
@@ -277,6 +304,7 @@ public final class RuntimeTrial {
       proof.put("storageFreshReopened", true);
       return proof;
     } catch (IOException | RuntimeException failure) {
+      primaryFailure = failure;
       Map<String, Object> detail = new LinkedHashMap<>();
       detail.put("runtimeId", expected.id());
       detail.put("error", BackupErrorCode.from(failure));
@@ -297,40 +325,73 @@ public final class RuntimeTrial {
     } finally {
       if (browser != null)
         try {
+          markHost(hostTimings, "browserCloseStart", hostStarted);
           browser.close();
         } catch (Exception ignored) {
+        } finally {
+          markHost(hostTimings, "browserCloseEnd", hostStarted);
         }
-      IOException stopping = null;
-      if (process != null) {
-        try {
-          String stopped = manager.stop();
-          if (stopped.isEmpty()) ProcessTermination.awaitExit(process, 3000);
-          if (!stopped.isEmpty() || !manager.confirmTrackedTrialStopped(process)) {
-            throw new IOException(
-                stopped.isEmpty()
-                    ? "TRIAL_PROCESS_UNCONFIRMED"
-                    : "TRIAL_PROCESS_UNCONFIRMED: " + SensitiveData.redact(stopped));
-          }
-        } catch (RuntimeException | IOException error) {
-          stopping = new IOException("TRIAL_PROCESS_UNCONFIRMED", error);
+      Process tracked = process;
+      boolean closed =
+          TrialSupport.finish(
+              tracked,
+              work,
+              new TrialSupport.Cleanup() {
+                public void stop() throws IOException {
+                  markHost(hostTimings, "managerStopStart", hostStarted);
+                  String stopped = manager.stop();
+                  markHost(hostTimings, "managerStopEnd", hostStarted);
+                  if (!stopped.isEmpty())
+                    throw new IOException(
+                        "TRIAL_PROCESS_UNCONFIRMED: " + SensitiveData.redact(stopped));
+                  ProcessTermination.awaitExit(tracked, 3000);
+                  markHost(hostTimings, "launcherAwaitEnd", hostStarted);
+                }
+
+                public boolean confirmed(Process launcher) throws IOException {
+                  boolean confirmed = manager.confirmTrackedTrialStopped(launcher);
+                  markHost(hostTimings, "guestExitCheckEnd", hostStarted);
+                  return confirmed;
+                }
+
+                public void closeRecord() throws IOException {
+                  File marker = fs.child(operation, "closed");
+                  if (fs.stat(marker).type.equals("MISSING"))
+                    TrialSupport.write(
+                        fs, operation, "closed", id.getBytes(StandardCharsets.US_ASCII));
+                  else if (!id.equals(new String(fs.small(marker, 128), StandardCharsets.US_ASCII)))
+                    throw new IOException("TRIAL_MARKER");
+                  if (!fs.stat(fs.child(operation, "payload")).type.equals("MISSING"))
+                    fs.removeOwned(operation, "payload");
+                  RuntimeTrialRecords.pruneClosed(fs, records);
+                  markHost(hostTimings, "recordCloseEnd", hostStarted);
+                }
+              },
+              primaryFailure);
+      if (closed) {
+        if (proof != null) {
+          proof.put("processExited", true);
+          proof.put("hostStageMillis", new LinkedHashMap<>(hostTimings));
         }
+        if (primaryFailure instanceof TrialExit exit) exit.closed = true;
       }
-      if (stopping != null) {
-        work.retainUntilExit(
-            TrialSupport.checkedExit(
-                process,
-                manager::confirmTrackedTrialStopped,
-                () -> manager.stop(),
-                "TRIAL_PROCESS_UNCONFIRMED"));
-        throw stopping;
-      }
-      if (proof != null) proof.put("processExited", true);
-      work.close();
-      TrialSupport.write(fs, operation, "closed", id.getBytes(StandardCharsets.US_ASCII));
-      // 只清理确认退出后的本次测试数据，保留小型记录，不碰用户 profile。
-      fs.removeOwned(operation, "payload");
-      RuntimeTrialRecords.pruneClosed(fs, records);
     }
+  }
+
+  private static void markHost(Map<String, Long> timings, String stage, long started) {
+    synchronized (timings) {
+      timings.putIfAbsent(stage, (System.nanoTime() - started) / 1000000L);
+    }
+  }
+
+  private static String builtinEntries() throws IOException {
+    List<String> entries = new ArrayList<>();
+    for (String name : BuiltinPluginRegistry.SIGNED)
+      entries.add(
+          BuiltinPluginRegistry.guestDirectory(name)
+              + "/"
+              + BuiltinPluginRegistry.entrypoint(name));
+    return new String(BackupJson.write(Map.of("entries", entries), 16384), StandardCharsets.UTF_8);
   }
 
   private static void report(BackupControl control, long started, String phase) throws IOException {
@@ -350,6 +411,7 @@ public final class RuntimeTrial {
   private static final class TrialExit extends IOException {
     final int code;
     final boolean hadAuth;
+    boolean closed;
 
     TrialExit(int code, boolean hadAuth, String detail) {
       super("TRIAL_PROCESS_EXITED: exit=" + code + "\n" + detail);
@@ -363,6 +425,30 @@ public final class RuntimeTrial {
     final ByteArrayOutputStream line = new ByteArrayOutputStream();
     final StringBuilder tail = new StringBuilder();
     DshAuthUrl.Parsed auth;
+    boolean nativeReady;
+    String nativeStage = "";
+    final Map<String, Long> nativeTimings = new LinkedHashMap<>();
+
+    private static String nativePhase(String stage) {
+      String phase =
+          switch (stage) {
+            case "pnpm" -> "TRIAL_NATIVE_PNPM";
+            case "modules" -> "TRIAL_NATIVE_MODULES";
+            case "loader" -> "TRIAL_NATIVE_LOADER";
+            case "flock" -> "TRIAL_NATIVE_FLOCK";
+            case "storage" -> "TRIAL_NATIVE_STORAGE";
+            case "fresh" -> "TRIAL_NATIVE_FRESH";
+            case "session" -> "TRIAL_NATIVE_SESSION";
+            case "plugin-ready" -> "TRIAL_NATIVE_PLUGIN_READY";
+            case "native-ready" -> "TRIAL_NATIVE_READY";
+            default -> "";
+          };
+      if (stage.matches("builtin-[0-9]")) {
+        int index = stage.charAt(stage.length() - 1) - '0';
+        if (index < BuiltinPluginRegistry.SIGNED.size()) phase = "TRIAL_NATIVE_BUILTIN_" + index;
+      }
+      return phase;
+    }
 
     Output(Process process) {
       this.process = process;
@@ -389,6 +475,27 @@ public final class RuntimeTrial {
         for (int i = 0; i < size; i++) {
           if (bytes[i] == '\n') {
             String text = line.toString("UTF-8");
+            if (text.equals("DSHA_TRIAL_NATIVE_CHECK_READY")) {
+              if (nativeReady) throw new IOException("TRIAL_NATIVE_DUPLICATE_PROOF");
+              nativeReady = true;
+              nativeStage = "TRIAL_NATIVE_READY";
+            }
+            if (text.startsWith("DSHA_TRIAL_NATIVE_STAGE ")) {
+              String stage = text.substring("DSHA_TRIAL_NATIVE_STAGE ".length());
+              String phase = nativePhase(stage);
+              if (!phase.isEmpty()) nativeStage = phase;
+            }
+            if (text.startsWith("DSHA_TRIAL_TIME ")) {
+              String[] fields = text.substring("DSHA_TRIAL_TIME ".length()).split(" ");
+              if (fields.length == 2
+                  && !nativePhase(fields[0]).isEmpty()
+                  && fields[1].matches("[0-9]{1,12}"))
+                nativeTimings.putIfAbsent(fields[0], Long.parseLong(fields[1]));
+            }
+            if (text.startsWith("DSHA_TRIAL_NATIVE_CHECK_FAILED"))
+              throw new IOException("TRIAL_NATIVE_MODULES_FAILED");
+            if (text.startsWith("DSHA_TRIAL_PLUGIN_CHECK_FAILED "))
+              throw new IOException("TRIAL_PLUGIN_FAILED");
             line.reset();
             tail.append(SensitiveData.redact(text)).append('\n');
             if (tail.length() > 16384) tail.delete(0, tail.length() - 16384);
@@ -410,19 +517,33 @@ public final class RuntimeTrial {
     }
   }
 
-  /** 诊断页和错误日志只读取最近一条已关闭试运行的小型脱敏记录。 */
+  /** 优先显示仍阻断维护的试运行失败；读取小型宿主记录绝不意味着放行或清理现场。 */
   public static String latestFailure(Context context) {
     try {
       BackupFileSystem fs = new AndroidBackupFileSystem();
       File home = fs.child(context.getFilesDir().getCanonicalFile(), HOME);
-      byte[] bytes = RuntimeTrialRecords.latestFailure(fs, home);
-      if (bytes.length == 0) return "";
+      RuntimeTrialRecords.FailureDiagnostic diagnostic =
+          RuntimeTrialRecords.latestDiagnostic(fs, home);
+      if (diagnostic == null) return "";
+      byte[] bytes = diagnostic.failure();
       Map<String, Object> value = BackupJson.read(bytes, 64 * 1024);
       String mode = BackupJson.string(value, "runtimeMode");
       String error = BackupJson.string(value, "error"), output = BackupJson.string(value, "output");
       Object exit = value.get("exitCode");
       return SensitiveData.redact(
-          "runtimeMode="
+          "trialRecord="
+              + diagnostic.recordId()
+              + "\ntrialState="
+              + diagnostic.state()
+              + "\nlaunched="
+              + diagnostic.launched()
+              + "\npidRecord="
+              + diagnostic.pid()
+              + "\nstalePidRecord="
+              + diagnostic.stalePid()
+              + "\nidentityRecord="
+              + diagnostic.identity()
+              + "\nruntimeMode="
               + (mode.isEmpty() ? "unknown" : mode)
               + "\nerror="
               + (error.isEmpty() ? "unknown" : error)
@@ -442,10 +563,150 @@ public final class RuntimeTrial {
         home,
         payload -> {
           WebProcessManager manager = new WebProcessManager(proot, payload);
+          TrialImportStop.Io importIo = legacyImportIo(manager);
+          TrialImportStop.stop(fs, payload.getParentFile(), payload, importIo);
           String stopped = manager.stop();
           if (!stopped.isEmpty() || !manager.confirmStopped(false))
             throw new IOException("TRIAL_PROCESS_UNCONFIRMED");
+          String nonce = payload.getParentFile().getName().replace("-", "");
+          importIo.confirmNoRelated(nonce, "/root/.dsha-runtime-trial-" + nonce, payload);
         });
+  }
+
+  private static TrialImportStop.Io legacyImportIo(WebProcessManager manager) {
+    return new TrialImportStop.Io() {
+      public int appUid() {
+        return android.os.Process.myUid();
+      }
+
+      public TrialImportStop.Snapshot capture(int pid) throws IOException {
+        WebProcessManager.ProcessState state = manager.inspect(pid);
+        if (state.kind == WebProcessManager.Kind.GONE)
+          return new TrialImportStop.Snapshot(
+              TrialImportStop.State.GONE, state.identity, -1, "", Map.of(), "");
+        if (state.kind == WebProcessManager.Kind.DENIED)
+          return new TrialImportStop.Snapshot(
+              TrialImportStop.State.DENIED, state.identity, -1, "", Map.of(), "");
+        int uid = owner(pid);
+        if (uid != appUid())
+          return new TrialImportStop.Snapshot(
+              TrialImportStop.State.LIVE, state.identity, uid, state.command, Map.of(), "");
+        return new TrialImportStop.Snapshot(
+            TrialImportStop.State.LIVE,
+            state.identity,
+            uid,
+            state.command,
+            environment(pid),
+            cwd(pid));
+      }
+
+      public void term(int pid) throws IOException {
+        try {
+          android.system.Os.kill(pid, android.system.OsConstants.SIGTERM);
+        } catch (android.system.ErrnoException failure) {
+          if (failure.errno != android.system.OsConstants.ESRCH)
+            throw new IOException("TRIAL_LEGACY_IMPORT_SIGNAL_UNCONFIRMED", failure);
+        }
+      }
+
+      public void confirmNoRelated(String nonce, String guest, File payload) throws IOException {
+        String[] entries = new File("/proc").list();
+        if (entries == null) throw new IOException("TRIAL_CONTEXT_SCAN_UNCONFIRMED");
+        String path = payload.getCanonicalPath();
+        Set<String> first = null;
+        for (int round = 0; round < 2; round++) {
+          Set<String> current = new HashSet<>();
+          entries = new File("/proc").list();
+          if (entries == null) throw new IOException("TRIAL_CONTEXT_SCAN_UNCONFIRMED");
+          for (String entry : entries) {
+            int pid = WebProcSel.parsePid(entry);
+            if (pid < 2 || pid == android.os.Process.myPid()) continue;
+            int uid = owner(pid);
+            if (uid < 0 || uid != appUid()) continue;
+            WebProcessManager.ProcessState before = manager.inspect(pid);
+            if (before.kind == WebProcessManager.Kind.GONE) continue;
+            if (before.kind == WebProcessManager.Kind.DENIED || before.identity == null)
+              throw new IOException("TRIAL_CONTEXT_INSPECTION_UNCONFIRMED");
+            Map<String, String> env = environment(pid);
+            String directory = cwd(pid);
+            boolean related =
+                nonce.equals(env.get("DSHA_RUNTIME_TRIAL_NONCE"))
+                    || (guest + "/home").equals(env.get("DSH_HOME"))
+                    || (guest + "/isolated-user-home").equals(env.get("HOME"))
+                    || directory.equals(path)
+                    || directory.startsWith(path + "/");
+            for (String argument : before.command.split("\u0000"))
+              related |= argument.equals(guest) || argument.startsWith(guest + "/");
+            WebProcessManager.ProcessState after = manager.inspect(pid);
+            if (after.kind == WebProcessManager.Kind.GONE) continue;
+            if (after.kind == WebProcessManager.Kind.DENIED
+                || after.identity == null
+                || !before.identity.sameProcess(after.identity)
+                || !before.command.equals(after.command)
+                || owner(pid) != uid) throw new IOException("TRIAL_CONTEXT_INSPECTION_UNCONFIRMED");
+            if (related) throw new IOException("TRIAL_CONTEXT_PROCESS_REMAINS");
+            current.add(after.identity.record());
+          }
+          if (first != null && !first.equals(current))
+            throw new IOException("TRIAL_CONTEXT_SCAN_CHANGED");
+          first = current;
+          if (round == 0) RuntimeTrial.pause(50);
+        }
+      }
+
+      private int owner(int pid) throws IOException {
+        try {
+          return android.system.Os.stat("/proc/" + pid).st_uid;
+        } catch (android.system.ErrnoException failure) {
+          if (failure.errno == android.system.OsConstants.ENOENT
+              || failure.errno == android.system.OsConstants.ESRCH) return -1;
+          throw new IOException("TRIAL_CONTEXT_OWNER_UNCONFIRMED", failure);
+        }
+      }
+
+      private Map<String, String> environment(int pid) throws IOException {
+        String text = readProcess(pid, "environ", 128 * 1024);
+        Map<String, String> selected = new HashMap<>();
+        for (String entry : text.split("\u0000")) {
+          int separator = entry.indexOf('=');
+          if (separator < 1) continue;
+          String name = entry.substring(0, separator);
+          if (!Set.of("DSHA_RUNTIME_TRIAL_NONCE", "DSH_HOME", "HOME").contains(name)) continue;
+          if (selected.put(name, entry.substring(separator + 1)) != null)
+            throw new IOException("TRIAL_CONTEXT_ENVIRONMENT_UNCONFIRMED");
+        }
+        return selected;
+      }
+
+      private String cwd(int pid) throws IOException {
+        try {
+          return new File(android.system.Os.readlink("/proc/" + pid + "/cwd")).getCanonicalPath();
+        } catch (android.system.ErrnoException failure) {
+          throw new IOException("TRIAL_CONTEXT_CWD_UNCONFIRMED", failure);
+        }
+      }
+
+      public long now() {
+        return android.os.SystemClock.elapsedRealtime();
+      }
+
+      public void pause() throws IOException {
+        RuntimeTrial.pause(50);
+      }
+    };
+  }
+
+  private static String readProcess(int pid, String name, int limit) throws IOException {
+    try (InputStream input = new FileInputStream("/proc/" + pid + "/" + name);
+        ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+      byte[] bytes = new byte[4096];
+      int size;
+      while ((size = input.read(bytes)) != -1) {
+        if (output.size() + size > limit) throw new IOException("TRIAL_CONTEXT_READ_LIMIT");
+        output.write(bytes, 0, size);
+      }
+      return new String(output.toByteArray(), StandardCharsets.UTF_8);
+    }
   }
 
   private static Map<String, Object> status(String address, String cookie) throws IOException {

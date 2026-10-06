@@ -60,7 +60,10 @@ public final class LegacyTarReader {
       if (second >= 0) start.unread(second);
       if (first >= 0) start.unread(first);
       boolean gzip = first == 31 && second == 139;
-      try (InputStream input = gzip ? new StrictGzipInputStream(start) : start) {
+      InputStream decoded = gzip ? new StrictGzipInputStream(start) : start;
+      // 签名资产的小成员共用解压输出缓存，避免 header/正文/padding 各调一次 inflater。
+      // 外层仍读到 EOF，由同一个严格 gzip 读取器检查 CRC、长度和尾随内容。
+      try (InputStream input = caseSensitive ? new BufferedInputStream(decoded, 262144) : decoded) {
         byte[] header = new byte[512], buffer = new byte[65536];
         long total = 0, metadata = 0, pathBytes = 0;
         int count = 0, headers = 0;
@@ -103,7 +106,7 @@ public final class LegacyTarReader {
             metadata = BackupLimits.add(metadata, size, BackupLimits.METADATA);
             byte[] bytes = new byte[(int) size];
             exact(input, bytes, bytes.length);
-            padding(input, size);
+            padding(input, size, buffer);
             if (type == 'L') longName = terminated(bytes);
             else if (type == 'K') longLink = terminated(bytes);
             else {
@@ -163,7 +166,7 @@ public final class LegacyTarReader {
           Limited limited = new Limited(input, size, control);
           visitor.entry(new Member(name, kind, target, size, (int) mode), limited);
           while (limited.read(buffer) != -1) {}
-          padding(input, size);
+          padding(input, size, buffer);
           control.report("LEGACY_VERIFYING", count, total);
         }
       }
@@ -228,9 +231,9 @@ public final class LegacyTarReader {
     }
   }
 
-  private static void padding(InputStream input, long size) throws IOException {
+  private static void padding(InputStream input, long size, byte[] buffer) throws IOException {
     int pad = (int) ((512 - size % 512) % 512);
-    exact(input, new byte[512], pad);
+    exact(input, buffer, pad);
   }
 
   private static long number(byte[] data, int start, int length) throws IOException {
@@ -245,15 +248,18 @@ public final class LegacyTarReader {
       }
       return value;
     }
-    String text =
-        new String(data, start, length, StandardCharsets.US_ASCII).replace('\0', ' ').trim();
-    if (text.isEmpty()) return 0;
-    if (!text.matches("[0-7]+")) throw new IOException("TAR_NUMBER");
-    try {
-      return Long.parseLong(text, 8);
-    } catch (NumberFormatException e) {
-      throw new IOException("TAR_NUMBER", e);
+    // 等同原有 NUL→空格和 String.trim，只在首尾忽略 ASCII 控制/空白。
+    // 每个成员有多个数字字段，直接按字节解析避免逐字段创建字符串和正则。
+    int at = start, end = start + length;
+    while (at < end && (data[at] & 255) <= 32) at++;
+    while (end > at && (data[end - 1] & 255) <= 32) end--;
+    for (; at < end; at++) {
+      int digit = (data[at] & 255) - '0';
+      if (digit < 0 || digit > 7 || value > (Long.MAX_VALUE - digit) / 8)
+        throw new IOException("TAR_NUMBER");
+      value = value * 8 + digit;
     }
+    return value;
   }
 
   private static Map<String, String> pax(byte[] data) throws IOException {

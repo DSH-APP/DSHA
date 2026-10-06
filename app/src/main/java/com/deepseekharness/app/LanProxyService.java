@@ -437,6 +437,7 @@ public final class LanProxyService {
     final ProxyRun run;
     final InputStream in;
     final OutputStream out;
+    boolean headOnly;
 
     LanConnection(SocketDispatch.Ticket owner, ProxyRun run) throws IOException {
       this.owner = owner;
@@ -458,8 +459,12 @@ public final class LanProxyService {
     }
 
     void fail(int status) {
+      fail(status, com.deepseekharness.app.util.LanFailureResponse.forStatus(status));
+    }
+
+    void fail(int status, com.deepseekharness.app.util.LanFailureResponse.Reason reason) {
       try {
-        writePlain(out, "HTTP/1.1 " + status + " Request Failed", "Request could not be processed");
+        com.deepseekharness.app.util.LanFailureResponse.write(out, status, reason, headOnly);
       } catch (IOException ignored) {
       } finally {
         owner.close();
@@ -478,6 +483,7 @@ public final class LanProxyService {
           owner.close();
           return;
         }
+        headOnly = request.method.equals("HEAD");
         String ip =
             owner.socket.getInetAddress() == null
                 ? ""
@@ -486,7 +492,7 @@ public final class LanProxyService {
         String token = LAN_TOKEN.current();
         int authorized = LanAuth.tokenOk(request.raw(), token);
         if (authorized == LanAuth.AUTH_DENY) {
-          fail(401);
+          fail(401, LanAuth.denialReason(request.raw(), token));
           return;
         }
         if (authorized == LanAuth.AUTH_OK_SET_COOKIE) {
@@ -499,7 +505,7 @@ public final class LanProxyService {
         }
         AuthSnapshot auth = snapshotDshAuth(run);
         if (auth == null) {
-          fail(503);
+          fail(503, com.deepseekharness.app.util.LanFailureResponse.Reason.BACKEND_AUTH_NOT_READY);
           return;
         }
         boolean websocket = request.websocketRequest();
@@ -556,7 +562,8 @@ public final class LanProxyService {
         String forwarded =
             writeCurrentRequest(client.run, auth, request.forwarded(websocket, !websocket), bout);
         if (forwarded == null) {
-          client.fail(503);
+          client.fail(
+              503, com.deepseekharness.app.util.LanFailureResponse.Reason.BACKEND_AUTH_NOT_READY);
           return;
         }
         if (request.value("Expect").equalsIgnoreCase("100-continue")) {
@@ -687,7 +694,11 @@ public final class LanProxyService {
 
   private static void writeLanRedirect(OutputStream out, String token) throws IOException {
     if (!isValidLanToken(token)) {
-      writePlain(out, "HTTP/1.1 503 Service Unavailable", "LAN token is not ready");
+      com.deepseekharness.app.util.LanFailureResponse.write(
+          out,
+          503,
+          com.deepseekharness.app.util.LanFailureResponse.Reason.TOKEN_UNAVAILABLE,
+          false);
       return;
     }
     String response =
@@ -703,19 +714,6 @@ public final class LanProxyService {
             + "; HttpOnly; SameSite=Strict\r\n"
             + "Content-Length: 0\r\nConnection: close\r\n\r\n";
     out.write(response.getBytes(StandardCharsets.ISO_8859_1));
-    out.flush();
-  }
-
-  private static void writePlain(OutputStream out, String status, String body) throws IOException {
-    byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
-    String header =
-        status
-            + "\r\nContent-Type: text/plain; charset=utf-8\r\n"
-            + "Cache-Control: no-store\r\nContent-Length: "
-            + bytes.length
-            + "\r\nConnection: close\r\n\r\n";
-    out.write(header.getBytes(StandardCharsets.ISO_8859_1));
-    out.write(bytes);
     out.flush();
   }
 

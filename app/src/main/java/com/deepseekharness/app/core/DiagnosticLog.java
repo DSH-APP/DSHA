@@ -45,7 +45,7 @@ public final class DiagnosticLog {
         String value = DiagnosticHistory.read(fs, folder);
         return value.isEmpty()
             ? com.deepseekharness.app.util.UiText.text("暂无失败或操作记录\n")
-            : SensitiveData.redact(value);
+            : com.deepseekharness.app.util.LogCompactor.compact(SensitiveData.redact(value), 8000);
       } catch (Exception e) {
         return com.deepseekharness.app.util.UiText.text("无法读取操作记录\n");
       }

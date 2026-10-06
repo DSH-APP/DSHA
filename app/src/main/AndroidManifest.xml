@@ -83,6 +83,10 @@
         </service>
         <activity android:name=".ui.BackgroundTasksActivity" android:exported="false" />
         <activity android:name=".ui.NativeDataActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.WorkspaceFilesActivity" android:exported="false" />
+          <activity android:name=".ui.StorageHelpActivity" android:exported="false" />
+          <activity android:name=".ui.ColdSetupSpeedActivity" android:exported="false" />
+        <activity android:name=".ui.SkillsActivity" android:exported="false" />
         <activity android:name=".ui.RetainedDataActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <service android:name=".backup.PostUpgradeCleanupService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />
         <service android:name=".backup.AutomaticBackupService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />

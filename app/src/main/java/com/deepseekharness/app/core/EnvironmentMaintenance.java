@@ -21,7 +21,49 @@ public final class EnvironmentMaintenance {
 
   public static String rebuild(HarnessController controller, Consumer<String> progress)
       throws Exception {
+    if (!MaintenanceCoordinator.isOwner())
+      throw new IOException("ENVIRONMENT_REQUIRES_MAINTENANCE");
+    if (com.deepseekharness.app.backup.ColdInstallTransaction.eligibleFresh(
+        new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
+        controller.context().getFilesDir().getCanonicalFile()))
+      return initializeFresh(controller.context(), controller.proot(), progress);
     return rebuild(controller, progress, controller.proot()::extractOfflineBundle);
+  }
+
+  /** 真正的首次空环境不创建无数据可保护的重建快照；冷事务和完整运行核验仍执行。 */
+  public static String initializeFresh(
+      android.content.Context context,
+      com.deepseekharness.app.runtime.ProotBootstrap boot,
+      Consumer<String> progress)
+      throws Exception {
+    if (!MaintenanceCoordinator.isOwner())
+      throw new IOException("ENVIRONMENT_REQUIRES_MAINTENANCE");
+    try (var invocation = boot.hostPorts().open()) {
+      var control = maintenanceControl(progress);
+      boot.extractOfflineBundle(
+          new com.deepseekharness.app.runtime.ProotBootstrap.ExtractionProgress() {
+            @Override
+            public void onStage(String stage) {
+              progress.accept(stage);
+            }
+
+            @Override
+            public void accept(Long done, Long total) {}
+          });
+      progress.accept(
+          com.deepseekharness.app.util.UiText.choose("检查启动配置…", "Checking startup configuration…"));
+      var proof =
+          com.deepseekharness.app.runtime.RuntimeTrial.verify(
+              context,
+              boot,
+              control,
+              () -> validateRuntime(boot, false),
+              boot.hostPorts().browserProbe());
+      boot.hostPorts().confirmColdRuntime(boot.getRootfsDir(), proof);
+      boot.confirmRuntimeHealth(proof);
+      if (!boot.isEnvironmentReady()) throw new IOException("RUNTIME_READINESS_FAILED");
+      return com.deepseekharness.app.util.UiText.text("解压与离线安装完成");
+    }
   }
 
   public static String rollbackRuntime(
@@ -307,24 +349,69 @@ public final class EnvironmentMaintenance {
   private static com.deepseekharness.app.backup.BackupControl maintenanceControl(
       Consumer<String> progress) {
     final long[] last = {0};
+    final String[] previousStage = {""};
     return BackupTask.currentControl(
         (stage, entries, bytes) -> {
           long now = android.os.SystemClock.elapsedRealtime();
-          if (now - last[0] < 600 && !stage.equals("TRIAL_COMPATIBILITY_RETRY")) return;
+          if (now - last[0] < 600
+              && stage.equals(previousStage[0])
+              && !stage.equals("TRIAL_COMPATIBILITY_RETRY")) return;
           last[0] = now;
+          previousStage[0] = stage;
           String title =
               stage.equals("TRIAL_COMPATIBILITY_RETRY")
                   ? com.deepseekharness.app.util.UiText.choose(
                       "proroot 已确认退出，正在使用 proot 进行一次兼容验证…",
                       "proroot has stopped; verifying once with proot compatibility mode…")
                   : stage.startsWith("TRIAL_")
-                      ? com.deepseekharness.app.util.UiText.choose(
-                          "正在确认隔离运行环境与网页连接；请保持应用在前台，可继续等待慢启动…",
-                          "Verifying the isolated runtime and browser connection; keep the app in the foreground. Slow startup continues waiting…")
+                      ? trialProgress(stage)
                       : com.deepseekharness.app.util.UiText.choose(
                           "正在核验受管文件…", "Verifying managed files…");
           progress.accept(title + (bytes > 0 ? " " + Fmt.bytes(bytes) : ""));
         });
+  }
+
+  private static String trialProgress(String stage) {
+    if (stage.matches("TRIAL_NATIVE_BUILTIN_[0-9]+")) {
+      int index = Integer.parseInt(stage.substring("TRIAL_NATIVE_BUILTIN_".length()));
+      return com.deepseekharness.app.util.UiText.format(
+          "正在加载内置组件：%d/%d…",
+          index + 1, com.deepseekharness.app.util.BuiltinPluginRegistry.SIGNED.size());
+    }
+    return switch (stage) {
+      case "TRIAL_NATIVE_MODULES" ->
+          com.deepseekharness.app.util.UiText.choose("正在核验原生模块…", "Checking native modules…");
+      case "TRIAL_NATIVE_LOADER" ->
+          com.deepseekharness.app.util.UiText.choose(
+              "正在准备组件加载器…", "Preparing the component loader…");
+      case "TRIAL_NATIVE_FLOCK" ->
+          com.deepseekharness.app.util.UiText.choose("正在核验文件锁…", "Checking file locking…");
+      case "TRIAL_NATIVE_READY" ->
+          com.deepseekharness.app.util.UiText.choose(
+              "正在启动 DSH 网页…", "Starting the DSH browser interface…");
+      case "TRIAL_NATIVE_PNPM" ->
+          com.deepseekharness.app.util.UiText.choose("核验 pnpm 入口…", "Checking the pnpm entry…");
+      case "TRIAL_NATIVE_STORAGE" ->
+          com.deepseekharness.app.util.UiText.choose("核验数据读写…", "Checking data access…");
+      case "TRIAL_NATIVE_FRESH" ->
+          com.deepseekharness.app.util.UiText.choose(
+              "在独立进程重开数据…", "Reopening data in a fresh process…");
+      case "TRIAL_NATIVE_SESSION" ->
+          com.deepseekharness.app.util.UiText.choose("核验会话重开…", "Checking session reopening…");
+      case "TRIAL_NATIVE_PLUGIN_READY" ->
+          com.deepseekharness.app.util.UiText.choose(
+              "数据与会话已通过核验", "Data and session checks passed");
+      case "TRIAL_AUTHENTICATING" ->
+          com.deepseekharness.app.util.UiText.choose(
+              "正在确认网页鉴权…", "Confirming browser authentication…");
+      case "TRIAL_RENDERING" ->
+          com.deepseekharness.app.util.UiText.choose(
+              "正在确认网页与数据读写…", "Confirming the browser and data access…");
+      default ->
+          com.deepseekharness.app.util.UiText.choose(
+              "正在确认隔离运行环境与网页连接；请保持应用在前台，可继续等待慢启动…",
+              "Verifying the isolated runtime and browser connection; keep the app in the foreground. Slow startup continues waiting…");
+    };
   }
 
   private static void validateRuntime(com.deepseekharness.app.runtime.ProotBootstrap proot)
@@ -338,39 +425,16 @@ public final class EnvironmentMaintenance {
     // 覆盖安装/权限变更可能改变 Android supplementary groups；与冷安装、PTY 一样先补齐当前真实组。
     // 只追加缺少的本机名称映射，随后仍以 id -Gn 实际复验，不能跳过第 6 步。
     proot.ensureAndroidGroups();
+    // Node、Python、工具和原生模块在 RuntimeTrial 的同一次真实启动中核验。
+    // 此处只核对不会启动 Node 的补丁/解析/组信息，避免重复加载整套 DSH。
     java.util.List<com.deepseekharness.app.util.InstallProbe.Check> checks =
-        com.deepseekharness.app.util.InstallProbe.checks(0);
-    com.deepseekharness.app.util.InstallProbe.Results checked =
-        new com.deepseekharness.app.util.InstallProbe.Results(checks);
+        com.deepseekharness.app.util.InstallProbe.checks(6);
+    var checked = new com.deepseekharness.app.util.InstallProbe.Results(checks);
     String probe =
-        readCheckedProot(proot, com.deepseekharness.app.util.InstallProbe.script(checks), 90_000);
+        readCheckedProot(proot, com.deepseekharness.app.util.InstallProbe.script(checks), 30_000);
     for (String line : probe.split("\\r?\\n")) checked.accept(line);
-    for (int step = 2; step <= 6; step++)
-      if (!checked.ok(step))
-        throw new IOException(
-            com.deepseekharness.app.util.UiText.format(
-                "新环境第 %d 步检查失败：%s", step, checked.detail(step)));
-    String script =
-        "set -e; curl --version; git --version; id -Gn; python3 -c 'import ssl,sqlite3,json,tarfile; assert ssl.OPENSSL_VERSION'; "
-            + (register ? "python3 /root/.dsh/register-builtin-plugins.py; " : "")
-            + "node -e "
-            + com.deepseekharness.app.util.ShellQuote.arg(
-                "(async()=>{const fs=require('node:fs');const p='/usr/local/lib/node_modules/@deepseek-ai/dsh/package.json';"
-                    + "const pkg=JSON.parse(fs.readFileSync(p,'utf8'));if(pkg.version!=='"
-                    + com.deepseekharness.app.util.Constants.DSH_VERSION
-                    + "'||process.arch!=='arm64'||!process.versions.node.startsWith('24.'))throw Error('运行时版本不符');"
-                    + "const r=require('node:module').createRequire(p);for(const n of ['sharp','koffi','node-pty','@deepseek-ai/node-addon-system/landlock-run'])r(n);"
-                    + "const loader=r('@deepseek-ai/cordis-plugin-loader').ModuleLoader.fromInternal();"
-                    + "if(!loader||typeof loader.import!=='function')throw Error('Node 插件加载器首次初始化失败');"
-                    + builtinImportProbe()
-                    + "const q='/root/.dsha-native-check-'+process.pid;const fd=fs.openSync(q,'wx',384);"
-                    + "try{await r('@deepseek-ai/node-addon-system/flock').tryLockExclusive(fd);}"
-                    + "finally{fs.closeSync(fd);fs.unlinkSync(q);}})().catch(e=>{console.error(e);process.exitCode=1;});")
-            + "; dsh --version; printf '\\nDSHA_RUNTIME_VALIDATED\\n'";
-    String output = readCheckedProot(proot, script, 90_000);
-    if (output == null || !output.contains("\nDSHA_RUNTIME_VALIDATED\n"))
-      throw new IOException(
-          com.deepseekharness.app.util.UiText.format("新环境运行校验失败，将保留并回切原环境。\n%s", output));
+    if (!checked.ok(6)) throw new IOException("RUNTIME_PATCH_CHECK_FAILED:" + checked.detail(6));
+    if (register) readCheckedProot(proot, "python3 /root/.dsh/register-builtin-plugins.py", 30_000);
   }
 
   private static String readCheckedProot(

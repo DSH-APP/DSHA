@@ -359,8 +359,18 @@ public final class VirtualScreenManager {
       String output = selected.start(app, command);
       Matcher match = output == null ? null : STARTED.matcher(output);
       if (output == null || !output.contains("[EXIT=0]") || match == null || !match.find()) {
+        String reason = com.deepseekharness.app.util.VirtualScreenBootstrap.error(output);
+        com.deepseekharness.app.core.DiagnosticLog.record(
+            app,
+            "VSCREEN_START",
+            "sdk="
+                + android.os.Build.VERSION.SDK_INT
+                + " channel="
+                + selected.id()
+                + " "
+                + (reason.isEmpty() ? "VSCREEN_START_RESULT_UNKNOWN" : reason));
         failStart(launchEpoch);
-        return failure("VSCREEN_START_RESULT_UNKNOWN");
+        return failure(reason.isEmpty() ? "VSCREEN_START_RESULT_UNKNOWN" : "VSCREEN_" + reason);
       }
       coreToken = match.group(1);
       boolean admitted;

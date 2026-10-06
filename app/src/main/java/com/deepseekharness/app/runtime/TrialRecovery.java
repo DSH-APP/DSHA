@@ -20,26 +20,50 @@ final class TrialRecovery {
     if (fs.stat(home).type.equals("MISSING")) return;
     List<String> entries = fs.list(home);
     if (entries.size() > 64) throw new IOException("TRIAL_RETENTION_LIMIT");
+    IOException retained = null;
     for (String id : entries) {
-      if (!id.matches(Ids.UUID_PATTERN)) throw new IOException("TRIAL_DIRECTORY");
-      File entry = fs.child(home, id), closed = fs.child(entry, "closed");
-      if (!fs.stat(closed).type.equals("MISSING")) {
-        if (!id.equals(new String(fs.small(closed, 128), StandardCharsets.US_ASCII)))
-          throw new IOException("TRIAL_MARKER");
-        if (!fs.stat(fs.child(entry, "payload")).type.equals("MISSING"))
-          fs.removeOwned(entry, "payload");
-        continue;
+      if (Thread.currentThread().isInterrupted())
+        throw new java.io.InterruptedIOException("CANCELLED");
+      try {
+        if (!id.matches(Ids.UUID_PATTERN)) throw new IOException("TRIAL_DIRECTORY");
+        File entry = fs.child(home, id), closed = fs.child(entry, "closed");
+        if (!fs.stat(closed).type.equals("MISSING")) {
+          if (!id.equals(new String(fs.small(closed, 128), StandardCharsets.US_ASCII)))
+            throw new IOException("TRIAL_MARKER");
+          if (!fs.stat(fs.child(entry, "payload")).type.equals("MISSING"))
+            fs.removeOwned(entry, "payload");
+          continue;
+        }
+        File payload = fs.child(entry, "payload");
+        File launched = fs.child(entry, "launched");
+        String launchedType = fs.stat(launched).type;
+        if (!launchedType.equals("MISSING")) {
+          if (!launchedType.equals("FILE")
+              || !id.equals(new String(fs.small(launched, 128), StandardCharsets.US_ASCII)))
+            throw new IOException("TRIAL_MARKER");
+          if (fs.stat(fs.child(payload, ".dsha-web.pid")).type.equals("MISSING")
+              && fs.stat(fs.child(payload, ".dsha-web.pid.stale")).type.equals("MISSING"))
+            throw new IOException(
+                "TRIAL_PROCESS_UNCONFIRMED",
+                new IOException("TRIAL_NO_PID_OR_BOUND_SESSION_EXIT_EVIDENCE"));
+          stopper.stopAndConfirm(payload);
+        }
+        TrialSupport.write(fs, entry, "closed", id.getBytes(StandardCharsets.US_ASCII));
+        fs.removeOwned(entry, "payload");
+      } catch (java.io.InterruptedIOException cancelled) {
+        throw cancelled;
+      } catch (IOException blocked) {
+        if (Thread.currentThread().isInterrupted()) {
+          java.io.InterruptedIOException cancelled =
+              new java.io.InterruptedIOException("CANCELLED");
+          cancelled.initCause(blocked);
+          throw cancelled;
+        }
+        if (retained == null) retained = blocked;
+        else retained.addSuppressed(blocked);
       }
-      File payload = fs.child(entry, "payload");
-      if (!fs.stat(fs.child(entry, "launched")).type.equals("MISSING")) {
-        if (fs.stat(fs.child(payload, ".dsha-web.pid")).type.equals("MISSING")
-            && fs.stat(fs.child(payload, ".dsha-web.pid.stale")).type.equals("MISSING"))
-          throw new IOException("TRIAL_PROCESS_UNCONFIRMED");
-        stopper.stopAndConfirm(payload);
-      }
-      TrialSupport.write(fs, entry, "closed", id.getBytes(StandardCharsets.US_ASCII));
-      fs.removeOwned(entry, "payload");
     }
+    if (retained != null) throw retained;
     RuntimeTrialRecords.pruneClosed(fs, home);
   }
 }

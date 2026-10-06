@@ -3,6 +3,7 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingLeft="18dp" android:paddingRight="18dp" android:paddingTop="14dp" android:paddingBottom="22dp">
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_environment_page" android:textSize="24sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_environment_sub" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="7dp" android:layout_marginBottom="18dp" />
+        <include layout="@layout/entry_storage_help" />
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:minHeight="38dp" android:gravity="center_vertical">
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui2_environment_state" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />

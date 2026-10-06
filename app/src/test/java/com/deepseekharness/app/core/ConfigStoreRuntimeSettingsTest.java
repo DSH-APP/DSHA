@@ -18,6 +18,24 @@ public class ConfigStoreRuntimeSettingsTest {
   }
 
   @Test
+  public void anUnselectedColdInstallMayTryFastModeWithoutChangingTheRuntimeDefault() {
+    assertTrue(ConfigStore.preferFastColdModeFrom(Map.of()));
+    var values = Map.of("dns_mode", "ipv4", "ui_language", "en");
+    assertTrue(ConfigStore.preferFastColdModeFrom(values));
+    assertFalse(ConfigStore.runtimeSettingsFrom(values).proroot);
+  }
+
+  @Test
+  public void explicitProotAndHistoricalSelectionRecordsPreventAutomaticFastMode() {
+    for (Object value : java.util.List.of("proot", "proroot", "", false, 1))
+      assertFalse(
+          ConfigStore.preferFastColdModeFrom(Map.of(Constants.KEY_CONTAINER_RUNTIME, value)));
+    for (String key :
+        java.util.List.of("cold_runtime_root", "cold_runtime_packages", "cold_runtime_mode"))
+      assertFalse(ConfigStore.preferFastColdModeFrom(Map.of(key, "")));
+  }
+
+  @Test
   public void oneMapImageSupportsOldScalarTypesAndNormalizesDns() {
     var snapshot =
         ConfigStore.runtimeSettingsFrom(

@@ -35,6 +35,7 @@ final class WebLifecycleController {
 
   static final class WebRun {
     final long generation;
+    final String instanceId = java.util.UUID.randomUUID().toString();
     volatile Process launcher;
     volatile WebProcessSession.BridgeLease bridge;
     volatile String authUrl = "";
@@ -115,6 +116,58 @@ final class WebLifecycleController {
   public String getWebAuthUrl() {
     WebRun run = state.currentRun;
     return run == null ? "" : run.authUrl;
+  }
+
+  /** 地址可以复用，网页只能属于本次仍存活且已经鉴权的正式实例。 */
+  public com.deepseekharness.app.util.PreviewPageSession.Identity getReadyWebPageIdentity() {
+    synchronized (lifecycle) {
+      WebRun run = state.currentRun;
+      return readyWebPageIdentity(
+          lifecycle, run, run != null && state.recovery.failed(run.generation));
+    }
+  }
+
+  static com.deepseekharness.app.util.PreviewPageSession.Identity readyWebPageIdentity(
+      WebLifecycle lifecycle, WebRun run, boolean failed) {
+    synchronized (lifecycle) {
+      if (run == null
+          || failed
+          || !lifecycle.isCurrent(run.generation)
+          || lifecycle.isStarting()
+          || lifecycle.isStopping()
+          || lifecycle.isUserStopped()
+          || run.authUrl.isEmpty()
+          || run.launcher == null
+          || !Compat.isAlive(run.launcher)) return null;
+      return new com.deepseekharness.app.util.PreviewPageSession.Identity(
+          run.generation, run.instanceId, run.authUrl);
+    }
+  }
+
+  public void addReadyWebPageListener(Runnable listener) {
+    if (listener == null) throw new IllegalArgumentException("PREVIEW_PAGE_LISTENER");
+    state.readyWebPageListeners.add(listener);
+  }
+
+  public void removeReadyWebPageListener(Runnable listener) {
+    state.readyWebPageListeners.remove(listener);
+  }
+
+  private void notifyReadyWebPageChanged() {
+    if (state.readyWebPageListeners.isEmpty()) return;
+    android.os.Handler main = new android.os.Handler(android.os.Looper.getMainLooper());
+    for (Runnable listener : state.readyWebPageListeners) {
+      main.post(
+          () -> {
+            // 页面退到后台后的排队事件不能再次认领旧 Activity。
+            if (!state.readyWebPageListeners.contains(listener)) return;
+            try {
+              listener.run();
+            } catch (RuntimeException e) {
+              Log.w("DSHA", "PREVIEW_PAGE_LISTENER_FAILED", e);
+            }
+          });
+    }
   }
 
   /** dsh 实际启动命令（写 pid 文件要在 exec 之前，exec 不换 pid）。 */
@@ -210,6 +263,7 @@ final class WebLifecycleController {
         WebRun run = new WebRun(generation);
         state.currentRun = run;
         webRuns.put(generation, run);
+        notifyReadyWebPageChanged();
         state.recovery.begin(generation, !automatic);
         config.requestStartupRecovery(false);
         state.diagnostics.begin(generation, safeMode);
@@ -432,6 +486,7 @@ final class WebLifecycleController {
                         com.deepseekharness.app.util.UiText.text("鉴权链接已就绪，点「进入对话」即可进入 dsh"));
                   }
                 }
+                notifyReadyWebPageChanged();
                 // LAN exchanges and migration checks never pause the stdout drain.
                 Thread ready =
                     new Thread(
@@ -689,6 +744,7 @@ final class WebLifecycleController {
       state.lastStopError = "";
       WebRun run = webRuns.get(previous);
       if (run != null) run.authUrl = "";
+      notifyReadyWebPageChanged();
       // 宿主直接写小标记，不等可能仍在解压/注册插件的串行任务。
       try {
         File sentinel = stopSentinel();
@@ -879,6 +935,7 @@ final class WebLifecycleController {
       if (lifecycle.isCurrent(generation))
         state.recovery.stage(generation, state.diagnostics.snapshot().stage);
       if (!lifecycle.isCurrent(generation) || !state.recovery.fail(generation, reason)) return;
+      notifyReadyWebPageChanged();
       state.diagnostics.completed(generation, "failed", reason);
       state.diagnostics.preserveFailure(new File(proot.getRootfsDir(), "root/dsh-web.log"), reason);
       if (!state.diagnostics.snapshot().safe)

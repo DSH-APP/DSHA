@@ -158,6 +158,20 @@ public final class ColdInstallTransaction {
     }
   }
 
+  public static boolean eligibleFresh(BackupFileSystem fs, File files) throws IOException {
+    for (String name :
+        List.of("user-data-v5", UserDataLayout.RECORD, UserDataLayout.RECORD + ".previous"))
+      if (!fs.stat(fs.child(files, name)).type.equals("MISSING")) return false;
+    try {
+      requireFresh(fs, fs.child(files, "linux"));
+      return true;
+    } catch (IOException error) {
+      if (error.getMessage() != null && error.getMessage().startsWith("COLD_EXISTING_"))
+        return false;
+      throw error;
+    }
+  }
+
   public Candidate candidate() {
     return candidate;
   }

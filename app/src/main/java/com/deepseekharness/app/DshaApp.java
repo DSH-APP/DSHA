@@ -138,6 +138,12 @@ public class DshaApp extends Application
           }
 
           @Override
+          public boolean preferFastColdMode() {
+            return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                && new com.deepseekharness.app.core.ConfigStore(runtimeApp).preferFastColdMode();
+          }
+
+          @Override
           public void stage(String value) {
             com.deepseekharness.app.core.ColdInstallDiagnostics.stage(runtimeApp, value);
           }
@@ -177,31 +183,30 @@ public class DshaApp extends Application
           }
 
           @Override
+          public String coldRuntimeIdentity(java.io.File rootfs) throws java.io.IOException {
+            return checkedColdRuntimeIdentity(runtimeApp, rootfs);
+          }
+
+          @Override
           public com.deepseekharness.app.runtime.RuntimeHostPorts.Settings successfulColdRuntime(
               java.io.File rootfs,
               com.deepseekharness.app.util.ColdInstallPlan.Mode mode,
               String packageSlotSha)
               throws java.io.IOException {
+            String rootIdentity = checkedColdRuntimeIdentity(runtimeApp, rootfs);
             java.io.File current =
                 new java.io.File(runtimeApp.getFilesDir(), "linux/ubuntu").getCanonicalFile();
-            if (!current.equals(rootfs.getCanonicalFile()))
-              throw new java.io.IOException("COLD_RUNTIME_ROOT_CHANGED");
             var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
-            var node = fs.stat(current);
             java.io.File toolsVersion =
                 new java.io.File(current, "root/.dsha-ubuntu-tools-version");
-            if (!node.type.equals("DIRECTORY")
-                || !fs.stat(toolsVersion).type.equals("FILE")
+            if (!fs.stat(toolsVersion).type.equals("FILE")
                 || !new String(
                         fs.small(toolsVersion, 128), java.nio.charset.StandardCharsets.US_ASCII)
                     .matches("[a-f0-9]{64}\\n"))
               throw new java.io.IOException("COLD_RUNTIME_POSTCHECK_MISSING");
             var selected =
                 new com.deepseekharness.app.core.ConfigStore(runtimeApp)
-                    .recordSuccessfulColdRuntime(
-                        mode,
-                        current.getPath() + ":" + node.device + ":" + node.key,
-                        packageSlotSha);
+                    .recordSuccessfulColdRuntime(mode, rootIdentity, packageSlotSha);
             com.deepseekharness.app.core.ColdInstallDiagnostics.record(
                 runtimeApp,
                 "RUNTIME_SELECTED",
@@ -227,5 +232,16 @@ public class DshaApp extends Application
               com.deepseekharness.app.util.UiText.text("任务通知"),
               NotificationManager.IMPORTANCE_LOW));
     }
+  }
+
+  private static String checkedColdRuntimeIdentity(android.content.Context app, java.io.File rootfs)
+      throws java.io.IOException {
+    var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
+    java.io.File current = fs.child(app.getFilesDir().getCanonicalFile(), "linux/ubuntu");
+    var node = fs.stat(current);
+    if (!node.type.equals("DIRECTORY")
+        || !current.getCanonicalFile().equals(rootfs.getCanonicalFile()))
+      throw new java.io.IOException("COLD_RUNTIME_ROOT_CHANGED");
+    return current.getCanonicalPath() + ":" + node.device + ":" + node.key;
   }
 }

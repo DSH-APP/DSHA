@@ -12,6 +12,8 @@ final class ColdToolsInstaller {
 
   static ProotBootstrap.ColdRuntimeSelection run(
       ProotBootstrap boot, java.util.function.BiConsumer<Long, Long> progress) throws IOException {
+    if ("configured-overlay-v1".equals(boot.readAssetString("ubuntu-tools.layout").trim()))
+      return configured(boot, progress);
     String slot = ".dsha-bundled-tools-" + java.util.UUID.randomUUID();
     var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
     String appData = boot.ctx.getApplicationInfo().dataDir;
@@ -35,25 +37,7 @@ final class ColdToolsInstaller {
     String guest = "/root/" + slot;
     String frozen = packageFingerprint(boot, fs, hostRoot, slot);
     try {
-      ContainerRuntime.Proroot candidate =
-          new ContainerRuntime.Proroot(boot.ctx, ContainerRuntime.Proroot.defaultDir(boot.ctx));
-      boolean available = candidate.available();
-      boolean isolated = IsolatedInstallProcess.supported(boot.ctx);
-      boot.hostPorts()
-          .record(
-              "CAPABILITY",
-              "proroot="
-                  + available
-                  + " isolation="
-                  + isolated
-                  + " supervisor="
-                  + IsolatedInstallProcess.sessionLauncher(boot.ctx)
-                  + "\n"
-                  + (available ? "" : candidate.unavailableReason()));
-      var settings = boot.hostPorts().settings();
-      var modes =
-          com.deepseekharness.app.util.ColdInstallPlan.modes(
-              settings.proroot, available, isolated, settings.disableProotSeccomp);
+      var modes = modes(boot, false);
       var selected =
           com.deepseekharness.app.util.ColdInstallPlan.run(
               modes,
@@ -117,6 +101,110 @@ final class ColdToolsInstaller {
     }
   }
 
+  private static ProotBootstrap.ColdRuntimeSelection configured(
+      ProotBootstrap boot, java.util.function.BiConsumer<Long, Long> progress) throws IOException {
+    var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
+    boot.requireColdCandidate();
+    var archiveDigest = com.deepseekharness.app.backup.BackupArchive.sha();
+    try (InputStream input =
+        new java.security.DigestInputStream(
+            boot.ctx.getAssets().open("ubuntu-tools.bin"), archiveDigest)) {
+      TarGzipExtractor.extractAuto(input, boot.rootfsDir, 0);
+    }
+    var manifest =
+        com.deepseekharness.app.backup.BackupJson.read(
+            boot.readAssetString("ubuntu-tools.manifest.json")
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8),
+            8192);
+    String archiveHash =
+        com.deepseekharness.app.backup.BackupJson.string(manifest, "archiveSha256");
+    String lockHash =
+        com.deepseekharness.app.backup.BackupJson.string(manifest, "packageLockSha256");
+    if (!archiveHash.matches("[a-f0-9]{64}") || !lockHash.matches("[a-f0-9]{64}"))
+      throw new IOException("COLD_CONFIGURED_MANIFEST");
+    if (!archiveHash.equals(
+        com.deepseekharness.app.backup.BackupArchive.hex(archiveDigest.digest())))
+      throw new IOException("COLD_CONFIGURED_ARCHIVE_CHANGED");
+    File marker = new File(boot.rootfsDir, "root/.dsha-ubuntu-tools-version");
+    if (!new String(fs.small(marker, 128), java.nio.charset.StandardCharsets.US_ASCII)
+        .trim()
+        .equals(lockHash)) throw new IOException("COLD_CONFIGURED_VERSION");
+    File status = new File(boot.rootfsDir, "var/lib/dpkg/status");
+    try (InputStream input = fs.read(status, fs.stat(status))) {
+      if (!com.deepseekharness.app.backup.BackupArchive.digest(
+              input, new com.deepseekharness.app.backup.BackupControl(null))
+          .equals(manifest.get("statusSha256"))) throw new IOException("COLD_CONFIGURED_STATUS");
+    }
+    var modes = modes(boot, true);
+    boolean dynamicLoaderRetry =
+        com.deepseekharness.app.util.ColdInstallPlan.allowDynamicLoaderRetry(
+            boot.coldCandidate != null,
+            boot.hostPorts().preferFastColdMode(),
+            boot.forceProot,
+            boot.hostPorts().settings().staticLoader);
+    try {
+      var selected =
+          com.deepseekharness.app.util.ColdInstallPlan.runConfigured(
+              modes,
+              dynamicLoaderRetry,
+              (mode, probe) -> {
+                boot.requireColdCandidate();
+                boot.extractionStage(
+                    progress,
+                    com.deepseekharness.app.util.UiText.format("检查离线安装运行方式：%s", mode.name()));
+                String command =
+                    com.deepseekharness.app.util.ColdInstallPlan.probeCommand(
+                            "/root/.dsha-cold-probe-" + java.util.UUID.randomUUID())
+                        + " && printf '\\nDSHA_UBUNTU_TOOLS_READY\\n'";
+                var result = collectColdCommand(boot, mode, command, 30_000);
+                return new com.deepseekharness.app.util.ColdInstallPlan.Observation(
+                    result.exitCode,
+                    result.timedOut,
+                    true,
+                    result.output + "\n" + result.tail,
+                    result.diagnostic());
+              },
+              (mode, probe, result) ->
+                  boot.hostPorts()
+                      .record("CONFIGURED_TOOLS_CHECK_" + mode.name(), result.diagnostic));
+      return new ProotBootstrap.ColdRuntimeSelection(selected, archiveHash);
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
+      throw new java.io.InterruptedIOException("COLD_CONFIGURED_CANCELLED");
+    }
+  }
+
+  private static java.util.List<com.deepseekharness.app.util.ColdInstallPlan.Mode> modes(
+      ProotBootstrap boot, boolean configured) {
+    var settings = boot.hostPorts().settings();
+    ContainerRuntime.Proroot candidate =
+        new ContainerRuntime.Proroot(
+            boot.ctx, ContainerRuntime.Proroot.defaultDir(boot.ctx), settings.staticLoader);
+    boolean available = android.os.Build.VERSION.SDK_INT >= 26 && candidate.available();
+    boolean isolated = IsolatedInstallProcess.supported(boot.ctx);
+    // 自动选择只用于已经完成 dpkg 的签名覆盖层及独立首次候选；旧环境/重建保持用户选择。
+    boolean automatic =
+        configured && boot.coldCandidate != null && boot.hostPorts().preferFastColdMode();
+    boolean preferProroot = !boot.forceProot && (settings.proroot || automatic);
+    boot.hostPorts()
+        .record(
+            "CAPABILITY",
+            "proroot="
+                + available
+                + " isolation="
+                + isolated
+                + " preferProroot="
+                + preferProroot
+                + " automaticCold="
+                + automatic
+                + " supervisor="
+                + IsolatedInstallProcess.sessionLauncher(boot.ctx)
+                + "\n"
+                + (available ? "" : candidate.unavailableReason()));
+    return com.deepseekharness.app.util.ColdInstallPlan.modes(
+        preferProroot, available, isolated, settings.disableProotSeccomp);
+  }
+
   private static String packageFingerprint(
       ProotBootstrap boot,
       com.deepseekharness.app.backup.BackupFileSystem fs,
@@ -143,9 +231,11 @@ final class ColdToolsInstaller {
       BoundedGuestSessions.Operation coldRecord = null;
       try {
         ContainerRuntime rt =
-            mode == com.deepseekharness.app.util.ColdInstallPlan.Mode.PROROOT
+            "proroot".equals(mode.runtime)
                 ? new ContainerRuntime.Proroot(
-                    boot.ctx, ContainerRuntime.Proroot.defaultDir(boot.ctx))
+                    boot.ctx,
+                    ContainerRuntime.Proroot.defaultDir(boot.ctx),
+                    mode.staticLoader(boot.hostPorts().settings().staticLoader))
                 : new ContainerRuntime.Proot(boot.ctx, boot.findNativeLib("libproot.so"));
         boolean isolated = IsolatedInstallProcess.supported(boot.ctx);
         coldRecord = isolated ? BoundedGuestSessions.begin(boot.ctx.getFilesDir()) : null;

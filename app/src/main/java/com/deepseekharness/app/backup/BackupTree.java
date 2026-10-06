@@ -10,10 +10,40 @@ public final class BackupTree {
 
   public static String digest(BackupFileSystem fs, File root, BackupControl control)
       throws IOException {
-    MessageDigest hash = BackupArchive.sha();
+    if (fs.getClass() == AndroidBackupFileSystem.class && fs.stat(root).type.equals("DIRECTORY")) {
+      try (AndroidTreeFileSystem tree = new AndroidTreeFileSystem(root)) {
+        return digestTree(tree, root, control);
+      }
+    }
+    return digestTree(fs, root, control);
+  }
+
+  private static String digestTree(BackupFileSystem fs, File root, BackupControl control)
+      throws IOException {
+    TreeHash hash = new TreeHash();
     long[] limits = {0, 0, 0};
-    visit(fs, root, "", hash, control, limits);
-    return BackupArchive.hex(hash.digest());
+    visit(
+        fs,
+        root,
+        "",
+        hash,
+        BackupArchive.sha(),
+        control,
+        limits,
+        new byte[65536],
+        null,
+        new ReadScratch(),
+        null);
+    return BackupArchive.hex(hash.finish());
+  }
+
+  private static final class ReadScratch {
+    private byte[] payload;
+
+    byte[] bytes() {
+      if (payload == null) payload = new byte[AndroidTreeFileSystem.LeafBatch.PAYLOAD_BYTES];
+      return payload;
+    }
   }
 
   /** 私有候选复制；不跟随链接，也不使用硬链接。复制前后独立核验源与候选字节。 */
@@ -70,52 +100,205 @@ public final class BackupTree {
     if (!node.same(fs.stat(source))) throw new IOException("SOURCE_CHANGED");
   }
 
-  private static void field(MessageDigest hash, String value) {
-    byte[] b = value.getBytes(StandardCharsets.UTF_8);
-    hash.update((byte) (b.length >> 24));
-    hash.update((byte) (b.length >> 16));
-    hash.update((byte) (b.length >> 8));
-    hash.update((byte) b.length);
-    hash.update(b);
+  /** 保持原有长度前缀字段格式。按有界缓冲合并更新，避免每个长度字节各进一次 SHA。 文件 SHA 直接编码为原有 64 字节小写 hex 字段，不建立中间字符串和 UTF-8 数组。 */
+  private static final class TreeHash {
+    final MessageDigest digest = BackupArchive.sha();
+    final byte[] fields = new byte[65536];
+    int count;
+
+    private void flush() {
+      if (count == 0) return;
+      digest.update(fields, 0, count);
+      count = 0;
+    }
+
+    private void ensure(int length) {
+      if (length > fields.length - count) flush();
+    }
+
+    private void length(int length) {
+      ensure(4);
+      fields[count++] = (byte) (length >> 24);
+      fields[count++] = (byte) (length >> 16);
+      fields[count++] = (byte) (length >> 8);
+      fields[count++] = (byte) length;
+    }
+
+    private void append(String value) {
+      byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+      length(bytes.length);
+      if (bytes.length > fields.length) {
+        flush();
+        digest.update(bytes);
+        return;
+      }
+      ensure(bytes.length);
+      System.arraycopy(bytes, 0, fields, count, bytes.length);
+      count += bytes.length;
+    }
+
+    void node(String relative, BackupFileSystem.Node node) {
+      append(relative);
+      append(node.type);
+      if (node.type.equals("FILE") || node.type.equals("DIRECTORY"))
+        append(Integer.toOctalString(node.mode));
+    }
+
+    void text(String value) {
+      append(value);
+    }
+
+    void file(byte[] sha) {
+      length(sha.length * 2);
+      ensure(sha.length * 2);
+      String digits = "0123456789abcdef";
+      for (byte value : sha) {
+        int unsigned = value & 255;
+        fields[count++] = (byte) digits.charAt(unsigned >>> 4);
+        fields[count++] = (byte) digits.charAt(unsigned & 15);
+      }
+    }
+
+    byte[] finish() {
+      flush();
+      return digest.digest();
+    }
+  }
+
+  /** 每遍树复用文件 SHA 引擎，字段仍保存各文件独立的完整 SHA-256。 */
+  private static byte[] fileDigest(
+      InputStream input, MessageDigest digest, BackupControl control, byte[] buffer)
+      throws IOException {
+    long total = 0;
+    int count;
+    while ((count = input.read(buffer)) != -1) {
+      control.check();
+      total = BackupLimits.add(total, count, BackupLimits.BYTES + 256L * 1024 * 1024);
+      digest.update(buffer, 0, count);
+    }
+    return digest.digest();
   }
 
   private static void visit(
       BackupFileSystem fs,
       File file,
       String relative,
-      MessageDigest hash,
+      TreeHash hash,
+      MessageDigest fileHash,
       BackupControl control,
-      long[] limits)
+      long[] limits,
+      byte[] buffer,
+      AndroidTreeFileSystem.DigestDirectory parent,
+      ReadScratch scratch,
+      BackupFileSystem.Node known)
       throws IOException {
     control.check();
     BackupLimits.path(relative);
     if (++limits[0] > BackupLimits.ENTRIES) throw new IOException("ENTRY_LIMIT");
-    BackupFileSystem.Node before = fs.stat(file);
-    field(hash, relative);
-    field(hash, before.type);
-    if (before.type.equals("FILE") || before.type.equals("DIRECTORY"))
-      field(hash, Integer.toOctalString(before.mode));
+    BackupFileSystem.Node before =
+        known != null ? known : parent == null ? fs.stat(file) : parent.stat(file.getName());
+    hash.node(relative, before);
     if (before.type.equals("FILE")) {
       limits[1] = BackupLimits.add(limits[1], before.size, BackupLimits.BYTES);
+      if (parent != null) {
+        hash.file(parent.digestFile(file.getName(), before, fileHash, buffer, control));
+        // digestFile 已在关闭 FD 前核对同一文件的 fstat 与固定父目录内的 lstat。
+        return;
+      }
       try (InputStream in = fs.read(file, before)) {
-        field(hash, BackupArchive.digest(in, control));
+        hash.file(fileDigest(in, fileHash, control, buffer));
       }
     } else if (before.type.equals("DIRECTORY")) {
-      var children = fs.list(file);
-      limits[2] = BackupLimits.add(limits[2], children.size(), BackupLimits.ENTRIES);
-      for (String name : children) {
-        BackupLimits.path(name);
-        if (name.contains("/")) throw new IOException("INVALID_CHILD");
-        visit(
-            fs,
-            new File(file, name),
-            relative.isEmpty() ? name : relative + "/" + name,
-            hash,
-            control,
-            limits);
+      try (AndroidTreeFileSystem.DigestDirectory directory =
+          fs instanceof AndroidTreeFileSystem tree
+              ? parent == null ? tree.digestRoot(before) : parent.directory(file.getName(), before)
+              : null) {
+        var children = directory == null ? fs.list(file) : directory.list();
+        limits[2] = BackupLimits.add(limits[2], children.size(), BackupLimits.ENTRIES);
+        if (directory != null)
+          visitChildren(
+              fs, file, relative, hash, fileHash, control, limits, buffer, directory, scratch,
+              children);
+        else
+          for (String name : children) {
+            BackupLimits.path(name);
+            if (name.contains("/")) throw new IOException("INVALID_CHILD");
+            visit(
+                fs,
+                new File(file, name),
+                relative.isEmpty() ? name : relative + "/" + name,
+                hash,
+                fileHash,
+                control,
+                limits,
+                buffer,
+                directory,
+                scratch,
+                null);
+          }
       }
-    } else if (before.type.equals("LINK")) field(hash, fs.readLink(file));
+      // scope.close 已核对目录 FD 和父目录项；根同时核对宿主路径。
+      if (fs instanceof AndroidTreeFileSystem) return;
+    } else if (before.type.equals("LINK"))
+      hash.text(parent == null ? fs.readLink(file) : parent.readLink(file.getName()));
     else if (!before.type.equals("MISSING")) throw new IOException("SPECIAL_FILE");
-    if (!before.same(fs.stat(file))) throw new IOException("SOURCE_CHANGED");
+    if (!before.same(parent == null ? fs.stat(file) : parent.stat(file.getName())))
+      throw new IOException("SOURCE_CHANGED");
+  }
+
+  /** 本遍的新鲜批量 tuple 先过原 Java 预算，最多 1MiB 的小 FILE 才进入串行 native 读取。 */
+  private static void visitChildren(
+      BackupFileSystem fs,
+      File file,
+      String relative,
+      TreeHash hash,
+      MessageDigest fileHash,
+      BackupControl control,
+      long[] limits,
+      byte[] buffer,
+      AndroidTreeFileSystem.DigestDirectory directory,
+      ReadScratch scratch,
+      java.util.List<String> children)
+      throws IOException {
+    for (int first = 0; first < children.size(); first += AndroidTreeFileSystem.LeafBatch.MEMBERS) {
+      AndroidTreeFileSystem.LeafBatch batch = directory.batch(children, first, control);
+      int index = 0;
+      while (index < batch.size()) {
+        control.check();
+        if (!batch.small(index)) {
+          String name = batch.name(index);
+          visit(
+              fs,
+              new File(file, name),
+              relative.isEmpty() ? name : relative + "/" + name,
+              hash,
+              fileHash,
+              control,
+              limits,
+              buffer,
+              directory,
+              scratch,
+              batch.node(index));
+          index++;
+          continue;
+        }
+        int count = 1;
+        while (index + count < batch.size() && batch.small(index + count)) count++;
+        for (int entry = index; entry < index + count; entry++) {
+          control.check();
+          String name = batch.name(entry), path = relative.isEmpty() ? name : relative + "/" + name;
+          BackupLimits.path(path);
+          if (++limits[0] > BackupLimits.ENTRIES) throw new IOException("ENTRY_LIMIT");
+          limits[1] = BackupLimits.add(limits[1], batch.node(entry).size, BackupLimits.BYTES);
+        }
+        byte[][] digests = batch.digestSmall(index, count, scratch.bytes(), fileHash, control);
+        for (int entry = 0; entry < count; entry++) {
+          String name = batch.name(index + entry);
+          hash.node(relative.isEmpty() ? name : relative + "/" + name, batch.node(index + entry));
+          hash.file(digests[entry]);
+        }
+        index += count;
+      }
+    }
   }
 }

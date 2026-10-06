@@ -104,11 +104,95 @@ public class RuntimeTrialRecordsTest {
     write(operation, "closed", id);
   }
 
+  @Test
+  public void pendingDiagnosticIsVisibleWithoutPublishingClosedOrRemovingPayload()
+      throws Exception {
+    File home = temporary.newFolder("pending-diagnostic");
+    String pending = id(51);
+    File operation = fs.child(home, pending);
+    fs.directory(operation);
+    File payload = fs.child(operation, "payload");
+    fs.directory(payload);
+    write(operation, "launched", pending);
+    write(operation, "failure.json", "{\"error\":\"PREFLIGHT_FAILED\",\"exitCode\":1}");
+    RuntimeTrialRecords.FailureDiagnostic diagnostic =
+        RuntimeTrialRecords.latestDiagnostic(fs, home);
+    assertNotNull(diagnostic);
+    assertEquals(pending, diagnostic.recordId());
+    assertEquals("PENDING_EXIT_CONFIRMATION", diagnostic.state());
+    assertEquals("MISSING", diagnostic.pid());
+    assertTrue(
+        new String(diagnostic.failure(), StandardCharsets.US_ASCII).contains("PREFLIGHT_FAILED"));
+    assertFalse(fs.child(operation, "closed").exists());
+    assertTrue(payload.exists());
+    assertThrows(IOException.class, () -> RuntimeTrialRecords.prepareForNew(fs, home));
+  }
+
   private void write(File directory, String name, String value) throws Exception {
     try (OutputStream out = fs.create(fs.child(directory, name))) {
       out.write(value.getBytes(StandardCharsets.US_ASCII));
     }
     fs.syncDirectory(directory);
+  }
+
+  @Test
+  public void ownedColdScopeFailureRemainsReadableAfterClosedPayloadRemoval() throws Exception {
+    File files = temporary.newFolder("app-files");
+    File home = new File(files, "cold-install-probes/" + id(52) + "/app/files/runtime-trials");
+    assertTrue(home.mkdirs());
+    String trial = id(53);
+    File operation = fs.child(home.getCanonicalFile(), trial);
+    fs.directory(operation);
+    String original =
+        "{\"runtimeMode\":\"proot\",\"error\":\"TRIAL_TIMEOUT:RENDERING\",\"output\":\"owned-original-output\"}";
+    write(operation, "failure.json", original);
+    write(operation, "launched", trial);
+    write(operation, "closed", trial);
+    RuntimeTrialRecords.FailureDiagnostic closed =
+        RuntimeTrialRecords.latestDiagnostic(fs, home.getCanonicalFile());
+    assertEquals("CLOSED", closed.state());
+    assertEquals(original, new String(closed.failure(), StandardCharsets.US_ASCII));
+    assertEquals("MISSING", closed.pid());
+    assertEquals("MISSING", closed.stalePid());
+    assertEquals("MISSING", closed.identity());
+    assertFalse(new File(operation, "payload").exists());
+    assertArrayEquals(
+        original.getBytes(StandardCharsets.US_ASCII),
+        fs.small(fs.child(operation, "failure.json"), 65536));
+    fs.delete(fs.child(operation, "closed"));
+    RuntimeTrialRecords.FailureDiagnostic pending =
+        RuntimeTrialRecords.latestDiagnostic(fs, home.getCanonicalFile());
+    assertEquals("PENDING_EXIT_CONFIRMATION", pending.state());
+    assertEquals("MISSING", pending.pid());
+    assertFalse(new File(operation, "closed").exists());
+    assertThrows(IOException.class, () -> RuntimeTrialRecords.prepareForNew(fs, home));
+  }
+
+  @Test
+  public void diagnosticNeverTreatsNonDirectoryPayloadAsMissing() throws Exception {
+    File home = temporary.newFolder("bad-payload-diagnostic");
+    String trial = id(54);
+    complete(home, trial, true);
+    File operation = fs.child(home, trial);
+    write(operation, "payload", "not-a-directory");
+    IOException file =
+        assertThrows(IOException.class, () -> RuntimeTrialRecords.latestDiagnostic(fs, home));
+    assertEquals("TRIAL_PAYLOAD_TYPE", file.getMessage());
+    JvmBackupFileSystem linkView =
+        new JvmBackupFileSystem() {
+          public Node stat(File path) throws IOException {
+            Node node = super.stat(path);
+            return path.equals(new File(operation, "payload"))
+                ? new Node("LINK", node.key, node.size, node.modified, node.device, node.mode)
+                : node;
+          }
+        };
+    IOException link =
+        assertThrows(IOException.class, () -> RuntimeTrialRecords.latestDiagnostic(linkView, home));
+    assertEquals("TRIAL_PAYLOAD_TYPE", link.getMessage());
+    assertEquals(
+        "not-a-directory",
+        new String(fs.small(fs.child(operation, "payload"), 65536), StandardCharsets.US_ASCII));
   }
 
   private static String id(int value) {

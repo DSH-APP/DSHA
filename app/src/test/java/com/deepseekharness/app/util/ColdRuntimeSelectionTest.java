@@ -30,6 +30,26 @@ public class ColdRuntimeSelectionTest {
   }
 
   @Test
+  public void dynamicLoaderSelectionRollbackRestoresTheOriginalStaticFlagAndItsAbsence()
+      throws Exception {
+    var before =
+        Map.<String, Object>of("container_runtime", "proot", "proroot_static_loader", true);
+    var current =
+        Map.of(
+            "container_runtime",
+            "proroot",
+            "proroot_static_loader",
+            false,
+            "cold_runtime_root",
+            "owned",
+            "api_key",
+            "secret");
+    assertEquals(before, ColdRuntimeSelection.rollback(before, current, "owned"));
+    assertEquals(Map.of(), ColdRuntimeSelection.rollback(Map.of(), current, "owned"));
+    assertEquals(before, ColdRuntimeSelection.snapshot(before));
+  }
+
+  @Test
   public void cannotRestoreUnrelatedOrUnrepresentablePreferences() throws Exception {
     try {
       ColdRuntimeSelection.rollback(

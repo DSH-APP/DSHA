@@ -148,7 +148,11 @@ public class MainActivity extends AppCompatActivity {
               }
             },
             false);
-    findViewById(R.id.btn_about).setOnClickListener(v -> AboutDialog.show(this));
+    android.view.ViewGroup quickEntries = findViewById(R.id.btn_about);
+    quickEntries.setVisibility(android.view.View.VISIBLE);
+    quickEntries.setContentDescription(com.deepseekharness.app.util.UiText.text("关于 DSHA"));
+    ((android.widget.ImageView) quickEntries.getChildAt(0)).setImageResource(R.drawable.ic_about);
+    quickEntries.setOnClickListener(v -> AboutDialog.show(this));
 
     BottomNavigationView nav = findViewById(R.id.bottom_nav);
     nav.setOnItemSelectedListener(

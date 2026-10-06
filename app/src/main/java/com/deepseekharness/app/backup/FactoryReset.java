@@ -94,12 +94,27 @@ public final class FactoryReset {
   }
 
   /** 测试与应用内格式化共用：保留根目录，只删除其中内容，不跟随符号链接。 */
-  static void eraseContents(
+  public static void eraseContents(
       BackupFileSystem fs, File root, BackupControl control, String stage, long[] removed)
       throws IOException {
     BackupFileSystem.Node rootNode = fs.stat(root);
     if (rootNode.type.equals("MISSING")) return;
     if (!rootNode.type.equals("DIRECTORY")) throw new IOException("FORMAT_ROOT_TYPE");
+    if (fs instanceof AndroidBackupFileSystem) {
+      try (AndroidTreeFileSystem removal = new AndroidTreeFileSystem(root)) {
+        eraseBoundContents(removal, root, control, stage, removed, rootNode);
+      }
+    } else eraseBoundContents(fs, root, control, stage, removed, rootNode);
+  }
+
+  private static void eraseBoundContents(
+      BackupFileSystem fs,
+      File root,
+      BackupControl control,
+      String stage,
+      long[] removed,
+      BackupFileSystem.Node rootNode)
+      throws IOException {
     fs.prepareOwnedRemoval(root);
     for (int pass = 0; pass < MAX_RELIST_PASSES; pass++) {
       control.check();

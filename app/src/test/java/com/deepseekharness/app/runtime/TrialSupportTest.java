@@ -16,10 +16,17 @@ public class TrialSupportTest {
 
   private static final class Launcher extends Process {
     volatile boolean exited;
-    final InputStream out = new ByteArrayInputStream(new byte[] {1}),
-        err = new ByteArrayInputStream(new byte[] {2});
+    final InputStream out, err = new ByteArrayInputStream(new byte[] {2});
     final OutputStream in = new ByteArrayOutputStream();
     int destroyed;
+
+    Launcher() {
+      this(new byte[] {1});
+    }
+
+    Launcher(byte[] output) {
+      out = new ByteArrayInputStream(output);
+    }
 
     public int exitValue() {
       if (!exited) throw new IllegalThreadStateException();
@@ -45,6 +52,135 @@ public class TrialSupportTest {
     public OutputStream getOutputStream() {
       return in;
     }
+  }
+
+  @Test
+  public void actualTrialOutputAcceptsOnlyOwnedStagesAndReportsPreparationFailures()
+      throws Exception {
+    Class<?> type = Class.forName("com.deepseekharness.app.runtime.RuntimeTrial$Output");
+    var constructor = type.getDeclaredConstructor(Process.class);
+    constructor.setAccessible(true);
+    var drain = type.getDeclaredMethod("drain");
+    drain.setAccessible(true);
+    var phase = type.getDeclaredField("nativeStage");
+    phase.setAccessible(true);
+    Object output =
+        constructor.newInstance(
+            new Launcher(
+                ("DSHA_TRIAL_NATIVE_STAGE modules\n"
+                        + "DSHA_TRIAL_NATIVE_STAGE builtin-1\n"
+                        + "DSHA_TRIAL_NATIVE_STAGE builtin-999999\n"
+                        + "DSHA_TRIAL_NATIVE_STAGE arbitrary user text\n"
+                        + "DSHA_TRIAL_NATIVE_STAGE fresh\n"
+                        + "DSHA_TRIAL_TIME fresh 1234\n"
+                        + "DSHA_TRIAL_TIME arbitrary 4321\n"
+                        + "DSHA_TRIAL_TIME fresh 5678\n"
+                        + "DSHA_TRIAL_TIME session -1\n")
+                    .getBytes(StandardCharsets.UTF_8)));
+    drain.invoke(output);
+    assertEquals("TRIAL_NATIVE_FRESH", phase.get(output));
+    var timings = type.getDeclaredField("nativeTimings");
+    timings.setAccessible(true);
+    assertEquals(java.util.Map.of("fresh", 1234L), timings.get(output));
+    for (String[] row :
+        new String[][] {
+          {"DSHA_TRIAL_NATIVE_CHECK_FAILED Error: native proof", "TRIAL_NATIVE_MODULES_FAILED"},
+          {"DSHA_TRIAL_PLUGIN_CHECK_FAILED Error: fresh token mismatch", "TRIAL_PLUGIN_FAILED"}
+        }) {
+      Object failed =
+          constructor.newInstance(new Launcher((row[0] + "\n").getBytes(StandardCharsets.UTF_8)));
+      var thrown =
+          assertThrows(
+              java.lang.reflect.InvocationTargetException.class, () -> drain.invoke(failed));
+      assertTrue(thrown.getCause() instanceof IOException);
+      assertEquals(row[1], thrown.getCause().getMessage());
+      var diagnostics = type.getDeclaredMethod("diagnostics");
+      diagnostics.setAccessible(true);
+      assertTrue(String.valueOf(diagnostics.invoke(failed)).contains(row[0]));
+    }
+  }
+
+  @Test
+  public void primaryFailureSurvivesAndLaterConfirmedClosePrecedesLeaseRelease() throws Exception {
+    Launcher launcher = new Launcher();
+    launcher.exited = true;
+    AtomicBoolean confirmed = new AtomicBoolean();
+    AtomicInteger records = new AtomicInteger(), releases = new AtomicInteger();
+    Process[] retained = new Process[1];
+    com.deepseekharness.app.util.RuntimeWorkPort.Work work =
+        new com.deepseekharness.app.util.RuntimeWorkPort.Work() {
+          public void retainUntilExit(Process value) {
+            retained[0] = value;
+          }
+
+          public void close() {
+            releases.incrementAndGet();
+          }
+        };
+    IOException primary = new IOException("ORIGINAL_PREFLIGHT_FAILURE");
+    assertFalse(
+        TrialSupport.finish(
+            launcher,
+            work,
+            new TrialSupport.Cleanup() {
+              public void stop() {}
+
+              public boolean confirmed(Process process) {
+                return confirmed.get();
+              }
+
+              public void closeRecord() {
+                records.incrementAndGet();
+              }
+            },
+            primary));
+    assertEquals("ORIGINAL_PREFLIGHT_FAILURE", primary.getMessage());
+    assertEquals(1, primary.getSuppressed().length);
+    assertEquals(0, records.get());
+    assertEquals(0, releases.get());
+    assertThrows(IllegalThreadStateException.class, () -> retained[0].exitValue());
+    confirmed.set(true);
+    assertEquals(7, retained[0].exitValue());
+    assertEquals(7, retained[0].exitValue());
+    assertEquals(1, records.get());
+  }
+
+  @Test
+  public void closeRecordFailureDoesNotReplacePrimaryOrRetainAnAlreadyConfirmedGuest()
+      throws Exception {
+    Launcher launcher = new Launcher();
+    launcher.exited = true;
+    AtomicInteger releases = new AtomicInteger();
+    com.deepseekharness.app.util.RuntimeWorkPort.Work work =
+        new com.deepseekharness.app.util.RuntimeWorkPort.Work() {
+          public void retainUntilExit(Process value) {
+            fail("already confirmed");
+          }
+
+          public void close() {
+            releases.incrementAndGet();
+          }
+        };
+    IOException primary = new IOException("NATIVE_CHECK_FAILED");
+    assertFalse(
+        TrialSupport.finish(
+            launcher,
+            work,
+            new TrialSupport.Cleanup() {
+              public void stop() {}
+
+              public boolean confirmed(Process process) {
+                return true;
+              }
+
+              public void closeRecord() throws IOException {
+                throw new IOException("WRITE_DENIED");
+              }
+            },
+            primary));
+    assertEquals("NATIVE_CHECK_FAILED", primary.getMessage());
+    assertEquals("TRIAL_RECORD_CLOSE_FAILED", primary.getSuppressed()[0].getMessage());
+    assertEquals(1, releases.get());
   }
 
   @Test
@@ -174,6 +310,12 @@ public class TrialSupportTest {
             .start();
     try {
       assertTrue("bounded bash fixture", process.waitFor(5, TimeUnit.SECONDS));
+      if (process.exitValue() == 78) {
+        // MSYS's zero synthetic starttime cannot establish a Linux birth.
+        assertFalse(new File(root, ".dsha-web.identity").exists());
+        assertTrue(new File(root, ".dsha-web.pid").isFile());
+        return;
+      }
       assertEquals(0, process.exitValue());
       String[] lines =
           new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8)

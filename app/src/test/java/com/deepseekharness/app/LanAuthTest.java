@@ -120,4 +120,20 @@ public class LanAuthTest {
         LanAuth.AUTH_DENY, LanAuth.tokenOk("GET /?token=" + old + " HTTP/1.1\r\n\r\n", current));
     assertFalse(LanAuth.stripTokenFromUrl("/?token=" + current).contains(current));
   }
+
+  @Test
+  public void missingInvalidAndUnavailableCredentialsGetDifferentGuidance() {
+    assertEquals(
+        com.deepseekharness.app.util.LanFailureResponse.Reason.TOKEN_MISSING,
+        LanAuth.denialReason("GET / HTTP/1.1\r\nReferer: /?token=old\r\n\r\n", TOKEN));
+    assertEquals(
+        com.deepseekharness.app.util.LanFailureResponse.Reason.TOKEN_INVALID,
+        LanAuth.denialReason("GET /?token=old HTTP/1.1\r\n\r\n", TOKEN));
+    assertEquals(
+        com.deepseekharness.app.util.LanFailureResponse.Reason.TOKEN_INVALID,
+        LanAuth.denialReason("GET / HTTP/1.1\r\nCookie: dsha_lan=old\r\n\r\n", TOKEN));
+    assertEquals(
+        com.deepseekharness.app.util.LanFailureResponse.Reason.TOKEN_UNAVAILABLE,
+        LanAuth.denialReason("GET / HTTP/1.1\r\n\r\n", ""));
+  }
 }

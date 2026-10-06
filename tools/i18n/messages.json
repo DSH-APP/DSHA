@@ -66,6 +66,7 @@
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
       "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java",
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java",
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
       "app/src/main/res/layout/fragment_install.xml"
     ]
@@ -1662,6 +1663,7 @@
     "zh": "返回",
     "en": "Back",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java",
       "app/src/main/res/layout/activity_adb_pair.xml",
       "app/src/main/res/layout/activity_diagnostics.xml",
       "app/src/main/res/layout/activity_plugin_install.xml",
@@ -2819,7 +2821,8 @@
       "app/src/main/java/com/deepseekharness/app/ui/AboutDialog.java",
       "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java",
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
     ]
   },
   {
@@ -2975,6 +2978,7 @@
       "app/src/main/java/com/deepseekharness/app/ui/OverlayStyleDialog.java",
       "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
       "app/src/main/java/com/deepseekharness/app/ui/WebDownloads.java",
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java",
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
     ]
   },
@@ -23107,7 +23111,8 @@
     "zh": "上一页",
     "en": "Previous page",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java",
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
     ]
   },
   {
@@ -23115,7 +23120,8 @@
     "zh": "下一页",
     "en": "Next page",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/RetainedDataActivity.java",
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
     ]
   },
   {
@@ -23806,6 +23812,7 @@
     "zh": "快捷入口",
     "en": "Quick access",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java",
       "app/src/main/res/values/ui_iteration.xml"
     ]
   },
@@ -24254,6 +24261,7 @@
     "zh": "工作目录",
     "en": "Workspace",
     "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java",
       "app/src/main/res/values/ui_iteration.xml"
     ]
   },
@@ -28891,5 +28899,1385 @@
       "app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java"
     ],
     "id": "build156_choose_57827e0ae00a"
+  },
+  {
+    "id": "build158_entry_workspace_exports",
+    "zh": "作品与文件导出",
+    "en": "Files and exports",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "id": "build158_entry_storage_guide",
+    "zh": "储存指南",
+    "en": "Storage guide",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java",
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "id": "build158_entry_skills",
+    "zh": "技能（Skills）",
+    "en": "Skills",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java",
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "id": "build158_entry_workspace_exports_hint",
+    "zh": "浏览工作区 · 保存到手机 · 分享",
+    "en": "Browse workspace · Save to device · Share",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "id": "build158_entry_storage_guide_hint",
+    "zh": "数据位置 · 导出备份 · 恢复与清理",
+    "en": "Data locations · Export backups · Restore and clean up",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "id": "build158_entry_skills_hint",
+    "zh": "查看技能 · 导入 SKILL.md",
+    "en": "View skills · Import SKILL.md",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "id": "build158_6",
+    "zh": "作品文件导出",
+    "en": "Export work files",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/data/WorkspaceFileExports.java",
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_7",
+    "zh": "选择工作目录里的作品文件，保存到手机或分享给其他应用。无需 Root；这是普通文件导出，完整数据备份另有入口。",
+    "en": "Choose a file from your workspace to save on the device or share with another app. No root is needed. Full data backups have a separate entry.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_8",
+    "zh": "上一级",
+    "en": "Up",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_9",
+    "zh": "刷新",
+    "en": "Refresh",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_10",
+    "zh": "取消导出",
+    "en": "Cancel export",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_11",
+    "zh": "保存原始文件，或选择接收文件的应用。",
+    "en": "Save the original file or choose an app to receive it.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_12",
+    "zh": "保存到…",
+    "en": "Save to…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_13",
+    "zh": "分享…",
+    "en": "Share…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_14",
+    "zh": "分享作品文件",
+    "en": "Share work file",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_15",
+    "zh": "正在读取目录…",
+    "en": "Reading folder…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_16",
+    "zh": "这个目录没有可读取的文件。",
+    "en": "This folder has no readable files.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_17",
+    "zh": "已取消文件操作。",
+    "en": "File operation cancelled.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_18",
+    "zh": "应用在选择保存位置期间重新启动，请重新选择文件导出。",
+    "en": "The app restarted while choosing a destination. Select the file again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_19",
+    "zh": "已打开分享选择器，请在接收应用中完成分享。",
+    "en": "The share picker is open. Complete sharing in the receiving app.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_20",
+    "zh": "点目录继续浏览，点文件选择保存或分享。",
+    "en": "Tap a folder to browse, or a file to save or share.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_21",
+    "zh": "文件发生了变化，请等待写入完成后刷新并重试。",
+    "en": "The file changed. Wait for writing to finish, then refresh and retry.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_22",
+    "zh": "保存后的文件未通过字节核验，请重新选择保存位置。",
+    "en": "The saved file failed verification. Choose another destination and retry.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_23",
+    "zh": "请选择手机或其他文件服务中的新文件保存位置。",
+    "en": "Choose a new file destination on the device or another file service.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_24",
+    "zh": "所选项目不是可导出的普通文件。",
+    "en": "The selected item is not an exportable regular file.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_25",
+    "zh": "目录",
+    "en": "Folder",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_26",
+    "zh": "正在核对并导出：%s",
+    "en": "Verifying and exporting: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_27",
+    "zh": "已保存文件：%s",
+    "en": "File saved: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_28",
+    "zh": "文件操作未完成：%s\n可刷新目录，或返回上一级查找作品文件。",
+    "en": "File operation incomplete: %s\nRefresh the folder or go up to find your work files.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_29",
+    "zh": "位置：%s",
+    "en": "Location: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build158_30",
+    "zh": "作品文件浏览",
+    "en": "Browse work files",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_title",
+    "zh": "存储、备份与重建说明",
+    "en": "Storage, backups and rebuilding",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_intro",
+    "zh": "先看保留范围，再选择操作。打开本页不会修改文件或停止 DSH。",
+    "en": "Check what is kept before choosing an operation. Opening this guide does not change files or stop DSH.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_start",
+    "zh": "只想腾空间，从这里开始",
+    "en": "Start here to free up space",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_cache_explanation",
+    "zh": "先到「存储与文件」查看占用。完整 Ubuntu、Node 和插件依赖属于应用数据，通常比 Android 缓存大得多。Android「清缓存」可能只有几十 MB，清完不会移除这套运行环境。",
+    "en": "Check usage in Storage and files first. The full Ubuntu environment, Node and plugin dependencies are app data, usually much larger than Android's cache. Clear cache may free only a few dozen MB and does not remove the runtime.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_cleanup_scope",
+    "zh": "应用内清理只移除可再生缓存和已核验的多余运行时副本。对话、附件、设置、插件、手动备份和无法核验的原件保留。清理前仍会在原页面确认，并安全停止 DSH 和终端。",
+    "en": "In-app cleanup removes reproducible caches and verified excess runtime copies. It keeps conversations, attachments, settings, plugins, manual backups and unverified originals. The existing page still asks for confirmation and safely stops DSH and terminals before cleanup.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_open_sizes",
+    "zh": "查看占用与清理选项",
+    "en": "View usage and cleanup options",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_sizes_hint",
+    "zh": "打开存储页后才统计详细大小；清理仍需原页面确认。",
+    "en": "Detailed sizes are calculated after opening the storage page. Cleanup still needs confirmation there.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_export_first",
+    "zh": "重要数据，先导出再维护",
+    "en": "Export important data before maintenance",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_export_scope",
+    "zh": "导出选择「应用数据」可保存对话、附件、配置和用户插件，不会复制完整 Ubuntu。个人项目要另选目录；原生 API Key 默认不包含，需要时在导出页主动勾选。",
+    "en": "Choose Application data to export conversations, attachments, settings and user plugins, without copying the full Ubuntu environment. Select personal project folders separately. The native API key is excluded by default; explicitly select it on the export page if needed.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_export_location",
+    "zh": "新导出文件为 DSHA-data-v5-….tar.gz，无需备份密码。请用系统保存窗口存到 App 外的文档、下载或云盘，并另留一份。导出完成后可先做恢复预检，确认范围和文件可读；预检不会立即覆盖当前数据。",
+    "en": "New exports are DSHA-data-v5-….tar.gz files and need no backup password. Use the system save dialog to store the file outside the app, in Documents, Downloads or cloud storage, and keep another copy. Then inspect it before restoring to check its scope and readability. Inspection does not immediately overwrite current data.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_local_copies",
+    "zh": "本机自动备份和重建保护副本仍在 App 内，不保证清除全部存储或卸载后可用。历史加密备份仍需保存原密码。",
+    "en": "Local automatic backups and rebuild protection copies stay inside the app and are not guaranteed to survive clearing app storage or uninstalling. Keep the original passwords for older encrypted backups.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_export_button",
+    "zh": "去导出重要数据",
+    "en": "Export important data",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_inspect_button",
+    "zh": "选择备份做恢复预检",
+    "en": "Choose a backup to inspect",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_inspect_hint",
+    "zh": "先检查文件，再由原页面确认是否恢复。",
+    "en": "Check the file first, then confirm any restoration on the existing page.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_rebuild_keeps",
+    "zh": "适合：Ubuntu 或运行组件损坏、普通修复无效。它会保护并核验对话、附件、配置、用户插件和个人项目，再重建运行环境并恢复数据；原生 API Key 保留在本机。",
+    "en": "Use this when Ubuntu or runtime components are damaged and ordinary repair has not helped. It protects and verifies conversations, attachments, settings, user plugins and personal projects, then rebuilds the runtime and restores the data. The native API key stays on this device.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_rebuild_effects",
+    "zh": "影响：会停止 DSH、终端和正在执行的任务，需要时间和额外空间。额外安装的系统软件留在旧环境中，可能要在新环境重新安装。保护副本和旧环境按核验规则保留，不能保证重建后立刻腾出空间。",
+    "en": "Effects: DSH, terminals and active tasks stop. Rebuilding takes time and extra space. Additional system software stays in the old environment and may need reinstalling in the new one. Protection copies and old environments are retained under verification rules, so rebuilding may not immediately free space.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_rebuild_failure",
+    "zh": "保护失败时不切换环境，后续失败会尝试回切原环境。建议先把重要数据导出到 App 外；只想腾空间时先用存储页的清理选项。",
+    "en": "If data protection fails, the environment is not switched. Later failures attempt to return to the original environment. Export important data outside the app first. To free space, start with cleanup on the storage page.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_environment_button",
+    "zh": "打开安装与环境",
+    "en": "Open installation and environment",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_environment_hint",
+    "zh": "查看原有修复和重建入口，打开页面不会开始重建。",
+    "en": "View the existing repair and rebuild options. Opening the page does not start a rebuild.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_reset",
+    "zh": "重置配置（保留对话）",
+    "en": "Reset settings (keep conversations)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_reset_keeps",
+    "zh": "适合：网页设置错误。保留对话、附件、用户插件、个人文件和原生保存的 API Key，不重建 Ubuntu，也不移除额外安装的软件。",
+    "en": "Use this for incorrect web settings. It keeps conversations, attachments, user plugins, personal files and the natively saved API key. Ubuntu is not rebuilt, and additional software is not removed.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_reset_effects",
+    "zh": "影响：先停止 DSH、终端和写入任务，再重置当前网页的普通设置和工作目录配置。原配置保留以便恢复；原生 API Key 不会因此清空。入口在「设置 → 数据与备份 → 重置配置」，仍需原来的确认。",
+    "en": "Effects: DSH, terminals and writers stop before the current web profile's ordinary settings and workspace configuration are reset. The original settings are retained for recovery, and the native API key is not cleared. Open Settings → Data and backups → Reset settings; the existing confirmation still applies.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_android_cache",
+    "zh": "Android 系统「清缓存」",
+    "en": "Android's Clear cache",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_android_cache_scope",
+    "zh": "通常只删除 Android 标记的临时缓存，之后使用会重新生成。Ubuntu、插件依赖、对话和本机备份存放在应用数据中，不会靠清缓存释放。系统显示缓存只有几十 MB，而应用数据很大，是两种不同的占用。",
+    "en": "This usually removes only temporary files marked as cache by Android; they are recreated with use. Ubuntu, plugin dependencies, conversations and local backups are app data and are not freed by clearing cache. A cache of a few dozen MB and much larger app data are different kinds of storage usage.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_android_erase",
+    "zh": "Android 系统「清除全部存储／清除数据」",
+    "en": "Android's Clear storage / Clear data",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_android_erase_scope",
+    "zh": "会删除 App 私有目录中的对话、附件、插件、配置、API Key、本机备份和 Ubuntu 环境。下次打开需要重新解压和设置。卸载应用也会删除这些私有数据。",
+    "en": "This deletes conversations, attachments, plugins, settings, API keys, local backups and Ubuntu from the app's private directory. The next launch needs fresh extraction and setup. Uninstalling also deletes these private data.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_android_erase_recovery",
+    "zh": "本机副本会随私有数据一起删除，不能依赖它救回数据。只有事先存到 App 外且可读的导出文件，才可在重新初始化后手动导入其中的数据范围。未导出的私有数据，App 无法恢复。",
+    "en": "Local copies are deleted along with private data and cannot be relied on for recovery. Only a readable export saved outside the app beforehand can be imported manually after fresh setup, within its exported scope. The app cannot recover private data that was never exported.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_format",
+    "zh": "应用内「完整格式化」",
+    "en": "In-app full format",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_format_scope",
+    "zh": "用于确实要从头开始。原有确认和停止检查通过后，会删除运行环境、对话、插件、配置、API Key 等核心私有数据，并回到欢迎页。它不是保留对话的配置重置；操作前先导出重要数据到 App 外。",
+    "en": "Use this to start over completely. After the existing confirmation and shutdown checks, it deletes the runtime, conversations, plugins, settings, API keys and other core private data, then returns to the welcome page. It does not keep conversations like a settings reset. Export important data outside the app first.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_growth",
+    "zh": "为什么占用会增长",
+    "en": "Why storage usage grows",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_growth_reasons",
+    "zh": "首次解压完整 Ubuntu、安装软件或插件依赖、保存附件和项目、生成备份都会占空间。自动备份正常保留 3 份；手动备份、未知记录和受损原件不会自动删除。更新也会保留可用的回退副本，方便出现问题时恢复。",
+    "en": "Extracting Ubuntu, installing software or plugin dependencies, saving attachments and projects, and making backups all use space. Normally, three automatic backups are kept. Manual backups, unknown records and damaged originals are not deleted automatically. Updates also keep usable rollback copies for recovery.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_growth_retention",
+    "zh": "存储页会按规则清理已核验的多余副本；被修改、含额外文件或无法确认的原件继续保留。需要查看这些内容时，可打开保留副本清单；不要为了腾空间直接手动删除 Ubuntu 或依赖目录。",
+    "en": "The storage page cleans verified excess copies under its existing rules. Modified originals, copies with extra files and unverified originals remain retained. Browse the retained-copy list to inspect them. Avoid manually deleting Ubuntu or dependency folders to free space.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_automatic_button",
+    "zh": "查看本机自动备份",
+    "en": "View local automatic backups",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_automatic_hint",
+    "zh": "查看计划和已保留的自动副本。",
+    "en": "View the schedule and retained automatic copies.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_retained_button",
+    "zh": "查看保留副本与旧环境",
+    "en": "View retained copies and old environments",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "issue88_storage_retained_hint",
+    "zh": "只读查看清单，检查、导出与恢复仍由原页面处理。",
+    "en": "Browse the list without changing originals. Inspection, export and restoration use their existing pages.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-002",
+    "zh": "从文件导入 SKILL.md，让 DSH 按需读取可复用的任务说明。无需 Root。",
+    "en": "Import SKILL.md files so DSH can load reusable task instructions as needed. Root is not required.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-003",
+    "zh": "这里管理用户全局技能。导入仅复制 SKILL.md，正文中的命令不会自动执行；引用的脚本和资料需用文件入口另行放入同一技能目录。",
+    "en": "This page manages global user skills. Import copies only SKILL.md and does not run commands in its body. Add referenced scripts and resources to the same skill folder through Files.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-004",
+    "zh": "导入 SKILL.md",
+    "en": "Import SKILL.md",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-005",
+    "zh": "刷新技能",
+    "en": "Refresh skills",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-006",
+    "zh": "取消读取",
+    "en": "Cancel reading",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-007",
+    "zh": "尚无可读取的用户全局技能。",
+    "en": "No readable global user skills yet.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-008",
+    "zh": "可读取的用户全局技能：%s",
+    "en": "Readable global user skills: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-009",
+    "zh": "另有 %s 个技能文件无法通过导入格式检查，原件已保留。",
+    "en": "%s additional skill files did not pass the import format checks. Their originals were retained.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-010",
+    "zh": "查看 SKILL.md",
+    "en": "View SKILL.md",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-011",
+    "zh": "模型可按需调用 skill 工具读取。",
+    "en": "The model can load this with the skill tool as needed.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-012",
+    "zh": "此技能禁止模型自主调用。",
+    "en": "This skill disables autonomous model invocation.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-013",
+    "zh": "在聊天中输入 /%s 可明确调用。",
+    "en": "Enter /%s in chat to invoke it explicitly.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-014",
+    "zh": "复制调用命令",
+    "en": "Copy invocation",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-015",
+    "zh": "此技能禁止用户直接调用。",
+    "en": "This skill disables direct user invocation.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-017",
+    "zh": "选择技能文件后可查看内容并复制调用命令。",
+    "en": "Select a skill to view its contents and copy its invocation.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-018",
+    "zh": "正在读取用户技能…",
+    "en": "Reading user skills…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-019",
+    "zh": "正在读取并检查 SKILL.md…",
+    "en": "Reading and checking SKILL.md…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-020",
+    "zh": "已导入技能：%s\n%s\nDSH 会在后续请求中发现此技能；若目录尚未刷新，可重启 Web。",
+    "en": "Imported skill: %s\n%s\nDSH discovers this skill on subsequent requests. Restart Web if its catalog has not refreshed.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-021",
+    "zh": "已取消读取，未导入技能。",
+    "en": "Reading cancelled. No skill was imported.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-022",
+    "zh": "请选择名为 SKILL.md 的文件，不能导入目录或压缩包。",
+    "en": "Choose a file named SKILL.md. Folders and archives cannot be imported.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-023",
+    "zh": "SKILL.md 必须为非空文件，且不超过 1 MiB。",
+    "en": "SKILL.md must be non-empty and at most 1 MiB.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-024",
+    "zh": "SKILL.md 必须是有效 UTF-8 文本。",
+    "en": "SKILL.md must contain valid UTF-8 text.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-025",
+    "zh": "技能格式无效。文件需以 --- YAML 开头，包含小写短横线 name 和非空 description；调用开关使用 disable-model-invocation / user-invocable。未导入文件。",
+    "en": "Invalid skill format. Start with --- YAML frontmatter, include a lowercase kebab-case name and non-empty description, and use disable-model-invocation / user-invocable for invocation controls. No file was imported.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-026",
+    "zh": "已有同名技能或目录，未覆盖原件。请先在源文件中使用不同的 name。",
+    "en": "A skill or folder with this name already exists. The original was retained. Use a different name in the source file first.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-027",
+    "zh": "有安装、备份、恢复或维护任务正在进行，请完成后重试。",
+    "en": "An install, backup, restore or maintenance operation is active. Retry after it finishes.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-028",
+    "zh": "当前 DSH 用户目录不可安全读取，请先完成环境安装或修复。未创建替代目录。",
+    "en": "The current DSH user folder cannot be read safely. Complete environment setup or repair first. No replacement folder was created.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-029",
+    "zh": "技能目录不是可安全读取的普通目录，或条目超过 512 项。原件已保留。",
+    "en": "The skills folder is not a safely readable regular directory, or it has more than 512 entries. Originals were retained.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-030",
+    "zh": "技能操作未完成。请检查文件授权、可用空间和目录状态；已有技能未覆盖。",
+    "en": "The skill operation did not finish. Check file access, free space and the folder state. Existing skills were retained.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-031",
+    "zh": "技能读取",
+    "en": "Read skills",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "id": "b158-skills-032",
+    "zh": "技能导入",
+    "en": "Import skill",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+    ]
+  },
+  {
+    "zh": "配置的工作目录暂不可读取，已打开个人文件目录。",
+    "en": "The configured workspace is temporarily unreadable. The personal files folder is open.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+    ]
+  },
+  {
+    "id": "build160_cold_timing_0",
+    "zh": "首次安装测速",
+    "en": "First-install timing",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ColdSetupSpeedActivity.java",
+      "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
+    ]
+  },
+  {
+    "id": "build160_cold_timing_1",
+    "zh": "在独立目录完整执行首次安装，保留当前环境、数据和设置。开始时会正常停止 DSH 和终端；测速期间请保持应用在前台。",
+    "en": "Run a complete first install in an isolated directory while keeping the existing environment, data and settings. DSH and terminals stop normally before timing. Keep the app in the foreground.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ColdSetupSpeedActivity.java"
+    ]
+  },
+  {
+    "id": "build160_cold_timing_2",
+    "zh": "开始测速",
+    "en": "Start timing",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ColdSetupSpeedActivity.java"
+    ]
+  },
+  {
+    "id": "build160_cold_timing_3",
+    "zh": "正在准备独立安装目录…",
+    "en": "Preparing an isolated install directory…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ColdSetupSpeedActivity.java"
+    ]
+  },
+  {
+    "id": "build160_cold_timing_4",
+    "zh": "完整首次安装完成：%.2f 秒；临时环境已清理，原数据保留。",
+    "en": "Full first install completed in %.2f seconds. Temporary files were cleaned; existing data was kept.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ColdSetupSpeedActivity.java"
+    ]
+  },
+  {
+    "id": "build160_cold_timing_5",
+    "zh": "测速未完成：%s",
+    "en": "Timing did not complete: %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ColdSetupSpeedActivity.java"
+    ]
+  },
+  {
+    "id": "build160_trial_stage_0",
+    "zh": "正在加载内置组件：%d/%d…",
+    "en": "Loading built-in components: %d/%d…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_trial_stage_1",
+    "zh": "正在核验原生模块…",
+    "en": "Checking native modules…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_trial_stage_2",
+    "zh": "正在准备组件加载器…",
+    "en": "Preparing the component loader…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_trial_stage_3",
+    "zh": "正在核验文件锁…",
+    "en": "Checking file locking…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_trial_stage_4",
+    "zh": "正在确认网页鉴权…",
+    "en": "Confirming browser authentication…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_trial_stage_5",
+    "zh": "正在确认网页与数据读写…",
+    "en": "Confirming the browser and data access…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_trial_stage_ready",
+    "zh": "正在启动 DSH 网页…",
+    "en": "Starting the DSH browser interface…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_cold_detail_0",
+    "zh": "核对完整安装文件…",
+    "en": "Checking complete installation files…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ColdBundleTransaction.java"
+    ]
+  },
+  {
+    "id": "build160_cold_detail_1",
+    "zh": "确认安装文件并提交…",
+    "en": "Confirming and publishing installation files…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ColdBundleTransaction.java"
+    ]
+  },
+  {
+    "id": "build160_cold_detail_2",
+    "zh": "安装文件已提交",
+    "en": "Installation files published",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/runtime/ColdBundleTransaction.java"
+    ]
+  },
+  {
+    "id": "build160_cold_detail_3",
+    "zh": "检查启动配置…",
+    "en": "Checking startup configuration…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_cold_detail_4",
+    "zh": "核验 pnpm 入口…",
+    "en": "Checking the pnpm entry…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_cold_detail_5",
+    "zh": "核验数据读写…",
+    "en": "Checking data access…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_cold_detail_6",
+    "zh": "在独立进程重开数据…",
+    "en": "Reopening data in a fresh process…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_cold_detail_7",
+    "zh": "核验会话重开…",
+    "en": "Checking session reopening…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build160_cold_detail_8",
+    "zh": "数据与会话已通过核验",
+    "en": "Data and session checks passed",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
+    ]
+  },
+  {
+    "id": "build161_LanFailureResponse_3648",
+    "zh": "局域网地址缺少访问凭据。请回到 DSHA 启动页，点局域网地址并复制完整连接链接。",
+    "en": "The LAN address has no access credential. Open the DSHA Launch page, tap the LAN address, and copy the complete connection link.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LanFailureResponse.java"
+    ]
+  },
+  {
+    "id": "build161_LanFailureResponse_3649",
+    "zh": "局域网访问凭据已失效或不匹配。请回到 DSHA 启动页重新复制连接链接；DSH 重启或关闭局域网访问后，旧链接和浏览器凭据会失效。",
+    "en": "The LAN credential has expired or does not match. Copy a new connection link from the DSHA Launch page. Restarting DSH or turning LAN access off invalidates old links and browser credentials.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LanFailureResponse.java"
+    ]
+  },
+  {
+    "id": "build161_LanFailureResponse_3650",
+    "zh": "局域网访问凭据尚未就绪。请在 DSHA 中启动 DSH，等待局域网地址出现后重新复制连接链接。",
+    "en": "The LAN credential is not ready. Start DSH in DSHA, wait for the LAN address, then copy a new connection link.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LanFailureResponse.java"
+    ]
+  },
+  {
+    "id": "build161_LanFailureResponse_3651",
+    "zh": "局域网代理正在等待 DSH 认证。请回到 DSHA 确认 DSH 已启动，再刷新此页；此状态不表示局域网链接失效。",
+    "en": "The LAN proxy is waiting for DSH authentication. Confirm DSH is running in DSHA, then refresh this page. This does not mean the LAN link has expired.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LanFailureResponse.java"
+    ]
+  },
+  {
+    "id": "build161_LanFailureResponse_3652",
+    "zh": "局域网代理暂时繁忙。请稍后刷新；持续失败时请在 DSHA 中查看启动日志。",
+    "en": "The LAN proxy is temporarily busy. Refresh shortly. If this persists, inspect the startup log in DSHA.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LanFailureResponse.java"
+    ]
+  },
+  {
+    "id": "build161_LanFailureResponse_3653",
+    "zh": "局域网代理无法连接 DSH。请回到 DSHA 确认 DSH 正在运行并查看启动日志，再刷新此页。",
+    "en": "The LAN proxy could not connect to DSH. Confirm DSH is running and inspect the startup log in DSHA, then refresh this page.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LanFailureResponse.java"
+    ]
+  },
+  {
+    "id": "build161_LanFailureResponse_3654",
+    "zh": "读取请求超时。请检查网络后重试。",
+    "en": "The request timed out. Check the network and retry.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LanFailureResponse.java"
+    ]
+  },
+  {
+    "id": "build161_LanFailureResponse_3655",
+    "zh": "请求格式无效或超出限制。请使用 DSHA 复制的完整连接链接重试。",
+    "en": "The request is invalid or exceeds a limit. Retry with the complete connection link copied from DSHA.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LanFailureResponse.java"
+    ]
+  },
+  {
+    "id": "build161_LogCompactor_3656",
+    "zh": "失败线索（显示摘要）：\n",
+    "en": "Failure clues (display summary):\n",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LogCompactor.java"
+    ]
+  },
+  {
+    "id": "build161_LogCompactor_3657",
+    "zh": "\n上下文：\n",
+    "en": "\nContext:\n",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LogCompactor.java"
+    ]
+  },
+  {
+    "id": "build161_LogCompactor_3658",
+    "zh": "… [已省略部分显示内容，原始记录仍保留] …",
+    "en": "… [display shortened; original record retained] …",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/LogCompactor.java"
+    ]
+  },
+  {
+    "id": "build161_lan_link_lifetime",
+    "zh": "此链接包含访问凭据。局域网使用 HTTP，流量未加密，请只在可信网络使用并只分享给可信设备。DSH 重启或关闭局域网访问后，旧链接会失效，请重新复制。\n\n%s",
+    "en": "This link contains an access credential. LAN traffic uses unencrypted HTTP; use a trusted network and share only with trusted devices. Restarting DSH or turning LAN access off invalidates old links; copy a new link.\n\n%s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3660",
+    "zh": "使用说明",
+    "en": "How to use",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3661",
+    "zh": "先连接设备通道，再点“创建竖屏”或“创建横屏”。",
+    "en": "Connect a device channel, then tap Create portrait or Create landscape.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3662",
+    "zh": "调整预览大小",
+    "en": "Adjust preview size",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3663",
+    "zh": "创建竖屏",
+    "en": "Create portrait",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3664",
+    "zh": "创建横屏",
+    "en": "Create landscape",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3665",
+    "zh": "应用",
+    "en": "App",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3666",
+    "zh": "键盘",
+    "en": "Keyboard",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3667",
+    "zh": "控件树",
+    "en": "AI tree",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3668",
+    "zh": "选择应用后会自动填入包名",
+    "en": "Choose an app to fill its package",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3669",
+    "zh": "选择",
+    "en": "Choose",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3670",
+    "zh": "本机键盘输入（中文需无障碍）",
+    "en": "Keyboard input (accessibility for Unicode)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3671",
+    "zh": "发送",
+    "en": "Send",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3672",
+    "zh": "兼容版暂不支持虚拟屏，请使用标准版",
+    "en": "Virtual screen is not available in the Low build yet; use Standard",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3673",
+    "zh": "虚拟屏需要 Android 11 及以上",
+    "en": "Requires Android 11 or later",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3674",
+    "zh": "虚拟屏开启与使用",
+    "en": "Start and use a virtual screen",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3675",
+    "zh": "1. 使用标准版，手机系统需为 Android 11 或更高。兼容版暂不支持虚拟屏。\n\n2. 打开“设置 → 设备能力授权”，连接 ADB、Shizuku 或 Root 中的一种通道即可。没有 Root 时，可在系统开发者选项开启“无线调试”，再按 DSHA 的 ADB 配对页提示完成配对与连接。仅打开无线调试开关还不够，请确认通道已连接。\n\n3. 回到“设备能力授权”，点“打开虚拟屏”。在本页点“创建竖屏”或“创建横屏”，等待画面出现。打开此页或开启无障碍，都不会自动创建虚拟屏。\n\n4. 点“应用 → 选择”，选中想操作的应用，再点“启动”，把它打开到虚拟屏。预览里可以点击、滑动；双指用于调整预览。\n\n5. 读控件树和中文输入需要开启 DSHA 无障碍。让助手操作时，还要按应用提示确认本次读屏与操作授权，并将操作目标设为虚拟屏。\n\nVSCREEN_NOT_RUNNING 表示虚拟屏还没创建、已经关闭，或连接已断开。先检查设备通道，再点创建按钮；不需要清除数据或重新解压环境。\n\n创建仍失败：到“设置 → 自检与诊断”查看错误记录并导出日志。仅开启无障碍不能解决设备通道或系统兼容问题。\n\n不用时点本页“关闭”回收虚拟屏；连接断开或授权被撤销后，需要重新连接并创建。",
+    "en": "1. Use Standard on Android 11 or later. Low does not support virtual screens yet.\n\n2. Open Settings → Device capability access and connect one channel: ADB, Shizuku, or Root. Without Root, enable Wireless debugging in the system Developer options, then follow DSHA's ADB pairing page to pair and connect. Enabling the system switch alone is not enough; confirm the channel is connected.\n\n3. In Device capability access, tap Open virtual screen. Tap Create portrait or Create landscape here and wait for a picture. Opening this page or enabling accessibility does not create a virtual screen automatically.\n\n4. Tap App → Choose, select an app, then tap Launch to open it on the virtual screen. Tap and swipe in the preview; use two fingers to adjust the preview.\n\n5. Enable DSHA accessibility for the control tree and Unicode input. For assistant control, also confirm this run's screen access when prompted and choose the virtual screen as the action target.\n\nVSCREEN_NOT_RUNNING means no virtual screen has been created, it was closed, or its connection was lost. Check the device channel, then tap a create button. You do not need to clear data or extract the environment again.\n\nIf creation still fails, open Settings → Diagnostics to inspect the error record and export logs. Accessibility alone cannot resolve a missing device channel or system compatibility problem.\n\nTap Close when finished. After a disconnection or revoked access, reconnect and create the virtual screen again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3676",
+    "zh": "选择已安装应用",
+    "en": "Choose installed app",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3677",
+    "zh": "控件树（给 AI 使用）",
+    "en": "Accessibility tree for AI",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3678",
+    "zh": "操作完成",
+    "en": "Done",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3679",
+    "zh": "虚拟屏已开启",
+    "en": "Virtual screen ready",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3680",
+    "zh": "虚拟屏尚未开启或已关闭。先连接设备通道，再点“创建竖屏”或“创建横屏”；开启无障碍不会自动创建。",
+    "en": "The virtual screen has not started or was closed. Connect a device channel, then tap Create portrait or Create landscape. Accessibility does not create it automatically.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3681",
+    "zh": "画面已变化，请看最新画面后再操作",
+    "en": "The view changed. Observe again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3682",
+    "zh": "请先在设备能力授权中连接通道",
+    "en": "Connect a device channel first",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3683",
+    "zh": "中文输入需要开启无障碍服务",
+    "en": "Enable accessibility for Unicode input",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3684",
+    "zh": "未完成：",
+    "en": "Not completed: ",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3685",
+    "zh": "设备通道状态",
+    "en": "Device channel status",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3686",
+    "zh": "让助手读屏、点击和输入。先完成屏幕操作设置，再在对话中描述任务。",
+    "en": "Let the assistant observe, tap and type. Set up screen control, then describe the task in a conversation.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3687",
+    "zh": "撤销本次读屏与操作授权",
+    "en": "Revoke screen access for this run",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3688",
+    "zh": "已撤销，后续屏幕操作需要重新确认",
+    "en": "Revoked. Future screen actions require confirmation",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3689",
+    "zh": "打开虚拟屏",
+    "en": "Open virtual screen",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3690",
+    "zh": "虚拟屏需要已连接的设备通道。无障碍不会自动创建，请打开虚拟屏后点“创建竖屏”或“创建横屏”；页内有使用说明。",
+    "en": "A virtual screen requires a connected device channel. Accessibility does not create it automatically. Open virtual screen, then tap Create portrait or Create landscape. Instructions are available on that page.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3691",
+    "zh": "已关闭短信读取",
+    "en": "SMS reading disabled",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3692",
+    "zh": "已关闭 · 查询会被阻止",
+    "en": "Off · queries are blocked",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3693",
+    "zh": "需要系统定位权限",
+    "en": "Location permission required",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3694",
+    "zh": "位置读取保持关闭。请在系统应用权限中允许定位，再返回这里开启；如果系统定位服务关闭，也需要先开启系统定位。",
+    "en": "Location reading remains off. Allow location in system app permissions, then return and enable it here. System location services must also be enabled.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3695",
+    "zh": "暂不开启",
+    "en": "Not now",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3696",
+    "zh": "打开系统权限设置",
+    "en": "Open app permissions",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3697",
+    "zh": "请在系统设置中打开 DSHA 应用权限",
+    "en": "Open DSHA permissions in system settings",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3698",
+    "zh": "已连接，可以在对话中使用 Computer Use。",
+    "en": "Connected. Computer Use is available in conversations.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "build162_usage_3699",
+    "zh": "开关已开启，正在等待系统连接；可重新开关服务。",
+    "en": "Enabled, waiting for the system to connect. Try toggling the service.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
   }
 ]

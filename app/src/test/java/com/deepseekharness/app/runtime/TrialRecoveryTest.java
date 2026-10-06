@@ -40,6 +40,37 @@ public final class TrialRecoveryTest {
   }
 
   @Test
+  public void missingPidDoesNotPreventRecoveringAnotherProvenStoppedTrial() throws Exception {
+    File home = temporary.newFolder("mixed-pending");
+    File unknown = new File(home, "00000000-0000-0000-0000-000000000001");
+    File known = new File(home, "00000000-0000-0000-0000-000000000002");
+    assertTrue(unknown.mkdir());
+    assertTrue(known.mkdir());
+    assertTrue(new File(unknown, "payload").mkdir());
+    assertTrue(new File(known, "payload").mkdir());
+    write(unknown, "launched", unknown.getName());
+    write(known, "launched", known.getName());
+    write(new File(known, "payload"), ".dsha-web.pid", "123");
+    java.util.concurrent.atomic.AtomicInteger stopped =
+        new java.util.concurrent.atomic.AtomicInteger();
+    assertThrows(
+        IOException.class,
+        () ->
+            TrialRecovery.recover(
+                fs,
+                home,
+                payload -> {
+                  assertEquals(known.getName(), payload.getParentFile().getName());
+                  stopped.incrementAndGet();
+                }));
+    assertEquals(1, stopped.get());
+    assertTrue(new File(unknown, "payload").exists());
+    assertFalse(new File(unknown, "closed").exists());
+    assertTrue(new File(known, "closed").exists());
+    assertFalse(new File(known, "payload").exists());
+  }
+
+  @Test
   public void missingHomeDoesNotCreateOrInvokeAnything() throws Exception {
     File missing = new File(temporary.getRoot(), "missing");
     TrialRecovery.recover(

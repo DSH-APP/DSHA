@@ -26,10 +26,11 @@ import java.util.function.Supplier;
 public class SettingsFragment extends Fragment {
 
   private static final TabOption[] TAB_OPTIONS = {
-    new TabOption("安装", "安装与修复运行环境", InstallFragment::new),
-    new TabOption("配置", "接口、显示与运行", ConfigFragment::new),
-    new TabOption("数据与备份", "备份恢复 · 文件共享", WorkspaceFragment::new),
-    new TabOption("设备能力授权", "Root · Shizuku · ADB · 权限", DeviceGrantsFragment::new),
+    new TabOption("安装", "安装与修复运行环境", InstallFragment::new, R.drawable.ic_ui2_box),
+    new TabOption("配置", "接口、显示与运行", ConfigFragment::new, R.drawable.ic_settings),
+    new TabOption("数据与备份", "备份恢复 · 文件共享", WorkspaceFragment::new, R.drawable.ic_ui2_folder),
+    new TabOption(
+        "设备能力授权", "Root · Shizuku · ADB · 权限", DeviceGrantsFragment::new, R.drawable.ic_ui_shield),
   };
 
   @Nullable
@@ -238,12 +239,7 @@ public class SettingsFragment extends Fragment {
     chev.setTextColor(requireContext().getColor(R.color.text_muted));
 
     android.widget.ImageView icon = new android.widget.ImageView(requireContext());
-    icon.setImageResource(
-        index == 0
-            ? R.drawable.ic_ui2_box
-            : index == 1
-                ? R.drawable.ic_settings
-                : index == 2 ? R.drawable.ic_ui2_folder : R.drawable.ic_ui_shield);
+    icon.setImageResource(opt.icon);
     icon.setImageTintList(
         android.content.res.ColorStateList.valueOf(requireContext().getColor(R.color.primary)));
     icon.setBackgroundResource(R.drawable.bg_logo);
@@ -253,11 +249,16 @@ public class SettingsFragment extends Fragment {
     row.addView(body);
     row.addView(chev);
     row.setOnClickListener(
-        v ->
+        v -> {
+          if (opt.activity != null) {
+            startActivity(new Intent(requireContext(), opt.activity));
+          } else {
             UiMotion.page(requireContext(), getParentFragmentManager().beginTransaction())
                 .replace(R.id.fragment_container, opt.factory.get())
                 .addToBackStack("settings")
-                .commit());
+                .commit();
+          }
+        });
     return row;
   }
 
@@ -269,11 +270,23 @@ public class SettingsFragment extends Fragment {
     final String title;
     final String sub;
     final Supplier<Fragment> factory;
+    final Class<? extends android.app.Activity> activity;
+    final int icon;
 
-    TabOption(String title, String sub, Supplier<Fragment> factory) {
+    TabOption(String title, String sub, Supplier<Fragment> factory, int icon) {
       this.title = title;
       this.sub = sub;
       this.factory = factory;
+      this.activity = null;
+      this.icon = icon;
+    }
+
+    TabOption(String title, String sub, Class<? extends android.app.Activity> activity, int icon) {
+      this.title = title;
+      this.sub = sub;
+      this.factory = null;
+      this.activity = activity;
+      this.icon = icon;
     }
   }
 }

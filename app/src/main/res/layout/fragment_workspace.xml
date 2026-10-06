@@ -22,6 +22,33 @@
         </LinearLayout>
         <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
       </LinearLayout>
+      <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+      <LinearLayout android:id="@+id/workspace_files" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_folder" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/workspace_files_title" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/workspace_files_hint" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+        </LinearLayout>
+        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
+      </LinearLayout>
+      <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+      <LinearLayout android:id="@+id/workspace_guide" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_entry_book" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/workspace_guide_title" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/workspace_guide_hint" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+        </LinearLayout>
+        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
+      </LinearLayout>
+      <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+      <LinearLayout android:id="@+id/workspace_skills" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_entry_book" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/workspace_skills_title" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/workspace_skills_hint" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+        </LinearLayout>
+        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
+      </LinearLayout>
     </LinearLayout>
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_maintenance" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="12dp">

@@ -25,7 +25,10 @@ public final class TarGzipExtractor {
 
   public static void extractSelected(
       InputStream in, File dest, int strip, Predicate<String> selected) throws IOException {
-    extractSelected(in, dest, strip, selected, new AndroidBackupFileSystem());
+    if (strip < 0 || strip > 64) throw new IOException("TAR_STRIP");
+    try (AndroidTrustedAssetFileSystem fs = new AndroidTrustedAssetFileSystem(dest)) {
+      extractSelected(in, dest, strip, selected, fs);
+    }
   }
 
   static void extractSelected(

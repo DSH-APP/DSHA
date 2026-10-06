@@ -30,14 +30,22 @@ public final class BackupArchive {
   }
 
   public static String hex(byte[] bytes) {
-    StringBuilder out = new StringBuilder(bytes.length * 2);
-    for (byte b : bytes) out.append(String.format(Locale.ROOT, "%02x", b & 255));
-    return out.toString();
+    char[] out = new char[bytes.length * 2];
+    String digits = "0123456789abcdef";
+    for (int i = 0; i < bytes.length; i++) {
+      int b = bytes[i] & 255;
+      out[i * 2] = digits.charAt(b >>> 4);
+      out[i * 2 + 1] = digits.charAt(b & 15);
+    }
+    return new String(out);
   }
 
   public static String digest(InputStream input, BackupControl control) throws IOException {
+    return digest(input, control, new byte[65536]);
+  }
+
+  static String digest(InputStream input, BackupControl control, byte[] buffer) throws IOException {
     MessageDigest digest = sha();
-    byte[] buffer = new byte[65536];
     long total = 0;
     int n;
     while ((n = input.read(buffer)) != -1) {

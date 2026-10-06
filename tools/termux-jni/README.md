@@ -1,6 +1,6 @@
 # Termux JNI：现行身份与重编入口
 
-现行库为 API 23、arm64；`max-page-size=16384`、`common-page-size=4096`。当前入库 [libtermux.so](../../app/src/main/jniLibs/arm64-v8a/libtermux.so) 实际 SHA-256：`0c6b87759cb35f2ae8265155d3d669d511b43dbddab5831b6f55904833676147`。
+现行库为 API 23、arm64；`max-page-size=16384`、`common-page-size=4096`。当前入库 [libtermux.so](../../app/src/main/jniLibs/arm64-v8a/libtermux.so) 实际 SHA-256：`67d7bebc5a9be51e2a42047b5a849872ad0088f1afd561808809ab6ce7c8d158`。
 
 [build.ps1](build.ps1) 校验固定上游 `termux.c`，在构建目录生成出生身份握手补丁；子进程自读 stat，父进程登记并确认后才允许 exec。脚本检查 LOAD、RELRO 和 JNI 导出再替换入库文件，不下载工具、不调用 Gradle。默认 API 与对齐值以上述脚本为准。
 
@@ -10,7 +10,7 @@
 & ./tools/termux-jni/build.ps1 -Ndk $env:ANDROID_NDK_HOME -MinApi 23
 ```
 
-这是 Windows PowerShell 的重编入口。JNI/ELF 字节核验不能代替对应 Android 版本、真实页大小和非调试应用的进程访问时序验收。本轮文档更新仅只读核对入库文件，未重编或执行设备测试。工程步骤见 [CONTRIBUTING](../../CONTRIBUTING.md)，进程归属见 [模块图](../../docs/module-map.md)。
+这是 Windows PowerShell 的重编入口。JNI/ELF 字节核验不能代替对应 Android 版本、真实页大小和非调试应用的进程访问时序验收。build159 的有界批量写回仍先 syncfs，再对同一写 FD 的 dup 逐个 fsync 核对结果；本地 build160 增加完整祖先链身份核验及新建签名小文件的 prepare/finish，写 FD 由 Java PFD 唯一持有，原同步和发布边界保持。树校验新增同一父 FD 内最多 32 个成员的串行统计与实际小文件读取，保留 EOF、打开 FD 和具名叶子的完整身份核验，SHA 仍由原 Java 引擎计算。当前库经 API23 编译、LOAD 对齐、4 KiB/16 KiB RELRO 与精确 JNI 导出检查；本轮 Android 13 正式包的冷安装速度和运行核验另记实际结果。工程步骤见 [CONTRIBUTING](../../CONTRIBUTING.md)，进程归属见 [模块图](../../docs/module-map.md)。
 
 ## 历史构建记录
 

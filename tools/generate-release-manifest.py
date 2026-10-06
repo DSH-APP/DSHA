@@ -9,7 +9,7 @@ import re
 import subprocess
 import zipfile
 from urllib.parse import quote, urlparse
-from release_names import apk_filename
+from release_names import apk_filename, apk_name_version
 
 PUBLISH_CERT = json.loads((Path(__file__).resolve().parents[1]/'ci/release-identity.json').read_text(encoding='utf-8'))['certificateSha256']
 
@@ -90,6 +90,9 @@ def main():
     parser.add_argument('--channel', choices=('stable', 'preview'), help='显式指定发布通道；正式推广已验收 rc 包时使用 stable')
     parser.add_argument('--origin', default='https://dsha.cc')
     args = parser.parse_args()
+    release_root = Path(__file__).resolve().parents[1] / 'release'
+    if args.output.resolve().is_relative_to(release_root.resolve()):
+        parser.error('--output 必须位于 release 之外；release 仅存放 APK 与 .apk.sha256')
     previous_path = args.previous_manifest or args.output
     previous = json.loads(previous_path.read_text(encoding='utf-8')) if previous_path.exists() else None
     origin = args.origin.rstrip('/')
@@ -105,13 +108,14 @@ def main():
     if artifacts[0]['runtimeId']!=artifacts[1]['runtimeId'] or artifacts[0]['dshVersion']!=artifacts[1]['dshVersion']:
         raise ValueError('两版受管运行身份不一致')
     notes = args.notes.read_text(encoding='utf-8').strip()
+    download_version = apk_name_version()
     for artifact, apk in zip(artifacts, (args.standard, args.low)):
         expected = apk_filename(artifact['flavor'])
         if artifact['filename'] != expected:
             raise ValueError(f'发布文件名应为 {expected}')
-        artifact['url'] = origin + '/downloads/' + quote(version) + '/' + quote(artifact['filename'])
+        artifact['url'] = origin + '/downloads/' + quote(download_version) + '/' + quote(artifact['filename'])
         apk.with_suffix('.apk.sha256').write_bytes(f'{artifact["sha256"]}  {apk.name}\n'.encode('utf-8'))
-    release = dict(version=version, versionCode=code, channel=release_channel(version, args.channel),
+    release = dict(version=version, apkNameVersion=download_version, versionCode=code, channel=release_channel(version, args.channel),
                    pageUrl=origin + '/download/', notes=notes, dshVersion=artifacts[0]['dshVersion'], runtimeId=artifacts[0]['runtimeId'], artifacts=artifacts)
     manifest = dict(schemaVersion=1, packageName='com.dsh.client', certificateSha256=PUBLISH_CERT,
                     releases=retain_channels(release, previous))

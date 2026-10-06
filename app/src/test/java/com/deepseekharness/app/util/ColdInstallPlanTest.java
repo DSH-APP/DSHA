@@ -21,6 +21,167 @@ public class ColdInstallPlanTest {
     return result(0, true, probe ? ColdInstallPlan.PROBE_READY : ColdInstallPlan.INSTALL_READY);
   }
 
+  private static ColdInstallPlan.Observation signalStackFailure() {
+    return result(
+        139,
+        true,
+        "Fatal glibc error: ../sysdeps/unix/sysv/linux/sysconf-sigstksz.h:25 (sysconf_sigstksz): assertion failed: minsigstksz != 0");
+  }
+
+  private static ColdInstallPlan.Observation configuredReady() {
+    return result(0, true, ColdInstallPlan.PROBE_READY + "\n" + ColdInstallPlan.INSTALL_READY);
+  }
+
+  @Test
+  public void onlyAutomaticFreshStaticColdChecksAllowTheDynamicLoaderAttempt() {
+    assertTrue(ColdInstallPlan.allowDynamicLoaderRetry(true, true, false, true));
+    assertFalse(ColdInstallPlan.allowDynamicLoaderRetry(false, true, false, true));
+    assertFalse(ColdInstallPlan.allowDynamicLoaderRetry(true, false, false, true));
+    assertFalse(ColdInstallPlan.allowDynamicLoaderRetry(true, true, true, true));
+    assertFalse(ColdInstallPlan.allowDynamicLoaderRetry(true, true, false, false));
+    assertFalse(ColdInstallPlan.Mode.PROROOT_DYNAMIC.staticLoader(true));
+    assertFalse(ColdInstallPlan.Mode.PROROOT_DYNAMIC.staticLoader(false));
+    assertFalse(ColdInstallPlan.Mode.PROROOT.staticLoader(false));
+    assertTrue(ColdInstallPlan.Mode.PROROOT.staticLoader(true));
+  }
+
+  @Test
+  public void confirmedSpecificStaticFailureTriesTheRealDynamicModeOnce() throws Exception {
+    List<ColdInstallPlan.Mode> calls = new ArrayList<>(), records = new ArrayList<>();
+    var selected =
+        ColdInstallPlan.runConfigured(
+            ColdInstallPlan.modes(true, true, true, false),
+            true,
+            (mode, probe) -> {
+              calls.add(mode);
+              return mode == ColdInstallPlan.Mode.PROROOT
+                  ? signalStackFailure()
+                  : configuredReady();
+            },
+            (mode, probe, observation) -> records.add(mode));
+    assertEquals(ColdInstallPlan.Mode.PROROOT_DYNAMIC, selected);
+    assertEquals(
+        List.of(ColdInstallPlan.Mode.PROROOT, ColdInstallPlan.Mode.PROROOT_DYNAMIC), calls);
+    assertEquals(calls, records);
+  }
+
+  @Test
+  public void closedDynamicFailureContinuesProotAndUnknownDynamicExitStopsAllLaterWork()
+      throws Exception {
+    List<ColdInstallPlan.Mode> calls = new ArrayList<>();
+    var selected =
+        ColdInstallPlan.runConfigured(
+            ColdInstallPlan.modes(true, true, true, false),
+            true,
+            (mode, probe) -> {
+              calls.add(mode);
+              if (mode == ColdInstallPlan.Mode.PROROOT) return signalStackFailure();
+              if (mode == ColdInstallPlan.Mode.PROROOT_DYNAMIC)
+                return result(126, true, "closed dynamic loader failure");
+              return configuredReady();
+            },
+            (mode, probe, observation) -> {});
+    assertEquals(ColdInstallPlan.Mode.PROOT, selected);
+    assertEquals(
+        List.of(
+            ColdInstallPlan.Mode.PROROOT,
+            ColdInstallPlan.Mode.PROROOT_DYNAMIC,
+            ColdInstallPlan.Mode.PROOT),
+        calls);
+    calls.clear();
+    assertThrows(
+        IOException.class,
+        () ->
+            ColdInstallPlan.runConfigured(
+                ColdInstallPlan.modes(true, true, true, false),
+                true,
+                (mode, probe) -> {
+                  calls.add(mode);
+                  return mode == ColdInstallPlan.Mode.PROROOT
+                      ? signalStackFailure()
+                      : result(0, false, ColdInstallPlan.PROBE_READY);
+                },
+                (mode, probe, observation) -> {}));
+    assertEquals(
+        List.of(ColdInstallPlan.Mode.PROROOT, ColdInstallPlan.Mode.PROROOT_DYNAMIC), calls);
+  }
+
+  @Test
+  public void otherCrashesTimeoutsUnknownExitAndExplicitChoiceNeverTriggerDynamicMode()
+      throws Exception {
+    for (var failure :
+        List.of(
+            result(139, true, "SIGSEGV"),
+            result(1, true, signalStackFailure().output),
+            new ColdInstallPlan.Observation(
+                139, true, true, signalStackFailure().output, "timeout"),
+            result(139, false, signalStackFailure().output))) {
+      List<ColdInstallPlan.Mode> calls = new ArrayList<>();
+      try {
+        ColdInstallPlan.runConfigured(
+            ColdInstallPlan.modes(true, true, true, false),
+            true,
+            (mode, probe) -> {
+              calls.add(mode);
+              return mode == ColdInstallPlan.Mode.PROROOT ? failure : configuredReady();
+            },
+            (mode, probe, observation) -> {});
+        assertTrue(failure.exited);
+      } catch (IOException stopped) {
+        assertFalse(failure.exited);
+        assertEquals("COLD_INSTALL_PROCESS_EXIT_UNCONFIRMED", stopped.getMessage());
+      }
+      assertFalse(calls.contains(ColdInstallPlan.Mode.PROROOT_DYNAMIC));
+    }
+    List<ColdInstallPlan.Mode> calls = new ArrayList<>();
+    ColdInstallPlan.runConfigured(
+        ColdInstallPlan.modes(true, true, true, false),
+        (mode, probe) -> {
+          calls.add(mode);
+          return mode == ColdInstallPlan.Mode.PROROOT ? signalStackFailure() : configuredReady();
+        },
+        (mode, probe, observation) -> {});
+    assertEquals(List.of(ColdInstallPlan.Mode.PROROOT, ColdInstallPlan.Mode.PROOT), calls);
+  }
+
+  @Test
+  public void configuredPackagesUseOneCheckAndNeverRunInstaller() throws Exception {
+    List<Boolean> calls = new ArrayList<>();
+    var mode =
+        ColdInstallPlan.runConfigured(
+            List.of(ColdInstallPlan.Mode.PROOT),
+            (candidate, probe) -> {
+              calls.add(probe);
+              return result(
+                  0, true, ColdInstallPlan.PROBE_READY + "\n" + ColdInstallPlan.INSTALL_READY);
+            },
+            (candidate, probe, observation) -> {});
+    assertEquals(ColdInstallPlan.Mode.PROOT, mode);
+    assertEquals(List.of(true), calls);
+  }
+
+  @Test
+  public void configuredMissingToolsMarkerAndUnknownExitCannotPass() {
+    assertThrows(
+        IOException.class,
+        () ->
+            ColdInstallPlan.runConfigured(
+                List.of(ColdInstallPlan.Mode.PROOT),
+                (candidate, probe) -> ready(true),
+                (candidate, probe, observation) -> {}));
+    assertThrows(
+        IOException.class,
+        () ->
+            ColdInstallPlan.runConfigured(
+                List.of(ColdInstallPlan.Mode.PROOT, ColdInstallPlan.Mode.PROOT_COMPAT),
+                (candidate, probe) ->
+                    result(
+                        0,
+                        false,
+                        ColdInstallPlan.PROBE_READY + "\n" + ColdInstallPlan.INSTALL_READY),
+                (candidate, probe, observation) -> {}));
+  }
+
   @Test
   public void huaweiFailureSequenceSelectsNoSeccompAndWritesPackagesOnlyOnce() throws Exception {
     List<String> calls = new ArrayList<>(), records = new ArrayList<>();

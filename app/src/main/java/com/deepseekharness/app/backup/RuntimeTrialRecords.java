@@ -106,6 +106,80 @@ public final class RuntimeTrialRecords {
     return selected == null ? new byte[0] : fs.small(selected, 64 * 1024);
   }
 
+  public record FailureDiagnostic(
+      byte[] failure,
+      String recordId,
+      String state,
+      String launched,
+      String pid,
+      String stalePid,
+      String identity) {}
+
+  /** A pending failure must be visible without closing, moving or deleting its evidence. */
+  public static FailureDiagnostic latestDiagnostic(BackupFileSystem fs, File home)
+      throws IOException {
+    BackupFileSystem.Node root = fs.stat(home);
+    if (root.type.equals("MISSING")) return null;
+    if (!root.type.equals("DIRECTORY")) throw new IOException("TRIAL_DIRECTORY");
+    List<String> entries = fs.list(home);
+    if (entries.size() > SCAN_LIMIT) throw new IOException("TRIAL_RETENTION_LIMIT");
+    File selected = null;
+    String selectedId = "";
+    long selectedAt = Long.MIN_VALUE;
+    boolean selectedPending = false;
+    for (String id : entries) {
+      if (!id.matches(ID)) throw new IOException("TRIAL_DIRECTORY");
+      File entry = fs.child(home, id);
+      if (!fs.stat(entry).type.equals("DIRECTORY")) throw new IOException("TRIAL_DIRECTORY");
+      File failure = fs.child(entry, "failure.json");
+      BackupFileSystem.Node failed = fs.stat(failure);
+      if (failed.type.equals("MISSING")) continue;
+      if (!failed.type.equals("FILE")) throw new IOException("TRIAL_FAILURE_RECORD");
+      File marker = fs.child(entry, "closed");
+      BackupFileSystem.Node closed = fs.stat(marker);
+      boolean pending = closed.type.equals("MISSING");
+      if (!pending
+          && (!closed.type.equals("FILE")
+              || !id.equals(new String(fs.small(marker, 128), StandardCharsets.US_ASCII))))
+        throw new IOException("TRIAL_MARKER");
+      if (selected == null
+          || pending && !selectedPending
+          || pending == selectedPending
+              && (failed.modified > selectedAt
+                  || failed.modified == selectedAt && id.compareTo(selectedId) > 0)) {
+        selected = entry;
+        selectedId = id;
+        selectedAt = failed.modified;
+        selectedPending = pending;
+      }
+    }
+    if (selected == null) return null;
+    File launched = fs.child(selected, "launched");
+    String launchedType = fs.stat(launched).type;
+    if (!launchedType.equals("MISSING")
+        && (!launchedType.equals("FILE")
+            || !selectedId.equals(new String(fs.small(launched, 128), StandardCharsets.US_ASCII))))
+      throw new IOException("TRIAL_MARKER");
+    File payload = fs.child(selected, "payload");
+    String payloadType = fs.stat(payload).type;
+    if (!payloadType.equals("DIRECTORY") && !payloadType.equals("MISSING"))
+      throw new IOException("TRIAL_PAYLOAD_TYPE");
+    return new FailureDiagnostic(
+        fs.small(fs.child(selected, "failure.json"), 64 * 1024),
+        selectedId,
+        selectedPending ? "PENDING_EXIT_CONFIRMATION" : "CLOSED",
+        launchedType,
+        payloadType.equals("MISSING")
+            ? "MISSING"
+            : fs.stat(fs.child(payload, ".dsha-web.pid")).type,
+        payloadType.equals("MISSING")
+            ? "MISSING"
+            : fs.stat(fs.child(payload, ".dsha-web.pid.stale")).type,
+        payloadType.equals("MISSING")
+            ? "MISSING"
+            : fs.stat(fs.child(payload, ".dsha-web.identity")).type);
+  }
+
   private static void removeAfter(BackupFileSystem fs, File home, List<Record> records, int keep)
       throws IOException {
     for (int i = keep; i < records.size(); i++) fs.removeOwned(home, records.get(i).id);

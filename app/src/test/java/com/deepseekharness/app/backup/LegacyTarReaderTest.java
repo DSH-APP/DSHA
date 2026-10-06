@@ -40,6 +40,49 @@ public class LegacyTarReaderTest {
     return out.toByteArray();
   }
 
+  static byte[] withMode(byte[] input, byte[] mode) {
+    assertEquals(8, mode.length);
+    System.arraycopy(mode, 0, input, 100, mode.length);
+    Arrays.fill(input, 148, 156, (byte) ' ');
+    int checksum = 0;
+    for (int at = 0; at < 512; at++) checksum += input[at] & 255;
+    put(input, 148, String.format("%06o\0 ", checksum));
+    return input;
+  }
+
+  @Test
+  public void numericFieldsKeepTrimAndOctalSemantics() throws Exception {
+    for (String mode : List.of(" \t0644\r ", "\0 00644\0", "00007777", "        ")) {
+      byte[] archive =
+          withMode(tar("file", '0', new byte[0]), mode.getBytes(StandardCharsets.US_ASCII));
+      int expected = mode.equals("00007777") ? 0777 : mode.equals("        ") ? 0 : 0644;
+      LegacyTarReader.read(
+          new ByteArrayInputStream(archive),
+          (entry, data) -> assertEquals(expected, entry.mode),
+          new BackupControl(null));
+    }
+  }
+
+  @Test
+  public void numericFieldsRejectInteriorPaddingInvalidDigitAndHighByte() throws Exception {
+    List<byte[]> modes = new ArrayList<>();
+    for (String mode : List.of("0000800\0", "006\0 4\0\0", "0000-1\0\0"))
+      modes.add(mode.getBytes(StandardCharsets.US_ASCII));
+    modes.add(new byte[] {'0', '0', '0', '0', '6', '4', (byte) 0xff, 0});
+    for (byte[] mode : modes) {
+      byte[] archive = withMode(tar("file", '0', new byte[0]), mode);
+      IOException failure =
+          assertThrows(
+              IOException.class,
+              () ->
+                  LegacyTarReader.read(
+                      new ByteArrayInputStream(archive),
+                      (entry, data) -> {},
+                      new BackupControl(null)));
+      assertEquals("TAR_NUMBER", failure.getMessage());
+    }
+  }
+
   @Test
   public void readsSyntheticLegacyPayloadOnHost() throws Exception {
     byte[] body = "对话原件".getBytes(StandardCharsets.UTF_8),

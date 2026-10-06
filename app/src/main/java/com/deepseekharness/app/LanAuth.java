@@ -45,6 +45,24 @@ final class LanAuth {
     return query != null && constantTimeEquals(token, query) ? AUTH_OK_SET_COOKIE : AUTH_DENY;
   }
 
+  static com.deepseekharness.app.util.LanFailureResponse.Reason denialReason(
+      String head, String token) {
+    var missing = com.deepseekharness.app.util.LanFailureResponse.Reason.TOKEN_MISSING;
+    if (token == null || token.isEmpty())
+      return com.deepseekharness.app.util.LanFailureResponse.Reason.TOKEN_UNAVAILABLE;
+    if (queryToken(head) != null)
+      return com.deepseekharness.app.util.LanFailureResponse.Reason.TOKEN_INVALID;
+    if (head != null)
+      for (String line : head.split("\\r?\\n")) {
+        int colon = line.indexOf(':');
+        if (colon <= 0 || !line.substring(0, colon).trim().equalsIgnoreCase("Cookie")) continue;
+        for (String part : line.substring(colon + 1).split(";"))
+          if (part.trim().startsWith(COOKIE_NAME + "="))
+            return com.deepseekharness.app.util.LanFailureResponse.Reason.TOKEN_INVALID;
+      }
+    return missing;
+  }
+
   /** Read only the request target, never Referer or another header. */
   static String queryToken(String head) {
     if (head == null) return null;

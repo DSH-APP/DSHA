@@ -58,7 +58,8 @@ public final class ColdInstallDiagnostics {
       File file = new File(context.getFilesDir(), "cold-install-diagnostics.txt");
       try {
         return file.isFile() && !Compat.isSymbolicLink(file)
-            ? SensitiveData.redact(TextLogTail.read(file, 128 * 1024))
+            ? com.deepseekharness.app.util.LogCompactor.compactInstall(
+                SensitiveData.redact(TextLogTail.read(file, 128 * 1024)), 8000)
             : com.deepseekharness.app.util.UiText.choose("暂无冷安装记录\n", "No cold-install record\n");
       } catch (Exception error) {
         return "INSTALL_DIAGNOSTIC_UNREADABLE: " + error.getClass().getSimpleName();

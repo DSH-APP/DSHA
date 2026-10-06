@@ -95,8 +95,17 @@ public final class DeviceGrantsFragment extends Fragment {
         button ->
             startActivity(
                 new Intent(ctx, com.deepseekharness.app.vscreen.VirtualScreenActivity.class)));
-    if (com.deepseekharness.app.vscreen.VirtualScreenManager.supported(ctx))
+    if (com.deepseekharness.app.vscreen.VirtualScreenManager.supported(ctx)) {
+      android.widget.TextView virtualHint = new android.widget.TextView(ctx);
+      virtualHint.setText(
+          com.deepseekharness.app.util.UiText.choose(
+              "虚拟屏需要已连接的设备通道。无障碍不会自动创建，请打开虚拟屏后点“创建竖屏”或“创建横屏”；页内有使用说明。",
+              "A virtual screen requires a connected device channel. Accessibility does not create it automatically. Open virtual screen, then tap Create portrait or Create landscape. Instructions are available on that page."));
+      virtualHint.setTextSize(12);
+      virtualHint.setTextColor(ctx.getColor(R.color.text_secondary));
+      screenCard.addView(virtualHint, new android.widget.LinearLayout.LayoutParams(-1, -2));
       screenCard.addView(virtualScreen, new android.widget.LinearLayout.LayoutParams(-1, -2));
+    }
 
     CompoundButton root = view.findViewById(R.id.config_root_shell);
     root.setChecked(RootShell.enabled(ctx));

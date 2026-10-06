@@ -266,6 +266,18 @@ public class ConfigStore {
     prefs.edit().putString(Constants.KEY_CONTAINER_RUNTIME, v ? "proroot" : "proot").apply();
   }
 
+  /** 冷安装可试用快速方式；任何历史选择（包括显式 proot 和无效旧值）都保留。 */
+  public boolean preferFastColdMode() {
+    return preferFastColdModeFrom(prefs.getAll());
+  }
+
+  static boolean preferFastColdModeFrom(java.util.Map<String, ?> values) {
+    return !values.containsKey(Constants.KEY_CONTAINER_RUNTIME)
+        && !values.containsKey("cold_runtime_root")
+        && !values.containsKey("cold_runtime_packages")
+        && !values.containsKey("cold_runtime_mode");
+  }
+
   public boolean isProrootStaticLoader() {
     return flag("proroot_static_loader", true);
   }
@@ -289,11 +301,15 @@ public class ConfigStore {
       String packageSlotSha)
       throws java.io.IOException {
     synchronized (COLD_SELECTION_LOCK) {
-      if (rootIdentity == null
+      if (mode == null
+          || rootIdentity == null
           || rootIdentity.isEmpty()
           || packageSlotSha == null
           || !packageSlotSha.matches("[a-f0-9]{64}"))
         throw new java.io.IOException("COLD_RUNTIME_SELECTION_RECORD");
+      if (mode == com.deepseekharness.app.util.ColdInstallPlan.Mode.PROROOT_DYNAMIC
+          && (!preferFastColdModeFrom(prefs.getAll()) || !isProrootStaticLoader()))
+        throw new java.io.IOException("COLD_RUNTIME_SELECTION_CHANGED");
       var edit =
           prefs
               .edit()
@@ -301,8 +317,9 @@ public class ConfigStore {
               .putString("cold_runtime_root", rootIdentity)
               .putString("cold_runtime_packages", packageSlotSha)
               .putString("cold_runtime_mode", mode.name());
-      if (mode != com.deepseekharness.app.util.ColdInstallPlan.Mode.PROROOT)
-        edit.putBoolean("proot_disable_seccomp", mode.noSeccomp);
+      if (mode == com.deepseekharness.app.util.ColdInstallPlan.Mode.PROROOT_DYNAMIC)
+        edit.putBoolean("proroot_static_loader", false);
+      if (!"proroot".equals(mode.runtime)) edit.putBoolean("proot_disable_seccomp", mode.noSeccomp);
       if (!edit.commit()) throw new java.io.IOException("COLD_RUNTIME_SELECTION_PERSISTENCE");
       return runtimeSettingsSnapshot();
     }

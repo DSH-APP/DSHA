@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
+import com.deepseekharness.app.util.ExtractionReadProgress;
 
 /** Extracts signed cold assets and prepares the candidate before publication. */
 final class ColdBundleExtractor {
@@ -57,42 +58,53 @@ final class ColdBundleExtractor {
         }
       }
 
-      InputStream counted = raw;
-      final java.util.function.BiConsumer<Long, Long> cb = onProgress;
-      final long totalBytes = archiveBytes;
-      if (cb != null) {
-        counted =
-            new java.io.FilterInputStream(raw) {
-              long done = 0;
+      boolean split =
+          "split-runtime-v1".equals(boot.readAssetString("offline-rootfs.layout").trim());
+      ZipEntry runtime = split && apk != null ? apk.getEntry("assets/dsh-runtime.bin") : null;
+      if (split && apk != null && runtime == null)
+        throw new IOException(com.deepseekharness.app.util.UiText.text("APK 缺少独立 dsh 运行时，安装未完成"));
+      long totalBytes = archiveBytes;
+      if (split)
+        totalBytes =
+            archiveBytes >= 0 && runtime != null && runtime.getSize() >= 0
+                ? archiveBytes + runtime.getSize()
+                : -1;
+      ExtractionReadProgress progress = new ExtractionReadProgress(totalBytes, onProgress);
 
-              @Override
-              public int read(byte[] b, int off, int len) throws IOException {
-                int n = super.read(b, off, len);
-                if (n > 0) {
-                  done += n;
-                  cb.accept(done, totalBytes);
-                }
-                return n;
-              }
-            };
-      }
-
-      // 覆盖安装换了内置包（版本不符）时，先清掉旧 rootfs 再解压，
-      // 避免旧版残留文件（alpha.5 独有的 dsh 文件）与新包混在一起
+      // 入口已确认本次目标为空；已有环境只能由外层维护事务保留、发布与回切。
       boot.rootfsDir.mkdirs();
       boot.extractionStage(
           onProgress, com.deepseekharness.app.util.UiText.text("解压 Ubuntu 与 Node"));
-      TarGzipExtractor.extractAuto(counted, boot.rootfsDir, 0);
-      if ("split-runtime-v1".equals(boot.readAssetString("offline-rootfs.layout").trim())) {
-        boot.extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("解压 dsh 与内置依赖"));
-        ZipEntry runtime = apk == null ? null : apk.getEntry("assets/dsh-runtime.bin");
-        if (apk != null && runtime == null)
-          throw new IOException(com.deepseekharness.app.util.UiText.text("APK 缺少独立 dsh 运行时，安装未完成"));
+      if (split && boot.coldCandidate != null) {
+        boot.requireColdCandidate();
         try (InputStream input =
             apk == null
                 ? boot.ctx.getAssets().open("dsh-runtime.bin")
                 : apk.getInputStream(runtime)) {
-          TarGzipExtractor.extractAuto(input, boot.rootfsDir, 0);
+          ColdSplitExtraction.run(
+              new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
+              boot.rootfsDir,
+              boot.coldCandidate.linux().getParentFile(),
+              raw,
+              input,
+              totalBytes,
+              onProgress,
+              ColdSplitExtraction::extractSigned);
+        }
+        boot.requireColdCandidate();
+      } else {
+        TarGzipExtractor.extractAuto(progress.count(raw), boot.rootfsDir, 0);
+        progress.flush();
+        if (split) {
+          boot.extractionStage(
+              onProgress, com.deepseekharness.app.util.UiText.text("解压 dsh 与内置依赖"));
+          try (InputStream input =
+              apk == null
+                  ? boot.ctx.getAssets().open("dsh-runtime.bin")
+                  : apk.getInputStream(runtime)) {
+            TarGzipExtractor.extractAuto(progress.count(input), boot.rootfsDir, 0);
+            progress.flush();
+          }
         }
       }
       boot.extractionStage(
@@ -100,15 +112,15 @@ final class ColdBundleExtractor {
       boot.installBundledPython(boot.rootfsDir);
       boot.installBundledPnpm(boot.rootfsDir);
       boot.extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("准备应用工具"));
-      RuntimeTools.prepare(boot.ctx, boot.getRootfsDir());
+      // 本次完整补丁链与应用入口只准备一次，离线 dpkg 不安装受管 dsh 文件。
+      // 仍在首次 guest 启动前完成准备；提交和后续真实运行核验照常执行。
+      boot.ensureDshRuntimePatches();
       RuntimeTools.prepareBuiltinDependencies(boot.rootfsDir);
       boot.ensureAndroidGroups();
       boot.extractionStage(
           onProgress, com.deepseekharness.app.util.UiText.text("安装离线 curl、git 与证书"));
       ProotBootstrap.ColdRuntimeSelection installedRuntime =
           boot.installBundledUbuntuTools(onProgress);
-      boot.extractionStage(onProgress, com.deepseekharness.app.util.UiText.text("适配 dsh 运行时"));
-      boot.ensureDshRuntimePatches();
       if (boot.coldCandidate == null)
         com.deepseekharness.app.util.ColdInstallPlan.publishReady(
             () ->

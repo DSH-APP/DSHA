@@ -37,6 +37,31 @@ public class WorkspaceFragment extends Fragment {
     View v = inflater.inflate(R.layout.fragment_workspace, container, false);
     controller = HarnessController.get(requireContext());
     task = com.deepseekharness.app.core.BackupTask.get(requireContext());
+    ((TextView) v.findViewById(R.id.workspace_files_title))
+        .setText(com.deepseekharness.app.util.UiText.text("作品与文件导出"));
+    ((TextView) v.findViewById(R.id.workspace_files_hint))
+        .setText(com.deepseekharness.app.util.UiText.text("浏览工作区 · 保存到手机 · 分享"));
+    ((TextView) v.findViewById(R.id.workspace_guide_title))
+        .setText(com.deepseekharness.app.util.UiText.text("储存指南"));
+    ((TextView) v.findViewById(R.id.workspace_guide_hint))
+        .setText(com.deepseekharness.app.util.UiText.text("数据位置 · 导出备份 · 恢复与清理"));
+    ((TextView) v.findViewById(R.id.workspace_skills_title))
+        .setText(com.deepseekharness.app.util.UiText.text("技能（Skills）"));
+    ((TextView) v.findViewById(R.id.workspace_skills_hint))
+        .setText(com.deepseekharness.app.util.UiText.text("查看技能 · 导入 SKILL.md"));
+    v.findViewById(R.id.workspace_files)
+        .setOnClickListener(
+            x ->
+                startActivity(
+                    new android.content.Intent(requireContext(), WorkspaceFilesActivity.class)));
+    v.findViewById(R.id.workspace_guide)
+        .setOnClickListener(
+            x ->
+                startActivity(
+                    new android.content.Intent(requireContext(), StorageHelpActivity.class)));
+    v.findViewById(R.id.workspace_skills)
+        .setOnClickListener(
+            x -> startActivity(new android.content.Intent(requireContext(), SkillsActivity.class)));
     v.findViewById(R.id.workspace_backup)
         .setOnClickListener(
             x ->

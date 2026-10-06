@@ -3,6 +3,7 @@ import fnmatch
 import hashlib
 import json
 from pathlib import Path
+from release_layout import ROOT, source_snapshot_path
 
 CONTRACT=Path(__file__).with_name('release-acceptance.json')
 CERT='e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5'
@@ -12,7 +13,7 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def baseline_from_receipt(path):
+def baseline_from_receipt(path, root=ROOT):
     """A raw current snapshot is not a baseline: require a completed two-flavor delivery receipt."""
     path=Path(path).resolve()
     receipt=json.loads(path.read_text(encoding='utf8'))
@@ -22,9 +23,8 @@ def baseline_from_receipt(path):
     if len(apks)!=2 or {a.get('flavor') for a in apks}!={'standard','low'} \
             or any(a.get('certificateSha256')!=CERT or a.get('package')!='com.dsh.client' for a in apks):
         raise ValueError('ACCEPTANCE_BASELINE_IDENTITY')
-    source=receipt.get('sourceSnapshot',{});snapshot=Path(source.get('path','')).resolve()
-    if snapshot.parent!=path.parent or not snapshot.is_file() or digest(snapshot)!=source.get('sha256'):
-        raise ValueError('ACCEPTANCE_BASELINE_SNAPSHOT')
+    source=receipt.get('sourceSnapshot',{})
+    snapshot=source_snapshot_path(source.get('path',''), source.get('sha256'), root)
     return json.loads(snapshot.read_text(encoding='utf8')),{'receiptSha256':digest(path),'sourceSha256':digest(snapshot)}
 
 

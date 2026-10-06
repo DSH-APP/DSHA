@@ -93,6 +93,18 @@ public class HarnessController {
     return web.getWebAuthUrl();
   }
 
+  public com.deepseekharness.app.util.PreviewPageSession.Identity getReadyWebPageIdentity() {
+    return web.getReadyWebPageIdentity();
+  }
+
+  public void addReadyWebPageListener(Runnable listener) {
+    web.addReadyWebPageListener(listener);
+  }
+
+  public void removeReadyWebPageListener(Runnable listener) {
+    web.removeReadyWebPageListener(listener);
+  }
+
   public String getWebAuthFailure() {
     return web.getWebAuthFailure();
   }

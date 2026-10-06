@@ -1619,6 +1619,38 @@
         "--verify-archive"
       ],
       "cli": "--verify-archive; current source/marker/lock bytes and production builder through DSHA_PYTHON; no APK/archive generation or fixture-pointer mutation"
+    },
+    {
+      "path": "tools/test-release-layout.py",
+      "stage": "fast",
+      "reason": "Version-grouped local delivery paths, ownership and byte-preserving migration; no phone operations.",
+      "args": [],
+      "timeoutSeconds": 60,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-skill-import.mjs",
+      "stage": "runtime",
+      "reason": "Generate two real JVM SkillImports fixtures with JDK17 and SHA-verified SnakeYAML/Gson from the existing backup dependency lock, then read with the pinned rc2 provider/tool; no Android, JUnit, phone or user-data operations.",
+      "args": [
+        "--jdk",
+        "{jdk}",
+        "--fixture",
+        "{fixture}"
+      ],
+      "timeoutSeconds": 60,
+      "requires": [
+        "node24",
+        "raw",
+        "jdk17",
+        "python39"
+      ],
+      "environment": {},
+      "cli": "--jdk <JDK17 directory> --fixture <runner-owned directory>; missing locked JARs are fetched from Maven Central and checked by SHA256. The legacy single fixture argument remains an optional compound mode."
     }
   ],
   "historicalExcluded": [

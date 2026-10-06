@@ -39,8 +39,19 @@ public final class VirtualScreenActivity extends AppCompatActivity {
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(dp(12), dp(10), dp(12), dp(12));
     root.setBackgroundResource(R.color.surface);
-    root.addView(button(t("返回", "Back"), this::finish), new LinearLayout.LayoutParams(-1, dp(40)));
-    state = label(t("创建或复用虚拟屏", "Create or reuse virtual screen"), 14);
+    LinearLayout navigation = new LinearLayout(this);
+    navigation.addView(
+        button(t("返回", "Back"), this::finish), new LinearLayout.LayoutParams(0, dp(40), 1));
+    navigation.addView(
+        button(t("使用说明", "How to use"), this::showUsage),
+        new LinearLayout.LayoutParams(0, dp(40), 1));
+    root.addView(navigation);
+    state =
+        label(
+            t(
+                "先连接设备通道，再点“创建竖屏”或“创建横屏”。",
+                "Connect a device channel, then tap Create portrait or Create landscape."),
+            14);
     root.addView(state);
     detail = label("", 11);
     root.addView(detail);
@@ -100,10 +111,10 @@ public final class VirtualScreenActivity extends AppCompatActivity {
     root.addView(size, new LinearLayout.LayoutParams(-1, dp(32)));
     LinearLayout orientation = new LinearLayout(this);
     orientation.addView(
-        button(t("竖屏", "Portrait"), () -> create("portrait")),
+        button(t("创建竖屏", "Create portrait"), () -> create("portrait")),
         new LinearLayout.LayoutParams(0, dp(40), 1));
     orientation.addView(
-        button(t("横屏", "Landscape"), () -> create("landscape")),
+        button(t("创建横屏", "Create landscape"), () -> create("landscape")),
         new LinearLayout.LayoutParams(0, dp(40), 1));
     root.addView(orientation);
     LinearLayout tools = new LinearLayout(this);
@@ -169,7 +180,34 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                   "兼容版暂不支持虚拟屏，请使用标准版",
                   "Virtual screen is not available in the Low build yet; use Standard")
               : t("虚拟屏需要 Android 11 及以上", "Requires Android 11 or later"));
-    setContentView(root);
+    ScrollView scroll = new ScrollView(this);
+    scroll.addView(root);
+    setContentView(scroll);
+  }
+
+  private void showUsage() {
+    new com.deepseekharness.app.ui.DshaDialogBuilder(this)
+        .setTitle(t("虚拟屏开启与使用", "Start and use a virtual screen"))
+        .setMessage(
+            t(
+                "1. 使用标准版，手机系统需为 Android 11 或更高。兼容版暂不支持虚拟屏。\n\n"
+                    + "2. 打开“设置 → 设备能力授权”，连接 ADB、Shizuku 或 Root 中的一种通道即可。没有 Root 时，可在系统开发者选项开启“无线调试”，再按 DSHA 的 ADB 配对页提示完成配对与连接。仅打开无线调试开关还不够，请确认通道已连接。\n\n"
+                    + "3. 回到“设备能力授权”，点“打开虚拟屏”。在本页点“创建竖屏”或“创建横屏”，等待画面出现。打开此页或开启无障碍，都不会自动创建虚拟屏。\n\n"
+                    + "4. 点“应用 → 选择”，选中想操作的应用，再点“启动”，把它打开到虚拟屏。预览里可以点击、滑动；双指用于调整预览。\n\n"
+                    + "5. 读控件树和中文输入需要开启 DSHA 无障碍。让助手操作时，还要按应用提示确认本次读屏与操作授权，并将操作目标设为虚拟屏。\n\n"
+                    + "VSCREEN_NOT_RUNNING 表示虚拟屏还没创建、已经关闭，或连接已断开。先检查设备通道，再点创建按钮；不需要清除数据或重新解压环境。\n\n"
+                    + "创建仍失败：到“设置 → 自检与诊断”查看错误记录并导出日志。仅开启无障碍不能解决设备通道或系统兼容问题。\n\n"
+                    + "不用时点本页“关闭”回收虚拟屏；连接断开或授权被撤销后，需要重新连接并创建。",
+                "1. Use Standard on Android 11 or later. Low does not support virtual screens yet.\n\n"
+                    + "2. Open Settings → Device capability access and connect one channel: ADB, Shizuku, or Root. Without Root, enable Wireless debugging in the system Developer options, then follow DSHA's ADB pairing page to pair and connect. Enabling the system switch alone is not enough; confirm the channel is connected.\n\n"
+                    + "3. In Device capability access, tap Open virtual screen. Tap Create portrait or Create landscape here and wait for a picture. Opening this page or enabling accessibility does not create a virtual screen automatically.\n\n"
+                    + "4. Tap App → Choose, select an app, then tap Launch to open it on the virtual screen. Tap and swipe in the preview; use two fingers to adjust the preview.\n\n"
+                    + "5. Enable DSHA accessibility for the control tree and Unicode input. For assistant control, also confirm this run's screen access when prompted and choose the virtual screen as the action target.\n\n"
+                    + "VSCREEN_NOT_RUNNING means no virtual screen has been created, it was closed, or its connection was lost. Check the device channel, then tap a create button. You do not need to clear data or extract the environment again.\n\n"
+                    + "If creation still fails, open Settings → Diagnostics to inspect the error record and export logs. Accessibility alone cannot resolve a missing device channel or system compatibility problem.\n\n"
+                    + "Tap Close when finished. After a disconnection or revoked access, reconnect and create the virtual screen again."))
+        .setPositiveButton(t("知道了", "Got it"), null)
+        .show();
   }
 
   private void toggle(View view) {
@@ -311,6 +349,7 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                     return;
                   }
                   if (frame.bitmap != null) {
+                    if (!busy) state.setText(t("虚拟屏已开启", "Virtual screen ready"));
                     preview.frame(frame.bitmap, frame.value);
                     generation = frame.value.optString("generation");
                     frameSeq = frame.value.optLong("frameSeq");
@@ -322,11 +361,22 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                             + frame.value.optInt("height")
                             + " · "
                             + manager.channel());
+                  } else if (!busy && !frame.value.optBoolean("ok")) {
+                    String code = frame.value.optString("error");
+                    if (!code.isEmpty()) state.setText(message(code));
+                    preview.clear();
+                    detail.setText("");
+                    generation = "";
+                    frameSeq = -1;
                   }
                 });
   }
 
   private String message(String code) {
+    if (code.equals("VSCREEN_NOT_RUNNING"))
+      return t(
+          "虚拟屏尚未开启或已关闭。先连接设备通道，再点“创建竖屏”或“创建横屏”；开启无障碍不会自动创建。",
+          "The virtual screen has not started or was closed. Connect a device channel, then tap Create portrait or Create landscape. Accessibility does not create it automatically.");
     if (code.equals("STALE_FRAME") || code.equals("STALE_GENERATION"))
       return t("画面已变化，请看最新画面后再操作", "The view changed. Observe again.");
     if (code.equals("DEVICE_CHANNEL_UNAVAILABLE"))

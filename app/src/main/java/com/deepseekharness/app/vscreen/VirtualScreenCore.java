@@ -30,6 +30,7 @@ public final class VirtualScreenCore {
   private static Context context;
   private static Session session;
   private static ServerSocket server;
+  private static String startupStage = "CONTEXT";
   private static final ThreadPoolExecutor CLIENTS =
       new ThreadPoolExecutor(
           2,
@@ -49,7 +50,9 @@ public final class VirtualScreenCore {
         throw new UnsupportedOperationException("API_30_REQUIRED");
       if (Arrays.asList(args).contains("--token"))
         throw new IllegalArgumentException("TOKEN_MUST_NOT_BE_IN_ARGV");
-      Context system = com.deepseekharness.app.runtime.PrivilegedPackageContext.systemContext();
+      Context system =
+          com.deepseekharness.app.runtime.PrivilegedPackageContext.virtualScreenContext();
+      startupStage = "IDENTITY";
       selfPackage = arg(args, "--package", "");
       if (!com.deepseekharness.app.util.SelfPackageIdentity.validName(selfPackage))
         throw new SecurityException("SELF_PACKAGE_UNVERIFIED");
@@ -59,6 +62,7 @@ public final class VirtualScreenCore {
       if (!installedDshaApkPath(system).equals(classPath))
         throw new SecurityException("INVALID_CLASSPATH");
       if (Arrays.asList(args).contains("--launch")) {
+        startupStage = "LAUNCH";
         launch(port);
         return;
       }
@@ -68,7 +72,9 @@ public final class VirtualScreenCore {
         throw new UnsupportedOperationException("API_30_REQUIRED");
       token = randomToken();
       // The shared helper prepares one main Looper before the first systemMain attach.
+      startupStage = "SHELL_CONTEXT";
       context = system.createPackageContext("com.android.shell", 0);
+      startupStage = "BIND_LISTENER";
       server = new ServerSocket(port, 8, InetAddress.getByName("127.0.0.1"));
       Thread watchdog =
           new Thread(
@@ -111,7 +117,11 @@ public final class VirtualScreenCore {
       System.out.flush();
       Looper.loop();
     } catch (Throwable error) {
-      System.err.println("DSHA_VSCREEN_ERROR=" + cause(error).getClass().getSimpleName());
+      System.err.println(
+          "DSHA_VSCREEN_ERROR="
+              + com.deepseekharness.app.util.VirtualScreenBootstrap.failureCode(
+                  startupStage, android.os.Build.VERSION.SDK_INT, error));
+      System.err.flush();
       System.exit(1);
     }
   }
@@ -132,14 +142,16 @@ public final class VirtualScreenCore {
                 "--package",
                 selfPackage)
             .redirectInput(new File("/dev/null"))
-            .redirectError(new File("/dev/null"))
+            .redirectErrorStream(true)
             .start();
     boolean started = false;
     try {
       // The server creates a secret after exec; its parent returns it through the
       // Root/Shizuku/ADB result channel, not an OS-visible command-line argument.
       long deadline = SystemClock.elapsedRealtime() + 8000;
+      startupStage = "BOOTSTRAP";
       String childToken = readBootstrap(child, deadline);
+      startupStage = "REACHABILITY";
       while (SystemClock.elapsedRealtime() < deadline) {
         if (!child.isAlive()) throw new IOException("CORE_EXITED");
         HttpURLConnection c = null;
@@ -173,36 +185,27 @@ public final class VirtualScreenCore {
   }
 
   private static String readBootstrap(Process child, long deadline) throws Exception {
-    ByteArrayOutputStream line = new ByteArrayOutputStream();
+    com.deepseekharness.app.util.VirtualScreenBootstrap bootstrap =
+        new com.deepseekharness.app.util.VirtualScreenBootstrap();
     InputStream input = child.getInputStream();
     while (SystemClock.elapsedRealtime() < deadline) {
-      if (!child.isAlive()) throw new IOException("CORE_EXITED");
       int available = input.available();
       if (available <= 0) {
+        if (!child.isAlive()) throw new IOException("CORE_EXITED");
         Thread.sleep(20);
         continue;
       }
       int value = input.read();
       if (value < 0) throw new EOFException("CORE_BOOTSTRAP_EOF");
-      if (value == '\n') {
-        String text = line.toString(StandardCharsets.US_ASCII.name()).trim();
-        String prefix = "DSHA_VSCREEN_BOOTSTRAP ";
-        if (!text.startsWith(prefix)) throw new IOException("CORE_BOOTSTRAP_INVALID");
-        String secret = text.substring(prefix.length());
-        if (!secret.matches("[a-f0-9]{48}")) throw new IOException("CORE_BOOTSTRAP_INVALID");
-        return secret;
-      }
-      if (value != '\r') {
-        if (line.size() >= 128) throw new IOException("CORE_BOOTSTRAP_LIMIT");
-        line.write(value);
-      }
+      bootstrap.accept(value);
+      if (!bootstrap.token().isEmpty()) return bootstrap.token();
     }
     throw new IOException("CORE_BOOTSTRAP_TIMEOUT");
   }
 
   private static String installedDshaApkPath() throws Exception {
     return installedDshaApkPath(
-        com.deepseekharness.app.runtime.PrivilegedPackageContext.systemContext());
+        com.deepseekharness.app.runtime.PrivilegedPackageContext.virtualScreenContext());
   }
 
   private static String installedDshaApkPath(Context system) throws Exception {

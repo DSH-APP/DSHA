@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from release_acceptance import requirements,validate,baseline_from_receipt,digest,CERT
+from release_layout import source_snapshot_path
 
 class AcceptanceTest(unittest.TestCase):
     def setUp(self):
@@ -80,16 +81,43 @@ class AcceptanceTest(unittest.TestCase):
 
     def test_raw_or_changed_snapshot_cannot_be_substituted_for_delivered_baseline(self):
         with tempfile.TemporaryDirectory() as folder:
-            root=Path(folder);raw=root/'sources.json';receipt=root/'manifest.json'
+            root=Path(folder);evidence=root/'app/build/stability-acceptance/fixture';evidence.mkdir(parents=True)
+            raw=evidence/'sources.json';receipt=evidence/'manifest.json'
             raw.write_text(json.dumps(self.base),encoding='utf8')
-            with self.assertRaises(ValueError):baseline_from_receipt(raw)
+            with self.assertRaises(ValueError):baseline_from_receipt(raw,root)
             data={'status':'PASS_FOR_EXECUTED_SCOPE','apks':[{'flavor':f,'package':'com.dsh.client','certificateSha256':CERT} for f in ('standard','low')],
                   'sourceSnapshot':{'path':str(raw),'sha256':digest(raw)}}
             receipt.write_text(json.dumps(data),encoding='utf8')
-            actual,provenance=baseline_from_receipt(receipt)
+            actual,provenance=baseline_from_receipt(receipt,root)
             self.assertEqual(self.base,actual);self.assertEqual(digest(receipt),provenance['receiptSha256'])
             raw.write_text(json.dumps({self.path:'c'*64}),encoding='utf8')
-            with self.assertRaises(ValueError):baseline_from_receipt(receipt)
+            with self.assertRaises(ValueError):baseline_from_receipt(receipt,root)
+
+    def test_separate_artifact_receipt_keeps_snapshot_hash_binding(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);snapshot=root/'artifacts/source/build158/source-sha256.json';snapshot.parent.mkdir(parents=True)
+            receipt=root/'artifacts/deliveries/build158.json';receipt.parent.mkdir(parents=True)
+            snapshot.write_text(json.dumps(self.base),encoding='utf8')
+            receipt.write_text(json.dumps({'status':'PASS_FOR_EXECUTED_SCOPE',
+                'apks':[{'flavor':f,'package':'com.dsh.client','certificateSha256':CERT} for f in ('standard','low')],
+                'sourceSnapshot':{'path':str(snapshot),'sha256':digest(snapshot)}}),encoding='utf8')
+            self.assertEqual(baseline_from_receipt(receipt,root)[0],self.base)
+            external=root/'outside-snapshot.json';external.write_bytes(snapshot.read_bytes())
+            with self.assertRaises(ValueError):source_snapshot_path(external,digest(external),root)
+
+    def test_migrated_original_snapshot_requires_applied_map_and_same_bytes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder).resolve();old=root/'release/build156-source/final-source-sha256.json'
+            new=root/'artifacts/source/build156/final-source-sha256.json';new.parent.mkdir(parents=True)
+            new.write_text(json.dumps(self.base),encoding='utf8')
+            mapping=root/'artifacts/release-layout-migrations/build158.json';mapping.parent.mkdir(parents=True)
+            plan={'schema':1,'status':'PLANNED','root':str(root),'files':[{'kind':'source','source':str(old),'target':str(new),'sha256':digest(new)}]}
+            mapping.write_text(json.dumps(plan),encoding='utf8')
+            with self.assertRaises(ValueError):source_snapshot_path(old,digest(new),root)
+            plan['status']='APPLIED';mapping.write_text(json.dumps(plan),encoding='utf8')
+            self.assertEqual(source_snapshot_path(old,digest(new),root),new)
+            expected=digest(new);new.write_text('{}',encoding='utf8')
+            with self.assertRaises(ValueError):source_snapshot_path(old,expected,root)
 
     def test_compatibility_behavior_inputs_select_recovery_matrix(self):
         for path in ('app/src/main/assets/web-integration/es-compat.js','app/src/main/assets/web-integration/compat.js',
