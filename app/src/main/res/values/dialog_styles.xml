@@ -1,4 +1,15 @@
 <resources>
+    <!-- 所有 Activity 统一从下方进入、向下退出；不再出现系统默认的右侧推入。 -->
+    <style name="Animation.DSHA.Activity" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/activity_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/activity_hold</item>
+        <item name="android:activityCloseEnterAnimation">@anim/activity_hold</item>
+        <item name="android:activityCloseExitAnimation">@anim/activity_close_exit</item>
+        <item name="android:taskOpenEnterAnimation">@anim/activity_open_enter</item>
+        <item name="android:taskOpenExitAnimation">@anim/activity_hold</item>
+        <item name="android:taskCloseEnterAnimation">@anim/activity_hold</item>
+        <item name="android:taskCloseExitAnimation">@anim/activity_close_exit</item>
+    </style>
     <style name="Animation.DSHA.Dialog" parent="">
         <item name="android:windowEnterAnimation">@anim/dialog_enter</item>
         <item name="android:windowExitAnimation">@anim/page_exit</item>

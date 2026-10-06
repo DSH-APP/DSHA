@@ -651,11 +651,25 @@ public class LaunchFragment extends Fragment {
     if (lanAddrText != null) lanAddrText.setVisibility(View.GONE);
 
     int port = controller.getWebPort();
+    String authUrl = webEntryUrl();
+    boolean authed = port > 0 && !authUrl.isEmpty();
     TextView local = root.findViewById(R.id.launch_local_value);
     if (local != null)
-      local.setText(port > 0 ? "127.0.0.1:" + port : getString(R.string.ui_status_unavailable));
+      local.setText(
+          authed
+              ? com.deepseekharness.app.util.AddressMask.mask(authUrl)
+              : port > 0
+                  ? com.deepseekharness.app.util.UiText.format(
+                      "127.0.0.1:%s · %s",
+                      String.valueOf(port),
+                      com.deepseekharness.app.util.UiText.choose("等待鉴权", "Waiting for auth"))
+                  : getString(R.string.ui_status_unavailable));
     View copyLocal = root.findViewById(R.id.launch_copy_local);
-    if (copyLocal != null) copyLocal.setEnabled(port > 0);
+    // 只有拿到本轮官方鉴权链接后才允许复制；复制的是带 token 的完整链接。
+    if (copyLocal != null) {
+      copyLocal.setEnabled(authed);
+      copyLocal.setAlpha(authed ? 1f : 0.4f);
+    }
 
     TextView lanLabel = root.findViewById(R.id.launch_lan_label);
     if (lanLabel != null)
@@ -676,7 +690,9 @@ public class LaunchFragment extends Fragment {
       if (ip != null && !ip.isEmpty()) {
         final String service = "http://" + ip + ":" + LanProxyService.LAN_PORT + "/";
         if (lanValue != null) {
-          lanValue.setText(ip + ":" + LanProxyService.LAN_PORT);
+          lanValue.setText(
+              com.deepseekharness.app.util.AddressMask.mask(
+                  service + "?token=" + LanProxyService.getLanToken(requireContext())));
           lanValue.setOnClickListener(v -> showLanAddress(service));
         }
         if (copyLan != null) copyLan.setVisibility(View.VISIBLE);
@@ -697,17 +713,26 @@ public class LaunchFragment extends Fragment {
     }
   }
 
+  /** 复制本轮官方鉴权链接（含 token）；未鉴权时不复制裸地址，避免得到打不开的链接。 */
   private void copyLocalAddress() {
-    int port = controller.getWebPort();
-    if (port <= 0) return;
-    copyAddr(getString(R.string.ui2_copy_local), "127.0.0.1:" + port);
+    String url = webEntryUrl();
+    if (controller.getWebPort() <= 0 || url.isEmpty()) return;
+    copyAddr(getString(R.string.ui2_copy_local), url);
   }
 
+  /** 局域网与对话框「复制连接链接」一致：带 LAN token，3081 代理按 token 鉴权后换成 cookie。 */
   private void copyLanAddress() {
     if (!controller.config().isLanMode() || !LanProxyService.isBound()) return;
     String ip = HarnessController.getLanAddress();
     if (ip == null || ip.isEmpty()) return;
-    copyAddr(getString(R.string.ui2_copy_lan), ip + ":" + LanProxyService.LAN_PORT);
+    copyAddr(
+        getString(R.string.ui2_copy_lan),
+        "http://"
+            + ip
+            + ":"
+            + LanProxyService.LAN_PORT
+            + "/?token="
+            + LanProxyService.getLanToken(requireContext()));
   }
 
   private int color(int id) {
