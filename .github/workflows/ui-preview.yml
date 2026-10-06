@@ -32,7 +32,18 @@ jobs:
         run: |
           platform=$(python3 tools/ci-toolchain.py --field androidPlatform)
           buildtools=$(python3 tools/ci-toolchain.py --field buildTools)
-          sdkmanager "platforms;$platform" "build-tools;$buildtools"
+          # Runner 镜像的 PATH 不一定带 sdkmanager，按 ANDROID_HOME 定位
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          sdkm="$(command -v sdkmanager || true)"
+          if [ -z "$sdkm" ]; then
+            for c in "$sdk_root"/cmdline-tools/latest/bin/sdkmanager "$sdk_root"/cmdline-tools/*/bin/sdkmanager "$sdk_root"/tools/bin/sdkmanager; do
+              if [ -x "$c" ]; then sdkm="$c"; break; fi
+            done
+          fi
+          if [ -z "$sdkm" ]; then echo "sdkmanager not found under $sdk_root" >&2; ls -la "$sdk_root" >&2 || true; exit 1; fi
+          echo "sdkmanager: $sdkm"
+          yes | "$sdkm" --licenses > /dev/null || true
+          "$sdkm" "platforms;$platform" "build-tools;$buildtools"
           chmod +x gradlew
           ./gradlew :app:assembleStandardDebug \
             -x :app:prepareStandardAssets \

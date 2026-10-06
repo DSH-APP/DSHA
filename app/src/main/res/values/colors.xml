@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 对齐 DSH --dsw-static / --dsw-alias（日间）。text_muted 略深于网页 caption，以满足 4.5 对比度。 -->
+    <!-- 对齐 DSH dsw-static / dsw-alias 变量（日间）。text_muted 略深于网页 caption，以满足 4.5 对比度。 -->
     <color name="primary">#4176E6</color>
     <color name="primary_dark">#2F4C8F</color>
     <color name="accent_on">#FFFFFF</color>
