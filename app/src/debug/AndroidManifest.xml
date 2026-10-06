@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <instrumentation android:name="com.deepseekharness.app.core.Rc21RecoveryAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.Rc21RecoveryAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
     <application>
         <provider android:name=".DocumentsAuditProvider" android:authorities="${applicationId}.documents.audit"
             android:exported="true" android:grantUriPermissions="true" android:permission="android.permission.MANAGE_DOCUMENTS">
@@ -10,33 +10,33 @@
         <activity android:name=".ui.FragmentSessionTestActivity" android:exported="false" android:excludeFromRecents="true" />
         <activity android:name="com.deepseekharness.app.BridgeAuditInstrumentation$AskActivity" android:exported="false" />
     </application>
-    <instrumentation android:name="com.deepseekharness.app.ui.UiMotionAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.PluginSortAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.LogPanelAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.DocumentsAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.DeviceCapabilityAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.LayoutAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.InstallAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.core.UpdateFlowAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.core.MaintenanceFixtureInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.FragmentSessionInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.AdbFlowAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.BridgeAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.DevicePolicyAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.SmsGrantAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.runtime.ProotCommandAuditInstrumentation" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.WebRegressionAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.DiagnosticPtyAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.runtime.RuntimeStartupAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.core.Alpha2Audit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.runtime.PidMaintenanceAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.core.RuntimeFallbackAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.runtime.RestartRaceAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.LaunchLogAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.PluginListAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.MultiTerminalLanguageAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.LanguageSettingsAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.StartupRecoveryAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.core.WebPortAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
-    <instrumentation android:name="com.deepseekharness.app.ui.BrowserCompatibilityAudit" android:targetPackage="com.dsh.client" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.UiMotionAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.PluginSortAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.LogPanelAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.DocumentsAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.DeviceCapabilityAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.LayoutAuditInstrumentation" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.InstallAuditInstrumentation" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.UpdateFlowAuditInstrumentation" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.MaintenanceFixtureInstrumentation" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.FragmentSessionInstrumentation" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.AdbFlowAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.BridgeAuditInstrumentation" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.DevicePolicyAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.SmsGrantAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.runtime.ProotCommandAuditInstrumentation" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.WebRegressionAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.DiagnosticPtyAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.runtime.RuntimeStartupAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.Alpha2Audit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.runtime.PidMaintenanceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.RuntimeFallbackAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.runtime.RestartRaceAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.LaunchLogAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.PluginListAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.MultiTerminalLanguageAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.LanguageSettingsAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.StartupRecoveryAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.core.WebPortAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
+    <instrumentation android:name="com.deepseekharness.app.ui.BrowserCompatibilityAudit" android:targetPackage="${applicationId}" android:functionalTest="true" />
 </manifest>

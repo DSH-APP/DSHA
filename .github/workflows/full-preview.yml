@@ -1,0 +1,199 @@
+name: Full preview APK
+# 从锁定配方生成全部离线资产并逐项核验摘要，打出能真正进入 DSH 的 standardDebug 预览包。
+# 预览包使用独立包名 com.dsh.client.uipreview（debug 签名），可与正式版并存；不用于发布。
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - ui/redesign-v2
+    paths:
+      - .github/workflows/full-preview.yml
+      - 'tools/**'
+permissions:
+  contents: read
+concurrency:
+  group: full-preview-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  # 基础 Ubuntu 原始归档没有仓库内生成配方；v1.2.0-rc1 正式 APK 以 STORED 原样携带同一字节，
+  # 由 tools/fetch-pinned-archive.py 按 runtime-descriptor.json 中的摘要核验后才落盘。
+  ROOTFS_SOURCE_APK: https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1/dsha-1.2.0-rc1.apk
+jobs:
+  dsh-runtime:
+    # 锁定的 dsh-runtime.bin 由 Windows 主机生成：build-dsh-runtime.py 用 sorted(Path.rglob) 排序，
+    # Windows 路径比较不区分大小写，Linux 区分，成员顺序不同就得不到锁定摘要。
+    # npm 使用 --ignore-scripts 且只下载 linux/arm64 包，不在宿主执行任何第三方代码。
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Keep LF checkout
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify toolchain against source configuration
+        id: toolchain
+        run: python tools/ci-toolchain.py --github-output
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: ${{ steps.toolchain.outputs.python }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ steps.toolchain.outputs.node }}
+      - name: Restore locked npm downloads
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: app/build/npm-cache
+          key: dsh-npm-${{ hashFiles('tools/dsh-runtime/package-lock.json') }}
+      - name: Generate dsh-runtime.bin from locked npm tree
+        run: |
+          python --version; node --version; npm --version
+          python tools/prepare-dsh-runtime.py --cache app/build/npm-cache
+      - name: Archive must match the pinned descriptor digest
+        run: |
+          python - <<'EOF'
+          import hashlib, json
+          expected = json.load(open('app/src/main/assets/runtime-descriptor.json', encoding='utf-8'))['inputs']['dsh-runtime.bin']
+          h = hashlib.sha256()
+          with open('app/src/main/assets/dsh-runtime.bin', 'rb') as f:
+              for b in iter(lambda: f.read(1 << 20), b''): h.update(b)
+          print('dsh-runtime.bin expected', expected, 'generated', h.hexdigest())
+          if h.hexdigest() != expected:
+              raise SystemExit('DSH_RUNTIME_NOT_REPRODUCED')
+          EOF
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dsh-runtime-generated
+          path: |
+            app/src/main/assets/dsh-runtime.bin
+            app/src/main/assets/dsh-runtime.inputs.json
+          if-no-files-found: error
+          retention-days: 1
+
+  preview:
+    needs: dsh-runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify toolchain against source configuration
+        id: toolchain
+        run: python3 tools/ci-toolchain.py --github-output
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: ${{ steps.toolchain.outputs.python }}
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.toolchain.outputs.java }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ steps.toolchain.outputs.node }}
+      - name: System tools for asset generators
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libarchive-tools zstd
+          python3 --version; node --version; bsdtar --version
+      - name: Restore pinned base rootfs
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: app/build/pinned-inputs
+          key: pinned-rootfs-${{ hashFiles('app/src/main/assets/offline-rootfs.version', 'tools/fetch-pinned-archive.py') }}-0a680b56
+      - name: Restore locked upstream downloads
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            app/build/ubuntu-tools-cache
+            app/build/runtime-downloads
+          key: locked-downloads-${{ hashFiles('tools/ubuntu-tools/packages.lock.json', 'tools/runtime-tools.lock.json', 'tools/build-standard-runtime.py') }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: dsh-runtime-generated
+          path: app/src/main/assets
+      - name: Pinned base Ubuntu rootfs (offline-rootfs.bin)
+        run: |
+          python3 tools/fetch-pinned-archive.py --url "$ROOTFS_SOURCE_APK" \
+            --member assets/offline-rootfs.bin --descriptor-input offline-rootfs.bin \
+            --output app/build/pinned-inputs/offline-rootfs.bin
+          cp app/build/pinned-inputs/offline-rootfs.bin app/src/main/assets/offline-rootfs.bin
+      - name: Generate python-support.bin / pnpm-runtime.bin / ca-certificates.crt
+        run: python3 tools/build-standard-runtime.py --cache app/build/runtime-downloads --tar bsdtar
+      - name: Generate ubuntu-tools.bin from locked deb set
+        run: python3 tools/prepare-ubuntu-tools.py --cache app/build/ubuntu-tools-cache
+      - name: Regenerated checked-in assets must be byte-identical
+        run: |
+          # 生成器会就地改写已提交资产；任何字节差异都表示锁定配方不可复现，直接失败。
+          if ! git diff --quiet -- app/src/main/assets; then
+            git diff --stat -- app/src/main/assets
+            echo "::error::生成的已提交资产与仓库字节不一致" >&2
+            exit 1
+          fi
+          git status --porcelain --untracked-files=no
+      - name: Verify every archive against pinned descriptors
+        run: |
+          python3 tools/prepare-runtime-tools.py --check
+          python3 tools/generate-builtin-plugins.py --verify
+          python3 tools/generate-credential-paths.py --check
+          python3 tools/prepare-backup-assets.py --check
+          python3 tools/prepare-runtime-descriptor.py --check
+          python3 tools/verify-runtime-descriptor-source.py | tee app/build/descriptor-source-proof.json
+          python3 - <<'EOF'
+          import json
+          proof = json.load(open('app/build/descriptor-source-proof.json'))
+          if proof['deferredArchives']:
+              raise SystemExit('仍有未核验归档: %s' % proof['deferredArchives'])
+          print('PASS all descriptor inputs present and byte-identical')
+          EOF
+      - name: Android SDK
+        run: |
+          platform=$(python3 tools/ci-toolchain.py --field androidPlatform)
+          buildtools=$(python3 tools/ci-toolchain.py --field buildTools)
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          sdkm="$(command -v sdkmanager || true)"
+          if [ -z "$sdkm" ]; then
+            for c in "$sdk_root"/cmdline-tools/latest/bin/sdkmanager "$sdk_root"/cmdline-tools/*/bin/sdkmanager "$sdk_root"/tools/bin/sdkmanager; do
+              if [ -x "$c" ]; then sdkm="$c"; break; fi
+            done
+          fi
+          if [ -z "$sdkm" ]; then echo "sdkmanager not found under $sdk_root" >&2; ls -la "$sdk_root" >&2 || true; exit 1; fi
+          echo "sdkmanager: $sdkm"
+          yes | "$sdkm" --licenses > /dev/null || true
+          "$sdkm" "platforms;$platform" "build-tools;$buildtools"
+      - name: Assemble standardDebug preview with full offline assets
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleStandardDebug -Pdsha.previewSuffix=true --no-daemon --max-workers=2
+      - name: Verify generated split rootfs, recovery archives and APK identity
+        run: |
+          python3 - <<'EOF'
+          import hashlib, json, pathlib
+          def sha(p):
+              h = hashlib.sha256()
+              with open(p, 'rb') as f:
+                  for b in iter(lambda: f.read(1 << 20), b''): h.update(b)
+              return h.hexdigest()
+          gen = pathlib.Path('app/build/generated/standardAssets')
+          lock = json.load(open('tools/recovery-runtime/lock.json'))
+          shared = {'recovery-rootfs.bin': gen / 'offline-rootfs.bin', 'recovery-dsh-runtime.bin': gen / 'dsh-runtime.bin'}
+          for row in lock['archives']:
+              got = sha(shared[row['asset']])
+              print(row['asset'], 'expected', row['sha256'], 'generated', got)
+              if got != row['sha256']:
+                  raise SystemExit('RECOVERY_ARCHIVE_NOT_REPRODUCED: ' + row['asset'])
+          print(open('app/build/generated/recoveryAssets/recovery-asset-locations.json').read())
+          EOF
+          ls -l app/build/outputs/apk/standard/debug/
+          aapt="$(ls -d "${ANDROID_HOME:-/usr/local/lib/android/sdk}"/build-tools/*/aapt2 | sort -V | tail -1)"
+          "$aapt" dump badging app/build/outputs/apk/standard/debug/*.apk | head -2
+          unzip -lv app/build/outputs/apk/standard/debug/*.apk | grep -E 'offline-rootfs|dsh-runtime|ubuntu-tools|recovery-' || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: DSHA-FULL-PREVIEW-DEBUG
+          path: app/build/outputs/apk/standard/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
