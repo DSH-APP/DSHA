@@ -90,9 +90,7 @@ public class LaunchFragment extends Fragment {
     v.findViewById(R.id.launch_download_logs)
         .setOnClickListener(x -> startActivity(DiagnosticActivity.downloadLogs(requireContext())));
 
-    v.findViewById(R.id.launch_models)
-        .setOnClickListener(
-            x -> startActivity(new Intent(requireContext(), ModelSetupActivity.class)));
+    // 模型入口已从首页移除（只在 设置 → 模型配置）。
     v.findViewById(R.id.launch_copy_local).setOnClickListener(x -> copyLocalAddress());
     v.findViewById(R.id.launch_copy_lan).setOnClickListener(x -> copyLanAddress());
     v.findViewById(R.id.launch_log_toggle)
@@ -519,7 +517,7 @@ public class LaunchFragment extends Fragment {
       Button recovery = root.findViewById(R.id.launch_recovery);
       int failures = controller.config().getWebFailures();
       recovery.setVisibility(View.VISIBLE);
-      recovery.setText(com.deepseekharness.app.util.UiText.text("恢复选项"));
+      recovery.setText(R.string.ui3_launch_recovery);
       recovery.setContentDescription(
           !trace.issues.isEmpty()
               ? com.deepseekharness.app.util.UiText.format(

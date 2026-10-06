@@ -26,7 +26,10 @@ import com.deepseekharness.app.R;
 import com.deepseekharness.app.core.HarnessController;
 import com.deepseekharness.app.core.TerminalSessionOwner;
 import com.deepseekharness.app.util.SensitiveData;
+import com.termux.terminal.TerminalColors;
+import com.termux.terminal.TerminalEmulator;
 import com.termux.terminal.TerminalSession;
+import com.termux.terminal.TextStyle;
 import com.termux.view.TerminalView;
 import com.termux.view.TerminalViewClient;
 
@@ -50,6 +53,10 @@ public final class PtyTerminalFragment extends Fragment
   private static final int FONT_MIN_SP = 8;
   private static final int FONT_MAX_SP = 24;
   private static final int FONT_DEF_SP = 13;
+
+  // 浅色白底下 ANSI 白(7)/亮白(15)不可读，换成灰/深字；深色恢复 COLOR_SCHEME 默认。
+  private static final int ANSI_WHITE_LIGHT = 0xFF6E7781;
+  private static final int ANSI_BRIGHT_WHITE_LIGHT = 0xFF1F2328;
 
   /**
    * 扩展键：{@code {显示, 要发的序列}}，序列为 null 表示这是个状态键（Ctrl / Alt）。
@@ -243,6 +250,7 @@ public final class PtyTerminalFragment extends Fragment
           };
       if (isResumed()) selected.attachListener(sessionListener);
       view.attachSession(selected.session());
+      applyTerminalColors();
       view.onScreenUpdated();
       Integer exit = selected.isRunning() ? null : exitStatusOf(selected);
       if (exit == null && previous == selected) exit = previousExit;
@@ -502,6 +510,7 @@ public final class PtyTerminalFragment extends Fragment
     super.onResume();
     OWNER.attachPty(tabsObserver);
     if (view != null && c != null) attachSelected();
+    else applyTerminalColors();
   }
 
   @Override
@@ -732,7 +741,53 @@ public final class PtyTerminalFragment extends Fragment
 
   @Override
   public void onEmulatorSet() {
+    applyTerminalColors();
     onOutput();
+  }
+
+  /**
+   * 让 Termux 色表跟随应用主题：前景、背景、光标取 terminal_* 资源色；
+   * 浅色下把 ANSI 白/亮白换成白底可读的灰黑，深色恢复库默认值。
+   * 在 attach、onResume、模拟器重建（含尺寸变化）时调用；不在每次输出里刷，避免拖慢重绘。
+   */
+  private void applyTerminalColors() {
+    TerminalView target = view;
+    Context ctx = getContext();
+    if (target == null || ctx == null) return;
+    try {
+      TerminalSession session = target.getCurrentSession();
+      TerminalEmulator emulator = session == null ? null : session.getEmulator();
+      if (emulator == null) return;
+      TerminalColors colors = emulator.mColors;
+      int[] palette = colors == null ? null : colors.mCurrentColors;
+      if (palette == null || palette.length <= TextStyle.COLOR_INDEX_CURSOR) return;
+      boolean night =
+          (ctx.getResources().getConfiguration().uiMode
+                  & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+              == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+      boolean changed = false;
+      changed |=
+          setPaletteColor(
+              palette, TextStyle.COLOR_INDEX_FOREGROUND, ctx.getColor(R.color.terminal_text));
+      changed |=
+          setPaletteColor(
+              palette, TextStyle.COLOR_INDEX_BACKGROUND, ctx.getColor(R.color.terminal_surface));
+      changed |=
+          setPaletteColor(
+              palette, TextStyle.COLOR_INDEX_CURSOR, ctx.getColor(R.color.terminal_cursor));
+      int[] defaults = TerminalColors.COLOR_SCHEME.mDefaultColors;
+      changed |= setPaletteColor(palette, 7, night ? defaults[7] : ANSI_WHITE_LIGHT);
+      changed |= setPaletteColor(palette, 15, night ? defaults[15] : ANSI_BRIGHT_WHITE_LIGHT);
+      if (changed) target.invalidate();
+    } catch (Throwable ignored) {
+      // 色表只是外观；库内部结构异常时保持默认配色，不影响终端使用。
+    }
+  }
+
+  private static boolean setPaletteColor(int[] palette, int index, int color) {
+    if (palette[index] == color) return false;
+    palette[index] = color;
+    return true;
   }
 
   @Override

@@ -35,12 +35,6 @@ public final class ThemeController {
     return new ConfigStore(context).getUiTheme();
   }
 
-  public static String cycle(Context context) {
-    String next = UiThemePreference.next(preference(context));
-    select(context, next);
-    return next;
-  }
-
   public static void followSystem(Context context) {
     select(context, UiThemePreference.SYSTEM);
   }

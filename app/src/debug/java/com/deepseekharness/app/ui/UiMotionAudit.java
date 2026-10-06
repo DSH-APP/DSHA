@@ -55,7 +55,8 @@ public final class UiMotionAudit extends Instrumentation {
           (w, metrics, dropped) -> frames.add(metrics.getMetric(FrameMetrics.TOTAL_DURATION));
       window.addOnFrameMetricsAvailableListener(listener, new Handler(thread.getLooper()));
       for (int round = 0; round < 4; round++) {
-        for (int index : new int[] {0, 1, 2, 3}) {
+        // settings_tabs 第 0 行「模型配置」打开独立 Activity；第 3 行权限策略是弹窗。只轮换 Fragment 子页。
+        for (int index : new int[] {1, 2}) {
           final int row = index;
           ui(
               () ->

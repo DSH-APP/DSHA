@@ -202,4 +202,17 @@
     <string name="ui2_web_port_lan_on">Web %1$s · LAN on</string>
     <string name="ui2_web_port_lan_off">Web %1$s · LAN off</string>
     <string name="ui2_ports">Ports and interfaces</string>
+    <string name="ui3_launch_trouble">Trouble starting?</string>
+    <string name="ui3_launch_recovery">Recovery</string>
+    <string name="ui3_sep_dot">·</string>
+    <string name="ui3_data_ops">Data actions</string>
+    <string name="ui3_maintenance">Maintenance</string>
+    <string name="ui3_recovery_sub">Check the environment, protect and export readable data</string>
+    <string name="ui3_reset_sub">Ordinary settings return to defaults; conversations and credentials stay</string>
+    <string name="ui3_check_on_start_sub">Checks in the background on launch without switching pages.</string>
+    <string name="ui3_install_runtime_title">Runtime</string>
+    <string name="ui3_install_runtime_save">Save runtime</string>
+    <string name="ui3_settings_group_interface">Interface</string>
+    <string name="ui3_settings_group_data_device">Data and devices</string>
+    <string name="ui3_settings_selftest_sub">Check components, storage and services</string>
 </resources>

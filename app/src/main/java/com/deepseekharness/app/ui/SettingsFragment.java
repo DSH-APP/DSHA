@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.deepseekharness.app.BuildConfig;
 import com.deepseekharness.app.OverlayController;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.core.ConfigStore;
@@ -23,21 +24,19 @@ import com.deepseekharness.app.util.UiLanguagePreference;
 import com.deepseekharness.app.util.UiText;
 import com.deepseekharness.app.util.UpdatePolicy;
 
-import java.util.function.Supplier;
-
 /**
- * 设置页：运行 / 设备与数据入口 + 偏好 + 支持。
+ * 设置首页：运行 / 界面 / 数据与设备 / 支持四组入口。
  */
 public class SettingsFragment extends Fragment {
 
-  private static final TabOption[] TAB_OPTIONS = {
-    new TabOption("安装", "安装与修复运行环境", InstallFragment::new),
-    new TabOption("配置", "接口、显示与运行", ConfigFragment::new),
-    new TabOption("数据与备份", "备份恢复 · 文件共享", WorkspaceFragment::new),
-    new TabOption("设备能力授权", "Root · Shizuku · ADB · 权限", DeviceGrantsFragment::new),
+  private static final String[] PERMISSION_VALUES = {
+    "danger-full-access", "workspace-write", "read-only"
   };
 
   private TextView installStatus;
+  private TextView networkSub;
+  private TextView permissionSub;
+  private TextView webSub;
   private TextView overlaySub;
   private TextView versionView;
   private TextView updateSub;
@@ -53,10 +52,7 @@ public class SettingsFragment extends Fragment {
     View v = inflater.inflate(R.layout.fragment_settings, container, false);
 
     config = HarnessController.get(requireContext()).config();
-    LinearLayout tabs = v.findViewById(R.id.settings_tabs);
-    for (int i = 0; i < TAB_OPTIONS.length; i++) {
-      tabs.addView(buildRow(i), new LinearLayout.LayoutParams(-1, -2));
-    }
+    buildGroups(v);
     bindKeepAlive(v.findViewById(R.id.settings_power));
 
     versionView = v.findViewById(R.id.settings_ver);
@@ -186,6 +182,9 @@ public class SettingsFragment extends Fragment {
   private void refreshDynamicRows() {
     if (!isAdded()) return;
     refreshInstallStatus();
+    refreshNetworkRow();
+    refreshPermissionRow();
+    refreshWebRow();
     refreshOverlayStatus();
     refreshVersionRow();
   }
@@ -250,8 +249,165 @@ public class SettingsFragment extends Fragment {
     startActivity(new Intent(requireContext(), UpdateActivity.class));
   }
 
-  private LinearLayout buildRow(final int index) {
-    TabOption opt = TAB_OPTIONS[index];
+  private void buildGroups(View v) {
+    LinearLayout runtime = v.findViewById(R.id.settings_tabs);
+    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+
+    LinearLayout model =
+        buildRow(
+            R.drawable.ic_settings,
+            UiText.choose("模型配置", "Model setup"),
+            UiText.choose("服务商、密钥与模型目录", "Providers, keys and models"),
+            false,
+            x -> startActivity(new Intent(requireContext(), ModelSetupActivity.class)));
+    runtime.addView(model, lp);
+
+    LinearLayout network =
+        buildRow(
+            R.drawable.ic_ui_link,
+            UiText.choose("网络与端口", "Network and ports"),
+            "",
+            false,
+            x -> open(new NetworkFragment()));
+    networkSub = subOf(network);
+    runtime.addView(network, new LinearLayout.LayoutParams(-1, -2));
+
+    LinearLayout env =
+        buildRow(
+            R.drawable.ic_ui2_box,
+            UiText.choose("运行环境", "Runtime environment"),
+            "",
+            false,
+            x -> open(new InstallFragment()));
+    installStatus = subOf(env);
+    installStatus.setText(UiText.choose("安装与修复运行环境", "Install and repair runtime"));
+    runtime.addView(env, new LinearLayout.LayoutParams(-1, -2));
+
+    LinearLayout permission =
+        buildRow(
+            R.drawable.ic_ui_shield,
+            getString(R.string.permission_mode_title),
+            "",
+            true,
+            x -> showPermissionDialog());
+    permissionSub = subOf(permission);
+    runtime.addView(permission, new LinearLayout.LayoutParams(-1, -2));
+
+    LinearLayout web =
+        buildRow(
+            R.drawable.ic_launch,
+            UiText.choose("网页显示", "Web display"),
+            "",
+            true,
+            x -> open(new WebDisplayFragment()));
+    webSub = subOf(web);
+    ((LinearLayout) v.findViewById(R.id.settings_web_host))
+        .addView(web, new LinearLayout.LayoutParams(-1, -2));
+
+    LinearLayout data = v.findViewById(R.id.settings_data_host);
+    data.addView(
+        buildRow(
+            R.drawable.ic_ui2_folder,
+            getString(R.string.ui2_data_title),
+            UiText.choose("备份恢复 · 文件共享", "Backup and restore · file sharing"),
+            false,
+            x -> open(new WorkspaceFragment())),
+        new LinearLayout.LayoutParams(-1, -2));
+    data.addView(
+        buildRow(
+            R.drawable.ic_recovery_shield,
+            getString(R.string.ui2_device_grants),
+            UiText.choose("Root · Shizuku · ADB · 权限", "Root · Shizuku · ADB · permissions"),
+            true,
+            x -> open(new DeviceGrantsFragment())),
+        new LinearLayout.LayoutParams(-1, -2));
+
+    ((LinearLayout) v.findViewById(R.id.settings_tasks_host))
+        .addView(
+            buildRow(
+                R.drawable.ic_ui_tasks,
+                UiText.choose("后台任务", "Background tasks"),
+                UiText.choose("查看运行中与已完成的任务", "Running and finished tasks"),
+                true,
+                x -> BackgroundTasksActivity.open(requireContext())),
+            new LinearLayout.LayoutParams(-1, -2));
+  }
+
+  private void open(Fragment target) {
+    UiMotion.page(requireContext(), getParentFragmentManager().beginTransaction())
+        .replace(R.id.fragment_container, target)
+        .addToBackStack("settings")
+        .commit();
+  }
+
+  private void refreshNetworkRow() {
+    if (networkSub == null) return;
+    networkSub.setText(
+        getString(
+            config.isLanMode() ? R.string.ui2_web_port_lan_on : R.string.ui2_web_port_lan_off,
+            config.getPort()));
+  }
+
+  private String permissionLabel(String mode) {
+    if ("workspace-write".equals(mode)) return getString(R.string.permission_mode_workspace);
+    if ("read-only".equals(mode)) return getString(R.string.permission_mode_readonly);
+    return getString(R.string.permission_mode_full);
+  }
+
+  private void refreshPermissionRow() {
+    if (permissionSub == null) return;
+    permissionSub.setText(
+        permissionLabel(config.getPermissionMode())
+            + " · "
+            + getString(R.string.permission_mode_scope));
+  }
+
+  private void showPermissionDialog() {
+    String current = config.getPermissionMode();
+    int checked = java.util.Arrays.asList(PERMISSION_VALUES).indexOf(current);
+    String[] labels = {
+      getString(R.string.permission_mode_full),
+      getString(R.string.permission_mode_workspace),
+      getString(R.string.permission_mode_readonly)
+    };
+    new DshaDialogBuilder(requireContext())
+        // AlertDialog 同时设置 message 与单选列表时列表不显示；范围说明放在设置行副标题。
+        .setTitle(getString(R.string.permission_mode_title))
+        .setSingleChoiceItems(
+            labels,
+            Math.max(checked, 0),
+            (dialog, which) -> {
+              config.setPermissionMode(PERMISSION_VALUES[which]);
+              refreshPermissionRow();
+              dialog.dismiss();
+            })
+        .setNegativeButton(UiText.choose("取消", "Cancel"), null)
+        .show();
+  }
+
+  private void refreshWebRow() {
+    if (webSub == null) return;
+    String engine;
+    if (BuildConfig.LOW_ANDROID) {
+      engine = config.isGeckoCore() ? "Gecko" : UiText.choose("自动", "Automatic");
+    } else {
+      engine = "System WebView";
+    }
+    webSub.setText(
+        engine
+            + " · "
+            + (config.isDesktopMode()
+                ? UiText.choose("桌面布局", "Desktop layout")
+                : UiText.choose("移动布局", "Mobile layout")));
+  }
+
+  private static TextView subOf(LinearLayout row) {
+    return (TextView) row.getTag();
+  }
+
+  /** 通用设置行：图标 + 标题 + 副标题 + 箭头；副标题 TextView 放在 tag 里。 */
+  private LinearLayout buildRow(
+      int iconRes, String titleText, String subtitle, boolean last, View.OnClickListener onClick) {
     LinearLayout row = new LinearLayout(requireContext());
     row.setOrientation(LinearLayout.HORIZONTAL);
     row.setGravity(Gravity.CENTER_VERTICAL);
@@ -259,8 +415,7 @@ public class SettingsFragment extends Fragment {
     row.setMinimumHeight(dp(64));
     row.setClickable(true);
     row.setFocusable(true);
-    row.setBackgroundResource(
-        index == TAB_OPTIONS.length - 1 ? R.drawable.bg_action_plain : R.drawable.bg_ui2_row);
+    row.setBackgroundResource(last ? R.drawable.bg_action_plain : R.drawable.bg_ui2_row);
 
     LinearLayout body = new LinearLayout(requireContext());
     body.setOrientation(LinearLayout.VERTICAL);
@@ -271,7 +426,7 @@ public class SettingsFragment extends Fragment {
     body.setLayoutParams(bodyParams);
 
     TextView title = new TextView(requireContext());
-    title.setText(rowTitle(index, opt));
+    title.setText(titleText);
     title.setTextSize(15);
     title.setTextColor(requireContext().getColor(R.color.text));
     title.setIncludeFontPadding(false);
@@ -281,13 +436,12 @@ public class SettingsFragment extends Fragment {
     sub.setTextSize(13);
     sub.setTextColor(requireContext().getColor(R.color.text_secondary));
     sub.setIncludeFontPadding(false);
-    sub.setText(rowSubtitle(index, opt, sub));
+    sub.setText(subtitle);
     LinearLayout.LayoutParams slp =
         new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     slp.topMargin = dp(4);
     sub.setLayoutParams(slp);
-    if (index == 0) installStatus = sub;
 
     body.addView(title);
     body.addView(sub);
@@ -299,12 +453,7 @@ public class SettingsFragment extends Fragment {
     chev.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
     ImageView icon = new ImageView(requireContext());
-    icon.setImageResource(
-        index == 0
-            ? R.drawable.ic_ui2_box
-            : index == 1
-                ? R.drawable.ic_settings
-                : index == 2 ? R.drawable.ic_ui2_folder : R.drawable.ic_ui_shield);
+    icon.setImageResource(iconRes);
     icon.setImageTintList(
         android.content.res.ColorStateList.valueOf(requireContext().getColor(R.color.primary)));
     icon.setBackgroundResource(R.drawable.bg_icon_tile);
@@ -313,57 +462,12 @@ public class SettingsFragment extends Fragment {
     row.addView(icon, new LinearLayout.LayoutParams(dp(36), dp(36)));
     row.addView(body);
     row.addView(chev, new LinearLayout.LayoutParams(dp(16), dp(16)));
-    row.setOnClickListener(
-        v ->
-            UiMotion.page(requireContext(), getParentFragmentManager().beginTransaction())
-                .replace(R.id.fragment_container, opt.factory.get())
-                .addToBackStack("settings")
-                .commit());
+    row.setOnClickListener(onClick);
+    row.setTag(sub);
     return row;
-  }
-
-  private String rowTitle(int index, TabOption opt) {
-    if (index == 0) return getString(R.string.ui2_install_environment);
-    if (index == 1) return getString(R.string.ui2_ports);
-    if (index == 2) return getString(R.string.ui2_data_title);
-    if (index == 3) return getString(R.string.ui2_device_grants);
-    return UiText.text(opt.title);
-  }
-
-  private String rowSubtitle(int index, TabOption opt, TextView sub) {
-    if (index == 0) {
-      EnvironmentUiStatus.Snapshot snap = EnvironmentUiStatus.get(requireContext());
-      if (snap.known) {
-        if (snap.ready) {
-          sub.setTextColor(requireContext().getColor(R.color.ok));
-          return getString(R.string.ui2_status_ok);
-        }
-        sub.setTextColor(requireContext().getColor(R.color.warn));
-        return getString(R.string.ui2_status_needs_recovery);
-      }
-      return UiText.text(opt.sub);
-    }
-    if (index == 1) {
-      String port = config.getPort();
-      return getString(
-          config.isLanMode() ? R.string.ui2_web_port_lan_on : R.string.ui2_web_port_lan_off, port);
-    }
-    return UiText.text(opt.sub);
   }
 
   private int dp(int v) {
     return Math.round(v * getResources().getDisplayMetrics().density);
-  }
-
-  private static final class TabOption {
-    final String title;
-    final String sub;
-    final Supplier<Fragment> factory;
-
-    TabOption(String title, String sub, Supplier<Fragment> factory) {
-      this.title = title;
-      this.sub = sub;
-      this.factory = factory;
-    }
   }
 }

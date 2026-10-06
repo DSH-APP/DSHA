@@ -41,11 +41,13 @@ public class PluginFragment extends Fragment {
   private PluginRepository repository;
   private PluginRepository.State current;
   private View root, header, footer;
-  private boolean renderedMarket;
   private EditText linkInput, search;
   private TextView linkHint;
   private CheckBox hideBuiltin;
+
+  /** 旧版「市场 / 已安装」分段状态；页面已合一，仅为兼容 saved state 与旧入口参数保留，不影响显示。 */
   private boolean market = true;
+
   private final java.util.Set<String> expandedPlugins = new java.util.HashSet<>();
   private PluginSort.Mode sortOrder = PluginSort.Mode.NAME_ASC;
   private final List<PluginRepository.Item> visibleItems = new ArrayList<>();
@@ -68,7 +70,7 @@ public class PluginFragment extends Fragment {
   /** 只在首次读取或安全启动失效后同步一次；等待中的轮询只读内存状态。 */
   private void refreshInstalledIfNeeded() {
     refreshHandler.removeCallbacks(refreshInvalidated);
-    if (root == null || !isResumed() || market) return;
+    if (root == null || !isResumed()) return;
     if (pluginRefreshBlocked()) {
       refreshHandler.postDelayed(refreshInvalidated, 500);
       return;
@@ -405,9 +407,10 @@ public class PluginFragment extends Fragment {
     find(R.id.btnPluginInstall).setEnabled(valid && !repository.isBusy());
   }
 
+  /** 分段条已隐藏；旧入口与调试审计仍可触发，行为是同步已安装状态并回到顶部，不切换显示内容。 */
   private void selectTab(boolean showMarket) {
     market = showMarket;
-    if (!market) refreshInstalledIfNeeded();
+    refreshInstalledIfNeeded();
     linkInput.clearFocus();
     search.clearFocus();
     android.view.inputmethod.InputMethodManager keyboard =
@@ -503,13 +506,7 @@ public class PluginFragment extends Fragment {
     find(R.id.pluginWebsiteSection).setVisibility(View.VISIBLE);
     find(R.id.pluginLinkSection).setVisibility(View.VISIBLE);
     find(R.id.btnPluginRestore).setVisibility(repository.isSafeMode() ? View.VISIBLE : View.GONE);
-    find(R.id.installedControls).setVisibility(market ? View.GONE : View.VISIBLE);
-    find(R.id.btnMarket).setSelected(market);
-    find(R.id.btnInstalled).setSelected(!market);
-    ((TextView) find(R.id.btnMarket))
-        .setTextColor(requireContext().getColor(market ? R.color.primary : R.color.text_secondary));
-    ((TextView) find(R.id.btnInstalled))
-        .setTextColor(requireContext().getColor(market ? R.color.text_secondary : R.color.primary));
+    find(R.id.installedControls).setVisibility(View.VISIBLE);
     find(R.id.pluginBusy).setVisibility(current.busy ? View.VISIBLE : View.GONE);
     android.widget.ProgressBar progress = find(R.id.pluginBusy);
     progress.setIndeterminate(current.percent < 0);
@@ -554,8 +551,7 @@ public class PluginFragment extends Fragment {
             || !query.equals(renderedQuery)
             || renderedSort != sortOrder
             || renderedHideBuiltin != hideBuiltin.isChecked();
-    boolean rebind = changed || renderedBusy != current.busy || renderedMarket != market;
-    renderedMarket = market;
+    boolean rebind = changed || renderedBusy != current.busy;
     // 阶段进度每 400 ms 更新；列表内容未变时只更新状态，保留滚动和展开控件。
     if (changed) {
       visibleItems.clear();
@@ -595,7 +591,7 @@ public class PluginFragment extends Fragment {
     }
     ((TextView) find(R.id.pluginCount)).setText(count);
     TextView empty = find(R.id.pluginEmpty);
-    empty.setVisibility(!market && visibleItems.isEmpty() ? View.VISIBLE : View.GONE);
+    empty.setVisibility(visibleItems.isEmpty() ? View.VISIBLE : View.GONE);
     empty.setText(
         current.busy
             ? com.deepseekharness.app.util.UiText.text("正在读取插件…")
@@ -962,6 +958,7 @@ public class PluginFragment extends Fragment {
             com.deepseekharness.app.util.UiText.format("更多操作：%s", item.name));
       }
       android.widget.Button expand = holder.itemView.findViewById(R.id.pluginExpand),
+          more = holder.itemView.findViewById(R.id.pluginMore),
           delete = holder.itemView.findViewById(R.id.pluginDelete);
       TextView details = holder.itemView.findViewById(R.id.pluginDetails);
       String location =
@@ -990,11 +987,8 @@ public class PluginFragment extends Fragment {
               source));
       boolean expanded = expandedPlugins.contains(item.name);
       details.setVisibility(expanded ? View.VISIBLE : View.GONE);
-      expand.setVisibility(expanded ? View.VISIBLE : View.GONE);
-      expand.setText(
-          expanded
-              ? com.deepseekharness.app.util.UiText.choose("收起详情", "Collapse details")
-              : com.deepseekharness.app.util.UiText.choose("展开插件详情", "Plugin details"));
+      // 点整行切换展开；原展开按钮保留 id 但不再显示。
+      expand.setVisibility(View.GONE);
       View.OnClickListener toggleDetails =
           v -> {
             if (!expandedPlugins.add(item.name)) expandedPlugins.remove(item.name);
@@ -1003,6 +997,9 @@ public class PluginFragment extends Fragment {
           };
       expand.setOnClickListener(toggleDetails);
       holder.itemView.setOnClickListener(toggleDetails);
+      more.setVisibility(expanded ? View.VISIBLE : View.GONE);
+      more.setText(com.deepseekharness.app.util.UiText.choose("更多操作", "More actions"));
+      more.setOnClickListener(v -> itemActions(item));
       delete.setVisibility(expanded && item.deletable ? View.VISIBLE : View.GONE);
       delete.setEnabled(!repository.isBusy());
       delete.setText(com.deepseekharness.app.util.UiText.choose("删除插件", "Delete plugin"));
@@ -1032,7 +1029,7 @@ public class PluginFragment extends Fragment {
 
     @Override
     public int getItemCount() {
-      return 2 + (market ? 0 : visibleItems.size());
+      return 2 + visibleItems.size();
     }
   }
 }

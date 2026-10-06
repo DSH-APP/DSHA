@@ -182,7 +182,8 @@ public final class LanguageSettingsAudit extends Instrumentation {
       for (androidx.fragment.app.Fragment fragment :
           new androidx.fragment.app.Fragment[] {
             new SettingsFragment(),
-            new ConfigFragment(),
+            new NetworkFragment(),
+            new WebDisplayFragment(),
             new WorkspaceFragment(),
             new InstallFragment(),
             new DeviceGrantsFragment(),

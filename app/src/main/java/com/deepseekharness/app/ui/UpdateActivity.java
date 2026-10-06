@@ -60,6 +60,11 @@ public final class UpdateActivity extends AppCompatActivity {
             channels.check(position == 1 ? R.id.update_preview : R.id.update_stable);
           }
         });
+    com.deepseekharness.app.core.ConfigStore updateConfig =
+        new com.deepseekharness.app.core.ConfigStore(this);
+    android.widget.CompoundButton checkOnStart = findViewById(R.id.update_check_on_start);
+    checkOnStart.setChecked(updateConfig.isCheckUpdate());
+    checkOnStart.setOnCheckedChangeListener((b, checked) -> updateConfig.setCheckUpdate(checked));
     findViewById(R.id.update_back).setOnClickListener(v -> finish());
     ((TextView) findViewById(R.id.update_dsh))
         .setText(com.deepseekharness.app.util.Constants.DSH_VERSION);

@@ -15,9 +15,11 @@
     <color name="warn">#AF5109</color>
     <color name="err">#C81E1E</color>
     <color name="preview">#F5F6F7</color>
-    <!-- Termux 的默认 ANSI 前景色是白色；终端背景必须固定为深色。 -->
-    <color name="terminal_surface">#0A0D12</color>
-    <color name="terminal_outline">#263041</color>
+    <!-- 终端跟随应用主题：日间白底深字，PtyTerminalFragment 会把这些色写入 Termux 色表。 -->
+    <color name="terminal_surface">#FFFFFF</color>
+    <color name="terminal_outline">#E1E5EE</color>
+    <color name="terminal_text">#1F2328</color>
+    <color name="terminal_cursor">#225FE2</color>
     <color name="logo_top">#EDF3FE</color>
     <color name="ok_bg">#E6FAED</color>
     <color name="warn_bg">#FEF5E7</color>

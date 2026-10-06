@@ -15,6 +15,10 @@
     <color name="warn">#F7AD31</color>
     <color name="err">#F46666</color>
     <color name="preview">#0F1115</color>
+    <color name="terminal_surface">#1B1B1C</color>
+    <color name="terminal_outline">#353638</color>
+    <color name="terminal_text">#E6E8EA</color>
+    <color name="terminal_cursor">#7AAAFF</color>
     <color name="logo_top">#283142</color>
     <color name="ok_bg">#233C2C</color>
     <color name="warn_bg">#27241F</color>

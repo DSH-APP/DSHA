@@ -22,6 +22,12 @@
                         <androidx.appcompat.widget.AppCompatButton android:layout_width="0dp" android:layout_height="wrap_content" android:id="@+id/launch_open" android:text="@string/ui2_restart" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn" android:textColor="@color/text" android:layout_weight="1" />
                         <androidx.appcompat.widget.AppCompatButton android:layout_width="0dp" android:layout_height="wrap_content" android:id="@+id/launch_stop" android:text="@string/ui2_stop" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn" android:textColor="@color/err" android:layout_weight="1" android:layout_marginStart="8dp" />
                     </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_trouble_row" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="4dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/ui3_launch_trouble" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" />
+                        <Button android:id="@+id/launch_safe" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/Widget.DSHA.TextButton" android:minHeight="44dp" android:minWidth="0dp" android:textSize="13sp" android:textAllCaps="false" android:text="@string/ui_m0007" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:importantForAccessibility="no" android:text="@string/ui3_sep_dot" android:textSize="13sp" android:textColor="@color/text_muted" android:includeFontPadding="false" />
+                        <Button android:id="@+id/launch_recovery" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/Widget.DSHA.TextButton" android:minHeight="44dp" android:minWidth="0dp" android:textSize="13sp" android:textAllCaps="false" android:text="@string/ui3_launch_recovery" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="12dp" android:visibility="gone">
@@ -55,14 +61,7 @@
                     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/lan_addr" android:text="" android:textSize="11sp" android:textColor="@color/primary" android:includeFontPadding="false" android:visibility="gone" android:textIsSelectable="true" />
                 </LinearLayout>
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_models" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:layout_marginTop="12dp" android:clickable="true" android:focusable="true" android:background="@drawable/bg_card" android:gravity="center_vertical">
-                    <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_settings" android:background="@drawable/bg_icon_tile" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_models" android:textSize="15sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_tap_to_edit" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
-                    </LinearLayout>
-                    <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
-                </LinearLayout>
+                <View android:layout_width="0dp" android:layout_height="0dp" android:id="@+id/launch_models" android:visibility="gone" />
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_log_panel" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp" android:layout_marginTop="12dp">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
@@ -75,11 +74,6 @@
                             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_log" android:text="@string/ui_m0025" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:fontFamily="monospace" android:textIsSelectable="true" android:padding="12dp" android:maxLines="1" android:ellipsize="end" />
                         </LinearLayout>
                     </com.deepseekharness.app.ui.LogScrollView>
-                </LinearLayout>
-
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="10dp" android:gravity="center_vertical">
-                    <androidx.appcompat.widget.AppCompatButton android:layout_width="0dp" android:layout_height="wrap_content" android:id="@+id/launch_safe" android:text="@string/ui_m0007" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn" android:textColor="@color/text" android:layout_weight="1" />
-                    <androidx.appcompat.widget.AppCompatButton android:layout_width="0dp" android:layout_height="wrap_content" android:id="@+id/launch_recovery" android:text="@string/ui_m0011" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn" android:textColor="@color/text" android:layout_weight="1" android:layout_marginStart="8dp" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

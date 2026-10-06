@@ -158,8 +158,11 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
       visible(R.id.sub_back, nested);
       visible(R.id.app_logo, false);
       ((TextView) canvas.findViewById(R.id.btn_theme))
-          .setText(
-              com.deepseekharness.app.util.UiText.text(ThemeController.isDark(this) ? "黑夜" : "白天"));
+          .setCompoundDrawablesWithIntrinsicBounds(
+              ThemeController.isDark(this) ? R.drawable.ic_ui2_moon : R.drawable.ic_ui2_sun,
+              0,
+              0,
+              0);
       com.google.android.material.bottomnavigation.BottomNavigationView nav =
           canvas.findViewById(R.id.bottom_nav);
       nav.setSelectedItemId(
@@ -262,13 +265,9 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
         text(R.id.launch_run_state, "自动重启已暂停");
       }
     } else if (scene.startsWith("plugins")) {
-      boolean management = scene.equals("plugins_installed");
-      visible(R.id.pluginMarketCard, !management);
-      visible(R.id.pluginWebsiteSection, !management);
-      visible(R.id.pluginLinkSection, !management);
-      visible(R.id.pluginLocalTitle, !management);
-      visible(R.id.pluginLocalCard, !management);
-      visible(R.id.installedControls, management);
+      // 插件页已合为一页：安装区与已安装列表同时显示。
+      visible(R.id.pluginMarketCard, true);
+      visible(R.id.installedControls, true);
       text(R.id.pluginLinkHint, "支持 npm、GitHub 和已构建压缩包");
       text(R.id.statusText, "请选择插件来源，解析后核对实际信息。");
       text(R.id.pluginCount, "共 12 个插件");

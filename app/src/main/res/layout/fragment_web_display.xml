@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="@dimen/card_pad">
+            <com.deepseekharness.app.ui.DshaSelectView
+                android:id="@+id/web_core_choice"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_input"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp" />
+            <TextView
+                android:id="@+id/web_gecko_hint"
+                style="@style/DshaText.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/ui_m0118"
+                android:visibility="gone" />
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/web_desktop"
+                style="@style/DshaText.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:paddingStart="@dimen/gap_tight"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="@string/ui_m0057"
+                android:textSize="13sp" />
+            <LinearLayout
+                android:id="@+id/web_pip_settings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:minHeight="64dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_weight="1">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/picture_in_picture_title"
+                        android:textSize="13sp"
+                        android:textColor="@color/text"
+                        android:includeFontPadding="false"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/web_pip_status"
+                        style="@style/DshaText.Caption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/picture_in_picture_disabled" />
+                </LinearLayout>
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_ui2_chevron"
+                    android:contentDescription="@null"
+                    app:tint="@color/text_muted" />
+            </LinearLayout>
+        </LinearLayout>
+        <Button
+            android:id="@+id/web_save"
+            style="@style/Widget.DSHA.PrimaryButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/ui_m0002" />
+    </LinearLayout>
+</ScrollView>
