@@ -70,11 +70,16 @@ public class InstallFragment extends Fragment {
     view.findViewById(R.id.install_status)
         .setOnClickListener(v -> BackgroundTasksActivity.open(requireContext()));
     var controller = com.deepseekharness.app.core.HarnessController.get(requireContext());
-    ((TextView) view.findViewById(R.id.install_environment))
-        .setText(
-            controller.isEnvironmentReady()
-                ? com.deepseekharness.app.util.UiText.choose("可用", "Available")
-                : com.deepseekharness.app.util.UiText.choose("等待检查", "Needs checking"));
+    TextView environment = view.findViewById(R.id.install_environment);
+    boolean ready = controller.isEnvironmentReady();
+    environment.setText(
+        ready
+            ? com.deepseekharness.app.util.UiText.choose("可用", "Available")
+            : com.deepseekharness.app.util.UiText.choose("等待检查", "Needs checking"));
+    environment.setBackgroundResource(ready ? R.drawable.bg_ok_chip : R.drawable.bg_warn_chip);
+    environment.setTextColor(
+        androidx.core.content.ContextCompat.getColor(
+            requireContext(), ready ? R.color.ok : R.color.warn));
     ((TextView) view.findViewById(R.id.install_app_version))
         .setText(com.deepseekharness.app.BuildConfig.VERSION_NAME);
     try {
@@ -273,6 +278,12 @@ public class InstallFragment extends Fragment {
                       ? R.color.primary
                       : R.color.text_muted;
       status.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), color));
+      if (state.steps[i] == InstallTask.Step.OK)
+        status.setBackgroundResource(R.drawable.bg_ok_chip);
+      else if (state.steps[i] == InstallTask.Step.FAILED
+          || state.steps[i] == InstallTask.Step.SKIPPED)
+        status.setBackgroundResource(R.drawable.bg_warn_chip);
+      else status.setBackground(null);
       view.findViewById(STEP_IDS[i])
           .setContentDescription(
               com.deepseekharness.app.util.UiText.format(

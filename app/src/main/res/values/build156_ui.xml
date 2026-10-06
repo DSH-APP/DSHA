@@ -10,8 +10,8 @@
     <string name="ui_font_larger" translatable="false">A+</string>
     <string name="ui_status_dot" translatable="false">●</string>
     <string name="ui_status_unavailable" translatable="false">—</string>
-    <string name="ui_welcome_counter">%1$d / 7</string>
-    <string name="ui_welcome_initial_counter">1 / 7</string>
+    <string name="ui_welcome_counter">%1$d / 3</string>
+    <string name="ui_welcome_initial_counter">1 / 3</string>
     <string name="ui_language_title">语言 / Language</string>
     <string name="ui_adb_host_label">设备地址（留空自动发现）</string>
     <string name="ui_adb_port_label">配对端口（留空自动发现）</string>

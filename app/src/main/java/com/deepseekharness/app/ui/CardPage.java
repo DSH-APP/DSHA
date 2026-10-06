@@ -19,19 +19,21 @@ final class CardPage {
     scroll = new ScrollView(context);
     scroll.setFillViewport(true);
     content = column();
-    content.setPadding(dp(18), dp(16), dp(18), dp(24));
+    content.setPadding(dp(16), dp(8), dp(16), dp(24));
     scroll.addView(content);
     root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
-    TextView heading = text(title, 24, R.color.text);
-    heading.setTypeface(null, android.graphics.Typeface.BOLD);
-    content.addView(heading);
+    if (!title.isEmpty()) {
+      TextView heading = text(title, 22, R.color.text);
+      heading.setTypeface(null, android.graphics.Typeface.BOLD);
+      content.addView(heading);
+    }
     if (!subtitle.isEmpty()) {
-      TextView sub = text(subtitle, 12, R.color.text_secondary);
-      sub.setPadding(0, dp(7), 0, dp(18));
+      TextView sub = text(subtitle, 13, R.color.text_secondary);
+      sub.setPadding(0, dp(6), 0, dp(16));
       content.addView(sub);
     }
     footer = column();
-    footer.setPadding(dp(18), dp(8), dp(18), dp(12));
+    footer.setPadding(dp(16), dp(8), dp(16), dp(12));
     root.addView(footer);
   }
 

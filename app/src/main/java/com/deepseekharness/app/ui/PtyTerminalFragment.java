@@ -93,6 +93,7 @@ public final class PtyTerminalFragment extends Fragment
   private boolean altDown;
   private TextView ctrlBtn;
   private TextView altBtn;
+  private Integer lastExitStatus;
 
   /** 供 MainActivity 决定挂哪一页。 */
   public static boolean preferred(Context ctx) {
@@ -139,10 +140,21 @@ public final class PtyTerminalFragment extends Fragment
     root.findViewById(R.id.pty_font_inc).setOnClickListener(v -> bumpFont(+1));
     root.findViewById(R.id.pty_simple).setOnClickListener(v -> switchToSimple());
     root.findViewById(R.id.terminal_new).setOnClickListener(v -> startTerminal());
+    View restart = root.findViewById(R.id.pty_restart);
+    if (restart != null) restart.setOnClickListener(v -> startTerminal());
+    View closeEnded = root.findViewById(R.id.pty_close_ended);
+    if (closeEnded != null)
+      closeEnded.setOnClickListener(
+          v -> {
+            var tab = OWNER.currentPty();
+            if (tab != null) closeTerminal(tab.id);
+          });
 
     if (!c.proot().isEnvironmentReady()) {
+      title.setVisibility(View.VISIBLE);
       title.setText(com.deepseekharness.app.util.UiText.text("环境未就绪 —— 先到「安装」页装完再回来"));
       root.findViewById(R.id.terminal_new).setEnabled(false);
+      applyExtraKeys();
       renderTabs();
       return;
     }
@@ -155,6 +167,7 @@ public final class PtyTerminalFragment extends Fragment
     try {
       String blocked = TerminalFragment.terminalBlockMessage(c.proot());
       if (!blocked.isEmpty()) {
+        title.setVisibility(View.VISIBLE);
         title.setText(blocked);
         return;
       }
@@ -165,6 +178,7 @@ public final class PtyTerminalFragment extends Fragment
       attachSelected();
     } catch (Throwable e) {
       String safe = SensitiveData.redact(String.valueOf(e));
+      title.setVisibility(View.VISIBLE);
       title.setText(com.deepseekharness.app.util.UiText.format("终端启动失败：%s", safe));
       com.deepseekharness.app.core.DiagnosticLog.record(requireContext(), "PTY_START", safe);
       android.util.Log.w("DSHA", com.deepseekharness.app.util.UiText.format("PTY 启动失败：%s", safe));
@@ -174,6 +188,8 @@ public final class PtyTerminalFragment extends Fragment
   private void attachSelected() {
     if (view == null || title == null || getView() == null) return;
     boolean ready = c != null && c.proot().isEnvironmentReady();
+    PtySession previous = attachedSession;
+    Integer previousExit = lastExitStatus;
     if (attachedSession != null) attachedSession.detachListener(sessionListener);
     attachedSession = null;
     sessionListener = null;
@@ -184,10 +200,14 @@ public final class PtyTerminalFragment extends Fragment
     View empty = getView().findViewById(R.id.pty_empty);
     empty.setVisibility(tab == null ? View.VISIBLE : View.GONE);
     view.setVisibility(tab == null ? View.INVISIBLE : View.VISIBLE);
-    view.setEnabled(ready && tab != null && !tab.isClosing());
+    view.setEnabled(ready && tab != null && !tab.isClosing() && tab.value.isRunning());
     getView().findViewById(R.id.terminal_new).setEnabled(ready);
-    if (tab == null) title.setText(com.deepseekharness.app.util.UiText.text("暂无终端"));
-    else {
+    lastExitStatus = null;
+    if (tab == null) {
+      title.setText(com.deepseekharness.app.util.UiText.text("暂无终端"));
+      title.setVisibility(View.GONE);
+      applyEndedBanner(null, null);
+    } else {
       PtySession selected = tab.value;
       attachedSession = selected;
       // 每次绑定捕获会话身份；旧会话排队中的回调不能改写新标签。
@@ -224,12 +244,21 @@ public final class PtyTerminalFragment extends Fragment
       if (isResumed()) selected.attachListener(sessionListener);
       view.attachSession(selected.session());
       view.onScreenUpdated();
+      Integer exit = selected.isRunning() ? null : exitStatusOf(selected);
+      if (exit == null && previous == selected) exit = previousExit;
+      lastExitStatus = selected.isRunning() ? null : exit;
       title.setText(
           selected.isRunning()
               ? displayTitle(selected.session())
               : com.deepseekharness.app.util.UiText.text("会话已结束"));
+      title.setVisibility(View.GONE);
+      applyEndedBanner(selected, exit);
     }
-    if (!ready) title.setText(com.deepseekharness.app.util.UiText.text("环境未就绪 —— 先到「安装」页装完再回来"));
+    if (!ready) {
+      title.setVisibility(View.VISIBLE);
+      title.setText(com.deepseekharness.app.util.UiText.text("环境未就绪 —— 先到「安装」页装完再回来"));
+    }
+    applyExtraKeys();
     renderTabs();
   }
 
@@ -283,6 +312,53 @@ public final class PtyTerminalFragment extends Fragment
     return t == null || t.trim().isEmpty() ? "Ubuntu · PTY" : SensitiveData.redact(t.trim());
   }
 
+  private Integer exitStatusOf(PtySession session) {
+    if (session == null || session.isRunning()) return null;
+    try {
+      TerminalSession s = session.session();
+      return s == null ? null : s.getExitStatus();
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
+  private void applyEndedBanner(PtySession session, Integer status) {
+    View root = getView();
+    if (root == null) return;
+    View banner = root.findViewById(R.id.pty_ended_banner);
+    TextView code = root.findViewById(R.id.pty_ended_code);
+    if (banner == null) return;
+    boolean ended = session != null && !session.isRunning();
+    banner.setVisibility(ended ? View.VISIBLE : View.GONE);
+    if (code == null) return;
+    if (ended && status != null) {
+      code.setText(getString(R.string.ui2_exit_code, String.valueOf(status)));
+      code.setVisibility(View.VISIBLE);
+    } else {
+      code.setText("");
+      code.setVisibility(View.GONE);
+    }
+  }
+
+  private void applyExtraKeys() {
+    View root = getView();
+    if (root == null) return;
+    View keys = root.findViewById(R.id.pty_keys);
+    if (keys == null) return;
+    boolean allowed = inputAllowed();
+    View row = keys.getParent() instanceof View ? (View) keys.getParent() : keys;
+    row.setAlpha(allowed ? 1f : 0.4f);
+    keys.setEnabled(allowed);
+    if (keys instanceof ViewGroup) {
+      ViewGroup group = (ViewGroup) keys;
+      for (int i = 0; i < group.getChildCount(); i++) {
+        View child = group.getChildAt(i);
+        child.setEnabled(allowed);
+        child.setClickable(allowed);
+      }
+    }
+  }
+
   // ==================== 扩展键 ====================
 
   private void buildExtraKeys(LinearLayout box) {
@@ -292,9 +368,10 @@ public final class PtyTerminalFragment extends Fragment
       TextView b = new TextView(requireContext());
       b.setText(com.deepseekharness.app.util.UiText.text(k[0]));
       b.setMinHeight(dp(44));
-      b.setMinWidth(dp(44));
+      b.setMinWidth(dp(52));
       b.setGravity(Gravity.CENTER);
-      b.setBackgroundResource(R.drawable.bg_chip);
+      b.setIncludeFontPadding(false);
+      b.setBackgroundResource(R.drawable.bg_card);
       b.setTextColor(getResources().getColor(R.color.text_secondary));
       b.setTypeface(android.graphics.Typeface.MONOSPACE);
       b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
@@ -317,10 +394,12 @@ public final class PtyTerminalFragment extends Fragment
       box.addView(b);
     }
     paintModifiers();
+    applyExtraKeys();
   }
 
   /** Ctrl / Alt 是状态键：按一下亮起来，下一个字符带上这个修饰键（TerminalView 会来问）。 */
   private void toggleModifier(String which) {
+    if (!inputAllowed()) return;
     if ("CTRL".equals(which)) ctrlDown = !ctrlDown;
     else altDown = !altDown;
     paintModifiers();
@@ -443,6 +522,7 @@ public final class PtyTerminalFragment extends Fragment
     redrawPending.set(false);
     view = null;
     title = null;
+    lastExitStatus = null;
     c = null;
     super.onDestroyView();
   }
@@ -489,7 +569,12 @@ public final class PtyTerminalFragment extends Fragment
     main.post(
         () -> {
           if (isAdded() && target != null && title == target && attachedSession == exited) {
+            lastExitStatus = status;
             target.setText(com.deepseekharness.app.util.UiText.format("会话已结束（退出码 %s）", status));
+            applyEndedBanner(exited, status);
+            applyExtraKeys();
+            if (view != null) view.setEnabled(false);
+            renderTabs();
           }
         });
   }
@@ -596,6 +681,8 @@ public final class PtyTerminalFragment extends Fragment
     return view != null
         && tab != null
         && !tab.isClosing()
+        && tab.value != null
+        && tab.value.isRunning()
         && c != null
         && c.proot().isEnvironmentReady();
   }

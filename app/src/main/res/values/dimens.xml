@@ -52,7 +52,7 @@
 
     <!-- 大容器：卡片、预览框 -->
 
-    <dimen name="radius_card">18dp</dimen>
+    <dimen name="radius_card">16dp</dimen>
 
     <!-- 控件：按钮、输入框 -->
 

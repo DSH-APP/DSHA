@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
               args.putBoolean(LaunchFragment.ARG_OPEN_WEB, true);
               f.setArguments(args);
             }
-            title.setText(R.string.app_name);
+            title.setText(R.string.ui_m0005);
           } else if (id == R.id.nav_plugins) {
             f =
                 com.deepseekharness.app.core.EnvironmentAccess.needsRecovery(controller)
@@ -186,10 +186,10 @@ public class MainActivity extends AppCompatActivity {
               f.setArguments(args);
               getIntent().removeExtra("open_plugins");
             }
-            title.setText(R.string.app_name);
+            title.setText(R.string.ui_m0016);
           } else if (id == R.id.nav_settings) {
             f = new SettingsFragment();
-            title.setText(R.string.app_name);
+            title.setText(R.string.ui_m0023);
           } else {
             // 终端：默认挂真 PTY 页（vim/htop/tmux 能跑），可在 PTY 页切回简易版
             f =
@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
                     : PtyTerminalFragment.preferred(this)
                         ? new PtyTerminalFragment()
                         : new TerminalFragment();
-            title.setText(R.string.app_name);
+            title.setText(R.string.ui_m0021);
           }
           UiMotion.page(this, getSupportFragmentManager().beginTransaction())
               .replace(R.id.fragment_container, f)
@@ -399,8 +399,7 @@ public class MainActivity extends AppCompatActivity {
     boolean nested = getSupportFragmentManager().getBackStackEntryCount() > 0;
     findViewById(R.id.sub_back)
         .setVisibility(nested ? android.view.View.VISIBLE : android.view.View.GONE);
-    findViewById(R.id.app_logo)
-        .setVisibility(nested ? android.view.View.GONE : android.view.View.VISIBLE);
+    findViewById(R.id.app_logo).setVisibility(android.view.View.GONE);
     if (shown instanceof AboutFragment)
       title.setText(com.deepseekharness.app.util.UiText.choose("关于 DSHA", "About DSHA"));
     else if (shown instanceof OverlayFragment)
@@ -411,11 +410,12 @@ public class MainActivity extends AppCompatActivity {
     else if (shown instanceof WorkspaceFragment)
       title.setText(com.deepseekharness.app.util.UiText.text("数据与备份"));
     else if (shown instanceof InstallFragment) title.setText(R.string.ui2_environment_page);
-    else if (shown instanceof SettingsFragment) title.setText(R.string.app_name);
-    else if (shown instanceof PluginFragment) title.setText(R.string.app_name);
+    else if (shown instanceof SettingsFragment) title.setText(R.string.ui_m0023);
+    else if (shown instanceof PluginFragment) title.setText(R.string.ui_m0016);
     else if (shown instanceof TerminalFragment || shown instanceof PtyTerminalFragment)
-      title.setText(R.string.app_name);
-    else title.setText(R.string.app_name);
+      title.setText(R.string.ui_m0021);
+    else if (shown instanceof LaunchFragment) title.setText(R.string.ui_m0005);
+    else title.setText(R.string.ui_m0005);
   }
 
   @Override

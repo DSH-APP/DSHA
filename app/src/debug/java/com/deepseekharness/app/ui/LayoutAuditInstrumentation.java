@@ -186,18 +186,13 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
     if (view instanceof android.widget.CompoundButton || view instanceof EditText) return false;
     if (view instanceof android.widget.Button) return true;
     int id = view.getId();
-    return id == R.id.settings_language
-        || id == R.id.config_overlay_style
+    return id == R.id.config_overlay_style
         || id == R.id.config_workspace_entry
         || id == R.id.environment_recovery_banner
-        || id == R.id.pty_title
         || id == R.id.btnMarket
         || id == R.id.btnInstalled
         || id == R.id.btnRefresh
-        || id == R.id.btnPluginPaste
         || id == R.id.btnPluginInstall
-        || id == R.id.btnImport
-        || id == R.id.btnExport
         || id == R.id.pluginActions
         || id == R.id.pty_font_dec
         || id == R.id.pty_font_inc

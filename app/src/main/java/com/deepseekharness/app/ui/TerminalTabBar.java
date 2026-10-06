@@ -1,8 +1,11 @@
 package com.deepseekharness.app.ui;
 
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
+import com.deepseekharness.app.PtySession;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.util.TerminalTabs;
 
@@ -19,31 +22,52 @@ final class TerminalTabBar {
     row.removeAllViews();
     var current = tabs.current();
     for (var tab : tabs.snapshot()) {
+      boolean selected = current != null && current.id == tab.id;
+      boolean running = isRunning(tab.value);
       LinearLayout chip = new LinearLayout(root.getContext());
       chip.setGravity(Gravity.CENTER_VERTICAL);
-      chip.setBackgroundResource(
-          current != null && current.id == tab.id ? R.drawable.bg_selection : R.drawable.bg_chip);
+      chip.setMinimumHeight(dp(root, 48));
+      chip.setBackgroundResource(selected ? R.drawable.bg_card : 0);
+      View dot = new View(root.getContext());
+      GradientDrawable circle = new GradientDrawable();
+      circle.setShape(GradientDrawable.OVAL);
+      circle.setColor(
+          root.getContext()
+              .getColor(running && !tab.isClosing() ? R.color.ok : R.color.text_muted));
+      dot.setBackground(circle);
+      dot.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+      LinearLayout.LayoutParams dotLp = new LinearLayout.LayoutParams(dp(root, 8), dp(root, 8));
+      dotLp.setMarginStart(dp(root, 12));
+      chip.addView(dot, dotLp);
       TextView name = new TextView(root.getContext());
       name.setText(
           com.deepseekharness.app.util.UiText.format(
               tab.isClosing() ? "终端 %s · 关闭中…" : "终端 %s", tab.number));
       name.setTextColor(
-          root.getContext()
-              .getColor(
-                  current != null && current.id == tab.id
-                      ? R.color.primary
-                      : R.color.text_secondary));
-      name.setTextSize(13);
+          root.getContext().getColor(selected ? R.color.text : R.color.text_secondary));
+      name.setTextSize(14);
+      name.setTypeface(selected ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
       name.setIncludeFontPadding(false);
       name.setGravity(Gravity.CENTER);
       name.setSingleLine();
-      name.setMinWidth(dp(root, 72));
+      name.setMinWidth(dp(root, 48));
       name.setMinHeight(dp(root, 48));
-      name.setPadding(dp(root, 12), 0, dp(root, 8), 0);
+      name.setPadding(dp(root, 8), 0, dp(root, 8), 0);
       name.setContentDescription(
           com.deepseekharness.app.util.UiText.format("切换到终端 %s", tab.number));
       name.setOnClickListener(v -> actions.select(tab.id));
       chip.addView(name, new LinearLayout.LayoutParams(-2, -2));
+      if (!running && !tab.isClosing() && selected) {
+        TextView ended = new TextView(root.getContext());
+        ended.setText(root.getContext().getString(R.string.ui2_ended));
+        ended.setTextColor(root.getContext().getColor(R.color.text_muted));
+        ended.setTextSize(12);
+        ended.setIncludeFontPadding(false);
+        ended.setGravity(Gravity.CENTER);
+        ended.setMinHeight(dp(root, 48));
+        ended.setPadding(0, 0, dp(root, 4), 0);
+        chip.addView(ended, new LinearLayout.LayoutParams(-2, -2));
+      }
       TextView close = new TextView(root.getContext());
       close.setText(com.deepseekharness.app.util.UiText.text("×"));
       close.setTextSize(20);
@@ -59,7 +83,7 @@ final class TerminalTabBar {
       LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
       lp.setMarginEnd(dp(root, 6));
       row.addView(chip, lp);
-      if (current != null && current.id == tab.id)
+      if (selected)
         chip.post(
             () -> {
               if (root.isAttachedToWindow())
@@ -67,6 +91,11 @@ final class TerminalTabBar {
                     .smoothScrollTo(chip.getLeft(), 0);
             });
     }
+  }
+
+  private static boolean isRunning(Object value) {
+    if (value instanceof PtySession) return ((PtySession) value).isRunning();
+    return true;
   }
 
   private static int dp(View root, int value) {
