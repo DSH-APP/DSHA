@@ -18,6 +18,9 @@ env:
   # 基础 Ubuntu 原始归档没有仓库内生成配方；v1.2.0-rc1 正式 APK 以 STORED 原样携带同一字节，
   # 由 tools/fetch-pinned-archive.py 按 runtime-descriptor.json 中的摘要核验后才落盘。
   ROOTFS_SOURCE_APK: https://github.com/DSH-APP/DSHA/releases/download/v1.2.0-rc1/dsha-1.2.0-rc1.apk
+  # Windows runner 默认 cp1252 控制台无法输出生成器的中文日志。
+  PYTHONUTF8: '1'
+  PYTHONIOENCODING: utf-8
 jobs:
   dsh-runtime:
     # 锁定的 dsh-runtime.bin 由 Windows 主机生成：build-dsh-runtime.py 用 sorted(Path.rglob) 排序，
