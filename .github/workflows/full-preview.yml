@@ -124,6 +124,8 @@ jobs:
             --member assets/offline-rootfs.bin --descriptor-input offline-rootfs.bin \
             --output app/build/pinned-inputs/offline-rootfs.bin
           cp app/build/pinned-inputs/offline-rootfs.bin app/src/main/assets/offline-rootfs.bin
+      - name: Seed locked debs (superseded versions are only kept on Launchpad)
+        run: python3 tools/seed-locked-debs.py
       - name: Generate python-support.bin / pnpm-runtime.bin / ca-certificates.crt
         run: python3 tools/build-standard-runtime.py --cache app/build/runtime-downloads --tar bsdtar
       - name: Generate ubuntu-tools.bin from locked deb set
