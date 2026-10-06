@@ -7,7 +7,10 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -16,12 +19,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.deepseekharness.app.R;
+import com.deepseekharness.app.core.ConfigStore;
 import com.deepseekharness.app.core.MaintenanceCoordinator;
 import com.deepseekharness.app.core.BackupTask;
 import com.deepseekharness.app.core.InstallRepository;
 import com.deepseekharness.app.util.EnvironmentTaskGate;
 import com.deepseekharness.app.util.InstallTask;
 import com.deepseekharness.app.util.SensitiveData;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** 安装页只展示应用级任务快照；页面销毁不影响后台任务、取消信号或结果。 */
 public class InstallFragment extends Fragment {
@@ -70,11 +75,16 @@ public class InstallFragment extends Fragment {
     view.findViewById(R.id.install_status)
         .setOnClickListener(v -> BackgroundTasksActivity.open(requireContext()));
     var controller = com.deepseekharness.app.core.HarnessController.get(requireContext());
-    ((TextView) view.findViewById(R.id.install_environment))
-        .setText(
-            controller.isEnvironmentReady()
-                ? com.deepseekharness.app.util.UiText.choose("可用", "Available")
-                : com.deepseekharness.app.util.UiText.choose("等待检查", "Needs checking"));
+    TextView environment = view.findViewById(R.id.install_environment);
+    boolean ready = controller.isEnvironmentReady();
+    environment.setText(
+        ready
+            ? com.deepseekharness.app.util.UiText.choose("可用", "Available")
+            : com.deepseekharness.app.util.UiText.choose("等待检查", "Needs checking"));
+    environment.setBackgroundResource(ready ? R.drawable.bg_ok_chip : R.drawable.bg_warn_chip);
+    environment.setTextColor(
+        androidx.core.content.ContextCompat.getColor(
+            requireContext(), ready ? R.color.ok : R.color.warn));
     ((TextView) view.findViewById(R.id.install_app_version))
         .setText(com.deepseekharness.app.BuildConfig.VERSION_NAME);
     try {
@@ -119,7 +129,71 @@ public class InstallFragment extends Fragment {
       final int step = i + 1;
       view.findViewById(STEP_IDS[i]).setOnClickListener(v -> showStep(step));
     }
+    bindRuntimeCard(view);
     render();
+  }
+
+  /** 运行方式：proroot / proot、静态加载器、seccomp；逻辑自原配置页搬入，保存时取环境任务租约。 */
+  private void bindRuntimeCard(View view) {
+    ConfigStore config = new ConfigStore(requireContext());
+    DshaSelectView choice = view.findViewById(R.id.install_runtime_choice);
+    CompoundButton staticLoader = view.findViewById(R.id.install_static_loader);
+    CompoundButton noSeccomp = view.findViewById(R.id.install_no_seccomp);
+    AtomicBoolean useProroot = new AtomicBoolean(config.isProroot());
+    choice.setPrompt(com.deepseekharness.app.util.UiText.choose("运行方式", "Runtime"));
+    choice.setAdapter(
+        new ArrayAdapter<>(
+            requireContext(), R.layout.item_data_choice, new String[] {"proroot", "proot"}));
+    choice.setSelection(useProroot.get() ? 0 : 1);
+    choice.setOnItemSelectedListener(
+        new AdapterView.OnItemSelectedListener() {
+          public void onNothingSelected(AdapterView<?> parent) {}
+
+          public void onItemSelected(AdapterView<?> parent, View item, int position, long id) {
+            useProroot.set(position == 0);
+          }
+        });
+    staticLoader.setChecked(config.isProrootStaticLoader());
+    noSeccomp.setChecked(config.isProotSeccompDisabled());
+    view.findViewById(R.id.install_runtime_save)
+        .setOnClickListener(
+            v -> {
+              EnvironmentTaskGate.Lease saving =
+                  EnvironmentTaskGate.tryAcquire(com.deepseekharness.app.util.UiText.text("保存配置"));
+              if (saving == null) {
+                Toast.makeText(
+                        requireContext(),
+                        com.deepseekharness.app.util.UiText.format(
+                            "正在%s，完成后再保存配置", EnvironmentTaskGate.activeKind()),
+                        Toast.LENGTH_SHORT)
+                    .show();
+                return;
+              }
+              try {
+                saving.run(
+                    () -> {
+                      config.setProroot(useProroot.get());
+                      config.setProrootStaticLoader(staticLoader.isChecked());
+                      config.setProotSeccompDisabled(noSeccomp.isChecked());
+                      Toast.makeText(
+                              requireContext(),
+                              com.deepseekharness.app.util.UiText.choose(
+                                  "已保存；重启 Web 生效", "Saved. Restart Web to apply."),
+                              Toast.LENGTH_LONG)
+                          .show();
+                      return null;
+                    });
+              } catch (Exception e) {
+                Toast.makeText(
+                        requireContext(),
+                        com.deepseekharness.app.util.UiText.format(
+                            "配置保存未完成：%s", SensitiveData.redact(String.valueOf(e))),
+                        Toast.LENGTH_LONG)
+                    .show();
+              } finally {
+                saving.close();
+              }
+            });
   }
 
   @Override
@@ -273,6 +347,12 @@ public class InstallFragment extends Fragment {
                       ? R.color.primary
                       : R.color.text_muted;
       status.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), color));
+      if (state.steps[i] == InstallTask.Step.OK)
+        status.setBackgroundResource(R.drawable.bg_ok_chip);
+      else if (state.steps[i] == InstallTask.Step.FAILED
+          || state.steps[i] == InstallTask.Step.SKIPPED)
+        status.setBackgroundResource(R.drawable.bg_warn_chip);
+      else status.setBackground(null);
       view.findViewById(STEP_IDS[i])
           .setContentDescription(
               com.deepseekharness.app.util.UiText.format(

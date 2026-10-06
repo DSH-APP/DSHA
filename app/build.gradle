@@ -79,6 +79,11 @@ android {
     buildTypes {
         debug {
             debuggable true
+            // 仅 full-preview 工作流显式传 -Pdsha.previewSuffix=true：独立包名，可与正式版并存安装。
+            if (project.findProperty('dsha.previewSuffix') == 'true') {
+                applicationIdSuffix '.uipreview'
+                versionNameSuffix '-uipreview'
+            }
         }
         release {
             minifyEnabled false

@@ -291,7 +291,8 @@ public final class ThemeInstrumentation extends Instrumentation {
         com.deepseekharness.app.PtySession terminal =
             (com.deepseekharness.app.PtySession) field.get(null);
         MainActivity old = MainActivity.active();
-        runOnMainSync(() -> old.findViewById(R.id.btn_theme).performClick());
+        // 顶栏外观按钮现在弹出菜单；直接走菜单项使用的同一入口切到浅色。
+        runOnMainSync(() -> ThemeTransition.select(old, old.findViewById(R.id.btn_theme), "light"));
         until(
             () ->
                 MainActivity.active() != null
@@ -363,7 +364,8 @@ public final class ThemeInstrumentation extends Instrumentation {
         require(failures.isEmpty(), String.join("\n", failures));
         // 顶部按钮切换后再切回，仍保留当前设置页。
         MainActivity before = MainActivity.active();
-        runOnMainSync(() -> before.findViewById(R.id.btn_theme).performClick());
+        runOnMainSync(
+            () -> ThemeTransition.select(before, before.findViewById(R.id.btn_theme), "light"));
         until(
             () -> MainActivity.active() != before && !ThemeController.isDark(MainActivity.active()),
             "顶部切换无效");

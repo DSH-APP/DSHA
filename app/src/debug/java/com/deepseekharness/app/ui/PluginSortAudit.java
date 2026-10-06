@@ -238,8 +238,8 @@ public final class PluginSortAudit extends Instrumentation {
               "按钮没有显示当前排序");
           check(
               page.findViewById(R.id.btnSort).getHeight()
-                  == page.findViewById(R.id.btnPluginUpdates).getHeight(),
-              "操作框高度不一致");
+                  >= Math.round(44 * page.getResources().getDisplayMetrics().density),
+              "排序按钮触控高度不足");
         }
         screenshot(lang + "-management");
         ui(() -> ((EditText) page.findViewById(R.id.pluginSearch)).setText("plugin"));

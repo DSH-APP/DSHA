@@ -26,12 +26,7 @@ public final class ModernAndroidUi implements Application.ActivityLifecycleCallb
     if (android.os.Build.VERSION.SDK_INT >= 29) content.setForceDarkAllowed(false);
     WindowCompat.setDecorFitsSystemWindows(activity.getWindow(), false);
     int color = activity.getColor(R.color.surface);
-    activity
-        .getWindow()
-        .setNavigationBarColor(
-            android.os.Build.VERSION.SDK_INT >= 26
-                ? color
-                : activity.getColor(R.color.terminal_surface));
+    activity.getWindow().setNavigationBarColor(color);
     content.setBackgroundColor(color);
     boolean light = ColorUtils.calculateLuminance(color) > 0.5;
     androidx.core.view.WindowInsetsControllerCompat controller =
@@ -59,6 +54,14 @@ public final class ModernAndroidUi implements Application.ActivityLifecycleCallb
 
   @Override
   public void onActivityCreated(Activity activity, Bundle saved) {
+    // Android 14+ 的跨 Activity 动画优先读 overrideActivityTransition；
+    // 主题里的 windowAnimationStyle 在部分系统上会被忽略，这里显式统一为「从下方进入」。
+    if (android.os.Build.VERSION.SDK_INT >= 34) {
+      activity.overrideActivityTransition(
+          Activity.OVERRIDE_TRANSITION_OPEN, R.anim.activity_open_enter, R.anim.activity_hold);
+      activity.overrideActivityTransition(
+          Activity.OVERRIDE_TRANSITION_CLOSE, R.anim.activity_hold, R.anim.activity_close_exit);
+    }
     if (android.os.Build.VERSION.SDK_INT < 29)
       activity
           .getWindow()

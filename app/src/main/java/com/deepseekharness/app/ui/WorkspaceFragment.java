@@ -139,8 +139,13 @@ public class WorkspaceFragment extends Fragment {
     if (pending)
       summary.append(com.deepseekharness.app.util.UiText.text("\n\n有未完成的环境维护，请恢复原环境后再继续。"));
     ((TextView) view.findViewById(R.id.workspace_backup_status)).setText(summary.toString());
-    for (int id : new int[] {R.id.workspace_backup, R.id.workspace_location, R.id.workspace_reset})
-      view.findViewById(id).setEnabled(!busy && !pending);
+    for (int id :
+        new int[] {R.id.workspace_backup, R.id.workspace_location, R.id.workspace_reset}) {
+      View row = view.findViewById(id);
+      if (row == null) continue;
+      row.setEnabled(!busy && !pending);
+      row.setAlpha(busy || pending ? 0.5f : 1f);
+    }
     if (s.status == com.deepseekharness.app.util.BackupTaskState.Status.PREVIEW
         && previewDialog == null
         && isResumed()) {

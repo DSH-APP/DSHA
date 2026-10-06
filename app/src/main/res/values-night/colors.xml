@@ -1,28 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-
-
-    <color name="primary">#6AA4FF</color>
-    <color name="primary_dark">#3A75DA</color>
-    <color name="accent_on">#081428</color>
-    <color name="surface">#000000</color>
-    <color name="card">#111214</color>
-    <color name="raised">#1A1C20</color>
-    <color name="line">#292C32</color>
-    <color name="text">#E4E8F0</color>
-    <color name="text_secondary">#ADB8C9</color>
-    <color name="text_muted">#9DA8BB</color>
-    <color name="ok">#7ED6A2</color>
-    <color name="warn">#E5C07B</color>
-    <color name="err">#E08A8A</color>
-    <color name="preview">#080B10</color>
-    <color name="logo_top">#12233D</color>
-
-    <!-- 深色底下涟漪要更亮一点才看得见 -->
-    <color name="ripple">#187DA7F4</color>
+    <!-- 对齐 DSH 深色：底 #151517，卡片 #1B1B1C，主色 #7AAAFF；涟漪与 err 按 4.5 对比度要求微调 -->
+    <color name="primary">#7AAAFF</color>
+    <color name="primary_dark">#5686FE</color>
+    <color name="accent_on">#0F1115</color>
+    <color name="surface">#151517</color>
+    <color name="card">#1B1B1C</color>
+    <color name="raised">#2C2C2E</color>
+    <color name="line">#353638</color>
+    <color name="text">#F5F6F7</color>
+    <color name="text_secondary">#ADB2B8</color>
+    <color name="text_muted">#979DA6</color>
+    <color name="ok">#4ED17E</color>
+    <color name="warn">#F7AD31</color>
+    <color name="err">#F46666</color>
+    <color name="preview">#0F1115</color>
+    <color name="terminal_surface">#1B1B1C</color>
+    <color name="terminal_outline">#353638</color>
+    <color name="terminal_text">#E6E8EA</color>
+    <color name="terminal_cursor">#7AAAFF</color>
+    <color name="logo_top">#283142</color>
+    <color name="ok_bg">#233C2C</color>
+    <color name="warn_bg">#27241F</color>
+    <color name="ripple">#137AAAFF</color>
     <color name="primary_ripple">#20FFFFFF</color>
     <color name="error_on">#1A0F0F</color>
-    <color name="disabled">#1B2130</color>
-    <color name="err_bg">#1AE08A8A</color>
+    <color name="disabled">#232324</color>
+    <color name="err_bg">#1AF46666</color>
 </resources>

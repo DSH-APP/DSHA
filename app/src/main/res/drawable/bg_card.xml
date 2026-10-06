@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 卡片靠页面底色分层，不再描边。LayoutAudit 比对同类框像素，禁止渐变。 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <solid android:color="@color/card" />
     <corners android:radius="@dimen/radius_card" />
-    <stroke android:width="@dimen/stroke" android:color="@color/line" />
 </shape>

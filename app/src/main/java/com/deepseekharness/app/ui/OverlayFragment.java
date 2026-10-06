@@ -324,7 +324,8 @@ public final class OverlayFragment extends Fragment {
         .putBoolean(OverlayController.K_CONFIRM, confirmation.isChecked())
         .apply();
     if (!on) OverlayController.teardown(requireContext().getApplicationContext());
-    else OverlayController.applyStyleNow(requireContext().getApplicationContext());
+    else if (OverlayController.permitted(requireContext()))
+      OverlayController.applyStyleNow(requireContext().getApplicationContext());
     livePreview = false;
     OverlayController.hideStylePreview(requireContext().getApplicationContext());
     Toast.makeText(

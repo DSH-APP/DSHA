@@ -3,7 +3,6 @@ package com.deepseekharness.app.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +18,6 @@ import androidx.fragment.app.Fragment;
 import com.deepseekharness.app.LanProxyService;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.core.HarnessController;
-import com.deepseekharness.app.util.Constants;
 
 /**
  * 启动页：启动 / 进入 / 停止 dsh Web，显示运行状态、鉴权链接与局域网访问地址。
@@ -32,6 +30,8 @@ public class LaunchFragment extends Fragment {
   private HarnessController controller;
   private TextView lanAddrText;
   private TextView launchLog;
+  private boolean logExpanded;
+  private String fullLog = "";
 
   /** 启动按钮当前是否处于「进入」态（鉴权链接已就绪）。 */
   private boolean webReady;
@@ -90,30 +90,14 @@ public class LaunchFragment extends Fragment {
     v.findViewById(R.id.launch_download_logs)
         .setOnClickListener(x -> startActivity(DiagnosticActivity.downloadLogs(requireContext())));
 
-    v.findViewById(R.id.launch_models)
-        .setOnClickListener(
-            x -> startActivity(new Intent(requireContext(), ModelSetupActivity.class)));
-    v.findViewById(R.id.launch_address)
+    // 模型入口已从首页移除（只在 设置 → 模型配置）。
+    v.findViewById(R.id.launch_copy_local).setOnClickListener(x -> copyLocalAddress());
+    v.findViewById(R.id.launch_copy_lan).setOnClickListener(x -> copyLanAddress());
+    v.findViewById(R.id.launch_log_toggle)
         .setOnClickListener(
             x -> {
-              String local = controller.getWebAuthUrl();
-              String addresses =
-                  local.isEmpty()
-                      ? com.deepseekharness.app.util.UiText.choose(
-                          "启动后可查看访问地址。", "Start DSH to view access addresses.")
-                      : local;
-              if (lanAddrText != null && lanAddrText.getVisibility() == View.VISIBLE)
-                addresses += "\n\n" + lanAddrText.getText();
-              var dialog =
-                  new DshaDialogBuilder(requireContext())
-                      .setTitle(R.string.ui2_address)
-                      .setMessage(addresses)
-                      .setNegativeButton(android.R.string.cancel, null);
-              if (!local.isEmpty())
-                dialog.setPositiveButton(
-                    com.deepseekharness.app.util.UiText.choose("复制本机地址", "Copy local URL"),
-                    (d, w) -> copyAddr("DSH", local));
-              dialog.show();
+              logExpanded = !logExpanded;
+              applyLogView();
             });
     restart.setText(R.string.ui2_restart);
     v.findViewById(R.id.launch_recovery).setOnClickListener(x -> showRecovery());
@@ -172,7 +156,7 @@ public class LaunchFragment extends Fragment {
                     });
               });
           webReady = false;
-          start.setText(com.deepseekharness.app.util.UiText.text("启动"));
+          start.setText(getString(R.string.ui2_start_action));
           status.setText(com.deepseekharness.app.util.UiText.text("停止中…"));
           refreshLanAddr();
           refreshRunState();
@@ -196,7 +180,7 @@ public class LaunchFragment extends Fragment {
         new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
             .format(new java.util.Date());
     status.setText(com.deepseekharness.app.util.UiText.format("启动中…（%s）", time));
-    start.setText(com.deepseekharness.app.util.UiText.text("启动"));
+    start.setText(getString(R.string.ui2_start_action));
     webReady = false;
     java.util.function.Consumer<String> startStatus =
         msg -> {
@@ -348,12 +332,59 @@ public class LaunchFragment extends Fragment {
 
   /** 仅在用户仍位于底部时跟随；滚动日志本身，不请求焦点或移动操作区。 */
   private void updateLog(String text) {
+    fullLog = text == null ? "" : text;
+    applyLogView();
+  }
+
+  private void applyLogView() {
     View root = getView();
     if (root == null || launchLog == null) return;
     LogScrollView scroll = root.findViewById(R.id.launch_log_scroll);
-    boolean follow = scroll.shouldFollowEnd();
-    launchLog.setText(text);
-    if (follow) scroll.followEndAfterLayout();
+    Button toggle = root.findViewById(R.id.launch_log_toggle);
+    String display = displayLog(fullLog);
+    if (logExpanded) {
+      launchLog.setMaxLines(Integer.MAX_VALUE);
+      launchLog.setEllipsize(null);
+      launchLog.setText(display);
+      if (scroll != null) {
+        ViewGroup.LayoutParams lp = scroll.getLayoutParams();
+        lp.height = dp(170);
+        scroll.setLayoutParams(lp);
+        if (scroll.shouldFollowEnd()) scroll.followEndAfterLayout();
+      }
+      if (toggle != null) toggle.setText(R.string.ui2_collapse_logs);
+    } else {
+      launchLog.setMaxLines(1);
+      launchLog.setEllipsize(android.text.TextUtils.TruncateAt.END);
+      launchLog.setText(lastLine(display));
+      if (scroll != null) {
+        ViewGroup.LayoutParams lp = scroll.getLayoutParams();
+        lp.height = dp(56);
+        scroll.setLayoutParams(lp);
+      }
+      if (toggle != null) toggle.setText(R.string.ui2_view_all_logs);
+    }
+  }
+
+  private String displayLog(String text) {
+    if (text == null || text.isEmpty()) return "";
+    return text.replace("进入对话", getString(R.string.ui2_enter_workspace));
+  }
+
+  private static String lastLine(String text) {
+    if (text == null || text.isEmpty()) return "";
+    int end = text.length();
+    while (end > 0) {
+      char c = text.charAt(end - 1);
+      if (c != '\n' && c != '\r') break;
+      end--;
+    }
+    int start = text.lastIndexOf('\n', end - 1);
+    return text.substring(start + 1, end);
+  }
+
+  private int dp(int value) {
+    return Math.round(value * getResources().getDisplayMetrics().density);
   }
 
   @Override
@@ -407,13 +438,8 @@ public class LaunchFragment extends Fragment {
           controller.startupDiagnostics().snapshot();
       String localUrl = webEntryUrl();
       if (launchLog != null && (trace.revision != logRevision || !localUrl.equals(logUrl))) {
-        // 仅原生本机视图显示当前鉴权地址；归档与导出的诊断仍统一脱敏。
         updateLog(
-            (trace.log.isEmpty() ? com.deepseekharness.app.util.UiText.text("还没有日志。") : trace.log)
-                + (localUrl.isEmpty()
-                    ? ""
-                    : com.deepseekharness.app.util.UiText.format(
-                        "\n\n本机 Web 地址（可长按复制）：\n%s", localUrl)));
+            trace.log.isEmpty() ? com.deepseekharness.app.util.UiText.text("还没有日志。") : trace.log);
         logRevision = trace.revision;
         logUrl = localUrl;
       }
@@ -427,22 +453,43 @@ public class LaunchFragment extends Fragment {
                       : starting
                           ? com.deepseekharness.app.util.UiText.text("DSH 启动中…")
                           : ready
-                              ? (trace.safe
-                                      ? com.deepseekharness.app.util.UiText.text("基础界面已就绪 · 安全模式")
-                                      : com.deepseekharness.app.util.UiText.text("DSH 已就绪，可进入"))
-                                  + (controller.isWebCompatibilityFallback()
-                                      ? com.deepseekharness.app.util.UiText.text(" · 已兼容切换 proot")
-                                      : "")
-                              : controller.isUserStopped()
-                                  ? getString(R.string.ui2_stopped)
-                                  : getString(R.string.ui2_stopped));
+                              ? getString(R.string.ui2_ready)
+                              : getString(R.string.ui2_stopped));
+      TextView compat = root.findViewById(R.id.launch_compat);
+      if (compat != null) {
+        if (ready && controller.isWebCompatibilityFallback()) {
+          compat.setText(R.string.ui2_proot_compat);
+          compat.setVisibility(View.VISIBLE);
+        } else if (ready && trace.safe) {
+          compat.setText(R.string.ui2_safe_mode);
+          compat.setVisibility(View.VISIBLE);
+        } else {
+          compat.setVisibility(View.GONE);
+        }
+      }
+      TextView dot = root.findViewById(R.id.launch_run_dot);
+      if (dot != null) {
+        if (ready) {
+          dot.setBackgroundResource(R.drawable.bg_ok_chip);
+          dot.setTextColor(color(R.color.ok));
+          dot.setText("✓");
+        } else if (starting || stopping || enteringWeb) {
+          dot.setBackgroundResource(R.drawable.bg_warn_chip);
+          dot.setTextColor(color(R.color.warn));
+          dot.setText(R.string.ui_status_dot);
+        } else {
+          dot.setBackgroundResource(R.drawable.bg_icon_tile);
+          dot.setTextColor(color(R.color.text_muted));
+          dot.setText(R.string.ui_status_dot);
+        }
+      }
       ((TextView) root.findViewById(R.id.launch_port))
           .setText(ready ? String.valueOf(controller.getWebPort()) : "—");
       ((TextView) root.findViewById(R.id.launch_environment))
           .setText(EnvironmentUiStatus.get(requireContext()).ready ? "READY" : "—");
       ((TextView) root.findViewById(R.id.launch_subtitle))
           .setText(
-              ready
+              ready || starting
                   ? (controller.isWebCompatibilityFallback()
                           ? "proot"
                           : controller.proot().runtime().id())
@@ -470,7 +517,7 @@ public class LaunchFragment extends Fragment {
       Button recovery = root.findViewById(R.id.launch_recovery);
       int failures = controller.config().getWebFailures();
       recovery.setVisibility(View.VISIBLE);
-      recovery.setText(com.deepseekharness.app.util.UiText.text("恢复选项"));
+      recovery.setText(R.string.ui3_launch_recovery);
       recovery.setContentDescription(
           !trace.issues.isEmpty()
               ? com.deepseekharness.app.util.UiText.format(
@@ -483,8 +530,8 @@ public class LaunchFragment extends Fragment {
             enteringWeb
                 ? com.deepseekharness.app.util.UiText.text("进入中…")
                 : ready
-                    ? com.deepseekharness.app.util.UiText.choose("▶  进入工作台", "▶  Open workspace")
-                    : getString(R.string.ui2_start));
+                    ? getString(R.string.ui2_enter_workspace)
+                    : getString(R.string.ui2_start_action));
         start.setEnabled(!enteringWeb && !starting && !stopping);
       }
       Button restart = root.findViewById(R.id.launch_open);
@@ -597,36 +644,99 @@ public class LaunchFragment extends Fragment {
         .start();
   }
 
-  /** LAN 地址默认只展示服务地址；用户点按后查看并复制本轮连接凭据。 */
+  /** 本机 / 局域网地址卡：lan_addr 仅保留 id，真实状态写到可见行。 */
   private void refreshLanAddr() {
-    if (lanAddrText == null || !isAdded()) return;
-    boolean lan =
-        requireContext()
-            .getSharedPreferences(Constants.PREFS, Context.MODE_PRIVATE)
-            .getBoolean(Constants.KEY_LAN_MODE, false);
+    View root = getView();
+    if (root == null || !isAdded()) return;
+    if (lanAddrText != null) lanAddrText.setVisibility(View.GONE);
+
+    int port = controller.getWebPort();
+    String authUrl = webEntryUrl();
+    boolean authed = port > 0 && !authUrl.isEmpty();
+    TextView local = root.findViewById(R.id.launch_local_value);
+    if (local != null)
+      local.setText(
+          authed
+              ? com.deepseekharness.app.util.AddressMask.mask(authUrl)
+              : port > 0
+                  ? com.deepseekharness.app.util.UiText.format(
+                      "127.0.0.1:%s · %s",
+                      String.valueOf(port),
+                      com.deepseekharness.app.util.UiText.choose("等待鉴权", "Waiting for auth"))
+                  : getString(R.string.ui_status_unavailable));
+    View copyLocal = root.findViewById(R.id.launch_copy_local);
+    // 只有拿到本轮官方鉴权链接后才允许复制；复制的是带 token 的完整链接。
+    if (copyLocal != null) {
+      copyLocal.setEnabled(authed);
+      copyLocal.setAlpha(authed ? 1f : 0.4f);
+    }
+
+    TextView lanLabel = root.findViewById(R.id.launch_lan_label);
+    if (lanLabel != null)
+      lanLabel.setText(getString(R.string.ui2_lan) + " · " + getString(R.string.ui2_lan_hint));
+    TextView lanValue = root.findViewById(R.id.launch_lan_value);
+    View copyLan = root.findViewById(R.id.launch_copy_lan);
+    boolean lan = controller.config().isLanMode();
     if (!lan) {
-      lanAddrText.setVisibility(View.GONE);
+      if (lanValue != null) {
+        lanValue.setText(R.string.ui2_lan_off);
+        lanValue.setOnClickListener(null);
+      }
+      if (copyLan != null) copyLan.setVisibility(View.GONE);
       return;
     }
-    boolean bound = LanProxyService.isBound();
-    if (bound) {
+    if (LanProxyService.isBound()) {
       String ip = HarnessController.getLanAddress();
       if (ip != null && !ip.isEmpty()) {
         final String service = "http://" + ip + ":" + LanProxyService.LAN_PORT + "/";
-        lanAddrText.setText(
-            com.deepseekharness.app.util.UiText.format(
-                "局域网地址：%s\n点按查看或复制连接链接；流量未加密，请只在可信网络使用。", service));
-        lanAddrText.setOnClickListener(v -> showLanAddress(service));
+        if (lanValue != null) {
+          lanValue.setText(
+              com.deepseekharness.app.util.AddressMask.mask(
+                  service + "?token=" + LanProxyService.getLanToken(requireContext())));
+          lanValue.setOnClickListener(v -> showLanAddress(service));
+        }
+        if (copyLan != null) copyLan.setVisibility(View.VISIBLE);
       } else {
-        lanAddrText.setText(
-            com.deepseekharness.app.util.UiText.text("局域网已开启，但还没拿到 WiFi 地址（连上 WiFi 再看）"));
-        lanAddrText.setOnClickListener(null);
+        if (lanValue != null) {
+          lanValue.setText(
+              com.deepseekharness.app.util.UiText.text("局域网已开启，但还没拿到 WiFi 地址（连上 WiFi 再看）"));
+          lanValue.setOnClickListener(null);
+        }
+        if (copyLan != null) copyLan.setVisibility(View.GONE);
       }
     } else {
-      lanAddrText.setText(com.deepseekharness.app.util.UiText.text("局域网代理正在等待本轮认证"));
-      lanAddrText.setOnClickListener(null);
+      if (lanValue != null) {
+        lanValue.setText(com.deepseekharness.app.util.UiText.text("局域网代理正在等待本轮认证"));
+        lanValue.setOnClickListener(null);
+      }
+      if (copyLan != null) copyLan.setVisibility(View.GONE);
     }
-    lanAddrText.setVisibility(View.VISIBLE);
+  }
+
+  /** 复制本轮官方鉴权链接（含 token）；未鉴权时不复制裸地址，避免得到打不开的链接。 */
+  private void copyLocalAddress() {
+    String url = webEntryUrl();
+    if (controller.getWebPort() <= 0 || url.isEmpty()) return;
+    copyAddr(getString(R.string.ui2_copy_local), url);
+  }
+
+  /** 局域网与对话框「复制连接链接」一致：带 LAN token，3081 代理按 token 鉴权后换成 cookie。 */
+  private void copyLanAddress() {
+    if (!controller.config().isLanMode() || !LanProxyService.isBound()) return;
+    String ip = HarnessController.getLanAddress();
+    if (ip == null || ip.isEmpty()) return;
+    copyAddr(
+        getString(R.string.ui2_copy_lan),
+        "http://"
+            + ip
+            + ":"
+            + LanProxyService.LAN_PORT
+            + "/?token="
+            + LanProxyService.getLanToken(requireContext()));
+  }
+
+  private int color(int id) {
+    return requireContext().getColor(id);
   }
 
   private void showLanAddress(String service) {

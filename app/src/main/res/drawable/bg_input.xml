@@ -4,7 +4,7 @@
 
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/card" />
+            <solid android:color="@color/raised" />
             <corners android:radius="@dimen/radius_control" />
             <stroke
                 android:width="2dp"
@@ -14,11 +14,8 @@
 
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/card" />
+            <solid android:color="@color/raised" />
             <corners android:radius="@dimen/radius_control" />
-            <stroke
-                android:width="@dimen/stroke"
-                android:color="@color/line" />
         </shape>
     </item>
 </selector>

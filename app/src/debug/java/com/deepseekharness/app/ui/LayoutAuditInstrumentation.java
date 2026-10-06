@@ -186,18 +186,13 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
     if (view instanceof android.widget.CompoundButton || view instanceof EditText) return false;
     if (view instanceof android.widget.Button) return true;
     int id = view.getId();
-    return id == R.id.settings_language
-        || id == R.id.config_overlay_style
+    return id == R.id.config_overlay_style
         || id == R.id.config_workspace_entry
         || id == R.id.environment_recovery_banner
-        || id == R.id.pty_title
         || id == R.id.btnMarket
         || id == R.id.btnInstalled
         || id == R.id.btnRefresh
-        || id == R.id.btnPluginPaste
         || id == R.id.btnPluginInstall
-        || id == R.id.btnImport
-        || id == R.id.btnExport
         || id == R.id.pluginActions
         || id == R.id.pty_font_dec
         || id == R.id.pty_font_inc
@@ -333,27 +328,32 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
             ((ViewGroup) MainActivity.active().findViewById(R.id.settings_tabs))
                 .getChildAt(1)
                 .performClick());
-    until(() -> MainActivity.active().findViewById(R.id.config_save) != null, "配置页未打开");
+    until(() -> MainActivity.active().findViewById(R.id.net_save) != null, "网络与端口页未打开");
     require(
         ((TextView) MainActivity.active().findViewById(R.id.app_title))
             .getText()
             .toString()
-            .equals(com.deepseekharness.app.util.UiText.text("配置")),
+            .equals(com.deepseekharness.app.util.UiText.choose("网络与端口", "Network and ports")),
         "子页标题错误");
     require(
         MainActivity.active().findViewById(R.id.sub_back).getVisibility() == View.VISIBLE,
         "返回入口缺失");
-    ui(() -> ((EditText) MainActivity.active().findViewById(R.id.config_port)).setText("39081"));
+    ui(() -> ((EditText) MainActivity.active().findViewById(R.id.net_port)).setText("39081"));
     MainActivity before = MainActivity.active();
-    ui(() -> before.findViewById(R.id.btn_theme).performClick());
+    ui(
+        () ->
+            ThemeTransition.select(
+                before,
+                before.findViewById(R.id.btn_theme),
+                ThemeController.isDark(before) ? "light" : "dark"));
     until(
         () ->
             MainActivity.active() != null
                 && MainActivity.active() != before
-                && MainActivity.active().findViewById(R.id.config_save) != null,
+                && MainActivity.active().findViewById(R.id.net_save) != null,
         "主题切换丢失子页");
     require(
-        ((EditText) MainActivity.active().findViewById(R.id.config_port))
+        ((EditText) MainActivity.active().findViewById(R.id.net_port))
             .getText()
             .toString()
             .equals("39081"),

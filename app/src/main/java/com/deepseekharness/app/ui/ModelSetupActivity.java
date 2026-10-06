@@ -81,6 +81,7 @@ public final class ModelSetupActivity extends AppCompatActivity {
     status = page.text("", 12, R.color.text_secondary);
     status.setPadding(0, 0, 0, page.dp(14));
     page.content.addView(status);
+    addLocalKeyCard();
     body = page.column();
     page.content.addView(body);
     page.footer.setVisibility(View.GONE);
@@ -126,6 +127,183 @@ public final class ModelSetupActivity extends AppCompatActivity {
       page.button(body, t("重新连接", "Reconnect"), false, repository::load);
       repository.load();
     }
+  }
+
+  private void toast(String text) {
+    Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+  }
+
+  /** 本机 API Key 卡：凭据读取、重试、移除与保存逻辑自原配置页搬入。 */
+  private void addLocalKeyCard() {
+    final com.deepseekharness.app.core.ConfigStore c =
+        new com.deepseekharness.app.core.ConfigStore(this);
+    final java.util.concurrent.atomic.AtomicReference<com.deepseekharness.app.util.CredentialRead>
+        credential = new java.util.concurrent.atomic.AtomicReference<>(c.readApiKey());
+    LinearLayout card = page.column();
+    card.setPadding(page.dp(16), page.dp(14), page.dp(16), page.dp(14));
+    card.setBackgroundResource(R.drawable.bg_card);
+    LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(-1, -2);
+    cardParams.bottomMargin = page.dp(12);
+    page.content.addView(card, cardParams);
+    TextView heading = page.text(t("本机 API Key", "Local API key"), 16, R.color.text);
+    heading.setTypeface(null, android.graphics.Typeface.BOLD);
+    heading.setPadding(0, 0, 0, page.dp(8));
+    card.addView(heading);
+    final EditText apiKey =
+        field(card, getString(R.string.ui_api_key_replacement_label), "", "", true);
+    TextView hint = page.text(getString(R.string.ui2_legacy_hint), 11, R.color.text_muted);
+    hint.setPadding(0, page.dp(6), 0, 0);
+    card.addView(hint);
+    final TextView credentialState = page.text("", 12, R.color.text_secondary);
+    credentialState.setPadding(0, page.dp(8), 0, 0);
+    credentialState.setVisibility(View.GONE);
+    card.addView(credentialState);
+    final Runnable[] render = new Runnable[1];
+    final Button retryCredential =
+        page.button(
+            card,
+            UiText.text("重试读取 API Key"),
+            false,
+            () -> {
+              credential.set(c.readApiKey());
+              render[0].run();
+            });
+    final Button removeCredential =
+        page.button(
+            card,
+            UiText.choose("移除本机 API Key 记录", "Remove the saved API key"),
+            false,
+            () ->
+                new DshaDialogBuilder(this)
+                    .setTitle(UiText.choose("移除本机 API Key 记录？", "Remove the saved API key?"))
+                    .setMessage(UiText.text("仅移除本机保存的 API Key 记录，不删除对话或配置文件。继续使用相关接口时需要重新提供凭据。"))
+                    .setNegativeButton(UiText.text("取消"), null)
+                    .setPositiveButton(
+                        UiText.text("移除"),
+                        (dialog, which) -> {
+                          var lease =
+                              com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire(
+                                  UiText.text("保存配置"));
+                          if (lease == null) {
+                            toast(UiText.text("有其他操作正在进行，请稍后重试。"));
+                            return;
+                          }
+                          try {
+                            lease.run(
+                                () -> {
+                                  var current = c.readApiKey();
+                                  var shown = credential.get();
+                                  if (current.state != shown.state
+                                      || current.state
+                                              == com.deepseekharness.app.util.CredentialRead.State
+                                                  .AVAILABLE
+                                          && !current.requireValue().equals(shown.requireValue())) {
+                                    credential.set(current);
+                                    render[0].run();
+                                    toast(
+                                        UiText.choose(
+                                            "凭据已变化，请重新确认。",
+                                            "The credential changed. Confirm again."));
+                                    return null;
+                                  }
+                                  if (c.saveApiKey("")) {
+                                    credential.set(c.readApiKey());
+                                    apiKey.setText("");
+                                    render[0].run();
+                                  } else toast(UiText.text("凭据记录未能保存，原记录已保留。"));
+                                  return null;
+                                });
+                          } catch (Exception failure) {
+                            toast(UiText.text("凭据记录未能保存，原记录已保留。"));
+                          } finally {
+                            lease.close();
+                          }
+                        })
+                    .show());
+    final Button saveKey =
+        page.button(
+            card,
+            UiText.choose("保存密钥", "Save key"),
+            true,
+            () -> {
+              apiKey.setError(null);
+              com.deepseekharness.app.util.EnvironmentTaskGate.Lease saving =
+                  com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire(UiText.text("保存配置"));
+              if (saving == null) {
+                toast(
+                    UiText.format(
+                        "正在%s，完成后再保存配置",
+                        com.deepseekharness.app.util.EnvironmentTaskGate.activeKind()));
+                return;
+              }
+              try {
+                saving.run(
+                    () -> {
+                      String entered = apiKey.getText().toString().trim();
+                      boolean keepKey = entered.isEmpty();
+                      if (!keepKey && !c.saveApiKey(entered)) {
+                        apiKey.setError(UiText.text("密钥加密保存失败，原配置已保留，请重试"));
+                        return null;
+                      }
+                      credential.set(c.readApiKey());
+                      if (!keepKey
+                          && (credential.get().state
+                                  != com.deepseekharness.app.util.CredentialRead.State.AVAILABLE
+                              || !entered.equals(credential.get().requireValue()))) {
+                        apiKey.setError(
+                            UiText.choose("密钥保存后读取未通过，请重试。", "API key readback failed. Retry."));
+                        render[0].run();
+                        return null;
+                      }
+                      if (!keepKey) {
+                        apiKey.setText("");
+                        toast(UiText.choose("API Key 已保存", "API key saved"));
+                      }
+                      render[0].run();
+                      return null;
+                    });
+              } catch (Exception e) {
+                toast(
+                    UiText.format(
+                        "配置保存未完成：%s",
+                        com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(e))));
+              } finally {
+                saving.close();
+              }
+            });
+    render[0] =
+        () -> {
+          boolean failed = !credential.get().usable();
+          credentialState.setVisibility(View.VISIBLE);
+          credentialState.setText(
+              failed
+                  ? com.deepseekharness.app.core.ConfigStore.credentialMessage(credential.get())
+                  : credential.get().state
+                          == com.deepseekharness.app.util.CredentialRead.State.AVAILABLE
+                      ? UiText.choose(
+                          "API Key 已保存；输入新密钥可替换，留空保持原记录。",
+                          "An API key is saved. Enter a new key to replace it; leave blank to keep it.")
+                      : UiText.choose(
+                          "尚未保存 API Key；可在上方输入新密钥。",
+                          "No API key is saved. Enter a new key above."));
+          retryCredential.setVisibility(failed ? View.VISIBLE : View.GONE);
+          removeCredential.setVisibility(
+              credential.get().state
+                      == com.deepseekharness.app.util.CredentialRead.State.NOT_CONFIGURED
+                  ? View.GONE
+                  : View.VISIBLE);
+        };
+    render[0].run();
+    apiKey.addTextChangedListener(
+        new android.text.TextWatcher() {
+          public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+            saveKey.setEnabled(s.length() <= 16384);
+          }
+
+          public void afterTextChanged(android.text.Editable text) {}
+        });
   }
 
   private void leave() {

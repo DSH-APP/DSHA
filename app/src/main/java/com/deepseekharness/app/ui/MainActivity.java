@@ -3,6 +3,7 @@ package com.deepseekharness.app.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -174,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
               args.putBoolean(LaunchFragment.ARG_OPEN_WEB, true);
               f.setArguments(args);
             }
-            title.setText(R.string.app_name);
+            title.setText(R.string.ui_m0005);
           } else if (id == R.id.nav_plugins) {
             f =
                 com.deepseekharness.app.core.EnvironmentAccess.needsRecovery(controller)
@@ -186,10 +187,10 @@ public class MainActivity extends AppCompatActivity {
               f.setArguments(args);
               getIntent().removeExtra("open_plugins");
             }
-            title.setText(R.string.app_name);
+            title.setText(R.string.ui_m0016);
           } else if (id == R.id.nav_settings) {
             f = new SettingsFragment();
-            title.setText(R.string.app_name);
+            title.setText(R.string.ui_m0023);
           } else {
             // 终端：默认挂真 PTY 页（vim/htop/tmux 能跑），可在 PTY 页切回简易版
             f =
@@ -198,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                     : PtyTerminalFragment.preferred(this)
                         ? new PtyTerminalFragment()
                         : new TerminalFragment();
-            title.setText(R.string.app_name);
+            title.setText(R.string.ui_m0021);
           }
           UiMotion.page(this, getSupportFragmentManager().beginTransaction())
               .replace(R.id.fragment_container, f)
@@ -218,6 +219,7 @@ public class MainActivity extends AppCompatActivity {
     startupUpdates = com.deepseekharness.app.core.UpdateEngine.get(this);
     startupUpdates.state().observe(this, state -> showStartupUpdate());
     startupUpdates.checkOnStartup(config.isCheckUpdate());
+    ThemeTransition.playIfPending(this);
   }
 
   private void showStartupUpdate() {
@@ -300,7 +302,9 @@ public class MainActivity extends AppCompatActivity {
 
   private void renderThemeButton() {
     TextView theme = findViewById(R.id.btn_theme);
-    String preference = ThemeController.preference(this);
+    if (theme == null) return;
+    String preference =
+        com.deepseekharness.app.util.UiThemePreference.normalize(ThemeController.preference(this));
     boolean system = com.deepseekharness.app.util.UiThemePreference.SYSTEM.equals(preference);
     boolean light = com.deepseekharness.app.util.UiThemePreference.LIGHT.equals(preference);
     theme.setText("");
@@ -310,38 +314,49 @@ public class MainActivity extends AppCompatActivity {
         0,
         0);
     theme.setContentDescription(
-        com.deepseekharness.app.util.UiText.text(
-            system
-                ? "当前跟随系统，点击切换白天；长按跟随系统"
-                : light ? "当前白天模式，点击切换黑夜；长按跟随系统" : "当前黑夜模式，点击切换跟随系统；长按跟随系统"));
-    theme.setOnClickListener(
-        v -> {
-          ThemeController.cycle(this);
-          renderThemeButton();
-          showThemePreference();
-        });
-    theme.setOnLongClickListener(
-        v -> {
-          ThemeController.followSystem(this);
-          renderThemeButton();
-          showThemePreference();
-          return true;
-        });
+        com.deepseekharness.app.util.UiText.format(
+            com.deepseekharness.app.util.UiText.choose("外观：%s", "Appearance: %s"),
+            themeLabel(preference)));
+    theme.setOnLongClickListener(null);
+    theme.setLongClickable(false);
+    theme.setOnClickListener(v -> showThemeMenu(v));
   }
 
-  private void showThemePreference() {
-    String preference = ThemeController.preference(this);
-    String message =
-        com.deepseekharness.app.util.UiThemePreference.SYSTEM.equals(preference)
-            ? "已跟随系统主题"
-            : com.deepseekharness.app.util.UiThemePreference.LIGHT.equals(preference)
-                ? "已切换白天模式"
-                : "已切换黑夜模式";
-    android.widget.Toast.makeText(
-            this,
-            com.deepseekharness.app.util.UiText.text(message),
-            android.widget.Toast.LENGTH_SHORT)
-        .show();
+  private static String themeLabel(String preference) {
+    return com.deepseekharness.app.util.UiThemePreference.LIGHT.equals(preference)
+        ? com.deepseekharness.app.util.UiText.choose("浅色", "Light")
+        : com.deepseekharness.app.util.UiThemePreference.DARK.equals(preference)
+            ? com.deepseekharness.app.util.UiText.choose("深色", "Dark")
+            : com.deepseekharness.app.util.UiText.choose("跟随系统", "Follow system");
+  }
+
+  /** 顶栏外观菜单：浅色 / 深色 / 跟随系统，当前项打勾。 */
+  private void showThemeMenu(View anchor) {
+    String current =
+        com.deepseekharness.app.util.UiThemePreference.normalize(ThemeController.preference(this));
+    String[] modes = {
+      com.deepseekharness.app.util.UiThemePreference.LIGHT,
+      com.deepseekharness.app.util.UiThemePreference.DARK,
+      com.deepseekharness.app.util.UiThemePreference.SYSTEM
+    };
+    androidx.appcompat.widget.PopupMenu menu =
+        new androidx.appcompat.widget.PopupMenu(this, anchor);
+    for (int i = 0; i < modes.length; i++) {
+      android.view.MenuItem item = menu.getMenu().add(0, i, i, themeLabel(modes[i]));
+      item.setCheckable(true);
+      item.setChecked(modes[i].equals(current));
+    }
+    menu.setOnMenuItemClickListener(
+        item -> {
+          int index = item.getItemId();
+          if (index < 0 || index >= modes.length) return false;
+          String mode = modes[index];
+          if (mode.equals(current)) return true;
+          ThemeTransition.select(this, anchor, mode);
+          renderThemeButton();
+          return true;
+        });
+    menu.show();
   }
 
   private void consumeTaskTarget(Intent intent) {
@@ -399,23 +414,27 @@ public class MainActivity extends AppCompatActivity {
     boolean nested = getSupportFragmentManager().getBackStackEntryCount() > 0;
     findViewById(R.id.sub_back)
         .setVisibility(nested ? android.view.View.VISIBLE : android.view.View.GONE);
-    findViewById(R.id.app_logo)
-        .setVisibility(nested ? android.view.View.GONE : android.view.View.VISIBLE);
+    findViewById(R.id.app_logo).setVisibility(android.view.View.GONE);
     if (shown instanceof AboutFragment)
       title.setText(com.deepseekharness.app.util.UiText.choose("关于 DSHA", "About DSHA"));
     else if (shown instanceof OverlayFragment)
       title.setText(com.deepseekharness.app.util.UiText.choose("悬浮条", "Floating status"));
+    else if (shown instanceof NetworkFragment)
+      title.setText(com.deepseekharness.app.util.UiText.choose("网络与端口", "Network and ports"));
+    else if (shown instanceof WebDisplayFragment)
+      title.setText(com.deepseekharness.app.util.UiText.choose("网页显示", "Web display"));
     else if (shown instanceof ConfigFragment) title.setText(R.string.ui2_runtime_config);
     else if (shown instanceof DeviceGrantsFragment)
       title.setText(com.deepseekharness.app.util.UiText.text("设备能力授权"));
     else if (shown instanceof WorkspaceFragment)
       title.setText(com.deepseekharness.app.util.UiText.text("数据与备份"));
     else if (shown instanceof InstallFragment) title.setText(R.string.ui2_environment_page);
-    else if (shown instanceof SettingsFragment) title.setText(R.string.app_name);
-    else if (shown instanceof PluginFragment) title.setText(R.string.app_name);
+    else if (shown instanceof SettingsFragment) title.setText(R.string.ui_m0023);
+    else if (shown instanceof PluginFragment) title.setText(R.string.ui_m0016);
     else if (shown instanceof TerminalFragment || shown instanceof PtyTerminalFragment)
-      title.setText(R.string.app_name);
-    else title.setText(R.string.app_name);
+      title.setText(R.string.ui_m0021);
+    else if (shown instanceof LaunchFragment) title.setText(R.string.ui_m0005);
+    else title.setText(R.string.ui_m0005);
   }
 
   @Override

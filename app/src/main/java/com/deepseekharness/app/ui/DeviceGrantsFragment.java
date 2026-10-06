@@ -70,14 +70,23 @@ public final class DeviceGrantsFragment extends Fragment {
                 startActivity(new Intent(requireContext(), AccessibilitySetupActivity.class)));
     android.widget.LinearLayout screenCard =
         (android.widget.LinearLayout) view.findViewById(R.id.computer_use_hint).getParent();
+    float density = ctx.getResources().getDisplayMetrics().density;
+    int touch = Math.round(48 * density);
+    int gap = Math.round(12 * density);
+    int columnGap = Math.round(8 * density);
+    int buttonPad = Math.round(8 * density);
     android.widget.Button revoke = new androidx.appcompat.widget.AppCompatButton(ctx);
     revoke.setText(
         com.deepseekharness.app.util.UiText.choose(
             "撤销本次读屏与操作授权", "Revoke screen access for this run"));
-    revoke.setTextSize(12);
+    revoke.setTextSize(13);
     revoke.setAllCaps(false);
-    revoke.setBackgroundResource(R.drawable.bg_btn);
-    screenCard.addView(revoke, new android.widget.LinearLayout.LayoutParams(-1, -2));
+    revoke.setMinHeight(touch);
+    revoke.setMinimumHeight(touch);
+    revoke.setPadding(buttonPad, buttonPad, buttonPad, buttonPad);
+    revoke.setGravity(android.view.Gravity.CENTER);
+    revoke.setTextColor(ctx.getColor(R.color.err));
+    revoke.setBackgroundResource(R.drawable.bg_action_plain);
     revoke.setOnClickListener(
         button -> {
           com.deepseekharness.app.HttpShellService.revokeScreenGrant(ctx);
@@ -89,14 +98,33 @@ public final class DeviceGrantsFragment extends Fragment {
     virtualScreen.setText(
         com.deepseekharness.app.util.UiText.choose("打开虚拟屏", "Open virtual screen"));
     virtualScreen.setAllCaps(false);
-    virtualScreen.setTextSize(12);
+    virtualScreen.setTextSize(13);
+    virtualScreen.setMinHeight(touch);
+    virtualScreen.setMinimumHeight(touch);
+    virtualScreen.setPadding(buttonPad, buttonPad, buttonPad, buttonPad);
+    virtualScreen.setGravity(android.view.Gravity.CENTER);
+    virtualScreen.setTextColor(ctx.getColor(R.color.text));
     virtualScreen.setBackgroundResource(R.drawable.bg_btn);
     virtualScreen.setOnClickListener(
         button ->
             startActivity(
                 new Intent(ctx, com.deepseekharness.app.vscreen.VirtualScreenActivity.class)));
-    if (com.deepseekharness.app.vscreen.VirtualScreenManager.supported(ctx))
-      screenCard.addView(virtualScreen, new android.widget.LinearLayout.LayoutParams(-1, -2));
+    // 「打开虚拟屏」与「撤销授权」并排两列（权重 1:1，间距 8dp）；不支持虚拟屏时撤销按钮独占整行。
+    android.widget.LinearLayout actionRow = new android.widget.LinearLayout(ctx);
+    actionRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+    actionRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+    boolean hasVirtualScreen = com.deepseekharness.app.vscreen.VirtualScreenManager.supported(ctx);
+    if (hasVirtualScreen) {
+      android.widget.LinearLayout.LayoutParams virtualParams =
+          new android.widget.LinearLayout.LayoutParams(0, -2, 1f);
+      virtualParams.setMarginEnd(columnGap);
+      actionRow.addView(virtualScreen, virtualParams);
+    }
+    actionRow.addView(revoke, new android.widget.LinearLayout.LayoutParams(0, -2, 1f));
+    android.widget.LinearLayout.LayoutParams rowParams =
+        new android.widget.LinearLayout.LayoutParams(-1, -2);
+    rowParams.topMargin = gap;
+    screenCard.addView(actionRow, rowParams);
 
     CompoundButton root = view.findViewById(R.id.config_root_shell);
     root.setChecked(RootShell.enabled(ctx));
