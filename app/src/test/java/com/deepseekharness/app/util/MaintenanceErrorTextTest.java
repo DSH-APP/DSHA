@@ -23,4 +23,17 @@ public class MaintenanceErrorTextTest {
     assertTrue(text.contains("优雅退出") || text.contains("gracefully"));
     assertTrue(text.contains("原环境") || text.contains("original environment"));
   }
+
+  @Test
+  public void longUnpackLogKeepsFailureAndDropsNoise() {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < 80; i++) sb.append("Unpacking lib").append(i).append(" ...\n");
+    sb.append("ldconfig.real: Renaming of /etc/ld.so.cache~ failed: Read-only file system\n");
+    sb.append("dpkg: error processing package libc-bin (--unpack)\n");
+    String out = MaintenanceErrorText.render(sb.toString());
+    assertTrue(out.contains("Read-only file system"));
+    assertTrue(out.contains("error processing package libc-bin"));
+    assertFalse(out.contains("Unpacking lib40"));
+    assertTrue(out.length() < sb.length() / 2);
+  }
 }

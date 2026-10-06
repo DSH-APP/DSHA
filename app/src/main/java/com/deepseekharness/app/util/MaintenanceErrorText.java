@@ -14,7 +14,11 @@ public final class MaintenanceErrorText {
           "当前步骤被系统拒绝访问，尚不能判断是文件权限还是进程核验失败。请保持 DSHA 在前台，先点“恢复中断维护”重试；应用会保留原件，不会把失败显示成已恢复。\nPermission denied",
           "The system denied access during this step. Keep DSHA in the foreground and retry Recover interrupted maintenance; originals stay protected and a failed recovery is never shown as complete.\nPermission denied");
     String code = value.matches("[A-Z_0-9]{2,100}") ? value : "";
-    if (code.isEmpty()) return UiStateText.render(value);
+    if (code.isEmpty()) {
+      String rendered = UiStateText.render(value);
+      // 未登记的正文可能是整段 dpkg/apt 输出；界面只留头尾和失败行。
+      return rendered.length() > 800 ? LogCompactor.compactReason(rendered, 1200) : rendered;
+    }
     String message =
         switch (code) {
           case "RUNTIME_RETENTION_LIMIT",
