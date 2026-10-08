@@ -21,9 +21,19 @@ public class BuiltinPluginsTest {
   }
 
   @Test
+  public void destructiveGuardIsApkOwnedAndNotUserSwitchable() {
+    // 删除确认守卫是硬约束：随包提供、不进用户可见名单、也不允许被用户停用。
+    assertTrue(BuiltinPlugins.internal("dsh-destructive-guard"));
+    assertTrue(BuiltinPlugins.system("dsh-destructive-guard"));
+    assertFalse(BuiltinPlugins.DEFAULT_BUILTINS.contains("dsh-destructive-guard"));
+    assertEquals("/root/dsha-destructive-guard", BuiltinPlugins.entityDir("dsh-destructive-guard"));
+  }
+
+  @Test
   public void signedSystemSetAlwaysProtectsEveryApkPlugin() {
     for (String name : BuiltinPlugins.DEFAULT_BUILTINS) assertTrue(BuiltinPlugins.system(name));
     assertTrue(BuiltinPlugins.system("dsh-app-integration"));
+    assertTrue(BuiltinPlugins.system("dsh-destructive-guard"));
     assertTrue(BuiltinPlugins.system("@deepseek-ai/dsh-base"));
     assertTrue(BuiltinPlugins.system("@deepseek-ai/dsh-web-app"));
     assertFalse(BuiltinPlugins.system("user-plugin"));

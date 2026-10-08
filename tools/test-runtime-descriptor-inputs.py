@@ -24,10 +24,13 @@ reads.discard('runtime-descriptor.json')
 if reads - identified:
     raise SystemExit('实际补丁资产未进入运行时身份: ' + ','.join(sorted(reads - identified)))
 builtin_registry = json.loads((ROOT / 'app/src/main/assets/builtin-plugins.json').read_text(encoding='utf8'))
-builtin_names = {row['name'] for row in builtin_registry['plugins'] if not row.get('internal')}
+# 每个签名内置插件的源码树都要进安装表。历史遗留的 app-integration 是唯一的
+# 例外（它用 assets/app-integration/ 而不是 assets/builtin-plugins/<name>/）；
+# 其余插件——包括 APK 独占的删除确认守卫——都必须在 builtin-plugins/<name>/ 下。
+tree_names = {row['name'] for row in builtin_registry['plugins'] if row['name'] != 'dsh-app-integration'}
 installed_names = {row['asset'].split('/')[1] for row in spec['installs'] if row['asset'].startswith('builtin-plugins/')}
-if builtin_names != installed_names:
-    raise SystemExit('签名内置插件声明与安装表不同')
+if tree_names != installed_names:
+    raise SystemExit('签名内置插件声明与安装表不同: ' + ','.join(sorted(tree_names ^ installed_names)))
 for row in spec['installs']:
     if row['asset'].startswith('builtin-plugins/'):
         _, name, suffix = row['asset'].split('/', 2)

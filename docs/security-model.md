@@ -23,6 +23,25 @@
 
 插件可以在应用 UID 下读写可访问文件并执行代码。自动安装不是独立安全认证。受管系统组件与用户插件分层；系统组件从当前签名 APK 重建，用户修改和个人依赖不得被当作缓存清掉。
 
+### 容器内破坏性命令确认（dsh-destructive-guard）
+
+随包插件 `dsh-destructive-guard` 在 DSH 宿主里注册 `tools/pre-execute` 闸门，识别 bash 命令中的删除/覆盖动作（`rm`、`rmdir`、`unlink`、`shred`、`truncate`、`dd`、`find -delete`/`-exec`、`git clean -f` 等）后要求用户确认，并在确认面板里给出解析后的目标路径与数量。它同时把审批策略固定为 `ask`（`DSH_PERMISSION_MODE=danger-full-access` 原本推导出 `never`，而 `ApprovalService` 在 `never` 下连弹窗都不走），因此：
+
+| 状态 | 后果 |
+|---|---|
+| 审批策略 `ask` 且有应答通道 | 弹出确认，用户"仅本次允许"才执行 |
+| 审批策略 `never`（例如用户显式选 `danger-full-access` 档位） | 守卫**硬拒绝**，不是放行 |
+| 审批服务缺失 / 应答通道不可用 / 用户拒绝 | 拒绝 |
+
+已知边界，不得据此夸大为"任意删除都拦得住"：
+
+- 识别只覆盖 bash 命令文本。用其它解释器删文件（`python3 -c 'shutil.rmtree'`、`node -e 'fs.rmSync'`、`perl`/`ruby`）、`sed -i`、`tar`/`unzip -o`/`install`/`curl -o` 的覆盖写、`git push --force` 都不在覆盖内；`trash` 这类可恢复操作按非破坏处理。
+- 命令文本来自管道或 here-doc 时不解析数据流（`echo 'rm -rf /' | bash`、`bash <<EOF`、`eval "$(cat x)"` 会漏），正文里的删除只能靠"数量未知"提示暴露意图。
+- 变量只解一层字面量赋值；`CMD='rm -rf x'; $CMD` 这类整条命令存进变量的写法漏。
+- 正式终端、`run_code`/cordis 动态插件、MCP 工具与直接写文件的工具不走这条闸门；`safe`（安全模式）启动用的是另一份只含官方基础界面的 profile，本守卫不加载。
+- 守卫插件本身在容器内，同 UID 的任意代码能改 `/root/.dsh/profiles/web/**`。`.disabled` 标记与 `bundles` 缺失由每次启动的注册流程强制恢复（APK 独占插件不允许停用），但**在 profile 的用户 patch 层里把自己的插件行置 `disabled: true` 仍然有效**；要补这一段需要宿主侧在启动后核验实际加载的插件集合（`/root/.dsha-web-activity.json` 已逐会话上报插件状态），本轮未做。
+
+
 ## 设备与浏览器能力
 
 Root、Shizuku、ADB 在发送前选择实际通道；设备命令由原生与特权执行侧策略检查。短信、虚拟屏、截图/读屏、录音和存储仍依赖对应原生授权与 Android 实际权限；未知命令的确认不能替代设备身份核验。结果未知时不得换通道重放。
