@@ -63,6 +63,8 @@ public final class WebUploads {
         ensureOwnedDirectory(root, root.getParentFile());
         batchDirectory = new File(root, UUID.randomUUID().toString());
         ensureOwnedDirectory(batchDirectory, root);
+        // 暂存与 Ubuntu rootfs、宿主附件同卷；上限只由可用空间决定，先记下起点再逐块核对。
+        long usableAtStart = batchDirectory.getUsableSpace();
         ArrayList<File> files = new ArrayList<>();
         long total = 0;
         for (Uri uri : uris) {
@@ -101,13 +103,22 @@ public final class WebUploads {
                 ensureNotInterrupted();
                 total += n;
                 if (total > WebTransferPolicy.UPLOAD_LIMIT)
-                  throw new IOException(com.deepseekharness.app.util.UiText.text("本次上传超过 256 MiB"));
+                  throw new IOException(
+                      com.deepseekharness.app.util.UiText.format(
+                          "本次上传超过 %s",
+                          android.text.format.Formatter.formatFileSize(
+                              context, WebTransferPolicy.UPLOAD_LIMIT)));
+                try {
+                  WebTransferPolicy.checkUploadSpace(total, usableAtStart);
+                } catch (IllegalArgumentException noSpace) {
+                  throw new IOException(noSpace.getMessage(), noSpace);
+                }
                 try {
                   budget.addBytes(reservation, n);
                 } catch (
                     com.deepseekharness.app.util.WebUploadSessionBudget.LimitExceededException
                         limit) {
-                  throw new IOException(sessionLimitMessage(limit.limit()), limit);
+                  throw new IOException(sessionLimitMessage(context, limit.limit()), limit);
                 } catch (
                     com.deepseekharness.app.util.WebUploadSessionBudget.SessionClosedException
                         cancelled) {
@@ -129,6 +140,7 @@ public final class WebUploads {
             instanceof com.deepseekharness.app.util.WebUploadSessionBudget.LimitExceededException)
           throw new IOException(
               sessionLimitMessage(
+                  context,
                   ((com.deepseekharness.app.util.WebUploadSessionBudget.LimitExceededException)
                           error)
                       .limit()),
@@ -151,8 +163,20 @@ public final class WebUploads {
       return budget.isClosed();
     }
 
-    private String sessionLimitMessage(String limit) {
-      return com.deepseekharness.app.util.UiText.text("浏览器会话上传缓存已达 512 MiB 或 40 个文件，请重新打开对话后再试");
+    /**
+     * 会话暂存上限文案：带上实际数值，改常数后提示不会再和真实行为对不上。
+     *
+     * @param limit 触发的是哪一条上限（{@code FILES} 或 {@code BYTES}）。
+     */
+    private String sessionLimitMessage(Context context, String limit) {
+      if ("FILES".equals(limit))
+        return com.deepseekharness.app.util.UiText.format(
+            "浏览器会话上传的文件数已达 %s 个，请重新打开对话后再试",
+            com.deepseekharness.app.util.WebUploadSessionBudget.MAX_SESSION_FILES);
+      return com.deepseekharness.app.util.UiText.format(
+          "浏览器会话上传缓存已达 %s，请重新打开对话后再试",
+          android.text.format.Formatter.formatFileSize(
+              context, com.deepseekharness.app.util.WebUploadSessionBudget.MAX_SESSION_BYTES));
     }
 
     private void ensureOwnedDirectory(File directory, File parent) throws IOException {

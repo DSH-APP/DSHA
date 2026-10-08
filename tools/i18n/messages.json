@@ -4558,8 +4558,8 @@
   },
   {
     "id": "m0556",
-    "zh": "本次上传超过 256 MiB",
-    "en": "This upload exceeds 256 MiB",
+    "zh": "本次上传超过 %s",
+    "en": "This upload exceeds %s",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
     ]
@@ -30278,6 +30278,22 @@
     "en": "Enabled, waiting for the system to connect. Try toggling the service.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "upload-session-bytes",
+    "zh": "浏览器会话上传缓存已达 %s，请重新打开对话后再试",
+    "en": "The browser session upload cache has reached %s; reopen the conversation and try again",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
+    ]
+  },
+  {
+    "id": "upload-session-files",
+    "zh": "浏览器会话上传的文件数已达 %s 个，请重新打开对话后再试",
+    "en": "The browser session already holds %s uploaded files; reopen the conversation and try again",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
     ]
   }
 ]
