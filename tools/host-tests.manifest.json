@@ -1136,6 +1136,31 @@
       "cli": "no positional arguments; see explicit environment/requirements"
     },
     {
+      "path": "tools/test-startup-boot-progress.mjs",
+      "stage": "fast",
+      "reason": "Pure source fixture: real injected startup.js against a deterministic fake DOM/fake timers; no browser or device",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-frontend-static-cache.mjs",
+      "stage": "runtime",
+      "reason": "Applies the production patch recipe to the current raw frontend-static module and exercises real static serving; optional explicit module path, no device",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
       "path": "tools/test-startup-recovery.py",
       "stage": "history",
       "reason": "Retired Python startup engine regression only; current production uses native ConfigurationSnapshots; not current release evidence",

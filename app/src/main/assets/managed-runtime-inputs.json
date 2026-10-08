@@ -331,6 +331,7 @@
     "dsh-runtime.bin",
     "dsha-deepseek-messages-compat.js",
     "glibc-python.tar.gz",
+    "frontend-static-cache-patch.json",
     "language-patch.json",
     "lexical-claim-patch.json",
     "office-fonts-patch.json",
