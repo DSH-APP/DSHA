@@ -146,3 +146,77 @@ worktree：`/root/Documents/deepseek-harness/default-workspace/dsha-envfast`，�
 4. 「每次冷启动」回归：确认 `confirmHealth` 仍只跑一次、`runtime-health/<id>.json` 命中、
    589 链接仍走 HIT（`repair-builtin.log` 应打印"无需改动"）。
 5. 建议顺带测：rc1 迁移在**全新**环境下的真实耗时（现在测到 13 s 但无输入）。
+
+---
+
+# 追加：RC1 迁移「空输入花 13 秒」核查（回答用户）
+
+## ① 现在还有作用吗 —— 有
+`rc1-migration.py` 是 **pre-RC1 布局的数据保护快照**：把 `settings.yaml` / `settings.yaml.imported`、
+旧格式 `sessions/*`（`session.v3.json` 等）、`.agent-presets/*`、以及 profile 白名单文件
+（`package.json`/`compatibility.json`/`pnpm-lock.yaml`/`pnpm-workspace.yaml`/`cordis.patch.yml`）
+快照到隔离区并保留原件；`finalize` 再写回执。
+
+**真正会迁移的判定点**（两层门控）：
+1. 宿主层 `runtime/Rc1MigrationCache.java` + `util/Rc1MigrationReuse.matches(...)`：
+   比对 `current.json` / `prepare.json` / `receipt.json` + 数据根身份 + inputs，
+   命中则**完全不启动 python**（`GuestPluginScripts.migration()` 走
+   `BoundedProcessRunner.localCompletion(Rc1MigrationCache.output(...))`）。
+2. guest 层 `rc1-migration.py:prepare()`：
+   `state/current.json` 存在 且 `version==2` 且 `same_input(current, stamp)`
+   且 `generations/<gen>/prepare.json` 的 `protectionComplete == true`
+   → `emit('already')` 并 return 0，**跳过 `inventory()`**。
+
+未命中上面任一条 ⇒ 跑全量 `inventory()`（`rc1-migration.py:168-183`），
+**跳级升级的用户正是走这条路**：旧环境没有 receipt ⇒ 真做快照。
+
+隔离实验（`/tmp/rc1t`，未触碰真实环境）证明它确实干活：
+```
+pre-RC1 布局（settings.yaml + profiles/web/package.json + sessions/.../session.v3.json + .agent-presets/reviewer）
+prepare  → status=prepared settings=1 presets=1 sessions=1 ; prepare.json inputs=['settings.yaml'] sources=4
+finalize → receipt: sourcePreserved=true protectionComplete=true
+           sessionsStatus=preserved-awaiting-runtime-open, warnings=[SETTINGS_PENDING_READBACK_OR_REVIEW]
+           快照保留 4 份；settings.yaml 与原 session.v3.json 原件仍在
+```
+⇒ **删掉它会让从旧 build 直接升上来的用户丢掉设置/旧会话保护**，且会破坏
+`core/StartupPipeline.java:176` 的「迁移快照未完成则阻止导入」门控。
+
+## ② 13 秒花在哪 —— **不在迁移里**
+`prepare` 与 `finalize` 是**两次独立调用，位于启动序列两端**：
+- `prepare` ← `core/StartupPipeline.java:108`（真实启动早期，注册插件之前）
+- `finalize` ← `core/WebLifecycleController.java:574`（**web 层起来之后** `RC1_FINALIZE`）
+
+所以 `prepare.json`(09:54:08.480) → `receipt.json`(09:54:21.488) 的 13.0 s，
+**是这两点之间「插件注册 + dsh web 首次启动 + 鉴权」的耗时**，不是迁移耗时。
+
+同一设备实测（`/tmp/rc1t`，脚本原样）：
+| 场景 | prepare | finalize | 合计 |
+|---|---|---|---|
+| 全新空环境（= 设备当时的情形） | **108.5 ms** | **95.1 ms** | **203.6 ms** |
+| 空环境重复 prepare | **92.2 ms**（`status=already`） | — | — |
+| 裸 `python3 -c pass` 参照 | 33.1 ms | | 解释器启动底噪 |
+| pre-RC1 布局 | 43.5 ms | 31.0 ms | 74.5 ms |
+
+⇒ 迁移真实成本 ≈ **0.2 s / 95 s ≈ 0.2 %**，其中 ≈66 ms 还是两次解释器启动。
+
+**「13 s」纯属区间采样假象**：拿 `prepare.json` 与 `receipt.json` 的 mtime 之差当迁移耗时是错的。
+
+## ③ 处置：**都不做**（不改代码）
+- **不删**：跳级升级路径仍需要它（①已证），删了会造成数据保护缺口，且需清 receipt/state/调用点/文档，风险远大于收益。
+- **不加 fast-path**：**已经有两层了**（宿主 `Rc1MigrationCache` + guest `current.json/protectionComplete`），再加一层只是重复复杂度。
+- **设备证据证明热启动成本为 0**：`/run/dsha-rc1-state/current.json` 的 mtime 仍是
+  **09:54:08.480**，而 web 启动过 3 次（09:54:08 / 10:09:05 / 10:23:48）。
+  若 guest 走到 `already`，`current.json` 会被重写（更新 startupId）；它没有 ⇒
+  **10:09 与 10:23 两次启动根本没启动 python**，宿主层直接短路。
+- **不要为了达标而硬改**：为 0.2 % 的一次性成本改动数据保护路径是负收益。
+
+## ④ 结论一句话
+用户的前提不成立：迁移不是 13 s，而是 0.2 s；那 13 s 是 web 首次启动；热启动已经是 0；**保留原样**。
+
+## ⑤ 真机怎么验（若要复核）
+1. 看 `/run/dsha-rc1-state/current.json` 与 `.dsh/.dsha-rc1-migration/receipt.json` 的 mtime：
+   多次冷启动后若 `current.json` mtime 不变 ⇒ 宿主短路生效（本次已是此现象）。
+2. 想在真机复现「真迁移」：用一台**从 pre-RC1 build 升级**上来的机器，或删掉
+   `files/rc1-migration-state` 后放入旧 `settings.yaml` + 旧 `sessions/*` 再启动，
+   应看到 `sources/presets/sessions` 非零且原件保留。
+3. 量 web 首次启动耗时（才是那 13 s 的真正归属）：用「首次安装测速」页逐段 `elapsedMillis`。
