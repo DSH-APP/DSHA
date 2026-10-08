@@ -1,7 +1,7 @@
 {
   "name": "dsh-device-shell-guide",
   "description": "DSHA builtin plugin: protected device commands through root, Shizuku or ADB",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

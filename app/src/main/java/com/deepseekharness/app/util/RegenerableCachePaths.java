@@ -17,7 +17,9 @@ public final class RegenerableCachePaths {
         "root/.dsh/session_projcache",
         "root/.dsh/plugin-updates.json",
         "root/.cache/dsh",
-        "root/.cache/cordis");
+        "root/.cache/cordis",
+        // AI 与脚本的临时文件目录：由 dsh-device-shell-guide 插件创建，内容按约定可再生。
+        ScratchPaths.ROOTFS_DIRECTORY);
     ArrayList<String> entities = new ArrayList<>(BuiltinPlugins.DEFAULT_BUILTINS);
     entities.add("dsh-app-integration");
     for (String name : entities) {

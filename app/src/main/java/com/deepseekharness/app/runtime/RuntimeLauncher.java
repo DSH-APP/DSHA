@@ -71,6 +71,10 @@ final class RuntimeLauncher {
         .environment()
         .put("PATH", "/root/dsh-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin");
     builder.environment().put("TMPDIR", "/tmp");
+    // AI 与脚本共用的临时文件目录：guest 侧唯一约定，终端、插件与 Web 都从这里取。
+    builder
+        .environment()
+        .put("DSHA_CACHE_DIR", com.deepseekharness.app.util.ScratchPaths.GUEST_DIRECTORY);
     builder.environment().put("DEBIAN_FRONTEND", "noninteractive");
     RuntimeTools.applyEnvironment(rootfs, builder.environment(), ports.settings());
     if (context != null) {
