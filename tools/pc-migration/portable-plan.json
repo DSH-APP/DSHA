@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "packagePrefix": "DSHA-portable-",
+  "extension": ".tar.gz",
+  "comment": "手机端 DSH 数据 → 电脑端 dsh 的便携包策略。白名单：只打包 include 列出的路径，其它一律不进包。",
+  "include": [
+    {
+      "path": "sessions",
+      "kind": "dir",
+      "why": "会话日志（zstd jsonl，header 自带 cwd，路径自洽）；session.lock 是租约文件，恢复端会自己重建，不进包",
+      "skip": [
+        "session.lock"
+      ]
+    },
+    {
+      "path": "storages/workspace.json",
+      "kind": "file",
+      "why": "工作区注册表；恢复时按 --workspace 改写 path"
+    },
+    {
+      "path": "attachments",
+      "kind": "dir",
+      "why": "附件对象仓（内容寻址）"
+    },
+    {
+      "path": "profiles/{profile}/cordis.patch.yml",
+      "kind": "file",
+      "why": "用户设置层（模型/字号/主题等）"
+    },
+    {
+      "path": "llm-deepseek",
+      "kind": "dir",
+      "why": "文件 API 缓存（按账号作用域，非设备绑定）"
+    }
+  ],
+  "credentials": {
+    "path": ".credentials.yaml",
+    "default": "exclude",
+    "flag": "--with-credentials",
+    "pruneRecordPrefixes": [
+      "client-connection/"
+    ],
+    "filter": "credential-yaml-filter.cjs",
+    "why": "默认不含。用户显式要求时也必须字段级剔除 client-connection/*（浏览器会话签名密钥，设备+本轮 dsh 绑定，迁到电脑无意义且敏感）；只保留 refs 里的用户 API Key 引用。"
+  },
+  "exclude": [
+    {
+      "path": "storages/session_projcache",
+      "why": "投影缓存，可重建；record.identity.cwd 是绝对路径，且 version 绑定 dsh 版本"
+    },
+    {
+      "path": "profiles/*/node_modules",
+      "why": "设备侧 pnpm 链接；PC 端由 PC 的 dsh 自己装"
+    },
+    {
+      "path": "profiles/*/package.json",
+      "why": "含 link:/root/dsha-* 设备绝对路径，PC 上必然失效"
+    },
+    {
+      "path": "profiles/*/pnpm-workspace.yaml",
+      "why": "同上，设备侧 profile 布局"
+    },
+    {
+      "path": "node_modules",
+      "why": "DSHA 塞进 $DSH_HOME 的随包依赖；PC 端 dsh 自带"
+    },
+    {
+      "path": "cache",
+      "why": "可再生（附件请求图片等）"
+    },
+    {
+      "path": "__pycache__",
+      "why": "可再生"
+    },
+    {
+      "path": ".bridge_token / .bridge_headers / .bridge_status",
+      "why": "3090 桥的本机共享凭据；泄露即等于交出设备控制权"
+    },
+    {
+      "path": ".anonymous-user-id",
+      "why": "harness-home 级匿名身份；迁移会让两台机器共用一个 id，PC 端重新生成更干净"
+    },
+    {
+      "path": ".runtime-descriptor.json / .runtime-health.json / .runtime-links-cache.json",
+      "why": "设备侧受管运行时契约与健康回执"
+    },
+    {
+      "path": ".dsha-web.pid / .dsha-web.identity / .dsha-stopped / .dsha-rc1-migration / .offline-*",
+      "why": "DSHA 生命周期与装机状态"
+    },
+    {
+      "path": "plugin-activations.json / plugin-safe-mode.json / plugin-sources.json / plugin-history / plugin-src",
+      "why": "设备侧插件状态与源码；PC 端不需要"
+    },
+    {
+      "path": "*.py / *.cjs / script-version / builtin-plugins.json / runtime-patches.json / runtime-tools.json / repair-builtin.log",
+      "why": "全部是 DSHA 随包脚本与受管资产，不是用户数据"
+    },
+    {
+      "path": "settings.yaml",
+      "why": "rc2 已无此文件；若存在则属于旧格式，由 PC 端 dsh 自己迁移"
+    }
+  ],
+  "rewrite": {
+    "always": [
+      {
+        "target": "storages/session_projcache",
+        "action": "drop"
+      },
+      {
+        "target": "storages/workspace.json:tables.workspaces.*.path",
+        "action": "set-to-workspace-arg"
+      }
+    ],
+    "sessionCwd": {
+      "default": "keep",
+      "flag": "--rewrite-cwd",
+      "why": "会话日志是 zstd 多帧，header 里有绝对 cwd，且 dsh 用 projectKey(cwd) 推导目录名并做一致性核验。默认原样保留（零格式风险）。开 --rewrite-cwd 时把整棵 sessions 转成明文 session.vN.jsonl 并改写 header.cwd，同时在 profile patch 里加 session-persistence-jsonl compression: none —— dsh 拒绝同一个 sessions 根混用两种编码。"
+    }
+  }
+}
