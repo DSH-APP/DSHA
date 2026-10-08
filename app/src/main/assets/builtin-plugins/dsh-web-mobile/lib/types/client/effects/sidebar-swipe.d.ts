@@ -8,12 +8,9 @@ export declare function startZonePxFor(viewportWidthPx: number, ratio?: number):
 export interface SwipeThresholds {
     openDistanceRatio: number;
     closeDistanceRatio: number;
-    velocityWindowMs: number;
     openVelocity: number;
     closeVelocity: number;
     lockPx: number;
-    cooldownMs: number;
-    startZonePx: number;
 }
 /**
  * Pure decision: what does this stroke do, given the drawer state?
@@ -85,7 +82,9 @@ export declare function slidingVelocity(samples: Array<{
  * open). Pure and viewport-relative so it is unit-testable; the runtime
  * variant additionally checks the drawer geometry via the DOM.
  */
-export declare function hitTestStart(clientX: number, viewportWidthPx: number, rtl: boolean, t: Pick<SwipeThresholds, 'startZonePx'>): boolean;
+export declare function hitTestStart(clientX: number, viewportWidthPx: number, rtl: boolean, t: {
+    startZonePx: number;
+}): boolean;
 /**
  * Geometric start-hit test for the FILES gesture: the pointer went down in
  * the RIGHT edge zone (RTL: LEFT) — the exact mirror of hitTestStart. Pure

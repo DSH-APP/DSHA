@@ -29,13 +29,27 @@ public final class WebBlobDownload implements AutoCloseable {
   }
 
   public void start(String base, String url, String name) {
+    start(base, url, name, false, null, -1, null);
+  }
+
+  public void start(
+      String base,
+      String url,
+      String name,
+      boolean share,
+      String mime,
+      long size,
+      java.util.function.BiConsumer<Boolean, String> completion) {
     if (!WebPreviewPolicy.sameService(base, view.getUrl())
         || !WebPreviewPolicy.pageDownload(base, url)) return;
-    if (model.isBusy() || model.canRetrySave() || model.pickerOpen) return;
+    if (model.isBusy() || model.canRetrySave() || model.pickerOpen) {
+      if (completion != null) completion.accept(false, "TRANSFER_BUSY");
+      return;
+    }
     try {
       Pipe pipe = new Pipe();
       active = pipe;
-      if (!model.download(base, url, null, name, -1, pipe.input)) {
+      if (!model.download(base, url, null, name, size, pipe.input, share, mime, completion)) {
         pipe.fail(com.deepseekharness.app.util.UiText.text("下载未启动"));
         return;
       }

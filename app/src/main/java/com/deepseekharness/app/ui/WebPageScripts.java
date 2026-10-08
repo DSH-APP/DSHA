@@ -24,6 +24,8 @@ public final class WebPageScripts {
         + "\n"
         + read(context, "web-integration/compat.js")
         + "\n"
+        + read(context, "web-integration/files.js")
+        + "\n"
         + read(context, "bridge-token-compat.cjs")
         + "\n"
         + read(context, "web-integration/startup.js");

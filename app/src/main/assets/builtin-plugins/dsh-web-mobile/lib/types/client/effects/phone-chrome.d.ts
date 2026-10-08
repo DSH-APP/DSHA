@@ -34,6 +34,8 @@ export declare function findFrame(): HTMLElement | null;
 /** Resolve the plugin-owned frame marker, falling back to the raw shell frame. */
 export declare function getFrame(): HTMLElement | null;
 export declare function ensureDismissShadow(): void;
+/** Toggle the selection marker for the duration of a conversation selection. */
+export declare function installSelectionChromeYield(ctx: ClientContext): void;
 /**
  * Frame marker controller: owns `data-mobile-nav="frame"` and every plugin
  * marker that can survive on the shell-owned frame. Installed once at apply

@@ -76,7 +76,9 @@ public class AdbWheelBundleTest {
             bundled,
             restored,
             archive,
-            cachedArchive);
+            cachedArchive,
+            AdbWheelCache.Lock.read(
+                Files.readAllBytes(new File(assets, "adb-wheels.lock.json").toPath())));
     assertEquals(expected.size() - 1, report.added);
     assertEquals(1, report.modified);
     assertEquals(originalModifiedHash, hash(modified));

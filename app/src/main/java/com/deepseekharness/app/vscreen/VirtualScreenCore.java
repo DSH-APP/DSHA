@@ -64,6 +64,8 @@ public final class VirtualScreenCore {
       if (Arrays.asList(args).contains("--launch")) {
         startupStage = "LAUNCH";
         launch(port);
+        // ROM 可能留下非守护线程；一次性启动父进程必须明确结束，常驻服务由子进程承担。
+        System.exit(0);
         return;
       }
       if (!Arrays.asList(args).contains("--server"))

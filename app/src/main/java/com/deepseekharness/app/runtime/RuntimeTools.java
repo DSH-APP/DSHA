@@ -39,6 +39,9 @@ final class RuntimeTools {
       RuntimeHostPorts.Settings settings =
           RuntimeHostPorts.fromOwner(context.getApplicationContext()).settings();
       synchronized (LOCK) {
+        // 预配置工具归档不运行旧 install-ubuntu-tools 的 mkdir /tmp；普通启动也修复缺失目录。
+        RuntimeTemporaryDirectories.prepare(
+            new com.deepseekharness.app.backup.AndroidBackupFileSystem(), rootfs);
         try {
           prepareResolver(context, rootfs, settings, deviceDns);
         } catch (IOException error) {

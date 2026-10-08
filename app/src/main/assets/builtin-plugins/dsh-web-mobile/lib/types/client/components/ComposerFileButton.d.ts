@@ -11,8 +11,11 @@ export interface ComposerFileButtonProps extends PropsRuntime<'conversation.inpu
  * aria-label is 「添加文件或调用指令」). The host still mounts its own hidden
  * `input[type=file]` in the composer tool row and its own command opens the
  * native dialog with exactly `fileInputRef.current?.click()`, so this control
- * triggers that same input instead of reimplementing intake: file validation,
- * upload and the availability policy all stay host-owned.
+ * hands the choice back to that same input instead of reimplementing intake:
+ * file validation, upload and the availability policy all stay host-owned.
+ * Since 2026-10-06 the tap opens the plugin's two-option sheet first
+ * (effects/composer-file-picker.ts: 上传图片 / 上传附件) — the button itself only
+ * renders and carries the disabled arms, so the picker path lives in one place.
  *
  * The control is contributed to the host-declared `conversation.input.left`
  * list slot ("Compact controls at the left of the composer tool row"), which

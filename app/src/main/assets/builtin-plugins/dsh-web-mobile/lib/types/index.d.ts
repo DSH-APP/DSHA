@@ -27,6 +27,9 @@ export interface HostContext {
     get(service: string): unknown;
     /** Run apply once the named services exist (cordis fiber inject). */
     inject(services: readonly string[], apply: (scoped: ScopedContext) => void): void;
+    /** Subscribe to one host event; scoped contexts forward to their parent and
+     * dispose the subscription with the scope. Absent on minimal host shapes. */
+    on?(event: string, handler: (...args: unknown[]) => void): unknown;
     /** Host logger service face (warn-level is all this plugin uses). */
     logger: {
         warn(message: string): void;

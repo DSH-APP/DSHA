@@ -27,17 +27,24 @@ export interface PanelExit {
     task: ReconcilerTask;
 }
 /**
- * Leave the panel: switch back to the conversation and let the incoming content
- * fade in.
+ * Leave the panel: freeze the panel into a plugin-owned snapshot that slides back
+ * out to the side, and let the conversation come back on the SAME tick
+ * (2026-10-07: 店主先报「退出像掉帧、直接回聊天界面」，再报「空档有点久了。」)
  *
- * ⚠ The switch is deliberately NOT delayed behind an outgoing animation.
- * `selectPanel(null)` makes React remount the whole conversation, and that
- * commit blocks the main thread long enough to matter (measured on a phone:
- * ~390 ms for a long session). Fading the panel out first would show a blank
- * screen for that entire window — the panel is already transparent but the
- * conversation has not mounted yet. Keeping the panel opaque until the very
- * commit means it disappears on the same frame the conversation appears, and
- * the only transition is the conversation's fade-in.
+ * Two earlier shapes and why they failed:
+ *  · marker-then-swap only: React unmounts the panel inside that same commit, so
+ *    the exit animation painted an empty 0×0 slot — measured frame by frame, the
+ *    panel element was already gone on the first frame after the tap;
+ *  · animate-the-real-panel-first: the departure became visible, but the
+ *    conversation's remount commit (~390ms on a long session) then started 220ms
+ *    later — the owner felt exactly that added blank window.
+ *
+ * Current shape: clone the panel into `[data-mobile-nav="panel-ghost"]` (fixed,
+ * pointer-events:none), swap RIGHT AWAY, then slide the clone out over
+ * `PANEL_GHOST_MS` (the drawer's .28s). The clone's transform/opacity run on the
+ * compositor, so the slide stays smooth while the main thread pays for the
+ * conversation remount — no added gap, and the direction matches the drawer the
+ * owner asked to copy.
  *
  * @param layout - `ctx.layout`; probed, never assumed.
  * @returns the exit action (idempotent while an exit is in flight, so a double

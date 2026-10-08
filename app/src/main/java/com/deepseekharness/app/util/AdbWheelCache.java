@@ -15,6 +15,69 @@ public final class AdbWheelCache {
   private static final long MAX_EXPANDED = 512L * 1024 * 1024;
   private static final int MAX_ENTRIES = 50_000;
 
+  /** 只从签名 APK 读取的离线锁；不能用可写缓存里的同名文件证明 APK 内容。 */
+  public static final class Lock {
+    public final String archiveSha256;
+    public final Map<String, String> wheels;
+
+    private Lock(String archiveSha256, Map<String, String> wheels) {
+      this.archiveSha256 = archiveSha256;
+      this.wheels = Collections.unmodifiableMap(wheels);
+    }
+
+    public static Lock read(byte[] bytes) throws IOException {
+      var value = com.deepseekharness.app.backup.BackupJson.read(bytes, 64 * 1024);
+      if (com.deepseekharness.app.backup.BackupJson.number(value, "schema") != 1)
+        throw new IOException("WHEELS_LOCK_SCHEMA");
+      String archive = com.deepseekharness.app.backup.BackupJson.string(value, "archiveSha256");
+      if (!archive.matches("[a-f0-9]{64}")) throw new IOException("WHEELS_LOCK_HASH");
+      Object list = value.get("wheels");
+      if (!(list instanceof Map<?, ?> entries) || entries.isEmpty() || entries.size() > 128)
+        throw new IOException("WHEELS_LOCK_ENTRIES");
+      Map<String, String> wheels = new LinkedHashMap<>();
+      for (var item : entries.entrySet()) {
+        if (!(item.getKey() instanceof String name)
+            || !name.matches("[A-Za-z0-9][A-Za-z0-9_.+%-]{0,240}\\.whl")
+            || !(item.getValue() instanceof String sha)
+            || !sha.matches("[a-f0-9]{64}")) throw new IOException("WHEELS_LOCK_ENTRY");
+        wheels.put(name, sha);
+      }
+      return new Lock(archive, wheels);
+    }
+  }
+
+  /** 缓存补缺前逐项核对离线归档与 wheel SHA；损坏 APK 临时副本不能发布。 */
+  public static void verifyBundle(BackupFileSystem fs, File bundled, File archive, Lock lock)
+      throws IOException {
+    if (!regular(fs, archive) || !lock.archiveSha256.equals(digest(fs, archive)))
+      throw new IOException("WHEELS_ARCHIVE_HASH_MISMATCH");
+    List<String> names = fs.list(bundled);
+    if (names.size() != lock.wheels.size() || !lock.wheels.keySet().containsAll(names))
+      throw new IOException("WHEELS_BUNDLE_MEMBERS_MISMATCH");
+    for (var item : lock.wheels.entrySet()) {
+      checkCancelled();
+      File source = fs.child(bundled, item.getKey());
+      if (!regular(fs, source) || !item.getValue().equals(digest(fs, source)))
+        throw new IOException("WHEELS_BUNDLE_HASH_MISMATCH:" + inline(item.getKey()));
+    }
+  }
+
+  public static Merge fillMissing(
+      BackupFileSystem fs, File bundled, File cache, File apkArchive, File cachedArchive, Lock lock)
+      throws IOException {
+    verifyBundle(fs, bundled, apkArchive, lock);
+    Merge report = fillMissing(fs, bundled, cache, apkArchive, cachedArchive);
+    for (var item : lock.wheels.entrySet()) {
+      if (report.preserved.contains(item.getKey())) continue;
+      File installed = fs.child(cache, item.getKey());
+      if (!regular(fs, installed) || !item.getValue().equals(digest(fs, installed)))
+        throw new IOException("WHEELS_CACHE_LOCK_HASH_MISMATCH:" + inline(item.getKey()));
+    }
+    if (report.archiveAdded && !lock.archiveSha256.equals(digest(fs, cachedArchive)))
+      throw new IOException("WHEELS_CACHE_ARCHIVE_HASH_MISMATCH");
+    return report;
+  }
+
   public static final class Merge {
     public int added, same, modified, extra;
     public boolean archiveAdded, archiveDifferent;
@@ -277,27 +340,33 @@ public final class AdbWheelCache {
     File part = fs.child(target.getParentFile(), ".adb-wheel-copy-" + UUID.randomUUID() + ".part");
     BackupFileSystem.Node[] owned = {null};
     try {
-      copy(fs, source, part, owned);
+      FileIntegrity.Result copied = copy(fs, source, part, owned);
+      if (!copied.sha256.equals(digest(fs, part)))
+        throw new IOException("WHEELS_CACHE_COPY_HASH_MISMATCH:" + inline(target.getName()));
       if (present(fs, target)) return false;
       fs.move(part, target);
       fs.syncDirectory(target.getParentFile());
+      if (!copied.sha256.equals(digest(fs, target)))
+        throw new IOException("WHEELS_CACHE_READBACK_HASH_MISMATCH:" + inline(target.getName()));
       return true;
     } finally {
       cleanupCopy(fs, part, owned[0]);
     }
   }
 
-  private static void copy(
+  private static FileIntegrity.Result copy(
       BackupFileSystem fs, File source, File target, BackupFileSystem.Node[] owned)
       throws IOException {
     var before = fs.stat(source);
+    FileIntegrity.Result copied;
     try (InputStream in = fs.read(source, before)) {
       OutputStream opened = fs.create(target);
       try (OutputStream out = opened) {
         owned[0] = fs.stat(target);
-        FileIntegrity.copy(in, out, MAX_WHEEL);
+        copied = FileIntegrity.copy(in, out, MAX_WHEEL);
       }
     }
+    return copied;
   }
 
   private static void cleanupCopy(BackupFileSystem fs, File path, BackupFileSystem.Node owned)

@@ -5,6 +5,16 @@ import static org.junit.Assert.*;
 
 public class WebTransferPolicyTest {
   @Test
+  public void shareMimeRejectsHeaderSyntaxAndKeepsActualType() {
+    assertEquals("text/markdown", WebTransferPolicy.mimeType("text/markdown"));
+    assertEquals(
+        "application/vnd.example+json", WebTransferPolicy.mimeType("application/vnd.example+json"));
+    for (String bad :
+        new String[] {null, "", "text/plain\r\nextra: value", "file:///secret", "text/*"})
+      assertEquals("application/octet-stream", WebTransferPolicy.mimeType(bad));
+  }
+
+  @Test
   public void filenamesStayInsideOwnedDirectory() {
     assertEquals(".._.._secret", WebTransferPolicy.fileName("../../secret"));
     assertEquals("download.bin", WebTransferPolicy.fileName(".."));

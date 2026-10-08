@@ -53,7 +53,7 @@ def render():
     native = '\n'.join(f'| `{path}` | {NATIVE_NOTICES.get(Path(path).name, ("unknown", "new binary without reviewed source"))[0]} | {NATIVE_NOTICES.get(Path(path).name, ("unknown", "new binary without reviewed source"))[1]} |'
                        for path in native_members())
     hashes = '\n'.join(f'- `{name}`：`{hashlib.sha256((ASSETS / "builtin-plugins/dsh-web-mobile/lib" / name).read_bytes()).hexdigest()}`'
-                       for name in ('client.js', 'index.js', 'compress.js', 'delete-session.js'))
+                       for name in ('client.js', 'index.js', 'compress.js', 'delete-session.js', 'reasoning-effort.js'))
     return f'''# 第三方组件声明
 
 此文由 `python tools/generate-third-party-notices.py` 从当前锁和实际资产生成。DSHA 自有代码采用 MIT；随包第三方组件分别遵循其许可，不因 APK 顶层许可变成 MIT。

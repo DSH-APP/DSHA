@@ -15,14 +15,15 @@
 
 ## 移动插件
 
-- `dsh-web-mobile` **3.0.3**，MIT，来自 `https://github.com/mexiaosqwq/dsh-web-mobile`，固定提交 `a094288883b343e848d7f9cf302d73ad8ed4794b`。
-- 上游 client 摘要 `88bfc7b315249cbe8a4fcbcaf41854cce3a8480a5b98a7bdb063ba78b1ae9a19`；本地差异由 `tools/apply-mobile-client-patches.mjs` 与 `tools/mobile-server/` 管理。不是未修改的上游产物。
+- `dsh-web-mobile` **3.0.5**，MIT，来自 `https://github.com/mexiaosqwq/dsh-web-mobile`，固定提交 `9b16223e6c5ee8209c25034b24fb790990967b3f`。
+- 上游 client 摘要 `1403ab28a1f3478c2a7a11236830f242140e2de7463b7ccb384e469e93bd3ffa`；本地差异由 `tools/apply-mobile-client-patches.mjs` 与 `tools/mobile-server/` 管理。不是未修改的上游产物。
 - 许可全文：`app/src/main/assets/builtin-plugins/dsh-web-mobile/LICENSE`。当前产物摘要：
 
-- `client.js`：`3e5568a4c41730df9b3a01261b7781678cb74866e1c96f45164204e5e9a6c5e7`
-- `index.js`：`1ab8021dec1453ed7e48a43269efcc46598a27005de2d51b6644579544c90445`
+- `client.js`：`a5991fe7b504da60c974b819d546ee25718d605e0fba3ec068432a76d6808b62`
+- `index.js`：`607ea57134e8772fa5e9bb1778c556703ba21191f8ef198ec278b764f945797a`
 - `compress.js`：`f5902f4f036d0f7a67d2ce6e4c71b01a98227cb4365abde7a4bf8f1bf5e6de0c`
 - `delete-session.js`：`f4f8caf0fd54ab49ad264908296b12d9d46868542b082136927afe3c21d32b19`
+- `reasoning-effort.js`：`7cd99e7ecf88cf7af25317f08fd8a2592be5dcde197282060463df3dfbc028ac`
 
 ## 终端与会话启动器
 

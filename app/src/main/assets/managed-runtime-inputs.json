@@ -193,6 +193,11 @@
       "executable": false
     },
     {
+      "asset": "builtin-plugins/dsh-web-mobile/lib/reasoning-effort.js",
+      "target": "root/dsha-web-mobile/lib/reasoning-effort.js",
+      "executable": false
+    },
+    {
       "asset": "builtin-plugins/dsh-web-mobile/LICENSE",
       "target": "root/dsha-web-mobile/LICENSE",
       "executable": false
@@ -492,7 +497,10 @@
     "util/WebStopDiagnostic.java",
     "util/WebStopException.java",
     "data/PortableSettings.java",
-    "vscreen/VirtualScreenAccessibility.java"
+    "vscreen/VirtualScreenAccessibility.java",
+    "util/AdbWheelPaths.java",
+    "util/AdbDependencyPreparation.java",
+    "util/AdbWheelCache.java"
   ],
   "generatorSources": [
     "tools/mobile-server/compress.js",

@@ -5,7 +5,7 @@ import {apply} from '../app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/i
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import { Readable } from 'node:stream';
-function fixture(rejection, t) {
+function fixture(rejection, t, getService=()=>{throw Error('不应访问会话');}) {
   let handler, checked=0, consulted=0;
   const disposers=[];
   class Agents {
@@ -17,7 +17,8 @@ function fixture(rejection, t) {
     assert.equal(handler,undefined);handler=route.handler;return ()=>{};
   }};
   t.after(()=>{for(const dispose of disposers.reverse())dispose();});
-  const ctx={effect(){},get(){consulted++;throw Error('不应访问会话');},inject(names,fn){
+  const ctx={effect(){},logger:{warn(){}},get(name){consulted++;return getService(name);},inject(names,fn){
+    if (names.length === 1 && names[0] === 'settings') return; // 此夹具未提供可选设置服务。
     assert.deepEqual(names,names.length===1?['webServer']:['webServer','connection','agents']);
     const services=names.length===1?{webServer}:{webServer,agents:new Agents(),connection:{requestRejection(){checked++;return rejection;}}};
     fn({...services,effect:run=>{const dispose=run();assert.equal(typeof dispose,'function');disposers.push(dispose);}});
@@ -72,12 +73,25 @@ for(const [name,value,status,error] of [
   await f.handler(req,{writeHead:status=>code=status,end:text=>body=JSON.parse(text)});
   assert.equal(code,status);assert.equal(body.error.code,error);assert.equal(f.checked,1);assert.equal(f.consulted,0);
 });
+test('删除入口的意外 Host 异常返回结构化500',async t=>{
+  const f=fixture(undefined,t,name=>{
+    if(name==='sessionPersistence')return {};
+    throw Error('unexpected Host service failure');
+  });
+  const req=Readable.from([JSON.stringify({sessionId:'fixture'})]);
+  req.method='POST';req.headers={host:'127.0.0.1:3080',origin:'http://127.0.0.1:3080'};
+  let code,body;
+  await f.handler(req,{writeHead:status=>code=status,end:text=>body=JSON.parse(text)});
+  assert.equal(code,500);assert.equal(body.error.code,'delete-failed');
+});
+
 test('移动 UI 模块对锁定 rc2 Host 声明实际服务依赖',()=>{
   let plugin;
   vm.runInNewContext(readFileSync('app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/client.js','utf8'),
     {window:{__ModuleLoader__:{load:value=>plugin=value}}});
   const exported=plugin.factory(()=>({}));
-  for (const name of ['slots','layout','locale','sessions','workspaces','sessionLogDownload'])
+  for (const name of ['slots','layout','locale','sessions','sessionLogDownload'])
     assert.ok(exported.inject.includes(name), name);
+  assert.equal(exported.inject.includes('workspaces'), false);
   assert.equal(exported.inject.includes('sidebarRight'), false);
 });

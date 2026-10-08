@@ -8,6 +8,14 @@ public final class WebTransferPolicy {
 
   private WebTransferPolicy() {}
 
+  public static String mimeType(String value) {
+    return value != null
+            && value.length() <= 127
+            && value.matches("[A-Za-z0-9!#$&^_.+\\-]+/[A-Za-z0-9!#$&^_.+\\-]+")
+        ? value
+        : "application/octet-stream";
+  }
+
   public static String fileName(String name) {
     String safe = name == null ? "" : name.replaceAll("[\\\\/\\p{Cntrl}]", "_").trim();
     if (safe.isEmpty() || safe.equals(".") || safe.equals("..")) return "download.bin";

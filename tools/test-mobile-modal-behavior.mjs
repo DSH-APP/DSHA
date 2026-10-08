@@ -8,6 +8,7 @@ import { browserFixture } from './rc1-browser-fixture.mjs';
 const runtime = process.env.DSHA_TEST_RUNTIME || JSON.parse(fs.readFileSync('app/build/test-runtimes/current.json', 'utf8')).raw;
 const fixture = await browserFixture(runtime);
 const page = fixture.page;
+page.setDefaultTimeout(3000);
 try {
   const frontend = path.resolve(runtime, 'node_modules/@deepseek-ai/dsh-web-frontend/dist');
   const html = fs.readFileSync(path.join(frontend, 'index.html'), 'utf8');
@@ -122,6 +123,37 @@ try {
       viewport:document.documentElement.style.getPropertyValue('--dsha-mobile-visible-vh')};
   });
   assert.deepEqual(cleanup, {same:true,owns:true,viewport:''});
+  const sharedFocus = await page.evaluate(() => {
+    const results=[];
+    for(const shortcutFirst of [true,false]) {
+      const local=[];
+      const ctx={effect(run){local.push(run());}};
+      const modelGuard=mobileRequire('./effects/model-menu-keyboard-guard.js');
+      guard.installShortcutModalKeyboardGuard(ctx);
+      modelGuard.installModelMenuKeyboardGuard(ctx);
+      document.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch'}));
+      const menu=document.createElement('div');menu.dataset.menuMaterial='';
+      const model=document.createElement('input');model.setAttribute('role','searchbox');menu.append(model);
+      document.querySelector('[data-shortcut-modal="shortcuts"]').append(menu);
+      document.activeElement?.blur();model.focus();
+      const blockedWithBoth=document.activeElement!==model;
+      local[shortcutFirst?0:1]();
+      model.focus();
+      const modelRuleRemaining=shortcutFirst?document.activeElement!==model:document.activeElement===model;
+      let shortcutRuleRemaining=true;
+      if(!shortcutFirst) {
+        const auto=document.createElement('input');auto.setAttribute('data-modal-autofocus','');
+        auto.setAttribute('data-dsh-automatic-focus','');menu.append(auto);auto.focus();
+        shortcutRuleRemaining=document.activeElement!==auto;
+      }
+      local[shortcutFirst?1:0]();menu.remove();
+      results.push({shortcutFirst,blockedWithBoth,modelRuleRemaining,shortcutRuleRemaining,
+        originalRestored:HTMLInputElement.prototype.focus===originalFocus});
+    }
+    return results;
+  });
+  for(const row of sharedFocus)assert.deepEqual(row,{shortcutFirst:row.shortcutFirst,blockedWithBoth:true,
+    modelRuleRemaining:true,shortcutRuleRemaining:true,originalRestored:true});
   const ownership = await page.evaluate(() => {
     guard.installShortcutModalKeyboardGuard(context);
     const inner=HTMLInputElement.prototype.focus;
@@ -188,6 +220,6 @@ try {
   });
   assert.equal(frozen,true);
   assert.deepEqual(fixture.errors, []);
-  console.log(JSON.stringify({runtime,host:'actual rc2 ShortcutReference + Modal',cases,largeFont,visual,gestures,
+  console.log(JSON.stringify({runtime,host:'actual rc2 ShortcutReference + Modal',cases,largeFont,visual,gestures,sharedFocus,
     checks:['initial focus','touch','Tab','search/clear','accessibility tree','reopen','later automatic focus','owner cleanup','same-width resize','visualViewport keyboard'],errors:fixture.errors},null,2));
 } finally { await fixture.close(); }

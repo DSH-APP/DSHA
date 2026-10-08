@@ -4,17 +4,17 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-export const upstreamCommit = 'a094288883b343e848d7f9cf302d73ad8ed4794b';
-export const upstreamClientHash = '88bfc7b315249cbe8a4fcbcaf41854cce3a8480a5b98a7bdb063ba78b1ae9a19';
+export const upstreamCommit = '9b16223e6c5ee8209c25034b24fb790990967b3f';
+export const upstreamClientHash = '1403ab28a1f3478c2a7a11236830f242140e2de7463b7ccb384e469e93bd3ffa';
 const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // Host modules are whole-module replacements because the upstream buffered
 // stream and private-registry lifecycle must be replaced together. Exact
 // commit bytes plus named public export anchors pin that review boundary.
 export const upstreamServerHashes = {
-  'compress.js': '3009046f4bc490318830d56dacdb012fa0467d2b8fe63671f0d31bda1fa7c21a',
-  'delete-session.js': 'bd09d85745941e2561b5bd2f3f4d336ded4a054db615747b70362b4a4dbbb015',
-  'index.js': '6ca04f6ce174d6629ae1826cfe61ae313c6388b85f64229448900a75356d4e62',
+  'compress.js': '66c7cc33cb01c5fcc03830422ca587a378daa8c8e4bb10c300c86dccf7f0f5f3',
+  'delete-session.js': 'ea7ab47189ca6150313f9a16c7e68afa820f6d57adc27fee82b39ecc96a28d6b',
+  'index.js': '9e9fea06e83e4b6554d65c11dbf7764a8a087d3f2cde655578891efac217b5ca',
 };
 const serverAnchors = {
   'compress.js': 'export function installResponseCompression()',
@@ -41,6 +41,41 @@ export function applyMobileClientPatches(bytes) {
     if (source.split(before).length !== 2) throw new Error('补丁锚点缺失或不唯一: ' + before.slice(0, 100));
     source = source.replace(before, after);
   };
+  // rc2 热替换重新执行模块工厂，旧模块局部变量不能把滚动位置交给新模块。
+  // 按真实 DOM 节点保存，避免按数组下标将旧位置套到另一条会话。
+  const scrollStart = source.indexOf('const SWAP_RESTORE_MS = 10_000;');
+  const scrollEnd = source.indexOf('/**\n * Mobile-adaptive shell, browser half:', scrollStart);
+  if (scrollStart < 0 || scrollEnd < 0) throw new Error('移动滚动恢复模块锚点缺失');
+  source = source.slice(0, scrollStart) + `const SWAP_RESTORE_MS = 10_000;
+const scrollState = window.__dshaMobileScrollState instanceof WeakMap
+    ? window.__dshaMobileScrollState
+    : (window.__dshaMobileScrollState = new WeakMap());
+function conversationScrollers() {
+    return [...document.querySelectorAll('[data-mobile-nav="frame"] [class*="scrollBody"]')];
+}
+function rememberConversationScroll() {
+    for (const element of conversationScrollers()) {
+        if (element.scrollTop > 0)
+            scrollState.set(element, {top: element.scrollTop, savedAt: Date.now(), url: location.href});
+        else scrollState.delete(element);
+    }
+}
+function restoreConversationScroll() {
+    for (const element of conversationScrollers()) {
+        const saved = scrollState.get(element);
+        scrollState.delete(element);
+        if (!saved || Date.now() - saved.savedAt > SWAP_RESTORE_MS || saved.url !== location.href) continue;
+        requestAnimationFrame(() => {
+            if (element.isConnected && saved.url === location.href
+                && Date.now() - saved.savedAt <= SWAP_RESTORE_MS && element.scrollTop === 0)
+                element.scrollTop = saved.top;
+        });
+    }
+}
+` + source.slice(scrollEnd);
+  // Android WebView 没有 Web Share；仅正式顶层页面注入的文件接口可接管。
+  replace("        canShare: typeof nav.canShare === 'function' ? data => nav.canShare(data) : undefined,\n        share: typeof nav.share === 'function' ? data => nav.share(data) : undefined,",
+    "        canShare: typeof window.DSHA?.canShareFile === 'function' ? data => data.files.length === 1 && window.DSHA.canShareFile(data.files[0]) : typeof nav.canShare === 'function' ? data => nav.canShare(data) : undefined,\n        share: typeof window.DSHA?.shareFile === 'function' ? data => window.DSHA.shareFile(data.files[0]) : typeof nav.share === 'function' ? data => nav.share(data) : undefined,");
   replace('const consumed = new Map();', 'const consumed = new WeakMap();');
   replace(`    if (!isElementLike(target)) {
         consumed.set(target, until);
@@ -72,11 +107,19 @@ export function applyMobileClientPatches(bytes) {
     "            for (const record of records) {\n                // 历史消息和流式文本不改变 shell；flow 外的插入仍可唤醒布局。\n                const target = record.target instanceof Element ? record.target : record.target.parentElement;\n                if (target?.closest('[data-chat-flow]')) continue;\n                keys.add(");
   replace('            core.note(keys);', '            if (keys.size) core.note(keys);');
 
-  const guardStart = source.indexOf('__modules["effects/shortcut-modal-keyboard-guard.js"] = function (require, module, exports) {');
-  const guardEnd = source.indexOf('\n__modules[', guardStart + 1);
-  if (guardStart < 0 || guardEnd < 0) throw new Error('缺失快捷键守卫模块边界');
-  const guard = readFileSync(path.join(project, 'tools/mobile-shortcut-guard.js'), 'utf8').trim();
-  source = source.slice(0, guardStart) + '__modules["effects/shortcut-modal-keyboard-guard.js"] = function (require, module, exports) {\n' + guard + '\n};\n' + source.slice(guardEnd);
+  // 两个焦点守卫共享上游管理器；保留 DSHA 对锁定原型和第三方包装的归属检查。
+  for (const [name, local] of [
+    ['core/prototype-focus-shadow.js', 'mobile-focus-shadow.js'],
+    ['effects/shortcut-modal-keyboard-guard.js', 'mobile-shortcut-guard.js'],
+  ]) {
+    const header = '__modules["' + name + '"] = function (require, module, exports) {';
+    const start = source.indexOf(header);
+    const end = source.indexOf('\n__modules[', start + 1);
+    if (start < 0 || end < 0 || source.split(header).length !== 2)
+      throw new Error('缺失焦点守卫模块边界: ' + name);
+    const guard = readFileSync(path.join(project, 'tools', local), 'utf8').trim();
+    source = source.slice(0, start) + header + '\n' + guard + '\n};\n' + source.slice(end);
+  }
 
   // 保留键盘外高度基线，同时以当前真正可见区域限制纸片，支持同宽分屏缩短。
   replace('            const width = window.innerWidth;\n            if (stableVh === 0',

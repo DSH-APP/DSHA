@@ -12,6 +12,8 @@ import com.deepseekharness.app.util.EnvironmentTaskGate;
 import com.deepseekharness.app.util.InstallProcess;
 import com.deepseekharness.app.util.Compat;
 import com.deepseekharness.app.util.AdbWheelCache;
+import com.deepseekharness.app.util.AdbWheelPaths;
+import com.deepseekharness.app.util.AdbDependencyPreparation;
 import com.deepseekharness.app.util.FileIntegrity;
 import com.deepseekharness.app.runtime.TarGzipExtractor;
 
@@ -217,17 +219,28 @@ public final class AdbBridge {
           "GLIBC_PY_INSTALL_FAIL: 无法安装 Ubuntu Python3，请先修复基础环境\n%s", sb);
     }
     progress.accept(com.deepseekharness.app.util.UiText.text("正在检查离线 ADB 依赖…"));
-    if (!depsOk(proot)) {
-      progress.accept(
-          com.deepseekharness.app.util.UiText.text("正在从 APK 补齐缺少的 wheel，保留已恢复的修改版与额外文件…"));
-      String cache = injectWheels(ctx, proot);
-      sb.append(cache).append('\n');
-      if (!AdbResult.marker(cache, "WHEELS_CACHE_READY")) return sb.toString();
-      progress.accept(com.deepseekharness.app.util.UiText.text("正在校验所有缓存 wheel 并安装；损坏缓存会原样保留并报告…"));
-      String extracted = extractWheelsJava(proot);
-      sb.append(extracted).append('\n');
-      if (!AdbResult.marker(extracted, "WHEELS_JAVA_EXTRACTED")) return sb.toString();
-    }
+    var dependencies =
+        AdbDependencyPreparation.prepare(
+            new AdbDependencyPreparation.Steps() {
+              public boolean importsReady() {
+                return depsOk(proot);
+              }
+
+              public String fillCache() {
+                progress.accept(
+                    com.deepseekharness.app.util.UiText.text(
+                        "正在从 APK 补齐缺少的 wheel，保留已恢复的修改版与额外文件…"));
+                return injectWheels(ctx, proot);
+              }
+
+              public String installCache() {
+                progress.accept(
+                    com.deepseekharness.app.util.UiText.text("正在校验所有缓存 wheel 并安装；损坏缓存会原样保留并报告…"));
+                return extractWheelsJava(ctx, proot);
+              }
+            });
+    sb.append(dependencies.output);
+    if (!dependencies.continueSetup) return sb.toString();
     if (keyPresent(proot) && depsOk(proot) && wrapperPresent(proot)) {
       return sb.append("SETUP_DONE\n").toString();
     }
@@ -263,20 +276,20 @@ public final class AdbBridge {
    * adb_shell_wifi / spake2 / cryptography 是 manylinux(glibc) 轮子，bionic 的 Termux python
    * 加载不了；glibc python + 本方法 = 与 1.1.9.1（rootfs 预装 glibc python3）等效。
    */
-  public static String extractWheelsJava(ProotBootstrap proot) {
+  public static String extractWheelsJava(Context ctx, ProotBootstrap proot) {
     return environmentResult(
         proot,
         com.deepseekharness.app.util.UiText.text("安装 ADB 离线依赖"),
-        () -> extractWheelsOwned(proot));
+        () -> extractWheelsOwned(ctx, proot));
   }
 
-  private static String extractWheelsOwned(ProotBootstrap proot) {
+  private static String extractWheelsOwned(Context ctx, ProotBootstrap proot) {
     try {
-      return AdbWheelCache.install(
-          new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
-          new File(proot.getRootfsDir(), "root/.dsh/wheels"),
-          new File(proot.getRootfsDir(), "usr/lib/python3/dist-packages"),
-          proot.getRootfsDir().getParentFile());
+      var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
+      var paths = wheelPaths(ctx, proot, fs);
+      String result = AdbWheelCache.install(fs, paths.wheels, paths.site, paths.stagingParent);
+      paths.verify();
+      return result;
     } catch (Exception e) {
       return "WHEELS_EXTRACT_FAIL: " + SensitiveData.redact(String.valueOf(e));
     }
@@ -288,15 +301,24 @@ public final class AdbBridge {
 
   /** APK 归档先进入临时目录，再按名称补缺；不覆盖恢复出来的 wheel 或缓存归档。 */
   private static String injectWheels(Context ctx, ProotBootstrap proot) {
-    File stage = new File(ctx.getCacheDir(), "adb-wheel-bundle-" + java.util.UUID.randomUUID());
+    File stage;
+    AdbWheelPaths paths = null;
+    var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
     String boundary;
     try {
+      paths = wheelPaths(ctx, proot, fs);
+      // 只规范化 Android 授予的 cache 根，不能 canonicalize 可写 guest 子路径。
+      File cache = ctx.getCacheDir().getCanonicalFile();
+      if (!cache.equals(new File(paths.files.getParentFile(), "cache"))
+          || !fs.stat(cache).type.equals("DIRECTORY"))
+        throw new java.io.IOException("ADB_CACHE_AUTHORITY");
+      stage = new File(cache, "adb-wheel-bundle-" + java.util.UUID.randomUUID());
       if (!stage.mkdir())
         throw new java.io.IOException(
             com.deepseekharness.app.util.UiText.text("无法创建 APK wheel 临时目录"));
       boundary = stage.getCanonicalPath();
     } catch (Exception e) {
-      return "WHEELS_INJECT_FAIL: " + SensitiveData.redact(String.valueOf(e));
+      return wheelInjectionFailure(paths, e);
     }
     String result, cleanup = "";
     try {
@@ -311,22 +333,22 @@ public final class AdbBridge {
           FileOutputStream out = new FileOutputStream(archive)) {
         FileIntegrity.copy(in, out, 128L * 1024 * 1024);
       }
+      AdbWheelCache.Lock lock;
+      try (InputStream in = ctx.getAssets().open("adb-wheels.lock.json");
+          java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream()) {
+        FileIntegrity.copy(in, bytes, 64 * 1024);
+        lock = AdbWheelCache.Lock.read(bytes.toByteArray());
+      }
       File bundled = new File(stage, "wheels");
       if (!bundled.mkdir())
         throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("无法创建 wheel 解包目录"));
       TarGzipExtractor.extract(archive, bundled);
       AdbWheelCache.Merge report =
-          AdbWheelCache.fillMissing(
-              new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
-              bundled,
-              new File(proot.getRootfsDir(), "root/.dsh/wheels"),
-              archive,
-              new File(proot.getRootfsDir(), "root/.dsh/adb-wheels.tar.gz"));
+          AdbWheelCache.fillMissing(fs, bundled, paths.wheels, archive, paths.archive, lock);
+      paths.verify();
       result = report.message();
     } catch (Exception e) {
-      result =
-          com.deepseekharness.app.util.UiText.format(
-              "WHEELS_INJECT_FAIL: %s；已有缓存原样保留，未用 APK 覆盖", SensitiveData.redact(String.valueOf(e)));
+      result = wheelInjectionFailure(paths, e);
     } finally {
       try {
         AdbWheelCache.removeStage(stage, boundary);
@@ -335,6 +357,33 @@ public final class AdbBridge {
       }
     }
     return result + cleanup;
+  }
+
+  private static AdbWheelPaths wheelPaths(
+      Context ctx, ProotBootstrap proot, com.deepseekharness.app.backup.BackupFileSystem fs)
+      throws java.io.IOException {
+    Context app = ctx.getApplicationContext();
+    return AdbWheelPaths.bind(
+        fs, new File(app.getApplicationInfo().dataDir), app.getFilesDir(), proot.getRootfsDir());
+  }
+
+  private static String wheelInjectionFailure(AdbWheelPaths paths, Exception error) {
+    String state = "CACHE_STATE_UNAVAILABLE";
+    if (paths != null)
+      try {
+        state = paths.cacheState();
+      } catch (java.io.IOException unavailable) {
+        state += ":" + inlineDiagnostic(SensitiveData.redact(String.valueOf(unavailable)));
+      }
+    return com.deepseekharness.app.util.UiText.format(
+        "WHEELS_INJECT_FAIL: %s；目标 %s；%s；未覆盖已有条目",
+        inlineDiagnostic(SensitiveData.redact(String.valueOf(error))),
+        inlineDiagnostic(paths == null ? "/root/.dsh/wheels" : paths.wheels.getAbsolutePath()),
+        state);
+  }
+
+  private static String inlineDiagnostic(String value) {
+    return value.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t");
   }
 
   private static boolean keyPresent(ProotBootstrap proot) {
@@ -349,9 +398,13 @@ public final class AdbBridge {
     String r =
         execOwned(
             proot,
-            "python3 -c 'import adb_shell_wifi; from spake2.spake2 import Spake2_Alice, Spake2_Bob' 2>/dev/null && echo YES || echo NO",
+            "python3 -c 'import adb_shell_wifi; from spake2.spake2 import Spake2_Alice, Spake2_Bob' 2>/dev/null && echo ADB_DEPS_READY || echo ADB_DEPS_MISSING",
             60_000);
-    return r != null && r.contains("YES");
+    return AdbResult.marker(r, "ADB_DEPS_READY")
+        && !AdbResult.marker(r, "ADB_DEPS_MISSING")
+        && !r.contains("[ADB_PROCESS_EXIT=")
+        && !AdbResult.marker(r, "ADB_ERROR")
+        && !AdbResult.marker(r, "ADB_PROCESS_EXIT_UNCONFIRMED");
   }
 
   /** 单次配对。pairPort 为空时脚本内尝试 mdns 发现；host 为 App 解析出的真实 IP。 */

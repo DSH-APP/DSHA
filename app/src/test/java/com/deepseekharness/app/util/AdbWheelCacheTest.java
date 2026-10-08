@@ -47,6 +47,21 @@ public class AdbWheelCacheTest {
     return Files.readString(file.toPath());
   }
 
+  private String sha(File file) throws IOException {
+    try (InputStream in = new FileInputStream(file)) {
+      return FileIntegrity.copy(in, null, 128L * 1024 * 1024).sha256;
+    }
+  }
+
+  private AdbWheelCache.Lock lock(File bundled, File archive) throws IOException {
+    java.util.Map<String, String> wheels = new java.util.LinkedHashMap<>();
+    for (File wheel : bundled.listFiles()) wheels.put(wheel.getName(), sha(wheel));
+    return AdbWheelCache.Lock.read(
+        com.deepseekharness.app.backup.BackupJson.write(
+            java.util.Map.of("schema", 1L, "archiveSha256", sha(archive), "wheels", wheels),
+            64 * 1024));
+  }
+
   @Test
   public void partialCacheKeepsModifiedSameNameExtraAndArchiveAndInstallsTheirContent()
       throws Exception {
@@ -69,7 +84,8 @@ public class AdbWheelCacheTest {
             bundled,
             cache,
             archive,
-            restored);
+            restored,
+            lock(bundled, archive));
     assertEquals(1, merged.added);
     assertEquals(1, merged.modified);
     assertEquals(1, merged.extra);
@@ -362,5 +378,88 @@ public class AdbWheelCacheTest {
     assertNotNull(collision[0]);
     assertEquals("unknown original", text(collision[0]));
     assertFalse(new File(cache, "a.whl").exists());
+  }
+
+  @Test
+  public void wrongArchiveOrWheelHashCannotPublishIntoAnEmptyCache() throws Exception {
+    File bundled = temp.newFolder(), cache = temp.newFolder();
+    File wheel = wheel(bundled, "a.whl", "a.py", "signed content");
+    File archive = file(temp.getRoot(), "apk.bundle", "signed archive");
+    var lock = lock(bundled, archive);
+    var fs = new com.deepseekharness.app.backup.JvmBackupFileSystem();
+    File destination = new File(temp.getRoot(), "cached.bundle");
+    file(temp.getRoot(), "apk.bundle", "changed archive");
+    assertEquals(
+        "WHEELS_ARCHIVE_HASH_MISMATCH",
+        assertThrows(
+                IOException.class,
+                () -> AdbWheelCache.fillMissing(fs, bundled, cache, archive, destination, lock))
+            .getMessage());
+    assertEquals(0, cache.list().length);
+    file(temp.getRoot(), "apk.bundle", "signed archive");
+    wheel(bundled, "a.whl", "a.py", "different but valid wheel");
+    assertTrue(
+        assertThrows(
+                IOException.class,
+                () -> AdbWheelCache.fillMissing(fs, bundled, cache, archive, destination, lock))
+            .getMessage()
+            .contains("WHEELS_BUNDLE_HASH_MISMATCH:a.whl"));
+    assertEquals(0, cache.list().length);
+    assertFalse(destination.exists());
+    assertTrue(wheel.isFile());
+  }
+
+  @Test
+  public void missingOrUnexpectedBundleMemberIsRejectedBySignedLock() throws Exception {
+    File bundled = temp.newFolder(), cache = temp.newFolder();
+    File original = wheel(bundled, "a.whl", "a.py", "signed module");
+    File archive = file(temp.getRoot(), "apk.bundle", "signed archive");
+    var lock = lock(bundled, archive);
+    var fs = new com.deepseekharness.app.backup.JvmBackupFileSystem();
+    File destination = new File(temp.getRoot(), "cached.bundle");
+    wheel(bundled, "extra.whl", "extra.py", "unexpected module");
+    assertThrows(
+        IOException.class,
+        () -> AdbWheelCache.fillMissing(fs, bundled, cache, archive, destination, lock));
+    assertEquals(0, cache.list().length);
+    assertTrue(new File(bundled, "extra.whl").delete());
+    assertTrue(original.delete());
+    assertThrows(
+        IOException.class,
+        () -> AdbWheelCache.fillMissing(fs, bundled, cache, archive, destination, lock));
+    assertEquals(0, cache.list().length);
+  }
+
+  @Test
+  public void silentCacheWriteCorruptionIsDetectedBeforeWheelPublication() throws Exception {
+    File bundled = temp.newFolder(), cache = temp.newFolder();
+    wheel(bundled, "a.whl", "a.py", "signed content");
+    File archive = file(temp.getRoot(), "apk.bundle", "signed archive");
+    var fs =
+        new com.deepseekharness.app.backup.JvmBackupFileSystem() {
+          @Override
+          public OutputStream create(File file) throws IOException {
+            return new FilterOutputStream(super.create(file)) {
+              @Override
+              public void write(byte[] bytes, int offset, int length) throws IOException {
+                out.write(bytes, offset, Math.min(2, length));
+              }
+            };
+          }
+        };
+    IOException failure =
+        assertThrows(
+            IOException.class,
+            () ->
+                AdbWheelCache.fillMissing(
+                    fs,
+                    bundled,
+                    cache,
+                    archive,
+                    new File(temp.getRoot(), "cached.bundle"),
+                    lock(bundled, archive)));
+    assertTrue(failure.getMessage().contains("WHEELS_CACHE_COPY_HASH_MISMATCH:a.whl"));
+    assertEquals(0, cache.list().length);
+    assertTrue(new File(bundled, "a.whl").isFile());
   }
 }

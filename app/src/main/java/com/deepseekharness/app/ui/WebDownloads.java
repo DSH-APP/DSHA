@@ -56,6 +56,10 @@ public final class WebDownloads {
           } else {
             dismiss();
             if (state.phase().equals("ready") && !model.pickerOpen) {
+              if (model.isShareRequested()) {
+                model.prepareShare();
+                return;
+              }
               model.pickerOpen = true;
               Intent intent =
                   new Intent(Intent.ACTION_CREATE_DOCUMENT)
@@ -70,6 +74,28 @@ public final class WebDownloads {
                 Toast.makeText(
                         activity,
                         com.deepseekharness.app.util.UiText.text("无法打开保存位置选择器，请启用系统文件应用后重试"),
+                        Toast.LENGTH_LONG)
+                    .show();
+              }
+            } else if (state.phase().equals("share-ready")) {
+              android.net.Uri uri = model.takeShareUri();
+              if (uri == null) return;
+              try {
+                Intent send =
+                    new Intent(Intent.ACTION_SEND)
+                        .setType(model.shareMime())
+                        .putExtra(Intent.EXTRA_STREAM, uri)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                send.setClipData(android.content.ClipData.newRawUri(model.fileName(), uri));
+                activity.startActivity(
+                    Intent.createChooser(send, com.deepseekharness.app.util.UiText.text("分享")));
+                model.shareOpened(true);
+              } catch (RuntimeException error) {
+                model.shareOpened(false);
+                Toast.makeText(
+                        activity,
+                        com.deepseekharness.app.util.UiText.choose(
+                            "无法打开分享面板", "Unable to open the share picker"),
                         Toast.LENGTH_LONG)
                     .show();
               }

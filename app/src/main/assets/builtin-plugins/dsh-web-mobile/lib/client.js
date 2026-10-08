@@ -367,19 +367,24 @@ function createReconcilerCore(options) {
             forceAll = false;
             return;
         }
-        if (forceAll) {
+        // Snapshot and clear BEFORE running tasks: a task that calls note() from
+        // inside ensure() must leave its key dirty for the next pass. Clearing at
+        // the end swallowed exactly those keys (issue #86).
+        const keys = dirty;
+        const all = forceAll;
+        dirty = new Set();
+        forceAll = false;
+        if (all) {
             for (const task of active)
                 runEnsure(task);
         }
-        else if (dirty.size > 0) {
+        else if (keys.size > 0) {
             for (const task of active) {
                 const scopes = task.scopes;
-                if (scopes === undefined || scopes.some((key) => dirty.has(key)))
+                if (scopes === undefined || scopes.some((key) => keys.has(key)))
                     runEnsure(task);
             }
         }
-        dirty.clear();
-        forceAll = false;
     };
     const schedule = () => {
         if (pending !== null)
@@ -397,10 +402,12 @@ function createReconcilerCore(options) {
         }
         return () => {
             registered.delete(task);
-            if (active !== null) {
-                active.delete(task);
+            // Ownership check: the disposer is idempotent and only disposes a task
+            // that is actually active. Without it, calling one disposer twice ran
+            // dispose() twice (and a stale disposer could dispose a task this call
+            // never registered — issue #86).
+            if (active !== null && active.delete(task))
                 runDispose(task);
-            }
         };
     };
     const activate = () => {
@@ -450,9 +457,11 @@ __modules["core/sessions-compat.js"] = function (require, module, exports) {
 // These helpers let call sites stay compile-green against rc.2 typings while
 // degrading explicitly on an a2 host instead of throwing or silently dying.
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DELETE_VERIFY_INTERVAL_MS = exports.DELETE_VERIFY_ATTEMPTS = void 0;
 exports.currentSessionIdOf = currentSessionIdOf;
 exports.sessionsCanClear = sessionsCanClear;
 exports.sessionsCanOpen = sessionsCanOpen;
+exports.verifySessionDeleted = verifySessionDeleted;
 /** The current session id: rc.2's `current` field when present, else the a2
  *  main-view-retained session. Undefined when the shape matches neither. */
 function currentSessionIdOf(list) {
@@ -481,6 +490,41 @@ function sessionsCanClear(sessions) {
  *  phone-chrome) instead of throwing inside the capture pointerup listener. */
 function sessionsCanOpen(sessions) {
     return typeof sessions?.open === 'function';
+}
+/** How many times an unanswered delete request is re-checked against the list. */
+exports.DELETE_VERIFY_ATTEMPTS = 4;
+/** Delay between two re-checks of the session list. */
+exports.DELETE_VERIFY_INTERVAL_MS = 350;
+/**
+ * Decide whether a session delete landed even though no HTTP response arrived.
+ *
+ * The delete route is the plugin's only REST call, and the host half deployed
+ * on DSHA aborts its reply AFTER the handler already moved the session into the
+ * trash: the browser rejects the fetch with `TypeError: Failed to fetch`
+ * (`net::ERR_EMPTY_RESPONSE`) for a delete that DID happen. Reporting that as a
+ * failure is a lie the user has to work around, so the session list — not the
+ * fetch promise — is the judge: re-read it a bounded number of times and only
+ * conclude failure when the id survives every attempt.
+ *
+ * @param deps - list accessors plus the injected wait.
+ * @returns true as soon as the id is gone, false when it survives the budget.
+ */
+async function verifySessionDeleted(deps) {
+    const attempts = deps.attempts ?? exports.DELETE_VERIFY_ATTEMPTS;
+    const intervalMs = deps.intervalMs ?? exports.DELETE_VERIFY_INTERVAL_MS;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+        try {
+            await deps.refresh?.();
+        }
+        catch {
+            // A failed refresh is not an answer; the snapshot below still is.
+        }
+        if (!deps.listed())
+            return true;
+        if (attempt + 1 < attempts)
+            await deps.sleep(intervalMs);
+    }
+    return !deps.listed();
 }
 };
 __modules["effects/aionui-compat.js"] = function (require, module, exports) {
@@ -515,9 +559,13 @@ function installAionuiCompat(ctx) {
         const DESKTOP_APPVERSION = '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
         let restoreTimer = null;
         let spoofed = false;
-        let originalPlatform = navigator.platform;
-        let originalUserAgent = navigator.userAgent;
-        let originalAppVersion = navigator.appVersion;
+        // Restore what was actually there: an own descriptor if the page had one,
+        // otherwise REMOVE the own property we added so the prototype's getter shows
+        // through again. Writing the old VALUE back as an own property leaves a
+        // permanent own-property shadow behind (issue #86), which changes
+        // `Object.keys(navigator)` / descriptor probes for the rest of the session.
+        const NAV_KEYS = ['platform', 'userAgent', 'appVersion'];
+        const savedNavigator = new Map();
         const restoreNavigator = () => {
             if (restoreTimer !== null) {
                 window.clearTimeout(restoreTimer);
@@ -526,15 +574,20 @@ function installAionuiCompat(ctx) {
             if (!spoofed)
                 return;
             spoofed = false;
-            Object.defineProperty(navigator, 'platform', { value: originalPlatform, configurable: true });
-            Object.defineProperty(navigator, 'userAgent', { value: originalUserAgent, configurable: true });
-            Object.defineProperty(navigator, 'appVersion', { value: originalAppVersion, configurable: true });
+            for (const key of NAV_KEYS) {
+                const descriptor = savedNavigator.get(key) ?? null;
+                if (descriptor === null)
+                    delete navigator[key];
+                else
+                    Object.defineProperty(navigator, key, descriptor);
+            }
+            savedNavigator.clear();
         };
         const spoofDesktop = () => {
             if (!spoofed) {
-                originalPlatform = navigator.platform;
-                originalUserAgent = navigator.userAgent;
-                originalAppVersion = navigator.appVersion;
+                for (const key of NAV_KEYS) {
+                    savedNavigator.set(key, Object.getOwnPropertyDescriptor(navigator, key) ?? null);
+                }
                 Object.defineProperty(navigator, 'platform', { value: 'Win32', configurable: true });
                 Object.defineProperty(navigator, 'userAgent', { value: DESKTOP_UA, configurable: true });
                 Object.defineProperty(navigator, 'appVersion', { value: DESKTOP_APPVERSION, configurable: true });
@@ -695,7 +748,15 @@ function createStatsLineTask() {
         const box = reserve.getBoundingClientRect();
         const base = container.getBoundingClientRect();
         const left = box.left - base.left - container.clientLeft;
-        const top = box.top - base.top - container.clientTop;
+        // Center the host on its slot vertically, not top-align it. Measured
+        // 2026-09-29 (issue #140 acceptance): the 20px ring top-aligned on its
+        // 16px reserve hung its center at y=793 while the neighbouring keys sit
+        // at 789-791 — reported as「不与其他小UI对齐」. Centering is a no-op for
+        // same-height overlays (the 0.1.5/0.1.6 TPS text) and aligns the ring
+        // with the cluster. hostRect is read BEFORE the style write below; its
+        // height does not depend on top/left, so the math is stable across flushes.
+        const hostRect = host.getBoundingClientRect();
+        const top = box.top - base.top - container.clientTop - (hostRect.height - box.height) / 2;
         const styled = host;
         if (styled.style.left !== `${left}px`)
             styled.style.left = `${left}px`;
@@ -1895,6 +1956,8 @@ function startFollow() {
 /** True while the drawer subtree layout+paint is deliberately deferred by
  * the arm-time content-visibility split (see armOpenFollow). */
 let cvDeferred = false;
+/** Pending reveal chain handle (double rAF); cancelled on dispose. */
+let armRevealRaf = 0;
 /** Re-materialize the drawer contents after the mount-frame split. */
 function revealDrawerContent() {
     if (!cvDeferred)
@@ -1932,8 +1995,14 @@ function armOpenFollow(ctx) {
     cvDeferred = true;
     openFollowArmed = true;
     ctx.layout.toggleSidebar();
-    requestAnimationFrame(() => {
-        requestAnimationFrame(revealDrawerContent);
+    // Two frames (layout flush, then reveal). Kept in module state so a dispose
+    // between them cancels the chain instead of revealing a drawer that no
+    // longer belongs to this effect (issue #86).
+    armRevealRaf = requestAnimationFrame(() => {
+        armRevealRaf = requestAnimationFrame(() => {
+            armRevealRaf = 0;
+            revealDrawerContent();
+        });
     });
 }
 /**
@@ -2044,6 +2113,18 @@ function finishPendingCommit() {
  * lands. One-shot: a second call settles the previous commit first. */
 function commitWithAnimation(ctx, el, targetTx) {
     finishPendingCommit();
+    // prefers-reduced-motion: degrade the animation instead of adding one. This
+    // cannot be left to CSS — the transition written below is inline
+    // `!important`, which the stylesheet's reduce block cannot override, and the
+    // gesture-close path reaches here without a reduce check (issue #86). Land
+    // the exact same guarded commit, just without the animation beat.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        (0, overlay_backdrop_fab_ts_1.fadeOverlayOut)();
+        cooldownUntil = performance.now() + COOLDOWN_MS;
+        pendingCommit = { el, ctx, timer: 0 };
+        finishPendingCommit();
+        return;
+    }
     el.style.setProperty('transition', `transform ${COMMIT_ANIM_MS}ms ease-in-out`, 'important');
     // Flush the before-change style so the transition provably starts from the
     // current (finger) position instead of risking a coalesced recalc that
@@ -2373,12 +2454,9 @@ function endStroke(ctx, event, rtl, viewportWidthPx) {
             : classifySwipe({
                 openDistanceRatio: OPEN_DISTANCE_RATIO,
                 closeDistanceRatio: CLOSE_DISTANCE_RATIO,
-                velocityWindowMs: VELOCITY_WINDOW_MS,
                 openVelocity: OPEN_VELOCITY,
                 closeVelocity: CLOSE_VELOCITY,
                 lockPx: LOCK_PX,
-                cooldownMs: COOLDOWN_MS,
-                startZonePx: startZonePxFor(viewportWidthPx),
                 viewportWidthPx,
                 drawerOpen: lockDrawerOpen,
             }, { dx, dy, velX: vel }, rtl);
@@ -2646,6 +2724,10 @@ function installSidebarSwipe(ctx, filesToggle) {
             document.removeEventListener('touchmove', onTouchMove, { capture: true });
             document.removeEventListener('visibilitychange', onVisibility);
             window.removeEventListener('blur', onBlur);
+            if (armRevealRaf !== 0) {
+                cancelAnimationFrame(armRevealRaf);
+                armRevealRaf = 0;
+            }
             abortStroke(ctx, true);
         };
     });
@@ -2659,6 +2741,7 @@ exports.installMobileEffect = installMobileEffect;
 exports.findFrame = findFrame;
 exports.getFrame = getFrame;
 exports.ensureDismissShadow = ensureDismissShadow;
+exports.installSelectionChromeYield = installSelectionChromeYield;
 exports.installFrameController = installFrameController;
 exports.installReconciler = installReconciler;
 exports.addReconcilerTask = addReconcilerTask;
@@ -2700,20 +2783,6 @@ exports.DESKTOP_QUERY = '(min-width: 1024px)';
  *  layout but still gets the 「删除会话」 item. Mouse-driven or pointer-less
  *  windows never arm it, at any width. */
 exports.TOUCH_QUERY = '(pointer: coarse)';
-/** Long press on a session row opens its ⋯ menu — the phone equivalent of the
- *  desktop hover that reveals the row actions (the host renders them with
- *  `display: none` until `:hover` or `menuOpen`, neither of which touch ever
- *  reaches). Long enough to be deliberate, short enough to read as a context
- *  menu. */
-const LONG_PRESS_MS = 500;
-/** Pointer travel that cancels a long press (the swipe layer locks at 8px). */
-const LONG_PRESS_MOVE_PX = 10;
-/** How long the lift may not close the menu the press opened: the host menu
- *  closes on pointerleave, and the finger lift itself fires one. */
-const LONG_PRESS_MENU_GUARD_MS = 1200;
-/** Window in which the press's own synthesized click is swallowed, so the lift
- *  neither navigates the row nor collapses the drawer. */
-const LONG_PRESS_CLICK_SWALLOW_MS = 800;
 /** Finger-down to finger-up travel that still counts as a tap on a session row
  *  (#49). Per-axis (`isTapWithinSlop` is max-norm, not Euclidean): the drawer
  *  list scrolls vertically, so a 60px vertical drift must not navigate while a
@@ -2796,6 +2865,108 @@ function ensureDismissShadow() {
     pane.insertBefore(element, pane.firstElementChild);
 }
 /**
+ * Height of the phone conversation header, published as a CSS variable so the
+ * scroll body can extend up under it (layout.css.ts "selection-drag autoscroll
+ * ramp": the distance from the list's top edge decides how fast Blink
+ * autoscrolls a selection drag). Measured from the frame's top to the header's
+ * bottom - exactly how far the scrollport's box has to grow upward - which also
+ * stays correct when the header's own top is pushed down by safe-area padding.
+ */
+const HEADER_HEIGHT_VAR = '--mobile-nav-header-h';
+const HEADER_SELECTOR = '[data-mobile-nav="frame"] [data-phase] header';
+let observedHeader = null;
+let headerObserver = null;
+/** Publish the header height, idempotently: the variable write is itself an
+ *  attribute mutation on <html>, so an unconditional write would keep dirtying
+ *  the reconciler. */
+function publishHeaderHeight() {
+    if (typeof document === 'undefined')
+        return;
+    const frame = getFrame();
+    const header = observedHeader;
+    const unmeasurable = header === null || frame === null
+        || !(header instanceof HTMLElement)
+        || header.offsetHeight === 0;
+    const next = unmeasurable
+        ? '0px'
+        : `${Math.round(Math.max(0, header.getBoundingClientRect().bottom - frame.getBoundingClientRect().top))}px`;
+    const root = document.documentElement;
+    if (root.style.getPropertyValue(HEADER_HEIGHT_VAR) !== next) {
+        root.style.setProperty(HEADER_HEIGHT_VAR, next);
+    }
+}
+/** Reattach the ResizeObserver when React swaps the header element, then
+ *  publish. Cheap while nothing changes: one querySelector + an identity
+ *  compare, no layout work until the header is actually replaced. */
+function syncHeaderHeight() {
+    if (typeof document === 'undefined')
+        return;
+    const header = document.querySelector(HEADER_SELECTOR);
+    if (header !== observedHeader) {
+        headerObserver?.disconnect();
+        observedHeader = header;
+        if (header !== null && typeof ResizeObserver !== 'undefined') {
+            headerObserver = headerObserver ?? new ResizeObserver(() => { publishHeaderHeight(); });
+            headerObserver.observe(header);
+        }
+    }
+    publishHeaderHeight();
+}
+/**
+ * Marker set on <html> while a non-collapsed text selection lives in the
+ * conversation. CSS uses it to drop the header out of the hit test (see
+ * layout.css.ts "selection handle drag: keep the extent local"):
+ * the native Android handle drag resolves the selection extent by hit-testing
+ * the handle position, and an unselectable bar sitting there makes Blink walk
+ * FORWARD in DOM order to the first selectable node - measured on the live host
+ * as the flow's very first item (the "Load earlier" gate) - which the browser
+ * then reveals, so the viewport teleports to the top of the conversation instead
+ * of extending the selection by a line. Drop the bar out of the hit test and the
+ * same point resolves to the message the lifted scroll box now puts there.
+ */
+const SELECTING_ATTR = 'data-mobile-nav-selecting';
+/** True while the document selection is a non-collapsed range inside the
+ *  conversation (composer / drawer selections do not count - they must keep
+ *  their own chrome interactive). Cheap by design: no layout reads, because
+ *  selectionchange fires on every handle move. */
+function selectionLivesInConversation() {
+    const selection = window.getSelection();
+    if (selection === null || selection.isCollapsed)
+        return false;
+    const node = selection.anchorNode;
+    if (node === null)
+        return false;
+    const element = node instanceof HTMLElement ? node : node.parentElement;
+    if (element === null)
+        return false;
+    if (element.closest('[data-composer-card]') !== null)
+        return false;
+    return element.closest('[data-phase]') !== null;
+}
+/** Toggle the selection marker for the duration of a conversation selection. */
+function installSelectionChromeYield(ctx) {
+    installMobileEffect(ctx, 'dsh-web-mobile: selection chrome yield', () => {
+        if (typeof document === 'undefined')
+            return undefined;
+        const root = document.documentElement;
+        const sync = () => {
+            const wanted = selectionLivesInConversation();
+            if (wanted === root.hasAttribute(SELECTING_ATTR))
+                return;
+            if (wanted)
+                root.setAttribute(SELECTING_ATTR, '');
+            else
+                root.removeAttribute(SELECTING_ATTR);
+        };
+        document.addEventListener('selectionchange', sync);
+        sync();
+        return () => {
+            document.removeEventListener('selectionchange', sync);
+            root.removeAttribute(SELECTING_ATTR);
+        };
+    });
+}
+/**
  * Frame marker controller: owns `data-mobile-nav="frame"` and every plugin
  * marker that can survive on the shell-owned frame. Installed once at apply
  * time so effects no longer each need to find/set/clear the frame. Returns a
@@ -2834,7 +3005,23 @@ function installFrameController() {
             frame = null;
         },
     });
+    const removeHeaderMetrics = addReconcilerTask({
+        name: 'header-metrics',
+        scopes: ['*'],
+        ensure: () => {
+            syncHeaderHeight();
+        },
+        dispose: () => {
+            headerObserver?.disconnect();
+            headerObserver = null;
+            observedHeader = null;
+            if (typeof document !== 'undefined') {
+                document.documentElement.style.removeProperty(HEADER_HEIGHT_VAR);
+            }
+        },
+    });
     return () => {
+        removeHeaderMetrics();
         removeTask();
         frameControllerInstalled = false;
     };
@@ -3200,69 +3387,17 @@ function installOverlayInteractions(ctx) {
         let navSignatureAtArm = '';
         let navObserver = null;
         let navTimer = null;
-        // 2026-09-22 交互契约（群内统一）：单击 = 选中、双击 = 打开、长按 = 改会话名。
-        // 宿主 0.1.7 把「改会话名」挂在会话行标题的 dblclick 上（onRenameRequest），
-        // 而这恰好是双击手势要用的那个事件：双击会既打开会话又弹改名框。所以真实
-        // dblclick 在这里被吞掉（下方 onDrawerDoubleClick），长按则重放同一个事件去
-        // 开宿主自己的改名框（requestRowRename）——只有我们派发的那一个事件被放行。
-        // Touch has no hover, so the host's `_rowActions` — the ⋯ menu anchor — never
-        // shows up by itself: only `:hover` and `menuOpen` reveal it. Long press used
-        // to be the touch path to that menu; it belongs to rename now, so the mobile
-        // stylesheet pins `_rowActions` open instead (删除 / 归档 / 分叉 仍有触屏入口).
-        // The host menu closes on pointerleave, which the finger lift itself fires,
-        // and that lift still synthesizes a click on the row: both need guarding.
-        let pressTimer = null;
-        let pressOrigin = null;
-        let pressRow = null;
-        let pressFired = false;
-        let menuGuardUntil = 0;
-        let swallowClickUntil = 0;
-        let swallowClickRow = null;
-        const clearPress = () => {
-            if (pressTimer !== null)
-                window.clearTimeout(pressTimer);
-            pressTimer = null;
-            pressOrigin = null;
-            pressRow = null;
-            pressFired = false;
-        };
-        const openRowMenu = (row) => {
-            // A menu already on screen owns the gesture (host touch path, another
-            // plugin's long press); clicking the anchor again would close it.
-            if (document.querySelector('[role="menu"]') !== null)
-                return;
-            const button = row.querySelector('[class*="_rowActions"] button');
-            if (button === null)
-                return;
-            menuGuardUntil = performance.now() + LONG_PRESS_MENU_GUARD_MS;
-            button.click();
-        };
-        /** The only `dblclick`s allowed through to the host are the ones we
-         *  dispatch ourselves: a real one is the double *tap* that means "open the
-         *  session", and letting it reach the title would open the rename dialog on
-         *  the same gesture. Identity, not a flag on the event: nothing else can
-         *  forge it. */
-        const syntheticDoubleClicks = new WeakSet();
-        /** 长按 = 改会话名：宿主把改名挂在标题的 dblclick 上，这里重放那个事件，
-         *  而不是复制一套弹窗链路（宿主的 rename 状态机是包内私有的）。
-         *  @returns 是否成功派发；宿主标记变了、拿不到标题时为 false，调用方回退。 */
-        const requestRowRename = (row) => {
-            const title = row.querySelector('[class*="_title"]');
-            if (title === null)
-                return false;
-            const event = new MouseEvent('dblclick', { bubbles: true, cancelable: true, view: window });
-            syntheticDoubleClicks.add(event);
-            title.dispatchEvent(event);
-            return true;
-        };
-        /** Swallow the host's title-double-click rename (the 2026-09-22 contract puts
-         *  rename on long press, and double tap on "open"). Capture phase on
-         *  `document`, so the event never reaches React's root container and the
-         *  title's own onDoubleClick cannot run. Armed only inside the mobile
-         *  environment (this effect is MOBILE_QUERY-gated), so mouse-driven desktops
-         *  keep the host behaviour untouched. */
+        /** Swallow the host's title double-click rename: on touch a double *tap*
+         *  means "open the session" (DSHA's own two-tap detection sits on the row's
+         *  click handler), and letting the browser's `dblclick` reach the title would
+         *  open the host's rename dialog on that same gesture. Capture phase on
+         *  `document`, so the event never reaches React's root container. Only real
+         *  (trusted) events are swallowed — nothing here dispatches a synthetic
+         *  dblclick since the long-press rename was dropped (2026-10-07). Armed only
+         *  inside the mobile environment (this effect is MOBILE_QUERY-gated), so
+         *  mouse-driven desktops keep the host behaviour untouched. */
         const onDrawerDoubleClick = (event) => {
-            if (syntheticDoubleClicks.has(event))
+            if (!event.isTrusted)
                 return;
             const target = event.target;
             if (!(target instanceof Element))
@@ -3339,6 +3474,8 @@ function installOverlayInteractions(ctx) {
         // arrives — the store is the honest source of "navigation happened".
         let closeOnNavUnsub = null;
         let closeOnNavDone = false;
+        /** The queued `fire` handle: cleared on disarm so disposal leaves no timer. */
+        let closeOnNavTimer = 0;
         /** Disarming means spent: mark the close done before dropping the
          *  subscription, so a `fire` a subscription tick already queued cannot
          *  toggle the drawer after the close was handed to the other closer. */
@@ -3346,6 +3483,10 @@ function installOverlayInteractions(ctx) {
             closeOnNavDone = true;
             closeOnNavUnsub?.();
             closeOnNavUnsub = null;
+            if (closeOnNavTimer !== 0) {
+                window.clearTimeout(closeOnNavTimer);
+                closeOnNavTimer = 0;
+            }
         };
         const closeOnNavigation = (id) => {
             disarmCloseOnNav();
@@ -3360,81 +3501,25 @@ function installOverlayInteractions(ctx) {
             closeOnNavUnsub = ctx.sessions.list.subscribe(() => {
                 if ((0, sessions_compat_ts_1.currentSessionIdOf)(ctx.sessions.list.getSnapshot()) !== id)
                     return;
-                window.setTimeout(fire, 0);
+                if (closeOnNavTimer !== 0)
+                    window.clearTimeout(closeOnNavTimer);
+                closeOnNavTimer = window.setTimeout(() => {
+                    closeOnNavTimer = 0;
+                    fire();
+                }, 0);
             });
         };
+        /** Record where a touch started. The no-click row-tap fallback in
+         *  onDrawerPointerUp resolves the row's session id at the lift and needs the
+         *  down point to tell a tap from a scroll or a swipe, so every touch
+         *  pointerdown records it BEFORE any early return. */
         const onDrawerPointerDown = (event) => {
             touchDownAt = event.pointerType === 'touch' || event.pointerType === 'pen'
                 ? { x: event.clientX, y: event.clientY }
                 : null;
-            clearPress();
-            if (event.pointerType !== 'touch' && event.pointerType !== 'pen')
-                return;
-            if ((0, gesture_guard_ts_1.isStrokeLocked)())
-                return;
-            const target = event.target;
-            // isDrawerNavTarget already means "inside the drawer, on a row navigation
-            // target, and not on one of its buttons" — and it must stay the
-            // exemption-free base: arming long-press through the tap-close predicate
-            // made DSHA rows un-armable, killing their only touch path to the ⋯ menu.
-            if (!isDrawerNavTarget(target) || !(target instanceof Element))
-                return;
-            const row = target.closest('[class*="_sessionRow"]');
-            if (row === null || target.closest('[class*="_rowActions"]') !== null)
-                return;
-            pressOrigin = { x: event.clientX, y: event.clientY };
-            pressRow = row;
-            pressTimer = window.setTimeout(() => {
-                pressTimer = null;
-                if (pressRow === null)
-                    return;
-                pressFired = true;
-                // 长按 = 改会话名。拿不到标题（宿主标记变了）就退回 ⋯ 菜单：长按至少还能
-                // 到达行操作，而不是变成一个什么都不做的死手势。
-                if (!requestRowRename(pressRow))
-                    openRowMenu(pressRow);
-            }, LONG_PRESS_MS);
-        };
-        const onDrawerPointerMove = (event) => {
-            if (pressOrigin === null)
-                return;
-            if ((0, gesture_guard_ts_1.isStrokeLocked)()) {
-                clearPress();
-                return;
-            }
-            if (Math.abs(event.clientX - pressOrigin.x) > LONG_PRESS_MOVE_PX
-                || Math.abs(event.clientY - pressOrigin.y) > LONG_PRESS_MOVE_PX) {
-                clearPress();
-            }
-        };
-        // The host menu closes on pointerleave of its anchor; the finger lift fires
-        // one right after the press opened the menu, so stay out of the way until
-        // the finger is long gone.
-        const onDrawerPointerLeave = (event) => {
-            if (performance.now() > menuGuardUntil)
-                return;
-            const target = event.target;
-            if (!(target instanceof Element))
-                return;
-            if (target.closest('[class*="_rowActions"]') === null
-                && target.closest('[class*="_sessionRow"]') === null)
-                return;
-            event.stopPropagation();
         };
         const onDrawerClick = (event) => {
-            // The long press's own synthesized click is the one click that must not
-            // act: the row was not tapped, and the menu it opened must survive. One
-            // click only — a later tap on the ⋯ reaches React normally.
             const target = event.target;
-            if (swallowClickRow !== null && performance.now() <= swallowClickUntil) {
-                if (target instanceof Element && (target === swallowClickRow || swallowClickRow.contains(target))) {
-                    swallowClickUntil = 0;
-                    swallowClickRow = null;
-                    event.preventDefault();
-                    event.stopPropagation();
-                    return;
-                }
-            }
             // A classified swipe already toggled the drawer; never let its
             // synthetic tap also close it / navigate a row (gesture-guard).
             // isStrokeLocked: a stroke axis-locked mid-swipe (audit S0) — the
@@ -3469,16 +3554,6 @@ function installOverlayInteractions(ctx) {
                 return;
             if (event.pointerType !== 'touch' && event.pointerType !== 'pen')
                 return;
-            const pressed = pressFired;
-            const pressedRow = pressRow;
-            clearPress();
-            if (pressed && pressedRow !== null) {
-                // The press already opened the menu: the lift must not also navigate
-                // or close the drawer.
-                swallowClickUntil = performance.now() + LONG_PRESS_CLICK_SWALLOW_MS;
-                swallowClickRow = pressedRow;
-                return;
-            }
             const target = event.target;
             if (!(target instanceof Element))
                 return;
@@ -3544,22 +3619,17 @@ function installOverlayInteractions(ctx) {
         document.addEventListener('keydown', onKeyDown, true);
         document.addEventListener('click', onDrawerClick, true);
         document.addEventListener('pointerdown', onDrawerPointerDown, true);
-        document.addEventListener('pointermove', onDrawerPointerMove, true);
-        document.addEventListener('pointerleave', onDrawerPointerLeave, true);
         document.addEventListener('pointerup', onDrawerPointerUp, true);
         return () => {
             disarmNav();
             // Also marks the close spent, so a queued `fire` cannot outlive the effect.
             disarmCloseOnNav();
             touchDownAt = null;
-            clearPress();
             document.removeEventListener('dsha-session-open', onDshaSessionOpen);
             document.removeEventListener('dblclick', onDrawerDoubleClick, true);
             document.removeEventListener('keydown', onKeyDown, true);
             document.removeEventListener('click', onDrawerClick, true);
             document.removeEventListener('pointerdown', onDrawerPointerDown, true);
-            document.removeEventListener('pointermove', onDrawerPointerMove, true);
-            document.removeEventListener('pointerleave', onDrawerPointerLeave, true);
             document.removeEventListener('pointerup', onDrawerPointerUp, true);
         };
     });
@@ -3713,8 +3783,11 @@ const icon_compat_ts_1 = require("./core/icon-compat.js");
  * aria-label is 「添加文件或调用指令」). The host still mounts its own hidden
  * `input[type=file]` in the composer tool row and its own command opens the
  * native dialog with exactly `fileInputRef.current?.click()`, so this control
- * triggers that same input instead of reimplementing intake: file validation,
- * upload and the availability policy all stay host-owned.
+ * hands the choice back to that same input instead of reimplementing intake:
+ * file validation, upload and the availability policy all stay host-owned.
+ * Since 2026-10-06 the tap opens the plugin's two-option sheet first
+ * (effects/composer-file-picker.ts: 上传图片 / 上传附件) — the button itself only
+ * renders and carries the disabled arms, so the picker path lives in one place.
  *
  * The control is contributed to the host-declared `conversation.input.left`
  * list slot ("Compact controls at the left of the composer tool row"), which
@@ -3733,15 +3806,7 @@ function ComposerFileButton({ useInput, useSession, t }) {
     const busy = useInput((state) => state.phase !== 'plain');
     const subagent = useSession((state) => state.subagent !== null);
     const disabled = busy || subagent;
-    const openPicker = (event) => {
-        if (disabled)
-            return;
-        const card = event.currentTarget.closest('[data-composer-card]');
-        const input = card === null ? null : card.querySelector('input[type=file]');
-        if (input !== null)
-            input.click();
-    };
-    return ((0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "file-upload", "aria-label": t('fileUpload'), title: t('fileUpload'), disabled: disabled, onClick: openPicker, children: (0, jsx_runtime_1.jsx)(icon_compat_ts_1.IconPaperclip, { size: 16 }) }));
+    return ((0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "file-upload", "aria-label": t('fileUpload'), title: t('fileUpload'), disabled: disabled, children: (0, jsx_runtime_1.jsx)(icon_compat_ts_1.IconPaperclip, { size: 16 }) }));
 }
 };
 __modules["styles/base.css.js"] = function (require, module, exports) {
@@ -3897,9 +3962,79 @@ exports.BASE_CSS = `
 }
 @media (prefers-reduced-motion: reduce) {
   [data-mobile-nav="delete-dialog-backdrop"],
-  [data-mobile-nav="delete-dialog"] {
+  [data-mobile-nav="delete-dialog"],
+  [data-mobile-nav="file-picker-backdrop"],
+  [data-mobile-nav="file-picker"] {
     animation: none !important;
   }
+}
+
+/* ---------- composer file picker (effects/composer-file-picker.ts) ----------
+   手机档回形针入口的两选项浮层（上传图片 / 上传附件）。宿主在 0.1.6 删掉了自带的
+   附件按钮，只剩 composer 里一个隐藏 input，直接点它只会弹系统文件选择器 ——
+   形态不可控、也没有「只挑图片」这条路（2026-10-06 报障）。
+   形态（同日店主反馈「这个 UI 太丑了，缩小点，不要从底部弹出」）：**贴锚点的小浮层**，
+   不是整宽底部弹层 —— 宽度贴着内容（「width: max-content」，上限 min(78vw, 240px)），行高 34px、
+   行间距 0（2026-10-07 店主：「之间的距离更紧致一点」+「右边的留白有点多了，往左边缩点」），字号 14px。
+   定位用「position: fixed」，top/left 由 JS 按回形针 rect 算（上方优先，夹进视口 8px
+   内边距，且**视口一变就重算** —— 键盘收起把整体下移一个键盘高时浮层必须跟着锚点走，
+   否则会停在会话中部，2026-10-07 真机报障），所以这里只写盒子、不写定位与整宽。
+   没有「取消」行：点浮层外或按返回键关闭（外层透明遮罩只负责收点击）。
+   挂 document.body（与上面的 delete-dialog 同一取舍：挂在 frame 里会被第三方
+   dismiss shim 的捕获链吞点击），z 在移动档块里抬到 1400。 */
+[data-mobile-nav="file-picker-backdrop"] {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: transparent;
+}
+[data-mobile-nav="file-picker"] {
+  position: fixed;
+  box-sizing: border-box;
+  /* 宽度贴着内容（2026-10-07 店主：「右边的留白有点多了，往左边缩点」）：
+     两行都是「图标 + 两字标签」，固定 168px 起步会在右侧留一大块空白。 */
+  width: max-content;
+  min-width: 0;
+  max-width: min(78vw, 240px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 5px;
+  border-radius: 12px;
+  background: var(--dsw-alias-bg-layer-2, #fff);
+  box-shadow: rgba(0, 0, 0, .16) 0 8px 28px, rgba(0, 0, 0, .06) 0 0 0 .5px;
+  animation: dsh-web-mobile-fade .12s var(--ds-ease-in-out, ease-in-out);
+}
+[data-mobile-nav="file-picker-option"] {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary, currentColor);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+[data-mobile-nav="file-picker-icon"] {
+  flex: none;
+  display: inline-flex;
+  color: var(--dsw-alias-label-secondary, currentColor);
+}
+[data-mobile-nav="file-picker-icon"] svg {
+  width: 18px;
+  height: 18px;
+}
+[data-mobile-nav="file-picker-option"]:active {
+  background: var(--dsw-alias-interactive-bg-active, rgba(127, 127, 127, .12));
 }
 
 /* ---------- popover band above the open drawer (mobile only) ----------
@@ -3962,6 +4097,10 @@ exports.BASE_CSS = `
   [data-mobile-nav="delete-dialog-backdrop"] {
     z-index: 1400 !important;
   }
+  /* 同一个带里：回形针弹层也要压过抽屉（z 1300）与抽屉遮罩（1250）。 */
+  [data-mobile-nav="file-picker-backdrop"] {
+    z-index: 1400 !important;
+  }
   [data-mobile-nav="delete-dialog"] {
     z-index: 1401 !important;
   }
@@ -4017,6 +4156,48 @@ exports.BASE_CSS = `
   body:has([data-sidebar-right-open][data-sidebar-right-panel="fullscreen"])
     [class*="_overlayLayer"] {
     z-index: 1400 !important;
+  }
+}
+
+/* ---------- touch press feedback (mobile + hover: none only) ----------
+   Android WebView paints its own translucent blue tap highlight
+   (-webkit-tap-highlight-color default) over every tapped control. The
+   property is inherited and no host package sets it on descendants (grep of
+   dsh-client-ui-* bundles, 2026-10), so transparent on html/body clears it
+   page-wide; the explicit transparent values on our own controls above stay
+   as the desktop-width fallback. In its place the UI gives its own pressed
+   state: an inset box-shadow tint (paint-only, no layout, does not fight a
+   host background) in the host's interactive-bg-active colour, which the
+   theme defines for both light and dark. Every selector sits in :where(), so
+   (0,0,0) loses to any host or plugin rule that styles the element itself —
+   aria-selected / aria-pressed / own :active states keep their look — and
+   :focus-visible outlines are untouched. Desktop and narrow mouse windows
+   never enter this block (MOBILE_QUERY + hover: none). */
+@media (max-width: 1023px) and (pointer: coarse) {
+  @media (hover: none) {
+    html,
+    body {
+      -webkit-tap-highlight-color: transparent;
+    }
+    :where(button, [role="button"], [role="menuitem"], [role="menuitemradio"], [role="option"], [role="tab"], [role="treeitem"], a[href]) {
+      transition: box-shadow .12s var(--ds-ease-in-out, ease-in-out), transform .12s var(--ds-ease-in-out, ease-in-out);
+    }
+    :where(button, [role="button"], [role="menuitem"], [role="menuitemradio"], [role="option"], [role="tab"], [role="treeitem"], a[href]):where(:active):where(:not(:disabled, [aria-disabled="true"], [aria-selected="true"], [aria-pressed="true"], [aria-checked="true"])) {
+      box-shadow: inset 0 0 0 100vmax var(--dsw-alias-interactive-bg-active, color-mix(in srgb, currentColor 8%, transparent));
+    }
+    /* Icon-only buttons (a lone svg child, or a button that carries only an
+       aria-label) also shrink a touch. */
+    :where(button:has(> svg:only-child), button[aria-label]:not(:has(> span, > div))):where(:active):where(:not(:disabled, [aria-disabled="true"])) {
+      transform: scale(.96);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      :where(button, [role="button"], [role="menuitem"], [role="menuitemradio"], [role="option"], [role="tab"], [role="treeitem"], a[href]) {
+        transition: none;
+      }
+      :where(button:has(> svg:only-child), button[aria-label]:not(:has(> span, > div))):where(:active) {
+        transform: none;
+      }
+    }
   }
 }
 
@@ -4418,6 +4599,65 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     width: 0;
     height: 0;
   }
+  /* ---------- selection-drag autoscroll ramp (2026-10-07 live-host probe) ----------
+     Report (Android): once the conversation chrome became unselectable, dragging
+     the selection handle up stopped grabbing the title bar, but the conversation
+     did not scroll WITH the finger - it teleported a few screens up instead.
+     Mechanism measured on the live host (390x844, touch-emulated, selection anchor
+     inside the message flow, pointer held 1.4s): Blink only starts autoscrolling a
+     selection drag once the pointer is within ~3px of the scrollport's top edge,
+     and the RATE grows with how far the pointer sits ABOVE that edge, saturating
+     fast - y=140/100 -> 0 px/s, y=70 -> 1018, y=50 -> 2225, y=30 -> 3329,
+     y=10 -> 3232 px/s. The conversation scrollport's top edge is the header's
+     bottom edge (y=67), so every finger position on the header is 17-57px "above
+     the list" and lands in the 2200-3300 px/s band: one 777px screen every ~0.23s,
+     which reads as dropped frames / a jump to somewhere else. The ramp is
+     geometric, not ours - from y>=100 nothing scrolls at all, so the speed is
+     decided by where the list's box starts.
+     Fix: extend the scrollport's box up under the header so a drag point over the
+     header is only a few px above the list edge. Measured with the box moved to
+     y=0: y=30 -> 0 px/s, y=10 -> 595 px/s. The visual position is unchanged by
+     construction - the box grows upward by H while padding-top: H pushes the
+     content back down, so an element at content offset X still paints at
+     H + X - scrollTop (live-host check: header [0,0,390,67] and the composer seat
+     [0,740,388,104] are identical before/after; only the box [0,67,388,777] ->
+     [0,0,388,844] and scrollHeight +H move).
+     H comes from --mobile-nav-header-h, written by the reconciler task
+     "header-metrics" (phone-chrome.ts) as the header's bottom edge measured from
+     the frame's top. It is 0px whenever the header is not measurable (hero / blank
+     header), which makes both declarations below a no-op - the layout fails open if
+     the host ever stops rendering a conversation header. Phone tier only: the
+     desktop header is an ordinary in-flow bar and there is no touch selection drag
+     to ramp. */
+  [data-mobile-nav="frame"] [data-phase] [class*="_scrollBody"] {
+    margin-top: calc(-1 * var(--mobile-nav-header-h, 0px)) !important;
+    padding-top: var(--mobile-nav-header-h, 0px) !important;
+  }
+  /* ---------- selection handle drag: keep the extent local (2026-10-07) ----------
+     The phone selection handle drag is a native (Android WebView
+     TouchSelectionController) gesture: each move hit-tests the handle position to
+     resolve the selection extent and then reveals that extent. With the bar
+     unselectable but still hit-testable it won that hit test, Blink walked FORWARD
+     in DOM order to the next selectable node - the flow's first item, the
+     "Load earlier" gate, measured on the live host - and revealed it: the viewport
+     teleported to the top of the conversation instead of extending by a line
+     (reported as "not scroll-selection, it jumps somewhere else"). Dropping the bar
+     out of the hit test for the duration of the selection lets the same point
+     resolve into the message the lifted box above now puts underneath it, so the
+     extent stays local and the scroll ramp stays gentle. 「pointer-events」 only -
+     no layout change, so nothing reflows while the finger is down. The marker is
+     set by installSelectionChromeYield (phone-chrome.ts) and only for selections
+     that live in the conversation (composer/drawer keep their chrome
+     interactive); header buttons remain reachable the moment the selection
+     collapses, which is also what a tap anywhere else does. */
+  html[data-mobile-nav-selecting] [data-mobile-nav="frame"] [data-phase] header {
+    pointer-events: none !important;
+  }
+  /* A transparent header was harmless while nothing could scroll underneath it;
+     with the box lifted it would show the messages through the title row
+     (headless screenshot 2026-10-07: message text bled across "Standard mode"
+     and the tab strip), so the header rule below now carries an opaque
+     background. */
   /* Message action rows (copy / run-time badges) can overflow the right
      edge on narrow screens — keep them inside the message width. */
   [data-phase] [class*="_actions"] {
@@ -4559,6 +4799,15 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      fit. Main-session three-control form keeps single-row layout. */
   [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]):has([class*="_primary"] ~ [class*="_primary"]) {
     flex-wrap: wrap;
+  }
+  /* Issue #140: in that same dual-primary form the stop key and the send key
+     sit one 3px lane-gap apart — two same-shaped 34px pills where a mis-touch
+     on the left one interrupts the running reply. The 2026-09-23 「焊在一起」
+     3px decision keeps governing the main session's [model][send] cluster;
+     only this form (the one with two adjacent destructive-adjacent primaries)
+     gets +8px between the stop and the send key. Knob: margin-right. */
+  [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]):has([class*="_primary"] ~ [class*="_primary"]) > [class*="_trailing"] > [class*="_primary"]:has(~ [class*="_primary"]) {
+    margin-right: 8px;
   }
   [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > :first-child {
     flex: 0 1 auto;
@@ -4720,7 +4969,14 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      itself is shrinkable, so a squeezed root lets the trigger paint over
      the pinned send button. Keep the whole meter at its natural size; its
      trigger uses aria-haspopup="dialog", so the model-selector menu rules
-     (keyed on "menu") still do not apply. */
+     (keyed on "menu") still do not apply.
+     GENERATION NOTE (issue #140, 2026-09-29): 0.1.7-rc.2 moved the
+     ContextMeter out of this lane into the dock row under the card (next to
+     the TPS stats pills) — on rc.2 NONE of the trailing-lane meter rules in
+     this section match any more, and the trigger is back to its official
+     ~22px-tall box. They stay for the 0.1.5/0.1.6 generations where the
+     meter really rendered in the lane (structural anchors, inert elsewhere);
+     the rc.2+ hit-area repair lives in the dock-row section below. */
   [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] > [class*="_root"] {
     flex: none;
     min-width: 0;
@@ -4813,6 +5069,37 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     margin-left: 0;
   }
 
+  /* --- ContextMeter hit area on 0.1.7-rc.2+ (issue #140) ---
+     The stats-line overlay parks the ring in the composer card's trailing
+     lane (right cluster next to the send key — a deliberate 2026-09-23
+     placement, kept per the reporter's confirmation at acceptance). The
+     official trigger is 16x20px, far under the touch minimum. Regrow the
+     hit area IN PLACE with a transparent ::after (the 📎 recipe).
+     2026-09-29 acceptance, final geometry (headless-measured): the ring
+     svg and its reserve are set to 18px (compat.css.ts — 16px was too
+     small to aim, 24px/20px too big, the reporter settled on 18px), the
+     width growth is absorbed by the lane's left slack so the key gaps
+     stay 6px/5px, and the hit box is a SYMMETRIC 26x26 square
+     (inset -4px) keeping the generous touch area around the smaller
+     ring — 2px/1px clearance to the model and send keys. The track is
+     deepened to 25% black (compat.css.ts) so the donut reads as a
+     meter, not a spinner.
+     Knobs: the svg/reserve size (compat.css.ts) and this inset; the box
+     must stay a square hugging the ring, its edges clamped by the two
+     neighbouring keys. The dock container owns only this one dialog
+     trigger (the TPS stats pills render plain text), so a scoped
+     aria-haspopup="dialog" anchor cannot cross-match anything; the DOM
+     ancestry (ring inside the dock container) is unchanged by the
+     overlay's absolute positioning. */
+  [data-phase] [class*="_dock"] [class*="_trigger"][aria-haspopup="dialog"] {
+    position: relative;
+  }
+  [data-phase] [class*="_dock"] [class*="_trigger"][aria-haspopup="dialog"]::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+  }
+
   /* --- Third-party model seats (issue #60: @hytime/dsh-thinking-effort) ---
      A seat registered on conversation.input.model replaces the official pill,
      so the trailing lane no longer contains an aria-haspopup="menu" trigger:
@@ -4825,28 +5112,102 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      screen at 393px (reporter-measured: root x=106, panel left=-230; with our
      stylesheet disabled the root sat at x=339 and the panel at +3, which pins
      the blame on our injection). Both repairs anchor on the plugin's own
-     stable data-seat-* markers (identical across v0.2.3-v0.3.1) and leave the
+     stable data-seat-* markers (identical across v0.2.3-v0.3.7) and leave the
      official pill untouched:
      1. the seat root stretches across the trailing lane with its content
         pushed to the right edge, so the closed chip welds onto the
         [meter][send] cluster AND the grown root consumes all free space,
         which zeroes the meter fallback's margin-left:auto (flexible lengths
-        resolve before auto margins — no double void);
-     2. while the panel is open its anchor is re-centered on the stretched
-        root (the same left:50% + translateX recipe as the official menu
-        rule), so the panel hugs the composer's right side and the plugin's
-        own min(336px, 100vw - 32px) width keeps it inside the viewport at
-        every width. The reporter's rejected translateX attempt centered on
-        the UNFIXED zero-width root; centering only works once the root is
-        stretched. */
+        resolve before auto margins — no double void). The root is also made
+        position:static so the panel below anchors to the composer card
+        instead — the root is 0-width while the panel is open, so any
+        root-relative offset is meaningless;
+     2. while the panel is open its anchor is laid over the composer card
+        (left:0/right:0 against the card's padding box + an auto-margin
+        centre), so the panel is centred on the card, never rides the
+        collapsed root and never leaves the viewport.
+
+     ── 2026-10-04, thinking-effort 0.3.7: the old centring recipe had to go ──
+     Repair 2 used to be 'left:50%; right:auto; transform:translateX(-50%)'.
+     That recipe only worked while the plugin positioned nothing itself: a
+     mobile viewport left the panel hanging off whichever edge the collapsed
+     root sat near. 0.3.7 added its own narrow-screen clamp, which writes an
+     INLINE 'left' (390px phone, new chat: root x=122, inline left=-106px —
+     i.e. 16px, exactly the right place). Inline 'left' wins over the
+     stylesheet, so the recipe's 'left' became dead weight while its
+     'transform' kept firing, shifting the panel half its width further left:
+     x = 122 + (-106) + (-168) = -152px, off screen by 152px — the reproduced
+     bug. Two layers each half-applied. The fix keeps repair 1 (the stretch
+     is still what welds the closed chip onto the [meter][send] cluster) and
+     replaces repair 2 with the card-anchored recipe above; 'transform:none'
+     is what neutralises the stray translateX, and 'left:0' is '!important'
+     because it must beat that inline value. Panel width stays the plugin's
+     own (336px, capped at 100%) so the Off/High/Max ticks keep their
+     designed spacing.
+
+     The panel opens bottom:calc(100% + 8px) above the card, but the card is
+     only 70-108px tall on a phone while the panel is 208px, so it always
+     overflows upward — that is the plugin's own desktop behaviour and is
+     kept. What is NOT acceptable is overflowing the VIEWPORT, so three
+     guards follow (the inner listbox, the keyboard-short phone, landscape).
+     Every guard stays inside this mobile media query: desktop untouched. */
   [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] [data-seat-root] {
     flex: 1 1 auto;
     justify-content: flex-end;
+    /* Keep parked here rather than in a second rule: the panel below anchors
+       to the card, not to this root. */
+    position: static !important;
   }
   [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] [data-seat-root] > [data-seat-panel] {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
+    left: 0 !important;
+    right: 0 !important;
+    max-width: min(100%, 420px) !important;
+    transform: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Guard 1 — the panel's inner model listbox opens upward (bottom:58px
+     inside the panel) with max-height:min(220px, 100vh - 96px). On a short
+     screen that ceiling is taller than the room above the panel, so the
+     listbox pokes past the viewport top (320x568: menu y=-41). Clamp it to
+     half the viewport minus the panel's own 58px offset + padding. */
+  @media (max-height: 700px) {
+    [data-seat-model-menu] {
+      max-height: min(220px, calc(50vh - 110px)) !important;
+    }
+  }
+
+  /* Guard 2 — with the on-screen keyboard up (portrait, ≤505px tall) there
+     is not even 208px of room above the card. Let the whole panel scroll
+     inside itself instead of escaping the top; children keep their natural
+     height so the slider and its ticks are never squashed. */
+  @media (orientation: portrait) and (max-height: 505px) {
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] [data-seat-root] > [data-seat-panel] {
+      max-height: calc(50dvh - 45px) !important;
+      overflow-y: auto !important;
+      overscroll-behavior: contain !important;
+    }
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] [data-seat-root] > [data-seat-panel] > * {
+      flex: 0 0 auto !important;
+    }
+  }
+
+  /* Guard 3 — landscape: above the card there are only ~156px (the card
+     sits low, the panel is 208px), so an upward opening can never fit.
+     Detach the panel into a bottom-docked sheet instead; it floats clear
+     of the card and the viewport top. */
+  @media (orientation: landscape) {
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] [data-seat-root] > [data-seat-panel] {
+      position: fixed !important;
+      left: 16px !important;
+      right: 16px !important;
+      bottom: 12px !important;
+      top: auto !important;
+      transform: none !important;
+      margin: 0 auto !important;
+      max-width: min(100%, 420px) !important;
+    }
   }
 
   /* --- Composer file entry (0.1.6 host) ---
@@ -4864,11 +5225,17 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
        （面积 +47%），再由下面的 ::after 向外扩 4px（最终命中区约 42×42）。
        **图标位置不变**：盒宽 +6 后 margin-left 从 -10 收到 -13，图标中心原地不动；
        高度对齐发送键的 34px，行高不受影响。 */
-    width: 34px !important;
-    min-width: 34px !important;
-    max-width: 34px !important;
-    height: 34px !important;
-    min-height: 34px !important;
+    /* 2026-10-07 店主：「点一下有一层深一点的灰色，也有一层浅一点的灰色，去掉一层」。
+       根因是**嵌套两层**：宿主的按钮盒底色（34x34、圆角 8）与我们的 ::before 胶囊
+       （28x28 圆）半透明叠半透明 —— 重叠区深、外圈浅。压层叠（!important）在真机上
+       压不住那一层（实测按下仍是 233 外圈 + 222 内层），所以改成**结构上只有一层**：
+       可见胶囊 = 按钮盒本身。盒子 28x28 + 全圆角，与加号同尺寸；图标中心不变
+       （盒宽 34→28 ⇒ margin-left 由 -11 收到 -8）；命中区仍由 ::after 外扩。 */
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
     padding: 0 !important;
     position: relative !important;
     /* 左移 10px + 图标 14→16px（2026-09-23，店主："太往右了、有点小"）：
@@ -4879,11 +5246,11 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
        = 盒左缘 + 8.85，故盒左缘取 98 ⇒ margin-left: -10px（吃掉 6px gap 后再
        压进 modes 尾部留白 4px，不碰它的墨迹：chevron 墨迹止于 ~91）。
        这一个数值就是"往左多少"的旋钮，可按眼睛调，别动别的。 */
-    margin: 0 0 0 -11px !important;
+    margin: 0 0 0 -8px !important;
     display: grid !important;
     place-items: center;
     border: 0 !important;
-    border-radius: 8px;
+    border-radius: 999px;
     background: transparent;
     color: inherit;
     cursor: pointer;
@@ -4902,9 +5269,24 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     background: transparent;
     transition: background .12s ease;
   }
-  [data-composer-card] [data-mobile-nav="file-upload"]:hover::before,
-  [data-composer-card] [data-mobile-nav="file-upload"]:active::before {
+  [data-composer-card] [data-mobile-nav="file-upload"]::before {
+    /* 胶囊已由盒子本体承担，这一层永久透明（保留节点是为了不惊动既有锚点）。 */
+    background: transparent !important;
+  }
+  /* 2026-10-07 店主："点一下有一层深一点的灰色，也有一层浅一点的灰色，去掉一层"。
+     真因是**半透明叠半透明**，不是我们画了两层胶囊：宿主全局 CSS 里有
+     「button:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}」
+     （特异性 0,2,1 > 上面那条基础规则的 0,2,0，所以它赢了）与
+     「button:active{background-color:#0000001f}」，两者都画在这个按钮的**盒子**上；
+     而 ::before 的可见胶囊又画一层 ⇒ 重叠区深、外圈浅，看着就是两层灰。
+     可见胶囊只留 ::before 一层：盒子在所有状态下强制透明（::after 只有命中区、无底色）。 */
+  [data-composer-card] [data-mobile-nav="file-upload"]:hover,
+  [data-composer-card] [data-mobile-nav="file-upload"]:active,
+  [data-composer-card] [data-mobile-nav="file-upload"]:focus-visible {
     background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
+    box-shadow: none !important;
+    outline: none !important;
+    border-color: transparent !important;
   }
   /* 压掉浏览器默认的淡蓝 tap 高亮（店主 2026-09-23："单纯点击图标，出现一个淡蓝色
      的原始的点击画面"）。读源码取证：宿主头部那几个包（dsh-client-ui-subagent /
@@ -4960,8 +5342,8 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   [data-composer-card] [data-mobile-nav="file-upload"]::after {
     content: '';
     position: absolute;
-    inset: -4px;
-    border-radius: 12px;
+    inset: -7px;
+    border-radius: 999px;
   }
   /* A busy submit phase or a subagent session refuses attachments. The host
      gates intake on canAcceptDrop (package-private), so this reads the closest
@@ -5023,6 +5405,22 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     padding-left: 0 !important;
     padding-right: 8px !important;
     position: relative !important;
+    /* Opaque AND above the flow, both required: the host bar has no background,
+       and the message flow is a later sibling, so it painted OVER the bar (three
+       headless screenshots 2026-10-07: transparent -> content read through the
+       title row; opaque but unraised -> byte-identical to transparent, i.e. the
+       background was painted underneath; opaque + raised -> pixel-identical to
+       the untouched band). The scroll box runs underneath because of the
+       "selection-drag autoscroll ramp" rule above (it lifts it by
+       --mobile-nav-header-h). Same surface token the panel ghost uses, so themes
+       carry over; the host keeps its --dsw-alias-border-l3 bottom border.
+       z-index 30 clears the flow's own raised layers (host banners measured at
+       z 6-7 and the marks slot / composer seat at 7 on the live host) while
+       staying under this plugin's overlay tier (55+ backdrops/panels, FAB 21 is
+       hero-only where the header is hidden, drawer/menus 1000+) so a dialog or
+       the drawer still covers the bar. */
+    background: var(--dsw-alias-bg-layer-1, #fff) !important;
+    z-index: 30 !important;
   }
   /* The hero phase's empty header must stay hidden on phones. The host hides
      it via the headerHidden class at (0,1,0), but its own session-controller
@@ -5682,6 +6080,21 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      本条置于 ①嵌套块外：裁切陷阱与断点 A 的档位无关，全移动宽度生效。 */
   [data-mobile-nav="frame"] [data-phase] [data-mobile-nav="stats"] {
     justify-content: flex-start !important;
+    /* 指标行的空隙在手机上偏松（2026-10-07 店主截图：「距离缩一点，更紧致一点」）。
+       宿主 dsh-client-ui-chat 的 StatsPills 叠了三层：root 的 12px 列间距 +
+       sep 的 6px 两侧 margin + pill 的 8px 内边距 ⇒ 390px 实测两个指标之间的
+       视觉空隙 ~28px。手机档收成 gap 6 / sep 2 / pill 6：同组内 ~14px、组间
+       6px，仍然留得住「·」的读法，pill 的垂直尺寸没动（触控高度由宿主
+       line-height 决定）。类名前缀 bOPqQW_ 会随宿主换代，故用子串锚并整条
+       限定在本插件自己的 stats 标记内：换代只会让规则惰性化，不会误伤别处。 */
+    gap: 6px !important;
+  }
+  [data-mobile-nav="frame"] [data-phase] [data-mobile-nav="stats"] [class*="_sep"] {
+    margin: 0 2px !important;
+  }
+  [data-mobile-nav="frame"] [data-phase] [data-mobile-nav="stats"] [class*="_pill"] {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
   }
   [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [data-mobile-nav="files"] {
     width: 36px !important;
@@ -6416,6 +6829,20 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   [data-mobile-nav="frame"] section[data-plugin-panel] [data-plugin-row-detail] button[class*="_crumb"] {
     margin-left: var(--dsh-web-mobile-panel-clearance) !important;
   }
+  /* 自动化任务面板（@deepseek-ai/dsh-client-ui-schedule，0.2.0-rc.2 随实验性
+     bundle 提供）不是 section[data-plugin-panel]：该 bundle 里
+     「data-plugin-panel」命中 0 次，页头是 t-XoWW_pageHeading(display:flex)，
+     标题是 h1{flex:1;min-width:0;margin:0}。盒模型取自宿主自己的 CSS：
+     pageContent padding = clamp(24px,4vw,48px)（390px 视口取 24px），
+     于是标题左缘 24px 落进 FAB 盒 [10,12,38,38]（右缘 48）——20px 字号的
+     首字被整颗压住（2026-10-06 报障截图）。让位量沿用同一口径
+     （56px − 宿主自身 padding）；作用对象取 h1：它是 margin:0 的 flex item，
+     margin-left 只吃 flex 自由空间，不需要 width 补偿，也不会像整宽盒那样
+     顶出横向滚动条。「_pageHeading」片段在全部宿主 client bundle 里只有这一个
+     渲染者（2026-10-06 全量扫描），不误伤。 */
+  [data-mobile-nav="frame"] [class*="_pageHeading"] > h1 {
+    margin-left: var(--dsh-web-mobile-panel-clearance, calc(56px - clamp(24px, 4vw, 48px))) !important;
+  }
   /* 快捷键弹层在手机上的落地形态。上面那条 :not([data-shortcut-modal="shortcuts"])
      只是把它从设置面板家族里摘出来、还它官方的内部排版（2026-09-25 实测：纵向列
      回来了、标题「快捷键」回来了、列表 441px 可滚、无横向溢出、docScrollWidth
@@ -6461,6 +6888,43 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
        重复变暗：屏幕的整体明暗在弹层开合前后完全一致，剩下的变化只有卡片本身。 */
     background: transparent !important;
   }
+  /* --- 插件管理页（dsh-client-ui-plugin-manager）：整卡 / 整行可点 ---
+     2026-10-07 店主：「打开如图里面的功能，需要点击那些加黑字体才行」。读宿主源码确认到两层：
+     ① 宿主**已经**给标题按钮铺了整卡覆盖层（「.cardOpen:after{position:absolute;inset:0}」 配
+        「.cardLink{position:relative}」，标准 stretched-link）；
+     ② 但卡片 DOM 顺序是 icon → titleRow(button) → **cardDesc**，描述是个 -webkit-box 盒子，
+        绘制顺序排在覆盖层**之后** ⇒ 描述整块把点击吃掉，点它什么都不发生；只有标题（按钮自身）
+        与描述以外的细缝能开详情。
+     所以本规则不是「再加一层」，而是**把覆盖层抬到描述之上**（z-index），并把卡片里的其它
+     交互件（开关等）抬得更高，保证它们仍能单独点。
+     根节点仍钉 「position: relative」：一旦宿主换代不再给 cardLink 定位，「inset:0」 的包含块会
+     落到更外层 —— 覆盖层铺满整页，就成了「点哪都开第一个插件的详情」。
+     2026-10-08 补：宿主的条目根有**三种**（li[data-plugin-package] 包卡片、li[data-plugin-row]
+     包详情里的行、li[data-plugin-item] 官方 item 卡）。item 卡（plugins.item 槽）当初漏了 ——
+     真机症状正是「有开关的包卡片能整卡点，从『终端』起的 item 卡只有加黑标题能点」。 */
+  li[data-plugin-package],
+  li[data-plugin-row],
+  li[data-plugin-item] {
+    position: relative !important;
+  }
+  li[data-plugin-package] button[class*="_cardOpen"]::after,
+  li[data-plugin-row] button[class*="_rowOpen"]::after,
+  li[data-plugin-item] button[class*="_cardOpen"]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    /* 关键一行：压过同卡片里的描述/徽标等静态盒子（宿主那层没有 z-index）。 */
+    z-index: 1;
+  }
+  li[data-plugin-package] :is(button:not([class*="_cardOpen"]), a, input),
+  li[data-plugin-row] :is(button:not([class*="_rowOpen"]), a, input),
+  li[data-plugin-item] :is(button:not([class*="_cardOpen"]), a, input) {
+    position: relative;
+    /* 比覆盖层高一档：开关等控件仍在覆盖层之上，可单独点。 */
+    z-index: 2;
+  }
+
 
   /* DSHA 可见区域边界：分屏、短横屏、软键盘和 visualViewport 平移均可达。 */
   [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])):not([data-shortcut-modal="shortcuts"]),
@@ -6493,26 +6957,70 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      element's first style resolution and there is no full-opacity frame first.
      The exit marker is set by JS before the swap for the same reason. */
   @keyframes dsh-web-mobile-panel-in {
-    from { opacity: 0; transform: translateX(16px); }
+    from { opacity: .55; transform: translateX(100%); }
   }
   /* Deliberately NOT reusing dsh-web-mobile-fade: the exit cleanup listens on
      animationend BY NAME, and that keyframe also runs on the backdrop and the
      dialogs, which are frame descendants too — reusing it would end the
      transition early. */
   @keyframes dsh-web-mobile-panel-reveal {
-    from { opacity: 0; }
+    from { opacity: 0; transform: translateX(-14px); }
   }
   [data-mobile-nav="frame"]:has([class*="panelRow"][aria-current="page"]) [class*="_centerCol"] > * > * {
-    animation: dsh-web-mobile-panel-in .15s var(--ds-ease-in-out, ease-in-out) backwards;
+    animation: dsh-web-mobile-panel-in .28s cubic-bezier(0, 0, .2, 1) backwards;
   }
   [data-mobile-nav="frame"][data-mobile-panel-exit]:not(:has([class*="panelRow"][aria-current="page"])) [class*="_centerCol"] > * > * {
     /* ease-out rather than the shared in-out curve: the panel vanishes and the
        conversation appears on the same frame, so the fade has to come up fast
        or the first frames read as a flash of empty background. */
-    animation: dsh-web-mobile-panel-reveal .15s cubic-bezier(0, 0, .2, 1) backwards;
+    animation: dsh-web-mobile-panel-reveal .18s cubic-bezier(0, 0, .2, 1) backwards;
+  }
+  /* ---------- 面板进出：从侧面滑出 / 从原路滑回（2026-10-07 店主两轮报障） ----------
+     ① 第一轮：「退出的时候看着跟掉帧一样，直接回到聊天界面」—— 逐帧实测（390×844，插件页）：
+        点返回后的**第一帧**面板元素就已从 DOM 消失，退场动画落在 0×0 空槽上。
+     ② 第二轮：「空档有点久了……像打开侧边栏一样，从侧面滑出来，然后从原路返回」——
+        上一版把切换推迟 220ms 等真面板滑完，结果会话重挂那次 commit（长会话 ~390ms）
+        又往后挪了 220ms，空档反而更明显。
+     终态：退场不再动真面板，而是把面板 clone 成**冻结快照**（panel-exit.ts 里的
+     panel-ghost），**立刻**切换，让快照在合成器上滑回右侧 —— 主线程忙着重挂会话时它照样
+     不掉帧；进场整屏从右侧滑入（时长与抽屉的 .28s 对齐），会话侧从左侧 14px 滑回。
+     方向：进 = 从右往左推入，退 = 原路推回右侧。 */
+  [data-mobile-nav="panel-ghost"] {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    pointer-events: none;
+    overflow: hidden;
+    background: var(--dsw-alias-bg-layer-1, #fff);
+    animation: dsh-web-mobile-panel-ghost-out .28s cubic-bezier(.4, 0, .2, 1) both;
+  }
+  [data-mobile-nav="panel-ghost"] > * {
+    width: 100%;
+    height: 100%;
+  }
+  @keyframes dsh-web-mobile-panel-ghost-out {
+    to { opacity: .72; transform: translateX(100%); }
+  }
+  /* ---------- 长会话：消息块 content-visibility（2026-10-07 实测） ----------
+     店主报「对话越长、切换/开侧边栏越卡」。真宿主取证（最长会话，中心列 ~6000 节点）：
+       · 点抽屉那一拍 = 236ms longtask / 3 条（短会话 0ms），且随会话长度暴涨；
+       · CPU profile：「(program)」（样式计算/布局/绘制）1216ms、宿主自己的
+         「getAnimations({subtree:true})」 75ms、宿主 JS 个位数 ms、**插件 JS ≈ 8ms**
+         ⇒ 代价是「大 DOM 的布局/绘制」，不是插件逻辑。
+     这里让会话滚动区里的**消息块**自己跳过屏外内容的布局/绘制（窄选择器：只命中
+     滚动区的直接子块，本次实测 3 个；宿主的 scrollBody 自身用 :not 排除）：
+       · 运行时注入 A/B（同一会话，每臂 n=3）：点抽屉长任务 关 = 247/62/143ms
+         （复测 386/206）→ 开 = **57/61/70ms**（紧致一条 ~60ms 带）；
+       · 「contain-intrinsic-size: auto 320px」：auto 表示「渲染过就用记住的真实高度」，
+         只有从未渲染过的块才吃 320px 兜底 ⇒ 本次实测 scrollHeight 17699 前后不变、
+         置顶/置底位置正常，没有滚动跳变。 */
+  [data-mobile-nav="frame"] [class*="scrollBody"] [class*="_scroll"]:not([class*="scrollBody"]) > * {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 320px;
   }
   @media (prefers-reduced-motion: reduce) {
     [data-mobile-nav="frame"]:has([class*="panelRow"][aria-current="page"]) [class*="_centerCol"] > * > *,
+    [data-mobile-nav="panel-ghost"],
     [data-mobile-nav="frame"][data-mobile-panel-exit]:not(:has([class*="panelRow"][aria-current="page"])) [class*="_centerCol"] > * > * {
       animation: none !important;
     }
@@ -6599,15 +7107,42 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   }
   /* ---------- 会话行的 ⋯ 菜单在触屏常显（2026-09-22 交互契约） ----------
      宿主只在 :hover 和 menuOpen 时显示 _rowActions，而手机没有 hover。
-     长按以前是触屏进这个菜单的唯一路径，现在长按改成「改会话名」（见
-     phone-chrome.ts 的 requestRowRename → 标题 dblclick），所以把锚点常显，
-     删除 / 归档 / 分叉 继续有触屏入口。行内布局不动：标题是 flex:1 +
-     min-width:0，自己让位并省略；host 的 time / pinIndicator 保持原样。
-     只作用于抽屉里的会话行，搜索行（searchResultRow）不受影响。 */
+     长按改名已于 2026-10-07 下线（真机上它依赖的事件重放到不了宿主），
+     所以这个锚点是触屏到达重命名 / 分叉 / 归档 / 删除的唯一入口，必须常显。
+     行内布局不动：标题是 flex:1 + min-width:0，自己让位并省略；host 的
+     time / pinIndicator 保持原样。只作用于抽屉里的会话行，搜索行
+     （searchResultRow）不受影响。 */
   [data-mobile-nav="frame"] [class*="sessionRow"] [class*="_rowActions"] {
     display: inline-flex !important;
   }
+
+  /* ---------- 提问卡（ask-user）头部按钮热区（issue #140） ----------
+     宿主 dsh-client-ui-user-questions 的 QuestionComposer 头部两颗图标按钮
+     ——「收起问题卡片」与「放弃整组问题」——官方 24×24px、headerActions
+     gap 4px，远低于触控下限；「放弃」紧贴「收起」（放弃 = pending.cancel()
+     后 actions.clear，整组草稿不可恢复地清空，宿主无确认），单手误触即丢
+     内容。手机档原地放大命中盒（::after 透明扩展，墨迹与版式零变化），
+     同时拉开两颗按钮的节距：24px 按钮 + 12px gap + ±4px 扩展 = 32px 命中
+     盒、命中盒之间净空 4px——扩展幅度若超过节距的一半，两颗命中盒会互相
+     重叠，反而制造新的误触，这是本组数值的硬约束。
+     作用域：头部动作区专用（_headerActions 后代），翻页器的 prev/next 也
+     是同族 iconButton，但节距只有 6px，吃不下 ±4px 扩展，不掺和。哈希族
+     Mbwy4a_ 是该包 QuestionComposer.module.css 的稳定前缀，哈希变更时整组
+     规则自动失效，不误伤别家（哈希子串锚，非后缀锚，见 pitfalls「哈希子
+     串」）。 */
+  [class*="Mbwy4a_headerActions"] {
+    gap: 12px !important;
+  }
+  [class*="Mbwy4a_iconButton"] {
+    position: relative;
+  }
+  [class*="Mbwy4a_headerActions"] [class*="Mbwy4a_iconButton"]::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+  }
 }
+
 `;
 };
 __modules["styles/compat.css.js"] = function (require, module, exports) {
@@ -7198,9 +7733,17 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
      4px 下内边距；overflow 改 hidden（不可滑）、滚动条显式干掉；第一组
      flex:0 0 auto 保持完整，最后一组 flex:0 1 auto + min-width:0 自己吃掉
      差额并在末尾出省略号（实测截到"…缓存命…"，tok 数字仍完整可读）。
-     高度仍是 28px：composer 的底部占位（8px + 28px）不变，其它几何不跟着动。 */
+     高度仍是 28px：composer 的底部占位（8px + 28px）不变，其它几何不跟着动。
+
+      2026-10-06 加档（店主："输入框下面的轮次这一条和输入框底部的距离缩减一下，
+      但不能挨得太近，还是要留出一点空间"）。**实测（真机同源 headless，工厂版）**：
+      卡片 rect.bottom=808、轮次条 rect.top=812 → flex 间隙只有 4px，视觉间距
+      ≈ 4px + 28px 行高里文字上方的约 5px ≈ 9px。所以只上提 2px（margin-top:-2px）
+      → 视觉间距约 7px，仍留余量；早前的 -4px 会把间隙压到 0（就是"挨得太近"），
+      已按实测改回。不改 28px 行高、不动 composer 底部占位（8px + 28px 几何契约）。 */
 
   [data-mobile-nav="stats"] {
+    margin-top: -2px !important;
     display: flex !important;
     flex-flow: row nowrap !important;
     align-items: center !important;
@@ -7327,9 +7870,24 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   }
   [data-mobile-nav="stats-ring"] svg {
     display: inline-block !important;
-    width: 16px !important;
-    height: 16px !important;
+    /* 2026-09-29 验收定稿（issue #140）：16px 难瞄准、24px 过大、20px 仍偏大，
+       店主拍板 18px；与 26×26 命中盒（见 layout.css.ts 的环规则）匹配。
+       增宽由尾道左侧富余吸收，按键间距不变。 */
+    width: 18px !important;
+    height: 18px !important;
     flex: 0 0 auto !important;
+  }
+  /* 轨道深化（2026-09-29 验收，issue #140）：宿主轨道只有 12% 黑，环放大到
+     24px 后深灰进度弧显得像残缺的加载圈（店主「什么玩意儿」）。加深到 25%
+     让 donut 成完整圆环——是「用量表」不是「spinner」。子串锚 class*=_track
+     与仓库哈希锚惯例一致，环标记内不会跨匹配（fill 类名不同）。
+     #142：25% 黑改按主题取色——color-mix 取 25% 标签色（label-primary 浅色
+     =近黑、暗色=近白），浅色维持 #140 验收观感，暗色自动翻成 25% 白（裸
+     rgba(0,0,0,.25) 在暗色下不可见，环又退回残缺加载圈）；token 缺失时 var
+     兜底 #000 与原值等价。border 族没有 25% 等价档，纯 var 兜底会让浅色回
+     归宿主 12%，故用 color-mix；宿主 CSS 已用同款 color-mix+var 组合。 */
+  [data-mobile-nav="stats-ring"] [class*="_track"] {
+    stroke: color-mix(in srgb, var(--dsw-alias-label-primary, #000) 25%, transparent) !important;
   }
   /* 环与 TPS 读数不再搬动宿主 React 节点（#104：搬动后宿主卸载调 removeChild
      对不上父节点直接抛 NotFoundError，SlotErrorBoundary 把整个 composer 槽位
@@ -7343,8 +7901,10 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   [data-mobile-nav="stats-ring-reserve"] {
     flex: 0 0 auto !important;
     display: inline-block !important;
-    width: 16px !important;
-    height: 16px !important;
+    /* 18px 与定稿的环（上方 svg 规则）同尺寸：占位顶住的槽位即环的落点，
+       尾道左侧富余吸收增宽，按键间距不变。 */
+    width: 18px !important;
+    height: 18px !important;
     margin: 0 2px 0 0 !important;
     padding: 0 !important;
   }
@@ -7742,6 +8302,109 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
       animation: none !important;
     }
   }
+
+  /* ---------- File share (effects/file-share.ts) ----------
+     Files tree rows: the plugin appends one share button after the host's
+     own row button inside li[data-files-entry="file"] (host nodes are never
+     moved). The li becomes a flex row only while it carries that button, the
+     host button keeps the remaining width. Preview header: one icon button in
+     the official document.actions slot, sized like the host tool buttons. */
+  [data-files-body] li[data-files-entry="file"]:has(> [data-mobile-nav="file-share-row"]) {
+    display: flex;
+    align-items: center;
+  }
+  [data-files-body] li[data-files-entry="file"]:has(> [data-mobile-nav="file-share-row"]) > button:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  [data-mobile-nav="file-share-row"],
+  [data-mobile-nav="file-share-preview"] {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--dsw-radius-sm, 6px);
+    background: transparent;
+    color: var(--dsw-alias-label-tertiary, currentColor);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  [data-mobile-nav="file-share-row"] {
+    width: 36px;
+    height: 32px;
+  }
+  [data-mobile-nav="file-share-preview"] {
+    width: 32px;
+    height: 32px;
+    color: var(--dsw-alias-label-secondary, currentColor);
+  }
+  [data-mobile-nav="file-share-row"] svg,
+  [data-mobile-nav="file-share-preview"] svg {
+    width: 16px;
+    height: 16px;
+  }
+  [data-mobile-nav="file-share-row"]:active,
+  [data-mobile-nav="file-share-preview"]:active {
+    background: var(--dsw-alias-interactive-bg-hover, rgba(127, 127, 127, 0.16));
+  }
+  [data-mobile-nav="file-share-row"]:focus-visible,
+  [data-mobile-nav="file-share-preview"]:focus-visible {
+    outline: 2px solid var(--dsw-alias-border-focus, #4d6bfe);
+    outline-offset: -2px;
+  }
+  [data-mobile-nav="file-share-row"][aria-busy="true"],
+  [data-mobile-nav="file-share-preview"][aria-busy="true"] {
+    opacity: 0.45;
+    cursor: progress;
+  }
+  /* Fallback notice, only on hosts without the primitives Toast. */
+  [data-mobile-nav="file-share-toast"] {
+    position: fixed;
+    left: 50%;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    z-index: 1500;
+    max-width: min(90vw, 420px);
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: rgba(28, 28, 30, 0.92);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.45;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  /* ---------- Markdown 表格：手机档（≤767px）不再被压成「一字一行」 ----------
+     2026-10-06 真机报障：6 列宽表在 390px 上被 table-layout:auto 压到每列
+     1~2 字宽，表头竖排成一列单字，完全不可读。宿主 chat 包（ui-chat）只给
+     表格外面套了 .md-table-wide —— 用容器查询单位做「出血加宽」
+     （--dsh-table-lead / --dsh-table-spare），**整包没有任何 th/td/table
+     规则**（已 grep 确认，唯一命中在 settings-subagent 的 depthTable，与本页
+     无关），所以列宽完全由内容最小宽度决定，没有下限也没有滚动容器。
+     这里补齐手机档的两件事：给单元格一个最小宽度下限 + 让包裹层横向滚动。
+     th 允许 nowrap（表头本来就短、竖排最难看），td 只设下限、长句仍可换行，
+     不会把表格撑到无法阅读的宽度。
+     平板（768–1023）与桌面不动 —— 店主明确「平板不用」（对齐上游 768px
+     分档边界，与 layout.css.ts 的手机档写法一致）。 */
+  @media (max-width: 767px) and (pointer: coarse) {
+    [data-mobile-nav="frame"] .md-table-wide {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    [data-mobile-nav="frame"] .md-table-wide > table {
+      width: auto !important;
+      min-width: 100% !important;
+    }
+    [data-mobile-nav="frame"] .md-table-wide > table th {
+      white-space: nowrap !important;
+    }
+    [data-mobile-nav="frame"] .md-table-wide > table th,
+    [data-mobile-nav="frame"] .md-table-wide > table td {
+      min-width: 4.5em !important;
+    }
+  }
 }
 
 `;
@@ -7951,6 +8614,58 @@ exports.MISC_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   [data-mobile-nav="frame"] > :first-child [role="tree"] {
     content-visibility: auto;
     contain-intrinsic-size: auto 600px;
+  }
+
+  /* ---------- text selection stays inside content (B1, 2026-10-04) ----------
+     Report (Android): long-press a word in an AI reply, drag the selection
+     handle up over the session header, and the selection jumps to "select
+     all" instead of extending through the message list. Mechanism: the
+     header and the composer card are ordinary selectable boxes; the header
+     sits BEFORE the scrollport in DOM order (header, then
+     [data-conversation-scroll]) and the drawer earlier still (frame first
+     child, parked off-screen at -110%). A selection extent whose hit point
+     resolves into that chrome lands IN the chrome, so the highlighted range
+     covers the header and app shell on top of the messages - on a phone it
+     reads as the whole page. With the chrome unselectable the extent snaps
+     to the nearest message text instead (headless drag-select 390x844
+     touch-emulated, message -> header: focus node went from the header
+     title span to a message <p>; message -> composer row: from the Send
+     button to a message <p>; the scrollport kept auto-scrolling in both).
+     Layout is untouched: this only sets user-select.
+     Kept selectable: the message flow (outside every rule below) and the
+     composer editing surface, which is re-enabled explicitly - auto would
+     inherit none from the card, and an unselectable contenteditable cannot
+     host a caret or a paste on WebKit. Dialogs and text fields portalled
+     into the drawer DOM (settings sheet) are re-enabled the same way, so
+     their values stay copyable. Scope: the conversation header is the
+     header inside the [data-phase] root (chat content never renders one
+     there), and the anchor stays the DESCENDANT form on purpose: 0.2.0-rc.2
+     (live-host probe 2026-10-07) renders an unclassed wrapper <div> between
+     .wSkVaW_root[data-phase] and <header class="wSkVaW_header">, so the
+     child-combinator form this rule used to carry matched 0 elements - the
+     title bar kept user-select:auto and a drag-select up over it still ended
+     in the header title span (4391 selected chars, opening with the title /
+     mode / tab labels). On the composer side only the input card
+     ([data-composer-card], host marker since 0.1.2) and the plugin stats
+     row - the dock above the card (todo card, approval / ask-question
+     panels) is reply content and stays copyable. */
+  [data-mobile-nav="frame"] > :first-child,
+  [data-mobile-nav="frame"] [data-phase] header,
+  [data-mobile-nav="frame"] [data-composer-card],
+  [data-mobile-nav="stats"],
+  [data-mobile-nav="fab"],
+  [data-mobile-nav="backdrop"] {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+  [data-mobile-nav="frame"] [data-composer-input],
+  [data-mobile-nav="frame"] [data-composer-card] textarea,
+  [data-mobile-nav="frame"] > :first-child [role="dialog"],
+  [data-mobile-nav="frame"] > :first-child input,
+  [data-mobile-nav="frame"] > :first-child textarea,
+  [data-mobile-nav="frame"] [data-phase] header input {
+    -webkit-user-select: text !important;
+    user-select: text !important;
   }
 }
 
@@ -8221,6 +8936,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.installSessionMenuDelete = installSessionMenuDelete;
 const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
 const sessions_compat_ts_1 = require("./core/sessions-compat.js");
+const session_row_fiber_ts_1 = require("./effects/session-row-fiber.js");
 // Mirrored from src/client/locales.ts: the custom client bundler cannot
 // resolve `../` requires from effects/. Keep in sync.
 const NS = 'mobileNav';
@@ -8261,42 +8977,39 @@ function installSessionMenuDelete(ctx) {
         let injectRaf = 0;
         let dialogHost = null;
         let closeDialogOnKey = null;
-        /** Resolve one session id for a row: title match, group position tiebreak. */
-        const resolveSessionId = (row, title) => {
-            const sessions = ctx.sessions.list.getSnapshot();
-            const workspaces = ctx.workspaces.list.getSnapshot();
-            const archived = new Set(workspaces.archivedSessionIds);
-            const candidates = sessions.ids.filter((id) => {
-                const summary = sessions.byId[id];
-                return summary !== undefined && !summary.blank && summary.displayTitle === title && !archived.has(id);
-            });
-            if (candidates.length === 1)
-                return candidates[0];
-            if (candidates.length === 0)
-                return undefined;
-            // Duplicate titles: the row's position among its group's same-title
-            // rows maps 1:1 onto the same-title ids of that group's account.
-            const group = row.closest('[class*="_groupSection"]');
-            if (group === null)
-                return undefined;
-            const headerTitle = group
-                .querySelector(':scope > [class*="_projectRow"] [class*="_title"]')
-                ?.textContent?.trim();
-            const owned = new Set(workspaces.items.flatMap((workspace) => workspace.sessionIds));
-            const workspace = headerTitle === undefined
-                ? undefined
-                : workspaces.items.find((candidate) => candidate.title === headerTitle);
-            const workspaceIds = workspace === undefined ? [] : workspace.sessionIds;
-            const groupIds = workspace === undefined
-                ? sessions.ids.filter((id) => !owned.has(id) && !archived.has(id) && sessions.byId[id] !== undefined)
-                : workspaceIds.filter(id => !archived.has(id) && sessions.byId[id] !== undefined);
-            const sameTitleGroupIds = groupIds.filter(id => sessions.byId[id]?.displayTitle === title);
-            const rows = [...group.querySelectorAll(':scope > [class*="_sessionRow"]')];
-            const rowIndex = rows.indexOf(row);
-            const sameTitleBefore = rowIndex === -1
-                ? 0
-                : rows.slice(0, rowIndex).filter(candidate => candidate.querySelector('[class*="_title"]')?.textContent?.trim() === title).length;
-            return sameTitleGroupIds[sameTitleBefore];
+        /**
+         * The session id of one row, from the host's own stable anchors.
+         *
+         * 2026-10-07 — this replaces the whole "match the displayed title, then
+         * disambiguate duplicates by group position" heuristic, which 0.2.0-rc.2
+         * broke twice over (both measured on the real drawer):
+         *  · every session row is now wrapped in the host's `HoverCard` `<span>`, so
+         *    `:scope > [class*="_sessionRow"]` matched NOTHING → `rowIndex = -1` →
+         *    `sameTitleBefore = 0` → duplicate titles silently resolved to the FIRST
+         *    session with that title, i.e. **deleting the wrong conversation**;
+         *  · the group header (`_projectRow`) is likewise wrapped, so the workspace
+         *    could not be identified at all (「无法确定要删除的会话」).
+         *
+         * Order of preference, all host-owned:
+         *  1. `data-row-key="session:<id>"` — the same attribute the host's own
+         *     `AnimatedRows.readPositions()` uses, so it is a real contract;
+         *  2. `data-dsha-session-select` — the DSHA build stamps the id directly;
+         *  3. the React fiber (`session-row-fiber.ts`, the proven path long-press
+         *     navigation already uses).
+         * @param row - the session row element.
+         * @returns the session id, or null when the row offers none.
+         */
+        const rowSessionId = (row) => {
+            const rowKey = row.getAttribute('data-row-key') ?? '';
+            if (rowKey.startsWith('session:')) {
+                const id = rowKey.slice('session:'.length);
+                if (id !== '')
+                    return id;
+            }
+            const stamped = row.getAttribute('data-dsha-session-select');
+            if (stamped !== null && stamped !== '')
+                return stamped;
+            return (0, session_row_fiber_ts_1.findSessionIdInFiber)((0, session_row_fiber_ts_1.reactFiberOf)(row), isKnownSessionId);
         };
         /**
          * Read one menu item's visible label across host generations: rc.2 nests
@@ -8435,8 +9148,36 @@ function installSessionMenuDelete(ctx) {
                     }
                 }
                 catch (reason) {
-                    fail(mapError(null, reason));
-                    return;
+                    // A rejected fetch proves nothing. The host half deployed on DSHA
+                    // (a DSHA-patched builtin build) aborts the reply AFTER its handler
+                    // has already moved the session into the trash, so the browser
+                    // reports `TypeError: Failed to fetch` (net::ERR_EMPTY_RESPONSE) for
+                    // a delete that DID land — exactly the 2026-10-07 false failure.
+                    // Ask the session list instead of the fetch promise; only a session
+                    // that survives every re-read is a real failure. Verification itself
+                    // must never become the new failure mode, so any surprise in the
+                    // snapshot shape falls back to the ordinary error line.
+                    let landed = false;
+                    try {
+                        landed = await (0, sessions_compat_ts_1.verifySessionDeleted)({
+                            listed: () => ctx.sessions.list.getSnapshot()?.byId?.[sessionId] !== undefined,
+                            // Called AS A METHOD on ctx.sessions: refresh() reads `this.manager`
+                            // and an extracted reference would throw "this is undefined".
+                            refresh: async () => {
+                                await ctx.sessions.refresh?.();
+                            },
+                            sleep: (ms) => new Promise((resolve) => {
+                                window.setTimeout(() => { resolve(); }, ms);
+                            }),
+                        });
+                    }
+                    catch {
+                        landed = false;
+                    }
+                    if (!landed) {
+                        fail(mapError(null, reason));
+                        return;
+                    }
                 }
                 closeDialog();
                 if (wasCurrent && (0, sessions_compat_ts_1.sessionsCanClear)(ctx.sessions))
@@ -8496,14 +9237,25 @@ function installSessionMenuDelete(ctx) {
             backdrop.appendChild(card);
             dialogHost = { backdrop, card };
         };
+        /**
+         * The clones injected into host menus. They are plugin-owned nodes inside
+         * React-owned lists, so disposal must remove them explicitly — the host
+         * never unmounts them on our behalf, and the click listener rides the clone
+         * (issue #86: the old disposer left the node and its listener behind, and a
+         * later tap went through showError on a dead anchor).
+         */
+        const injected = new Set();
         /** Inject the delete item into one open session menu (idempotent). */
         const injectInto = (menu) => {
             if (menu.querySelector(`[${DELETE_ITEM_MARKER}]`) !== null)
                 return;
             const template = menu.querySelector('[role="menuitem"]');
-            const wrap = template?.parentElement;
+            // `?? null` collapses the optional chain so the guard is exact: the old
+            // `wrap === undefined` arm was unreachable once `template === null` had
+            // returned (issue #86).
+            const wrap = template?.parentElement ?? null;
             const viewport = menu.querySelector('[class*="_viewport"]');
-            if (template === null || wrap === null || wrap === undefined || viewport === null)
+            if (template === null || wrap === null || viewport === null)
                 return;
             const clone = wrap.cloneNode(true);
             const button = clone.querySelector('[role="menuitem"]');
@@ -8536,12 +9288,16 @@ function installSessionMenuDelete(ctx) {
                 // Close the host menu by toggling its anchor (React-owned state).
                 captured?.button.click();
                 try {
-                    if (captured === null || captured === undefined) {
+                    if (captured === null) {
                         showError(navT('deleteErrorResolve'));
                         return;
                     }
-                    const sessionId = resolveSessionId(captured.row, captured.title);
-                    if (sessionId === undefined) {
+                    // 用录制点击时从行上读到的会话 id（`data-row-key` → DSHA 戳 → fiber）。
+                    // 读不到就报错，不再按标题/行序猜 —— 2026-10-07 实测那条路在 0.2.0-rc.2
+                    // 上会静默删到**另一个同名会话**（宿主把行包进 HoverCard 后 `:scope >` 取不到行，
+                    // rowIndex 变成 -1，于是永远取"第一个同名 id"）。
+                    const sessionId = captured.sessionId;
+                    if (sessionId === null) {
                         showError(navT('deleteErrorResolve'));
                         return;
                     }
@@ -8557,6 +9313,7 @@ function installSessionMenuDelete(ctx) {
                 }
             });
             viewport.appendChild(clone);
+            injected.add(clone);
         };
         /**
          * Inject into every open session menu. Blank (new-session) rows are
@@ -8570,6 +9327,10 @@ function installSessionMenuDelete(ctx) {
          * resolution itself would still work).
          */
         const injectAll = () => {
+            // Drop references to clones the host already unmounted with its menu.
+            for (const clone of injected)
+                if (!clone.isConnected)
+                    injected.delete(clone);
             const blankLabel = wsT('session.new');
             for (const menu of document.querySelectorAll('[role="menu"]')) {
                 if (!isSessionMenu(menu))
@@ -8587,10 +9348,42 @@ function installSessionMenuDelete(ctx) {
                 injectAll();
             });
         };
-        // Capture the ⋯ button click before React handles it, so the row/title
-        // are known when the portaled menu appears. The host renders the anchor
-        // button WITHOUT `aria-haspopup` (Menu renders `{anchor}` verbatim), so
-        // the row's single button IS the ⋯ anchor — no attribute to match on.
+        /** Whether an id is a session this client knows (the fiber walk's filter). */
+        const isKnownSessionId = (id) => ctx.sessions.list.getSnapshot().byId[id] !== undefined;
+        /**
+         * The row's ⋯ anchor button.
+         *
+         * 2026-10-07 (host 0.2.0-rc.2): a row now carries THREE buttons — the ⋯
+         * (`aria-label="Session actions for …"`), `Archive session` and
+         * `Pin session`. Reading `querySelector('button')` only worked because the ⋯
+         * happened to come first; match it by its label and exclude the two row
+         * actions instead of betting on document order.
+         * @param row - the session row.
+         * @returns the ⋯ button, or null when this row has none.
+         */
+        const menuButtonOf = (row) => {
+            const buttons = [...row.querySelectorAll('button')];
+            const labelled = buttons.find((candidate) => {
+                const label = candidate.getAttribute('aria-label') ?? '';
+                return /session actions/i.test(label);
+            });
+            if (labelled !== undefined)
+                return labelled;
+            const fallback = buttons.find((candidate) => {
+                const label = candidate.getAttribute('aria-label') ?? '';
+                return !/archive session|pin session/i.test(label);
+            });
+            return fallback ?? null;
+        };
+        // Capture the ⋯ button click before React handles it, so the row/title/session
+        // id are known when the portaled menu appears.
+        //
+        // The id comes off the row's React FIBER first (same proven path the
+        // long-press navigation uses in phone-chrome.ts:715). The old title/group
+        // heuristic is kept only as a fallback: on 0.2.0-rc.2 the `_projectRow`
+        // group header no longer sits inside `_groupSection`, so duplicate titles
+        // (three rows all called 「你好」) could not be disambiguated and the delete
+        // tap died with 「无法确定要删除的会话」.
         const onDocumentClick = (event) => {
             const target = event.target;
             if (target === null)
@@ -8598,11 +9391,12 @@ function installSessionMenuDelete(ctx) {
             const row = target.closest('[class*="_sessionRow"]');
             if (row === null)
                 return;
-            const button = row.querySelector('button');
+            const button = menuButtonOf(row);
             if (button === null)
                 return;
             const title = row.querySelector('[class*="_title"]')?.textContent?.trim() ?? '';
-            anchor = { button, row, title };
+            const sessionId = rowSessionId(row);
+            anchor = { button, title, sessionId };
             scheduleInject();
         };
         document.addEventListener('click', onDocumentClick, true);
@@ -8632,6 +9426,10 @@ function installSessionMenuDelete(ctx) {
             if (injectRaf !== 0)
                 cancelAnimationFrame(injectRaf);
             closeDialog();
+            // Remove the injected items (and with them their click listeners).
+            for (const clone of injected)
+                clone.remove();
+            injected.clear();
             anchor = null;
         };
     }, phone_chrome_ts_1.TOUCH_QUERY);
@@ -8640,6 +9438,7 @@ function installSessionMenuDelete(ctx) {
 __modules["effects/composer-keyboard-guard.js"] = function (require, module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SHADOW_MARKER = void 0;
 exports.installComposerKeyboardGuard = installComposerKeyboardGuard;
 const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
 /**
@@ -8693,8 +9492,14 @@ const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
 const COMPOSER_CARD_SELECTOR = '[data-composer-card]';
 /** The Lexical editing surface (the only element allowed to raise the keyboard). */
 const COMPOSER_INPUT_SELECTOR = '[data-composer-input]';
-/** Re-arm marker kept on the editor element while its focus is shadowed. */
-const SHADOW_MARKER = 'data-mobile-nav-focus-shadow';
+/** Interactive controls inside the card — the only presses whose handlers
+ *  (keepFocus on send/stop/+, the + onClick's focusDraftEditor) refocus the
+ *  editor programmatically. Blank card padding/gaps are not controls. */
+const COMPOSER_CONTROL_SELECTOR = 'button, [role="button"], [role="option"], [role="menuitem"], [role="combobox"], [aria-haspopup], select, a[href], label, input';
+/** Re-arm marker kept on the editor element while its focus is shadowed.
+ *  Exported: session-focus-guard.ts shares the same shadow slot (one marker,
+ *  one own-property recipe) so both guards stay interoperable. */
+exports.SHADOW_MARKER = 'data-mobile-nav-focus-shadow';
 function installComposerKeyboardGuard(ctx) {
     (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: composer keyboard guard', () => {
         // 2026-09-23 扩档（店主报"点加号会弹键盘、而且再点关不掉"）：
@@ -8729,10 +9534,10 @@ function installComposerKeyboardGuard(ctx) {
         const restore = () => {
             window.clearTimeout(shadowTimer);
             shadowTimer = 0;
-            const el = document.querySelector(`[${SHADOW_MARKER}]`);
+            const el = document.querySelector(`[${exports.SHADOW_MARKER}]`);
             if (el === null)
                 return;
-            el.removeAttribute(SHADOW_MARKER);
+            el.removeAttribute(exports.SHADOW_MARKER);
             const shadowed = el;
             if (Object.prototype.hasOwnProperty.call(el, 'focus'))
                 delete shadowed.focus;
@@ -8755,9 +9560,22 @@ function installComposerKeyboardGuard(ctx) {
                 restore();
                 return;
             }
+            // 2026-10-04（B2「长按粘贴被吞」）：只有按在**控件**上才开窗口。卡片里的
+            // 空白（输入区滚动层的留白、输入区与按钮行之间 12px 的 gap 等）不是 keepFocus
+            // 的来源，却曾经同样开出 700ms 的 blur 窗口：长按落在这些空白上时 pointerdown
+            // 命中空白容器，而引擎的长按手势经触点校正（touch adjustment）把光标放进编辑面
+            // 并聚焦它——约 500ms，正在窗口内——onFocusIn 当场 blur，系统菜单的「粘贴」
+            // 随后派发到 body，内容不进草稿（headless 探针：修前长按 gap 处 paste 目标 BODY、
+            // 草稿不变；修后 paste 进编辑面）。空白处按下按"要打字"处理，与按在编辑面上
+            // 同路；控件判定限定在卡片内，卡片外的祖先不算。
+            const control = target.closest(COMPOSER_CONTROL_SELECTOR);
+            if (control === null || !card.contains(control)) {
+                restore();
+                return;
+            }
             // A button-area tap: shadow focus for the remainder of this dispatch.
             restore();
-            editor.setAttribute(SHADOW_MARKER, '');
+            editor.setAttribute(exports.SHADOW_MARKER, '');
             Object.defineProperty(editor, 'focus', {
                 configurable: true,
                 writable: true,
@@ -8806,6 +9624,114 @@ function installComposerKeyboardGuard(ctx) {
             document.removeEventListener('mousedown', onPointerDown, true);
             document.removeEventListener('focusin', onFocusIn, true);
             restore();
+        };
+    });
+}
+};
+__modules["effects/composer-keyboard-lift.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CHANNEL_TOLERANCE_PX = void 0;
+exports.computeComposerLift = computeComposerLift;
+exports.installComposerKeyboardLift = installComposerKeyboardLift;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+/** How far the two scroll channels may drift before the coordinate model
+ *  counts as unverified: covers rounding and event-order jitter, still small
+ *  enough to catch a real visual-viewport pan. */
+exports.CHANNEL_TOLERANCE_PX = 24;
+/** CSS px to lift the composer seat by; 0 rests (fail-open for every
+ *  unverified model, not just for "no overlap"). */
+function computeComposerLift(state) {
+    const { seatBottom, viewportHeight, scale, scrollY, offsetTop } = state;
+    if (!Number.isFinite(seatBottom) || !Number.isFinite(viewportHeight))
+        return 0;
+    if (!Number.isFinite(scale) || Math.abs(scale - 1) > 0.01)
+        return 0;
+    if (!Number.isFinite(scrollY) || !Number.isFinite(offsetTop))
+        return 0;
+    if (Math.abs(scrollY - offsetTop) > exports.CHANNEL_TOLERANCE_PX)
+        return 0;
+    const overlap = seatBottom - viewportHeight;
+    return overlap > 0 ? overlap : 0;
+}
+/** Host composer seat, scoped under the plugin frame marker. */
+const SEAT_SELECTOR = '[data-mobile-nav="frame"] [class*="_composerSeat"]';
+/** The Lexical editing surface — the only focus that arms the lift. */
+const COMPOSER_INPUT_SELECTOR = '[data-composer-input]';
+function installComposerKeyboardLift(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: composer keyboard lift', () => {
+        if (!(0, phone_chrome_ts_1.detectIosWebKit)(navigator, typeof CSS !== 'undefined' && typeof CSS.supports === 'function' ? CSS.supports.bind(CSS) : null)) {
+            return undefined;
+        }
+        const viewport = window.visualViewport;
+        if (!viewport)
+            return undefined;
+        let seat = null;
+        let appliedLift = 0;
+        let frame = 0;
+        const sync = () => {
+            frame = 0;
+            if (seat === null || !seat.isConnected)
+                return;
+            const lift = computeComposerLift({
+                // The rect already carries our own transform: add the applied lift
+                // back so `seatBottom` reads as the un-lifted screen bottom.
+                seatBottom: seat.getBoundingClientRect().bottom + appliedLift,
+                viewportHeight: viewport.height,
+                scale: viewport.scale,
+                scrollY: window.scrollY,
+                offsetTop: viewport.offsetTop,
+            });
+            appliedLift = lift;
+            seat.style.transform = lift > 0 ? `translateY(${-lift}px)` : '';
+        };
+        const schedule = () => {
+            if (frame === 0)
+                frame = requestAnimationFrame(sync);
+        };
+        const release = () => {
+            viewport.removeEventListener('resize', schedule);
+            viewport.removeEventListener('scroll', schedule);
+            window.removeEventListener('scroll', schedule);
+            if (frame !== 0) {
+                cancelAnimationFrame(frame);
+                frame = 0;
+            }
+            if (seat !== null)
+                seat.style.transform = '';
+            seat = null;
+            appliedLift = 0;
+        };
+        const onFocusIn = (event) => {
+            const target = event.target;
+            if (!(target instanceof Element) || target.closest(COMPOSER_INPUT_SELECTOR) === null)
+                return;
+            release();
+            const found = document.querySelector(SEAT_SELECTOR);
+            if (found === null)
+                return;
+            seat = found;
+            viewport.addEventListener('resize', schedule);
+            viewport.addEventListener('scroll', schedule);
+            window.addEventListener('scroll', schedule, { passive: true });
+            schedule();
+        };
+        const onFocusOut = (event) => {
+            const target = event.target;
+            if (!(target instanceof Element) || target.closest(COMPOSER_INPUT_SELECTOR) === null)
+                return;
+            const next = event.relatedTarget;
+            // Focus moving inside the seat keeps the keyboard up: stay armed.
+            if (next instanceof Element && next.closest(SEAT_SELECTOR) !== null)
+                return;
+            release();
+        };
+        document.addEventListener('focusin', onFocusIn, true);
+        document.addEventListener('focusout', onFocusOut, true);
+        return () => {
+            document.removeEventListener('focusin', onFocusIn, true);
+            document.removeEventListener('focusout', onFocusOut, true);
+            release();
         };
     });
 }
@@ -9204,6 +10130,12 @@ function installModelMenuAnchor(ctx) {
         const timers = [];
         /** 已确认「开着」的菜单节点；null 表示当前没有菜单（滚动路径据此零查询）。 */
         let active = null;
+        /**
+         * 我们最后写进 inline left 的节点与值。卸载/菜单消失时要把这行还回去 ——
+         * 否则宿主之后再渲染同一个菜单会带着我们留下的位置（issue #86）。
+         * 只在值仍是我们写的那份时才清，避免抹掉宿主自己写的位置。
+         */
+        let placedLeft = null;
         const laidOut = (el) => {
             if (el === null)
                 return null;
@@ -9240,6 +10172,7 @@ function installModelMenuAnchor(ctx) {
             // 只在真的不同时才写：避免和宿主来回抢同一帧。
             if (menu.style.left !== next)
                 menu.style.left = next;
+            placedLeft = { el: menu, value: next };
         };
         /** 交互路径：刷新缓存（会查询）并按新位置落位。 */
         const refresh = () => {
@@ -9323,51 +10256,32 @@ function installModelMenuAnchor(ctx) {
             for (const timer of timers)
                 window.clearTimeout(timer);
             timers.length = 0;
+            // 还回我们写的那行 inline left（只在值仍是我们写的时候）。
+            if (placedLeft !== null && placedLeft.el.style.left === placedLeft.value)
+                placedLeft.el.style.left = '';
+            placedLeft = null;
             active = null;
         };
     });
 }
 };
-__modules["effects/shortcut-modal-keyboard-guard.js"] = function (require, module, exports) {
+__modules["core/prototype-focus-shadow.js"] = function (require, module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.installShortcutModalKeyboardGuard = installShortcutModalKeyboardGuard;
-const phone_chrome = require("./effects/phone-chrome.js");
+exports.shadowFocus = shadowFocus;
 
-// DSHA：只抑制 rc2 首次挂载期间的自动搜索聚焦。原生触摸、Tab、读屏和后续
-// focus 请求保留；弹层本身获得焦点，以便 Escape/Tab 和读屏仍拥有正确上下文。
-// 此片段由 apply-mobile-client-patches.mjs 放入锁定上游 bundle，行为测试执行产物。
-function installShortcutModalKeyboardGuard(ctx) {
-    phone_chrome.installMobileEffect(ctx, 'dsh-web-mobile: shortcut modal keyboard guard', () => {
+// 上游两个守卫共用一层包装。DSHA 保留精确属性恢复与第三方包装归属检查。
+const rules = new Set();
+let restore = null;
+function shadowFocus(shouldSkip) {
+    if (restore === null) {
         const proto = HTMLInputElement.prototype;
         const descriptor = Object.getOwnPropertyDescriptor(proto, 'focus');
         const previous = proto.focus;
-        // 某些宿主/插件会锁住原型；此时保持浏览器默认聚焦，不让适配导致整页失败。
         if (typeof previous !== 'function' || descriptor?.configurable === false ||
-            (!descriptor && !Object.isExtensible(proto))) return;
-        const selector = '[data-shortcut-modal="shortcuts"] [data-modal-autofocus]';
-        // 断点切回移动布局时，已存在的输入框不是首次挂载。
-        const initialized = new WeakSet(document.querySelectorAll(selector));
-        const pending = new WeakSet();
-        let active = true;
+            (!descriptor && !Object.isExtensible(proto))) return () => {};
         const wrapper = function focus(options) {
-            if (active && this.matches(selector)) {
-                // focusWithoutRing 是当前宿主明确的自动聚焦入口。一次 commit 内
-                // Modal 和快捷键组件各有 layoutEffect，必须一起抑制，然后立即解除。
-                if (!initialized.has(this) && this.hasAttribute('data-dsh-automatic-focus')) {
-                    if (!pending.has(this)) {
-                        pending.add(this);
-                        Promise.resolve().then(() => initialized.add(this));
-                        const dialog = this.closest('[role="dialog"][aria-modal="true"]');
-                        if (dialog && !dialog.contains(document.activeElement)) {
-                            // 官方 Modal 已带 tabindex=-1，不修改 React 管理的属性。
-                            dialog.focus({ preventScroll: true });
-                        }
-                    }
-                    return;
-                }
-                initialized.add(this);
-            }
+            for (const rule of rules) if (rule.shouldSkip(this)) return;
             return previous.call(this, options);
         };
         try {
@@ -9375,23 +10289,2092 @@ function installShortcutModalKeyboardGuard(ctx) {
                 configurable: true, writable: true,
                 enumerable: descriptor?.enumerable ?? false, value: wrapper,
             });
-        } catch { return; }
-        // 在移动效果生命周期内提前安装，直接快捷键打开也不依赖 observer 的时序。
-        // 同一属性若后来被别的插件包装，停用本层即可；不能拆掉别人的包装。
-        return () => {
-            active = false;
+        } catch { return () => {}; }
+        restore = () => {
             if (Object.getOwnPropertyDescriptor(proto, 'focus')?.value !== wrapper) return;
             try {
                 if (descriptor) Object.defineProperty(proto, 'focus', descriptor);
                 else delete proto.focus;
             } catch {
-                // 原型可能在安装后被冻结；active=false 已使残留包装完全透传。
+                // 安装后被冻结时，空规则集合已使残留包装完全透传。
             }
         };
+    }
+    const rule = {shouldSkip};
+    rules.add(rule);
+    return () => {
+        if (!rules.delete(rule)) return;
+        if (rules.size === 0) {
+            const release = restore;
+            restore = null;
+            release?.();
+        }
+    };
+}
+};
+
+__modules["effects/shortcut-modal-keyboard-guard.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installShortcutModalKeyboardGuard = installShortcutModalKeyboardGuard;
+const phone_chrome = require("./effects/phone-chrome.js");
+const focus_shadow = require("./core/prototype-focus-shadow.js");
+
+// DSHA：只抑制 rc2 首次挂载期间的自动搜索聚焦。原生触摸、Tab、读屏和后续
+// focus 请求保留；弹层本身获得焦点，以便 Escape/Tab 和读屏仍拥有正确上下文。
+// 此片段由 apply-mobile-client-patches.mjs 放入锁定上游 bundle，行为测试执行产物。
+function installShortcutModalKeyboardGuard(ctx) {
+    phone_chrome.installMobileEffect(ctx, 'dsh-web-mobile: shortcut modal keyboard guard', () => {
+        const selector = '[data-shortcut-modal="shortcuts"] [data-modal-autofocus]';
+        // 断点切回移动布局时，已存在的输入框不是首次挂载。
+        const initialized = new WeakSet(document.querySelectorAll(selector));
+        const pending = new WeakSet();
+        return focus_shadow.shadowFocus(element => {
+            if (element.matches(selector)) {
+                // focusWithoutRing 是当前宿主明确的自动聚焦入口。一次 commit 内
+                // Modal 和快捷键组件各有 layoutEffect，必须一起抑制，然后立即解除。
+                if (!initialized.has(element) && element.hasAttribute('data-dsh-automatic-focus')) {
+                    if (!pending.has(element)) {
+                        pending.add(element);
+                        Promise.resolve().then(() => initialized.add(element));
+                        const dialog = element.closest('[role="dialog"][aria-modal="true"]');
+                        if (dialog && !dialog.contains(document.activeElement)) {
+                            // 官方 Modal 已带 tabindex=-1，不修改 React 管理的属性。
+                            dialog.focus({ preventScroll: true });
+                        }
+                    }
+                    return true;
+                }
+                initialized.add(element);
+            }
+            return false;
+        });
     });
 }
 };
 
+__modules["effects/model-menu-keyboard-guard.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installModelMenuKeyboardGuard = installModelMenuKeyboardGuard;
+const prototype_focus_shadow_ts_1 = require("./core/prototype-focus-shadow.js");
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+/**
+ * Mobile guard: opening the host's model / reasoning-level menu must not raise
+ * the soft keyboard by itself (owner report 2026-10-07, screenshot: the menu
+ * opens with 「搜索模型…」 focused and the keyboard covers the whole list).
+ *
+ * `dsh-client-ui-model-selection` renders a 模型 / 推理等级 menu; tapping 「模型」
+ * drills into the model pane and a `useEffect` calls
+ * `searchRef.current?.focus()` (`dsh-client-ui-model-selection/lib/client.js:29497`,
+ * the same call also fires from the menu's ArrowDown handler at :33452). On a
+ * phone that costs half the screen the moment the user asks for the model list.
+ *
+ * Why the METHOD shadow (the technique `shortcut-modal-keyboard-guard.ts` uses)
+ * and why the capture-phase pointerdown: that focus runs in a PASSIVE effect
+ * right after the pane commits, so any observer-based arming is a race — the
+ * arming has to happen strictly earlier, and the pointerdown that will become
+ * the drill tap is the last deterministic moment before it. A tap ON the field
+ * still focuses it natively (only the JS method is replaced), so searching
+ * stays one deliberate tap away.
+ *
+ * Cost (deliberately minimal): one capture listener, one `querySelector` per
+ * tap plus one idle check ~2s after the last tap. NO MutationObserver — the
+ * session streams text, so a subtree observer would run every frame (the same
+ * reasoning as `model-menu-anchor.ts`, which documents the measured cost).
+ *
+ * DOM contract (verified against 0.2.0-rc.2):
+ * - the portaled menu surface carries the primitives' `data-menu-material`
+ *   marker (`dsh-client-ui-primitives` MenuSurface) and, for this menu, the
+ *   hashed `_7KE1Ra_menu` class;
+ * - the pane's search field is an `input[role="searchbox"]` with
+ *   `aria-controls="<menuId>-models"`.
+ * Re-audit both when the host or dsh-client-ui-model-selection upgrades.
+ */
+/** A host menu surface (primitive marker first, hashed class as the fallback). */
+const HOST_MENU = '[data-menu-material], [class*="_7KE1Ra_menu"]';
+/**
+ * The field the drill-in focus must not reach on phones: the model pane's
+ * search box. Scoped two ways — inside a host menu surface, or carrying the
+ * model list's own `-models` control — so neither the shortcut modal's search
+ * field nor a settings-page input ever matches.
+ */
+const MODEL_SEARCHBOX = '[data-menu-material] input[role="searchbox"], input[role="searchbox"][aria-controls$="-models"]';
+/** How long the shadow stays armed after the last tap while no menu is up. */
+const IDLE_DISARM_MS = 2_000;
+/**
+ * Keep the model menu's search field from grabbing focus (and the soft
+ * keyboard) by itself, on the mobile breakpoint only.
+ * @param ctx - client root context.
+ */
+function installModelMenuKeyboardGuard(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: model menu keyboard guard', () => {
+        // The shared manager owns the single prototype patch: with the shortcut
+        // modal's guard (or any future guard) loaded at the same time, neither can
+        // wipe the other's rule or leave a stale wrapper behind (see
+        // core/prototype-focus-shadow.ts).
+        let release = null;
+        let idleTimer = 0;
+        const arm = () => {
+            if (release !== null)
+                return;
+            release = (0, prototype_focus_shadow_ts_1.shadowFocus)((element) => element.matches(MODEL_SEARCHBOX));
+        };
+        const disarm = () => {
+            release?.();
+            release = null;
+        };
+        const onPointerDown = () => {
+            // A tap is the moment before React can open the menu or drill into a
+            // pane, so arm now; the check below only decides when to give the
+            // prototype back, and a menu opened by this same gesture keeps it armed.
+            arm();
+            window.clearTimeout(idleTimer);
+            idleTimer = window.setTimeout(() => {
+                if (document.querySelector(HOST_MENU) === null)
+                    disarm();
+            }, IDLE_DISARM_MS);
+        };
+        document.addEventListener('pointerdown', onPointerDown, true);
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown, true);
+            window.clearTimeout(idleTimer);
+            disarm();
+        };
+    });
+}
+};
+__modules["core/plugin-card-tap-core.js"] = function (require, module, exports) {
+"use strict";
+// plugin-card-tap-core.ts — 插件管理页「整卡可点」的判定纯核（零 import，node --test 直跑）。
+//
+// 背景（2026-10-07 店主报障：「打开如图里面的功能，需要点击那些加黑字体才行」）：
+// 宿主 dsh-client-ui-plugin-manager 的卡片只把**标题**渲染成 <button>
+// （class 含 cardOpen；行式条目是 rowOpen 那颗），描述、图标、徽标、留白都不响应点击。
+// 宿主自己给标题按钮带了一层 stretched-link（.cardOpen:after{position:absolute;inset:0}），
+// 但卡片 DOM 顺序是 icon → titleRow(button) → **cardDesc**，描述那个 -webkit-box 盒子
+// 绘制在覆盖层之后 ⇒ 把点击整块吃掉。真机实测：补 z-index 抬升仍不生效，
+// 所以改成**捕获期转发点击**（行为级、不依赖绘制顺序）：点在卡片内、又不在任何交互
+// 控件上 ⇒ 替用户点一次那颗打开按钮。
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.decidePluginCardTap = decidePluginCardTap;
+/**
+ * 判定一次点击要不要转发给「打开详情」按钮。
+ *
+ * - 点标题本身 ⇒ 'ignore'（宿主自己会开，转发会双重触发）；
+ * - 点开关/链接/输入框等交互件 ⇒ 'ignore'（绝不抢它们的点击）；
+ * - 其余（描述、图标、徽标、留白）⇒ 'open'，由调用方转发。
+ * @param target - 命中的元素信息。
+ * @returns 'open' 需要转发；'ignore' 放行。
+ */
+function decidePluginCardTap(target) {
+    if (target.insideOpen)
+        return 'ignore';
+    if (target.onInteractive)
+        return 'ignore';
+    return 'open';
+}
+};
+__modules["effects/plugin-card-tap.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installPluginCardTap = installPluginCardTap;
+const plugin_card_tap_core_ts_1 = require("./core/plugin-card-tap-core.js");
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+/**
+ * 插件管理页：整卡 / 整行可点（2026-10-07 店主报障）。
+ *
+ * 症状：点卡片只有那行**加黑标题**能打开详情，描述/图标/留白点了没反应。
+ *
+ * 根因（读宿主 `dsh-client-ui-plugin-manager` 源码 + 真机截图取证）：宿主只把标题
+ * 渲染成 `<button aria-label=打开…详情>`，且自己带了一层 stretched-link
+ * （`.cardOpen:after{position:absolute;inset:0}` 配 `.cardLink{position:relative}`）；
+ * 但卡片 DOM 顺序是 `icon → titleRow(button) → cardDesc`，描述是个 `-webkit-box`
+ * 盒子，**绘制在覆盖层之后**，于是描述整块把点击吃掉。真机上给覆盖层补 `z-index`
+ * 抬升仍不生效（本文件所在的同一批修复里试过），所以这里改走**行为级**：
+ * 在捕获期把「卡片内、且不在任何交互控件上」的点击转发给那颗打开按钮。
+ *
+ * 与 CSS 的分工：layout.css.ts 里那组 `li[data-plugin-*] …::after` 规则保留
+ * （负责悬停视觉与桌面浏览器上的 stretched-link 语义），点击的**确定性**由本效果保证。
+ * 桌面档由 installMobileEffect 门控 ⇒ 鼠标环境零影响。
+ *
+ * 2026-10-08 补第三种根（店主截图：「官方」组里**从「终端」起**的四张点不动，之前四张正常）：
+ * 宿主的「官方」组是两类卡拼起来的 —— `official.map(packageCard)` 出 `li[data-plugin-package]`，
+ * `ledger.items.map(ItemCard)` 出 **`li[data-plugin-item]`**（`plugins.item` 槽的条目）。
+ * 两类卡的标题按钮都由同一个 `CardHead` 渲染（class 同样含 `cardOpen`），只是 item 卡没有
+ * 开关/徽标，所以症状看起来像「有开关的能点、没开关的不能点」。CARD 选择器当初漏了后者。
+ */
+/**
+ * 插件管理页条目根节点（宿主三种稳定标记）：
+ * `li[data-plugin-package]` 包卡片、`li[data-plugin-row]` 包详情里的行、
+ * `li[data-plugin-item]` 官方 item 卡（`plugins.item` 槽）。
+ */
+const CARD = 'li[data-plugin-package], li[data-plugin-row], li[data-plugin-item]';
+/** 条目里唯一能打开详情的按钮（卡片 `cardOpen` / 行式 `rowOpen`）。 */
+const OPEN = 'button[class*="_cardOpen"], button[class*="_rowOpen"]';
+/**
+ * 条目内其它交互件：一律不抢。
+ * `[role="switch"]` 是宿主 Switch 的既有半区；其余是防御（后代可能新增控件）。
+ */
+const INTERACTIVE = 'button, a, input, select, textarea, [role="switch"], [role="button"], [role="tab"], [contenteditable="true"]';
+/**
+ * Install the capture-phase click forwarder for plugin-manager entries.
+ * @param ctx - client root context.
+ */
+function installPluginCardTap(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: plugin card tap', () => {
+        const onClick = (event) => {
+            const target = event.target;
+            if (!(target instanceof Element))
+                return;
+            const card = target.closest(CARD);
+            if (card === null)
+                return;
+            const open = card.querySelector(OPEN);
+            if (!(open instanceof HTMLButtonElement))
+                return;
+            const decision = (0, plugin_card_tap_core_ts_1.decidePluginCardTap)({
+                insideOpen: open.contains(target),
+                onInteractive: target.closest(INTERACTIVE) !== null,
+            });
+            if (decision === 'ignore')
+                return;
+            // 只有描述/图标/留白会走到这里：别让这次点击再做别的事（选中文本、聚焦），
+            // 然后替用户点一次宿主那颗按钮。转发出来的 click 会再次经过本监听器，
+            // 但那时 target 就在 open 内部 ⇒ insideOpen ⇒ 直接放过，不会递归。
+            event.preventDefault();
+            open.click();
+        };
+        // 捕获期：宿主的 outside-click 之类监听器都在冒泡，先一步拿到事件。
+        document.addEventListener('click', onClick, true);
+        return () => document.removeEventListener('click', onClick, true);
+    });
+}
+};
+__modules["effects/session-focus-guard.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installSessionFocusGuard = installSessionFocusGuard;
+const sessions_compat_ts_1 = require("./core/sessions-compat.js");
+const composer_keyboard_guard_ts_1 = require("./effects/composer-keyboard-guard.js");
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+/**
+ * Mobile guard: entering a session must not raise the soft keyboard by itself.
+ *
+ * `dsh-client-ui-conversation`'s InputBar focuses the Lexical editor from a
+ * passive effect keyed on `[locked, sessionId, editor]` — every session switch
+ * programmatically focuses the editing surface (`focusDraftEditor`:
+ * `getRootElement()?.focus(...)` plus `editor.focus(...)`). On desktop that is
+ * a convenience. On a phone it costs the user half the screen the moment the
+ * session opens — they typically want to READ the history first (issue #140).
+ *
+ * Fix strategy: on a snapshot-observed current-session change, open a short
+ * guard window and shadow the editor's own `focus` property (the same
+ * own-property recipe as `composer-keyboard-guard.ts`, sharing its marker) so
+ * the host's session-switch autofocus lands on the no-op. A real tap is
+ * unaffected: the browser focuses natively and never routes through the JS
+ * method. The window is finite (see the constant) and also closes early when
+ * the user taps the editing surface, so no legitimate programmatic refocus
+ * (e.g. the `+` command menu, which needs the caret) is swallowed after the
+ * switch has settled.
+ *
+ * Timing: the host focus runs in a PASSIVE effect, which React schedules after
+ * commit — a MutationObserver callback is a microtask and therefore runs
+ * before it (measured precedent: `shortcut-modal-keyboard-guard.ts` header).
+ * Session switches remount the InputBar (the editor is Session-owned), so the
+ * observer re-shadows the freshly mounted `[data-composer-input]` inside the
+ * window; arming also shadows an already-present input for switches that
+ * reuse the element.
+ *
+ * 2026-09-29 headless correction (issue #140 verification run): the shadow
+ * alone is NOT sufficient. When the InputBar remounts for the new session,
+ * the host's focus call runs inside the commit's synchronous layout-effect
+ * phase — BEFORE any MutationObserver microtask — so the freshly mounted
+ * editor got focused while it still had no shadow (focusin measured at
+ * t=314ms with marker=false; the observer only shadowed it afterwards). The
+ * guard therefore keeps a focusin fallback for the window's lifetime: any
+ * DOM focus landing on the editing surface is blurred synchronously — the
+ * same recipe `composer-keyboard-guard.ts` proved on a real device in the
+ * 2026-09-23 keepFocus loop (blur at the focusin capture phase happens
+ * before the IME can rise, and drafts/caret live in the host's keyboard
+ * state, not in DOM focus). A real tap is unaffected: the pointerdown
+ * early-close below shuts the window before the browser's native focus of
+ * that tap runs.
+ *
+ * DOM contract (verified against 0.1.7-rc.2):
+ * - `[data-composer-input]` — the Lexical contenteditable surface (count=1;
+ *   present in every released host since 0.1.2-alpha.2, per
+ *   docs/debug/composer-tree-recon.md).
+ * - `data-mobile-nav-focus-shadow` — the shared shadow marker.
+ * Re-audit when the conversation package upgrades.
+ */
+/** Guard window for one session switch. Long enough for a slow phone to
+ *  render + run passive effects; short enough that a user tapping `+` right
+ *  after the switch only rarely lands inside it. */
+const FOCUS_GUARD_WINDOW_MS = 800;
+/** The Lexical editing surface — the only element whose autofocus we swallow. */
+const COMPOSER_INPUT_SELECTOR = '[data-composer-input]';
+/**
+ * Keep the session-switch autofocus from raising the soft keyboard, on the
+ * mobile breakpoint only.
+ * @param ctx - client root context.
+ */
+function installSessionFocusGuard(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: session focus guard', () => {
+        const list = ctx.sessions.list;
+        // Snapshot value at install time: subscribing must not arm the window by
+        // itself — only a CHANGE of the current session id does.
+        let lastSessionId = (0, sessions_compat_ts_1.currentSessionIdOf)(list.getSnapshot());
+        let windowTimer = 0;
+        let windowOpen = false;
+        const restore = () => {
+            window.clearTimeout(windowTimer);
+            windowTimer = 0;
+            windowOpen = false;
+            const el = document.querySelector(`[${composer_keyboard_guard_ts_1.SHADOW_MARKER}]`);
+            if (el === null)
+                return;
+            el.removeAttribute(composer_keyboard_guard_ts_1.SHADOW_MARKER);
+            const shadowed = el;
+            if (Object.prototype.hasOwnProperty.call(el, 'focus'))
+                delete shadowed.focus;
+        };
+        const shadow = (el) => {
+            if (el.hasAttribute(composer_keyboard_guard_ts_1.SHADOW_MARKER))
+                return;
+            el.setAttribute(composer_keyboard_guard_ts_1.SHADOW_MARKER, '');
+            Object.defineProperty(el, 'focus', {
+                configurable: true,
+                writable: true,
+                value: function swallowedFocus() {
+                    /* session-switch autofocus; keep the keyboard down */
+                },
+            });
+        };
+        const arm = () => {
+            restore();
+            windowOpen = true;
+            const el = document.querySelector(COMPOSER_INPUT_SELECTOR);
+            if (el !== null)
+                shadow(el);
+            windowTimer = window.setTimeout(restore, FOCUS_GUARD_WINDOW_MS);
+        };
+        // Session switches remount the InputBar: catch the freshly mounted editor
+        // inside the window. Microtask timing beats the host's passive effect.
+        const observer = new MutationObserver(() => {
+            if (!windowOpen)
+                return;
+            const el = document.querySelector(COMPOSER_INPUT_SELECTOR);
+            if (el !== null)
+                shadow(el);
+        });
+        // A tap on the editing surface is the user saying "I want to type": close
+        // the window on the spot so the residual shadow cannot eat anything.
+        const onPointerDown = (event) => {
+            if (!windowOpen)
+                return;
+            const target = event.target;
+            if (target instanceof Element && target.closest(COMPOSER_INPUT_SELECTOR) !== null)
+                restore();
+        };
+        // Timing fallback for the window's lifetime: the host focuses the freshly
+        // mounted editor from the commit's synchronous phase, before the observer
+        // microtask can shadow it (headless-measured 2026-09-29, see header), so
+        // any focus that still lands on the editing surface inside the window is
+        // blurred on the spot — before the IME can rise. User taps never reach
+        // this: their pointerdown closed the window above.
+        const onFocusIn = (event) => {
+            if (!windowOpen)
+                return;
+            const target = event.target;
+            if (target instanceof HTMLElement && target.closest(COMPOSER_INPUT_SELECTOR) !== null)
+                target.blur();
+        };
+        // Invalidation callback (zustand-style): re-read the snapshot and arm only
+        // when the current session id actually changed — list churn (titles,
+        // ordering, refresh) must never open the window.
+        const unsubscribe = list.subscribe(() => {
+            const current = (0, sessions_compat_ts_1.currentSessionIdOf)(list.getSnapshot());
+            if (current === lastSessionId)
+                return;
+            lastSessionId = current;
+            arm();
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+        document.addEventListener('pointerdown', onPointerDown, true);
+        document.addEventListener('focusin', onFocusIn, true);
+        return () => {
+            unsubscribe();
+            observer.disconnect();
+            document.removeEventListener('pointerdown', onPointerDown, true);
+            document.removeEventListener('focusin', onFocusIn, true);
+            restore();
+        };
+    });
+}
+};
+__modules["effects/reasoning-defaults.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DEFAULT_REASONING_EFFORTS = exports.LLM_PI_AI_ENTRY = void 0;
+exports.planReasoningEffortFill = planReasoningEffortFill;
+exports.installReasoningDefaults = installReasoningDefaults;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+/** Loader entry id whose config owns `llm-pi-ai.providers`. */
+exports.LLM_PI_AI_ENTRY = 'llm-pi-ai';
+/**
+ * Levels added to a hand-declared model that declares none — the UNION of the
+ * classic OpenAI trio (`low`/`medium`/`high`) and the DeepSeek/kimi/GLM family
+ * (`low`/`high`/`max`), plus `off` (`null` = omit the parameter). Kept identical
+ * to the host twin's set; `src/reasoning-effort.ts` documents why the union is
+ * the factory default and why `minimal`/`xhigh` stay out.
+ */
+exports.DEFAULT_REASONING_EFFORTS = Object.freeze({
+    off: null,
+    low: 'low',
+    medium: 'medium',
+    high: 'high',
+    max: 'max',
+});
+/** How long one remote settings call may take before the pass gives up. */
+const REMOTE_TIMEOUT_MS = 15_000;
+/**
+ * Bound one remote call.
+ *
+ * `running` is cleared in `finally`, so a promise that never settles (a silent
+ * carrier, a host stuck mid-write) would otherwise disable every later pass —
+ * the 10s sweep included. Bounding the call keeps the fill recoverable; a write
+ * that lands after its timeout is harmless, the next pass finds nothing to do.
+ */
+function withTimeout(promise, ms) {
+    return new Promise((resolvePromise, reject) => {
+        const timer = setTimeout(() => { reject(new Error(`settings remote did not answer within ${ms}ms`)); }, ms);
+        promise.then((value) => { clearTimeout(timer); resolvePromise(value); }, (error) => { clearTimeout(timer); reject(error instanceof Error ? error : new Error(String(error))); });
+    });
+}
+/** Narrow one unknown value to a plain object (arrays excluded). */
+function isRecord(value) {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+/** Whether a model entry already carries a level set (possibly `false`). */
+function hasLevels(entry) {
+    return isRecord(entry) && entry.reasoningEfforts !== undefined;
+}
+/**
+ * Plan the default-level fill for one `llm-pi-ai` section. Neither argument is
+ * mutated. `resolved` decides where a level set is missing, `user` supplies what
+ * may be written.
+ *
+ * @param resolved - the live merged section (`section.value`).
+ * @param user - the user layer (`section.user`).
+ * @returns ordered path ops plus how many models they cover.
+ */
+function planReasoningEffortFill(resolved, user) {
+    const ops = [];
+    let filled = 0;
+    if (!isRecord(user) || !isRecord(user.providers))
+        return { ops, filled };
+    const resolvedProviders = isRecord(resolved) && isRecord(resolved.providers) ? resolved.providers : {};
+    for (const [route, userProfile] of Object.entries(user.providers)) {
+        if (!isRecord(userProfile))
+            continue;
+        const resolvedProfile = isRecord(resolvedProviders[route]) ? resolvedProviders[route] : undefined;
+        if (Array.isArray(userProfile.models)) {
+            const userModels = userProfile.models;
+            const resolvedModels = resolvedProfile !== undefined && Array.isArray(resolvedProfile.models) ? resolvedProfile.models : [];
+            let changed = 0;
+            const models = [];
+            for (const [index, entry] of userModels.entries()) {
+                const resolvedEntry = resolvedModels[index];
+                if (isRecord(entry) && entry.reasoningEfforts === undefined && !hasLevels(resolvedEntry)) {
+                    models.push({ ...entry, reasoningEfforts: { ...exports.DEFAULT_REASONING_EFFORTS } });
+                    changed += 1;
+                    continue;
+                }
+                models.push(entry);
+            }
+            if (changed > 0) {
+                ops.push({ op: 'set', path: ['providers', route, 'models'], value: models });
+                filled += changed;
+            }
+            continue;
+        }
+    }
+    for (const [route, userProfile] of Object.entries(user.providers)) {
+        if (!isRecord(userProfile) || !isRecord(userProfile.modelOverrides))
+            continue;
+        const resolvedProfile = isRecord(resolvedProviders[route]) ? resolvedProviders[route] : undefined;
+        const resolvedOverrides = resolvedProfile !== undefined && isRecord(resolvedProfile.modelOverrides)
+            ? resolvedProfile.modelOverrides
+            : undefined;
+        for (const [id, entry] of Object.entries(userProfile.modelOverrides)) {
+            if (!isRecord(entry) || entry.reasoningEfforts !== undefined)
+                continue;
+            if (hasLevels(resolvedOverrides?.[id]))
+                continue;
+            ops.push({
+                op: 'set',
+                path: ['providers', route, 'modelOverrides', id, 'reasoningEfforts'],
+                value: { ...exports.DEFAULT_REASONING_EFFORTS },
+            });
+            filled += 1;
+        }
+    }
+    return { ops, filled };
+}
+/** Read the settings remote lazily, tolerating host shapes without it. */
+function settingsRemoteOf(ctx) {
+    const value = ctx.get?.('remote.settings');
+    if (!isRecord(value))
+        return undefined;
+    const describe = value.describe;
+    const mutate = value.mutate;
+    if (typeof describe !== 'function' || typeof mutate !== 'function')
+        return undefined;
+    return value;
+}
+/** Read the host-event gateway lazily, tolerating host shapes without it. */
+function remoteEventsOf(ctx) {
+    // ONLY `ctx.get(name)` may reach a service outside this plugin's `inject`
+    // list. A property read (`ctx.remote`) throws
+    // `cannot get property "remote" without inject` from the client runtime's
+    // service proxy — and that read runs inside `apply()`, so the throw fails the
+    // WHOLE client entry activation ("Failed to load plugins / dsh-web-mobile:
+    // failed", 2026-10-07 hot-load incident). `get` reads the registry without the
+    // inject requirement, which is how the settings remote above is reached too.
+    let candidate;
+    try {
+        candidate = ctx.get?.('remote');
+    }
+    catch {
+        // A host whose context refuses the lookup must not fail activation either.
+        return undefined;
+    }
+    if (isRecord(candidate) && typeof candidate.$on === 'function')
+        return candidate;
+    return undefined;
+}
+/**
+ * Install the browser-half fill: one attempt at install, one short retry (the
+ * remote may not have answered the first describe yet), a slow sweep for edits
+ * nobody re-describes, and an immediate pass on the `llm-pi-ai` document event.
+ *
+ * @param ctx - the client plugin context.
+ */
+function installReasoningDefaults(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: reasoning level defaults', () => {
+        const context = ctx;
+        let running = false;
+        const warn = (message) => {
+            context.logger?.warn?.(message);
+        };
+        const fill = () => {
+            if (running)
+                return;
+            const remote = settingsRemoteOf(context);
+            if (remote === undefined)
+                return;
+            running = true;
+            void (async () => {
+                try {
+                    const described = await withTimeout(remote.describe(), REMOTE_TIMEOUT_MS);
+                    if (described?.ok !== true)
+                        return;
+                    const namespaces = isRecord(described.value) ? described.value.namespaces : undefined;
+                    if (!Array.isArray(namespaces))
+                        return;
+                    const section = namespaces.find((row) => isRecord(row) && row.ns === exports.LLM_PI_AI_ENTRY);
+                    if (section === undefined)
+                        return;
+                    const plan = planReasoningEffortFill(section.value, section.user);
+                    if (plan.ops.length === 0)
+                        return;
+                    const revision = typeof section.revision === 'number' ? section.revision : undefined;
+                    const response = await withTimeout(remote.mutate(exports.LLM_PI_AI_ENTRY, plan.ops, revision), REMOTE_TIMEOUT_MS);
+                    if (response?.ok !== true) {
+                        warn('dsh-web-mobile: the host refused the reasoning-level fill');
+                    }
+                }
+                catch (error) {
+                    warn(`dsh-web-mobile: reasoning-level fill failed: ${error instanceof Error ? error.message : String(error)}`);
+                }
+                finally {
+                    running = false;
+                }
+            })();
+        };
+        const retry = setTimeout(fill, 2_000);
+        const sweep = setInterval(fill, 10_000);
+        fill();
+        // Host event, therefore the remote gateway — never the client-local bus.
+        // The whole wiring is best-effort: this effect is an optimization over the
+        // 10s sweep, so NOTHING here may throw out of `apply()` (a throwing entry
+        // activation takes the entire plugin down on the page).
+        let off;
+        try {
+            off = remoteEventsOf(context)?.$on?.('settings/document-updated', (...args) => {
+                // The payload is the changed namespace; a payload-less emit still counts
+                // (the fill only writes when a level set is actually missing).
+                if (args.length === 0 || args[0] === exports.LLM_PI_AI_ENTRY)
+                    fill();
+            });
+        }
+        catch (error) {
+            warn(`dsh-web-mobile: reasoning-level document event unavailable: ${error instanceof Error ? error.message : String(error)}`);
+        }
+        return () => {
+            clearTimeout(retry);
+            clearInterval(sweep);
+            if (typeof off === 'function')
+                off();
+        };
+    });
+}
+};
+__modules["effects/composer-paste-guard.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.shouldRerouteInsertText = shouldRerouteInsertText;
+exports.installComposerPasteGuard = installComposerPasteGuard;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+/**
+ * 手机档：多行粘贴只剩首行（输入法上屏之后再粘贴）。
+ *
+ * 机制（宿主 dsh-client-ui-conversation 内置 Lexical，0.2.0-rc.2 / 0.2.1-alpha.1 同形）：
+ * Android WebView 的长按「粘贴」菜单与输入法 commitText（含剪贴板候选）派发的是
+ * `beforeinput` + `inputType: 'insertText'`，而不是 `paste` 事件。Lexical 的 beforeinput
+ * 分发里，`data` 恰为 '\n' 才走换行命令；含换行的整段文本落进
+ * CONTROLLED_TEXT_INSERTION_COMMAND。输入法上屏后节点处于 dirty 态，这条命令只写入
+ * 第一段，其余段落被吞（同一会话内不会自愈）。真正的 `paste` 事件走 PASTE_COMMAND，
+ * 不吞段 —— 这就是「直接粘贴正常、先打字再粘贴丢内容」的分叉点。
+ * 上游报告：https://github.com/deepseek-ai/deepseek-harness/discussions/8823
+ *
+ * 修法（不改宿主）：document 捕获期拦下「可信的 insertText + 多行文本 + 落在 composer
+ * 编辑面内」的 beforeinput，改派一个携带同一文本的合成 `paste` 事件到编辑面，让宿主走
+ * 自己的 PASTE_COMMAND。先构造 DataTransfer/ClipboardEvent，构造失败就不拦，原路放行。
+ *
+ * DOM 契约（0.2.0-rc.2 核对）：`[data-composer-input]` 是 Lexical 的 contenteditable 根
+ * （同元素带 `data-lexical-editor`）。宿主修复此 bug 后可整体删除本效果。
+ */
+/** composer 的 Lexical 编辑面。 */
+const COMPOSER_INPUT_SELECTOR = '[data-composer-input]';
+/**
+ * 这一次 beforeinput 是否需要改投 paste 通道。
+ * 单个 '\n' 是宿主自己的换行命令（Shift+Enter / IME 换行），绝不拦。
+ * @param event - beforeinput 的相关字段。
+ * @returns 需要改投时为 true。
+ */
+function shouldRerouteInsertText(event) {
+    if (!event.isTrusted || event.defaultPrevented)
+        return false;
+    if (event.inputType !== 'insertText')
+        return false;
+    const text = event.data;
+    if (typeof text !== 'string')
+        return false;
+    // 单个换行符交回宿主：'\n'（宿主换行命令）与孤立 '\r'（老式 Mac 换行）同等对待。
+    // 只认 '\n' 会把单个 '\r' 当成"多行"改投合成 paste，反而给草稿插入一个字面的 CR。
+    // '\r\n' 是两个字符，不走这条；宿主那条命令只匹配 data === '\n'，所以它仍按既有
+    // 意图改投 paste，断行不会丢。
+    if (text === '\n' || text === '\r')
+        return false;
+    return text.includes('\n') || text.includes('\r');
+}
+/**
+ * 构造携带纯文本的合成 paste 事件；环境不支持时返回 null（调用方原路放行）。
+ * @param text - 要粘贴的文本。
+ * @returns 合成事件或 null。
+ */
+function createPasteEvent(text) {
+    if (typeof DataTransfer !== 'function' || typeof ClipboardEvent !== 'function')
+        return null;
+    try {
+        const clipboardData = new DataTransfer();
+        clipboardData.setData('text/plain', text);
+        const event = new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true });
+        // 少数引擎会忽略构造参数里的 clipboardData，此时合成事件对宿主是空粘贴，不能用。
+        if (event.clipboardData?.getData('text/plain') !== text)
+            return null;
+        return event;
+    }
+    catch {
+        return null;
+    }
+}
+function installComposerPasteGuard(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: composer paste guard', () => {
+        const onBeforeInput = (event) => {
+            if (!(event instanceof InputEvent))
+                return;
+            if (!shouldRerouteInsertText(event))
+                return;
+            const target = event.target;
+            if (!(target instanceof Element))
+                return;
+            const editor = target.closest(COMPOSER_INPUT_SELECTOR);
+            if (editor === null)
+                return;
+            const paste = createPasteEvent(event.data ?? '');
+            if (paste === null)
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+            editor.dispatchEvent(paste);
+        };
+        document.addEventListener('beforeinput', onBeforeInput, true);
+        return () => {
+            document.removeEventListener('beforeinput', onBeforeInput, true);
+        };
+    });
+}
+};
+__modules["effects/composer-file-picker.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.acceptForKind = acceptForKind;
+exports.bridgePickFile = bridgePickFile;
+exports.pickResultFiles = pickResultFiles;
+exports.classifyBridgeResult = classifyBridgeResult;
+exports.handFilesToHost = handFilesToHost;
+exports.openAttachmentPicker = openAttachmentPicker;
+exports.installComposerFilePicker = installComposerFilePicker;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+/**
+ * 手机档：输入框回形针 → 「上传图片 / 上传附件」两选弹层。
+ *
+ * 背景（2026-10-06 报障：「输入框中的文件上传打开的界面不行……点击输入框的回形针，
+ * 会弹出上传图片，上传附件两个选项」）：`ComposerFileButton` 直接点宿主的隐藏
+ * `input[type=file]`，Android WebView 于是弹系统文件选择器 —— 形态由系统决定，
+ * 插件控制不了，也没有「只挑图片」这条路。
+ *
+ * 修法：插件自绘一个小浮层给两个选项，选完把点击交回宿主那个 hidden input
+ * （`input.click()`），只给图片那一路临时写 image 通配 accept（click 返回后立刻
+ * 还原；附件那路不动属性）—— 系统选择器在 click 的同一次调用里读走 accept，所以还原不影响已弹出的
+ * 选择器；校验、上传、可用性策略、草稿生成全部仍是宿主的 intake，插件不另起一套。
+ *
+ * 形态归属（2026-10-08 结论，已提 DSH-APP/DSHA#101）：「上传附件」弹出来的是安卓文件管理
+ * 还是系统「打开方式」列表，**只由 App 侧 `WebChromeClient.onShowFileChooser` 决定** ——
+ * 现在那是 `params.createIntent()` 直接 launch，没有 `Intent.createChooser`，所以默认处理者
+ * （文件管理）直接接管。插件能改的只有 accept，而「全通配 accept」与「不写 accept」生成的 Intent 完全
+ * 一致（2026-10-07 店主真机实测「形态没变」），因此这条路插件换不出 chooser。
+ *
+ * 三路并存（按可用性排序，都是宿主 intake，不另起一套）：
+ *   1. App 侧给了 `window.DSHA.pickFile` 桥 → 走桥（原生自己弹「打开方式」），文件以 `File[]`
+ *      回来，写进宿主 hidden input 再派发 `change`；
+ *   2. 没有桥但 App 侧合入了 #101 的补丁 → 仍走 hidden input，系统这次会弹 chooser；
+ *   3. 以上都没有 → 现状（系统文件管理），行为与今天一致。
+ * 图片那一路不上桥：宿主 input + `accept="image/*"` 已经是「只挑图片」，桥反而可能带回通用选择器。
+ *
+ * DOM 契约（0.2.0-rc.2 核对）：入口 `[data-mobile-nav="file-upload"]` 由
+ * components/ComposerFileButton.tsx 渲染（官方 `conversation.input.left` 槽）；
+ * 宿主 input 在 `[data-composer-card]` 内，选择器 `input[type=file]`（0.1.6 起宿主
+ * 删掉了自己的回形针按钮，只留这个隐藏 input，其「文件」菜单项也是这么点的）。
+ * 弹层挂 `document.body`（与 session-menu.ts 同一取舍：挂在 frame 里会被第三方
+ * dismiss shim 的捕获期点击链吞掉）。宿主恢复自带的两选项入口后可整体删除本效果。
+ */
+/** 回形针入口按钮。 */
+const TRIGGER_SELECTOR = '[data-mobile-nav="file-upload"]';
+/** composer 卡片：宿主 hidden input 在其中。 */
+const CARD_SELECTOR = '[data-composer-card]';
+/** 宿主真正接收文件的 input —— 插件不另起 intake。 */
+const HOST_INPUT_SELECTOR = 'input[type=file]';
+/** mobileNav 命名空间（同 src/client/i18n/locales.ts 的 NS）。 */
+const NS = 'mobileNav';
+/**
+ * 当前打开着的那张浮层的 close（一次只会有一张）。
+ *
+ * 存在的理由：效果的 disposer 与「再点一次回形针」都必须走 close 才能把
+ * keydown / resize / orientationchange / visualViewport(resize+scroll) 这几个
+ * 持久监听和 rAF 链一起摘掉；只 remove() 节点会把这些监听留在 document/window 上，
+ * 每次手机档 ↔ 桌面档切换（或插件热重载）叠一套，回调还在找已经不在的浮层。
+ */
+let activeClose = null;
+/**
+ * 选项对应的 accept（空串 = 不改宿主 input 的属性）。
+ *
+ * 2026-10-07 实验记录（已回退）：曾给附件那路显式写全通配 accept，想验证「空的
+ * acceptTypes」是不是让 DSHA 起了文档选择器（DownloadsUI）而不是店主想要的
+ * 「打开方式」+ 应用列表。店主真机实测**形态没变**。
+ * 2026-10-08 补上根因：`WebPreviewActivity.onShowFileChooser` 是
+ * `params.createIntent()` 直接 launch，少包一层 `Intent.createChooser`，而「全通配 accept」
+ * 与「不写 accept」生成的 Intent 完全一致 ⇒ 插件只能影响 accept、换不出 chooser 形态。
+ * 已提 DSH-APP/DSHA#101；桥（`window.DSHA.pickFile`）落地后附件那路改走桥。
+ * 所以这里仍是「不改属性」，不给宿主 input 写多余的 accept。
+ * @param kind - 用户选择的入口。
+ * @returns 要临时写到宿主 input 上的 accept；空串表示不动该属性。
+ */
+function acceptForKind(kind) {
+    return kind === 'image' ? 'image/*' : '';
+}
+/**
+ * 取出可用的 `pickFile`（绑定好 this）；没有桥或方法不是函数时返回 undefined。
+ * @param bridge - `window.DSHA`。
+ * @returns 可直接调用的桥方法。
+ */
+function bridgePickFile(bridge) {
+    return typeof bridge?.pickFile === 'function' ? bridge.pickFile.bind(bridge) : undefined;
+}
+/**
+ * 桥的返回值 → 可信的 `File` 列表（脏数据一律丢弃，不把非 File 塞进宿主 input）。
+ * @param value - 桥的 resolve 值。
+ * @returns 通过 `instanceof File` 的元素。
+ */
+function pickResultFiles(value) {
+    return Array.isArray(value)
+        ? value.filter((item) => typeof File !== 'undefined' && item instanceof File)
+        : [];
+}
+/**
+ * 桥的结果该走哪条路。
+ *
+ * 用户取消（`null` / `undefined` / 空数组）**不回落** —— 否则一次取消会紧接着弹出第二个
+ * 选择器；桥抛错或返回脏数据才回落，宁可回落到现状也不能让按钮点了没反应。
+ * @param value - 桥的 resolve 值。
+ * @param failed - 桥是否抛错（Promise reject / 同步抛出）。
+ * @returns 分类结果。
+ */
+function classifyBridgeResult(value, failed) {
+    if (failed)
+        return 'fallback';
+    if (value === null || value === undefined)
+        return 'cancelled';
+    if (!Array.isArray(value))
+        return 'fallback';
+    // 空数组 = 用户没选（原生侧通常这么回）；元素全不是 File = 桥返回了脏数据，回落到现状。
+    if (value.length === 0)
+        return 'cancelled';
+    return pickResultFiles(value).length > 0 ? 'files' : 'fallback';
+}
+/** 宿主 hidden input（图片/附件两路唯一的 intake）。 */
+function hostInput() {
+    const card = document.querySelector(CARD_SELECTOR);
+    return card === null ? null : card.querySelector(HOST_INPUT_SELECTOR);
+}
+/**
+ * 把桥挑好的文件交给宿主 intake：写进 hidden input 再派发 `change`。
+ *
+ * 与 `input.click()` 那条路是同一个入口 —— 校验、大小/数量策略、上传、草稿生成全部仍归宿主。
+ * @param files - 桥返回的文件。
+ * @returns 是否成功交给宿主（false 时调用方回落 `openHostPicker`）。
+ */
+function handFilesToHost(files) {
+    const input = hostInput();
+    if (input === null)
+        return false;
+    try {
+        const transfer = new DataTransfer();
+        for (const file of files)
+            transfer.items.add(file);
+        input.files = transfer.files;
+    }
+    catch {
+        return false;
+    }
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+}
+/** 两个选项的行图标（内联静态 SVG，无用户数据）。 */
+const IMAGE_ICON = '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="20" height="20">' +
+    '<rect x="2.5" y="3.5" width="15" height="13" rx="2.5" stroke="currentColor" stroke-width="1.5"/>' +
+    '<circle cx="7.2" cy="8" r="1.4" fill="currentColor"/>' +
+    '<path d="M4.2 14.6l3.6-3.4 2.6 2.4 2.3-2.3 3.1 3.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>';
+const FILE_ICON = '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="20" height="20">' +
+    '<path d="M12.6 3.2H6.4A1.9 1.9 0 0 0 4.5 5.1v9.8a1.9 1.9 0 0 0 1.9 1.9h7.2a1.9 1.9 0 0 0 1.9-1.9V6.6l-2.9-3.4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<path d="M12.4 3.4v3.3h3.1" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '</svg>';
+/**
+ * 把点击交回宿主的 hidden input，按选项临时改 accept（两路都会写，click 返回后还原）。
+ * @param kind - 用户选择的入口。
+ */
+function openHostPicker(kind) {
+    const card = document.querySelector(CARD_SELECTOR);
+    const input = card === null ? null : card.querySelector(HOST_INPUT_SELECTOR);
+    if (input === null)
+        return;
+    const accept = acceptForKind(kind);
+    const hadAccept = input.hasAttribute('accept');
+    const priorAccept = input.getAttribute('accept');
+    if (accept !== '')
+        input.setAttribute('accept', accept);
+    try {
+        input.click();
+    }
+    finally {
+        if (accept !== '') {
+            if (hadAccept)
+                input.setAttribute('accept', priorAccept ?? '');
+            else
+                input.removeAttribute('accept');
+        }
+    }
+}
+/**
+ * 附件那一路：App 侧有 `pickFile` 桥就先走桥（原生自己弹「打开方式」），没有就回落宿主 input。
+ *
+ * 回落链：桥不存在 → 直接 `openHostPicker('file')`；桥抛错 / 返回脏数据 / 注入失败 →
+ * 也回落（那时候 App 侧若已合入 #101，宿主 input 自己就会弹 chooser）。
+ * @param t - mobileNav 文案。
+ */
+async function openAttachmentPicker(t) {
+    const bridge = window.DSHA;
+    const pick = bridgePickFile(bridge);
+    if (pick === undefined) {
+        openHostPicker('file');
+        return;
+    }
+    let value = null;
+    let failed = false;
+    try {
+        value = await pick({ accept: [], multiple: true, title: t('fileUploadAttachment') });
+    }
+    catch {
+        failed = true;
+    }
+    const outcome = classifyBridgeResult(value, failed);
+    if (outcome === 'cancelled')
+        return;
+    if (outcome === 'files' && handFilesToHost(pickResultFiles(value)))
+        return;
+    openHostPicker('file');
+}
+/**
+ * 弹出两选小浮层；已打开时先关掉旧的（幂等）。
+ *
+ * 形态（2026-10-06 店主反馈：「这个 UI 太丑了，缩小点，不要从底部弹出」）：
+ * 不是整宽底部弹层，而是贴着回形针的小浮层 —— 宽度贴着内容（「max-content」，
+ * 上限 min(78vw,240px)），行高 34px、间距 0、字号 14px，位置由触发按钮的 rect 算：
+ * 优先落在按钮**上方** 8px，上方放不下才翻到下方，并夹进视口 8px 内边距。
+ * 位置**每次视口变化都重算**（软键盘收起会整体下移一个键盘高，算一次的浮层会
+ * 停在会话中部 —— 2026-10-07 真机报障）。
+ * 无「取消」行：点浮层外或按返回键关闭（浮层外的透明遮罩只负责收点击）。
+ * @param t - mobileNav 文案。
+ * @param trigger - 被点的回形针入口（定位锚点）。
+ */
+function openSheet(t, trigger) {
+    // 关掉上一张浮层 —— 必须走它自己的 close（摘监听/rAF/计时器），
+    // 只 remove() 节点会把监听留在 document/window 上（见下方的 disposer 注释）。
+    activeClose?.();
+    activeClose = null;
+    const backdrop = document.createElement('div');
+    backdrop.dataset.mobileNav = 'file-picker-backdrop';
+    const sheet = document.createElement('div');
+    sheet.dataset.mobileNav = 'file-picker';
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-modal', 'true');
+    sheet.setAttribute('aria-label', t('fileUploadAttachment'));
+    const rows = [
+        { kind: 'image', icon: IMAGE_ICON, label: t('fileUploadImage') },
+        { kind: 'file', icon: FILE_ICON, label: t('fileUploadAttachment') },
+    ];
+    /** 打开期间挂上的监听/rAF，关闭时逐个摘掉。 */
+    const teardown = [];
+    const close = () => {
+        if (activeClose === close)
+            activeClose = null;
+        for (const off of teardown.splice(0))
+            off();
+        backdrop.remove();
+    };
+    activeClose = close;
+    const onKey = (event) => {
+        if (event.key === 'Escape')
+            close();
+    };
+    for (const row of rows) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.mobileNav = 'file-picker-option';
+        button.dataset.kind = row.kind;
+        const icon = document.createElement('span');
+        icon.dataset.mobileNav = 'file-picker-icon';
+        icon.innerHTML = row.icon;
+        const label = document.createElement('span');
+        label.textContent = row.label;
+        button.append(icon, label);
+        button.addEventListener('click', () => {
+            close();
+            // 附件优先走桥（App 侧有的话），图片仍走宿主的 accept="image/*"。
+            if (row.kind === 'file')
+                void openAttachmentPicker(t);
+            else
+                openHostPicker(row.kind);
+        });
+        sheet.append(button);
+    }
+    // 只认浮层外的点按（浮层内的单击不关，避免选完立刻又被关闭）。
+    backdrop.addEventListener('click', (event) => {
+        if (event.target === backdrop)
+            close();
+    });
+    document.addEventListener('keydown', onKey, true);
+    teardown.push(() => document.removeEventListener('keydown', onKey, true));
+    backdrop.append(sheet);
+    document.body.append(backdrop);
+    // 定位：锚点 rect → 上方优先，夹进视口。挂载后再量，所以这里量得到自身尺寸。
+    const GAP = 8;
+    const EDGE = 8;
+    // 先定好位再显形（2026-10-07 店主：「点击回形针弹出来的两个选项，会弹一下」）：
+    // 点回形针会让软键盘收起，视口在随后约 200ms 里持续变化。若按旧坐标立刻画出来，
+    // 用户看到的是「先出现在键盘上方、再跳一下」。所以隐藏挂载（`visibility` 不参与
+    // 布局，仍能量尺寸），等**连续两帧位置相同**再显形；follow 跑完或 400ms 兜底也必须
+    // 显形，免得 rAF 停摆（后台标签页）把浮层永久留在隐藏态。
+    sheet.style.visibility = 'hidden';
+    let revealed = false;
+    const reveal = () => {
+        if (revealed)
+            return;
+        revealed = true;
+        sheet.style.visibility = '';
+    };
+    let stableKey = '';
+    let stableFrames = 0;
+    const revealTimer = window.setTimeout(reveal, 400);
+    teardown.push(() => window.clearTimeout(revealTimer));
+    const place = () => {
+        if (!trigger.isConnected) {
+            close();
+            return;
+        }
+        const anchor = trigger.getBoundingClientRect();
+        const own = sheet.getBoundingClientRect();
+        let top = anchor.top - GAP - own.height;
+        if (top < EDGE)
+            top = Math.min(anchor.bottom + GAP, window.innerHeight - own.height - EDGE);
+        const left = Math.max(EDGE, Math.min(anchor.left, window.innerWidth - own.width - EDGE));
+        const settledTop = Math.round(Math.max(EDGE, top));
+        const settledLeft = Math.round(left);
+        sheet.style.top = `${settledTop}px`;
+        sheet.style.left = `${settledLeft}px`;
+        const key = `${settledTop}:${settledLeft}`;
+        if (key === stableKey)
+            stableFrames += 1;
+        else {
+            stableKey = key;
+            stableFrames = 0;
+        }
+        if (stableFrames >= 2)
+            reveal();
+    };
+    place();
+    // 重锚定（2026-10-07 真机报障）：浮层是 position:fixed，坐标若只在打开时算一次，
+    // 点回形针导致软键盘收起时，布局整体下移约一个键盘高，浮层却留在旧视口坐标 ——
+    // 真机上就停在会话中部（离回形针 ≈350px）。视口一变就重算；键盘动画是渐进的，
+    // 所以再跟 12 帧 rAF 追一段。锚点已不在文档里时直接收起浮层。
+    const onViewport = () => place();
+    window.addEventListener('resize', onViewport);
+    window.addEventListener('orientationchange', onViewport);
+    window.visualViewport?.addEventListener('resize', onViewport);
+    window.visualViewport?.addEventListener('scroll', onViewport);
+    teardown.push(() => window.removeEventListener('resize', onViewport));
+    teardown.push(() => window.removeEventListener('orientationchange', onViewport));
+    teardown.push(() => window.visualViewport?.removeEventListener('resize', onViewport));
+    teardown.push(() => window.visualViewport?.removeEventListener('scroll', onViewport));
+    let frames = 0;
+    let raf = requestAnimationFrame(function follow() {
+        // The keyboard animation is progressive, so the anchored position only
+        // stops changing after ~10 frames; reveal on the last one at the latest.
+        place();
+        if (++frames < 12)
+            raf = requestAnimationFrame(follow);
+        else
+            reveal();
+    });
+    teardown.push(() => cancelAnimationFrame(raf));
+}
+/**
+ * 安装手机档的输入框文件入口弹层。
+ * @param ctx - client 上下文。
+ */
+function installComposerFilePicker(ctx) {
+    (0, phone_chrome_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: composer file picker', () => {
+        const t = ctx.locale.bind(NS);
+        const onClick = (event) => {
+            const target = event.target;
+            if (!(target instanceof Element))
+                return;
+            const trigger = target.closest(TRIGGER_SELECTOR);
+            if (trigger === null || trigger.hasAttribute('disabled'))
+                return;
+            // 入口自己不再直点宿主 input（ComposerFileButton 2026-10-06 起只渲染按钮），
+            // 这里吞掉这一击，唯一的后续是弹层。
+            event.preventDefault();
+            event.stopPropagation();
+            openSheet(t, trigger);
+        };
+        document.addEventListener('click', onClick, true);
+        return () => {
+            document.removeEventListener('click', onClick, true);
+            // 浮层还开着就按它自己的路径关掉（先摘监听/rAF，再删节点）——只 remove()
+            // 节点会把 5 个持久监听留在 document/window 上，切换档位/热重载就叠一套。
+            activeClose?.();
+            activeClose = null;
+            document.querySelector('[data-mobile-nav="file-picker-backdrop"]')?.remove();
+        };
+    });
+}
+};
+__modules["core/attachment-mention-core.js"] = function (require, module, exports) {
+"use strict";
+// attachment-mention-core.ts — DOM-free, service-free half of the
+// 「本次附件」 @ source (effects/attachment-mention.ts). Everything that can be
+// decided from plain data lives here so node:test can pin it with no DOM, no
+// renderer and no DSH runtime: host-shape normalization, candidate building,
+// query filtering, pick parsing and the model serialization of one chip.
+//
+// Deliberately has ZERO import statements, like reconciler-core.ts and
+// session-row-fiber.ts: tests load it through Node's native type stripping and
+// the client bundle has nothing to resolve.
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ATTACHMENT_SOURCE_ORDER = exports.ATTACHMENT_SOURCE = void 0;
+exports.draftAttachmentIdsOf = draftAttachmentIdsOf;
+exports.normalizeDraftAttachments = normalizeDraftAttachments;
+exports.formatBytes = formatBytes;
+exports.buildRefs = buildRefs;
+exports.matchesQuery = matchesQuery;
+exports.buildCandidates = buildCandidates;
+exports.parseRef = parseRef;
+exports.clipboardTextOf = clipboardTextOf;
+exports.insertForPick = insertForPick;
+exports.serializeRef = serializeRef;
+/** Source name: unique per trigger in the input-trigger registry, and the
+ *  routing key the composer uses to find our codec at submit time. */
+exports.ATTACHMENT_SOURCE = 'mobile-nav-attachments';
+/** Group display order. The registry sorts ascending (default 0, which is
+ *  where ui-reference's @文件/@会话 group sits), so a negative order puts the
+ *  small, context-local 「本次附件」 section ABOVE the long file listing. */
+exports.ATTACHMENT_SOURCE_ORDER = -10;
+/** Version tag inside the opaque ref, so a future format change can tell its
+ *  own refs apart from ones cached in an older draft occurrence. */
+const REF_VERSION = 1;
+function isRecord(value) {
+    return typeof value === 'object' && value !== null;
+}
+/**
+ * Ordered draft attachment ids from one input-state snapshot. 0.2.0-rc.2
+ * publishes `attachmentIds` (files + images); the frozen rc.6 contract named
+ * the image-only predecessor `imageIds`. Anything else → empty.
+ */
+function draftAttachmentIdsOf(state) {
+    if (!isRecord(state))
+        return [];
+    const ids = Array.isArray(state.attachmentIds) ? state.attachmentIds : Array.isArray(state.imageIds) ? state.imageIds : [];
+    return ids.filter((id) => typeof id === 'string');
+}
+/**
+ * Normalize host draft descriptors (`{ kind, id, file }`, plus `previewUrl` on
+ * images) into plain records. `uploads` is the host `fileUploads` snapshot
+ * (`{ [id]: { status } }`), optional. Unknown shapes are dropped, not guessed.
+ */
+function normalizeDraftAttachments(descriptors, uploads) {
+    if (!Array.isArray(descriptors))
+        return [];
+    const out = [];
+    for (const raw of descriptors) {
+        if (!isRecord(raw) || typeof raw.id !== 'string')
+            continue;
+        const kind = raw.kind === 'image' || raw.kind === 'file' ? raw.kind : undefined;
+        if (kind === undefined)
+            continue;
+        const file = isRecord(raw.file) ? raw.file : undefined;
+        const name = typeof file?.name === 'string' ? file.name : '';
+        const size = typeof file?.size === 'number' && Number.isFinite(file.size) ? file.size : undefined;
+        const upload = isRecord(uploads) && isRecord(uploads[raw.id]) ? uploads[raw.id] : undefined;
+        const status = upload?.status === 'uploading' || upload?.status === 'ready' || upload?.status === 'error' ? upload.status : undefined;
+        out.push({
+            id: raw.id,
+            kind,
+            name,
+            ...(size === undefined ? {} : { bytes: size }),
+            ...(kind === 'file' && status !== undefined ? { status } : {}),
+        });
+    }
+    return out;
+}
+/** Compact byte size for the row description. */
+function formatBytes(bytes) {
+    if (bytes < 1024)
+        return `${bytes} B`;
+    const units = ['KB', 'MB', 'GB'];
+    let value = bytes / 1024;
+    let unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit += 1;
+    }
+    return `${value >= 10 ? Math.round(value) : Math.round(value * 10) / 10} ${units[unit]}`;
+}
+/** Pick-time refs for the whole rail: ordinal + ambiguity need every sibling. */
+function buildRefs(attachments) {
+    const counts = new Map();
+    for (const a of attachments)
+        counts.set(a.name, (counts.get(a.name) ?? 0) + 1);
+    return attachments.map((a, index) => ({
+        v: REF_VERSION,
+        id: a.id,
+        kind: a.kind,
+        name: a.name,
+        ordinal: index + 1,
+        ambiguous: a.name === '' || (counts.get(a.name) ?? 0) > 1,
+    }));
+}
+/** Chip / row title: the file name, or the localized unnamed label. */
+function labelOf(ref, copy) {
+    return ref.name === '' ? copy.unnamed(ref.ordinal) : ref.name;
+}
+/**
+ * Whether one attachment survives the live query. A drilled listing or a
+ * path-shaped query (contains `/`) belongs to the @文件 browser, so the
+ * section stays out of it; an empty query lists everything.
+ */
+function matchesQuery(name, query, drilled) {
+    if (drilled || query.includes('/'))
+        return false;
+    const q = query.trim().toLowerCase();
+    return q === '' || name.toLowerCase().includes(q);
+}
+/**
+ * Menu rows for the current rail. Empty rail or no match → [] (the menu drops
+ * an empty ready group, so the section simply does not appear). Prefix
+ * matches rank before infix matches; ties keep rail order.
+ */
+function buildCandidates(attachments, query, drilled, copy) {
+    const q = query.trim().toLowerCase();
+    const rows = [];
+    for (const [index, ref] of buildRefs(attachments).entries()) {
+        const attachment = attachments[index];
+        if (attachment === undefined)
+            continue;
+        const label = labelOf(ref, copy);
+        if (!matchesQuery(label, query, drilled))
+            continue;
+        const parts = [attachment.kind === 'image' ? copy.kindImage : copy.kindFile];
+        if (attachment.bytes !== undefined)
+            parts.push(formatBytes(attachment.bytes));
+        if (attachment.status === 'uploading')
+            parts.push(copy.uploading);
+        else if (attachment.status === 'error')
+            parts.push(copy.failed);
+        rows.push({
+            rank: q !== '' && label.toLowerCase().startsWith(q) ? 0 : 1,
+            index,
+            row: { name: label, description: parts.join(' · '), icon: 'file', section: copy.section, value: JSON.stringify(ref) },
+        });
+    }
+    rows.sort((a, b) => a.rank - b.rank || a.index - b.index);
+    return rows.map((entry) => entry.row);
+}
+/** Decode a ref string (candidate value or chip ref); undefined when foreign. */
+function parseRef(value) {
+    if (typeof value !== 'string')
+        return undefined;
+    let parsed;
+    try {
+        parsed = JSON.parse(value);
+    }
+    catch {
+        return undefined;
+    }
+    if (!isRecord(parsed) || parsed.v !== REF_VERSION)
+        return undefined;
+    const { id, kind, name, ordinal, ambiguous } = parsed;
+    if (typeof id !== 'string' || (kind !== 'file' && kind !== 'image') || typeof name !== 'string')
+        return undefined;
+    if (typeof ordinal !== 'number' || !Number.isInteger(ordinal) || ordinal < 1 || typeof ambiguous !== 'boolean')
+        return undefined;
+    return { v: REF_VERSION, id, kind, name, ordinal, ambiguous };
+}
+/** Clipboard / persistence projection: `@附件:name` (or `@附件:#n`). */
+function clipboardTextOf(ref, copy) {
+    return `@${copy.mention}:${ref.name === '' ? `#${ref.ordinal}` : ref.name}`;
+}
+/**
+ * Turn one menu pick into the insert outcome; undefined (= default sink) for a
+ * value this source did not mint.
+ */
+function insertForPick(value, copy) {
+    const ref = parseRef(value);
+    if (ref === undefined)
+        return undefined;
+    return {
+        source: exports.ATTACHMENT_SOURCE,
+        ref: JSON.stringify(ref),
+        label: labelOf(ref, copy),
+        appearance: 'file',
+        clipboardText: clipboardTextOf(ref, copy),
+    };
+}
+/**
+ * Model form of one chip. It mirrors the identity the model already sees for
+ * the attachment itself — dsh-llm renders a file part as
+ * `File "<name>" (<bytes> bytes, sha256:…)` and an image part as
+ * `Image "<name>" (<attachmentId>)` — so `[attachment: File "report.pdf"]`
+ * lines up with exactly one block of the same user message. Names are
+ * JSON-quoted like the host does. The ordinal (`#n`, rail order = the order
+ * the attachment parts precede the text) is added only when the name alone
+ * is ambiguous (unnamed paste, duplicate names). English on purpose: it is
+ * model-facing and must not change with the UI locale.
+ */
+function serializeRef(ref) {
+    const parsed = parseRef(ref);
+    if (parsed === undefined)
+        throw new Error(`${exports.ATTACHMENT_SOURCE}: unrecognized attachment reference`);
+    const kind = parsed.kind === 'image' ? 'Image' : 'File';
+    const named = parsed.name === '' ? kind : `${kind} ${JSON.stringify(parsed.name)}`;
+    return parsed.ambiguous ? `[attachment #${parsed.ordinal}: ${named}]` : `[attachment: ${named}]`;
+}
+};
+__modules["effects/attachment-mention.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ATTACHMENT_EN = exports.ATTACHMENT_ZH = exports.ATTACHMENT_NS = void 0;
+exports.readDraftAttachments = readDraftAttachments;
+exports.createAttachmentSource = createAttachmentSource;
+exports.installAttachmentMention = installAttachmentMention;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+const attachment_mention_core_ts_1 = require("./core/attachment-mention-core.js");
+/**
+ * 「本次附件」 @ source: while the composer rail above the input holds draft
+ * attachments (uploaded files and images), typing `@` lists them in their own
+ * menu section; a pick inserts one non-editable chip whose model form names
+ * that attachment (format + rationale: `serializeRef` in the core file).
+ * The `/` command menu is untouched — this source binds `@` only.
+ *
+ * Mobile-only by the plugin's desktop no-op promise: the source is registered
+ * under MOBILE_QUERY via installMobileEffect and unregistered when it stops
+ * matching.
+ *
+ * HOW THE RAIL IS READ (public services only — no DOM, no fiber):
+ *   sessions.scope(sessionId)                 → the session-scope ctx
+ *   conversation.input.for(actx).state        → SnapshotStore<InputState>
+ *       (frozen contract `SessionInput.state`, ui-conversation input/contract.d.ts)
+ *   InputState.attachmentIds                  → ordered draft ids (rc.2;
+ *       the rc.6 contract named the image-only predecessor `imageIds`)
+ *   conversation.resolveDraftAttachments(ids) → `{ kind, id, file }` descriptors
+ *       (rc.2; rc.6 `draftImages(ids)` — both feature-detected)
+ *   conversation.fileUploads.getSnapshot()    → `{ [id]: { status } }` (optional)
+ * This is exactly what the host's own composer renders the rail from
+ * (ui-conversation lib/client.js: InputBar `resolveDraftAttachments(input.attachmentIds)`).
+ *
+ * RE-AUDIT ON EVERY HOST UPGRADE (ui-conversation / ui-input-trigger):
+ * - `attachmentIds` / `resolveDraftAttachments` / `fileUploads` names (the
+ *   two latter are NOT in the frozen IConversation face — public class
+ *   members only). A rename degrades to "section never appears", not to an error.
+ * - `sinkSerialized` clears attachmentIds BEFORE codec.serialize runs, which is
+ *   why the chip ref is a self-contained pick-time snapshot.
+ * - rc.2 candidate fields `section`/`value`, `showGroupTitle`, `drilled`, and
+ *   the insert `appearance` (chip glyphs: 'session' | 'file' | 'folder' only —
+ *   there is no image glyph, so images use 'file').
+ */
+/** Own locale namespace (locales.ts stays untouched; same NS/zh/en shape as ui-reference). */
+exports.ATTACHMENT_NS = 'mobileNav.attachments';
+exports.ATTACHMENT_ZH = {
+    'section': '本次附件',
+    'kind.file': '文件',
+    'kind.image': '图片',
+    'status.uploading': '上传中',
+    'status.failed': '上传失败',
+    'unnamed': '附件 {n}',
+    'mention': '附件',
+};
+exports.ATTACHMENT_EN = {
+    'section': 'Attachments in this message',
+    'kind.file': 'File',
+    'kind.image': 'Image',
+    'status.uploading': 'Uploading',
+    'status.failed': 'Upload failed',
+    'unnamed': 'Attachment {n}',
+    'mention': 'attachment',
+};
+/**
+ * The current draft rail of one session, or [] when this host generation
+ * does not expose it (missing members = capability absent, not an error).
+ */
+function readDraftAttachments(ctx, sessionId) {
+    const sessions = ctx.get('sessions');
+    const conversation = ctx.get('conversation');
+    const actx = sessions?.scope?.(sessionId);
+    if (actx === undefined || conversation?.input?.for === undefined)
+        return [];
+    const ids = (0, attachment_mention_core_ts_1.draftAttachmentIdsOf)(conversation.input.for(actx)?.state?.getSnapshot());
+    if (ids.length === 0)
+        return [];
+    const descriptors = typeof conversation.resolveDraftAttachments === 'function'
+        ? conversation.resolveDraftAttachments(ids)
+        : typeof conversation.draftImages === 'function' ? conversation.draftImages(ids) : undefined;
+    return (0, attachment_mention_core_ts_1.normalizeDraftAttachments)(descriptors, conversation.fileUploads?.getSnapshot());
+}
+function copyOf(ctx) {
+    const t = ctx.locale.bind(exports.ATTACHMENT_NS);
+    return {
+        section: t('section'),
+        kindFile: t('kind.file'),
+        kindImage: t('kind.image'),
+        uploading: t('status.uploading'),
+        failed: t('status.failed'),
+        unnamed: (n) => t('unnamed', { n }),
+        mention: t('mention'),
+    };
+}
+/** The source object; `ctx` must be a scope where inputTriggers/sessions/conversation resolve. */
+function createAttachmentSource(ctx) {
+    return {
+        trigger: '@',
+        name: attachment_mention_core_ts_1.ATTACHMENT_SOURCE,
+        order: attachment_mention_core_ts_1.ATTACHMENT_SOURCE_ORDER,
+        // Section title comes from the candidates' own `section`; the group title
+        // would otherwise look up `slash.menu` with our raw source name.
+        showGroupTitle: false,
+        candidates(session, req) {
+            if (req.signal.aborted)
+                return Promise.resolve([]);
+            // MUST NOT THROW. The host calls `source.candidates(...)` synchronously and
+            // only attaches `.then(onFulfilled, onRejected)` AFTER the call returns
+            // (ui-input-trigger `fetchCandidates`: 「for (const source of roster)
+            // source.candidates(projection, …).then(…)」), so a synchronous throw here
+            // is nobody's rejection and takes down that whole `@` / `/` menu beat.
+            // The read below is deliberately synchronous, and its dependencies are
+            // host-side getters that can throw on a released scope
+            // (`conversation.input.for()` → "requires a retained Session scope"), so a
+            // capability gap must stay a capability gap: an empty list, the same
+            // result as a host generation without these members.
+            try {
+                // Synchronous read: resolves in the same microtask turn as the reference
+                // source's skeleton, so no pending row flashes for this group.
+                return Promise.resolve((0, attachment_mention_core_ts_1.buildCandidates)(readDraftAttachments(ctx, session.sessionId), req.query, req.drilled === true, copyOf(ctx)));
+            }
+            catch {
+                return Promise.resolve([]);
+            }
+        },
+        onPick({ candidate }) {
+            const insert = (0, attachment_mention_core_ts_1.insertForPick)(candidate.value, copyOf(ctx));
+            return insert === undefined ? undefined : { insert };
+        },
+        codec: {
+            // The chip's own clipboard projection is cached on the occurrence at
+            // insert time; this path only serves owner-side re-projection.
+            clipboardText: (ref) => (0, attachment_mention_core_ts_1.insertForPick)(ref, copyOf(ctx))?.clipboardText ?? '',
+            serialize: (ref) => {
+                try {
+                    return Promise.resolve((0, attachment_mention_core_ts_1.serializeRef)(ref));
+                }
+                catch (error) {
+                    return Promise.reject(error);
+                }
+            },
+        },
+    };
+}
+/**
+ * Register the 「本次附件」 @ source while the mobile breakpoint matches.
+ * `inputTriggers` is optional at the fiber level (ctx.inject): a host
+ * without ui-input-trigger simply never arms the feature.
+ * @param ctx - client root context.
+ */
+function installAttachmentMention(ctx) {
+    ctx.effect(() => ctx.locale.register(exports.ATTACHMENT_NS, { zh: exports.ATTACHMENT_ZH, en: exports.ATTACHMENT_EN }), 'dsh-web-mobile: attachment mention dictionaries');
+    ctx.inject(['inputTriggers'], (scope) => {
+        (0, phone_chrome_ts_1.installMobileEffect)(scope, 'dsh-web-mobile: attachment mention source', () => {
+            const registry = scope.get('inputTriggers');
+            if (typeof registry?.registerSource !== 'function')
+                return undefined;
+            return registry.registerSource(createAttachmentSource(scope));
+        });
+    });
+}
+};
+__modules["components/file-share-locale.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.fileShareEn = exports.fileShareZh = exports.FILE_SHARE_NS = void 0;
+/**
+ * `mobileNavFileShare` namespace: file-share copy, registered by
+ * installFileShare (effects/file-share.ts) through ctx.locale.register — kept
+ * out of i18n/locales.ts so the feature owns its dictionary end to end.
+ */
+exports.FILE_SHARE_NS = 'mobileNavFileShare';
+/** Simplified Chinese dictionary (the key-set source of truth). */
+exports.fileShareZh = {
+    'share': '分享',
+    'shareFile': '分享「{name}」',
+    'downloadFile': '下载「{name}」',
+    'sharing': '正在准备文件…',
+    'downloadedUnsupported': '当前环境不支持直接分享；已开始下载，请在系统保存位置确认',
+    'downloadedTooLarge': '文件超过 50 MB；已开始下载，请在系统保存位置确认',
+    'downloadedShareFailed': '分享未能完成；已开始下载，请在系统保存位置确认',
+    'errorTooLarge': '文件太大（超过 200 MB），无法在手机端分享或下载',
+    'errorNotFound': '文件不存在或已被移动',
+    'errorGeneric': '分享失败：{message}',
+};
+/** English dictionary, key-identical to the Chinese source of truth. */
+exports.fileShareEn = {
+    'share': 'Share',
+    'shareFile': 'Share "{name}"',
+    'downloadFile': 'Download "{name}"',
+    'sharing': 'Preparing file…',
+    'downloadedUnsupported': 'Direct sharing is unavailable here; a download has started — confirm it at the location your system shows',
+    'downloadedTooLarge': 'The file is over 50 MB; a download has started — confirm it at the location your system shows',
+    'downloadedShareFailed': 'Sharing did not finish; a download has started — confirm it at the location your system shows',
+    'errorTooLarge': 'The file is too large (over 200 MB) to share or download on mobile',
+    'errorNotFound': 'The file no longer exists or was moved',
+    'errorGeneric': 'Share failed: {message}',
+};
+};
+__modules["components/file-share-core.js"] = function (require, module, exports) {
+"use strict";
+/**
+ * File-share pure core: how a workspace file's bytes are read and how they
+ * reach the user — the system share sheet when the platform can share files,
+ * a plain download otherwise. DOM-free and import-free so node --test drives
+ * every decision with injected fakes (tests/file-share.test.ts); the React
+ * controls in file-share-controls.tsx bind the real navigator/document.
+ *
+ * Reading goes through the host's own Remote (`remote.workspaceFiles.readBytes`,
+ * dsh-api-workspace-files) — the same call the document preview uses, so
+ * authentication, sandbox policy and workspace confinement stay host-owned.
+ * Reads are windowed: one ranged call is capped by the host `maxBytes`
+ * (default 2 MiB, a larger window is refused rather than shortened), so the
+ * file is pulled in CHUNK_BYTES windows until EOF.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FileShareError = exports.CHUNK_BYTES = exports.SHARE_MAX_BYTES = void 0;
+exports.readWholeFile = readWholeFile;
+exports.isAbortError = isAbortError;
+exports.canShareFiles = canShareFiles;
+exports.deliverFile = deliverFile;
+exports.fileNameOf = fileNameOf;
+exports.mimeTypeOf = mimeTypeOf;
+/** Above this size the share sheet is skipped and the file is downloaded instead. */
+exports.SHARE_MAX_BYTES = 50 * 1024 * 1024;
+/** Above this size nothing is read at all: the browser would hold the whole file in memory. */
+const READ_MAX_BYTES = 200 * 1024 * 1024;
+/** One ranged read; well under the host's default 2 MiB per-call window cap. */
+exports.CHUNK_BYTES = 1024 * 1024;
+/** A share-flow failure carrying its stable code. */
+class FileShareError extends Error {
+    code;
+    /**
+     * @param code - stable failure code.
+     * @param message - diagnostic text.
+     */
+    constructor(code, message) {
+        super(message);
+        this.code = code;
+        this.name = 'FileShareError';
+    }
+}
+exports.FileShareError = FileShareError;
+/** Map one Remote failure onto a share-flow failure. */
+function remoteFailure(error) {
+    const code = error.code ?? '';
+    if (code === 'workspace-file/too-large')
+        return new FileShareError('too-large', error.message ?? code);
+    if (code === 'workspace-file/not-found' || code === 'workspace-file/not-regular-file') {
+        return new FileShareError('not-found', error.message ?? code);
+    }
+    return new FileShareError('read-failed', error.message ?? (code || 'read failed'));
+}
+/**
+ * Read a whole file in windows until EOF. The first window also reports the
+ * file's size (`bytes`), so an oversized file is refused after one small read.
+ * @param read - bound ranged read.
+ * @param path - file path.
+ * @param signal - cancellation; an abort rejects with the signal's reason.
+ * @param chunk - window size (tests shrink it).
+ * @param max - refuse files above this size.
+ * @returns the chunks and their total size.
+ */
+async function readWholeFile(read, path, signal, chunk = exports.CHUNK_BYTES, max = READ_MAX_BYTES) {
+    const parts = [];
+    let offset = 0;
+    for (;;) {
+        signal.throwIfAborted();
+        const result = await read(path, { offset, length: chunk }, signal);
+        signal.throwIfAborted();
+        if (!result.ok)
+            throw remoteFailure(result.error);
+        const { data, eof, bytes } = result.value;
+        if (bytes !== undefined && bytes > max) {
+            throw new FileShareError('too-large', `${path}: ${bytes} bytes exceed the ${max} byte share cap`);
+        }
+        // Copy into a fresh ArrayBuffer-backed view: the payload may be a view
+        // over a larger transport buffer, and Blob parts want ArrayBuffer views.
+        parts.push(new Uint8Array(data));
+        offset += data.length;
+        if (offset > max)
+            throw new FileShareError('too-large', `${path}: more than ${max} bytes`);
+        // An empty window with eof unset would loop forever; treat it as the end.
+        if (eof || data.length === 0)
+            break;
+    }
+    return { parts, size: offset };
+}
+/** Whether a rejection is the user dismissing the share sheet. */
+function isAbortError(error) {
+    return typeof error === 'object' && error !== null && error.name === 'AbortError';
+}
+/**
+ * Whether this platform can deliver a file to another app at all.
+ *
+ * The UI reads it to label the button HONESTLY: when nothing can share, the
+ * press can only end in a download, so calling it 「分享」 would be a lie (owner
+ * report 2026-10-07: 「还是选择存到哪里，而不是分享到媒体，比如说微信QQ，不然这不算是
+ * 文件分享」). Deliberately a *surface* probe, not a per-file `canShare` call:
+ * `canShare` wants real `File` objects, and a fabricated probe object makes
+ * browsers report false even for shareable files.
+ *
+ * Deliberately NOT named after `navigator.share`: Android WebView implements no
+ * Web Share at all (only standalone browsers do), so a host-side bridge — e.g. a
+ * DSHA `ACTION_SEND` entry point — is the route that actually matters on a phone,
+ * and it would NOT show up in these two seams. When such a bridge lands, extend
+ * `ShareDeps` with it and make this predicate (`bridge !== undefined ||` …) and
+ * the `deliverFile` routing order **bridge → Web Share → download** agree; the
+ * label and the glyph follow this predicate automatically, so the button flips
+ * back to 「分享「x」」 with no UI change. Do not pre-guess the bridge's shape from
+ * here: a `path`-only bridge needs the host half, a byte/base64 bridge does not.
+ * @param deps - platform seams.
+ * @returns true when both Web Share members are present.
+ */
+function canShareFiles(deps) {
+    return deps.share !== undefined && deps.canShare !== undefined;
+}
+/**
+ * Deliver one file: the system share sheet when the platform can share it,
+ * otherwise a download. A dismissed sheet (AbortError) is a silent cancel;
+ * any other share rejection (NotAllowedError after the user-activation window
+ * lapsed during a long read, a target app refusing the type, …) still gets
+ * the file to the user through the download route.
+ * @param file - the file to deliver.
+ * @param deps - platform seams.
+ * @returns the outcome.
+ */
+async function deliverFile(file, deps) {
+    if (file.size > (deps.shareMax ?? exports.SHARE_MAX_BYTES)) {
+        deps.download(file);
+        return { kind: 'downloaded', reason: 'too-large' };
+    }
+    // No share seam at all: a real branch of its own (it used to hide inside
+    // `!supported || deps.share === undefined`, where the second half could
+    // never decide anything because `supported` was already false).
+    const share = deps.share;
+    if (share === undefined) {
+        deps.download(file);
+        return { kind: 'downloaded', reason: 'unsupported' };
+    }
+    let supported = false;
+    try {
+        supported = deps.canShare?.({ files: [file] }) === true;
+    }
+    catch {
+        supported = false;
+    }
+    if (!supported) {
+        deps.download(file);
+        return { kind: 'downloaded', reason: 'unsupported' };
+    }
+    try {
+        await share({ files: [file], title: file.name });
+        return { kind: 'shared' };
+    }
+    catch (error) {
+        if (isAbortError(error))
+            return { kind: 'cancelled' };
+        deps.download(file);
+        return { kind: 'downloaded', reason: 'share-failed' };
+    }
+}
+/** Common extensions → MIME type; share targets filter on it, so a guess beats octet-stream. */
+const MIME_BY_EXTENSION = {
+    txt: 'text/plain', log: 'text/plain', md: 'text/markdown', markdown: 'text/markdown',
+    csv: 'text/csv', tsv: 'text/tab-separated-values', json: 'application/json',
+    xml: 'application/xml', yaml: 'text/yaml', yml: 'text/yaml', html: 'text/html', htm: 'text/html',
+    css: 'text/css', js: 'text/javascript', mjs: 'text/javascript', ts: 'text/plain', tsx: 'text/plain',
+    py: 'text/plain', sh: 'text/plain', svg: 'image/svg+xml',
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp',
+    bmp: 'image/bmp', heic: 'image/heic', avif: 'image/avif',
+    mp3: 'audio/mpeg', wav: 'audio/wav', m4a: 'audio/mp4', ogg: 'audio/ogg',
+    mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm',
+    pdf: 'application/pdf', zip: 'application/zip', gz: 'application/gzip', tar: 'application/x-tar',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xls: 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ppt: 'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+};
+/**
+ * The basename of a host path, in either separator spelling.
+ * @param path - absolute or relative path.
+ * @returns the last segment (the path itself when it has none).
+ */
+function fileNameOf(path) {
+    const segments = path.split(/[/\\]+/).filter(Boolean);
+    return segments.at(-1) ?? path;
+}
+/**
+ * MIME type guessed from a file name's extension.
+ * @param name - file name.
+ * @returns the guessed type, or application/octet-stream.
+ */
+function mimeTypeOf(name) {
+    const dot = name.lastIndexOf('.');
+    if (dot <= 0)
+        return 'application/octet-stream';
+    return MIME_BY_EXTENSION[name.slice(dot + 1).toLowerCase()] ?? 'application/octet-stream';
+}
+};
+__modules["components/file-share-controls.js"] = function (require, module, exports) {
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FilePreviewShareButton = FilePreviewShareButton;
+exports.FilesRowShare = FilesRowShare;
+const jsx_runtime_1 = require("react/jsx-runtime");
+const react_1 = require("react");
+const primitives = __importStar(require("@deepseek-ai/dsh-client-ui-primitives"));
+const file_share_core_ts_1 = require("./components/file-share-core.js");
+const hostTable = primitives;
+const hostShareIcon = ['IconShareOutlineRegular', 'IconShareOutline16']
+    .map(name => hostTable[name])
+    .find(value => typeof value === 'function');
+const hostWarningIcon = ['IconWarningOutlineRegular', 'IconWarningOutline16']
+    .map(name => hostTable[name])
+    .find(value => typeof value === 'function');
+const HostToastComponent = typeof hostTable.Toast === 'function' ? hostTable.Toast : undefined;
+/** Inline share glyph for injected DOM rows and hosts without a share icon (currentColor). */
+const SHARE_SVG = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'
+    + '<path d="M8 1.5v8.5M8 1.5 5 4.5M8 1.5l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="M5 7H4a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 4 14h8a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 12 7h-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+const DOWNLOAD_SVG = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'
+    + '<path d="M8 1.5v8.5M8 10 5 7M8 10l3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="M5 12.5H4A1.5 1.5 0 0 0 2.5 14v.5h11V14A1.5 1.5 0 0 0 12 12.5h-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+/** 平台没有 Web Share 时按钮只能"下载"，图标也跟着换成下载方向（诚实语义）。 */
+function DownloadGlyph() {
+    return (0, jsx_runtime_1.jsx)("span", { "aria-hidden": "true", dangerouslySetInnerHTML: { __html: DOWNLOAD_SVG } });
+}
+function ShareGlyph() {
+    if (hostShareIcon !== undefined) {
+        const Icon = hostShareIcon;
+        return (0, jsx_runtime_1.jsx)(Icon, { size: 16 });
+    }
+    return (0, jsx_runtime_1.jsx)("span", { "aria-hidden": "true", dangerouslySetInnerHTML: { __html: SHARE_SVG } });
+}
+/**
+ * Minimal self-built notice for hosts without the primitives Toast: one
+ * body-level status line, replaced by the next one, gone after 3s. Mounted on
+ * <body> so no transformed sheet ancestor can mis-place the fixed box.
+ */
+function showFallbackNotice(text) {
+    document.querySelector('[data-mobile-nav="file-share-toast"]')?.remove();
+    const node = document.createElement('div');
+    node.dataset.mobileNav = 'file-share-toast';
+    node.setAttribute('role', 'status');
+    node.textContent = text;
+    document.body.appendChild(node);
+    setTimeout(() => node.remove(), 3000);
+}
+/**
+ * The button label: 「分享」 only when the platform really has Web Share, else
+ * 「下载」 — the press can only end in a download there, and calling that
+ * 「分享」 was the owner's 2026-10-07 complaint.
+ * @param t - file-share copy.
+ * @param name - displayed file name.
+ * @returns the label for the current state.
+ */
+function shareLabel(t, name) {
+    return (0, file_share_core_ts_1.canShareFiles)(platformDeps()) ? t('shareFile', { name }) : t('downloadFile', { name });
+}
+/** Copy for one outcome; null when the outcome speaks for itself (sheet shown / dismissed). */
+function outcomeText(outcome, t) {
+    if (outcome.kind !== 'downloaded')
+        return null;
+    if (outcome.reason === 'too-large')
+        return t('downloadedTooLarge');
+    if (outcome.reason === 'share-failed')
+        return t('downloadedShareFailed');
+    return t('downloadedUnsupported');
+}
+/** Copy for one failure. */
+function failureText(error, t) {
+    if (error instanceof file_share_core_ts_1.FileShareError) {
+        if (error.code === 'too-large')
+            return t('errorTooLarge');
+        if (error.code === 'not-found')
+            return t('errorNotFound');
+    }
+    return t('errorGeneric', { message: error instanceof Error ? error.message : String(error) });
+}
+/** Anchor download, revoked once the browser has had time to start it. */
+function downloadFile(file) {
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = file.name;
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+}
+/** The live platform seams for deliverFile. */
+function platformDeps() {
+    const nav = navigator;
+    return {
+        canShare: typeof window.DSHA?.canShareFile === 'function' ? data => data.files.length === 1 && window.DSHA.canShareFile(data.files[0]) : typeof nav.canShare === 'function' ? data => nav.canShare(data) : undefined,
+        share: typeof window.DSHA?.shareFile === 'function' ? data => window.DSHA.shareFile(data.files[0]) : typeof nav.share === 'function' ? data => nav.share(data) : undefined,
+        download: downloadFile,
+    };
+}
+/** Shared share-flow state: single flight, busy path, failure notice. */
+function useFileShare(sessionId, readFileRange, t) {
+    const [busyPath, setBusyPath] = (0, react_1.useState)(null);
+    const [notice, setNotice] = (0, react_1.useState)(null);
+    const inFlight = (0, react_1.useRef)(null);
+    const seq = (0, react_1.useRef)(0);
+    const latest = (0, react_1.useRef)({ sessionId, readFileRange, t });
+    latest.current = { sessionId, readFileRange, t };
+    (0, react_1.useEffect)(() => () => inFlight.current?.abort(), []);
+    const announce = (0, react_1.useCallback)((text) => {
+        if (HostToastComponent === undefined) {
+            showFallbackNotice(text);
+            return;
+        }
+        seq.current += 1;
+        setNotice({ seq: seq.current, text });
+    }, []);
+    const share = (0, react_1.useCallback)((path) => {
+        if (inFlight.current !== null)
+            return;
+        const controller = new AbortController();
+        inFlight.current = controller;
+        setBusyPath(path);
+        const { sessionId: id, readFileRange: read, t: tr } = latest.current;
+        const run = async () => {
+            const { parts } = await (0, file_share_core_ts_1.readWholeFile)((p, range, signal) => read(id, p, range, signal), path, controller.signal);
+            const name = (0, file_share_core_ts_1.fileNameOf)(path);
+            const file = new File(parts, name, { type: (0, file_share_core_ts_1.mimeTypeOf)(name) });
+            const outcome = await (0, file_share_core_ts_1.deliverFile)(file, platformDeps());
+            const text = outcomeText(outcome, tr);
+            if (text !== null)
+                announce(text);
+        };
+        run().catch((error) => {
+            if (controller.signal.aborted)
+                return;
+            console.warn('[dsh-web-mobile] file share failed:', error);
+            announce(failureText(error, tr));
+        }).finally(() => {
+            if (inFlight.current === controller)
+                inFlight.current = null;
+            if (!controller.signal.aborted)
+                setBusyPath(null);
+        });
+    }, [announce]);
+    const toast = notice === null || HostToastComponent === undefined
+        ? null
+        : ((0, jsx_runtime_1.jsx)(HostToastComponent, { text: notice.text, ...(hostWarningIcon === undefined ? {} : { icon: (0, jsx_runtime_1.jsx)(IconWarning, {}) }), onDone: () => setNotice(null) }, notice.seq));
+    return { busyPath, share, toast };
+}
+function IconWarning() {
+    const Icon = hostWarningIcon;
+    return Icon === undefined ? null : (0, jsx_runtime_1.jsx)(Icon, {});
+}
+/**
+ * Preview header share button, contributed to the documentpreview-declared
+ * `sidebar.right.tab.document.actions` list slot ("Header toolbar
+ * contributions acting on the previewed file"). The owner renders the slot
+ * only once the file's Host path is known, for every renderer (text, code,
+ * image, PDF, Office, unsupported).
+ */
+function FilePreviewShareButton({ absolutePath, sessionId, readFileRange, t }) {
+    const { busyPath, share, toast } = useFileShare(sessionId, readFileRange, t);
+    const busy = busyPath !== null;
+    return ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "file-share-preview", "aria-label": busy ? t('sharing') : shareLabel(t, (0, file_share_core_ts_1.fileNameOf)(absolutePath)), "aria-busy": busy, disabled: busy, onClick: () => share(absolutePath), children: (0, file_share_core_ts_1.canShareFiles)(platformDeps()) ? (0, jsx_runtime_1.jsx)(ShareGlyph, {}) : (0, jsx_runtime_1.jsx)(DownloadGlyph, {}) }), toast] }));
+}
+/** Marker on each injected row button (idempotence + CSS + probe key). */
+const ROW_BUTTON = 'file-share-row';
+/**
+ * Row-end share buttons for the Files tree.
+ *
+ * The host file tree (ui-sidebar-files FilesBody) gives rows no menu, no
+ * long-press and no per-row slot: each file is `<li data-files-entry="file"
+ * data-files-path=…>` holding exactly one `<button>` whose click opens the
+ * preview. The only extension seat is `sidebar.right.tab.files.actions`, in
+ * the tree header. This entry sits there invisibly (a hidden anchor span) to
+ * get a session-bound lifetime scoped to ONE tree, and decorates that tree's
+ * file rows by APPENDING a plugin-owned button after the host's button.
+ * Host nodes are never moved, wrapped or re-parented (#104 rule): React only
+ * reconciles the children it rendered, so an extra trailing sibling survives
+ * re-renders and leaves with the `li` on unmount. Directories and "other"
+ * entries get no button; a reused `li` that turned into a directory drops it.
+ */
+function FilesRowShare({ sessionId, readFileRange, t }) {
+    const { busyPath, share, toast } = useFileShare(sessionId, readFileRange, t);
+    const anchorRef = (0, react_1.useRef)(null);
+    const latest = (0, react_1.useRef)({ busyPath, share, t });
+    latest.current = { busyPath, share, t };
+    const decorateRef = (0, react_1.useRef)(null);
+    (0, react_1.useEffect)(() => {
+        const root = anchorRef.current?.closest('[data-files-state="tree"]') ?? null;
+        const body = root?.querySelector('[data-files-body]') ?? null;
+        if (body === null)
+            return undefined;
+        const onClick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const button = event.currentTarget;
+            const path = button.parentElement?.getAttribute('data-files-path');
+            if (path)
+                latest.current.share(path);
+        };
+        const decorate = () => {
+            const { busyPath: busy, t: tr } = latest.current;
+            for (const stale of body.querySelectorAll(`[data-mobile-nav="${ROW_BUTTON}"]`)) {
+                if (stale.parentElement?.getAttribute('data-files-entry') !== 'file')
+                    stale.remove();
+            }
+            for (const row of body.querySelectorAll('li[data-files-entry="file"]')) {
+                let button = row.querySelector(`:scope > [data-mobile-nav="${ROW_BUTTON}"]`);
+                if (button === null) {
+                    button = document.createElement('button');
+                    button.type = 'button';
+                    button.dataset.mobileNav = ROW_BUTTON;
+                    button.innerHTML = (0, file_share_core_ts_1.canShareFiles)(platformDeps()) ? SHARE_SVG : DOWNLOAD_SVG;
+                    button.addEventListener('click', onClick);
+                    row.appendChild(button);
+                }
+                const path = row.getAttribute('data-files-path') ?? '';
+                const active = busy !== null && busy === path;
+                const label = active ? tr('sharing') : shareLabel(tr, (0, file_share_core_ts_1.fileNameOf)(path));
+                // Single flight is per tree (`inFlight` lives in this component) and
+                // `share()` returns immediately while one is running, so a tap on any
+                // OTHER row used to do visibly nothing. Block every row button for the
+                // flight: the tapped one keeps its 「分享中」 label, the rest read as
+                // disabled instead of silently dead. No new async path, no change to the
+                // success/failure routes.
+                const blocked = busy !== null;
+                if (button.getAttribute('aria-label') !== label)
+                    button.setAttribute('aria-label', label);
+                if (button.disabled !== blocked)
+                    button.disabled = blocked;
+                if (active)
+                    button.setAttribute('aria-busy', 'true');
+                else
+                    button.removeAttribute('aria-busy');
+            }
+        };
+        decorateRef.current = decorate;
+        let raf = 0;
+        const schedule = () => {
+            if (raf !== 0)
+                return;
+            raf = requestAnimationFrame(() => {
+                raf = 0;
+                decorate();
+            });
+        };
+        // childList only: our own aria/disabled writes never re-trigger it, and
+        // the appended buttons settle in one extra (idempotent) pass.
+        const observer = new MutationObserver(schedule);
+        observer.observe(body, { childList: true, subtree: true });
+        decorate();
+        return () => {
+            observer.disconnect();
+            if (raf !== 0)
+                cancelAnimationFrame(raf);
+            decorateRef.current = null;
+            for (const button of body.querySelectorAll(`[data-mobile-nav="${ROW_BUTTON}"]`)) {
+                button.removeEventListener('click', onClick);
+                button.remove();
+            }
+        };
+    }, []);
+    // Busy state and locale switches re-label the existing buttons in place.
+    (0, react_1.useEffect)(() => {
+        decorateRef.current?.();
+    }, [busyPath, t]);
+    return ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsx)("span", { hidden: true, "data-mobile-nav": "file-share-anchor", ref: anchorRef }), toast] }));
+}
+};
+__modules["effects/file-share.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.installFileShare = installFileShare;
+const phone_chrome_ts_1 = require("./effects/phone-chrome.js");
+const file_share_locale_ts_1 = require("./components/file-share-locale.js");
+const file_share_controls_tsx_1 = require("./components/file-share-controls.js");
+/**
+ * Install the mobile file-share entries.
+ * @param ctx - client root context.
+ */
+function installFileShare(ctx) {
+    // `remote.workspaceFiles` is not in the root inject list: a child fiber
+    // waits for it, so hosts without the namespace stay a quiet no-op.
+    ctx.inject(['slots', 'locale', 'remote', 'remote.workspaceFiles'], (scope) => {
+        scope.effect(() => scope.locale.register(file_share_locale_ts_1.FILE_SHARE_NS, { zh: file_share_locale_ts_1.fileShareZh, en: file_share_locale_ts_1.fileShareEn }), 'dsh-web-mobile: file-share dictionaries');
+        const remote = scope.remote;
+        const inject = () => ({
+            readFileRange: (sessionId, path, range, signal) => remote.workspaceFiles.readBytes(sessionId, path, { range }, signal),
+        });
+        (0, phone_chrome_ts_1.installMobileEffect)(scope, 'dsh-web-mobile: file share', () => {
+            const stops = [
+                scope.slots.inject('sidebar.right.tab.document.actions', () => scope.slots.register({
+                    name: 'sidebar.right.tab.document.actions',
+                    id: 'mobile-nav-file-share',
+                    order: 100,
+                    locale: file_share_locale_ts_1.FILE_SHARE_NS,
+                    inject,
+                }, file_share_controls_tsx_1.FilePreviewShareButton)),
+                scope.slots.inject('sidebar.right.tab.files.actions', () => scope.slots.register({
+                    name: 'sidebar.right.tab.files.actions',
+                    id: 'mobile-nav-file-share-rows',
+                    order: 100,
+                    locale: file_share_locale_ts_1.FILE_SHARE_NS,
+                    inject,
+                }, file_share_controls_tsx_1.FilesRowShare)),
+            ];
+            return () => {
+                for (const stop of stops)
+                    stop();
+            };
+        });
+    });
+}
+};
 __modules["core/layout-compat.js"] = function (require, module, exports) {
 "use strict";
 // The layout service face drifted between host generations. rc.6's ILayout
@@ -9487,18 +12470,39 @@ function panelViewOpen() {
 const PANEL_EXIT_ATTR = 'data-mobile-panel-exit';
 /** Safety net: clears the marker if the reveal animation never fires. */
 const PANEL_EXIT_FALLBACK_MS = 2000;
+/** The frozen panel snapshot that slides back out (see `exit`). */
+const PANEL_GHOST_VALUE = 'panel-ghost';
 /**
- * Leave the panel: switch back to the conversation and let the incoming content
- * fade in.
+ * Ghost slide-out length. Must stay in sync with `dsh-web-mobile-panel-ghost-out`
+ * in layout.css.ts (same .28s as the drawer's transition); this constant only
+ * drives the "animation never fired" cleanup.
+ */
+const PANEL_GHOST_MS = 280;
+/**
+ * The panel page React swaps into the main area — the very element the enter
+ * rule animates (`[class*="_centerCol"] > * > *`). Queried only while a panel
+ * row is active, so it can never pick up conversation content.
+ */
+const PANEL_ELEMENT_SELECTOR = '[data-mobile-nav="frame"] [class*="_centerCol"] > * > *';
+/**
+ * Leave the panel: freeze the panel into a plugin-owned snapshot that slides back
+ * out to the side, and let the conversation come back on the SAME tick
+ * (2026-10-07: 店主先报「退出像掉帧、直接回聊天界面」，再报「空档有点久了。」)
  *
- * ⚠ The switch is deliberately NOT delayed behind an outgoing animation.
- * `selectPanel(null)` makes React remount the whole conversation, and that
- * commit blocks the main thread long enough to matter (measured on a phone:
- * ~390 ms for a long session). Fading the panel out first would show a blank
- * screen for that entire window — the panel is already transparent but the
- * conversation has not mounted yet. Keeping the panel opaque until the very
- * commit means it disappears on the same frame the conversation appears, and
- * the only transition is the conversation's fade-in.
+ * Two earlier shapes and why they failed:
+ *  · marker-then-swap only: React unmounts the panel inside that same commit, so
+ *    the exit animation painted an empty 0×0 slot — measured frame by frame, the
+ *    panel element was already gone on the first frame after the tap;
+ *  · animate-the-real-panel-first: the departure became visible, but the
+ *    conversation's remount commit (~390ms on a long session) then started 220ms
+ *    later — the owner felt exactly that added blank window.
+ *
+ * Current shape: clone the panel into `[data-mobile-nav="panel-ghost"]` (fixed,
+ * pointer-events:none), swap RIGHT AWAY, then slide the clone out over
+ * `PANEL_GHOST_MS` (the drawer's .28s). The clone's transform/opacity run on the
+ * compositor, so the slide stays smooth while the main thread pays for the
+ * conversation remount — no added gap, and the direction matches the drawer the
+ * owner asked to copy.
  *
  * @param layout - `ctx.layout`; probed, never assumed.
  * @returns the exit action (idempotent while an exit is in flight, so a double
@@ -9526,23 +12530,67 @@ function createPanelExit(layout) {
             frame.removeEventListener('animationend', onAnimationEnd, true);
             frame.removeAttribute(PANEL_EXIT_ATTR);
         }
+        removeGhosts();
         panelLeaving = false;
         leaving = false;
+    }
+    /** The panel page element, or null when no panel owns the main area. */
+    function panelElement() {
+        if (!panelOwnsMainArea())
+            return null;
+        const el = document.querySelector(PANEL_ELEMENT_SELECTOR);
+        return el instanceof HTMLElement ? el : null;
+    }
+    /** Drop any frozen snapshot (idempotent; also called from cleanup). */
+    function removeGhosts() {
+        document.querySelectorAll(`[data-mobile-nav="${PANEL_GHOST_VALUE}"]`).forEach((el) => el.remove());
+    }
+    /** Freeze the outgoing panel into an inert clone that can slide away. */
+    function freezePanel(panel) {
+        removeGhosts();
+        const ghost = document.createElement('div');
+        ghost.dataset.mobileNav = PANEL_GHOST_VALUE;
+        ghost.setAttribute('aria-hidden', 'true');
+        ghost.append(panel.cloneNode(true));
+        document.body.append(ghost);
+        return ghost;
     }
     const exit = () => {
         if (!supported || leaving)
             return;
         leaving = true;
         panelLeaving = true;
-        // The marker goes on BEFORE the swap so the incoming conversation carries
-        // the animation from its first style resolution — no full-opacity frame.
+        // The marker goes on BEFORE the swap: the incoming conversation must carry its
+        // reveal from its first style resolution (no full-opacity frame).
         const frame = (0, phone_chrome_ts_1.getFrame)();
         if (frame !== null) {
             frame.setAttribute(PANEL_EXIT_ATTR, '');
             frame.addEventListener('animationend', onAnimationEnd, true);
         }
+        const panel = panelElement();
+        const ghost = panel === null ? null : freezePanel(panel);
+        // Commit on this very tick — the whole point of the snapshot is that the
+        // remount no longer waits for any animation to finish.
         selectPanel();
         cleanupTimer = window.setTimeout(cleanup, PANEL_EXIT_FALLBACK_MS);
+        if (ghost !== null) {
+            let dropped = false;
+            const drop = () => {
+                if (dropped)
+                    return;
+                dropped = true;
+                ghost.removeEventListener('animationend', onGhostEnd, true);
+                ghost.remove();
+            };
+            const onGhostEnd = (event) => {
+                if (event.animationName === 'dsh-web-mobile-panel-ghost-out')
+                    drop();
+            };
+            ghost.addEventListener('animationend', onGhostEnd, true);
+            // Fallback: reduced-motion kills the animation, and a layer left behind
+            // would cover the whole screen — never rely on animationend alone.
+            window.setTimeout(drop, PANEL_GHOST_MS + 120);
+        }
     };
     return { exit, supported, panelOpen: panelOwnsMainArea, task: createPanelBackExitTask(exit, supported) };
 }
@@ -9841,6 +12889,8 @@ exports.zh = {
     'sessionLog': '导出会话日志',
     'files': '文件浏览',
     'fileUpload': '添加文件',
+    'fileUploadImage': '上传图片',
+    'fileUploadAttachment': '上传附件',
     'previewFullscreen': '全屏预览',
     'previewExitFullscreen': '退出全屏',
     'deleteSession': '删除会话',
@@ -9863,6 +12913,8 @@ exports.en = {
     'sessionLog': 'Session log',
     'files': 'Files',
     'fileUpload': 'Add files',
+    'fileUploadImage': 'Upload image',
+    'fileUploadAttachment': 'Upload attachment',
     'previewFullscreen': 'Fullscreen preview',
     'previewExitFullscreen': 'Exit fullscreen',
     'deleteSession': 'Delete session',
@@ -9892,18 +12944,63 @@ const sidebar_swipe_ts_1 = require("./effects/sidebar-swipe.js");
 const subagent_chip_touch_ts_1 = require("./effects/subagent-chip-touch.js");
 const session_menu_ts_1 = require("./effects/session-menu.js");
 const composer_keyboard_guard_ts_1 = require("./effects/composer-keyboard-guard.js");
+const composer_keyboard_lift_ts_1 = require("./effects/composer-keyboard-lift.js");
 const composer_plus_toggle_ts_1 = require("./effects/composer-plus-toggle.js");
 const workspace_chip_toggle_ts_1 = require("./effects/workspace-chip-toggle.js");
 const team_chip_toggle_ts_1 = require("./effects/team-chip-toggle.js");
 const model_menu_anchor_ts_1 = require("./effects/model-menu-anchor.js");
 const shortcut_modal_keyboard_guard_ts_1 = require("./effects/shortcut-modal-keyboard-guard.js");
+const model_menu_keyboard_guard_ts_1 = require("./effects/model-menu-keyboard-guard.js");
+const plugin_card_tap_ts_1 = require("./effects/plugin-card-tap.js");
+const session_focus_guard_ts_1 = require("./effects/session-focus-guard.js");
+const reasoning_defaults_ts_1 = require("./effects/reasoning-defaults.js");
 const aionui_compat_ts_1 = require("./effects/aionui-compat.js");
+const composer_paste_guard_ts_1 = require("./effects/composer-paste-guard.js");
+const composer_file_picker_ts_1 = require("./effects/composer-file-picker.js");
+const attachment_mention_ts_1 = require("./effects/attachment-mention.js");
+const file_share_ts_1 = require("./effects/file-share.js");
 const panel_exit_ts_1 = require("./effects/panel-exit.js");
 const raf_scheduler_ts_1 = require("./core/raf-scheduler.js");
 const debug_ts_1 = require("./debug.js");
 const locales_ts_1 = require("./i18n/locales.js");
-/** Required services (cordis fiber inject — the loader passes all module exports as an object plugin). */
-exports.inject = ['slots', 'layout', 'locale', 'sessionLogDownload', 'sessions', 'workspaces'];
+/**
+ * Required services (cordis fiber inject — the loader passes all module exports
+ * as an object plugin). `inject` is a HARD dependency: a missing service stops
+ * the whole plugin from loading, so nothing may be listed here that the client
+ * does not actually read (issue #86 removed the never-read `workspaces`).
+ */
+exports.inject = ['slots', 'layout', 'locale', 'sessionLogDownload', 'sessions'];
+/**
+ * How long a remembered scroll position stays usable (see {@link restoreConversationScroll}).
+ * The gap between our teardown and re-apply is one dynamic import inside the host's
+ * client-modules queue — well under a second in practice; ten is generous.
+ */
+const SWAP_RESTORE_MS = 10_000;
+const scrollState = window.__dshaMobileScrollState instanceof WeakMap
+    ? window.__dshaMobileScrollState
+    : (window.__dshaMobileScrollState = new WeakMap());
+function conversationScrollers() {
+    return [...document.querySelectorAll('[data-mobile-nav="frame"] [class*="scrollBody"]')];
+}
+function rememberConversationScroll() {
+    for (const element of conversationScrollers()) {
+        if (element.scrollTop > 0)
+            scrollState.set(element, {top: element.scrollTop, savedAt: Date.now(), url: location.href});
+        else scrollState.delete(element);
+    }
+}
+function restoreConversationScroll() {
+    for (const element of conversationScrollers()) {
+        const saved = scrollState.get(element);
+        scrollState.delete(element);
+        if (!saved || Date.now() - saved.savedAt > SWAP_RESTORE_MS || saved.url !== location.href) continue;
+        requestAnimationFrame(() => {
+            if (element.isConnected && saved.url === location.href
+                && Date.now() - saved.savedAt <= SWAP_RESTORE_MS && element.scrollTop === 0)
+                element.scrollTop = saved.top;
+        });
+    }
+}
 /**
  * Mobile-adaptive shell, browser half: injects the mobile stylesheet, then
  * contributes the directory toggle to the session header and the backdrop +
@@ -9933,7 +13030,13 @@ function apply(ctx) {
             if (tag.isConnected)
                 document.head.appendChild(tag);
         }, 0);
+        // 热换后的滚动回位（2026-10-07 店主：「聊到一半突然闪到最上面」）。
+        // 宿主热换插件走 client-modules.replace()：tearDown → import → refresh，
+        // 我们这张表在窗口里会**整个消失**，长会话的 content-visibility 估算与布局
+        // 翻转会让 Chromium 把会话滚动区重锚到顶部。卸载前记下位置、重挂后回填。
+        restoreConversationScroll();
         return () => {
+            rememberConversationScroll();
             tag.remove();
         };
     }, 'dsh-web-mobile: styles');
@@ -10059,6 +13162,10 @@ function apply(ctx) {
                 stop();
         };
     }, 'dsh-web-mobile: reconciler infrastructure');
+    // Selection handle drag: while a conversation selection is live the header drops
+    // out of the hit test, so the native extent stays local instead of snapping to the
+    // flow's first item and revealing it (teleporting to the top of the session).
+    (0, phone_chrome_ts_1.installSelectionChromeYield)(ctx);
     // Drawer close interactions: Escape and navigation taps inside the drawer.
     (0, phone_chrome_ts_1.installOverlayInteractions)(ctx);
     // Sidebar panel exit: re-tapping the already-selected panel row returns to
@@ -10081,6 +13188,9 @@ function apply(ctx) {
     // iOS: tapping the composer's send/stop/+ buttons must not re-raise the
     // dismissed keyboard (upstream keepFocus focuses the editor on mousedown).
     (0, composer_keyboard_guard_ts_1.installComposerKeyboardGuard)(ctx);
+    // iOS: the host Lexical scroll helper mis-scrolls the window on every
+    // keystroke (issue #149); pin the composer seat above the keyboard.
+    (0, composer_keyboard_lift_ts_1.installComposerKeyboardLift)(ctx);
     (0, composer_plus_toggle_ts_1.installComposerPlusToggle)(ctx);
     // Hero workspace chip: the host's picker portaled its Menu with
     // `anchor={null}`, so its own outside-pointerdown close eats the trigger's
@@ -10098,8 +13208,35 @@ function apply(ctx) {
     // EDIT, and the keyboard shrinking the viewport resizes the sheet (owner
     // report: 「打开的时候还是会闪，而且还会唤起键盘」).
     (0, shortcut_modal_keyboard_guard_ts_1.installShortcutModalKeyboardGuard)(ctx);
+    // Model / reasoning-level menu (owner report 2026-10-07): drilling into the
+    // model pane focuses the host's 「搜索模型…」 field from a passive effect, so the
+    // keyboard covers the list the user just opened. Same method-shadow cure,
+    // armed from the capture-phase tap that precedes the pane switch.
+    (0, model_menu_keyboard_guard_ts_1.installModelMenuKeyboardGuard)(ctx);
+    (0, plugin_card_tap_ts_1.installPluginCardTap)(ctx);
+    // Entering a session (issue #140): the host's InputBar focuses the editor
+    // from a [locked, sessionId, editor] passive effect on every switch, which
+    // raises the soft keyboard over the history the user wanted to read. A short
+    // shadow-focus window per observed session switch swallows that one
+    // autofocus; real taps are unaffected.
+    (0, session_focus_guard_ts_1.installSessionFocusGuard)(ctx);
+    (0, reasoning_defaults_ts_1.installReasoningDefaults)(ctx);
+    // Multi-line paste after an IME commit keeps only the first line (host
+    // Lexical routes Android's insertText paste through the text-insertion
+    // command). Re-dispatch those as a paste event; mobile-only.
+    (0, composer_paste_guard_ts_1.installComposerPasteGuard)(ctx);
+    // Composer paperclip (owner report 2026-10-06): the system file picker is the
+    // wrong shape and cannot pick "images only", so the tap opens the plugin's own
+    // two-option sheet (上传图片 / 上传附件) and hands the choice back to the host's
+    // hidden input. Intake stays fully host-owned.
+    (0, composer_file_picker_ts_1.installComposerFilePicker)(ctx);
+    // @ menu 「本次附件」: mention the composer's draft attachments as locked chips.
+    (0, attachment_mention_ts_1.installAttachmentMention)(ctx);
     (0, phone_chrome_ts_1.installPhoneChrome)(ctx);
     (0, aionui_compat_ts_1.installAionuiCompat)(ctx);
+    // Mobile file sharing: Files-tree row buttons + preview header button
+    // (official 0.2.0 slots), share sheet with download fallback.
+    (0, file_share_ts_1.installFileShare)(ctx);
     // Debug badge (?mobile-nav-debug=1): live state overlay for phone-side
     // repros. No-op without the query param (docs: README, AGENTS.md).
     (0, debug_ts_1.installDebugBadge)(ctx);

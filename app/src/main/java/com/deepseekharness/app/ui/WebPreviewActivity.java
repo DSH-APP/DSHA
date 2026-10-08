@@ -592,6 +592,19 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
                 isCurrentPage(view)
                     && !pageFailed
                     && WebPreviewPolicy.sameService(baseUrl, view.getUrl()));
+    WebFileActions.attach(
+        view,
+        baseUrl,
+        () -> {
+          WebPreviewActivity host = retained.owner.get();
+          return host != null && host.isCurrentPage(view) && !host.pageFailed;
+        },
+        () -> {
+          if (retained.blobDownload == null)
+            retained.blobDownload = new WebBlobDownload(view, downloads.model);
+          return retained.blobDownload;
+        },
+        () -> retained.pageNavigation);
     updateDocumentLanguage(view);
     if (androidx.webkit.WebViewFeature.isFeatureSupported(
         androidx.webkit.WebViewFeature.WEB_MESSAGE_LISTENER)) {
@@ -671,6 +684,11 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
       if (!isCurrentPage(view)) return;
       retained.pageNavigation++;
+      if (retained.blobDownload != null) {
+        retained.blobDownload.close();
+        retained.blobDownload = null;
+        downloads.model.cancel();
+      }
       cancelFileSelection();
       if (microphoneRequests != null) microphoneRequests.cancel();
       retained.ready = false;
@@ -899,18 +917,20 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
       Intent primary = null;
       try {
         registerFilePicker(pending);
-        primary = params.createIntent();
+        primary =
+            WebUploadChooser.intent(
+                WebUploadChooser.onlyImages(params.getAcceptTypes()) ? params.createIntent() : null,
+                params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE,
+                params.getAcceptTypes());
         pending.picker.launch(primary);
       } catch (RuntimeException e) {
         try {
           if (primary == null)
             primary =
-                new Intent(Intent.ACTION_GET_CONTENT)
-                    .setType("*/*")
-                    .putExtra(
-                        Intent.EXTRA_ALLOW_MULTIPLE,
-                        params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE)
-                    .putExtra(Intent.EXTRA_MIME_TYPES, params.getAcceptTypes());
+                WebUploadChooser.intent(
+                    null,
+                    params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE,
+                    params.getAcceptTypes());
           pending.picker.launch(WebUploads.fallback(primary));
         } catch (RuntimeException ignored) {
           unregisterFilePicker(pending);
@@ -1023,6 +1043,7 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
     if (retained != null && retained.blobDownload != null) {
       retained.blobDownload.close();
       retained.blobDownload = null;
+      downloads.model.cancel();
     }
     if (previous != null) {
       container.removeView(previous);

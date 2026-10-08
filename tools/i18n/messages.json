@@ -30279,5 +30279,32 @@
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
     ]
+  },
+  {
+    "id": "m9007",
+    "zh": "打开方式",
+    "en": "Open with",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebUploadChooser.java"
+    ]
+  },
+  {
+    "id": "m9008",
+    "zh": "WHEELS_OPTIONAL_SKIP: Python 依赖导入已通过，跳过失败的缓存注入或安装并继续准备 ADB",
+    "en": "WHEELS_OPTIONAL_SKIP: Python imports passed; skipping the failed cache injection or installation and continuing ADB setup",
+    "source": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+      "app/src/main/java/com/deepseekharness/app/util/AdbDependencyPreparation.java"
+    ]
+  },
+  {
+    "id": "m9009",
+    "zh": "WHEELS_INJECT_FAIL: %s；目标 %s；%s；未覆盖已有条目",
+    "en": "WHEELS_INJECT_FAIL: %s; target %s; %s; existing entries were not overwritten",
+    "source": [
+      "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
+      "app/src/main/java/com/deepseekharness/app/util/AdbDependencyPreparation.java"
+    ],
+    "uiFormat": true
   }
 ]

@@ -66,6 +66,10 @@ final class RuntimeAssetFiles {
       }
       return;
     }
+    // 现场热修不能在下一次受管准备中无声丢失。继续使用签名内置版本前，
+    // 把改变的网页适配原件留在 rootfs 外；相同字节仍在上方直接返回。
+    if (ManagedOverlayEdits.client(relative))
+      ManagedOverlayEdits.retain(fs, authority, target, before);
     fs.atomic(target.getParentFile(), target.getName(), content);
     if (executable) fs.mode(target, 0755);
     fs.syncDirectory(target.getParentFile());

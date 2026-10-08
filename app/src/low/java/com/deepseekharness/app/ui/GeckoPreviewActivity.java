@@ -632,13 +632,8 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
               retained.pendingUpload = upload;
               GeckoResult<PromptResponse> pending = fileResult;
               Intent intent =
-                  new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                      .addCategory(Intent.CATEGORY_OPENABLE)
-                      .setType("*/*")
-                      .putExtra(
-                          Intent.EXTRA_ALLOW_MULTIPLE, prompt.type == FilePrompt.Type.MULTIPLE);
-              if (prompt.mimeTypes != null && prompt.mimeTypes.length > 0)
-                intent.putExtra(Intent.EXTRA_MIME_TYPES, prompt.mimeTypes);
+                  WebUploadChooser.intent(
+                      null, prompt.type == FilePrompt.Type.MULTIPLE, prompt.mimeTypes);
               try {
                 registerPicker(upload);
                 picker.launch(intent);
