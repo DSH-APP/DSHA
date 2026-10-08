@@ -13,12 +13,78 @@
   // 对启动诊断没有新增信息；只记录首次成功，错误/下一次错误前的加载仍保留。
   var reportedActive = Object.create(null), reportedLoading = Object.create(null);
   function uiText(zh, en) { return window.__DSHA_LANGUAGE__ === 'en' ? en : zh; }
+  // 本机时间戳：网页侧没有别的量法能区分「外壳已渲染」和「插件都应用完」，
+  // 带上 at 才能把每条事件排成一条真实的客户端启动时间线。
+  function stamp() {
+    try { return Math.round(performance.now()); } catch (_) { return 0; }
+  }
   function report(type, id, message, fatal) {
     if (count++ > 500) return;
     var text = JSON.stringify({type:type, id:String(id || '').slice(0,214), message:String(message || '').slice(0,6000), fatal:!!fatal && !ready,
-      nonce:String(binding.nonce||''),documentId:documentId,sequence:count-1,page:location.origin+location.pathname});
+      nonce:String(binding.nonce||''),documentId:documentId,sequence:count-1,page:location.origin+location.pathname,at:stamp()});
     console.info('[DSHA_PAGE] ' + text);
     window.dispatchEvent(new CustomEvent('dsha-startup', {detail:text}));
+  }
+  // 进入界面后插件才逐个 apply 的窗口里，给一个不挡操作的进度条；它只改善
+  // 预期，不改变启动速度，所以任何异常都必须静默放弃而不是影响页面。
+  var progress = {pending:0, done:0, total:0, el:null, text:null, show:0, idle:0, cap:0, closed:false};
+  function progressTotal() {
+    try {
+      var boot = window.__DSH_BOOT__;
+      return boot && boot.entries && boot.entries.length ? boot.entries.length : 0;
+    } catch (_) { return 0; }
+  }
+  function progressClose() {
+    if (progress.closed) return;
+    progress.closed = true;
+    if (progress.show) clearTimeout(progress.show);
+    if (progress.idle) clearTimeout(progress.idle);
+    if (progress.cap) clearTimeout(progress.cap);
+    try { if (progress.el && progress.el.parentNode) progress.el.parentNode.removeChild(progress.el); } catch (_) {}
+    progress.el = null;
+  }
+  function progressRender() {
+    if (!progress.text) return;
+    var shown = progress.total ? progress.done + '/' + progress.total : String(progress.done);
+    var line = uiText('正在启动网页功能 ', 'Starting web features ') + shown;
+    if (progress.text.textContent !== line) progress.text.textContent = line;
+  }
+  function progressShow() {
+    if (progress.el || progress.closed || !document.body) return;
+    var box = document.createElement('div');
+    box.setAttribute('data-dsha-boot-progress', '1');
+    box.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:2147483000;pointer-events:none;'
+        + 'display:flex;justify-content:center;padding:6px 10px;font:12px/1.4 system-ui,sans-serif;'
+        + 'background:rgba(20,20,24,.86);color:#f2f2f4;text-align:center;';
+    var span = document.createElement('span');
+    box.appendChild(span);
+    document.body.appendChild(box);
+    progress.el = box;
+    progress.text = span;
+    progressRender();
+    // 硬上限：插件卡住时进度条必须自己消失，不能永久占着屏幕。
+    progress.cap = setTimeout(progressClose, 30000);
+  }
+  function progressSettle() {
+    if (progress.closed || progress.pending !== 0) return;
+    progress.idle = setTimeout(function () { if (progress.pending === 0) progressClose(); }, 800);
+  }
+  function progressNote(type) {
+    if (progress.closed) return;
+    if (!progress.total) progress.total = progressTotal();
+    if (type === 'loading') {
+      progress.pending++;
+      // 计时器回调不在 reportPlugin 的 try 里，必须自己兜住。
+      if (!progress.el && !progress.show) progress.show = setTimeout(function () {
+        try { progressShow(); } catch (_) { progressClose(); }
+      }, 250);
+      if (progress.idle) { clearTimeout(progress.idle); progress.idle = 0; }
+      return;
+    }
+    if (progress.pending > 0) progress.pending--;
+    if (type === 'active') progress.done++;
+    if (progress.el) progressRender();
+    progressSettle();
   }
   function reportPlugin(type, id, message, fatal) {
     var key = String(id || '');
@@ -33,6 +99,7 @@
       reportedLoading[key] = false;
       reportedActive[key] = false;
     }
+    try { progressNote(type); } catch (_) { progressClose(); }
     report(type, key, message, fatal);
   }
   function detail(error) { return error && (error.stack || error.message) || String(error); }
@@ -94,10 +161,20 @@
     }
     var root = document.getElementById('root');
     if (document.querySelector('[data-composer-input]') || (seenBoot && !boot && root && root.children.length)) {
+      // ready 的语义（"外壳已可用"）与进度条无关：composer 常常先于插件出现，
+      // 这里绝不能顺手关掉进度条，否则插件随后启动时用户什么都看不到。
       ready = true; report('ready', '', uiText('网页已就绪', 'Web page ready')); observer.disconnect();
     }
   }
-  var observer = new MutationObserver(inspect);
+  // 启动期 DOM 抖动很大；把每个 mutation 批次里的扫描合并到一次宏任务里，
+  // 判据不变（仍然看同一个 boot 屏 / composer），只是少做几遍全场扫描。
+  var inspectQueued = false;
+  function queueInspect() {
+    if (inspectQueued) return;
+    inspectQueued = true;
+    setTimeout(function () { inspectQueued = false; inspect(); }, 0);
+  }
+  var observer = new MutationObserver(queueInspect);
   observer.observe(document, {childList:true, subtree:true, characterData:true});
   // Old WebView has no document-start hook: inspect a failure/ready screen
   // that already exists when the fallback observer is injected.

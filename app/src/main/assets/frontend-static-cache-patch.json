@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.0-rc.2",
+  "module": "@deepseek-ai/dsh-host-frontend-static/lib/index.js",
+  "patches": [
+    {
+      "before": "import { readFile } from \"node:fs/promises\";",
+      "after": "import { readFile, stat } from \"node:fs/promises\"; // DSHA_STATIC_CACHE_V1"
+    },
+    {
+      "before": "const STATIC_MISS_CODES = new Set([",
+      "after": "/** DSHA_STATIC_CACHE_V1: read one request header without depending on the header container. */\nfunction requestHeader(req, name) {\n\tif (req === void 0 || req.headers === void 0) return void 0;\n\tconst headers = req.headers;\n\tconst value = typeof headers.get === \"function\" ? headers.get(name) : headers[name];\n\treturn typeof value === \"string\" ? value : void 0;\n}\n/** DSHA_STATIC_CACHE_V1: the rendered index never caches; every dist file revalidates by tag. */\nfunction staticCacheHeaders(index, tag) {\n\tif (index) return { \"cache-control\": \"no-store\" };\n\tif (tag === void 0) return { \"cache-control\": \"no-cache\" };\n\treturn { \"cache-control\": \"no-cache\", etag: tag };\n}\nconst STATIC_MISS_CODES = new Set(["
+    },
+    {
+      "before": "async function serveStatic(pathname, res, distRoot, distIndex, authorizeIndex, renderIndex) {",
+      "after": "async function serveStatic(pathname, res, distRoot, distIndex, authorizeIndex, renderIndex, req) { // DSHA_STATIC_CACHE_V1"
+    },
+    {
+      "before": "\tlet body;\n\tlet type;\n\ttry {",
+      "after": "\tlet body;\n\tlet type;\n\tlet index = false;\n\tlet tag;\n\ttry {"
+    },
+    {
+      "before": "\t\t\tif (!authorizeIndex()) return;\n\t\t\tbody = await renderIndex();",
+      "after": "\t\t\tif (!authorizeIndex()) return;\n\t\t\tindex = true; // DSHA_STATIC_CACHE_V1\n\t\t\tbody = await renderIndex();"
+    },
+    {
+      "before": "\t\t\tbody = await readFile(target);\n\t\t\ttype = MIME[extname(target)] ?? \"application/octet-stream\";\n\t\t}",
+      "after": "\t\t\tbody = await readFile(target);\n\t\t\ttype = MIME[extname(target)] ?? \"application/octet-stream\";\n\t\t\t/* DSHA_STATIC_CACHE_V1: a size/mtime tag turns a repeat cold start into a 304 instead of a re-download. */\n\t\t\tconst meta = await stat(target);\n\t\t\ttag = `W/\"${meta.size.toString(16)}-${Math.floor(meta.mtimeMs).toString(16)}\"`;\n\t\t\tconst revalidated = requestHeader(req, \"if-none-match\");\n\t\t\tif (revalidated !== void 0 && revalidated.split(\",\").some((value) => value.trim() === tag)) {\n\t\t\t\tres.writeHead(304, staticCacheHeaders(false, tag));\n\t\t\t\tres.end();\n\t\t\t\treturn;\n\t\t\t}\n\t\t}"
+    },
+    {
+      "before": "\tres.writeHead(200, { \"content-type\": type });\n\tres.end(body);\n}",
+      "after": "\tres.writeHead(200, { \"content-type\": type, ...staticCacheHeaders(index, tag) }); // DSHA_STATIC_CACHE_V1\n\tres.end(body);\n}"
+    },
+    {
+      "before": "await serveStatic(decodeURIComponent(rawPath), res, distRoot, distIndex, () => ctx.connection.authorizeIndex(req, res), renderIndex);",
+      "after": "await serveStatic(decodeURIComponent(rawPath), res, distRoot, distIndex, () => ctx.connection.authorizeIndex(req, res), renderIndex, req);"
+    }
+  ]
+}
