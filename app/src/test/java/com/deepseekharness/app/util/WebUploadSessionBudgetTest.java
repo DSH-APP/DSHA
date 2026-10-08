@@ -9,25 +9,38 @@ public class WebUploadSessionBudgetTest {
     WebUploadSessionBudget budget = new WebUploadSessionBudget();
     for (int batch = 0; batch < 2; batch++) {
       var reservation = budget.beginBatch(20);
-      budget.addBytes(reservation, 256L * 1024L * 1024L);
+      budget.addBytes(reservation, WebTransferPolicy.UPLOAD_LIMIT);
       budget.finishCopy(reservation);
       assertTrue(budget.commit(reservation));
     }
     assertEquals(40, budget.committedFiles());
-    assertEquals(512L * 1024L * 1024L, budget.committedBytes());
+    // 一个保活页面至少能装下两次满额挑选，否则用户传第二个大文件就会被自己的暂存挡住。
+    assertEquals(2 * WebTransferPolicy.UPLOAD_LIMIT, budget.committedBytes());
+    assertEquals(WebUploadSessionBudget.MAX_SESSION_BYTES, budget.committedBytes());
     assertThrows(WebUploadSessionBudget.LimitExceededException.class, () -> budget.beginBatch(1));
+  }
+
+  @Test
+  public void singleBatchMayExceedTheOldQuarterGigabyteCeiling() {
+    WebUploadSessionBudget budget = new WebUploadSessionBudget();
+    var reservation = budget.beginBatch(1);
+    // 旧上限：512 MiB 会话 / 256 MiB 单次。单个 1 GiB 文件过去两层都过不去。
+    budget.addBytes(reservation, 1024L * 1024L * 1024L);
+    budget.finishCopy(reservation);
+    assertTrue(budget.commit(reservation));
+    assertEquals(1024L * 1024L * 1024L, budget.committedBytes());
   }
 
   @Test
   public void failedOrStaleBatchReleasesReservationsWithoutWeakeningCaps() {
     WebUploadSessionBudget budget = new WebUploadSessionBudget();
     var abandoned = budget.beginBatch(20);
-    budget.addBytes(abandoned, 300L * 1024L * 1024L);
+    budget.addBytes(abandoned, WebUploadSessionBudget.MAX_SESSION_BYTES);
     budget.rollback(abandoned);
     assertEquals(0, budget.reservedFiles());
     assertEquals(0, budget.reservedBytes());
     var accepted = budget.beginBatch(20);
-    budget.addBytes(accepted, 256L * 1024L * 1024L);
+    budget.addBytes(accepted, WebTransferPolicy.UPLOAD_LIMIT);
     budget.finishCopy(accepted);
     assertTrue(budget.commit(accepted));
   }

@@ -4,7 +4,15 @@ package com.deepseekharness.app.util;
 public final class WebUploadSessionBudget {
   public static final int MAX_BATCH_FILES = 20;
   public static final int MAX_SESSION_FILES = 40;
-  public static final long MAX_SESSION_BYTES = 512L * 1024L * 1024L;
+
+  /**
+   * 一个保活页面会话累计暂存上限（10 GiB = 两次满额单次挑选）。
+   *
+   * <p>原先的 512 MiB 只有当时单次上限（256 MiB）的两倍，用户传一个大文件再加第二个就会被「会话缓存已满」
+   * 挡住。单次上限放宽到 {@link WebTransferPolicy#UPLOAD_LIMIT} 后这里同步放宽，页面关闭时整棵缓存树照旧
+   * 删除；真正防写满盘的是 {@link WebTransferPolicy#checkUploadSpace} 的可用空间判据，不是这个常数。
+   */
+  public static final long MAX_SESSION_BYTES = 10L * 1024L * 1024L * 1024L;
 
   private enum State {
     COPYING,
