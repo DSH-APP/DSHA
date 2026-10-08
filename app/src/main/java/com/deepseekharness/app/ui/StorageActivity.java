@@ -52,15 +52,15 @@ public final class StorageActivity extends AppCompatActivity {
     clean =
         page.button(
             page.footer,
-            t("清理可再生缓存与多余运行时副本", "Clean reproducible caches and excess runtime copies"),
+            t("清理可再生缓存、临时文件与多余副本", "Clean reproducible caches, temporary files and excess copies"),
             true,
             () ->
                 new DshaDialogBuilder(this)
                     .setTitle(t("清理存储空间", "Clean storage"))
                     .setMessage(
                         t(
-                            "清理前会安全停止 DSH 和终端，再清理历史验收缓存，以及超过保留数量且已核验的受管回退副本。对话、附件、设置、插件、手动备份和无法核验的原件保留。",
-                            "DSH and terminals are stopped safely before cleanup. Removes old verification caches and verified excess managed rollback copies. Keeps chats, attachments, settings, plugins, manual backups and unverified originals."))
+                            "清理前会安全停止 DSH 和终端，再清空临时文件目录（/root/.cache/dsha）、历史验收缓存，以及超过保留数量且已核验的受管回退副本。对话、附件、设置、插件、手动备份和无法核验的原件保留。",
+                            "DSH and terminals are stopped safely before cleanup. Empties the temporary directory (/root/.cache/dsha), old verification caches, and verified excess managed rollback copies. Keeps chats, attachments, settings, plugins, manual backups and unverified originals."))
                     .setPositiveButton(t("开始清理", "Clean"), (d, w) -> load(true))
                     .setNegativeButton(t("取消", "Cancel"), null)
                     .show());
@@ -78,7 +78,14 @@ public final class StorageActivity extends AppCompatActivity {
     new Thread(
             () -> {
               try {
-                long reclaimed = remove ? StorageMaintenance.clean(this) : 0;
+                com.deepseekharness.app.backup.StorageMaintenance.Report report =
+                    remove
+                        ? StorageMaintenance.clean(
+                            this,
+                            (stage, detail) ->
+                                com.deepseekharness.app.core.DiagnosticLog.record(
+                                    this, stage, detail))
+                        : null;
                 var sizes = StorageMaintenance.inspect(this);
                 runOnUiThread(
                     () -> {
@@ -96,11 +103,18 @@ public final class StorageActivity extends AppCompatActivity {
                       }
                       state.setText(
                           remove
-                              ? UiText.format(
-                                  "已释放 %s", com.deepseekharness.app.util.Fmt.bytes(reclaimed))
+                              ? String.format(
+                                  java.util.Locale.ROOT,
+                                  t(
+                                      "已释放 %s（删除 %d 项，跳过 %d 项，失败 %d 项）",
+                                      "Freed %s (%d removed, %d skipped, %d failed)"),
+                                  com.deepseekharness.app.util.Fmt.bytes(report.bytes),
+                                  report.deleted,
+                                  report.skipped,
+                                  report.failed)
                               : t(
-                                  "已完成统计。清理只移除可再生缓存和已核验的多余运行时副本，个人数据与备份保留。",
-                                  "Sizes updated. Cleanup removes only reproducible caches and verified excess runtime copies. Personal data and backups are retained."));
+                                  "已完成统计。清理只移除可再生缓存、临时文件目录和已核验的多余运行时副本，个人数据与备份保留。",
+                                  "Sizes updated. Cleanup removes only reproducible caches, temporary files and verified excess runtime copies. Personal data and backups are retained."));
                       done();
                     });
               } catch (Exception error) {

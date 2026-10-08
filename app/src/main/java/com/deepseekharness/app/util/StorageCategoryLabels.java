@@ -15,7 +15,8 @@ public final class StorageCategoryLabels {
           "host-backup-operations", new String[] {"备份副本", "Backup copies"},
           "mozilla", new String[] {"兼容浏览器数据", "Compatibility browser data"},
           "user-data-v5", new String[] {"宿主个人数据", "Persistent user data"},
-          "cache", new String[] {"应用缓存", "App cache"});
+          "cache", new String[] {"应用缓存", "App cache"},
+          "scratch", new String[] {"临时文件目录", "Temporary files"});
 
   public static String label(String key, boolean english) {
     if (key == null) return null;

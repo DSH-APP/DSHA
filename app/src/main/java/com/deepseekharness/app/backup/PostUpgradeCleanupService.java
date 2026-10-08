@@ -48,7 +48,7 @@ public final class PostUpgradeCleanupService extends JobService {
     WORKERS.reopen();
   }
 
-  private void save(boolean success, String value) {
+  private void save(boolean success, String value, String detail) {
     synchronized (PostUpgradeCleanupService.class) {
       if (FACTORY_RESET.get() || AutomaticBackups.factoryResetPending(this)) return;
       var edit = getSharedPreferences("dsha_storage_cleanup", MODE_PRIVATE).edit();
@@ -56,7 +56,9 @@ public final class PostUpgradeCleanupService extends JobService {
         edit.putInt("completedBuild", BuildConfig.VERSION_CODE)
             .putInt("policy", POLICY)
             .putLong("freedBytes", Long.parseLong(value))
-            .putString("error", "");
+            .putString("error", "")
+            // 「删了什么/跳过什么/失败什么」跟随本任务既有的偏好通道留档，不新建渠道。
+            .putString("detail", detail);
       else edit.putString("error", value);
       edit.commit();
     }
@@ -84,10 +86,11 @@ public final class PostUpgradeCleanupService extends JobService {
                     retry = true;
                     return;
                   }
-                  long bytes = StorageMaintenance.clean(this);
-                  save(true, String.valueOf(bytes));
+                  // 本任务没有 UI 侧诊断端口；明细跟 freedBytes 一起写进同一个偏好通道。
+                  var report = StorageMaintenance.clean(this, null);
+                  save(true, String.valueOf(report.bytes), report.detail);
                 } catch (Exception error) {
-                  save(false, NativeBackupJobs.code(error));
+                  save(false, NativeBackupJobs.code(error), "");
                 } finally {
                   jobFinished(params, retry);
                 }
@@ -99,7 +102,7 @@ public final class PostUpgradeCleanupService extends JobService {
       return true;
     } catch (RuntimeException | Error unavailable) {
       lease.close();
-      save(false, "WORKER_UNAVAILABLE");
+      save(false, "WORKER_UNAVAILABLE", "");
       return false;
     }
   }
