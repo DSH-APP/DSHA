@@ -1,0 +1,22 @@
+{
+  "name": "dsh-destructive-guard",
+  "description": "DSHA builtin plugin: destructive container commands (rm and friends) always require an explicit user confirmation",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "cordis": {
+    "entry": "lib/index.js"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1"
+  },
+  "license": "MIT"
+}

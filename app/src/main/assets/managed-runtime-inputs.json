@@ -118,6 +118,26 @@
       "executable": false
     },
     {
+      "asset": "builtin-plugins/dsh-destructive-guard/package.json",
+      "target": "root/dsha-destructive-guard/package.json",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-destructive-guard/cordis.patch.yml",
+      "target": "root/dsha-destructive-guard/cordis.patch.yml",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-destructive-guard/lib/index.js",
+      "target": "root/dsha-destructive-guard/lib/index.js",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-destructive-guard/lib/destructive.js",
+      "target": "root/dsha-destructive-guard/lib/destructive.js",
+      "executable": false
+    },
+    {
       "asset": "builtin-plugins/dsh-device-shell-guide/package.json",
       "target": "root/dsha-device-shell-guide/package.json",
       "executable": false
