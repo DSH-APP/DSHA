@@ -383,7 +383,8 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
 
     void start(boolean verify, String readHost, int readPort) {
       if (busy || cleared) return;
-      // 仅拦截 Android 11+ 明确关闭的无线调试；读不到或旧系统仍走真实连接验证。
+      boolean prepareOffline = false;
+      // 无线调试关闭时仍可先准备离线依赖，避免准备时间消耗本次配对码的有效期。
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
         int wireless = -1;
         try {
@@ -392,7 +393,7 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
                   getApplication().getContentResolver(), "adb_wifi_enabled", -1);
         } catch (RuntimeException ignored) {
         }
-        if (wireless == 0) {
+        if (wireless == 0 && !verify) {
           watchEpoch++;
           DshaAccessibilityService.stopWatch();
           String detail = com.deepseekharness.app.util.UiText.text("无线调试已关闭，请先开启");
@@ -401,12 +402,13 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
           status.setValue(detail);
           return;
         }
+        prepareOffline = wireless == 0;
       }
       if (!verify && !AdbResult.code(code.trim())) {
         message(com.deepseekharness.app.util.UiText.text("配对码必须恰好为 6 位数字"));
         return;
       }
-      if (!LocalNetworkAccess.granted(getApplication())) {
+      if (!prepareOffline && !LocalNetworkAccess.granted(getApplication())) {
         message(com.deepseekharness.app.util.UiText.text("局域网权限未允许，请先在 DSHA 权限设置中允许"));
         return;
       }
@@ -415,13 +417,16 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
       final String pp = readPort > 0 ? String.valueOf(readPort) : pairPort;
       final String cp = connectPort;
       final String selectedHost = readPort > 0 ? readHost : host;
+      final boolean offlineOnly = prepareOffline;
       pairPort = ""; // 一次性配对端口不跨请求复用，旧弹窗关闭后必须重新发现。
       busy = true;
       watchEpoch++;
       status.setValue(
-          verify
-              ? com.deepseekharness.app.util.UiText.text("正在准备已有连接验证…")
-              : com.deepseekharness.app.util.UiText.text("正在准备配对环境…"));
+          offlineOnly
+              ? com.deepseekharness.app.util.UiText.text("正在准备离线 ADB 环境…")
+              : verify
+                  ? com.deepseekharness.app.util.UiText.text("正在准备已有连接验证…")
+                  : com.deepseekharness.app.util.UiText.text("正在准备配对环境…"));
       DshaAccessibilityService.stopWatch();
       task =
           new Thread(
@@ -434,7 +439,7 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
                           verify
                               ? com.deepseekharness.app.util.UiText.text("ADB 验证完整任务")
                               : com.deepseekharness.app.util.UiText.text("ADB 配对完整任务"),
-                          () -> perform(verify, value, pp, cp, selectedHost));
+                          () -> perform(verify, value, pp, cp, selectedHost, offlineOnly));
                 } catch (AdbEnvironmentTask.Busy e) {
                   if (!cleared) {
                     DeviceBridgeService.adbDetail = e.getMessage();
@@ -464,7 +469,13 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
     }
 
     /** 整段由同一 Lease.run 执行，准备、发现、配对、验证及授权期间不允许移动环境。 */
-    private String perform(boolean verify, String value, String pp, String cp, String selectedHost)
+    private String perform(
+        boolean verify,
+        String value,
+        String pp,
+        String cp,
+        String selectedHost,
+        boolean offlineOnly)
         throws Exception {
       if (cleared || Thread.currentThread().isInterrupted())
         return com.deepseekharness.app.util.UiText.text("ADB 操作已取消");
@@ -479,6 +490,14 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
         if (!AdbResult.marker(prep, "SETUP_DONE")) throw new IllegalStateException(prep);
         if (cleared || Thread.currentThread().isInterrupted())
           return com.deepseekharness.app.util.UiText.text("ADB 操作已取消");
+        if (offlineOnly) {
+          String detail =
+              com.deepseekharness.app.util.UiText.text(
+                  "ADB_OFFLINE_READY: 离线依赖已准备好，未验证连接。请开启无线调试后再次验证。");
+          DeviceBridgeService.adbDetail = detail;
+          DeviceBridgeService.adbState = "need_manual";
+          return new StringBuilder(prep).append('\n').append(detail).toString();
+        }
         String address = selectedHost == null ? "" : selectedHost;
         String port = pp;
         if (!verify && port.isEmpty()) {

@@ -91,7 +91,7 @@ public final class AdbWheelPaths {
     var data = fs.stat(home);
     if (!data.type.equals("MISSING") && !data.type.equals("DIRECTORY"))
       throw new IOException("ADB_DATA_LOCATION_TYPE");
-    // 已解析出的路径不能再含父链接；缺少的末级缓存目录由补缺逻辑创建。
+    // 已解析出的路径不能再含链接；首次准备可能缺少 Python 的多级目录。
     checked(home);
     checked(site);
   }
@@ -101,7 +101,19 @@ public final class AdbWheelPaths {
       throw new IOException("ADB_WHEEL_PATH_OUTSIDE_AUTHORITY");
     String relative =
         target.getPath().substring(files.getPath().length() + 1).replace(File.separatorChar, '/');
-    fs.child(files, relative);
+    if (!ManagedInstallPath.valid(relative)) throw new IOException("ADB_WHEEL_PATH_FORMAT");
+    File at = files;
+    for (String part : relative.split("/")) {
+      var parent = fs.stat(at);
+      // 已存在的前缀必须安全，缺少的后缀由原 NOFOLLOW 发布器逐级创建。
+      // fs.child 要求全部父目录在位，不能在首次安装前用它验证尚未创建的目录。
+      if (parent.type.equals("MISSING")) return;
+      if (!parent.type.equals("DIRECTORY")) throw new IOException("ADB_WHEEL_PARENT_TYPE");
+      at = new File(at, part);
+    }
+    var leaf = fs.stat(at);
+    if (!leaf.type.equals("MISSING") && !leaf.type.equals("DIRECTORY"))
+      throw new IOException("ADB_WHEEL_DIRECTORY_TYPE");
   }
 
   /** 只描述实有条目，不把不存在/空目录叫作已保留缓存。 */

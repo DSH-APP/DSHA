@@ -110,6 +110,24 @@ public class AdbWheelPathsTest {
   }
 
   @Test
+  public void coldPythonDirectoryCanBePreparedWithoutTreatingMissingParentsAsLinks()
+      throws Exception {
+    File data = data();
+    StrictFs fs = new StrictFs();
+    File python = new File(data, "files/linux/ubuntu/usr/lib/python3");
+    Files.delete(new File(python, "dist-packages").toPath());
+    Files.delete(python.toPath());
+    var paths = bind(fs, data);
+    assertEquals(new File(python, "dist-packages"), paths.site);
+    assertFalse(python.exists());
+    fs.parents(paths.rootfs, "usr/lib/python3/dist-packages/probe.py");
+    assertTrue(paths.site.isDirectory());
+    paths.verify();
+    fs.links.put(python, "/sdcard/foreign");
+    assertThrows(IOException.class, paths::verify);
+  }
+
+  @Test
   public void frameworkAliasIsNormalizedBeforeStrictParentOperations() throws Exception {
     File data = data();
     PlatformAlias alias = new PlatformAlias(data);

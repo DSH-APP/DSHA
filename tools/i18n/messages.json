@@ -30306,5 +30306,21 @@
       "app/src/main/java/com/deepseekharness/app/util/AdbDependencyPreparation.java"
     ],
     "uiFormat": true
+  },
+  {
+    "id": "m9010",
+    "zh": "正在准备离线 ADB 环境…",
+    "en": "Preparing the offline ADB environment…",
+    "source": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ]
+  },
+  {
+    "id": "m9011",
+    "zh": "ADB_OFFLINE_READY: 离线依赖已准备好，未验证连接。请开启无线调试后再次验证。",
+    "en": "ADB_OFFLINE_READY: Offline dependencies are ready; the connection has not been verified. Enable wireless debugging, then verify again.",
+    "source": [
+      "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ]
   }
 ]
