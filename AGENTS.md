@@ -2,7 +2,9 @@
 
 DSHA 的 AI / 新贡献者入口。本文让你不扫全库就能上手 —— 读它之前先读 [README.md](README.md)。
 
-**仓库事实速览**：单 Gradle 模块 `:app`，纯 Java 17、无 Kotlin；`applicationId com.dsh.client`，Java 包 `com.deepseekharness.app`；两个 flavor（`standard` / `low`，共用功能代码）；**arm64-v8a only**。APK 用 proot/proroot 把 Ubuntu rootfs 搬进应用私有目录，在里面跑 Node 24 + pnpm + `@deepseek-ai/dsh`（0.1.7-rc.2）的 Web UI（`:3080`）。当前交付版本 0.1.7-rc2 / versionCode 147。
+**仓库事实速览**：单 Gradle 模块 `:app`，纯 Java 17、无 Kotlin；`applicationId com.dsh.client`，Java 包 `com.deepseekharness.app`；两个 flavor（`standard` / `low`，共用功能代码）；**arm64-v8a only**。APK 用 proot/proroot 把 Ubuntu rootfs 搬进应用私有目录，在里面跑 Node 24 + pnpm + `@deepseek-ai/dsh`（0.2.0-rc.2）的 Web UI（`:3080`）。当前正式版 v0.2.0-rc2 / build170，APK 版本 0.2.21-20261009.0750-dsh0.2.0-rc.2 / versionCode 170。
+
+**build170 当前策略（覆盖下文同项历史说明）**：移动 UI 3.0.5；第三方插件检查后自动提交/启用，允许依赖生命周期脚本和 pnpmfile；新导出为无密码 tar.gz，内部自动副本及旧加密原件读取保留。两版各45项关联检查和 Android13 非破坏性正式包验收范围见[当前发布说明](docs/releases/v0.2.0-rc2-notes.md)与[build170](docs/releases/v0.2.21-build170-20261009.md)。下方目录数量为历史索引，不代表当前源码统计。
 
 ---
 

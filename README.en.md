@@ -59,23 +59,40 @@ original author [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) and a
 
 ## Download
 
-Current release: **v0.1.7-rc2** ([release notes](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.7-rc2) ·
+Current release: **v0.2.0-rc2 · build170** ([release notes](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.0-rc2) ·
 [full changelog](CHANGELOG.md)). Both builds share the `com.dsh.client` package and app data —
 **they cannot be installed side by side**:
 
 | Build | Devices | Web engine | Download | Size |
 |---|---|---|---|---:|
-| **Standard** | Android 11+ / arm64 | System WebView; experimental virtual display | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.7-rc2/dsha-0.1.7-rc2.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.7-rc2/dsha-0.1.7-rc2.apk.sha256) | 261 MiB |
-| **Low** | Android 6+ / arm64 | Bundled GeckoView 143; no virtual display yet | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.1.7-rc2/dsha-0.1.7-rc2low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.1.7-rc2/dsha-0.1.7-rc2low.apk.sha256) | 334 MiB |
+| **Standard** | Android 11+ / arm64 | System WebView; experimental virtual display | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2.apk.sha256) | 273.10 MiB |
+| **Low** | Android 6+ / arm64 | Bundled GeckoView 143; no virtual display yet | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2low.apk.sha256) | 345.27 MiB |
 
 - **Upgrading**: overwrite-install with a same-signature APK (certificate fingerprint `e7e3a3…a53f5`; verification steps in the [security model](docs/security-model.en.md)). Same Ubuntu base version only updates managed components, without rebuilding the environment.
-- **In-app updates**: "Settings → Check for updates" pulls the release manifest from [dsha.cc](https://dsha.cc) — no need to watch Releases.
+- **This download**: use the APK and matching SHA-256 links above; see [verification](docs/download-verification.en.md). In-app updates separately read the release manifest from [dsha.cc](https://dsha.cc).
 - **Older versions**: [Releases](https://github.com/DSH-APP/DSHA/releases).
 
-### Running in 30 seconds
+This is a **regular GitHub release / Latest**, not a prerelease. Version code **170**; the Ubuntu base remains **10**. [Matching source](https://github.com/DSH-APP/DSHA/tree/v0.2.0-rc2).
+
+### Changes and previous releases
+
+- Bundled DSH is now **0.2.0-rc.2**, with mobile UI **3.0.5** and fixes for phone focus, dialogs and plugin cards.
+- Files open the system document picker directly, with multiple selection. Image draft saving/restoration, first-time offline ADB preparation and chat shell `/tmp` failures are fixed.
+- Web files can use native sharing and saving. Virtual-display setup and LAN failure messages are clearer; exports, storage guidance and skills are grouped under Data & backups.
+- Plugins enable after package checks and support dependency install scripts. New exports are password-free `.tar.gz` files; older encrypted backups remain readable.
+
+| Earlier release | Main additions in this release |
+|---|---|
+| [v0.1.7-rc2 / 147, previous official release](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.7-rc2) | DSH 0.1.7 → 0.2.0 rc2, mobile UI 3.0.3 → 3.0.5, plus the file, draft, ADB, shell, plugin and backup changes above. |
+| [v0.1.5-rc2 / 129](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.5-rc2) | Also includes automatic backups, independent recovery, requested microphone access, PiP, the experimental Standard virtual display and managed-update improvements. |
+| [v1.1.10 and earlier](https://github.com/DSH-APP/DSHA/releases/tag/v1.1.10) | Two APK editions, managed Ubuntu/DSH updates and host-side backup/restore replace the old architecture. The complete direct-upgrade matrix has not been revalidated; original documentation remains in historical tags. |
+
+Both editions passed **45 targeted unit checks and Release Lint**. Android 13 checks cover signed overlay installs, attachment/image-draft behavior in both web engines, 15 offline ADB dependencies and final startup. Full wireless pairing, the reported vivo Android 16 device, Android 6/7, 16 KiB devices and final native SAF saving were not checked in this round. [Release notes](docs/releases/v0.2.0-rc2-notes.md) · [build170 acceptance](docs/releases/v0.2.21-build170-20261009.md).
+
+### Getting started
 
 1. Install the APK (arm64 only; Android 11+ pick Standard, older systems pick Low)
-2. First launch extracts the bundled environment (a few minutes, once)
+2. First launch extracts and prepares the offline environment; time varies by device. The historical complete cold install took 42.412 seconds, above the 30-second target
 3. "Configure" → enter your DeepSeek API key → "Start" → the Web UI opens automatically
 
 That's it. For finer control, use the step-by-step install — each step can be reinstalled and updated independently.
@@ -90,7 +107,7 @@ That's it. For finer control, use the step-by-step install — each step can be 
 | 🐧 **Full glibc environment** | Not a trimmed distro: `apt` / PTY / native modules / Python / git all included. Upstream plugins run unmodified |
 | ⚡ **proroot, zero ptrace overhead** | Classic proot pays two context switches per syscall; proroot does in-process path translation via LD_PRELOAD + binary patching. Measured **+58%** on key benchmarks on a real device |
 | 🔌 **The phone is the agent's hands** | Accessibility + ADB without Shizuku + an independent virtual display: read screens, tap, install apps, run automations — all built in |
-| 💾 **Data survives reinstall** | Conversations and settings live in `Documents/dshdata`, visible and backup-able from any file manager; API keys are encrypted with Android Keystore |
+| 💾 **Export for migration** | Data & backups exports password-free `.tar.gz` archives. Storage guidance shows the actual location; local copies are not guaranteed to survive uninstall |
 | 🩺 **Failures that explain themselves** | Component-level checks + on-demand repair + startup diagnostics + an independent recovery DSH; when the web UI won't start, it names the plugin at fault |
 
 ---
@@ -113,9 +130,9 @@ That's it. For finer control, use the step-by-step install — each step can be 
 
 | Capability | Details |
 |---|---|
-| proroot / proot dual runtime | proroot by default (zero ptrace overhead); one tap in "Configure" switches back to proot |
+| proroot / proot dual runtime | Stable proot is the default; proroot can be selected in Configure, subject to device compatibility |
 | Measured speedups | vivo V2352A / Android 14: +58% across key benchmarks, +94% tar packaging (backups use this path), +82% stat-heavy workloads (node module resolution) |
-| Three-layer fallback | Missing runtime files fall back to proot automatically; 3 consecutive failed starts force the switch and tell the user; the install path always uses proot |
+| Bounded compatibility fallback | Retry proot once only after proroot exits before authentication without a plugin failure and guest exit is confirmed; slow startup never triggers fallback |
 | Node.js 24 + pnpm 10 | Same runtime as upstream, versions pinned with the APK |
 | Split-package updates | Ubuntu and the dsh runtime ship as separate packages inside the APK; cold installs extract both, partial updates read only the dsh package |
 | Managed update trials | A new environment boots for real in an isolated area first — ports, auth, session read/write and plugin loading are verified before it is committed; failures roll back automatically |
@@ -126,13 +143,13 @@ That's it. For finer control, use the step-by-step install — each step can be 
 
 | Capability | Details |
 |---|---|
-| Data survives uninstall | Conversations / settings / attachments live in `Internal storage/Documents/dshdata`, with a private symlink left in place |
-| v5 encrypted backups | `.dshbak` uses a password-derived key with AES-GCM; full AEAD authentication runs before any preview; inspect "how many items / how big / from which version" before restoring |
+| Storage and migration | Data & backups → Storage guidance shows the actual location. Updates preserve current data; export needed content before uninstalling |
+| v5 backups and exports | New exports are password-free `.tar.gz` integrity archives. Internal automatic copies remain encrypted; older encrypted originals still require their original password |
 | Automatic backup schedules | On by default: daily at a chosen time, every 1–168 hours, or after stopping DSH; running backups wait instead of interrupting your work; keeps the latest 3 verified copies |
 | Scoped backups | Full / conversations only / plugins only / settings only; restoring a partial backup touches only its own scope |
-| Conversations survive device changes | Hot data is symlinked to public storage; backups dereference those links into real snapshots, and cross-device link paths are rewritten on restore |
+| Restore on another device | Export actual conversations, attachments, settings and user plugins; check digests and scope before restore preview, retaining current content and conflicting originals |
 | Credentials never enter backups | The bridge token is excluded whole; `.credentials.yaml` is stripped field-by-field — machine keys removed, user API keys kept |
-| Forgiving restore | Old backups always accepted; missing plugins reinstalled in the background; system plugins are rebuilt by the current APK from managed manifests and cost no backup space |
+| Older backup compatibility | Full authentication/digest verification precedes restore preview; unknown or incomplete dependencies are reported. The current APK rebuilds system plugins, retaining user originals |
 | Corrupt session quarantine | Broken session files move to `corrupt-backup` where you can retrieve them — one bad file can't take down the whole web UI |
 | Post-upgrade cleanup | Regenerable caches and surplus old copies are cleaned in idle time after upgrades; at least two healthy predecessors are kept, and modified originals are never touched |
 | Full factory reset | Core data roots are deleted strictly and re-verified; only WebView caches and similar recreatable directories may downgrade persistent errors to warnings |
@@ -144,7 +161,7 @@ The agent calls these through the local `127.0.0.1:3090` bridge (token-gated; `/
 | Capability | Details |
 |---|---|
 | Screen control | **Via the accessibility service — no ADB needed**: structured screen dumps with tappable regions, tap by text or coordinates, text input, key events, swipes, PNG screenshots |
-| Virtual display (experimental) | Standard build on Android 11+: create a virtual display, launch any installed app, grab the latest frame (input must carry the frame ID to prevent mistargeting), tap / swipe / type / press keys |
+| Virtual display (experimental) | Standard / Android 11+: authorize ADB, Shizuku or Root, then create a display on its page. Accessibility alone does not create one; see the [setup guide](docs/virtual-screen-guide.md) |
 | Wireless ADB | Built-in pairing (TLS 1.3-PSK + SPAKE2) and keep-alive — **no Shizuku required**; survives reboots |
 | Shizuku / Root channels | Backup device-command channels, bound by the same command allowlist |
 | Talking to the user | System notifications, in-app toasts, vibration (wake the user after long jobs), a three-option blocking prompt, share / open URLs |
@@ -168,7 +185,7 @@ The agent calls these through the local `127.0.0.1:3090` bridge (token-gated; `/
 | Capability | Details |
 |---|---|
 | Dual engines | Standard uses the system WebView; Low bundles GeckoView 143, immune to whatever WebView the system ships |
-| Mobile adaptation | Bundles [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) (MIT): single-column narrow screens, drawer navigation, bottom sheets, safe-area handling |
+| Mobile adaptation | Bundles [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) **3.0.5** (MIT), retaining phone shortcuts and narrow-screen layout while fixing focus, dialogs and plugin cards |
 | Picture-in-Picture | The conversation window supports a PiP mini window |
 | High refresh & power | Requests the display's peak refresh rate (120 Hz with zero dropped frames measured); hands control back to the system when idle |
 | Themes & languages | Dark / light / follow system; Simplified Chinese / English, following the system language by default |
@@ -184,12 +201,12 @@ The agent calls these through the local `127.0.0.1:3090` bridge (token-gated; `/
 | Plugin market | Install / update / enable / disable / delete / search / sort, entirely in-app; works with the [dsha.cc](https://dsha.cc) catalog and community plugins |
 | Many install paths | GitHub shorthand / tree / blob / archive / Release links, direct HTTPS archive URLs, local import (format detected by content, not extension), or `dsha-plugin install` in the terminal |
 | Multiple download sources | Automatic source selection with npm official and npmmirror; concurrent update checks, locked-version cache reuse, bounded fallback on failure |
-| Dependency safety | Bundled pnpm native lockfile freezes dependency digests; lifecycle scripts and pnpmfile hooks disabled; path traversal and outside symlinks in archives are rejected |
-| Review before enable | Third-party plugins install disabled; static structure + content digest checks, and the user confirms before enabling |
+| Dependencies and transactions | Bundled pnpm 10.34.5 permits unlocked resolution, lifecycle scripts and pnpmfile; actual locks/digests are recorded, archive traversal is rejected and rollback originals are retained |
+| Enable after installation | Package format, paths, dependencies and digests are checked before automatic commit/enable; explicit disable and safe-mode choices remain. See [plugin details](docs/plugins.md) |
 | Hard-dependency rewrite | Plugins that hardcode service dependencies get rewritten to runtime injection — one plugin can't drag down the whole plugin tree |
 | Built-in plugin protection | Built-in plugins can't be deleted; disabled ones stay disabled across upgrades; configs import/export cleanly |
 
-Seven plugins ship built in: `dsh-web-mobile` (mobile adaptation), `dsh-status-overlay` (floating
+Main built-in plugins include: `dsh-web-mobile` (mobile adaptation), `dsh-status-overlay` (floating
 bar), `dsh-task-notifier` (turn-complete notifications), `dsh-device-shell-guide` (device capability
 guide), `dsh-computer-use-android` (Android Computer Use), `dsh-tool-vscreen` (virtual display
 tools) and `dsh-auto-review` (official experimental Auto review entry).
@@ -243,7 +260,7 @@ Listed honestly, so you don't discover them after installing:
 |---|---|---|
 | Architecture | ⚠️ arm64-v8a only | 32-bit and x86 devices are not supported |
 | OS version | ✅ Standard 11+ / Low 6+ | Older systems lose some capabilities (wireless pairing needs 11+, see [android-low](docs/android-low.md)) |
-| Size | ⚠️ 261 / 334 MiB | The price of a bundled Ubuntu environment — in exchange for no downloads and no command line |
+| Size | ⚠️ 273.10 / 345.27 MiB | The price of a bundled Ubuntu environment — in exchange for no downloads and no command line |
 | bash tool | ✅ Works | Full Ubuntu bash; the agent runs shell commands without restriction |
 | bash **sandbox isolation** | ⚠️ Unavailable | bubblewrap needs unprivileged user namespaces, and Android sepolicy refuses — neither the container path nor Termux can work around it. Constraints rely on dsh's permission modes: `danger-full-access` by default, switchable to `workspace-write` or `read-only` in Configure. Judge the risk yourself |
 | Sundigital / HarmonyOS anco | ❓ Unverified | Plausible in theory; no real-device regression yet |
@@ -266,15 +283,15 @@ Listed honestly, so you don't discover them after installing:
 │  ├ LAN proxy :3081 · ADB / Shizuku / Root channels  │
 │  └ Overlay (TYPE_APPLICATION_OVERLAY)               │
 ├─────────────────────────────────────────────────────┤
-│ proroot (default, zero ptrace cost) / proot (fallb.)│
+│ proot (default) / proroot (optional, device-specific)│
 ├─────────────────────────────────────────────────────┤
 │ Ubuntu 24.04 arm64 · Node.js 24 · pnpm 10           │
 │  └ @deepseek-ai/dsh  →  Web UI :3080                │
 └─────────────────────────────────────────────────────┘
 ```
 
-Data: conversations / settings / attachments live in `Documents/dshdata` (public, visible, backup-able);
-the `DSH_HOME` tree and `.credentials.yaml` deliberately stay in the private directory.
+Data: see Data & backups → Storage guidance for the actual location; legacy `Documents/dshdata` remains readable.
+Android Keystore protects API keys; local keys and automatic copies are not guaranteed to survive uninstall.
 
 ---
 
@@ -291,6 +308,8 @@ Once paired, the agent can operate this phone directly — **no Shizuku needed**
 
 > The pairing code requires Android 11+; on older systems use the Shizuku / Root channels —
 > or skip pairing entirely, since the accessibility capabilities (screen reading, taps, input) need none.
+
+With wireless debugging off, Verify existing connection can prepare the bundled offline dependencies first. `ADB_OFFLINE_READY` means dependencies are ready; enable wireless debugging and complete pairing or connection verification afterward.
 
 **After pairing**: DSHA maintains the connection itself (keep-alive + reconnect); it survives reboots.
 
