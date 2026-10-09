@@ -19,6 +19,14 @@ final class PictureInPictureFrame extends FrameLayout {
    * repeatedly (the high-frequency PiP flicker reported on the tablet).
    * Keep one logical viewport for the whole PiP session and only scale the
    * already laid-out child into the current bounds.
+   *
+   * The cache below deduplicates geometry, not child work: when the webpage
+   * updates, its native subtree calls requestLayout(), and the logical viewport
+   * does not move.  Skipping the child in that case would swallow the request
+   * forever (stale measure, no onLayout), which shows up as the content area
+   * flashing blank while the frozen PiP window keeps its bounds.  So both
+   * onMeasure and onLayout must still dispatch a pending subtree request, and
+   * only the scale/translation writes stay value-deduplicated.
    */
   private int compactViewportWidth = -1, compactViewportHeight = -1;
   private int measuredChildWidth = -1, measuredChildHeight = -1;
@@ -113,6 +121,12 @@ final class PictureInPictureFrame extends FrameLayout {
     childTransformApplied = false;
   }
 
+  /** 子页面自己发起的布局请求；几何缓存不能把它当成「没有变化」丢掉。 */
+  private boolean childRequestedLayout() {
+    for (int i = 0; i < getChildCount(); i++) if (getChildAt(i).isLayoutRequested()) return true;
+    return false;
+  }
+
   private void clearChildTransform() {
     for (int i = 0; i < getChildCount(); i++) {
       View child = getChildAt(i);
@@ -140,7 +154,12 @@ final class PictureInPictureFrame extends FrameLayout {
     }
     int[] viewport =
         drawingViewport(MeasureSpec.getSize(widthSpec), MeasureSpec.getSize(heightSpec));
-    if (viewport[0] != measuredChildWidth || viewport[1] != measuredChildHeight) {
+    if (PictureInPicturePolicy.mustDispatchChildLayout(
+        viewport[0],
+        viewport[1],
+        measuredChildWidth,
+        measuredChildHeight,
+        childRequestedLayout())) {
       for (int i = 0; i < getChildCount(); i++)
         getChildAt(i)
             .measure(
@@ -163,32 +182,45 @@ final class PictureInPictureFrame extends FrameLayout {
     float scale = PictureInPicturePolicy.scale(getWidth(), getHeight(), viewport[0], viewport[1]);
     float tx = (getWidth() - viewport[0] * scale) / 2f;
     float ty = (getHeight() - viewport[1] * scale) / 2f;
-    boolean geometryChanged =
-        viewport[0] != laidOutViewportWidth
-            || viewport[1] != laidOutViewportHeight
+    // 逻辑视口冻结时窗口变化只需重写变换；只有子页面真的要求重排（或视口本身变了）才动子树。
+    boolean layoutChild =
+        PictureInPicturePolicy.mustDispatchChildLayout(
+            viewport[0],
+            viewport[1],
+            laidOutViewportWidth,
+            laidOutViewportHeight,
+            childRequestedLayout());
+    boolean transformChanged =
+        !childTransformApplied
             || getWidth() != laidOutWidth
             || getHeight() != laidOutHeight
             || Float.compare(scale, laidOutScale) != 0
             || Float.compare(tx, laidOutTranslationX) != 0
             || Float.compare(ty, laidOutTranslationY) != 0;
-    if (!geometryChanged) return;
+    if (!layoutChild && !transformChanged) return;
     for (int i = 0; i < getChildCount(); i++) {
       View child = getChildAt(i);
-      child.layout(0, 0, viewport[0], viewport[1]);
-      child.setPivotX(0);
-      child.setPivotY(0);
-      child.setScaleX(scale);
-      child.setScaleY(scale);
-      child.setTranslationX(tx);
-      child.setTranslationY(ty);
+      if (layoutChild) child.layout(0, 0, viewport[0], viewport[1]);
+      if (transformChanged) {
+        child.setPivotX(0);
+        child.setPivotY(0);
+        child.setScaleX(scale);
+        child.setScaleY(scale);
+        child.setTranslationX(tx);
+        child.setTranslationY(ty);
+      }
     }
-    laidOutViewportWidth = viewport[0];
-    laidOutViewportHeight = viewport[1];
-    laidOutWidth = getWidth();
-    laidOutHeight = getHeight();
-    laidOutScale = scale;
-    laidOutTranslationX = tx;
-    laidOutTranslationY = ty;
-    childTransformApplied = true;
+    if (layoutChild) {
+      laidOutViewportWidth = viewport[0];
+      laidOutViewportHeight = viewport[1];
+    }
+    if (transformChanged) {
+      laidOutWidth = getWidth();
+      laidOutHeight = getHeight();
+      laidOutScale = scale;
+      laidOutTranslationX = tx;
+      laidOutTranslationY = ty;
+      childTransformApplied = true;
+    }
   }
 }
