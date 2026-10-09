@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "runtimeId": "dfc36876658fcdbbdc985894ee1f854c79881f2c02d3c3c95ccc71158f6a2801",
+  "runtimeId": "8dbac508c8c26ebac0775167bfb463d8672ddea1a123078cb388cc04536ac1d5",
   "baseVersion": "10",
   "dshVersion": "0.2.0-rc.2",
   "launcherContract": "DSHA_ARM64_V2",
@@ -131,7 +131,7 @@
     "core/WebReadyTasks.java": "3010c17320d375cd78db5f27d09dee863e03da3d960a39aac018b7ed8165b493",
     "core/WebStopCoordinator.java": "ce0a32b93e57f4b9d5d34321e9fd6f9fc3a5a05c699cea5ccdfe4e0f4e1b2b16",
     "data/PortableSettings.java": "6e3acf3c5b0d5f9b217f538aaf31baf0b369ce535e77d992daaa0139937dad16",
-    "generator:tools/apply-mobile-client-patches.mjs": "b04131176c1907f1ca1d8865ea410d1a933259ebbc4c459123758094b644d5c7",
+    "generator:tools/apply-mobile-client-patches.mjs": "e2b25ccc0d2f33657179bd0522e8659a70c01fc2bf7cfe2bb0d7c5fab8a6825d",
     "generator:tools/asset-deployment.json": "dafc6f85f190a18d1d52bb4628dd02713fe2da126c632383842e5e06f7efc6dc",
     "generator:tools/asset_deployment.py": "2b680431d553f3a7fd561372e3ab76a379f48327f7c81931e044d11849f2d67a",
     "generator:tools/backup-dependencies.lock.json": "891585530b7e3224f8ce8523ab2cf20b05dbaa4f472202742676f2799927ddbe",
