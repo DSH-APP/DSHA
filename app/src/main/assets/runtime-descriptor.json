@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "runtimeId": "5d6f6c4920a7fd08c6a18548d8533cef3ccf415c27b3722d707217c9639ea4b3",
+  "runtimeId": "dfc36876658fcdbbdc985894ee1f854c79881f2c02d3c3c95ccc71158f6a2801",
   "baseVersion": "10",
   "dshVersion": "0.2.0-rc.2",
   "launcherContract": "DSHA_ARM64_V2",
@@ -330,7 +330,7 @@
     "builtin-plugins/dsh-tool-vscreen/lib/server.cjs": "6a2a193e5f6b2a5661ba5c4c8fdb35bf57a872b3f5ba9be6f4b0694572ef33ad",
     "builtin-plugins/dsh-tool-vscreen/package.json": "a58e0c4c476f7c4c1c7f2f9e942828b739a940f0b8473751745874c901be4cfa",
     "builtin-plugins/dsh-web-mobile/cordis.patch.yml": "90e1e7a4ef3bfb11198cb1d686d4c5deb26bf3683915a78c5b4b050879393bb6",
-    "builtin-plugins/dsh-web-mobile/lib/client.js": "a5991fe7b504da60c974b819d546ee25718d605e0fba3ec068432a76d6808b62",
+    "builtin-plugins/dsh-web-mobile/lib/client.js": "83c607c83c9c91cfeb24217d192131004ef02f0b071db2e1f9db14a9e10c33d2",
     "builtin-plugins/dsh-web-mobile/lib/compress.js": "f5902f4f036d0f7a67d2ce6e4c71b01a98227cb4365abde7a4bf8f1bf5e6de0c",
     "builtin-plugins/dsh-web-mobile/lib/delete-session.js": "f4f8caf0fd54ab49ad264908296b12d9d46868542b082136927afe3c21d32b19",
     "builtin-plugins/dsh-web-mobile/lib/index.js": "607ea57134e8772fa5e9bb1778c556703ba21191f8ef198ec278b764f945797a",
