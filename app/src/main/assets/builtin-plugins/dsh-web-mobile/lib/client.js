@@ -3251,24 +3251,55 @@ function installPhoneChrome(ctx) {
         // reachable. No keyboard-padding implementation is assumed here.
         let stableVh = 0;
         let stableWidth = 0;
-        const syncStableViewport = () => {
+        let lastVisibleVh = '';
+        let lastViewportTop = '';
+        let syncWidth = -1;
+        let syncTimer = 0;
+        let syncRaf = 0;
+        const writeStableViewport = () => {
             const height = window.innerHeight;
             const width = window.innerWidth;
             const visible = window.visualViewport;
             const available = Math.max(1, Math.min(height, visible?.height ?? height));
-            root.style.setProperty('--dsha-mobile-visible-vh', `${available}px`);
-            root.style.setProperty('--dsha-mobile-viewport-top', `${visible?.offsetTop ?? 0}px`);
+            const nextVh = `${available}px`;
+            const nextTop = `${visible?.offsetTop ?? 0}px`;
+            if (nextVh !== lastVisibleVh) {
+                lastVisibleVh = nextVh;
+                root.style.setProperty('--dsha-mobile-visible-vh', nextVh);
+            }
+            if (nextTop !== lastViewportTop) {
+                lastViewportTop = nextTop;
+                root.style.setProperty('--dsha-mobile-viewport-top', nextTop);
+            }
             if (stableVh === 0 || height > stableVh || width !== stableWidth) {
                 stableVh = height;
                 stableWidth = width;
                 root.style.setProperty(exports.STABLE_VIEWPORT_VAR, `${height}px`);
             }
         };
+        const syncStableViewport = () => {
+            const width = window.innerWidth;
+            if (width !== syncWidth) {
+                syncWidth = width;
+                if (syncTimer !== 0) { clearTimeout(syncTimer); syncTimer = 0; }
+                if (syncRaf !== 0) { cancelAnimationFrame(syncRaf); syncRaf = 0; }
+                writeStableViewport();
+                return;
+            }
+            if (syncTimer !== 0) clearTimeout(syncTimer);
+            syncTimer = setTimeout(() => {
+                syncTimer = 0;
+                if (syncRaf !== 0) return;
+                syncRaf = requestAnimationFrame(() => { syncRaf = 0; writeStableViewport(); });
+            }, 150);
+        };
         syncStableViewport();
         window.addEventListener('resize', syncStableViewport);
         window.visualViewport?.addEventListener('resize', syncStableViewport);
         window.visualViewport?.addEventListener('scroll', syncStableViewport);
         return () => {
+            if (syncTimer !== 0) { clearTimeout(syncTimer); syncTimer = 0; }
+            if (syncRaf !== 0) { cancelAnimationFrame(syncRaf); syncRaf = 0; }
             window.removeEventListener('resize', syncStableViewport);
             window.visualViewport?.removeEventListener('resize', syncStableViewport);
             window.visualViewport?.removeEventListener('scroll', syncStableViewport);
