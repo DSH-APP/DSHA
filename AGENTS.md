@@ -102,6 +102,7 @@ bash build.sh :app:testStandardDebugUnitTest   # 全量单测
 - 新 dsh 依赖由 `tools/dsh-runtime/package-lock.json` 锁定；`tools/prepare-runtime-descriptor.py` 生成独立受管契约描述，APK 版本仅作诊断来源。相同基础版本更新受管树，个人数据保持原位；**不因 UI-only APK 更新替换环境，不因普通 dsh 更新递增 Ubuntu 基础环境版本**。
 - 离线 curl / git / 证书由 `tools/ubuntu-tools/packages.lock.json` 锁定（`tools/prepare-ubuntu-tools.py` 生成 `ubuntu-tools.bin`）；网页 ES 兼容依赖锁在 `tools/web-compat/`（`node tools/prepare-web-compat.mjs`）。生成文件不提交，构建核验摘要。
 - 中英文界面：文案目录 `tools/i18n/messages.json`，构建生成 Java 文案字典；偏好 `system`（默认）/ `zh` / `en`；**系统语言必须在进程最早时刻锁存**（`SystemLanguage.initialize()`，早于任何 `Locale.setDefault`），否则「跟随系统」切一次就自我锁死。语言切换只重建界面，不停终端或 Web；用户输入、命令原文不做自动替换。
+- 改文案的三条硬要求：① `messages.json` 里的 `zh` 必须与 Java 字面量**逐字节一致**（用 `json.dumps` 做定点替换，别整体重写该文件）；② 跑 `tools/check-ui-i18n.py`，`newFindings` 必须为 0 —— 顺带注意：改动带 `nonFindings` 声明的文件（`BackupTask` / `EnvironmentMaintenance` / `RecoveryController`）会让声明失效，必须一并处理；③ 跑 `tools/prepare-ui-languages.py`，带 `%s` 的模板中英签名必须一致。
 - 旧 WebView 的 `AbortSignal.any/timeout` 与 `crypto.randomUUID` 补齐：兼容脚本须进入受管 HTML 的应用脚本之前，并覆盖文档起始与 Worker。
 
 ### 数据与备份
