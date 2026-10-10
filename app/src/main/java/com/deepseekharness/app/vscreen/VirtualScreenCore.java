@@ -10,6 +10,8 @@ import android.media.ImageReader;
 import android.os.Looper;
 import android.os.SystemClock;
 import org.json.JSONObject;
+import com.deepseekharness.app.util.VirtualScreenFailures;
+import com.deepseekharness.app.util.VirtualScreenInputPolicy;
 import com.deepseekharness.app.util.VirtualScreenPolicy;
 import java.io.*;
 import java.net.*;
@@ -31,6 +33,7 @@ public final class VirtualScreenCore {
   private static Session session;
   private static ServerSocket server;
   private static String startupStage = "CONTEXT";
+  private static String missingDisplayFlags = "";
   private static final ThreadPoolExecutor CLIENTS =
       new ThreadPoolExecutor(
           2,
@@ -310,7 +313,7 @@ public final class VirtualScreenCore {
             if (!VirtualScreenPolicy.fresh(observed, session.sequence)) return error("STALE_FRAME");
           }
         }
-        return session.input.touch(stroke, action, x, y) ? status() : error("TOUCH_REJECTED");
+        return session.input.touch(stroke, action, x, y) ? status() : inputFailure(session);
       }
       if (!Set.of(
               "/vscreen/tap", "/vscreen/swipe", "/vscreen/type", "/vscreen/key", "/vscreen/check")
@@ -338,15 +341,15 @@ public final class VirtualScreenCore {
           String stroke = UUID.randomUUID().toString();
           session.observed = -1;
           try {
-            if (!session.input.touch(stroke, 0, x, y)) return error("INPUT_REJECTED");
+            if (!session.input.touch(stroke, 0, x, y)) return inputFailure(session);
             int steps = Math.max(1, ms / 16);
             for (int n = 1; n < steps; n++) {
               Thread.sleep(16);
               if (!session.input.touch(
                   stroke, 2, x + (endX - x) * n / steps, y + (endY - y) * n / steps))
-                return error("INPUT_REJECTED");
+                return inputFailure(session);
             }
-            return session.input.touch(stroke, 1, endX, endY) ? status() : error("INPUT_REJECTED");
+            return session.input.touch(stroke, 1, endX, endY) ? status() : inputFailure(session);
           } finally {
             session.input.cancel();
           }
@@ -355,7 +358,7 @@ public final class VirtualScreenCore {
           int code = Integer.parseInt(q.getOrDefault("keycode", "-1"));
           if (code != 3 && code != 4 && code != 66 && code != 67) return error("INVALID_KEY");
           session.observed = -1;
-          return session.input.key(code) ? status() : error("INPUT_REJECTED");
+          return session.input.key(code) ? status() : inputFailure(session);
         }
         List<String> argv =
             new ArrayList<>(List.of("/system/bin/input", "-d", String.valueOf(session.id)));
@@ -380,7 +383,7 @@ public final class VirtualScreenCore {
     } catch (IllegalArgumentException error) {
       return error("INVALID_ARGUMENT");
     } catch (Throwable error) {
-      return error("VSCREEN_" + cause(error).getClass().getSimpleName());
+      return failure(error);
     }
   }
 
@@ -389,16 +392,20 @@ public final class VirtualScreenCore {
     if (session != null && session.width == size[0] && session.height == size[1]) return status();
     release();
     ImageReader reader = ImageReader.newInstance(size[0], size[1], PixelFormat.RGBA_8888, 3);
+    VirtualDisplay display = null;
     try {
       DisplayManager manager = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
+      List<String> absent = new ArrayList<>();
       int flags =
           DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
               | DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY
-              | flag("VIRTUAL_DISPLAY_FLAG_SUPPORTS_TOUCH")
-              | flag("VIRTUAL_DISPLAY_FLAG_DESTROY_CONTENT_ON_REMOVAL")
-              | flag("VIRTUAL_DISPLAY_FLAG_TRUSTED")
-              | flag("VIRTUAL_DISPLAY_FLAG_OWN_FOCUS");
-      VirtualDisplay display =
+              | flag("VIRTUAL_DISPLAY_FLAG_SUPPORTS_TOUCH", absent)
+              | flag("VIRTUAL_DISPLAY_FLAG_DESTROY_CONTENT_ON_REMOVAL", absent)
+              | flag("VIRTUAL_DISPLAY_FLAG_TRUSTED", absent)
+              | flag("VIRTUAL_DISPLAY_FLAG_OWN_FOCUS", absent);
+      // 静默降级也要留痕：隐藏常量消失时 flag() 只会给 0，不写下来就没人知道少了什么
+      missingDisplayFlags = String.join(",", absent);
+      display =
           manager.createVirtualDisplay(
               "DSHA-VirtualScreen", size[0], size[1], 320, reader.getSurface(), flags);
       if (display == null) throw new IOException("DISPLAY_CREATE_FAILED");
@@ -406,8 +413,14 @@ public final class VirtualScreenCore {
       session.start();
       return status();
     } catch (Throwable error) {
-      reader.close();
-      throw error;
+      // 失败必须回收：Session 建好之后才失败的，连会话一起收——否则静态 session 指向已释放的显示，
+      // 下一次同尺寸 create 会在开头提前 return status()，报一个活着的死会话（读图必失败）。
+      if (session != null) release();
+      else {
+        if (display != null) display.release();
+        reader.close();
+      }
+      return failure(error);
     }
   }
 
@@ -422,6 +435,9 @@ public final class VirtualScreenCore {
         .put("frameSeq", session.sequence)
         .put("package", actual)
         .put("packageVerified", !actual.isEmpty())
+        .put("inputBackend", session.input.backend())
+        .put("inputUnavailable", session.input.unavailableReason())
+        .put("missingDisplayFlags", missingDisplayFlags)
         .put("orientation", session.width > session.height ? "landscape" : "portrait");
   }
 
@@ -574,17 +590,34 @@ public final class VirtualScreenCore {
     System.exit(0);
   }
 
-  private static int flag(String name) {
+  /** 输入动作失败：区分「这台设备没有可用的输入后端」与「后端拒绝了这次动作」。 */
+  private static JSONObject inputFailure(Session session) {
+    return error(
+        session.input.available() ? "INPUT_REJECTED" : VirtualScreenInputPolicy.INPUT_UNAVAILABLE);
+  }
+
+  /** 取隐藏常量；取不到时记下名字（静默给 0 会让「少了一个标志」变成查不出来的怪现象）。 */
+  private static int flag(String name, List<String> absent) {
     try {
       return DisplayManager.class.getField(name).getInt(null);
     } catch (ReflectiveOperationException e) {
+      absent.add(name);
       return 0;
     }
   }
 
-  private static Throwable cause(Throwable e) {
-    while (e.getCause() != null) e = e.getCause();
-    return e;
+  /**
+   * 失败一律给稳定码 + 根因摘要：码里绝不出现异常类名，摘要里必须带上缺失的类名/方法签名
+   * （issue #113 的唯一线索就在 {@code NoSuchMethodException} 的 message 里）。
+   */
+  private static JSONObject failure(Throwable error) {
+    JSONObject value = error(VirtualScreenFailures.code(error));
+    try {
+      String cause = VirtualScreenFailures.cause(error);
+      if (!cause.isEmpty()) value.put("cause", cause);
+    } catch (Exception ignored) {
+    }
+    return value;
   }
 
   private static JSONObject ok() {
@@ -651,7 +684,7 @@ public final class VirtualScreenCore {
       width = w;
       height = h;
       id = d.getDisplay().getDisplayId();
-      input = new VirtualScreenInput(id);
+      input = VirtualScreenInput.create(id);
     }
 
     void start() {
