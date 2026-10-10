@@ -1,0 +1,57 @@
+# dsh-destructive-guard bundle patch：把"删除必须先确认"做成组合层的硬约束。
+#
+# 为什么必须动审批策略（否则守卫形同虚设）：
+#   dsh-base 按 `DSH_PERMISSION_MODE` 推导审批策略 —— danger-full-access ⇒ policy=never
+#   （dsh-base/cordis.patch.yml:248）。而 ApprovalService.decide() 在 never 下**在弹窗之前**
+#   就返回 rejected（dsh-user-approval/lib/index.js:175），所以任何 ask 都到不了用户面前。
+#   这就是"全局授权直接放行删除"的根：策略 never 时根本没有确认这个动作。
+#   这里把策略固定成 ask；沙箱模式**不动**（仍由环境变量决定 danger-full-access），
+#   文件访问能力与之前完全一致，多出来的只有"会问"这一件事。
+#
+# 为什么还要补 preset：
+#   approval 变 ask 之后，"沙箱全开 + 会问"这个组合不在 dsh-base 的三档里，而
+#   permission-presets 在构造时用 derive() 推导默认档位，推导不出就直接抛错
+#   （dsh-permission-presets/lib/index.js:180）。所以显式补一档并把它设为默认。
+#   danger-full-access 这一档仍是 approval=never —— 那时守卫会把破坏性命令硬拒绝，
+#   是"更严"而不是"绕过"。
+#
+# defaultPreset 必须跟着 `DSH_PERMISSION_MODE` 走：新会话的沙箱档位是从默认 preset
+# 的 spec 里 pin 下去的（dsh-permission-presets/lib/index.js:376 pinInitialPermission），
+# 写死 guarded-full-access 会让用户选的 read-only / workspace-write 在**新会话**上失效。
+#
+# 而且默认值只能比 dsh-base 更严、绝不能更宽：dsh-base 对未设/空值/非法值都退回
+# workspace-write（`DSH_PERMISSION_MODE ?? 'workspace-write'`），这里必须同样退回
+# workspace-write，而不是掉进全盘可写那一档。只有显式 danger-full-access 才映射到
+# guarded-full-access（沙箱同样是全盘可写，但破坏性命令要问）。
+- id: approval
+  name: '@deepseek-ai/dsh-user-approval'
+  config:
+    policy: ask
+- id: permission
+  name: '@deepseek-ai/dsh-permission-presets'
+  config:
+    defaultPreset: !!js "((process.env.DSH_PERMISSION_MODE ?? 'workspace-write') === 'read-only') ? 'read-only' : (((process.env.DSH_PERMISSION_MODE ?? 'workspace-write') === 'danger-full-access') ? 'guarded-full-access' : 'workspace-write')"
+    presets:
+      read-only:
+        sandbox: read-only
+        approval: ask
+        name: read-only
+        description: Read-only; actions that need approval still ask.
+      workspace-write:
+        sandbox: workspace-write
+        approval: ask
+        name: workspace-write
+        description: Write inside the workspace and permitted temp directories; wider retries require approval.
+      danger-full-access:
+        sandbox: danger-full-access
+        approval: never
+        name: danger-full-access
+        description: Full file access without approval prompts; destructive commands are hard-denied by the guard.
+      guarded-full-access:
+        sandbox: danger-full-access
+        approval: ask
+        name: guarded-full-access
+        description: Full file access, but destructive commands (rm and friends) must be confirmed first.
+- insert:
+  - id: destructive-guard
+    name: 'dsh-destructive-guard'
