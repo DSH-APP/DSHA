@@ -28,6 +28,9 @@ public final class WebUploads {
   private static final Set<String> ACTIVE_SESSION_ROOTS =
       Collections.synchronizedSet(new HashSet<>());
 
+  /** 选择器交回的 {@code content://} 瞬时打不开时的等待；只重试一次。 */
+  private static final long SOURCE_RETRY_DELAY_MILLIS = 400L;
+
   /** One bounded cache owned by a retained page. The directory is removed only after that page closes. */
   public static final class Session implements AutoCloseable {
     private final File cacheRoot;
@@ -86,10 +89,7 @@ public final class WebUploads {
           ensureOwnedDirectory(directory, batchDirectory);
           File file = new File(directory, name);
           files.add(file);
-          InputStream opened = context.getContentResolver().openInputStream(uri);
-          if (opened == null)
-            throw new IOException(com.deepseekharness.app.util.UiText.text("没有文件读取权限，请重新选择"));
-          InputStream in = register(opened);
+          InputStream in = register(openSource(context, uri));
           try {
             ParcelFileDescriptor descriptor = openNoFollow(file);
             try (InputStream source = in;
@@ -123,6 +123,9 @@ public final class WebUploads {
         budget.finishCopy(reservation);
         ready = true;
         return new Batch(this, reservation, batchDirectory, files);
+      } catch (FileNotFoundException missing) {
+        android.util.Log.w("DSHA", "WEB_UPLOAD_SOURCE_MISSING", missing);
+        throw new IOException(com.deepseekharness.app.util.UiText.text("文件已被移动或删除，请重新选择"), missing);
       } catch (Exception error) {
         if (error instanceof IOException) throw (IOException) error;
         if (error
@@ -144,6 +147,42 @@ public final class WebUploads {
           else retainReservation(reservation);
         }
         cleanupIfClosed();
+      }
+    }
+
+    /**
+     * 打开选择器交回的 {@code content://}，只对「瞬时打不开」重试一次。
+     *
+     * <p>选择器偶尔会交回一条指向尚未落盘、或刚落盘还没被 provider 看到的文件的 URI（刚截完图立刻挑那张图即属此类），
+     * 此时 {@code openInputStream} 抛 ENOENT。这类竞态过一拍就能读，因此重试一次；仍失败才交给调用方报错。
+     */
+    private static InputStream openSource(Context context, Uri uri) throws IOException {
+      try {
+        return requireSource(context, uri);
+      } catch (FileNotFoundException transientMissing) {
+        awaitSourceRetry();
+        try {
+          return requireSource(context, uri);
+        } catch (FileNotFoundException missing) {
+          missing.addSuppressed(transientMissing);
+          throw missing;
+        }
+      }
+    }
+
+    private static InputStream requireSource(Context context, Uri uri) throws IOException {
+      InputStream opened = context.getContentResolver().openInputStream(uri);
+      if (opened == null)
+        throw new IOException(com.deepseekharness.app.util.UiText.text("没有文件读取权限，请重新选择"));
+      return opened;
+    }
+
+    private static void awaitSourceRetry() throws InterruptedIOException {
+      try {
+        Thread.sleep(SOURCE_RETRY_DELAY_MILLIS);
+      } catch (InterruptedException interrupted) {
+        Thread.currentThread().interrupt();
+        throw new InterruptedIOException("UPLOAD_CANCELLED");
       }
     }
 
