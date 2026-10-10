@@ -210,29 +210,58 @@ public final class VirtualScreenManager {
     JSONObject value = requestAt(snapshot.identity.port, snapshot.identity.token, route, query);
     // Grant revision and target checks may use platform calls; keep them outside LOCK too.
     if (!authorized(snapshot.authority)) return failure("SCREEN_TARGET_CHANGED");
+    String rejection = null;
     synchronized (LOCK) {
       if (!currentLocked(snapshot)) return failure("VSCREEN_REVOKED");
       if (!value.optBoolean("ok")) {
         lastError = value.optString("error");
-        return value;
+        // 只在这里算出要记的摘要，落盘必须放到锁外（记录会写文件）。
+        rejection = frameRejectionDetail(route, value);
+      } else {
+        String returned = value.optString("generation", generation);
+        if (!generation.equals(returned)) {
+          if (!changeGeneration) return failure("STALE_GENERATION");
+          generation = returned;
+          stateRevision++;
+          frameSequence = -1;
+        }
+        long sequence = value.optLong("frameSeq", -1);
+        if (sequence >= 0
+            && sequence < frameSequence
+            && (route.equals("/vscreen/status") || route.equals("/vscreen/preview")))
+          return failure("STALE_FRAME");
+        // A real input may already have executed before a newer preview arrives. Keep its
+        // result, but never regress observation metadata or offer it as a current frame.
+        if (sequence >= 0) frameSequence = Math.max(frameSequence, sequence);
+        tagLocked(value);
       }
-      String returned = value.optString("generation", generation);
-      if (!generation.equals(returned)) {
-        if (!changeGeneration) return failure("STALE_GENERATION");
-        generation = returned;
-        stateRevision++;
-        frameSequence = -1;
-      }
-      long sequence = value.optLong("frameSeq", -1);
-      if (sequence >= 0
-          && sequence < frameSequence
-          && (route.equals("/vscreen/status") || route.equals("/vscreen/preview")))
-        return failure("STALE_FRAME");
-      // A real input may already have executed before a newer preview arrives. Keep its
-      // result, but never regress observation metadata or offer it as a current frame.
-      if (sequence >= 0) frameSequence = Math.max(frameSequence, sequence);
-      tagLocked(value);
-      return value;
+    }
+    if (rejection != null) recordFrameRejection(rejection);
+    return value;
+  }
+
+  /** 帧门拒绝的可诊断摘要：稳定原因码 + 实际值/期望值；不含画面、坐标或用户内容。 */
+  private static String frameRejectionDetail(String route, JSONObject value) {
+    if (!"STALE_FRAME".equals(value.optString("error"))) return null;
+    return route
+        + " reason="
+        + value.optString("reason", "UNKNOWN")
+        + " requested="
+        + value.optLong("requestedFrameSeq", -1)
+        + " current="
+        + value.optLong("currentFrameSeq", -1)
+        + " observed="
+        + value.optLong("observedFrameSeq", -1);
+  }
+
+  /**
+   * 帧门拒绝必须可诊断（issue #117）：写进有界事件记录，用户导出「自检与诊断」时能看到
+   * 实际值/期望值，而不是只有一个 STALE_FRAME。
+   */
+  private void recordFrameRejection(String detail) {
+    try {
+      com.deepseekharness.app.core.DiagnosticLog.record(context, "VSCREEN_INPUT_REJECTED", detail);
+    } catch (Throwable ignored) {
     }
   }
 
@@ -419,7 +448,7 @@ public final class VirtualScreenManager {
     } catch (Throwable error) {
       if (!coreToken.isEmpty()) requestAt(selectedPort, coreToken, "/vscreen/close", "");
       failStart(launchEpoch);
-      return failure("VSCREEN_START_" + error.getClass().getSimpleName());
+      return failure(com.deepseekharness.app.util.VirtualScreenErrors.stable(error));
     } finally {
       cancelAdbLaunch(launchEpoch);
     }
@@ -511,19 +540,17 @@ public final class VirtualScreenManager {
         () -> {
           Snapshot session = snapshot(gen);
           if (session == null) return missingSnapshot(gen);
-          JSONObject check =
-              perform(
-                  session,
-                  "/vscreen/check",
-                  "generation=" + encode(gen) + "&frameSeq=" + seq,
-                  false);
-          if (!check.optBoolean("ok")) return check;
+          // node 按 nodeId 走无障碍 performAction：目标是否还在、是否还在同一窗口，由无障碍层的
+          // STALE_TREE（树 ≤30 秒）+ refresh() + windowId 判定。核心的像素帧门只对坐标注入有意义，
+          // 前置它只会让 tree → node 这条零截图链路在动态界面下必然断掉（issue #117）。
+          JSONObject info = perform(session, "/vscreen/status", "", false);
+          if (!info.optBoolean("ok")) return info;
           if (!current(session)) return failure("VSCREEN_REVOKED");
           try {
             JSONObject result =
                 com.deepseekharness.app.DshaAccessibilityService.virtualControl(
                     accessibility,
-                    check.optInt("displayId", -1),
+                    info.optInt("displayId", -1),
                     "node",
                     new JSONObject().put("nodeId", node).put("action", action).put("text", text));
             return current(session) ? result : failure("SCREEN_TARGET_CHANGED");

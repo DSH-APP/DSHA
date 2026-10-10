@@ -1028,6 +1028,14 @@ public final class HttpShellService {
     return com.deepseekharness.app.util.SensitiveAppPolicy.sensitive(pkg);
   }
 
+  /** 屏幕授权的三态结果：桥要能区分「用户还没点允许」与「用户拒绝了」（issue #123）。 */
+  private enum ScreenAuthorization {
+    ALLOWED,
+    DENIED,
+    NO_ANSWER,
+    UNAVAILABLE
+  }
+
   /** @param action 给用户看的具体动作描述 —— 弹窗必须说清 AI 要干什么，
    *               而不是笼统一句「操作屏幕」，否则用户等于盲签。 */
   private boolean uiAuthorized(String action) {
@@ -1035,11 +1043,16 @@ public final class HttpShellService {
   }
 
   private boolean uiAuthorized(String action, String pkg) {
+    return screenAuthorization(action, pkg) == ScreenAuthorization.ALLOWED;
+  }
+
+  /** 同一次屏幕授权请求的完整结果；只被需要区分三态的端点使用（如 /app/vscreen/*）。 */
+  private ScreenAuthorization screenAuthorization(String action, String pkg) {
     boolean sensitive = isSensitiveApp(pkg);
     var controller = com.deepseekharness.app.core.HarnessController.get(ctx);
     long generation = controller.getWebGeneration(), revision = uiGrant.revision();
     if (!sensitive && hasScreenGrant(ctx)) {
-      return true;
+      return ScreenAuthorization.ALLOWED;
     }
     String where = pkg.isEmpty() ? com.deepseekharness.app.util.UiText.text("当前界面") : pkg;
     String why =
@@ -1048,16 +1061,21 @@ public final class HttpShellService {
                 "在【%s】里：%s  # 这类应用涉及支付或隐私，每次都需要你确认", where, action)
             : com.deepseekharness.app.util.UiText.format(
                 "%s  # 本次 DSH 运行期间有效，可在设备能力授权中随时撤销", action);
-    boolean ok = requestUserConfirm(why);
+    ConfirmationOutcome outcome = confirmOutcome(why);
     // A sensitive confirmation is one-shot, but must obey the same revocation and
     // run identity checks as a remembered grant. Never revive an old dialog result.
-    return uiGrant.completeConfirmation(
-        ok,
-        generation,
-        controller.getWebGeneration(),
-        revision,
-        !controller.isStopping() && !controller.isUserStopped(),
-        !sensitive);
+    boolean granted =
+        uiGrant.completeConfirmation(
+            outcome == ConfirmationOutcome.ALLOWED,
+            generation,
+            controller.getWebGeneration(),
+            revision,
+            !controller.isStopping() && !controller.isUserStopped(),
+            !sensitive);
+    if (granted) return ScreenAuthorization.ALLOWED;
+    if (outcome == ConfirmationOutcome.DENIED) return ScreenAuthorization.DENIED;
+    if (outcome == ConfirmationOutcome.NO_ANSWER) return ScreenAuthorization.NO_ANSWER;
+    return ScreenAuthorization.UNAVAILABLE;
   }
 
   private static String shortText(String s) {
@@ -1196,8 +1214,18 @@ public final class HttpShellService {
               : target != null
                   ? target.packageName
                   : status.optBoolean("packageVerified") ? status.optString("package") : "";
-      if (!uiAuthorized(com.deepseekharness.app.util.UiText.format("操作独立虚拟屏：%s", route), pkg))
-        return "{\"ok\":false,\"error\":\"USER_REJECTED\"}";
+      ScreenAuthorization authorization =
+          screenAuthorization(com.deepseekharness.app.util.UiText.format("操作独立虚拟屏：%s", route), pkg);
+      if (authorization != ScreenAuthorization.ALLOWED)
+        // "用户还没点允许"与"用户拒绝了"必须给不同的码：前者调用方应等一会儿再问，
+        // 后者不该重试（issue #123 的 60 秒挂起）。
+        return "{\"ok\":false,\"error\":\""
+            + (authorization == ScreenAuthorization.DENIED
+                ? "USER_REJECTED"
+                : authorization == ScreenAuthorization.NO_ANSWER
+                    ? "USER_NO_ANSWER"
+                    : "USER_CONFIRM_UNAVAILABLE")
+            + "\"}";
       java.util.function.BooleanSupplier live =
           () ->
               generation == controller.getWebGeneration()
@@ -1277,7 +1305,7 @@ public final class HttpShellService {
   /** /app/help lists bridge endpoint parameters for authenticated clients. */
   private String appHelp() {
     return com.deepseekharness.app.util.UiText.format(
-        "DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=%s）\n凭据由宿主写入 /root/.dsh/.bridge_headers；使用 curl -H @/root/.dsh/.bridge_headers，不把 token 写进 URL 或命令参数。\n带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\n\n== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\n读屏  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → 每行「[序号] \"文字\" 可点击 中心=(x,y) 区域=l,t,r,b」\n点按  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=设置\" -H @/root/.dsh/.bridge_headers\n      → 优先按文字点：控件位置随滚动/动画变，文字不变。没有文字才用 ?x=&y=\n输入  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=内容\" -H @/root/.dsh/.bridge_headers\n      → 填到当前焦点框；没有焦点先 tap 一下输入框\n按键  /app/ui/key?name=back  （back/home/recents/notifications/quicksettings/lock）\n滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n截屏  /app/ui/screenshot   → 存 PNG 到应用截图目录并返回路径（不回 base64）\n节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n\n== 独立虚拟屏（Android 11+；每次输入必须带最新 frameSeq）==\n/app/vscreen/create?orientation=portrait|landscape  创建虚拟屏\n/app/vscreen/status  查询 displayId、尺寸和 frameSeq\n/app/vscreen/launch?package=com.example.app  启动已安装应用\n/app/vscreen/see  获取最新预览；tap/swipe/type/key 必须携带该 frameSeq\n/app/vscreen/close  关闭并回收虚拟屏\n\n== 设备与应用 ==\n/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n/app/launch?pkg=com.tencent.mm  启动应用\n/app/clip                       读剪贴板（需 App 在前台，系统限制）\n/app/clip + text=…              写剪贴板\n/app/readfile?path=/…          读取绝对路径的目录或文本，仍受 Android 权限限制；凭据区（.dsh/.ssh/.android）不可读\n设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n\n== 与用户交互 ==\n/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n/app/notify?title=… + text=…      通知栏\n/app/toast + text=…               App 内提示\n/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n/app/share（text= 或 path=）      分享到其它应用\n/app/open?url=https://…           打开链接\n/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA；凭据区不可导出\n建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n产出报告用 /app/export，别只留在容器里。\n\n== 传感器与位置（默认关闭，需用户在配置页勾选）==\n/app/location（加 fresh=1 强制重新定位，可能等数秒）\n/app/sensors 列表 · /app/sensor?name=light 读值\n（light 环境光 lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation 姿态四元数 / steps 开机后步数）\n/app/torch?on=1 手电\n这三类返回 DISABLED（用户没开该能力）或 NO_PERMISSION（没授系统权限）时，\n照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n\n== 元信息 ==\n/app/version                          桥协议版本 + App 版本（特性检测用）\n/app/help                             本清单\n\n== 插件状态 ==\n/app/plugins                          读回上次上报的加载状态\n/app/plugins?loaded=a,b&failed=c      上报（插件侧用）\n\n== 设备 shell（自动选择 root / Shizuku / ADB）==\n/root/dsh-bin/adb-shell \"命令\"        用 id 核验实际身份\n包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n短信只允许当前 Android 用户的 content query --uri content://sms，默认关闭；设置 → 设备能力授权可开启或撤销。\n短信预授权可能返回正文及验证码；不允许发送、修改或删除，Android 仍可拒绝访问。Shizuku 不执行此敏感查询。\n仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n设置 → 设备能力授权中连接可用通道，别反复试同一条命令。\n不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n\n== root（--su）==\n已启用并经 root 管理器授权的 su 可直接执行，无需 ADB 配对；其次使用 Shizuku，再使用 ADB。\n--su 仅在明确需要 root 时使用，须先在设备能力授权页允许；同一设备保护策略始终生效。\n[EXECUTION_UNKNOWN] 表示命令可能已执行，先核对实际状态，不能切换通道或自动重放。\n",
+        "DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=%s）\n凭据由宿主写入 /root/.dsh/.bridge_headers；使用 curl -H @/root/.dsh/.bridge_headers，不把 token 写进 URL 或命令参数。\n带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\n\n== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\n读屏  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → 每行「[序号] \"文字\" 可点击 中心=(x,y) 区域=l,t,r,b」\n点按  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=设置\" -H @/root/.dsh/.bridge_headers\n      → 优先按文字点：控件位置随滚动/动画变，文字不变。没有文字才用 ?x=&y=\n输入  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=内容\" -H @/root/.dsh/.bridge_headers\n      → 填到当前焦点框；没有焦点先 tap 一下输入框\n按键  /app/ui/key?name=back  （back/home/recents/notifications/quicksettings/lock）\n滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n截屏  /app/ui/screenshot   → 存 PNG 到应用截图目录并返回路径（不回 base64）\n节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n\n== 独立虚拟屏（Android 11+；坐标与文本输入必须带“刚看过的那一帧”）==\n/app/vscreen/create?orientation=portrait|landscape  创建虚拟屏\n/app/vscreen/status  查询 displayId、尺寸和 frameSeq（只读；它的 frameSeq 不能直接用于输入）\n/app/vscreen/launch?package=com.example.app  启动已安装应用\n/app/vscreen/see  取最新预览（可带 since=<帧号> 去重）；输入要带的是它返回的 frameSeq\n/app/vscreen/tap?x=&y=&frameSeq=&generation=  按坐标点按\n/app/vscreen/swipe?x1=&y1=&x2=&y2=&ms=&frameSeq=&generation=  滑动\n/app/vscreen/touch?stroke=&action=0..3&x=&y=&frameSeq=&generation=  连续触控（stroke 为 16–64 位十六进制）\n/app/vscreen/type?text=&frameSeq=&generation=  输入文本（中文需开启无障碍）\n/app/vscreen/key?keycode=3|4|66|67&frameSeq=&generation=  系统按键\n/app/vscreen/tree  读虚拟屏控件树；返回的 generation 与 frameSeq 供 node 使用\n/app/vscreen/node  POST JSON {generation,nodeId,action,text?}  按 nodeId 做语义操作（click/long_click/scroll_forward/scroll_backward/focus/set_text）；与帧号无关，不需要 frameSeq，nodeId 用一次即失效\n/app/vscreen/editor|edit|submit  POST JSON {generation,editorId,text?,start?,end?}  读写当前焦点输入框\n/app/vscreen/close  关闭并回收虚拟屏\n帧门：坐标与文本输入要求“刚 see 过的那一帧仍是最新帧”。画面在动（≥1fps）时它必然过期，返回 STALE_FRAME 并带 reason：FRAME_NOT_OBSERVED（没 see 过这一帧）/ FRAME_EXPIRED（已被新帧顶掉）/ OBSERVATION_TIMEOUT（超过 30 秒）。先 see 再输入；动态界面请改用 tree + node（不受帧率影响，也不用回传图片）。\n空屏时 frameSeq 恒为 0、see 返回 FRAME_NOT_READY —— 那是“屏上还没有内容”，不是创建失败。\n创建失败：VSCREEN_TRUSTED_DISPLAY_DENIED（该通道拿不到 ADD_TRUSTED_DISPLAY，请改用 Root 或无障碍通道）/ VSCREEN_DISPLAY_CREATE_FAILED / VSCREEN_PERMISSION_DENIED。\n等待授权不等于被拒绝：确认没等到回答返回 USER_NO_ANSWER，用户明确拒绝才是 USER_REJECTED。\n\n== 设备与应用 ==\n/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n/app/launch?pkg=com.tencent.mm  启动应用\n/app/clip                       读剪贴板（需 App 在前台，系统限制）\n/app/clip + text=…              写剪贴板\n/app/readfile?path=/…          读取绝对路径的目录或文本，仍受 Android 权限限制；凭据区（.dsh/.ssh/.android）不可读\n设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n\n== 与用户交互 ==\n/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n/app/notify?title=… + text=…      通知栏\n/app/toast + text=…               App 内提示\n/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n/app/share（text= 或 path=）      分享到其它应用\n/app/open?url=https://…           打开链接\n/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA；凭据区不可导出\n建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n产出报告用 /app/export，别只留在容器里。\n\n== 传感器与位置（默认关闭，需用户在配置页勾选）==\n/app/location（加 fresh=1 强制重新定位，可能等数秒）\n/app/sensors 列表 · /app/sensor?name=light 读值\n（light 环境光 lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation 姿态四元数 / steps 开机后步数）\n/app/torch?on=1 手电\n这三类返回 DISABLED（用户没开该能力）或 NO_PERMISSION（没授系统权限）时，\n照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n\n== 元信息 ==\n/app/version                          桥协议版本 + App 版本（特性检测用）\n/app/help                             本清单\n\n== 插件状态 ==\n/app/plugins                          读回上次上报的加载状态\n/app/plugins?loaded=a,b&failed=c      上报（插件侧用）\n\n== 设备 shell（自动选择 root / Shizuku / ADB）==\n/root/dsh-bin/adb-shell \"命令\"        用 id 核验实际身份\n包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n短信只允许当前 Android 用户的 content query --uri content://sms，默认关闭；设置 → 设备能力授权可开启或撤销。\n短信预授权可能返回正文及验证码；不允许发送、修改或删除，Android 仍可拒绝访问。Shizuku 不执行此敏感查询。\n仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n设置 → 设备能力授权中连接可用通道，别反复试同一条命令。\n不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n\n== root（--su）==\n已启用并经 root 管理器授权的 su 可直接执行，无需 ADB 配对；其次使用 Shizuku，再使用 ADB。\n--su 仅在明确需要 root 时使用，须先在设备能力授权页允许；同一设备保护策略始终生效。\n[EXECUTION_UNKNOWN] 表示命令可能已执行，先核对实际状态，不能切换通道或自动重放。\n",
         BRIDGE_PROTOCOL);
   }
 
@@ -1868,25 +1896,39 @@ public final class HttpShellService {
     return Query.of(path);
   }
 
+  /** 确认结果三态：允许 / 用户明确拒绝 / 没等到回答（超时、窗口关闭、代次失效、桥停止）。 */
+  private enum ConfirmationOutcome {
+    ALLOWED,
+    DENIED,
+    NO_ANSWER,
+    UNAVAILABLE
+  }
+
   /** 只请求用户确认（不执行命令），返回是否允许；/confirm 端点用。
    *  通知与弹窗同时发：只走弹窗的话，Activity 一被 pause 用户就再也看不见，
    *  只能干等 60s 超时——这正是「弹窗有时不出现」的由来。（吸收上游 PR#24） */
   private boolean requestUserConfirm(String cmd) {
+    return confirmOutcome(cmd) == ConfirmationOutcome.ALLOWED;
+  }
+
+  /** 同一次确认的完整结果：桥要用它区分「用户还没点允许」与「用户拒绝了」（issue #123）。 */
+  private ConfirmationOutcome confirmOutcome(String cmd) {
     final PendingConfirmation pending;
     synchronized (LIFECYCLE) {
       BridgeRun run = activeRun;
       if (!running
           || run == null
           || !LIFECYCLE.isCurrent(run.generation)
-          || requestRun.get() != null && requestRun.get() != run) return false;
+          || requestRun.get() != null && requestRun.get() != run)
+        return ConfirmationOutcome.UNAVAILABLE;
       var request = confirmations.begin(run.generation);
-      if (request == null) return false;
+      if (request == null) return ConfirmationOutcome.UNAVAILABLE;
       pending = new PendingConfirmation(request);
       pendingConfirm = pending;
     }
     try {
       synchronized (LIFECYCLE) {
-        if (!currentConfirmation(pending)) return false;
+        if (!currentConfirmation(pending)) return ConfirmationOutcome.UNAVAILABLE;
         showConfirmNotification(cmd, pending);
         OverlayController.askConfirm(
             ctx,
@@ -1934,15 +1976,19 @@ public final class HttpShellService {
       boolean allowed = pending.request.await(CONFIRM_TIMEOUT_S, TimeUnit.SECONDS);
       synchronized (LIFECYCLE) {
         BridgeRun run = activeRun;
-        return allowed
-            && running
+        if (!(running
             && run != null
             && run.generation == pending.request.generation
-            && LIFECYCLE.isCurrent(run.generation);
+            && LIFECYCLE.isCurrent(run.generation))) return ConfirmationOutcome.UNAVAILABLE;
+        if (allowed) return ConfirmationOutcome.ALLOWED;
+        // await 返回 false 有两种完全不同的情况：用户点了拒绝，以及没有人回答（issue #123）。
+        return pending.request.answered()
+            ? ConfirmationOutcome.DENIED
+            : ConfirmationOutcome.NO_ANSWER;
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      return false;
+      return ConfirmationOutcome.UNAVAILABLE;
     } finally {
       synchronized (LIFECYCLE) {
         finishConfirmation(pending);

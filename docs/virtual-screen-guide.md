@@ -13,3 +13,32 @@
 如果创建按钮报其它错误，到 **设置 → 自检与诊断** 查看记录、导出日志。开启无障碍不能替代设备通道，也不能消除厂商系统的兼容问题。
 
 不用时在虚拟屏页点 **关闭**，回收临时虚拟屏。退出预览页与关闭虚拟屏是两个不同操作；需要结束时请使用“关闭”。
+
+## 已知限制
+
+### 动态界面（≥1fps）不能用坐标点按
+
+坐标与文本输入要求“**刚看过的那一帧仍是最新帧**”：`see` 取回帧号后，一次 HTTP 往返通常长于帧间隔（约 55ms），所以在持续重绘的界面（首页轮播、直播小窗、loading）上，`tap` / `swipe` / `touch` / `type` / `key` 会稳定返回 `STALE_FRAME`。该错误现在带 `reason` 区分成因：
+
+| reason | 含义 | 下一步 |
+|---|---|---|
+| `FRAME_NOT_OBSERVED` | 这一帧从没通过 `see` 取过（`status` 的帧号不能用于输入） | 先 `see` 取一帧，再用它返回的 `frameSeq` 输入 |
+| `FRAME_EXPIRED` | 取过，但已被新帧顶掉 | 重新 `see`；动态界面请改用下面的语义操作 |
+| `OBSERVATION_TIMEOUT` | 距上次看画面超过 30 秒 | 重新 `see` |
+
+**动态界面的正确做法**：用 `tree` 读控件树、用 `node` 按 `nodeId` 做语义操作（`click` / `long_click` / `scroll_forward` / `scroll_backward` / `focus` / `set_text`）。语义操作与“当前第几帧”无关，不需要 `frameSeq`，也不回传图片；节点是否仍然有效由无障碍层按树的新鲜度（30 秒）与节点身份判定，失效时返回 `STALE_TREE` / `STALE_NODE`。注意一个 `nodeId` 只能用一次，需要重复操作时重新 `tree`。
+
+空屏（还没启动应用）时 `frameSeq` 恒为 0、`see` 返回 `FRAME_NOT_READY` —— 那是“屏上还没有内容”，不是创建失败。
+
+### Android 12 上 ADB / Shizuku 通道的受信任显示限制
+
+虚拟显示有一个受信任标志（`VIRTUAL_DISPLAY_FLAG_TRUSTED`），它需要签名级权限 `ADD_TRUSTED_DISPLAY`：
+
+- **Android 11**：不持有该权限时，系统静默忽略这个请求，创建照常成功。
+- **Android 12**：不持有却请求会被 `DisplayManagerService` 直接拒绝（`VSCREEN_TRUSTED_DISPLAY_DENIED`）；系统的 `com.android.shell` 自 **Android 13** 起才申请该权限，所以 **12 上的 ADB / Shizuku 通道拿不到它**。
+- DSHA 现在按调用方实际是否持有该权限决定是否请求：不持有就不请求，创建像 Android 11 那样成功，代价是该显示不是“受信任显示”（不显示系统装饰、输入法策略回落到默认显示；DSHA 不使用系统装饰，输入走事件注入与无障碍）。
+- 若系统仍然拒绝（`VSCREEN_DISPLAY_CREATE_FAILED` / `VSCREEN_PERMISSION_DENIED`），请改用 **Root 通道**，或改用 **无障碍屏幕操作**（读屏 / 点按 / 输入 / 滑动 / 按键 / 截屏）。
+
+### 等待授权不等于被拒绝
+
+从助手侧调用 `/app/vscreen/*` 的写入端点时，DSHA 会先请你确认“本次读屏与操作授权”（通知 / 悬浮条 / 弹窗，最多等 60 秒）。**没有人回答**时桥返回 `USER_NO_ANSWER`（等你点“允许”后再试），只有你明确点了“拒绝”才返回 `USER_REJECTED`。授权确认过一次后，本次 DSH 运行内不再重复询问，可在“设备能力授权”里随时撤销。

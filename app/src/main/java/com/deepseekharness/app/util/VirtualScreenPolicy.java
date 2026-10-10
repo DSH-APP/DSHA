@@ -6,6 +6,9 @@ public final class VirtualScreenPolicy {
 
   public static final int MIN_API = 30;
 
+  /** 观察窗口：超过它就必须重新 see，避免用很久以前的画面决策。 */
+  public static final long OBSERVATION_WINDOW_MS = 30_000;
+
   public static boolean supported(int api) {
     return api >= MIN_API;
   }
@@ -30,5 +33,35 @@ public final class VirtualScreenPolicy {
 
   public static boolean fresh(long observed, long current) {
     return observed > 0 && observed == current;
+  }
+
+  /**
+   * 是否请求 {@code VIRTUAL_DISPLAY_FLAG_TRUSTED}。
+   *
+   * <p>该 flag 在 API 31+ 需要签名级 {@code ADD_TRUSTED_DISPLAY}，不持有却请求会被
+   * DisplayManagerService 直接抛 SecurityException（issue #123：Android 12 的 shell 未申请该权限，
+   * ADB/Shizuku 通道因此恒失败）。不请求它只失去系统装饰与输入法策略，DSHA 不使用系统装饰，
+   * 输入走事件注入与无障碍，所以按调用方实际持有的权限决定请求与否。
+   *
+   * @param uid 实际发起创建的进程 uid
+   * @param permissionGranted 该 uid 是否确实持有 {@code ADD_TRUSTED_DISPLAY}
+   */
+  public static boolean requestTrustedDisplay(int uid, boolean permissionGranted) {
+    return uid == 0 || permissionGranted;
+  }
+
+  /** 帧号是否仍是最新帧；返回 null 表示放行，否则返回稳定的拒绝码。 */
+  public static String frameRejection(long requested, long current) {
+    if (requested <= 0) return "FRAME_NOT_OBSERVED";
+    return fresh(requested, current) ? null : "FRAME_EXPIRED";
+  }
+
+  /**
+   * 坐标与文本输入还要求调用方确实看过这一帧（观察由 see/preview 写入，输入后复位）。
+   * 返回 null 表示放行，否则返回稳定的拒绝码。
+   */
+  public static String observationRejection(long requested, long observed, long ageMs) {
+    if (requested <= 0 || observed != requested) return "FRAME_NOT_OBSERVED";
+    return ageMs > OBSERVATION_WINDOW_MS ? "OBSERVATION_TIMEOUT" : null;
   }
 }

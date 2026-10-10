@@ -11,6 +11,7 @@ public final class BridgeConfirmations {
     public final String identity;
     private final CountDownLatch done = new CountDownLatch(1);
     private volatile boolean allowed;
+    private volatile boolean answered;
 
     private Request(long generation) {
       this.generation = generation;
@@ -19,6 +20,15 @@ public final class BridgeConfirmations {
 
     public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
       return done.await(timeout, unit) && allowed;
+    }
+
+    /**
+     * 用户是否真的做过选择。{@code await} 返回 false 有两种完全不同的情况：用户在期限内点了拒绝，
+     * 以及没有人回答（超时、窗口关闭、代次失效、桥停止）。调用方需要区分它们 —— 等授权与
+     * "用户拒绝" 的下一步动作不一样（issue #123）。
+     */
+    public boolean answered() {
+      return answered;
     }
   }
 
@@ -37,6 +47,7 @@ public final class BridgeConfirmations {
     if (!pending(current) || current.generation != generation || !current.identity.equals(identity))
       return false;
     current.allowed = allow;
+    current.answered = true;
     current.done.countDown();
     return true;
   }

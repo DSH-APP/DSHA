@@ -136,7 +136,7 @@ bash build.sh :app:testStandardDebugUnitTest   # 全量单测
 
 - **独立应急 DSH**：`recovery/` 不经过正式环境的迁移、数据绑定及全局启动锁；归档由 `tools/recovery-runtime/lock.json` 单独锁定；应急 Profile 仅有五个受控修复工具。不能用「原生安全 Profile」替代独立运行根。`RecoveryRepairBroker` 的 HTTP 接口不能确认写入：原生确认绑定候选、源摘要及数据代次，再经停止屏障和宿主事务。
 - 应急资产去重：`recovery-asset-locations.json` 仅映射物理位置；仅当正式归档 SHA 与独立应急锁完全相同才共用包内字节，解压运行根仍独立，不读取正式 rootfs 作为救援依赖。
-- **虚拟屏**（Standard，API 30+）：App 持有认证连接和心跳；每次输入必须带最新 frameSeq（`util/VirtualScreenPolicy.fresh`）；动作失败**绝不换通道重放**。
+- **虚拟屏**（Standard，API 30+）：App 持有认证连接和心跳；**坐标与文本输入**必须带"刚 `see` 过且仍是最新"的 frameSeq（`util/VirtualScreenPolicy.frameRejection` / `observationRejection`，拒绝时回 `STALE_FRAME` + `reason`），语义操作（`node` / `editor`）不校验帧号，安全性由无障碍层的树新鲜度与节点身份承担；`VIRTUAL_DISPLAY_FLAG_TRUSTED` 只在调用方确实持有 `ADD_TRUSTED_DISPLAY` 时请求（API 31+ 不持有却请求会被系统拒绝）；动作失败**绝不换通道重放**。
 - **麦克风**：清单同时声明 `RECORD_AUDIO` 与 `MODIFY_AUDIO_SETTINGS`；由 `BrowserMicrophone` 按网页请求申请，不能在普通启动时预授权；只放行当前本机页面的纯音频请求，摄像头 / 屏幕音频拒绝；旧回调不能批准新页。
 - **设备验收经验**：`uiautomator dump` 会抑制其他无障碍服务；截图授权绑定 DSH generation，停止 / 断连 / 撤销后失效；截图存应用私有 Pictures/DSHA，无需所有文件访问；PiP 可能盖住底部控件，自动化必须核对实际可见区域与屏幕方向；截图 / 读屏不可将敏感值写入公开取证文件。
 - Shizuku 必须注册 `rikka.shizuku.ShizukuProvider`；标准版 13.1.5 / 兼容版 12.2.0（不用 overrideLibrary 掩盖 minSdk 24）。回调严格核对管理器 UID、Binder 描述符、单次请求与超时。
