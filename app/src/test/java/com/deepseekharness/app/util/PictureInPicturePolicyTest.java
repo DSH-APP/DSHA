@@ -81,4 +81,18 @@ public class PictureInPicturePolicyTest {
     assertTrue(PictureInPicturePolicy.keepContentActive(false, true));
     assertFalse(PictureInPicturePolicy.keepContentActive(false, false));
   }
+
+  @Test
+  public void sameSizeSubtreeLayoutRequestIsStillDispatched() {
+    // 首次进入小窗：缓存还是哨兵值，必须分发。
+    assertTrue(PictureInPicturePolicy.mustDispatchChildLayout(1440, 3016, -1, -1, false));
+    // 视口或缓存尺寸变化照旧分发。
+    assertTrue(PictureInPicturePolicy.mustDispatchChildLayout(1440, 3016, 1440, 2048, false));
+    assertTrue(PictureInPicturePolicy.mustDispatchChildLayout(1080, 3016, 1440, 3016, false));
+    assertTrue(PictureInPicturePolicy.mustDispatchChildLayout(1080, 2048, 1440, 3016, true));
+    // 空闲：几何量与子树请求都没变，容器不重复分发，避免无意义的子树重排。
+    assertFalse(PictureInPicturePolicy.mustDispatchChildLayout(1440, 3016, 1440, 3016, false));
+    // 小窗期间逻辑视口冻结；子页面自己 requestLayout() 时必须分发，否则请求被永久吞掉。
+    assertTrue(PictureInPicturePolicy.mustDispatchChildLayout(1440, 3016, 1440, 3016, true));
+  }
 }
