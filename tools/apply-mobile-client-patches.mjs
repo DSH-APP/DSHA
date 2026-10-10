@@ -155,6 +155,63 @@ function restoreConversationScroll() {
 `;
   replace('  /* ---------- sidebar panel enter / exit (see effects/panel-exit.ts) ----------',
     css + '  /* ---------- sidebar panel enter / exit (see effects/panel-exit.ts) ----------');
+  // mattskills 状态栏胶囊（dsh-mattpocock-skills-deck，conversation.input.dock order 40）在手机竖屏把尾巴
+  //   两段挤出药丸：技能列表按钮（2×2 网格）与「收起」箭头被宿主 wrapper 的 overflow:hidden 截掉，同一
+  //   会话横屏正常。393px 实测：胶囊内容 ≈415px vs 药丸 ~360px，差的正是那两段（绑票会话多一段在办票
+  //   + 两位数字计数）。收紧胶囊那套桌面留白（列间距 6→3px、每段内边距 7→4px × ~11 个子项，约省 90px）
+  //   把宽度还给尾巴，并留一条横向滚动兜底；桌面不受影响（规则在 ≤1023px 媒体查询内）。
+  //   上游同款修复已提 PR（mexiaosqwq/dsh-web-mobile#173）：那边合了、且把 upstreamCommit 升到含它的
+  //   commit 之后，这一段 delta 连同下面这个 replace 一起删掉，再重跑本工具刷新产物。
+  const capsuleTailCss = `
+  /* ---------- mattskills status capsule: keep its tail (skills button / fold
+      chevron) inside the pill on portrait ----------
+      dsh-mattpocock-skills-deck renders a capsule status bar in
+      conversation.input.dock (order 40, the row above the composer card). Its
+      own sheet deliberately never shrinks icons or counters, so as soon as the
+      capsule's content is wider than the pill the host wrapper's overflow:hidden
+      cuts the right edge and the two segments that sit last - the skills-list
+      button (2x2 grid) and the fold chevron that collapses the whole deck strip
+      - are not painted at all. Measured 2026-10-10 on a 393px portrait viewport,
+      session bound to a ticket with two-digit counters: capsule content
+      ~= 415px against a ~360px pill, i.e. ~55px short, exactly those two
+      segments; the same session on landscape shows both. Reclaim the width from
+      the capsule's desktop-sized spacing (6px column gap plus 7px padding on
+      each of ~11 children) rather than hiding any segment, and keep a
+      horizontal scroll as the fallback for the narrowest phones so the tail can
+      still be swiped into view. Desktop untouched: this block lives inside the
+      max-width: 1023px media query. */
+  [data-slot="conversation.input.dock"] .dsws-capsule {
+    gap: 1px 3px !important;
+    padding: 3px 4px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule::-webkit-scrollbar {
+    display: none !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-capsule-word {
+    padding: 2px 4px !important;
+    column-gap: 3px !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-seg {
+    padding: 2px 4px !important;
+    gap: 3px !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-split .dsws-split-part {
+    padding: 2px 4px !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-timebtn {
+    padding: 2px 4px !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-skillbtn,
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-fold-toggle {
+    padding: 1px 2px !important;
+  }
+`;
+  replace(
+    '  [data-slot="conversation.input.dock"] [data-gitgraph-chip-anchor] [data-gitgraph-chip]:active {\n    transform: scale(.96) !important;\n    transition: transform .12s !important;\n  }\n',
+    '  [data-slot="conversation.input.dock"] [data-gitgraph-chip-anchor] [data-gitgraph-chip]:active {\n    transform: scale(.96) !important;\n    transition: transform .12s !important;\n  }\n' + capsuleTailCss);
   return source;
 }
 

@@ -8512,6 +8512,52 @@ exports.MISC_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
     transition: transform .12s !important;
   }
 
+  /* ---------- mattskills status capsule: keep its tail (skills button / fold
+      chevron) inside the pill on portrait ----------
+      dsh-mattpocock-skills-deck renders a capsule status bar in
+      conversation.input.dock (order 40, the row above the composer card). Its
+      own sheet deliberately never shrinks icons or counters, so as soon as the
+      capsule's content is wider than the pill the host wrapper's overflow:hidden
+      cuts the right edge and the two segments that sit last - the skills-list
+      button (2x2 grid) and the fold chevron that collapses the whole deck strip
+      - are not painted at all. Measured 2026-10-10 on a 393px portrait viewport,
+      session bound to a ticket with two-digit counters: capsule content
+      ~= 415px against a ~360px pill, i.e. ~55px short, exactly those two
+      segments; the same session on landscape shows both. Reclaim the width from
+      the capsule's desktop-sized spacing (6px column gap plus 7px padding on
+      each of ~11 children) rather than hiding any segment, and keep a
+      horizontal scroll as the fallback for the narrowest phones so the tail can
+      still be swiped into view. Desktop untouched: this block lives inside the
+      max-width: 1023px media query. */
+  [data-slot="conversation.input.dock"] .dsws-capsule {
+    gap: 1px 3px !important;
+    padding: 3px 4px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule::-webkit-scrollbar {
+    display: none !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-capsule-word {
+    padding: 2px 4px !important;
+    column-gap: 3px !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-seg {
+    padding: 2px 4px !important;
+    gap: 3px !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-split .dsws-split-part {
+    padding: 2px 4px !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-timebtn {
+    padding: 2px 4px !important;
+  }
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-skillbtn,
+  [data-slot="conversation.input.dock"] .dsws-capsule .dsws-fold-toggle {
+    padding: 1px 2px !important;
+  }
+
   /* ---------- ask question composer (ask_user_question): kill iOS Safari
       input-focus auto-zoom ----------
       Safari on iPhone enlarges the whole viewport when a focused <input> /
