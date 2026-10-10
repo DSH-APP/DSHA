@@ -12,6 +12,7 @@
     {"name": "dsh-computer-use-android", "guestDirectory": "/root/dsha-computer-use-android", "entrypoint": "lib/index.js", "internal": false},
     {"name": "dsh-auto-review", "guestDirectory": "/root/dsha-auto-review", "entrypoint": "lib/index.js", "internal": false},
     {"name": "dsh-tool-vscreen", "guestDirectory": "/root/dsha-tool-vscreen", "entrypoint": "lib/index.js", "internal": false},
-    {"name": "dsh-app-integration", "guestDirectory": "/root/dsha-app-integration", "entrypoint": "index.js", "internal": true}
+    {"name": "dsh-app-integration", "guestDirectory": "/root/dsha-app-integration", "entrypoint": "index.js", "internal": true},
+    {"name": "dsh-destructive-guard", "guestDirectory": "/root/dsha-destructive-guard", "entrypoint": "lib/index.js", "internal": true}
   ]
 }

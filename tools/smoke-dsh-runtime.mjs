@@ -21,7 +21,7 @@ if (process.argv.includes('--composer')) {
   writeFileSync(client,content);
 }
 mkdirSync(resolve(home, 'profiles/web'), { recursive: true });
-const plugins = process.argv.includes('--builtins') ? ['dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile', 'dsh-computer-use-android', 'dsh-auto-review', 'dsh-tool-vscreen', 'dsh-app-integration'] : [];
+const plugins = process.argv.includes('--builtins') ? ['dsh-device-shell-guide', 'dsh-task-notifier', 'dsh-status-overlay', 'dsh-web-mobile', 'dsh-computer-use-android', 'dsh-auto-review', 'dsh-tool-vscreen', 'dsh-app-integration', 'dsh-destructive-guard'] : [];
 const dependencies = {};
 for (const name of plugins) {
   const source = name === 'dsh-app-integration' ? resolve('app/src/main/assets/app-integration')

@@ -23,6 +23,30 @@
 
 插件可以在应用 UID 下读写可访问文件并执行代码。自动安装不是独立安全认证。受管系统组件与用户插件分层；系统组件从当前签名 APK 重建，用户修改和个人依赖不得被当作缓存清掉。
 
+### 容器内破坏性命令确认（dsh-destructive-guard）
+
+随包插件 `dsh-destructive-guard` 在 DSH 宿主里注册 `tools/pre-execute` 闸门，识别 bash 命令中的删除/覆盖动作（`rm`、`rmdir`、`unlink`、`shred`、`truncate`、`dd`、`find -delete`/`-exec`、`git clean -f` 等）后要求用户确认，并在确认面板里给出解析后的目标路径与数量。它同时把审批策略固定为 `ask`（`DSH_PERMISSION_MODE=danger-full-access` 原本推导出 `never`，而 `ApprovalService` 在 `never` 下连弹窗都不走），因此：
+
+| 状态 | 后果 |
+|---|---|
+| 审批策略 `ask` 且有应答通道 | 弹出确认，用户"仅本次允许"才执行 |
+| 审批策略 `never`（例如用户显式选 `danger-full-access` 档位） | 守卫**硬拒绝**，不是放行 |
+| 审批服务缺失 / 应答通道不可用 / 用户拒绝 | 拒绝 |
+
+守卫在识别前先解析**本次调用真正生效的工作目录**，与 bash 执行器同一套语义：`arguments.workdir` 优先（相对值按会话 cwd 解析），其次沙箱策略的 `workspaceRoot` / 会话 cwd，最后才是执行器给出的 cwd；解析不出目录时不猜一个出来，而是把文件事实一律按"未知"上报（宁可多问一次）。只看会话 cwd 会把确认目标指到错误的目录，并把"覆盖已有文件"误判成新建文件而静默放行 —— 这正是本闸门存在的意义，所以这条是硬要求。
+
+`git` 的全局选项（`-C <dir>`、`-c k=v`、`--git-dir=`、`--work-tree=` 等）在识别子命令之前先剥掉，`-C` 指定的目录同时作为确认目标；遇到认不出的全局选项按"无法完整识别"收紧（照常问一次），而不是当无害放行。通配展开被上限截断、或某条判定的目标本来就无法枚举（`find -delete`、`git clean -f`）时，面板必须报下界或未知（"至少 N 个目标"），不得把截断值当精确值。
+
+默认档位只允许比 dsh-base 更严：`DSH_PERMISSION_MODE` 未设、为空或非法时一律退回 `workspace-write`（与 `dsh-base` 的 `?? 'workspace-write'` 一致），只有显式 `danger-full-access` 才映射到 `guarded-full-access`（沙箱仍全盘可写，但破坏性命令要问）。
+
+已知边界，不得据此夸大为"任意删除都拦得住"（下表同时是 `tools/test-destructive-guard.mjs` 里登记的"已知绕过"清单）：
+
+- 识别只覆盖 bash 命令文本。用其它解释器删文件（`python3 -c 'shutil.rmtree'`、`node -e 'fs.rmSync'`、`perl`/`ruby`）、`sed -i`、`tar`/`unzip -o`/`install`/`curl -o` 的覆盖写、`git push --force` 都不在覆盖内；`trash` 这类可恢复操作按非破坏处理。
+- 命令文本来自管道或 here-doc 时不解析数据流（`echo 'rm -rf /' | bash`、`bash <<EOF`、`eval "$(cat x)"` 会漏），正文里的删除只能靠"数量未知"提示暴露意图。
+- 变量只解一层字面量赋值；`CMD='rm -rf x'; $CMD` 这类整条命令存进变量的写法漏。
+- 正式终端、`run_code`/cordis 动态插件、MCP 工具与直接写文件的工具不走这条闸门；`safe`（安全模式）启动用的是另一份只含官方基础界面的 profile，本守卫不加载。
+- 守卫插件本身在容器内，同 UID 的任意代码能改 `/root/.dsh/profiles/web/**`。`.disabled` 标记与 `bundles` 缺失由每次启动的注册流程强制恢复（APK 独占插件不允许停用），但**在 profile 的用户 patch 层里把自己的插件行置 `disabled: true` 仍然有效**；要补这一段需要宿主侧在启动后核验实际加载的插件集合（`/root/.dsha-web-activity.json` 已逐会话上报插件状态），本轮未做。
+
 ## 设备与浏览器能力
 
 Root、Shizuku、ADB 在发送前选择实际通道；设备命令由原生与特权执行侧策略检查。短信、虚拟屏、截图/读屏、录音和存储仍依赖对应原生授权与 Android 实际权限；未知命令的确认不能替代设备身份核验。结果未知时不得换通道重放。
