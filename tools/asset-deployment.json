@@ -25,6 +25,7 @@
     "dsha-device-shell.sh",
     "dsha-plugin.sh",
     "dsha-runtime-env.sh",
+    "frontend-static-cache-patch.json",
     "install-basic-tools.sh",
     "install-ubuntu-tools.sh",
     "language-patch.json",
