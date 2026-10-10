@@ -11,6 +11,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import org.json.JSONObject;
 import com.deepseekharness.app.util.VirtualScreenPolicy;
+import com.deepseekharness.app.util.VirtualScreenErrors;
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -306,8 +307,10 @@ public final class VirtualScreenCore {
             y = Float.parseFloat(coordinate(q, "y", session.height));
         if (action == 0) {
           synchronized (session.lock) {
-            long observed = Long.parseLong(q.getOrDefault("frameSeq", "-1"));
-            if (!VirtualScreenPolicy.fresh(observed, session.sequence)) return error("STALE_FRAME");
+            long requested = Long.parseLong(q.getOrDefault("frameSeq", "-1"));
+            String rejection = VirtualScreenPolicy.frameRejection(requested, session.sequence);
+            if (rejection != null)
+              return staleFrame(rejection, requested, session.sequence, session.observed);
           }
         }
         return session.input.touch(stroke, action, x, y) ? status() : error("TOUCH_REJECTED");
@@ -318,10 +321,15 @@ public final class VirtualScreenCore {
       long observed = Long.parseLong(q.getOrDefault("frameSeq", "-1"));
       synchronized (session.lock) {
         if (!session.generation.equals(q.get("generation"))) return error("STALE_GENERATION");
-        if (!VirtualScreenPolicy.fresh(observed, session.sequence)
-            || observed != session.observed
-            || SystemClock.elapsedRealtime() - session.observedAt > 30_000)
-          return error("STALE_FRAME");
+        // 拒绝码只说"过期"是没用的：没看过这一帧、被新帧顶掉、观察超时是三种不同的自救方式。
+        String rejection =
+            VirtualScreenPolicy.inputRejection(
+                observed,
+                session.sequence,
+                session.observed,
+                SystemClock.elapsedRealtime() - session.observedAt);
+        if (rejection != null)
+          return staleFrame(rejection, observed, session.sequence, session.observed);
         if (path.equals("/vscreen/check")) {
           session.observed = -1;
           return status();
@@ -380,7 +388,7 @@ public final class VirtualScreenCore {
     } catch (IllegalArgumentException error) {
       return error("INVALID_ARGUMENT");
     } catch (Throwable error) {
-      return error("VSCREEN_" + cause(error).getClass().getSimpleName());
+      return error(VirtualScreenErrors.stable(error));
     }
   }
 
@@ -389,6 +397,11 @@ public final class VirtualScreenCore {
     if (session != null && session.width == size[0] && session.height == size[1]) return status();
     release();
     ImageReader reader = ImageReader.newInstance(size[0], size[1], PixelFormat.RGBA_8888, 3);
+    // 只有真的持有 ADD_TRUSTED_DISPLAY 才请求受信任显示：API 31+ 不持有却请求会被系统直接拒绝
+    // （issue #123：Android 12 的 shell 未申请该权限，ADB/Shizuku 通道因此恒失败）。
+    boolean trusted =
+        VirtualScreenPolicy.requestTrustedDisplay(
+            android.os.Process.myUid(), trustedDisplayPermission());
     try {
       DisplayManager manager = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
       int flags =
@@ -396,8 +409,8 @@ public final class VirtualScreenCore {
               | DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY
               | flag("VIRTUAL_DISPLAY_FLAG_SUPPORTS_TOUCH")
               | flag("VIRTUAL_DISPLAY_FLAG_DESTROY_CONTENT_ON_REMOVAL")
-              | flag("VIRTUAL_DISPLAY_FLAG_TRUSTED")
               | flag("VIRTUAL_DISPLAY_FLAG_OWN_FOCUS");
+      if (trusted) flags |= flag("VIRTUAL_DISPLAY_FLAG_TRUSTED");
       VirtualDisplay display =
           manager.createVirtualDisplay(
               "DSHA-VirtualScreen", size[0], size[1], 320, reader.getSurface(), flags);
@@ -405,10 +418,49 @@ public final class VirtualScreenCore {
       session = new Session(display, reader, size[0], size[1]);
       session.start();
       return status();
+    } catch (IllegalArgumentException invalid) {
+      reader.close();
+      return error("INVALID_ARGUMENT");
     } catch (Throwable error) {
       reader.close();
-      throw error;
+      // 创建失败既给稳定码、也不丢掉真实原因：只有"确实请求过受信任显示且被系统拒绝"才是
+      // 该通道拿不到 ADD_TRUSTED_DISPLAY，其余按异常类别映射（issue #123）。
+      String stable = VirtualScreenErrors.stable(error);
+      boolean trustedDenied = trusted && VirtualScreenErrors.PERMISSION_DENIED.equals(stable);
+      return error(trustedDenied ? VirtualScreenErrors.TRUSTED_DISPLAY_DENIED : stable);
     }
+  }
+
+  /**
+   * 自身是否真的持有 ADD_TRUSTED_DISPLAY。{@code checkSelfPermission} 判的是**本进程 uid**
+   * （{@code Process.myPid()/myUid()}），与 DisplayManagerService 的 {@code Binder.getCallingUid()}
+   * 一致 —— 不要改成按包名判断，那会在 ADB/Shizuku 通道上给出错误答案。查不到就按"不持有"处理：
+   * 不请求 TRUSTED 的创建仍然可以成功，方向安全。
+   */
+  private static VirtualScreenPolicy.TrustedDisplayPermission trustedDisplayPermission() {
+    try {
+      if (context == null) return VirtualScreenPolicy.TrustedDisplayPermission.UNKNOWN;
+      return context.checkSelfPermission("android.permission.ADD_TRUSTED_DISPLAY")
+              == android.content.pm.PackageManager.PERMISSION_GRANTED
+          ? VirtualScreenPolicy.TrustedDisplayPermission.HELD
+          : VirtualScreenPolicy.TrustedDisplayPermission.NOT_HELD;
+    } catch (Throwable unavailable) {
+      return VirtualScreenPolicy.TrustedDisplayPermission.UNKNOWN;
+    }
+  }
+
+  /** 帧门拒绝：保留既有的 STALE_FRAME 码，同时给出可区分的原因与实际值/期望值。 */
+  private static JSONObject staleFrame(String reason, long requested, long current, long observed) {
+    JSONObject value = error("STALE_FRAME");
+    try {
+      value
+          .put("reason", reason)
+          .put("requestedFrameSeq", requested)
+          .put("currentFrameSeq", current)
+          .put("observedFrameSeq", observed);
+    } catch (Exception ignored) {
+    }
+    return value;
   }
 
   private static JSONObject status() throws Exception {
@@ -580,11 +632,6 @@ public final class VirtualScreenCore {
     } catch (ReflectiveOperationException e) {
       return 0;
     }
-  }
-
-  private static Throwable cause(Throwable e) {
-    while (e.getCause() != null) e = e.getCause();
-    return e;
   }
 
   private static JSONObject ok() {

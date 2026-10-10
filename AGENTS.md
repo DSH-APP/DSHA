@@ -102,6 +102,7 @@ bash build.sh :app:testStandardDebugUnitTest   # 全量单测
 - 新 dsh 依赖由 `tools/dsh-runtime/package-lock.json` 锁定；`tools/prepare-runtime-descriptor.py` 生成独立受管契约描述，APK 版本仅作诊断来源。相同基础版本更新受管树，个人数据保持原位；**不因 UI-only APK 更新替换环境，不因普通 dsh 更新递增 Ubuntu 基础环境版本**。
 - 离线 curl / git / 证书由 `tools/ubuntu-tools/packages.lock.json` 锁定（`tools/prepare-ubuntu-tools.py` 生成 `ubuntu-tools.bin`）；网页 ES 兼容依赖锁在 `tools/web-compat/`（`node tools/prepare-web-compat.mjs`）。生成文件不提交，构建核验摘要。
 - 中英文界面：文案目录 `tools/i18n/messages.json`，构建生成 Java 文案字典；偏好 `system`（默认）/ `zh` / `en`；**系统语言必须在进程最早时刻锁存**（`SystemLanguage.initialize()`，早于任何 `Locale.setDefault`），否则「跟随系统」切一次就自我锁死。语言切换只重建界面，不停终端或 Web；用户输入、命令原文不做自动替换。
+- 改文案的三条硬要求：① `messages.json` 里的 `zh` 必须与 Java 字面量**逐字节一致**（用 `json.dumps` 做定点替换，别整体重写该文件）；② 跑 `tools/check-ui-i18n.py`，`newFindings` 必须为 0 —— 顺带注意：改动带 `nonFindings` 声明的文件（`BackupTask` / `EnvironmentMaintenance` / `RecoveryController`）会让声明失效，必须一并处理；③ 跑 `tools/prepare-ui-languages.py`，带 `%s` 的模板中英签名必须一致。
 - 旧 WebView 的 `AbortSignal.any/timeout` 与 `crypto.randomUUID` 补齐：兼容脚本须进入受管 HTML 的应用脚本之前，并覆盖文档起始与 Worker。
 
 ### 数据与备份
@@ -136,7 +137,7 @@ bash build.sh :app:testStandardDebugUnitTest   # 全量单测
 
 - **独立应急 DSH**：`recovery/` 不经过正式环境的迁移、数据绑定及全局启动锁；归档由 `tools/recovery-runtime/lock.json` 单独锁定；应急 Profile 仅有五个受控修复工具。不能用「原生安全 Profile」替代独立运行根。`RecoveryRepairBroker` 的 HTTP 接口不能确认写入：原生确认绑定候选、源摘要及数据代次，再经停止屏障和宿主事务。
 - 应急资产去重：`recovery-asset-locations.json` 仅映射物理位置；仅当正式归档 SHA 与独立应急锁完全相同才共用包内字节，解压运行根仍独立，不读取正式 rootfs 作为救援依赖。
-- **虚拟屏**（Standard，API 30+）：App 持有认证连接和心跳；每次输入必须带最新 frameSeq（`util/VirtualScreenPolicy.fresh`）；动作失败**绝不换通道重放**。
+- **虚拟屏**（Standard，API 30+）：App 持有认证连接和心跳；**坐标与文本输入**必须带"刚 `see` 过且仍是最新"的 frameSeq（`util/VirtualScreenPolicy.frameRejection` / `observationRejection`，拒绝时回 `STALE_FRAME` + `reason`），语义操作（`node` / `editor`）不校验帧号，安全性由无障碍层的树新鲜度与节点身份承担；`VIRTUAL_DISPLAY_FLAG_TRUSTED` 只在调用方确实持有 `ADD_TRUSTED_DISPLAY` 时请求（API 31+ 不持有却请求会被系统拒绝）；动作失败**绝不换通道重放**。
 - **麦克风**：清单同时声明 `RECORD_AUDIO` 与 `MODIFY_AUDIO_SETTINGS`；由 `BrowserMicrophone` 按网页请求申请，不能在普通启动时预授权；只放行当前本机页面的纯音频请求，摄像头 / 屏幕音频拒绝；旧回调不能批准新页。
 - **设备验收经验**：`uiautomator dump` 会抑制其他无障碍服务；截图授权绑定 DSH generation，停止 / 断连 / 撤销后失效；截图存应用私有 Pictures/DSHA，无需所有文件访问；PiP 可能盖住底部控件，自动化必须核对实际可见区域与屏幕方向；截图 / 读屏不可将敏感值写入公开取证文件。
 - Shizuku 必须注册 `rikka.shizuku.ShizukuProvider`；标准版 13.1.5 / 兼容版 12.2.0（不用 overrideLibrary 掩盖 minSdk 24）。回调严格核对管理器 UID、Binder 描述符、单次请求与超时。
@@ -180,6 +181,7 @@ bash build.sh :app:testStandardDebugUnitTest   # 全量单测
 
 - 注释与 UI 串用中文；提交信息用中文 + `type:` 前缀说明原因。
 - 每个协作者单一职责；纯逻辑抽到 `util/` 并配测试；不改历史 SharedPreferences 键名。
+- **对外错误码只表达“发生了什么、下一步做什么”**：不得把异常类名或原始异常消息当错误码外泄（`util/VirtualScreenErrors` 是唯一的映射点）；同一个码不得覆盖“没等到用户回答”与“用户明确拒绝”两种语义。
 - 匹配现有风格：try/catch 包住有风险操作、优雅降级、失败 toast 给用户。
 - 原生按钮和选项统一居中与字体边距；普通卡片、主按钮及文字状态共用主题资源，不用独立渐变或硬编码颜色制造同类框色差。布局修订跑 `LayoutAuditInstrumentation` 的 style 中英文验收（日夜、短屏、1.3 倍字体）。
 - 应用弹窗统一 `DshaDialogBuilder`，自定义内容必须能在短屏和大字体下滚动；应用状态经 `UiStateText` 按显示边界重新渲染，不缓存语言。

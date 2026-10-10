@@ -197,6 +197,7 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                     + "5. 读控件树和中文输入需要开启 DSHA 无障碍。让助手操作时，还要按应用提示确认本次读屏与操作授权，并将操作目标设为虚拟屏。\n\n"
                     + "VSCREEN_NOT_RUNNING 表示虚拟屏还没创建、已经关闭，或连接已断开。先检查设备通道，再点创建按钮；不需要清除数据或重新解压环境。\n\n"
                     + "创建仍失败：到“设置 → 自检与诊断”查看错误记录并导出日志。仅开启无障碍不能解决设备通道或系统兼容问题。\n\n"
+                    + "画面在动的应用（≥1fps）目前只能用“控件树 + 节点操作”（tree + node）来点：坐标点按会报“画面已变化”。Android 12 上 ADB/Shizuku 通道通常拿不到系统的受信任显示权限，创建会按非受信任显示进行；若系统仍然拒绝，请改用 Root 通道或无障碍屏幕操作。\n\n"
                     + "不用时点本页“关闭”回收虚拟屏；连接断开或授权被撤销后，需要重新连接并创建。",
                 "1. Use Standard on Android 11 or later. Low does not support virtual screens yet.\n\n"
                     + "2. Open Settings → Device capability access and connect one channel: ADB, Shizuku, or Root. Without Root, enable Wireless debugging in the system Developer options, then follow DSHA's ADB pairing page to pair and connect. Enabling the system switch alone is not enough; confirm the channel is connected.\n\n"
@@ -205,6 +206,7 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                     + "5. Enable DSHA accessibility for the control tree and Unicode input. For assistant control, also confirm this run's screen access when prompted and choose the virtual screen as the action target.\n\n"
                     + "VSCREEN_NOT_RUNNING means no virtual screen has been created, it was closed, or its connection was lost. Check the device channel, then tap a create button. You do not need to clear data or extract the environment again.\n\n"
                     + "If creation still fails, open Settings → Diagnostics to inspect the error record and export logs. Accessibility alone cannot resolve a missing device channel or system compatibility problem.\n\n"
+                    + "A screen that keeps redrawing (1fps or more) can currently only be tapped through the control tree and node actions (tree + node); tapping by coordinate reports that the picture already changed. On Android 12 the ADB/Shizuku channel usually cannot hold the trusted-display permission, so creation falls back to a non-trusted display; if the system still refuses, use the Root channel or accessibility screen actions.\n\n"
                     + "Tap Close when finished. After a disconnection or revoked access, reconnect and create the virtual screen again."))
         .setPositiveButton(t("知道了", "Got it"), null)
         .show();
@@ -318,7 +320,7 @@ public final class VirtualScreenActivity extends AppCompatActivity {
           } catch (Exception error) {
             result = new JSONObject();
             try {
-              result.put("error", error.getClass().getSimpleName());
+              result.put("error", com.deepseekharness.app.util.VirtualScreenErrors.stable(error));
             } catch (Exception ignored) {
             }
           }
@@ -328,7 +330,9 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                 busy = false;
                 if (isDestroyed() || !visible || current != callbackEpoch) return;
                 state.setText(
-                    out.optBoolean("ok") ? t("操作完成", "Done") : message(out.optString("error")));
+                    out.optBoolean("ok")
+                        ? t("操作完成", "Done")
+                        : message(out.optString("error"), out.optString("reason")));
                 if (manager.generation().isEmpty()) preview.clear();
               });
         });
@@ -363,7 +367,8 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                             + manager.channel());
                   } else if (!busy && !frame.value.optBoolean("ok")) {
                     String code = frame.value.optString("error");
-                    if (!code.isEmpty()) state.setText(message(code));
+                    if (!code.isEmpty())
+                      state.setText(message(code, frame.value.optString("reason")));
                     preview.clear();
                     detail.setText("");
                     generation = "";
@@ -372,17 +377,49 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                 });
   }
 
-  private String message(String code) {
+  /** 帧门拒绝会带 reason：同一个 STALE_FRAME 有四种成因，自救方式完全不同（issue #117）。 */
+  private String message(String code, String reason) {
     if (code.equals("VSCREEN_NOT_RUNNING"))
       return t(
           "虚拟屏尚未开启或已关闭。先连接设备通道，再点“创建竖屏”或“创建横屏”；开启无障碍不会自动创建。",
           "The virtual screen has not started or was closed. Connect a device channel, then tap Create portrait or Create landscape. Accessibility does not create it automatically.");
-    if (code.equals("STALE_FRAME") || code.equals("STALE_GENERATION"))
+    if (code.equals("STALE_FRAME")) {
+      if (reason.equals("FRAME_NOT_OBSERVED"))
+        return t(
+            "还没看过这一帧：先用 see 取一帧，再用它返回的 frameSeq 输入（status 的帧号不能用于输入）。",
+            "This frame was never observed: call see first, then input with the frameSeq it returns (the frameSeq from status cannot be used for input).");
+      if (reason.equals("FRAME_EXPIRED"))
+        return t(
+            "画面已经变化：动态界面（≥1fps）下坐标输入拿不到最新帧。先 see 再输入，或改用 tree + node 的语义操作。",
+            "The view already changed: on a live screen (≥1fps) coordinate input cannot hold the newest frame. Call see again, or use tree + node semantic actions.");
+      if (reason.equals("OBSERVATION_TIMEOUT"))
+        return t(
+            "距上次看画面已超过 30 秒，请重新 see 再输入。",
+            "More than 30 seconds passed since the last observed frame; call see again.");
+      return t("画面已变化，请看最新画面后再操作", "The view changed. Observe again.");
+    }
+    if (code.equals("STALE_GENERATION"))
       return t("画面已变化，请看最新画面后再操作", "The view changed. Observe again.");
     if (code.equals("DEVICE_CHANNEL_UNAVAILABLE"))
       return t("请先在设备能力授权中连接通道", "Connect a device channel first");
     if (code.equals("ACCESSIBILITY_REQUIRED_FOR_UNICODE"))
       return t("中文输入需要开启无障碍服务", "Enable accessibility for Unicode input");
+    if (code.equals("VSCREEN_TRUSTED_DISPLAY_DENIED"))
+      return t(
+          "这台设备拒绝了受信任显示：当前通道（ADB/Shizuku）没有 ADD_TRUSTED_DISPLAY。请改用 Root 通道，或改用无障碍屏幕操作（读屏/点按/输入/截屏）。",
+          "This device refused a trusted display: the current channel (ADB/Shizuku) has no ADD_TRUSTED_DISPLAY. Use the Root channel, or use accessibility screen actions (read, tap, input, screenshot).");
+    if (code.equals("VSCREEN_DISPLAY_CREATE_FAILED"))
+      return t(
+          "系统拒绝了创建虚拟屏。可先用无障碍屏幕操作；仍失败请到“设置 → 自检与诊断”导出日志。",
+          "The system refused to create the virtual screen. Use accessibility screen actions for now; if it keeps failing, export a log from Settings → Self-check and diagnostics.");
+    if (code.equals("VSCREEN_PERMISSION_DENIED"))
+      return t(
+          "设备拒绝了这次虚拟屏操作（权限不足）。请改用 Root 通道，或改用无障碍屏幕操作。",
+          "The device refused this virtual-screen operation (permission denied). Use the Root channel, or use accessibility screen actions.");
+    if (code.equals("VSCREEN_DISPLAY_SERVICE_UNAVAILABLE"))
+      return t(
+          "系统的显示服务中断了这次调用，请先确认虚拟屏状态再重试。",
+          "The system display service interrupted this call; check the virtual screen state before retrying.");
     return t("未完成：", "Not completed: ") + code;
   }
 
