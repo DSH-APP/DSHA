@@ -36,6 +36,8 @@ public final class VirtualScreenManager {
           });
   private final Context context;
   private volatile String token = "", channel = "", generation = "", lastError = "";
+  /** 最近一次创建失败摘要：连续重试同样的失败不再重复写诊断（写放大）。 */
+  private volatile String lastCreateFailure = "";
   private volatile int port;
   private final AtomicLong LIFECYCLE_EPOCH = new AtomicLong();
   private volatile long activeEpoch = -1;
@@ -208,6 +210,7 @@ public final class VirtualScreenManager {
         && !route.equals("/vscreen/create"))
       query += (query.isEmpty() ? "" : "&") + "expectedPackage=" + encode(snapshot.target);
     JSONObject value = requestAt(snapshot.identity.port, snapshot.identity.token, route, query);
+    if (route.equals("/vscreen/create")) recordCreateOutcome(value);
     // Grant revision and target checks may use platform calls; keep them outside LOCK too.
     if (!authorized(snapshot.authority)) return failure("SCREEN_TARGET_CHANGED");
     synchronized (LOCK) {
@@ -405,6 +408,7 @@ public final class VirtualScreenManager {
       if (!committed) {
         requestAt(selectedPort, coreToken, "/vscreen/close", "");
         failStart(launchEpoch);
+        recordCreateOutcome(created);
         return created.optBoolean("ok") ? failure("VSCREEN_START_CANCELLED") : created;
       }
       ScheduledFuture<?> scheduled =
@@ -780,6 +784,26 @@ public final class VirtualScreenManager {
               }
             })
         .toString();
+  }
+
+  /**
+   * 创建结果留痕：失败写 core 的稳定码 + 根因摘要——这是唯一能定位隐藏 API 缺口的线索
+   * （issue #113），否则用户只拿到一个异常类名、诊断页里什么都没有；同样的失败只写一次，
+   * 连续重试不再放大诊断。成功则清掉去重键，让下一次复发还能记上。
+   */
+  private void recordCreateOutcome(JSONObject value) {
+    if (value == null) return;
+    if (value.optBoolean("ok")) {
+      lastCreateFailure = "";
+      return;
+    }
+    Context app = context;
+    String code = value.optString("error");
+    String cause = value.optString("cause");
+    String summary = cause.isEmpty() ? code : code + " " + cause;
+    if (app == null || summary.isEmpty() || summary.equals(lastCreateFailure)) return;
+    lastCreateFailure = summary;
+    com.deepseekharness.app.core.DiagnosticLog.record(app, "VSCREEN_CREATE", summary);
   }
 
   private static JSONObject requestAt(
