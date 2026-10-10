@@ -9,16 +9,19 @@ public class VirtualScreenFailuresTest {
     assertEquals(
         VirtualScreenFailures.NATIVE_API_UNAVAILABLE,
         VirtualScreenFailures.code(
-            new NoSuchMethodException("no such method: android.view.InputEvent.setDisplayId(int)")));
+            new NoSuchMethodException(
+                "no such method: android.view.InputEvent.setDisplayId(int)")));
     assertEquals(
         VirtualScreenFailures.NATIVE_API_UNAVAILABLE,
         VirtualScreenFailures.code(new NoSuchFieldException("displayId")));
     assertEquals(
         VirtualScreenFailures.NATIVE_API_UNAVAILABLE,
-        VirtualScreenFailures.code(new NoClassDefFoundError("android.hardware.input.InputManager")));
+        VirtualScreenFailures.code(
+            new NoClassDefFoundError("android.hardware.input.InputManager")));
     assertEquals(
         VirtualScreenFailures.NATIVE_API_UNAVAILABLE,
-        VirtualScreenFailures.code(new ClassNotFoundException("android.hardware.input.InputManager")));
+        VirtualScreenFailures.code(
+            new ClassNotFoundException("android.hardware.input.InputManager")));
   }
 
   @Test
@@ -36,7 +39,8 @@ public class VirtualScreenFailuresTest {
         VirtualScreenFailures.DISPLAY_IO,
         VirtualScreenFailures.code(new java.io.IOException("DISPLAY_CREATE_FAILED")));
     assertEquals(
-        VirtualScreenFailures.OPERATION_FAILED, VirtualScreenFailures.code(new RuntimeException("boom")));
+        VirtualScreenFailures.OPERATION_FAILED,
+        VirtualScreenFailures.code(new RuntimeException("boom")));
     // 码里不许出现异常类名：issue #113 的原始症状就是 VSCREEN_NoSuchMethodException
     assertFalse(VirtualScreenFailures.code(new RuntimeException("boom")).contains("Runtime"));
   }
@@ -53,7 +57,8 @@ public class VirtualScreenFailuresTest {
     // 根因认不出来时，才退回沿链取第一个能识别的类别
     assertEquals(
         VirtualScreenFailures.DISPLAY_STATE,
-        VirtualScreenFailures.code(new IllegalStateException("state", new RuntimeException("boom"))));
+        VirtualScreenFailures.code(
+            new IllegalStateException("state", new RuntimeException("boom"))));
   }
 
   @Test

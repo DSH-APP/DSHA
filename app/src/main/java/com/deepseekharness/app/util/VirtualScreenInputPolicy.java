@@ -31,6 +31,7 @@ public final class VirtualScreenInputPolicy {
 
   /** 反射后端需要的三个隐藏成员，按查找顺序排列（查找顺序＝真实失败顺序）。 */
   public static final String MEMBER_GET_INSTANCE = "InputManager.getInstance";
+
   public static final String MEMBER_INJECT_EVENT = "InputManager.injectInputEvent(InputEvent,int)";
   public static final String MEMBER_SET_DISPLAY = "InputEvent.setDisplayId(int)";
 
@@ -40,13 +41,36 @@ public final class VirtualScreenInputPolicy {
   public static final int MIN_DURATION_MS = 1;
   public static final int MAX_DURATION_MS = 3000;
 
-  /** 缺失成员清单（按查找顺序、逗号分隔）；空串表示反射后端可用。 */
-  public static String missing(boolean getInstance, boolean injectEvent, boolean setDisplay) {
+  /** 回退命令的超时预算下限（命令本身的启动开销）与上限。 */
+  public static final long COMMAND_MIN_TIMEOUT_MS = 2500;
+
+  public static final long COMMAND_MAX_TIMEOUT_MS = 6000;
+
+  /**
+   * 缺失/不可用的隐藏成员清单（按查找顺序、逗号分隔）；空串表示反射后端可用。
+   *
+   * <p>{@code getInstance} 分「查不到」与「查得到但调用不成立」两态：后者在较新的系统上
+   * 是因为它改成了需要 ActivityThread 上下文，清单里必须写成不同的一项，否则同一个成员会出现两次。
+   */
+  public static String missing(
+      boolean getInstanceFound,
+      boolean getInstanceCallable,
+      boolean injectEvent,
+      boolean setDisplay) {
     StringBuilder out = new StringBuilder();
-    if (!getInstance) append(out, MEMBER_GET_INSTANCE);
+    if (!getInstanceFound) append(out, MEMBER_GET_INSTANCE);
+    else if (!getInstanceCallable) append(out, MEMBER_GET_INSTANCE + "(invoke-failed)");
     if (!injectEvent) append(out, MEMBER_INJECT_EVENT);
     if (!setDisplay) append(out, MEMBER_SET_DISPLAY);
     return out.toString();
+  }
+
+  /**
+   * 回退命令的超时预算：按住越久命令本身跑得越久，但上限必须远小于心跳预算
+   * （core 的 route 是类锁，一次手势会把 ping/status 串行化在后面），否则会被误判成 core 不可达。
+   */
+  public static long commandTimeoutMs(int gestureMs) {
+    return Math.max(COMMAND_MIN_TIMEOUT_MS, Math.min(COMMAND_MAX_TIMEOUT_MS, gestureMs + 2500L));
   }
 
   /**
@@ -100,10 +124,16 @@ public final class VirtualScreenInputPolicy {
     return Math.max(MIN_DURATION_MS, Math.min(MAX_DURATION_MS, ms));
   }
 
-  /** 命令参数里的坐标：固定 Locale 与小数位，非有限值退 0，避免本地化小数点进 argv。 */
+  /**
+   * 命令参数里的坐标：向下取一位小数、固定 Locale，非有限值退 0。
+   *
+   * <p>必须向下取整：core 用 {@code n < edge} 校验，四舍五入会把 1007.96 变成正好等于显示边缘的
+   * 1008.0，命令侧收到越界坐标。也不能用本地化小数点，argv 里必须是 {@code .}。
+   */
   public static String coordinate(float value) {
     if (!Float.isFinite(value)) return "0.0";
-    return String.format(Locale.US, "%.1f", value);
+    double floored = Math.floor(Math.max(0f, value) * 10.0) / 10.0;
+    return String.format(Locale.US, "%.1f", floored);
   }
 
   private static void append(StringBuilder out, String name) {

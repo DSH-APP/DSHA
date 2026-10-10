@@ -363,13 +363,22 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                             + manager.channel());
                   } else if (!busy && !frame.value.optBoolean("ok")) {
                     String code = frame.value.optString("error");
-                    if (!code.isEmpty()) state.setText(message(code));
+                    if (!code.isEmpty()) state.setText(message(code) + cause(frame.value));
                     preview.clear();
                     detail.setText("");
                     generation = "";
                     frameSeq = -1;
                   }
                 });
+  }
+
+  /**
+   * 根因摘要直接跟在错误码后面：issue #113 的关键线索（缺失的类名与方法签名）不该只躺在日志里，
+   * 用户看到「未完成：<稳定码> · NoSuchMethodException: no such method: …」就能直接反馈。
+   */
+  private static String cause(JSONObject value) {
+    String cause = value.optString("cause");
+    return cause.isEmpty() ? "" : " · " + cause;
   }
 
   private String message(String code) {

@@ -6,13 +6,34 @@ import static org.junit.Assert.*;
 public class VirtualScreenInputPolicyTest {
   @Test
   public void reportsMissingMembersInLookupOrder() {
-    assertEquals("", VirtualScreenInputPolicy.missing(true, true, true));
+    assertEquals("", VirtualScreenInputPolicy.missing(true, true, true, true));
     assertEquals(
         "InputManager.getInstance,InputEvent.setDisplayId(int)",
-        VirtualScreenInputPolicy.missing(false, true, false));
+        VirtualScreenInputPolicy.missing(false, false, true, false));
     assertEquals(
         "InputManager.getInstance,InputManager.injectInputEvent(InputEvent,int),InputEvent.setDisplayId(int)",
-        VirtualScreenInputPolicy.missing(false, false, false));
+        VirtualScreenInputPolicy.missing(false, false, false, false));
+  }
+
+  @Test
+  public void distinguishesFoundButUncallableMembers() {
+    // 查得到但调用不成立（新系统要求 ActivityThread 上下文）：不能与「查不到」混为一谈，
+    // 也不能让同一个成员在清单里出现两次。
+    assertEquals(
+        "InputManager.getInstance(invoke-failed)",
+        VirtualScreenInputPolicy.missing(true, false, true, true));
+    // 「查不到」与「调用不成立」互斥，同一个成员不会出现两次
+    assertEquals(
+        "InputManager.getInstance,InputManager.injectInputEvent(InputEvent,int)",
+        VirtualScreenInputPolicy.missing(false, false, false, true));
+  }
+
+  @Test
+  public void keepsCommandBudgetWellUnderTheHeartbeatBudget() {
+    assertEquals(2500L, VirtualScreenInputPolicy.commandTimeoutMs(0));
+    assertEquals(4000L, VirtualScreenInputPolicy.commandTimeoutMs(1500));
+    assertEquals(5500L, VirtualScreenInputPolicy.commandTimeoutMs(3000));
+    assertEquals(6000L, VirtualScreenInputPolicy.commandTimeoutMs(99999));
   }
 
   @Test
@@ -48,7 +69,11 @@ public class VirtualScreenInputPolicyTest {
     assertEquals(300, VirtualScreenInputPolicy.duration(300));
     assertEquals("0.0", VirtualScreenInputPolicy.coordinate(Float.NaN));
     assertEquals("0.0", VirtualScreenInputPolicy.coordinate(Float.POSITIVE_INFINITY));
+    assertEquals("0.0", VirtualScreenInputPolicy.coordinate(-5f));
     assertEquals("12.3", VirtualScreenInputPolicy.coordinate(12.34f));
+    // 向下取整：core 用 n < edge 校验，四舍五入会得到正好等于显示边缘的 1008.0
+    assertEquals("1007.9", VirtualScreenInputPolicy.coordinate(1007.96f));
+    assertEquals("2.9", VirtualScreenInputPolicy.coordinate(2.9999f));
   }
 
   @Test

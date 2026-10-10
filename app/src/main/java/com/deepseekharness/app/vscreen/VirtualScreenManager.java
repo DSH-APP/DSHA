@@ -36,8 +36,10 @@ public final class VirtualScreenManager {
           });
   private final Context context;
   private volatile String token = "", channel = "", generation = "", lastError = "";
+
   /** 最近一次创建失败摘要：连续重试同样的失败不再重复写诊断（写放大）。 */
   private volatile String lastCreateFailure = "";
+
   private volatile int port;
   private final AtomicLong LIFECYCLE_EPOCH = new AtomicLong();
   private volatile long activeEpoch = -1;
@@ -391,6 +393,7 @@ public final class VirtualScreenManager {
       }
       JSONObject created =
           requestAt(selectedPort, coreToken, "/vscreen/create", "width=" + w + "&height=" + h);
+      recordCreateOutcome(created);
       boolean live = authorized(authority), committed = false;
       synchronized (LOCK) {
         if (live
@@ -408,7 +411,6 @@ public final class VirtualScreenManager {
       if (!committed) {
         requestAt(selectedPort, coreToken, "/vscreen/close", "");
         failStart(launchEpoch);
-        recordCreateOutcome(created);
         return created.optBoolean("ok") ? failure("VSCREEN_START_CANCELLED") : created;
       }
       ScheduledFuture<?> scheduled =
@@ -423,7 +425,7 @@ public final class VirtualScreenManager {
     } catch (Throwable error) {
       if (!coreToken.isEmpty()) requestAt(selectedPort, coreToken, "/vscreen/close", "");
       failStart(launchEpoch);
-      return failure("VSCREEN_START_" + error.getClass().getSimpleName());
+      return failure(error);
     } finally {
       cancelAdbLaunch(launchEpoch);
     }
@@ -838,7 +840,7 @@ public final class VirtualScreenManager {
       JSONObject result = new JSONObject(out.toString("UTF-8"));
       return result;
     } catch (Exception e) {
-      return failure("VSCREEN_CONNECTION_" + e.getClass().getSimpleName());
+      return failure(e);
     } finally {
       if (c != null) c.disconnect();
     }
@@ -897,6 +899,17 @@ public final class VirtualScreenManager {
     } catch (Exception ignored) {
     }
     return j;
+  }
+
+  /** 失败一律给稳定码 + 根因摘要，别把异常类名当错误码外泄（issue #113）。 */
+  private static JSONObject failure(Throwable error) {
+    JSONObject value = failure(com.deepseekharness.app.util.VirtualScreenFailures.code(error));
+    try {
+      String cause = com.deepseekharness.app.util.VirtualScreenFailures.cause(error);
+      if (!cause.isEmpty()) value.put("cause", cause);
+    } catch (Exception ignored) {
+    }
+    return value;
   }
 
   private static JSONObject failure(String code) {

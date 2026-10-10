@@ -413,9 +413,13 @@ public final class VirtualScreenCore {
       session.start();
       return status();
     } catch (Throwable error) {
-      // 已经创建的虚拟显示必须在这里回收：否则每次失败重试都漏一个，直到 core 空闲自杀
-      if (display != null) display.release();
-      reader.close();
+      // 失败必须回收：Session 建好之后才失败的，连会话一起收——否则静态 session 指向已释放的显示，
+      // 下一次同尺寸 create 会在开头提前 return status()，报一个活着的死会话（读图必失败）。
+      if (session != null) release();
+      else {
+        if (display != null) display.release();
+        reader.close();
+      }
       return failure(error);
     }
   }
@@ -589,9 +593,7 @@ public final class VirtualScreenCore {
   /** 输入动作失败：区分「这台设备没有可用的输入后端」与「后端拒绝了这次动作」。 */
   private static JSONObject inputFailure(Session session) {
     return error(
-        session.input.available()
-            ? "INPUT_REJECTED"
-            : VirtualScreenInputPolicy.INPUT_UNAVAILABLE);
+        session.input.available() ? "INPUT_REJECTED" : VirtualScreenInputPolicy.INPUT_UNAVAILABLE);
   }
 
   /** 取隐藏常量；取不到时记下名字（静默给 0 会让「少了一个标志」变成查不出来的怪现象）。 */

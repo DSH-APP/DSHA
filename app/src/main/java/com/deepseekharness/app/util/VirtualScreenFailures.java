@@ -84,7 +84,8 @@ public final class VirtualScreenFailures {
   private static List<Throwable> chain(Throwable error) {
     List<Throwable> chain = new ArrayList<>();
     Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
-    for (Throwable current = error; current != null && chain.size() < 16 && seen.add(current);
+    for (Throwable current = error;
+        current != null && chain.size() < 16 && seen.add(current);
         current = current.getCause()) chain.add(current);
     return chain;
   }

@@ -18,22 +18,32 @@
 
 - **reflection**：直接向虚拟屏提交输入事件，按下、移动、抬起逐事件生效。系统提供所需接口时用它。
 - **input-command**：反射接口在新系统上被移除或拒绝时自动回退，抬起时用一条系统命令重放整个手势。
-  功能可用，但**移动的中间态对界面不可见**——需要拖拽过程中实时反馈的操作（长按拖拽、画线）表现会差一些。
+  功能可用，但**移动的中间态对界面不可见**——需要拖拽过程中实时反馈的操作（拖拽中画线、跟手缩放）表现会差一些。
+  按住会按真实时长重放成按住（长按可用），点击仍是点击。反射后端**第一次调用被系统拒绝**时也会自动切到这里，
+  并在 `inputUnavailable` 里写明原因。
 
-`/app/vscreen/status` 会带 `inputBackend`（上面两种之一或 `unavailable`）、`inputUnavailable`（缺失的隐藏成员）
+`/app/vscreen/status` 会带 `inputBackend`（上面两种之一或 `unavailable`）、`inputUnavailable`（缺失或不可用的隐藏成员）
 与 `missingDisplayFlags`（系统缺少的虚拟屏标志常量），用于判断这台设备到底缺什么。
+
+**创建相关**（core 侧稳定码，真正的原因在应答与诊断记录的 `cause` 字段里）：
 
 | 错误码 | 含义 | 怎么办 |
 |---|---|---|
-| `VSCREEN_NATIVE_API_UNAVAILABLE` | 系统隐藏接口查找失败（含输入注入需要的接口） | 升级到最新版 DSHA；创建失败的记录里有 `cause`，写着缺失的类名与方法签名，附上它反馈 |
+| `VSCREEN_NATIVE_API_UNAVAILABLE` | 系统隐藏接口查找/调用失败（含输入注入需要的接口） | 升级到最新版 DSHA；把页面或记录里 `cause` 写的缺失类名与方法签名附上反馈 |
 | `VSCREEN_PERMISSION_DENIED` | 通道身份没有创建虚拟屏 / 受信任显示的权限 | 换一个通道（Root 或已配对的 ADB），或按提示开启对应权限 |
 | `VSCREEN_DISPLAY_SERVICE_UNAVAILABLE` | 显示服务不可达（系统进程被回收等） | 重试一次；反复失败就重启设备 |
 | `VSCREEN_DISPLAY_IO` | 创建虚拟屏本身失败（显示子系统报错），与权限无关 | 到 **设置 → 自检与诊断** 导出记录反馈 |
 | `VSCREEN_INVALID_DISPLAY_REQUEST` / `VSCREEN_DISPLAY_STATE` | 请求参数不合法 / 当前状态不允许（已关闭、正在启动） | 按页面提示重新创建 |
 | `VSCREEN_OPERATION_FAILED` | 其它未分类失败 | 到 **设置 → 自检与诊断** 导出记录反馈 |
 | `VSCREEN_INPUT_UNAVAILABLE` | 两条输入后端都不可用：虚拟屏能看，但不能点 | 用无障碍操作真机屏幕，并把设备信息反馈给我们 |
+| `INPUT_REJECTED` | 有输入后端，但这次动作被系统拒绝 | 确认目标应用在虚拟屏前台，再试一次 |
 
-`VSCREEN_NoSuchMethodException` 这类把系统异常类名当错误码的旧写法已经不再出现：创建失败一律给上表里的稳定码，
-真正的原因写在记录与应答的 `cause` 字段里。
+**创建之前的失败**不走上表：通道不可用是 `DEVICE_CHANNEL_UNAVAILABLE`，方向不合法是 `INVALID_ORIENTATION`，
+兼容版是 `VSCREEN_UNSUPPORTED_LOW`，系统低于 Android 11 是 `VSCREEN_API_30_REQUIRED`，没有运行中的虚拟屏是
+`VSCREEN_NOT_RUNNING`（启动中 `VSCREEN_START_IN_PROGRESS`、已撤销 `VSCREEN_REVOKED`）；
+core 进程启动握手失败会给出 `VSCREEN_CORE_<阶段>_SDK<n>_<类型>` 并同时写入诊断记录。
+
+`VSCREEN_NoSuchMethodException` 这类把系统异常类名当错误码的旧写法已经不再出现：core 侧失败一律给上表的稳定码，
+真正的原因写在应答、页面提示与诊断记录的 `cause` 里。
 
 不用时在虚拟屏页点 **关闭**，回收临时虚拟屏。退出预览页与关闭虚拟屏是两个不同操作；需要结束时请使用“关闭”。
