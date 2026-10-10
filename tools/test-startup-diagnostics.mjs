@@ -45,9 +45,14 @@ const source = fs.readFileSync(path.join(assets, 'web-integration/startup.js'), 
 const reports = [], listeners = {};
 let mutation, currentDefinition, boot = null, composer = null;
 const document = { querySelector(selector) { return selector === '[data-dsh-boot]' ? boot : composer; }, getElementById(){return {children:[{}]};} };
+// 启动期扫描现在是「每个宏任务一次」：mutation 回调只排队，测试必须显式冲刷
+// 这个队列才能观察扫描结果（也才能覆盖进度条的定时器路径）。
+const scheduled = [];
+const flushTimers = () => { for (let index = 0; index < 64 && scheduled.length; index++) scheduled.shift()(); };
 const context = {document,location:{origin:'http://127.0.0.1:3087',pathname:'/'},__DSHA_PAGE_BINDING__:{nonce:'a'.repeat(32)},console:{info(line){reports.push(JSON.parse(line.slice(12)));}},
   CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},
   MutationObserver:class {constructor(callback){mutation=callback;} observe(){} disconnect(){this.stopped=true;}},
+  setTimeout(callback){scheduled.push(callback);return scheduled.length;}, clearTimeout(){},
   addEventListener(type,callback){listeners[type]=callback;}, dispatchEvent(){}};
 context.window = context; context.top = context;
 vm.runInNewContext(source, context);
@@ -62,9 +67,9 @@ assert(reports.some(e => e.id==='plugin-reject' && e.type==='issue'));
 context.__ModuleLoader__.load({id:'plugin-import',factory(){throw new Error('factory failed');}});
 assert.throws(()=>currentDefinition.factory(), /factory failed/);
 assert(reports.some(e => e.id==='plugin-import' && e.message.includes('factory failed')));
-boot={textContent:'HARNESS Failed to load plugins plugin-reject'}; mutation();
+boot={textContent:'HARNESS Failed to load plugins plugin-reject'}; mutation(); flushTimers();
 assert(reports.some(e=>e.fatal));
-boot=null; composer={}; mutation();
+boot=null; composer={}; mutation(); flushTimers();
 assert(reports.some(e=>e.type==='ready'));
 listeners.unhandledrejection({reason:new Error('later error')});
 assert.equal(reports.at(-1).fatal,false);
