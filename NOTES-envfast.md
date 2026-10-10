@@ -89,7 +89,7 @@
 
 | # | 项目 | 提速估算（依据） | 正确性风险 | 状态 |
 |---|---|---|---|---|
-| 1 | 复用未变化候选树的摘要（元数据签名 + 缓存），消除 `publish()` 的第二次全量哈希 | **≈8–11 s**：单次全量 794 MiB@69 MiB/s≈11.5 s；签名遍历 ≈1.1 s（29 567 节点；`list()` 走 anchored 约 15 组件 open，5 126 目录）；首次多付 2×1.1 s ⇒ 23.0 s → 14.8 s | 低。签名覆盖 相对路径/类型/权限/大小/mtime/dev/inode/链接目标，**与 `Node.same()` 同等强度**（代码库各处已用它作 SOURCE_CHANGED 依据）；缓存前后各算一次签名，只有两次相等才登记，摘要不会与签名脱钩；树真变化时签名不同 ⇒ 走全量哈希 ⇒ 仍报 `COLD_PREPARED_CHANGED` | **已实现** |
+| 1 | 复用未变化候选树的摘要（元数据 + ctime 签名 + 缓存），消除 `publish()` 的第二次全量哈希 | **折算值，不是实测**：单次全量 794 MiB@69 MiB/s≈11.5 s；签名遍历 ≈1.1 s（29 567 节点；`list()` 走 anchored 约 15 组件 open，5 126 目录）；首次多付 2×1.1 s ⇒ 23.0 s → 14.8 s。真机首装总时长未测，禁止据此承诺「省 N 秒」 | 已按 #129 收紧：签名在元数据之外加入 `Node.ctime`（ctime），并加两条封印 —— 树内每个节点都要提供见证（`ctime != 0`）、登记时刻的秒必须晚于树内最新 ctime 的秒；任一不满足就放弃复用。等长改写 + 恢复 mtime 会改变 ctime ⇒ 签名不同 ⇒ 走全量哈希 ⇒ 仍报 `COLD_PREPARED_CHANGED` / `COLD_ORIGINAL_CHANGED`。这仍是「元数据 + ctime」级证据，不是内容复读；同 UID 写入者没有接口可以设置 ctime。Android 侧只有秒级 ctime（纳秒级 `st_ctim` 是 API 34 字段，而这份源码两个 flavor 共用、low 的 minSdk 是 23），同秒别名由第二条封印关闭：**摘要前的那次遍历与登记时的那次遍历都必须落在树内最新 ctime 所在秒之后**——只封印登记时的那次挡不住「与 before 同秒落笔」的写入者 | **已实现** |
 | 2 | 把 `queueSync` 的逐文件 fsync 合并为提交点一次 `syncfs()` | **≈7 s**（29.5 k × 0.252 ms） | **中高**。需新增 JNI（`android.system.Os` 无 syncfs/sync）；改为「结束时一次性落盘」会弱化中途 ENOSPC 早期发现，且崩溃窗口语义变化，评审成本高 | 未实现（建议单独评审） |
 | 3 | rc1 迁移空迁移快速返回 | 上限 **13 s**（实测区间），实际能省多少未定位 | 中。迁移是要保留数据的路径，必须保证「无输入」判定本身可靠 | 未实现（待真机 stdout） |
 | 4 | 用 `AndroidTreeFileSystem` 的批量原生 stat 做签名遍历 | 第 1 项的签名遍历从 ≈1.1 s 降到 ≈0.3–0.5 s，即再多省 **≈1 s** | 中。`AndroidTreeFileSystem` 是 Android 专有路径，本机单测只能覆盖通用分支 | 未实现（可选优化） |
@@ -105,18 +105,30 @@ worktree：`/root/Documents/deepseek-harness/default-workspace/dsha-envfast`，�
 
 - 新增 `app/src/main/java/com/deepseekharness/app/backup/TreeDigestCache.java`
   —— 纯逻辑：元数据签名 + 摘要缓存，未变化时不再读文件内容。
-- 新增 `app/src/test/java/com/deepseekharness/app/backup/TreeDigestCacheTest.java`（7 个用例）
+- 新增 `app/src/test/java/com/deepseekharness/app/backup/TreeDigestCacheTest.java`（11 个用例）
 - 改 `app/src/main/java/com/deepseekharness/app/backup/ColdInstallTransaction.java`
   —— 新增事务内 `TreeDigestCache` 字段 + `digestOf(File)`，把 4 处 `BackupTree.digest(...)` 改为走缓存。
 - 改 `tools/java-format-files.json` —— 登记上面两个新文件（仅 +2 行）。
+- 改 `app/src/main/java/com/deepseekharness/app/backup/BackupFileSystem.java` —— `Node` 增加 `ctime` 见证
+  （7 参数构造；6 参数构造保持 `ctime = 0` = 不提供见证），`same()` 刻意不含该字段。
+- 改 `app/src/main/java/com/deepseekharness/app/backup/AndroidBackupFileSystem.java` —— 用 `stat.st_ctime`
+  填充见证（API 34 之前只有秒级）。
+- 改 `app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystem.java` —— `unix:ctime` 纳秒级见证。
+- 改 `NOTES-envfast.md` —— 本节与第 5 节的结论同步。
 
 ## 5. 验证情况
 
 跑成的：
 - `tools/format-java.py --check`：3 个文件全 **PASS**（google-java-format 1.22.0，0 changed）。
-- `TreeDigestCacheTest`：**OK (7 tests)**。含「第二次 digest 不产生任何内容读取」断言（用计数代理 FS）。
-- `ColdInstallTransactionTest`：**OK (11 tests)** —— 含「prepared 之后篡改候选 ⇒ publish 必须抛
-  `COLD_PREPARED_CHANGED`」，证明缓存没有削弱变化检测。
+- `TreeDigestCacheTest`：**OK (11 tests)**（连跑 3 次稳定）。含「第二次 digest 不产生任何内容读取」断言
+  （计数代理 FS），以及 #129 要求的回归：等长改写 + 恢复 mtime 必须重读内容并给出新摘要（先断言复用真的
+  生效、复用时零读取，再断言改写被检出）；另含「无见证必须放弃复用」与「封印要求严格更晚的秒」两条规则
+  用例。把 `TreeDigestCache` 换回改动前版本、测试保持新版：**10 个用例中 3 个失败**（无见证复用、
+  同秒登记、等长改写恢复 mtime），即红→绿双向成立。
+- `ColdInstallTransactionTest`：**OK (11 tests)**。注意它**不能**充当缓存层面的证据：夹具用 6 参数构造
+  `Node`（`ctime = 0`，无见证）⇒ 缓存一律放弃复用走全量摘要，且 `candidateReplacementOrModificationCannotPublish`
+  的篡改是追加（改变大小），纯元数据判据也会报错；全仓测试里没有任何一处断言 `COLD_PREPARED_CHANGED` /
+  `COLD_ORIGINAL_CHANGED`（grep 证实），这两条检查的覆盖只在 TreeDigestCacheTest 这一层。
 - 度量实验：fsync 对比、内容哈希 vs 元数据遍历、mtime/find 时间线（均只读或只在 `/tmp` 等价目录）。
 - 跑法（本机无 aapt2，绕开 gradle）：
   ```
@@ -139,8 +151,9 @@ worktree：`/root/Documents/deepseek-harness/default-workspace/dsha-envfast`，�
 必须真机验的清单：
 1. 首启总时长与分段：用 App 内「首次安装测速」页（`ColdSetupSpeedActivity` → `ColdSetupTiming.run()`），
    它会把每段 `elapsedMillis` 写到 `files/cold-install-probes/latest.json`。**这是现成的可复走方法。**
-2. 本改动的实际收益：真机装 APK 后对比 `prepared.json` 写入时刻 → `publish` 完成时刻，
-   应比改动前少 ≈11 s；核对 `var/lib/dpkg/status`、`.dsha-ubuntu-tools-version`、
+2. 本改动的实际收益：真机装 APK 后对比 `prepared.json` 写入时刻 → `publish` 完成时刻。≈11 s 是折算值，
+   不是实测值；且复用成立还需要封印（两次遍历都晚于树内最新 ctime 所在秒）——若最后一次写入与摘要前那次
+   遍历同秒，本次安装会放弃复用、收益为 0（正确性不受影响）。核对 `var/lib/dpkg/status`、`.dsha-ubuntu-tools-version`、
    `runtime-descriptor.json`、`.offline-extracted` 全部仍然正确、无「假绿」。
 3. 反向用例：解压完成后、`publish` 之前人为改动候选树，必须仍然抛 `COLD_PREPARED_CHANGED` 并回滚。
 4. 「每次冷启动」回归：确认 `confirmHealth` 仍只跑一次、`runtime-health/<id>.json` 命中、
