@@ -226,13 +226,15 @@ public final class VirtualScreenManager {
           frameSequence = -1;
         }
         long sequence = value.optLong("frameSeq", -1);
-        if (sequence >= 0
-            && sequence < frameSequence
-            && (route.equals("/vscreen/status") || route.equals("/vscreen/preview")))
+        if (com.deepseekharness.app.util.VirtualScreenPolicy.frameRegressed(
+            frameSequence,
+            sequence,
+            route.equals("/vscreen/status") || route.equals("/vscreen/preview")))
           return failure("STALE_FRAME");
-        // A real input may already have executed before a newer preview arrives. Keep its
-        // result, but never regress observation metadata or offer it as a current frame.
-        if (sequence >= 0) frameSequence = Math.max(frameSequence, sequence);
+        // 输入可能已经真的执行过：保留它的结果，但观察元数据只前进、绝不倒退。
+        frameSequence =
+            com.deepseekharness.app.util.VirtualScreenPolicy.advanceFrameSequence(
+                frameSequence, sequence);
         tagLocked(value);
       }
     }

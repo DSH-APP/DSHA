@@ -35,6 +35,13 @@ public final class VirtualScreenPolicy {
     return observed > 0 && observed == current;
   }
 
+  /** 权限探测结果；{@code UNKNOWN} 表示查不出来，一律按"不持有"处理。 */
+  public enum TrustedDisplayPermission {
+    HELD,
+    NOT_HELD,
+    UNKNOWN
+  }
+
   /**
    * 是否请求 {@code VIRTUAL_DISPLAY_FLAG_TRUSTED}。
    *
@@ -42,13 +49,14 @@ public final class VirtualScreenPolicy {
    * DisplayManagerService 直接抛 SecurityException（issue #123：Android 12 的 shell 未申请该权限，
    * ADB/Shizuku 通道因此恒失败）。不请求它的代价是：该显示不再是受信任显示 —— 输入法策略回落到
    * 默认显示、不参与 display area organizer 分配（DSHA 本来就不请求系统装饰，输入走事件注入与
-   * 无障碍），因此按调用方实际持有的权限决定请求与否。
+   * 无障碍），因此按调用方实际持有的权限决定请求与否。探测不出来时宁可不要 TRUSTED：不请求它
+   * 的创建仍然可以成功。
    *
    * @param uid 实际发起创建的进程 uid
-   * @param permissionGranted 该 uid 是否确实持有 {@code ADD_TRUSTED_DISPLAY}
+   * @param permission 该 uid 对 {@code ADD_TRUSTED_DISPLAY} 的探测结果
    */
-  public static boolean requestTrustedDisplay(int uid, boolean permissionGranted) {
-    return uid == 0 || permissionGranted;
+  public static boolean requestTrustedDisplay(int uid, TrustedDisplayPermission permission) {
+    return uid == 0 || permission == TrustedDisplayPermission.HELD;
   }
 
   public static final String FRAME_NOT_OBSERVED = "FRAME_NOT_OBSERVED";
@@ -68,6 +76,19 @@ public final class VirtualScreenPolicy {
   public static String observationRejection(long requested, long observed, long ageMs) {
     if (requested <= 0 || observed != requested) return FRAME_NOT_OBSERVED;
     return ageMs > OBSERVATION_WINDOW_MS ? OBSERVATION_TIMEOUT : null;
+  }
+
+  /**
+   * 一次响应携带的帧号比已知状态更旧。只有查询类响应（status / preview）才据此拒绝 ——
+   * 输入可能已经真的执行过，它的结果必须保留，绝不能因为随后到来的旧预览被丢掉。
+   */
+  public static boolean frameRegressed(long previous, long returned, boolean queryRoute) {
+    return queryRoute && returned >= 0 && returned < previous;
+  }
+
+  /** 帧号只前进：不因为一次旧响应把观察元数据退回去。 */
+  public static long advanceFrameSequence(long previous, long returned) {
+    return returned >= 0 ? Math.max(previous, returned) : previous;
   }
 
   /**

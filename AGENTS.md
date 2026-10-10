@@ -180,6 +180,7 @@ bash build.sh :app:testStandardDebugUnitTest   # 全量单测
 
 - 注释与 UI 串用中文；提交信息用中文 + `type:` 前缀说明原因。
 - 每个协作者单一职责；纯逻辑抽到 `util/` 并配测试；不改历史 SharedPreferences 键名。
+- **对外错误码只表达“发生了什么、下一步做什么”**：不得把异常类名或原始异常消息当错误码外泄（`util/VirtualScreenErrors` 是唯一的映射点）；同一个码不得覆盖“没等到用户回答”与“用户明确拒绝”两种语义。
 - 匹配现有风格：try/catch 包住有风险操作、优雅降级、失败 toast 给用户。
 - 原生按钮和选项统一居中与字体边距；普通卡片、主按钮及文字状态共用主题资源，不用独立渐变或硬编码颜色制造同类框色差。布局修订跑 `LayoutAuditInstrumentation` 的 style 中英文验收（日夜、短屏、1.3 倍字体）。
 - 应用弹窗统一 `DshaDialogBuilder`，自定义内容必须能在短屏和大字体下滚动；应用状态经 `UiStateText` 按显示边界重新渲染，不缓存语言。

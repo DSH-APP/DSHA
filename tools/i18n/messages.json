@@ -8141,48 +8141,48 @@
   },
   {
     "id": "m1001",
-    "zh": "[ERR] 你拒绝了这次屏幕读取",
-    "en": "[ERR] You declined this screen read",
+    "zh": "[ERR] 未获得本次屏幕读取授权（未确认或已拒绝）",
+    "en": "[ERR] Screen read was not authorized (not confirmed, or declined)",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1002",
-    "zh": "[ERR] 你拒绝了这次截屏",
-    "en": "[ERR] You declined this screenshot",
+    "zh": "[ERR] 未获得本次截屏授权（未确认或已拒绝）",
+    "en": "[ERR] Screenshot was not authorized (not confirmed, or declined)",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1003",
-    "zh": "[ERR] 你拒绝了这次按键",
-    "en": "[ERR] You declined this key press",
+    "zh": "[ERR] 未获得本次按键授权（未确认或已拒绝）",
+    "en": "[ERR] Key press was not authorized (not confirmed, or declined)",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1004",
-    "zh": "[ERR] 你拒绝了这次滑动",
-    "en": "[ERR] You declined this swipe",
+    "zh": "[ERR] 未获得本次滑动授权（未确认或已拒绝）",
+    "en": "[ERR] Swipe was not authorized (not confirmed, or declined)",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1005",
-    "zh": "[ERR] 你拒绝了这次点击",
-    "en": "[ERR] You declined this tap",
+    "zh": "[ERR] 未获得本次点击授权（未确认或已拒绝）",
+    "en": "[ERR] Tap was not authorized (not confirmed, or declined)",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1006",
-    "zh": "[ERR] 你拒绝了这次输入",
-    "en": "[ERR] You declined this input",
+    "zh": "[ERR] 未获得本次输入授权（未确认或已拒绝）",
+    "en": "[ERR] Input was not authorized (not confirmed, or declined)",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]

@@ -401,7 +401,7 @@ public final class VirtualScreenCore {
     // （issue #123：Android 12 的 shell 未申请该权限，ADB/Shizuku 通道因此恒失败）。
     boolean trusted =
         VirtualScreenPolicy.requestTrustedDisplay(
-            android.os.Process.myUid(), holdsTrustedDisplay());
+            android.os.Process.myUid(), trustedDisplayPermission());
     try {
       DisplayManager manager = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
       int flags =
@@ -437,13 +437,15 @@ public final class VirtualScreenCore {
    * 一致 —— 不要改成按包名判断，那会在 ADB/Shizuku 通道上给出错误答案。查不到就按"不持有"处理：
    * 不请求 TRUSTED 的创建仍然可以成功，方向安全。
    */
-  private static boolean holdsTrustedDisplay() {
+  private static VirtualScreenPolicy.TrustedDisplayPermission trustedDisplayPermission() {
     try {
-      return context != null
-          && context.checkSelfPermission("android.permission.ADD_TRUSTED_DISPLAY")
-              == android.content.pm.PackageManager.PERMISSION_GRANTED;
+      if (context == null) return VirtualScreenPolicy.TrustedDisplayPermission.UNKNOWN;
+      return context.checkSelfPermission("android.permission.ADD_TRUSTED_DISPLAY")
+              == android.content.pm.PackageManager.PERMISSION_GRANTED
+          ? VirtualScreenPolicy.TrustedDisplayPermission.HELD
+          : VirtualScreenPolicy.TrustedDisplayPermission.NOT_HELD;
     } catch (Throwable unavailable) {
-      return false;
+      return VirtualScreenPolicy.TrustedDisplayPermission.UNKNOWN;
     }
   }
 

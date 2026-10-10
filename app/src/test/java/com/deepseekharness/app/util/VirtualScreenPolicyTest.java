@@ -26,12 +26,40 @@ public class VirtualScreenPolicyTest {
   public void requestsTrustedDisplayOnlyWhenTheCallerActuallyHoldsIt() {
     // Android 12 无 root：ADB/Shizuku 通道是 uid=2000，且系统的 shell 包未申请该签名级权限。
     // 请求 TRUSTED 会被 DisplayManagerService 直接抛 SecurityException（issue #123）。
-    assertFalse(VirtualScreenPolicy.requestTrustedDisplay(2000, false));
-    // Root 通道：uid 0 由 checkCallingPermission 放行。
-    assertTrue(VirtualScreenPolicy.requestTrustedDisplay(0, false));
+    assertFalse(
+        VirtualScreenPolicy.requestTrustedDisplay(
+            2000, VirtualScreenPolicy.TrustedDisplayPermission.NOT_HELD));
     // Android 13+ 平台签名的 shell、以及其它确实持有该权限的调用方。
-    assertTrue(VirtualScreenPolicy.requestTrustedDisplay(2000, true));
-    assertTrue(VirtualScreenPolicy.requestTrustedDisplay(10123, true));
+    assertTrue(
+        VirtualScreenPolicy.requestTrustedDisplay(
+            2000, VirtualScreenPolicy.TrustedDisplayPermission.HELD));
+    assertTrue(
+        VirtualScreenPolicy.requestTrustedDisplay(
+            10123, VirtualScreenPolicy.TrustedDisplayPermission.HELD));
+    // 探测不出来时宁可不要 TRUSTED：不请求它的创建仍然可以成功。
+    assertFalse(
+        VirtualScreenPolicy.requestTrustedDisplay(
+            2000, VirtualScreenPolicy.TrustedDisplayPermission.UNKNOWN));
+    // Root 通道：uid 0 由 checkCallingPermission 放行，与探测结果无关。
+    assertTrue(
+        VirtualScreenPolicy.requestTrustedDisplay(
+            0, VirtualScreenPolicy.TrustedDisplayPermission.UNKNOWN));
+    assertTrue(
+        VirtualScreenPolicy.requestTrustedDisplay(
+            0, VirtualScreenPolicy.TrustedDisplayPermission.NOT_HELD));
+  }
+
+  @Test
+  public void frameMetadataOnlyMovesForwardAndOnlyQueriesRejectARegression() {
+    // 查询类响应比已知帧号更旧 → 拒绝。
+    assertTrue(VirtualScreenPolicy.frameRegressed(10, 7, true));
+    // 输入结果照旧保留：不能因为随后到来的旧预览把它丢掉。
+    assertFalse(VirtualScreenPolicy.frameRegressed(10, 7, false));
+    assertFalse(VirtualScreenPolicy.frameRegressed(10, 10, true));
+    assertFalse(VirtualScreenPolicy.frameRegressed(10, -1, true));
+    assertEquals(5L, VirtualScreenPolicy.advanceFrameSequence(-1, 5));
+    assertEquals(10L, VirtualScreenPolicy.advanceFrameSequence(10, 7));
+    assertEquals(10L, VirtualScreenPolicy.advanceFrameSequence(10, -1));
   }
 
   @Test

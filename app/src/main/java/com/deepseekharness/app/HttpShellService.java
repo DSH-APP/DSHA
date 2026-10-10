@@ -1114,7 +1114,7 @@ public final class HttpShellService {
       if (r.equals("/app/ui/dump")) {
         if (!uiAuthorizedForTarget(
             target, com.deepseekharness.app.util.UiText.text("读取当前屏幕上的文字与控件")))
-          return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次屏幕读取");
+          return com.deepseekharness.app.util.UiText.text("[ERR] 未获得本次屏幕读取授权（未确认或已拒绝）");
         return DshaAccessibilityService.uiDump();
       }
       if (r.equals("/app/ui/tap")) {
@@ -1123,7 +1123,7 @@ public final class HttpShellService {
         if (!text.isEmpty()) {
           if (!uiAuthorizedForTarget(
               target, com.deepseekharness.app.util.UiText.format("点击「%s」", shortText(text))))
-            return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次点击");
+            return com.deepseekharness.app.util.UiText.text("[ERR] 未获得本次点击授权（未确认或已拒绝）");
           return DshaAccessibilityService.uiTapText(text);
         }
         int x = intParam(q, "x", -1);
@@ -1132,7 +1132,7 @@ public final class HttpShellService {
           return com.deepseekharness.app.util.UiText.text("[ERR] 需要 ?text=要点的文字 或 ?x=&y=坐标");
         if (!uiAuthorizedForTarget(
             target, com.deepseekharness.app.util.UiText.format("点击坐标 (%s,%s)", x, y)))
-          return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次点击");
+          return com.deepseekharness.app.util.UiText.text("[ERR] 未获得本次点击授权（未确认或已拒绝）");
         return DshaAccessibilityService.uiTap(x, y);
       }
       if (r.equals("/app/ui/input")) {
@@ -1144,7 +1144,7 @@ public final class HttpShellService {
                 ? com.deepseekharness.app.util.UiText.choose(
                     "清空当前输入框", "Clear the current input field")
                 : com.deepseekharness.app.util.UiText.format("在输入框里填入「%s」", shortText(text)))) {
-          return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次输入");
+          return com.deepseekharness.app.util.UiText.text("[ERR] 未获得本次输入授权（未确认或已拒绝）");
         }
         return DshaAccessibilityService.uiInput(text);
       }
@@ -1152,7 +1152,7 @@ public final class HttpShellService {
         String k = getParam(q, "name", "");
         if (!uiAuthorizedForTarget(
             target, com.deepseekharness.app.util.UiText.format("按下系统按键 %s", shortText(k))))
-          return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次按键");
+          return com.deepseekharness.app.util.UiText.text("[ERR] 未获得本次按键授权（未确认或已拒绝）");
         return DshaAccessibilityService.uiKey(k);
       }
       if (r.equals("/app/ui/screenshot") || r.equals("/app/ui/shot")) {
@@ -1164,7 +1164,7 @@ public final class HttpShellService {
         long generation = controller.getWebGeneration(), revision = uiGrant.revision();
         if (!uiAuthorizedForTarget(
             target, com.deepseekharness.app.util.UiText.text("截取当前屏幕并保存为图片")))
-          return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次截屏");
+          return com.deepseekharness.app.util.UiText.text("[ERR] 未获得本次截屏授权（未确认或已拒绝）");
         return DshaAccessibilityService.uiScreenshot(
             () ->
                 generation == controller.getWebGeneration()
@@ -1185,7 +1185,7 @@ public final class HttpShellService {
         if (!uiAuthorizedForTarget(
             target,
             com.deepseekharness.app.util.UiText.format("滑动屏幕 (%s,%s)→(%s,%s)", x1, y1, x2, y2))) {
-          return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次滑动");
+          return com.deepseekharness.app.util.UiText.text("[ERR] 未获得本次滑动授权（未确认或已拒绝）");
         }
         return DshaAccessibilityService.uiSwipe(x1, y1, x2, y2, intParam(q, "ms", 300));
       }
