@@ -11,7 +11,7 @@ public final class BridgeConfirmations {
     public final String identity;
     private final CountDownLatch done = new CountDownLatch(1);
     private volatile boolean allowed;
-    private volatile boolean answered;
+    private volatile Boolean answer;
 
     private Request(long generation) {
       this.generation = generation;
@@ -23,12 +23,12 @@ public final class BridgeConfirmations {
     }
 
     /**
-     * 用户是否真的做过选择。{@code await} 返回 false 有两种完全不同的情况：用户在期限内点了拒绝，
-     * 以及没有人回答（超时、窗口关闭、代次失效、桥停止）。调用方需要区分它们 —— 等授权与
-     * "用户拒绝" 的下一步动作不一样（issue #123）。
+     * 用户的选择：{@code TRUE} 允许、{@code FALSE} 拒绝、{@code null} 没有人回答（超时、窗口关闭、
+     * 代次失效、桥停止）。{@code await} 返回 false 只说明"期限内没等到"，调用方要区分结果必须读这里 ——
+     * 否则用户迟到的"允许"会被报成"拒绝"（issue #123）。
      */
-    public boolean answered() {
-      return answered;
+    public Boolean answer() {
+      return answer;
     }
   }
 
@@ -47,7 +47,7 @@ public final class BridgeConfirmations {
     if (!pending(current) || current.generation != generation || !current.identity.equals(identity))
       return false;
     current.allowed = allow;
-    current.answered = true;
+    current.answer = allow;
     current.done.countDown();
     return true;
   }

@@ -75,18 +75,18 @@ public class BridgeConfirmationsTest {
     BridgeConfirmations gate = new BridgeConfirmations();
     var denied = gate.begin(11);
     assertTrue(gate.resolve(11, denied.identity, false));
-    assertTrue(denied.answered());
+    assertEquals(Boolean.FALSE, denied.answer());
     assertFalse(denied.await(1, TimeUnit.MILLISECONDS));
     gate.finish(denied);
 
     var unanswered = gate.begin(12);
     assertFalse(unanswered.await(1, TimeUnit.MILLISECONDS));
-    assertFalse(unanswered.answered());
+    assertNull(unanswered.answer());
     gate.finish(unanswered);
 
     var allowed = gate.begin(13);
     assertTrue(gate.resolve(13, allowed.identity, true));
-    assertTrue(allowed.answered());
+    assertEquals(Boolean.TRUE, allowed.answer());
     assertTrue(allowed.await(1, TimeUnit.MILLISECONDS));
   }
 
@@ -96,7 +96,28 @@ public class BridgeConfirmationsTest {
     var request = gate.begin(14);
     // 窗口关闭 / 代次失效 / 桥停止走的都是 finish，不得被当成用户的选择。
     gate.finish(request);
-    assertFalse(request.answered());
+    assertNull(request.answer());
     assertFalse(request.await(0, TimeUnit.SECONDS));
+  }
+
+  @Test
+  public void aLateAnswerKeepsTheUsersRealChoice() throws Exception {
+    // 期限到了、调用方已经超时，用户随后才点「允许」——这不能报成"用户拒绝"（issue #123）。
+    BridgeConfirmations gate = new BridgeConfirmations();
+    var late = gate.begin(15);
+    assertFalse(late.await(1, TimeUnit.MILLISECONDS));
+    assertNull(late.answer());
+    assertTrue(gate.resolve(15, late.identity, true));
+    assertEquals(Boolean.TRUE, late.answer());
+    // 一次决议之后不再改变。
+    assertFalse(gate.resolve(15, late.identity, false));
+    assertEquals(Boolean.TRUE, late.answer());
+    gate.finish(late);
+
+    var lateDenial = gate.begin(16);
+    assertFalse(lateDenial.await(1, TimeUnit.MILLISECONDS));
+    assertTrue(gate.resolve(16, lateDenial.identity, false));
+    assertEquals(Boolean.FALSE, lateDenial.answer());
+    gate.finish(lateDenial);
   }
 }

@@ -26,6 +26,18 @@ public final class VirtualScreenErrors {
     return requestedTrusted ? TRUSTED_DISPLAY_DENIED : DISPLAY_CREATE_FAILED;
   }
 
+  /**
+   * 启动阶段的失败码：异常自带的 {@code VSCREEN_*} 码原样保留（例如 ADB 启动许可冲突是设备通道
+   * 问题，不该贴成显示域的标签），其余按类别映射；同样不外泄异常类名。
+   */
+  public static String startFailure(Throwable error) {
+    for (Throwable current = error; current != null; current = current.getCause()) {
+      String message = current.getMessage();
+      if (message != null && message.matches("VSCREEN_[A-Z0-9_]{1,64}")) return message;
+    }
+    return stable(error);
+  }
+
   /** 其它路由的兜底映射：沿异常链取第一个可识别的类别，取不到就是通用的操作失败。 */
   public static String stable(Throwable error) {
     for (Throwable current = error; current != null; current = current.getCause()) {

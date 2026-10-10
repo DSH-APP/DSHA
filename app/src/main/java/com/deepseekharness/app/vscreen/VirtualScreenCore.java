@@ -323,10 +323,11 @@ public final class VirtualScreenCore {
         if (!session.generation.equals(q.get("generation"))) return error("STALE_GENERATION");
         // 拒绝码只说"过期"是没用的：没看过这一帧、被新帧顶掉、观察超时是三种不同的自救方式。
         String rejection =
-            VirtualScreenPolicy.observationRejection(
-                observed, session.observed, SystemClock.elapsedRealtime() - session.observedAt);
-        if (rejection == null)
-          rejection = VirtualScreenPolicy.frameRejection(observed, session.sequence);
+            VirtualScreenPolicy.inputRejection(
+                observed,
+                session.sequence,
+                session.observed,
+                SystemClock.elapsedRealtime() - session.observedAt);
         if (rejection != null)
           return staleFrame(rejection, observed, session.sequence, session.observed);
         if (path.equals("/vscreen/check")) {
@@ -417,15 +418,25 @@ public final class VirtualScreenCore {
       session = new Session(display, reader, size[0], size[1]);
       session.start();
       return status();
+    } catch (IllegalArgumentException invalid) {
+      reader.close();
+      return error("INVALID_ARGUMENT");
     } catch (Throwable error) {
       reader.close();
-      // 创建失败按阶段给稳定码：请求过受信任显示却被拒 → 该通道不能创建受信任显示；
-      // 没请求仍失败 → 与权限无关的创建失败。绝不外泄异常类名（issue #123）。
-      return error(VirtualScreenErrors.createFailure(trusted));
+      // 创建失败既给稳定码、也不丢掉真实原因：只有"确实请求过受信任显示且被系统拒绝"才是
+      // 该通道拿不到 ADD_TRUSTED_DISPLAY，其余按异常类别映射（issue #123）。
+      String stable = VirtualScreenErrors.stable(error);
+      boolean trustedDenied = trusted && VirtualScreenErrors.PERMISSION_DENIED.equals(stable);
+      return error(trustedDenied ? VirtualScreenErrors.TRUSTED_DISPLAY_DENIED : stable);
     }
   }
 
-  /** 自身是否真的持有 ADD_TRUSTED_DISPLAY；查不到就按"不持有"处理（创建仍可成功）。 */
+  /**
+   * 自身是否真的持有 ADD_TRUSTED_DISPLAY。{@code checkSelfPermission} 判的是**本进程 uid**
+   * （{@code Process.myPid()/myUid()}），与 DisplayManagerService 的 {@code Binder.getCallingUid()}
+   * 一致 —— 不要改成按包名判断，那会在 ADB/Shizuku 通道上给出错误答案。查不到就按"不持有"处理：
+   * 不请求 TRUSTED 的创建仍然可以成功，方向安全。
+   */
   private static boolean holdsTrustedDisplay() {
     try {
       return context != null

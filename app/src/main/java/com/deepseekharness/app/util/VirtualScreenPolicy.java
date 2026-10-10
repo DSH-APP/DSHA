@@ -40,8 +40,9 @@ public final class VirtualScreenPolicy {
    *
    * <p>该 flag 在 API 31+ 需要签名级 {@code ADD_TRUSTED_DISPLAY}，不持有却请求会被
    * DisplayManagerService 直接抛 SecurityException（issue #123：Android 12 的 shell 未申请该权限，
-   * ADB/Shizuku 通道因此恒失败）。不请求它只失去系统装饰与输入法策略，DSHA 不使用系统装饰，
-   * 输入走事件注入与无障碍，所以按调用方实际持有的权限决定请求与否。
+   * ADB/Shizuku 通道因此恒失败）。不请求它的代价是：该显示不再是受信任显示 —— 输入法策略回落到
+   * 默认显示、不参与 display area organizer 分配（DSHA 本来就不请求系统装饰，输入走事件注入与
+   * 无障碍），因此按调用方实际持有的权限决定请求与否。
    *
    * @param uid 实际发起创建的进程 uid
    * @param permissionGranted 该 uid 是否确实持有 {@code ADD_TRUSTED_DISPLAY}
@@ -50,10 +51,14 @@ public final class VirtualScreenPolicy {
     return uid == 0 || permissionGranted;
   }
 
+  public static final String FRAME_NOT_OBSERVED = "FRAME_NOT_OBSERVED";
+  public static final String FRAME_EXPIRED = "FRAME_EXPIRED";
+  public static final String OBSERVATION_TIMEOUT = "OBSERVATION_TIMEOUT";
+
   /** 帧号是否仍是最新帧；返回 null 表示放行，否则返回稳定的拒绝码。 */
   public static String frameRejection(long requested, long current) {
-    if (requested <= 0) return "FRAME_NOT_OBSERVED";
-    return fresh(requested, current) ? null : "FRAME_EXPIRED";
+    if (requested <= 0) return FRAME_NOT_OBSERVED;
+    return fresh(requested, current) ? null : FRAME_EXPIRED;
   }
 
   /**
@@ -61,7 +66,16 @@ public final class VirtualScreenPolicy {
    * 返回 null 表示放行，否则返回稳定的拒绝码。
    */
   public static String observationRejection(long requested, long observed, long ageMs) {
-    if (requested <= 0 || observed != requested) return "FRAME_NOT_OBSERVED";
-    return ageMs > OBSERVATION_WINDOW_MS ? "OBSERVATION_TIMEOUT" : null;
+    if (requested <= 0 || observed != requested) return FRAME_NOT_OBSERVED;
+    return ageMs > OBSERVATION_WINDOW_MS ? OBSERVATION_TIMEOUT : null;
+  }
+
+  /**
+   * 输入帧门的完整判定（核心用的就是这个组合）：先问"这一帧是不是你刚看过的那一帧"，
+   * 再问"它还是不是最新帧"。返回 null 表示放行，否则返回稳定的拒绝码。
+   */
+  public static String inputRejection(long requested, long current, long observed, long ageMs) {
+    String rejected = observationRejection(requested, observed, ageMs);
+    return rejected != null ? rejected : frameRejection(requested, current);
   }
 }

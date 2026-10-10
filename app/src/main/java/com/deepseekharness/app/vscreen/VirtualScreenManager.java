@@ -254,13 +254,38 @@ public final class VirtualScreenManager {
         + value.optLong("observedFrameSeq", -1);
   }
 
+  /** 同一 (route, reason) 的连续拒绝只记一条，且至少间隔 10 秒 —— 有界日志不能被常态拒绝刷掉。 */
+  private static final long FRAME_REJECTION_INTERVAL_MS = 10_000;
+
+  private final Object REJECTION_LOG = new Object();
+  private String lastFrameRejection = "";
+  private long lastFrameRejectionAt;
+
   /**
    * 帧门拒绝必须可诊断（issue #117）：写进有界事件记录，用户导出「自检与诊断」时能看到
    * 实际值/期望值，而不是只有一个 STALE_FRAME。
    */
   private void recordFrameRejection(String detail) {
+    long now = clock.getAsLong();
+    synchronized (REJECTION_LOG) {
+      if (detail.equals(lastFrameRejection)
+          && now - lastFrameRejectionAt < FRAME_REJECTION_INTERVAL_MS) return;
+      lastFrameRejection = detail;
+      lastFrameRejectionAt = now;
+    }
+    recordDiagnostic("VSCREEN_INPUT_REJECTED", detail);
+  }
+
+  /** 诊断记录会写文件，一律交给 WORKER：绝不占住 ACTIONS 串行通道，也不在 LOCK 里落盘。 */
+  private void recordDiagnostic(String stage, String detail) {
     try {
-      com.deepseekharness.app.core.DiagnosticLog.record(context, "VSCREEN_INPUT_REJECTED", detail);
+      WORKER.execute(
+          () -> {
+            try {
+              com.deepseekharness.app.core.DiagnosticLog.record(context, stage, detail);
+            } catch (Throwable ignored) {
+            }
+          });
     } catch (Throwable ignored) {
     }
   }
@@ -434,6 +459,8 @@ public final class VirtualScreenManager {
       if (!committed) {
         requestAt(selectedPort, coreToken, "/vscreen/close", "");
         failStart(launchEpoch);
+        if (!created.optBoolean("ok"))
+          recordDiagnostic("VSCREEN_CREATE_REJECTED", created.optString("error", "UNKNOWN"));
         return created.optBoolean("ok") ? failure("VSCREEN_START_CANCELLED") : created;
       }
       ScheduledFuture<?> scheduled =
@@ -448,7 +475,7 @@ public final class VirtualScreenManager {
     } catch (Throwable error) {
       if (!coreToken.isEmpty()) requestAt(selectedPort, coreToken, "/vscreen/close", "");
       failStart(launchEpoch);
-      return failure(com.deepseekharness.app.util.VirtualScreenErrors.stable(error));
+      return failure(com.deepseekharness.app.util.VirtualScreenErrors.startFailure(error));
     } finally {
       cancelAdbLaunch(launchEpoch);
     }

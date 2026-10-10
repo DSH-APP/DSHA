@@ -50,4 +50,18 @@ public class VirtualScreenPolicyTest {
     // 缺少帧号参数。
     assertEquals("FRAME_NOT_OBSERVED", VirtualScreenPolicy.frameRejection(-1, 5));
   }
+
+  @Test
+  public void namesWhyAnInputFrameWasRejectedInTheOrderTheCoreUses() {
+    // 组合判定就是对外行为：先看观察，再看新鲜度。
+    assertNull(VirtualScreenPolicy.inputRejection(5, 5, 5, 1200));
+    // 用 status 的帧号（从没 see 过）：即使它仍是最新帧也必须是 NOT_OBSERVED。
+    assertEquals("FRAME_NOT_OBSERVED", VirtualScreenPolicy.inputRejection(5, 5, -1, 0));
+    // 观察被上一次输入消费后、又过了 40 秒：先说"没看过这一帧"，不说"超时"。
+    assertEquals("FRAME_NOT_OBSERVED", VirtualScreenPolicy.inputRejection(5, 5, -1, 40_000));
+    // see 过、但已被新帧顶掉。
+    assertEquals("FRAME_EXPIRED", VirtualScreenPolicy.inputRejection(5, 9, 5, 900));
+    // 看过、仍是最新帧，但超过 30 秒窗口。
+    assertEquals("OBSERVATION_TIMEOUT", VirtualScreenPolicy.inputRejection(5, 5, 5, 30_001));
+  }
 }

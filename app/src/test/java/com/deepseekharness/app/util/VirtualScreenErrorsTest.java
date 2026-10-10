@@ -38,6 +38,21 @@ public class VirtualScreenErrorsTest {
   }
 
   @Test
+  public void keepsAKnownStartupCodeButNeverAClassNameOrRawMessage() {
+    // ADB 启动许可冲突是设备通道问题，必须保留它自己的码，不能贴成显示域标签。
+    assertEquals(
+        "VSCREEN_ADB_LAUNCH_BUSY",
+        VirtualScreenErrors.startFailure(new IllegalStateException("VSCREEN_ADB_LAUNCH_BUSY")));
+    assertEquals(
+        "VSCREEN_DISPLAY_IO",
+        VirtualScreenErrors.startFailure(new SocketException("connect timed out")));
+    // 消息里带码但不是码本身时，不能把消息当码回给调用方，而是按类别映射。
+    assertEquals(
+        "VSCREEN_DISPLAY_STATE",
+        VirtualScreenErrors.startFailure(new IllegalStateException("boom VSCREEN_X")));
+  }
+
+  @Test
   public void everyCodeIsStableAndCarriesNoClassOrThrowableName() {
     List<Throwable> chain =
         List.of(
