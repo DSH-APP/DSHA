@@ -19,8 +19,9 @@ no-replay rule are unchanged. A lost COMMIT response still raises execution
 unknown and never sends the ADB command. The app's normal signed asset comparison
 and synchronization publish the updated bundled script.
 
-Seven bootstrap JUnit tests and seven ADB launch host tests passed, including
+Eight bootstrap JUnit tests and seven ADB launch host tests passed, including
 secret-bearing failures, auth/ticket rejections, START/COMMIT differentiation,
 exact successful handshake and no remote send after unknown commit.
-This is a local diagnostic repair; it has not been added to the virtual-screen
-upstream PR.
+These diagnostics are included in the Android 17 virtual-screen repair PR;
+installed-app acceptance and release limitations are recorded in
+`android17-vscreen-k80.md`.
