@@ -876,8 +876,9 @@ public final class VirtualScreenManager {
   }
 
   private static JSONObject failure(String code) {
-    android.util.Log.w("DSHA-VSCREEN",
-        com.deepseekharness.app.util.VirtualScreenBootstrap.diagnosticCode(code));
+    if (!"VSCREEN_NOT_RUNNING".equals(code))
+      android.util.Log.w("DSHA-VSCREEN",
+          com.deepseekharness.app.util.VirtualScreenBootstrap.diagnosticCode(code));
     JSONObject j = new JSONObject();
     try {
       j.put("ok", false).put("error", code);
