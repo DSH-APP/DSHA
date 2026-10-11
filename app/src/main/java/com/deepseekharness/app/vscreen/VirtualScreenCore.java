@@ -389,6 +389,8 @@ public final class VirtualScreenCore {
     if (session != null && session.width == size[0] && session.height == size[1]) return status();
     release();
     ImageReader reader = ImageReader.newInstance(size[0], size[1], PixelFormat.RGBA_8888, 3);
+    VirtualDisplay display = null;
+    Session created = null;
     try {
       DisplayManager manager = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
       int flags =
@@ -398,15 +400,38 @@ public final class VirtualScreenCore {
               | flag("VIRTUAL_DISPLAY_FLAG_DESTROY_CONTENT_ON_REMOVAL")
               | flag("VIRTUAL_DISPLAY_FLAG_TRUSTED")
               | flag("VIRTUAL_DISPLAY_FLAG_OWN_FOCUS");
-      VirtualDisplay display =
+      display =
           manager.createVirtualDisplay(
               "DSHA-VirtualScreen", size[0], size[1], 320, reader.getSurface(), flags);
       if (display == null) throw new IOException("DISPLAY_CREATE_FAILED");
-      session = new Session(display, reader, size[0], size[1]);
+      created = new Session(display, reader, size[0], size[1]);
+      session = created;
       session.start();
       return status();
     } catch (Throwable error) {
-      reader.close();
+      session = null;
+      if (created != null) {
+        created.active = false;
+        try {
+          synchronized (created.lock) {
+            if (created.frame != null) created.frame.recycle();
+            created.frame = null;
+          }
+        } catch (Throwable cleanup) {
+          error.addSuppressed(cleanup);
+        }
+      }
+      // Session 构造期间输入 API 初始化失败时，尚未登记到 session 的显示也需释放。
+      try {
+        if (display != null) display.release();
+      } catch (Throwable cleanup) {
+        error.addSuppressed(cleanup);
+      }
+      try {
+        reader.close();
+      } catch (Throwable cleanup) {
+        error.addSuppressed(cleanup);
+      }
       throw error;
     }
   }

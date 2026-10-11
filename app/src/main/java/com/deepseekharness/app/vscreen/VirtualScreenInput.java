@@ -17,12 +17,42 @@ final class VirtualScreenInput {
   private long downAt, lastAt;
   private float x, y;
 
+  static final class InputApi {
+    final Object manager;
+    final Method inject;
+
+    InputApi(Object manager, Method inject) {
+      this.manager = manager;
+      this.inject = inject;
+    }
+  }
+
+  interface GlobalApiLookup {
+    Class<?> load() throws ClassNotFoundException;
+  }
+
   VirtualScreenInput(int display) throws Exception {
     this.display = display;
-    Class<?> type = Class.forName("android.hardware.input.InputManager");
-    manager = type.getMethod("getInstance").invoke(null);
-    inject = type.getMethod("injectInputEvent", InputEvent.class, int.class);
+    Class<?> legacy = Class.forName("android.hardware.input.InputManager");
+    InputApi api =
+        resolveInputApi(legacy, () -> Class.forName("android.hardware.input.InputManagerGlobal"));
+    manager = api.manager;
+    inject = api.inject;
     setDisplay = InputEvent.class.getMethod("setDisplayId", int.class);
+  }
+
+  /** 只在旧单例方法缺失时使用新 API，调用或权限异常不触发回退。 */
+  static InputApi resolveInputApi(Class<?> legacy, GlobalApiLookup global) throws Exception {
+    Class<?> type = legacy;
+    Method getInstance;
+    try {
+      getInstance = type.getMethod("getInstance");
+    } catch (NoSuchMethodException missingLegacySingleton) {
+      type = global.load();
+      getInstance = type.getMethod("getInstance");
+    }
+    Object manager = getInstance.invoke(null);
+    return new InputApi(manager, type.getMethod("injectInputEvent", InputEvent.class, int.class));
   }
 
   synchronized boolean touch(String id, int action, float x, float y) throws Exception {
