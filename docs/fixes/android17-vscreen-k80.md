@@ -66,8 +66,9 @@ PASS portrait, landscape, injection, frames and display cleanup
 手机仍安装原始 build170，包名 `com.dsh.client`，APK 备份已保存。
 历史证书 SHA-256 为
 `e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5`。
-本机没有对应私钥，也没有可用的 GitHub 写入/工作流凭据；浏览器 CLI 当前注册
-不可用，未能确认浏览器中的 GitHub 登录。没有声称已提交远程 PR 或已修好安装版。
+本机没有对应私钥。GitHub 账号已通过 Git Credential Manager 正式授权；该账号
+对官方仓库仅有读取权限，没有写入权限，无法访问官方发布环境的签名密钥。
+修复可通过个人 fork 与 PR 提交，安装版仍待官方签名构建和覆盖安装验收。
 
 维护者可应用补丁，在同一提交上准备固定离线输入，通过 `ci-package.yml` 完整
 检查，再用 `release.yml` 的 `package_run_id` 调用历史签名流程。核对
