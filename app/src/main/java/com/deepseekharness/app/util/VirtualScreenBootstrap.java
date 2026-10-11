@@ -71,6 +71,25 @@ public final class VirtualScreenBootstrap {
     return "";
   }
 
+  /** Log only established machine codes, never arbitrary exception/bridge messages. */
+  public static String diagnosticCode(String code) {
+    if (code == null) return "VSCREEN_FAILURE_UNCLASSIFIED";
+    if (code.matches("VSCREEN_(?:START|CONNECTION)_(?:IllegalStateException|IllegalArgumentException|NullPointerException|IOException|ConnectException|SocketTimeoutException|SecurityException|NoClassDefFoundError|NoSuchMethodError|ClassNotFoundException|InvocationTargetException|Exception)")) return code;
+    if (code.startsWith("VSCREEN_ADB_")) {
+      String suffix = code.substring("VSCREEN_".length());
+      if (suffix.equals(startFailureCode(suffix))) return code;
+    }
+    for (String known : new String[] {
+      "VSCREEN_NOT_RUNNING", "VSCREEN_START_IN_PROGRESS", "VSCREEN_REVOKED", "VSCREEN_START_CANCELLED",
+      "VSCREEN_START_RESULT_UNKNOWN", "DEVICE_CHANNEL_UNAVAILABLE", "SCREEN_TARGET_CHANGED",
+      "VSCREEN_UNSUPPORTED_LOW", "VSCREEN_API_30_REQUIRED", "VSCREEN_APPLICATION_SCOPE_UNAVAILABLE",
+      "INVALID_ORIENTATION", "STALE_GENERATION", "STALE_FRAME", "INVALID_PACKAGE", "INVALID_TEXT",
+      "ACCESSIBILITY_REQUIRED_FOR_UNICODE", "INVALID_NODE_ACTION", "INVALID_EDITOR_ARGUMENTS",
+      "VSCREEN_RESPONSE_LIMIT", "INVALID_EDITOR_OPERATION"
+    }) if (known.equals(code)) return code;
+    return "VSCREEN_FAILURE_UNCLASSIFIED";
+  }
+
   public static String failureCode(String stage, int sdk, Throwable failure) {
     String propagated = failure == null ? "" : error("DSHA_VSCREEN_ERROR=" + failure.getMessage());
     if (!propagated.isEmpty() && propagated.startsWith("CORE_")) return propagated;

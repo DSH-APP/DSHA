@@ -85,4 +85,12 @@ public class VirtualScreenBootstrapTest {
     feed(parser, "ROM notice ENVIRONMENT_BUSY\nDSHA_VSCREEN_BOOTSTRAP " + "a".repeat(48) + "\n");
     assertEquals("a".repeat(48), parser.token());
   }
+
+  @Test
+  public void logCodesRejectArbitrarySecretsAndKeepKnownMachineFailures() {
+    assertEquals("VSCREEN_START_NoClassDefFoundError", VirtualScreenBootstrap.diagnosticCode("VSCREEN_START_NoClassDefFoundError"));
+    assertEquals("VSCREEN_ADB_START_BRIDGE_TIMEOUT", VirtualScreenBootstrap.diagnosticCode("VSCREEN_ADB_START_BRIDGE_TIMEOUT"));
+    assertEquals("VSCREEN_FAILURE_UNCLASSIFIED", VirtualScreenBootstrap.diagnosticCode("token=private"));
+    assertEquals("VSCREEN_FAILURE_UNCLASSIFIED", VirtualScreenBootstrap.diagnosticCode("VSCREEN_ADB_START_BRIDGE_TIMEOUT_private"));
+  }
 }
