@@ -46,6 +46,41 @@ class FakeDevice:
 
 
 class ADBVirtualScreenBridgeTest(unittest.TestCase):
+    def test_bridge_failure_codes_keep_stage_without_exception_secrets(self):
+        import urllib.error
+        for stage in ('START', 'COMMIT'):
+            for failure, reason in ((urllib.error.HTTPError('http://private/?token=secret', 401, 'secret', {}, None), 'HTTP_ERROR'),
+                                    (TimeoutError('token=secret'), 'TIMEOUT'),
+                                    (urllib.error.URLError(ConnectionRefusedError('token=secret')), 'CONNECT_FAILED'),
+                                    (FileNotFoundError('private/path/secret'), 'CREDENTIAL_UNAVAILABLE'),
+                                    (ValueError('token=secret'), 'INVALID_RESPONSE')):
+                self.assertEqual('ADB_' + stage + '_BRIDGE_' + reason, adb.vscreen_bridge_failure(stage, failure))
+
+    def test_start_policy_rejections_have_safe_specific_codes(self):
+        for output, code in (('虚拟屏启动许可无效、过期或已使用 token=secret', 'TICKET_REJECTED'),
+                             ('无法核验 DSHA 安装包路径 /private/secret', 'PATH_UNVERIFIED'),
+                             ('ADB 通道不可用 token=secret', 'CHANNEL_UNAVAILABLE'),
+                             ('token=secret arbitrary error', 'PLAN_REJECTED')):
+            self.assertEqual('ADB_START_BRIDGE_' + code, adb.vscreen_start_rejection({'state': 'completed', 'output': output}))
+
+    def test_start_auth_and_ticket_rejection_remain_blocked_without_returning_plan(self):
+        for result, code in (('[UNAUTHORIZED]', 'AUTH_REJECTED'),
+                             (json.dumps({'state': 'completed', 'output': '虚拟屏启动许可无效、过期或已使用 token=secret'}), 'TICKET_REJECTED')):
+            body = json.dumps({'result': result}).encode()
+            opener = type('Opener', (), {'open': lambda self, *a, **k: Response(body)})()
+            with mock.patch('builtins.open', return_value=io.StringIO('bridge-secret')), \
+                 mock.patch('urllib.request.build_opener', return_value=opener):
+                with self.assertRaisesRegex(adb.policy.Blocked, '^ADB_START_BRIDGE_' + code + '$'):
+                    adb.request_native_vscreen_start(COMMAND, TICKET)
+
+    def test_commit_lost_response_remains_unknown_and_never_replays(self):
+        import urllib.error
+        opener = type('Opener', (), {'open': lambda self, *a, **k: (_ for _ in ()).throw(urllib.error.URLError(ConnectionRefusedError('secret')))})()
+        with mock.patch('builtins.open', return_value=io.StringIO('bridge-secret')), \
+             mock.patch('urllib.request.build_opener', return_value=opener):
+            with self.assertRaisesRegex(adb.ExecutionUnknown, '^ADB_COMMIT_BRIDGE_CONNECT_FAILED$'):
+                adb.request_native_vscreen_commit(TICKET)
+
     def test_ticket_mode_rejects_root_or_caller_selected_endpoint(self):
         parsed = adb.parse_args(['--vscreen-launch', '--timeout', '20', '--connect-timeout', '20', '--', COMMAND])
         self.assertTrue(parsed[5])
