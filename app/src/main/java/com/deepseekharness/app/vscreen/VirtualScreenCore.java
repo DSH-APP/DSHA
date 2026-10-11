@@ -134,6 +134,9 @@ public final class VirtualScreenCore {
       throw new IllegalArgumentException("INVALID_CLASSPATH");
     Process child =
         new ProcessBuilder(
+                // ADB shell v1 关闭会清理所属进程组，核心需拥有独立会话。
+                // 不使用 setsid -d：保持直接子进程及 bootstrap 管道的生命周期可核验。
+                "/system/bin/setsid",
                 "/system/bin/app_process",
                 "-Djava.class.path=" + path,
                 "/system/bin",
