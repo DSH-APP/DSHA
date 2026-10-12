@@ -449,6 +449,13 @@ public final class VirtualScreenManager {
     return request("/vscreen/preview", "since=" + seq + "&generation=" + encode(gen));
   }
 
+  public JSONObject observe(String gen, long seq) {
+    return ordered(
+        () ->
+            performRequired(
+                gen, "/vscreen/observe", "generation=" + encode(gen) + "&frameSeq=" + seq));
+  }
+
   public JSONObject touch(String gen, long seq, String stroke, int action, float x, float y) {
     return ordered(
         () ->
@@ -769,6 +776,10 @@ public final class VirtualScreenManager {
 
               public JSONObject action(String mode, String gen, long seq, String query) {
                 return VirtualScreenManager.this.action(mode, gen, seq, query);
+              }
+
+              public JSONObject observe(String gen, long seq) {
+                return VirtualScreenManager.this.observe(gen, seq);
               }
 
               public JSONObject type(String gen, long seq, String text) {

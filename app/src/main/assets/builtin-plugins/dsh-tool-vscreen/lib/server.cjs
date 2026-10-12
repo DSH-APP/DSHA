@@ -3,7 +3,8 @@ const definitions=[
  ['android_vscreen_create','创建或复用虚拟屏。',{orientation:{type:'string',enum:['portrait','landscape']}}],
  ['android_vscreen_status','读取显示尺寸、方向、通道和最新 frameSeq。',{}],
  ['android_vscreen_launch','把已安装应用启动到虚拟屏。',{package:{type:'string',maxLength:160}}],
- ['android_vscreen_see','读取最新画面；成功后用 generation/frameSeq 驱动下一步。',{}],
+ ['android_vscreen_see','读取最新画面并登记这次观察；登记后 10 秒内可用该 generation/frameSeq 输入，每次输入后需重新观察。',{}],
+ ['android_vscreen_observe','轻量登记：只把 generation/frameSeq 记为「已观察」，不回画面（see 之后又隔了几秒、想省一次出图时用）。返回 registered:true 表示该帧仍是当前帧，可以直接用它输入；registered:false 表示画面已变，需要重新 see。',{generation:{type:'string',maxLength:80},frameSeq:{type:'integer',minimum:1}}],
  ['android_vscreen_tap','单次点击。',{generation:{type:'string',maxLength:80},frameSeq:{type:'integer',minimum:1},x:{type:'number',minimum:0},y:{type:'number',minimum:0}}],
  ['android_vscreen_swipe','连续滑动；手势会在虚拟屏上实时注入。',{generation:{type:'string',maxLength:80},frameSeq:{type:'integer',minimum:1},x1:{type:'number',minimum:0},y1:{type:'number',minimum:0},x2:{type:'number',minimum:0},y2:{type:'number',minimum:0},ms:{type:'integer',minimum:50,maximum:3000}}],
  ['android_vscreen_touch','发送一个触控阶段：0 按下、2 移动、1 抬起、3 取消。',{generation:{type:'string',maxLength:80},frameSeq:{type:'integer',minimum:1},stroke:{type:'string',pattern:'^[a-f0-9-]{16,64}$'},action:{type:'integer',enum:[0,1,2,3]},x:{type:'number',minimum:0},y:{type:'number',minimum:0}}],
@@ -15,7 +16,7 @@ const definitions=[
  ['android_vscreen_close','关闭并回收虚拟屏。',{}]
 ];
 const required={
- android_vscreen_create:[],android_vscreen_status:[],android_vscreen_launch:['package'],android_vscreen_see:[],
+ android_vscreen_create:[],android_vscreen_status:[],android_vscreen_launch:['package'],android_vscreen_see:[],android_vscreen_observe:['generation','frameSeq'],
  android_vscreen_tap:['generation','frameSeq','x','y'],android_vscreen_swipe:['generation','frameSeq','x1','y1','x2','y2'],
  android_vscreen_touch:['generation','frameSeq','stroke','action','x','y'],android_vscreen_type:['generation','frameSeq','text'],
  android_vscreen_key:['generation','frameSeq','keycode'],android_vscreen_tree:[],
@@ -53,7 +54,7 @@ function validate(def,args){
 function bridgeFailed(value){return !value||value.ok!==true;}
 function requestFor(name,args){
  const def=definitions.find(x=>x[0]===name);if(!def)throw Error('UNKNOWN_TOOL');validate(def,args);
- let route={android_vscreen_create:'create',android_vscreen_status:'status',android_vscreen_launch:'launch',android_vscreen_see:'see',android_vscreen_tap:'tap',android_vscreen_swipe:'swipe',android_vscreen_touch:'touch',android_vscreen_type:'type',android_vscreen_key:'key',android_vscreen_tree:'tree',android_vscreen_node:'node',android_vscreen_close:'close'}[name];
+ let route={android_vscreen_create:'create',android_vscreen_status:'status',android_vscreen_launch:'launch',android_vscreen_see:'see',android_vscreen_observe:'observe',android_vscreen_tap:'tap',android_vscreen_swipe:'swipe',android_vscreen_touch:'touch',android_vscreen_type:'type',android_vscreen_key:'key',android_vscreen_tree:'tree',android_vscreen_node:'node',android_vscreen_close:'close'}[name];
  const parameters={...args};
  if(name==='android_vscreen_editor'){route={get:'editor',edit:'edit',submit:'submit'}[args.op];delete parameters.op;}
  const url='http://127.0.0.1:3090/app/vscreen/'+route;

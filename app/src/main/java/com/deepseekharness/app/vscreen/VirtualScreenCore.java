@@ -297,6 +297,19 @@ public final class VirtualScreenCore {
         if (!expected.equals(actual)) return error("VSCREEN_TARGET_CHANGED");
       }
       if (path.equals("/vscreen/launch")) return launchPackage(q.get("package"));
+      if (path.equals("/vscreen/observe")) {
+        if (!session.generation.equals(q.get("generation"))) return error("STALE_GENERATION");
+        long presented = Long.parseLong(q.getOrDefault("frameSeq", "-1"));
+        synchronized (session.lock) {
+          // 帧号只增不减：越界或画面已变都不能登记，调用方必须重新 see 拿图。
+          if (presented <= 0 || presented > session.sequence) return error("STALE_FRAME");
+          if (presented != session.sequence) return status().put("registered", false);
+          session.observed = presented;
+          session.observedAt = SystemClock.elapsedRealtime();
+          // 在同一把锁内读回状态，避免登记成功后帧号又被采集线程推进。
+          return status().put("registered", true);
+        }
+      }
       if (path.equals("/vscreen/preview"))
         return preview(Long.parseLong(q.getOrDefault("since", "-1")), q.get("generation"));
       if (path.equals("/vscreen/touch")) {
@@ -310,7 +323,19 @@ public final class VirtualScreenCore {
         if (action == 0) {
           synchronized (session.lock) {
             long observed = Long.parseLong(q.getOrDefault("frameSeq", "-1"));
-            if (!VirtualScreenPolicy.fresh(observed, session.sequence)) return error("STALE_FRAME");
+            switch (VirtualScreenPolicy.inputFrame(
+                observed,
+                session.observed,
+                session.sequence,
+                session.observedAt,
+                SystemClock.elapsedRealtime())) {
+              case STALE:
+                return error("STALE_FRAME");
+              case EXPIRED:
+                return error("OBSERVATION_EXPIRED");
+              default:
+                break;
+            }
           }
         }
         return session.input.touch(stroke, action, x, y) ? status() : error("TOUCH_REJECTED");
@@ -321,10 +346,20 @@ public final class VirtualScreenCore {
       long observed = Long.parseLong(q.getOrDefault("frameSeq", "-1"));
       synchronized (session.lock) {
         if (!session.generation.equals(q.get("generation"))) return error("STALE_GENERATION");
-        if (!VirtualScreenPolicy.fresh(observed, session.sequence)
-            || observed != session.observed
-            || SystemClock.elapsedRealtime() - session.observedAt > 30_000)
-          return error("STALE_FRAME");
+        // 只接受「上次登记观察的那一帧 + 观察足够新」，不再要求它等于此刻的最新帧。
+        switch (VirtualScreenPolicy.inputFrame(
+            observed,
+            session.observed,
+            session.sequence,
+            session.observedAt,
+            SystemClock.elapsedRealtime())) {
+          case STALE:
+            return error("STALE_FRAME");
+          case EXPIRED:
+            return error("OBSERVATION_EXPIRED");
+          default:
+            break;
+        }
         if (path.equals("/vscreen/check")) {
           session.observed = -1;
           return status();
@@ -441,6 +476,7 @@ public final class VirtualScreenCore {
 
   private static JSONObject status() throws Exception {
     if (session == null) return ok().put("active", false);
+    // 这里不登记 observed：status 不回画面，登记它等于允许「没看过画面就注入输入」。
     String actual = currentPackage();
     return ok().put("active", true)
         .put("displayId", session.id)
@@ -470,8 +506,12 @@ public final class VirtualScreenCore {
     long seq, captured;
     synchronized (session.lock) {
       if (session.frame == null) return error("FRAME_NOT_READY");
-      if (since == session.sequence && session.generation.equals(generation))
+      if (since == session.sequence && session.generation.equals(generation)) {
+        // 调用方声明它持有的就是当前帧：同样登记为一次有效观察。
+        session.observed = session.sequence;
+        session.observedAt = SystemClock.elapsedRealtime();
         return status().put("unchanged", true).put("frameSeq", session.sequence);
+      }
       copy = session.frame.copy(Bitmap.Config.ARGB_8888, false);
       seq = session.sequence;
       captured = session.capturedAt;

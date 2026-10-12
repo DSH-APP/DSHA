@@ -27,6 +27,8 @@ public final class VirtualScreenRoutes {
         return "touch";
       case "/app/vscreen/preview":
         return "preview";
+      case "/app/vscreen/observe":
+        return "observe";
       case "/app/vscreen/see":
         return "see";
       case "/app/vscreen/tap":
