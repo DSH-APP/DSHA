@@ -9,7 +9,7 @@ public class VirtualScreenRoutesTest {
     for (String operation :
         new String[] {
           "create", "status", "launch", "tree", "node", "editor", "edit", "submit", "touch",
-          "preview", "see", "tap", "swipe", "key", "type", "close"
+          "preview", "observe", "see", "tap", "swipe", "key", "type", "close"
         }) {
       assertEquals(operation, VirtualScreenRoutes.operation("/app/vscreen/" + operation));
       for (String invalid :

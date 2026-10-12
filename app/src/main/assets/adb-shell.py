@@ -174,6 +174,28 @@ def parse_shell_result(raw, marker):
     return ShellResult(out[:match.start()], int(match.group(1)))
 
 
+def vscreen_bridge_failure(stage, error):
+    """Fixed stage/reason only: exception messages may include credentials or private paths."""
+    import urllib.error
+    if isinstance(error, urllib.error.HTTPError): reason = 'HTTP_ERROR'
+    elif isinstance(error, (TimeoutError, socket.timeout)): reason = 'TIMEOUT'
+    elif isinstance(error, urllib.error.URLError):
+        reason = 'TIMEOUT' if isinstance(error.reason, (TimeoutError, socket.timeout)) else 'CONNECT_FAILED'
+    elif isinstance(error, (FileNotFoundError, PermissionError)): reason = 'CREDENTIAL_UNAVAILABLE'
+    elif isinstance(error, (ValueError, KeyError, TypeError)): reason = 'INVALID_RESPONSE'
+    else: reason = 'FAILED'
+    return 'ADB_' + stage + '_BRIDGE_' + reason
+
+
+def vscreen_start_rejection(value):
+    output = value.get('output', '') if isinstance(value, dict) else ''
+    if not isinstance(output, str): return 'ADB_START_BRIDGE_PLAN_REJECTED'
+    if '虚拟屏启动许可无效、过期或已使用' in output: return 'ADB_START_BRIDGE_TICKET_REJECTED'
+    if '无法核验 DSHA 安装包路径' in output: return 'ADB_START_BRIDGE_PATH_UNVERIFIED'
+    if 'ADB 通道不可用' in output: return 'ADB_START_BRIDGE_CHANNEL_UNAVAILABLE'
+    return 'ADB_START_BRIDGE_PLAN_REJECTED'
+
+
 def request_native_vscreen_commit(ticket):
     """Consume the one-use managed launch authority immediately before the ADB shell send."""
     import urllib.request
@@ -182,7 +204,7 @@ def request_native_vscreen_commit(ticket):
         with open('/root/.dsh/.bridge_token') as source:
             token = source.read().strip()
         if not token:
-            raise ValueError('missing token')
+            raise policy.Blocked('ADB_COMMIT_BRIDGE_CREDENTIAL_UNAVAILABLE')
         query = urllib.parse.urlencode({'ticket': ticket})
         request = urllib.request.Request('http://127.0.0.1:3090/device/vscreen/commit?' + query,
             headers={'X-Token': token})
@@ -190,12 +212,12 @@ def request_native_vscreen_commit(ticket):
         with opener.open(request, timeout=10) as response:
             value = json.loads(response.read(65536)).get('result')
         if value != 'VSCREEN_START_COMMITTED':
-            raise policy.Blocked('虚拟屏启动许可已撤销或已使用')
+            raise policy.Blocked('ADB_COMMIT_BRIDGE_AUTH_REJECTED' if value == '[UNAUTHORIZED]' else 'ADB_COMMIT_BRIDGE_TICKET_REJECTED')
     except policy.Blocked:
         raise
     except Exception as error:
         # A lost commit response may mean the one-use ticket was consumed. Never send or retry.
-        raise ExecutionUnknown('虚拟屏启动许可结果未知，命令未重放（' + type(error).__name__ + '）') from error
+        raise ExecutionUnknown(vscreen_bridge_failure('COMMIT', error)) from error
 
 
 def run_on_endpoint(device_cls, signer_cls, cmd, host, port, deadline, command_timeout=COMMAND_TIMEOUT):
@@ -327,24 +349,26 @@ def request_native_vscreen_start(cmd, ticket):
         with open('/root/.dsh/.bridge_token') as source:
             token = source.read().strip()
         if not token:
-            raise ValueError('missing token')
+            raise policy.Blocked('ADB_START_BRIDGE_CREDENTIAL_UNAVAILABLE')
         query = urllib.parse.urlencode({'cmd': cmd, 'ticket': ticket})
         request = urllib.request.Request('http://127.0.0.1:3090/device/vscreen/start?' + query,
             headers={'X-Token': token})
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         with opener.open(request, timeout=15) as response:
             envelope = json.loads(response.read(1024 * 1024))
+        if envelope.get('result') == '[UNAUTHORIZED]':
+            raise policy.Blocked('ADB_START_BRIDGE_AUTH_REJECTED')
         value = json.loads(envelope['result'])
         plan = value.get('plan')
         if (value.get('state') != 'adb' or not isinstance(plan, dict)
                 or plan.get('kind') != 'VIRTUAL_SCREEN' or plan.get('nativeTicket') != ticket
                 or plan.get('nativeAuthorization') != 'managed-vscreen-start'):
-            raise policy.Blocked('原生虚拟屏启动许可没有授权此操作')
+            raise policy.Blocked(vscreen_start_rejection(value))
         return plan
     except policy.Blocked:
         raise
     except Exception as error:
-        raise policy.Blocked('无法取得原生虚拟屏启动许可，命令未发送（' + type(error).__name__ + '）') from error
+        raise policy.Blocked(vscreen_bridge_failure('START', error)) from error
 
 
 def parse_args(args):

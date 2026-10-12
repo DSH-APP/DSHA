@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import {definitions,tools,validate,requestFor,decodeBridge} from '../app/src/main/assets/builtin-plugins/dsh-tool-vscreen/lib/server.cjs';
 const names=definitions.map(row=>row[0]);
-assert.deepEqual(names,['android_vscreen_create','android_vscreen_status','android_vscreen_launch','android_vscreen_see','android_vscreen_tap','android_vscreen_swipe','android_vscreen_touch','android_vscreen_type','android_vscreen_key','android_vscreen_tree','android_vscreen_node','android_vscreen_editor','android_vscreen_close']);
+assert.deepEqual(names,['android_vscreen_create','android_vscreen_status','android_vscreen_launch','android_vscreen_see','android_vscreen_observe','android_vscreen_tap','android_vscreen_swipe','android_vscreen_touch','android_vscreen_type','android_vscreen_key','android_vscreen_tree','android_vscreen_node','android_vscreen_editor','android_vscreen_close']);
+const observe=definitions.find(row=>row[0]==='android_vscreen_observe');
+validate(observe,{generation:'test-generation',frameSeq:1});
+assert.throws(()=>validate(observe,{generation:'test-generation',frameSeq:0}),/INVALID_frameSeq/);
+assert.throws(()=>validate(observe,{generation:'test-generation'}),/INVALID_frameSeq/);
+assert.throws(()=>validate(observe,{generation:'test-generation',frameSeq:1,extra:true}),/UNKNOWN_ARGUMENT/);
+const observeRequest=requestFor('android_vscreen_observe',{generation:'test-generation',frameSeq:7});assert.equal(observeRequest.method,'GET');assert.match(observeRequest.url,/\/observe\?/);assert.match(observeRequest.url,/frameSeq=7$/);assert.ok(!observeRequest.url.includes('since='));
+assert.deepEqual(tools.find(row=>row.name==='android_vscreen_observe').inputSchema.required,['generation','frameSeq']);
 const tap=definitions.find(row=>row[0]==='android_vscreen_tap');
 validate(tap,{generation:'test-generation',frameSeq:1,x:3,y:4});
 assert.throws(()=>validate(tap,{generation:'test-generation',frameSeq:0,x:3,y:4}),/INVALID_frameSeq/);

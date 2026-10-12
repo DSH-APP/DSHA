@@ -23,6 +23,7 @@ public final class VscreenBridgeRequest {
     SUBMIT,
     TOUCH,
     PREVIEW,
+    OBSERVE,
     SEE,
     TAP,
     SWIPE,
@@ -57,6 +58,8 @@ public final class VscreenBridgeRequest {
     T touch(String generation, long frame, String stroke, int action, float x, float y);
 
     T preview();
+
+    T observe(String generation, long frame);
 
     T action(String mode, String generation, long frame, String query);
 
@@ -102,6 +105,8 @@ public final class VscreenBridgeRequest {
       case PREVIEW:
       case SEE:
         return actions.preview();
+      case OBSERVE:
+        return actions.observe(gen, frame);
       case TAP:
       case SWIPE:
       case KEY:
@@ -305,6 +310,11 @@ public final class VscreenBridgeRequest {
       case PREVIEW:
       case SEE:
       case CLOSE:
+        break;
+      case OBSERVE:
+        allowed.addAll(List.of("generation", "frameSeq"));
+        need("generation", 80);
+        integer("frameSeq", 1, Long.MAX_VALUE, true);
         break;
       case EDITOR:
       case EDIT:

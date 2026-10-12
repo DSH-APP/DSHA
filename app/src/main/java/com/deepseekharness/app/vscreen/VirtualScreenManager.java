@@ -449,6 +449,13 @@ public final class VirtualScreenManager {
     return request("/vscreen/preview", "since=" + seq + "&generation=" + encode(gen));
   }
 
+  public JSONObject observe(String gen, long seq) {
+    return ordered(
+        () ->
+            performRequired(
+                gen, "/vscreen/observe", "generation=" + encode(gen) + "&frameSeq=" + seq));
+  }
+
   public JSONObject touch(String gen, long seq, String stroke, int action, float x, float y) {
     return ordered(
         () ->
@@ -771,6 +778,10 @@ public final class VirtualScreenManager {
                 return VirtualScreenManager.this.action(mode, gen, seq, query);
               }
 
+              public JSONObject observe(String gen, long seq) {
+                return VirtualScreenManager.this.observe(gen, seq);
+              }
+
               public JSONObject type(String gen, long seq, String text) {
                 return VirtualScreenManager.this.type(gen, seq, text);
               }
@@ -876,6 +887,9 @@ public final class VirtualScreenManager {
   }
 
   private static JSONObject failure(String code) {
+    if (!"VSCREEN_NOT_RUNNING".equals(code))
+      android.util.Log.w("DSHA-VSCREEN",
+          com.deepseekharness.app.util.VirtualScreenBootstrap.diagnosticCode(code));
     JSONObject j = new JSONObject();
     try {
       j.put("ok", false).put("error", code);

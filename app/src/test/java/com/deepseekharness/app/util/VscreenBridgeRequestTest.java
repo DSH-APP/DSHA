@@ -52,6 +52,12 @@ public class VscreenBridgeRequestTest {
       return called = "preview";
     }
 
+    public String observe(String g, long f) {
+      gen = g;
+      end = (int) f;
+      return called = "observe";
+    }
+
     public String action(String mode, String g, long frame, String query) {
       return called = mode;
     }
@@ -95,6 +101,38 @@ public class VscreenBridgeRequestTest {
             .execute(actions));
     assertEquals(1, actions.start);
     assertEquals(1, actions.end);
+  }
+
+  @Test
+  public void observeRegistersTheFrameWithoutRequestingAPreview() throws Exception {
+    Actions actions = new Actions();
+    assertEquals(
+        "observe",
+        VscreenBridgeRequest.query(
+                "/app/vscreen/observe", "generation=gen&frameSeq=7")
+            .execute(actions));
+    assertEquals("gen", actions.gen);
+    assertEquals(7, actions.end);
+    assertEquals(
+        400,
+        assertThrows(
+                HttpProtocol.Failure.class,
+                () -> VscreenBridgeRequest.query("/app/vscreen/observe", "frameSeq=7"))
+            .status);
+    assertEquals(
+        400,
+        assertThrows(
+                HttpProtocol.Failure.class,
+                () -> VscreenBridgeRequest.query("/app/vscreen/observe", "generation=gen"))
+            .status);
+    assertEquals(
+        400,
+        assertThrows(
+                HttpProtocol.Failure.class,
+                () ->
+                    VscreenBridgeRequest.query(
+                        "/app/vscreen/observe", "generation=gen&frameSeq=7&since=7"))
+            .status);
   }
 
   @Test
