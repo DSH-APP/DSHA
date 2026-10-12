@@ -30322,5 +30322,13 @@
     "source": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
+  },
+  {
+    "id": "m9012",
+    "zh": "文件已被移动或删除，请重新选择",
+    "en": "The file has been moved or deleted. Select it again.",
+    "source": [
+      "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
+    ]
   }
 ]
