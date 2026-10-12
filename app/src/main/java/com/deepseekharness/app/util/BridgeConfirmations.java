@@ -11,6 +11,7 @@ public final class BridgeConfirmations {
     public final String identity;
     private final CountDownLatch done = new CountDownLatch(1);
     private volatile boolean allowed;
+    private volatile Boolean answer;
 
     private Request(long generation) {
       this.generation = generation;
@@ -19,6 +20,15 @@ public final class BridgeConfirmations {
 
     public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
       return done.await(timeout, unit) && allowed;
+    }
+
+    /**
+     * 用户的选择：{@code TRUE} 允许、{@code FALSE} 拒绝、{@code null} 没有人回答（超时、窗口关闭、
+     * 代次失效、桥停止）。{@code await} 返回 false 只说明"期限内没等到"，调用方要区分结果必须读这里 ——
+     * 否则用户迟到的"允许"会被报成"拒绝"（issue #123）。
+     */
+    public Boolean answer() {
+      return answer;
     }
   }
 
@@ -37,6 +47,7 @@ public final class BridgeConfirmations {
     if (!pending(current) || current.generation != generation || !current.identity.equals(identity))
       return false;
     current.allowed = allow;
+    current.answer = allow;
     current.done.countDown();
     return true;
   }

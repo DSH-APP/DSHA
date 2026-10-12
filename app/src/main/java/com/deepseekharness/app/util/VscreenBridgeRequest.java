@@ -322,7 +322,9 @@ public final class VscreenBridgeRequest {
       default:
         allowed.addAll(List.of("generation", "frameSeq"));
         need("generation", 80);
-        integer("frameSeq", 1, Long.MAX_VALUE, true);
+        // node 走无障碍 performAction：目标是否还活着由无障碍层的树新鲜度与节点校验决定，
+        // 与"当前第几帧"无关，因此帧号对它是可选的（issue #117）；坐标与文本输入仍必填。
+        integer("frameSeq", 1, Long.MAX_VALUE, operation != Operation.NODE);
         if (operation == Operation.NODE) {
           allowed.addAll(List.of("nodeId", "action", "text"));
           need("nodeId", 80);

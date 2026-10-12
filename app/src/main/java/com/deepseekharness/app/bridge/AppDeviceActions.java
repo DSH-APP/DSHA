@@ -22,7 +22,8 @@ public final class AppDeviceActions {
       boolean sensitive = com.deepseekharness.app.util.SensitiveAppPolicy.sensitive(pkg);
       if (sensitive
           && !authorize.test(com.deepseekharness.app.util.UiText.format("启动敏感应用：%s", pkg), pkg))
-        return "[ERR] USER_REJECTED";
+        // 确认门有三态：没等到回答与用户明确拒绝都到这里，文案不能再一口咬定"用户拒绝"。
+        return "[ERR] USER_NOT_AUTHORIZED";
       android.content.Intent i = ctx.getPackageManager().getLaunchIntentForPackage(pkg);
       if (i == null)
         return com.deepseekharness.app.util.UiText.format("NOT_FOUND: %s（该应用没有启动入口或未安装）", pkg);
