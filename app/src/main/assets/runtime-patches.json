@@ -15,7 +15,8 @@
     {"asset":"rc1-settings-migration-patch.json"},
     {"asset":"language-patch.json"},
     {"asset":"tooltip-interaction-patch.json","markers":["DSHA_TOOLTIP_DISMISS_RC2_V1"]},
-    {"asset":"tooltip-entry-patch.json"}
+    {"asset":"tooltip-entry-patch.json"},
+    {"asset":"frontend-static-cache-patch.json","markers":["DSHA_STATIC_CACHE_V1"]}
   ],
   "specialized": ["pdf-compat-patch.json","browser-bootstrap","client-combo-patch.json","lan-settings-persistence","workspace-directory-policy-patch.json"],
   "retired": [

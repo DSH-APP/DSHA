@@ -453,6 +453,19 @@
       "cli": "no positional arguments; see explicit environment/requirements"
     },
     {
+      "path": "tools/test-frontend-static-cache.mjs",
+      "stage": "runtime",
+      "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
+      "args": [],
+      "timeoutSeconds": 900,
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "environment": {},
+      "cli": "no positional arguments in CI; optional module path or DSHA_FRONTEND_STATIC_MODULE for local runs"
+    },
+    {
       "path": "tools/test-gecko-model-navigation.mjs",
       "stage": "history",
       "reason": "已退役旧补丁/一次性入口；历史源码保留，不作为当前通过证据",
@@ -1098,6 +1111,18 @@
       ],
       "environment": {},
       "timeoutSeconds": 300
+    },
+    {
+      "path": "tools/test-startup-boot-progress.mjs",
+      "stage": "fast",
+      "reason": "Current source behavior regression; explicit platform inputs required",
+      "args": [],
+      "timeoutSeconds": 600,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
     },
     {
       "path": "tools/test-startup-checkpoints.py",

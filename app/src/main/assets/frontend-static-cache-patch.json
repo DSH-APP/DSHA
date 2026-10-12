@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.0-rc.2",
+  "module": "@deepseek-ai/dsh-host-frontend-static/lib/index.js",
+  "patches": [
+    {
+      "before": "import { readFile } from \"node:fs/promises\";",
+      "after": "import { readFile, stat } from \"node:fs/promises\"; // DSHA_STATIC_CACHE_V1"
+    },
+    {
+      "before": "const STATIC_MISS_CODES = new Set([",
+      "after": "/** DSHA_STATIC_CACHE_V1: 读一个请求头，不依赖头部容器的具体实现。 */\nfunction requestHeader(req, name) {\n\tif (req === void 0 || req.headers === void 0) return void 0;\n\tconst headers = req.headers;\n\tconst value = typeof headers.get === \"function\" ? headers.get(name) : headers[name];\n\treturn typeof value === \"string\" ? value : void 0;\n}\n/** DSHA_STATIC_CACHE_V1: size+mtime 派生弱标签；DSHA 原地改写资产必然换标签。 */\nfunction staticTag(meta) {\n\treturn `W/\"${meta.size.toString(16)}-${Math.floor(meta.mtimeMs).toString(16)}\"`;\n}\n/** DSHA_STATIC_CACHE_V1: 候选列表命中即复用；RFC 9110 的通配 * 表示任何现有表示。 */\nfunction staticRevalidated(req, tag) {\n\tconst value = requestHeader(req, \"if-none-match\");\n\tif (value === void 0) return false;\n\treturn value.split(\",\").some((candidate) => {\n\t\tconst trimmed = candidate.trim();\n\t\treturn trimmed === \"*\" || trimmed === tag;\n\t});\n}\n/** DSHA_STATIC_CACHE_V1: 渲染索引永不缓存；dist 资产每次重验。 */\nfunction staticCacheHeaders(index, tag) {\n\tif (index) return { \"cache-control\": \"no-store\" };\n\tif (tag === void 0) return { \"cache-control\": \"no-cache\" };\n\treturn { \"cache-control\": \"no-cache\", etag: tag };\n}\nconst STATIC_MISS_CODES = new Set(["
+    },
+    {
+      "before": "async function serveStatic(pathname, res, distRoot, distIndex, authorizeIndex, renderIndex) {",
+      "after": "async function serveStatic(pathname, res, distRoot, distIndex, authorizeIndex, renderIndex, req) { // DSHA_STATIC_CACHE_V1"
+    },
+    {
+      "before": "\tlet body;\n\tlet type;\n\ttry {",
+      "after": "\tlet body;\n\tlet type;\n\tlet index = false; // DSHA_STATIC_CACHE_V1\n\tlet tag;\n\ttry {"
+    },
+    {
+      "before": "\t\t\tif (!authorizeIndex()) return;\n\t\t\tbody = await renderIndex();",
+      "after": "\t\t\tif (!authorizeIndex()) return;\n\t\t\tindex = true; // DSHA_STATIC_CACHE_V1\n\t\t\tbody = await renderIndex();"
+    },
+    {
+      "before": "\t\t\tbody = await readFile(target);\n\t\t\ttype = MIME[extname(target)] ?? \"application/octet-stream\";\n\t\t}",
+      "after": "\t\t\t/* DSHA_STATIC_CACHE_V1: 先取标签；命中重验就不必读整份文件。 */\n\t\t\ttype = MIME[extname(target)] ?? \"application/octet-stream\";\n\t\t\ttag = staticTag(await stat(target));\n\t\t\tif (staticRevalidated(req, tag)) {\n\t\t\t\tres.writeHead(304, staticCacheHeaders(false, tag));\n\t\t\t\tres.end();\n\t\t\t\treturn;\n\t\t\t}\n\t\t\tbody = await readFile(target);\n\t\t}"
+    },
+    {
+      "before": "\tres.writeHead(200, { \"content-type\": type });",
+      "after": "\tres.writeHead(200, { \"content-type\": type, ...staticCacheHeaders(index, tag) }); // DSHA_STATIC_CACHE_V1"
+    },
+    {
+      "before": "\t\tawait serveStatic(decodeURIComponent(rawPath), res, distRoot, distIndex, () => ctx.connection.authorizeIndex(req, res), renderIndex);",
+      "after": "\t\tawait serveStatic(decodeURIComponent(rawPath), res, distRoot, distIndex, () => ctx.connection.authorizeIndex(req, res), renderIndex, req); // DSHA_STATIC_CACHE_V1"
+    }
+  ]
+}
