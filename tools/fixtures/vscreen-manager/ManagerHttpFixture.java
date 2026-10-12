@@ -97,6 +97,46 @@ public final class ManagerHttpFixture {
     server.removeContext("/vscreen/touch");server.removeContext("/vscreen/preview");
     System.out.println("PASS real input result preserved while older metadata cannot regress or render");
   }
+  private static void executedWriteIsNotReportedAsRejection() throws Exception {
+    CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);AtomicBoolean authorized=new AtomicBoolean(true);
+    server.createContext("/vscreen/touch",exchange->{try{entered.countDown();await(release);reply(exchange,response(1));}catch(Exception error){throw new RuntimeException(error);}finally{exchange.close();}});
+    install(81,"owner-a","display-a",1);
+    Future<String> response=CLIENTS.submit(()->manager.withBridgeTarget("target.pkg",authorized::get,()->manager.touch("display-a",1,"12345678-1234-1234-1234-123456789abc",0,1,2).toString()));
+    await(entered);authorized.set(false);release.countDown();
+    JSONObject value=new JSONObject(response.get(3,TimeUnit.SECONDS));
+    require(value.optBoolean("ok"),"executed write keeps its real result");
+    require(value.optBoolean("targetChangedAfterExecution"),"executed write is marked as already executed");
+    require(value.optString("error").isEmpty(),"executed write is not reported as a rejection");
+    server.removeContext("/vscreen/touch");
+    System.out.println("PASS executed write is marked instead of reported as not executed");
+  }
+  private static void runChangedWriteIsNotReportedAsRejection() throws Exception {
+    CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);
+    server.createContext("/vscreen/touch",exchange->{try{entered.countDown();await(release);reply(exchange,"{\"ok\":true,\"generation\":\"display-b\",\"frameSeq\":1,\"displayId\":4,\"package\":\"target.pkg\"}");}catch(Exception error){throw new RuntimeException(error);}finally{exchange.close();}});
+    install(91,"owner-a","display-a",1);
+    Future<JSONObject> response=CLIENTS.submit(()->manager.touch("display-a",1,"12345678-1234-1234-1234-123456789abc",0,1,2));
+    await(entered);release.countDown();JSONObject value=response.get(3,TimeUnit.SECONDS);
+    require(value.optBoolean("ok"),"executed write keeps its real result");
+    require(value.optBoolean("runChangedAfterExecution"),"generation change after execution is marked as a run change");
+    require(value.optString("error").isEmpty(),"executed write is not reported as a stale generation");
+    require("display-a".equals(field("generation").get(manager)),"returned generation must not replace the live display");
+    require(field("frameSequence").getLong(manager)==1,"returned generation must not commit frame metadata");
+    server.removeContext("/vscreen/touch");
+    System.out.println("PASS generation change after execution is marked instead of reported as not executed");
+  }
+  private static void keyWriteIsNotReportedAsRejection() throws Exception {
+    CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);AtomicBoolean authorized=new AtomicBoolean(true);
+    server.createContext("/vscreen/key",exchange->{try{require(exchange.getRequestURI().getRawQuery().contains("frameSeq=1"),"key request carries the observed frame");entered.countDown();await(release);reply(exchange,response(1));}catch(Exception error){throw new RuntimeException(error);}finally{exchange.close();}});
+    install(101,"owner-a","display-a",1);
+    Future<String> response=CLIENTS.submit(()->manager.withBridgeTarget("target.pkg",authorized::get,()->manager.action("key","display-a",1,"keycode=4").toString()));
+    await(entered);authorized.set(false);release.countDown();
+    JSONObject value=new JSONObject(response.get(3,TimeUnit.SECONDS));
+    require(value.optBoolean("ok"),"executed key keeps its real result");
+    require(value.optBoolean("targetChangedAfterExecution"),"key on a changed target is marked as already executed");
+    require(value.optString("error").isEmpty(),"key is not reported as a rejection");
+    server.removeContext("/vscreen/key");
+    System.out.println("PASS key route on a changed target is marked instead of reported as not executed");
+  }
   private static void distinctOwnersAndLateClose() throws Exception {
     VirtualScreenManager peer = new VirtualScreenManager(null, () -> 100, new VirtualScreenManager.Visuals() {
       public void present() {}
@@ -142,7 +182,7 @@ public final class ManagerHttpFixture {
   public static void main(String[] args) throws Exception {
     stateLock=field("LOCK").get(manager);epoch=(AtomicLong)field("LIFECYCLE_EPOCH").get(manager);
     server=HttpServer.create(new InetSocketAddress("127.0.0.1",0),8);server.setExecutor(SERVER);server.start();
-    try{staleSessionAndStateLock();staleGrantAndTarget();outOfOrderFrames();orderedTouch();olderActionReceipt();distinctOwnersAndLateClose();}
+    try{staleSessionAndStateLock();staleGrantAndTarget();outOfOrderFrames();orderedTouch();olderActionReceipt();executedWriteIsNotReportedAsRejection();runChangedWriteIsNotReportedAsRejection();keyWriteIsNotReportedAsRejection();distinctOwnersAndLateClose();}
     finally{server.stop(0);CLIENTS.shutdownNow();SERVER.shutdownNow();((ScheduledExecutorService)field("WORKER").get(manager)).shutdownNow();synchronized(stateLock){field("token").set(manager,"");field("generation").set(manager,"");field("activeEpoch").setLong(manager,-1);}}
   }
 }

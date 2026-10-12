@@ -27,4 +27,37 @@ public class VirtualScreenRoutesTest {
     assertEquals("", VirtualScreenRoutes.operation(null));
     assertEquals("", VirtualScreenRoutes.operation("/app/vscreen/unknown"));
   }
+
+  @Test
+  public void onlyActionEndpointsCountAsStateChanging() {
+    for (String mutating :
+        new String[] {"tap", "swipe", "key", "type", "touch", "node", "edit", "submit"})
+      assertTrue(mutating, VirtualScreenRoutes.mutates(mutating));
+    for (String readonly :
+        new String[] {
+          "create", "status", "launch", "tree", "editor", "preview", "see", "close", ""
+        }) assertFalse(readonly, VirtualScreenRoutes.mutates(readonly));
+    assertFalse(VirtualScreenRoutes.mutates(null));
+  }
+
+  @Test
+  public void onlyCoreActionRoutesCountAsStateChanging() {
+    for (String mutating : new String[] {"tap", "swipe", "key", "type", "touch"})
+      assertTrue(mutating, VirtualScreenRoutes.mutatesCore("/vscreen/" + mutating));
+    for (String readonly :
+        new String[] {
+          "create", "status", "launch", "tree", "editor", "preview", "see", "close", "check", "ping"
+        }) assertFalse(readonly, VirtualScreenRoutes.mutatesCore("/vscreen/" + readonly));
+    for (String invalid :
+        new String[] {
+          null,
+          "tap",
+          "/app/vscreen/tap",
+          "/vscreen/tap?x=1",
+          "/vscreen/tapXXX",
+          "/vscreen/",
+          "/x/vscreen/tap",
+          "/vscreen/../tap"
+        }) assertFalse(String.valueOf(invalid), VirtualScreenRoutes.mutatesCore(invalid));
+  }
 }

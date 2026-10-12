@@ -128,7 +128,7 @@ bash build.sh :app:testStandardDebugUnitTest   # 全量单测
 - dsh 启动契约：`exec dsh web --no-open --host 127.0.0.1 --port 3080`；env `DSH_HOME=/root/.dsh`、`DEEPSEEK_API_KEY`（非空才 export）、`DSH_PERMISSION_MODE`、`DSH_CONFIRM=1`、`BROWSER=true`、`cd /root`。pid 文件在 `exec` 之前写（`exec` 不换 pid）。proot 二进制从 `nativeLibraryDir/libproot.so` 执行（不能放 filesDir，Android 10+ W^X）。
 - Web 首选端口冲突时保留用户配置，先试本机成功备用端口，否则用锁定 dsh 的 `--port 0` 分配；动态鉴权只接收本轮官方启动行；保活、鉴权和 LAN 必须用实际端口，**不能按端口猜 PID 终止进程**。
 - Web 启动等待鉴权不设强制终止时限（60 秒仅提示）；停止与维护必须共用 `WebProcessManager` 的 PID 身份 / 出生身份核验。
-- 3090 桥协议版本做特性检测（`/app/version`，`BRIDGE_PROTOCOL=2`）；插件判版本用 `>=` 而不是 `==`。命令查询串预算不得缩到低于 8192 字符需求。
+- 3090 桥协议版本做特性检测（`/app/version`，`BRIDGE_PROTOCOL=4`）；插件判版本用 `>=` 而不是 `==`。命令查询串预算不得缩到低于 8192 字符需求。
 - LAN 正文由方法、状态码和明确传输边界决定；只有真正验证过的 101 WebSocket 握手可切隧道；不把 hop-by-hop 头移除后继续发送不匹配的编码体。
 - PTY 出生身份在原生 fork/exec 握手中登记：子进程自读 stat，父进程确认后才 exec；不得退回 Java 启动后单次读取。PTY 与简易终端独立标签和会话，跨切页 / 旋转 / 语言切换保持进程；关闭单个标签必须核验该会话退出后再移除。终端会话 ID 永久递增，显示编号独立复用最小空缺。
 

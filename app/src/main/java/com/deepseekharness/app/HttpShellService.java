@@ -11,6 +11,8 @@ import com.deepseekharness.app.util.BridgeLifecycle;
 import com.deepseekharness.app.util.BridgeQuestions;
 import com.deepseekharness.app.util.BoundedUiCall;
 import com.deepseekharness.app.util.BridgeRoutes;
+import com.deepseekharness.app.util.ScreenActionResult;
+import com.deepseekharness.app.util.VirtualScreenRoutes;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -1181,7 +1183,7 @@ public final class HttpShellService {
   private String appVscreen(com.deepseekharness.app.util.VscreenBridgeRequest request) {
     String route = request.route(),
         query = request.query(),
-        operation = com.deepseekharness.app.util.VirtualScreenRoutes.operation(route);
+        operation = VirtualScreenRoutes.operation(route);
     try {
       if (operation.equals("status") || operation.equals("close"))
         return com.deepseekharness.app.vscreen.VirtualScreenManager.from(ctx).bridge(request);
@@ -1189,15 +1191,18 @@ public final class HttpShellService {
       long generation = controller.getWebGeneration(), revision = uiGrant.revision();
       var status = com.deepseekharness.app.vscreen.VirtualScreenManager.from(ctx).status();
       int display = status.optInt("displayId", -1);
-      var target = display > 0 ? DshaAccessibilityService.observeTarget(display) : null;
+      var promptTarget = display > 0 ? DshaAccessibilityService.observeTarget(display) : null;
       String pkg =
           operation.equals("launch")
               ? getParam(query, "package", "")
-              : target != null
-                  ? target.packageName
+              : promptTarget != null
+                  ? promptTarget.packageName
                   : status.optBoolean("packageVerified") ? status.optString("package") : "";
       if (!uiAuthorized(com.deepseekharness.app.util.UiText.format("操作独立虚拟屏：%s", route), pkg))
         return "{\"ok\":false,\"error\":\"USER_REJECTED\"}";
+      // 目标身份必须在用户确认结束之后重新采集：确认期间界面可能已经变化，用确认前的旧快照去否决
+      // 一个已经执行完的动作，正是 #140 里「已执行却报失败」的来源。
+      var target = display > 0 ? DshaAccessibilityService.observeTarget(display) : null;
       java.util.function.BooleanSupplier live =
           () ->
               generation == controller.getWebGeneration()
@@ -1211,7 +1216,10 @@ public final class HttpShellService {
                 || target != null
                     && !operation.equals("launch")
                     && !DshaAccessibilityService.matchesTarget(target))
-              return "{\"ok\":false,\"error\":\"SCREEN_TARGET_CHANGED\"}";
+              return ScreenActionResult.notExecuted();
+            // 转发给虚拟屏 core 的 expectedPackage 有意沿用用户确认时批准的目标应用（pkg）：
+            // 确认之后若界面已经换了窗口，执行前的目标校验会先以「未执行」拒绝，
+            // 不会把输入注入用户没有批准的那个应用。
             String result =
                 com.deepseekharness.app.vscreen.VirtualScreenManager.from(ctx)
                     .withBridgeTarget(
@@ -1224,11 +1232,17 @@ public final class HttpShellService {
                         () ->
                             com.deepseekharness.app.vscreen.VirtualScreenManager.from(ctx)
                                 .bridge(request));
-            if (!live.getAsBoolean()
-                || target != null
+            // 执行后校验失败不等于「没执行」：写操作可能已经落地（#140）。写操作保留真实结果并追加标记，
+            // 只读操作没有动作可落地，继续按「未执行」返回。
+            boolean targetChanged =
+                target != null
                     && !operation.equals("launch")
-                    && !DshaAccessibilityService.matchesTarget(target))
-              return "{\"ok\":false,\"error\":\"SCREEN_TARGET_CHANGED\"}";
+                    && !DshaAccessibilityService.matchesTarget(target);
+            boolean runChanged = !live.getAsBoolean();
+            if (targetChanged || runChanged)
+              return VirtualScreenRoutes.mutates(operation)
+                  ? ScreenActionResult.executed(result, targetChanged, runChanged)
+                  : ScreenActionResult.notExecuted();
             return result;
           };
       return target != null && !operation.equals("launch")
@@ -1259,8 +1273,14 @@ public final class HttpShellService {
    * </ul>
    *
    * <p>所以插件的正确写法是 {@code if (protocol >= N)} 而不是 {@code == N}。
+   *
+   * <p><b>4</b>：{@code /app/vscreen/*} 的写操作在「动作已落地、之后目标或运行态校验失败」时
+   * 返回 {@code ok:true} 加 {@code targetChangedAfterExecution} / {@code runChangedAfterExecution}
+   * 标记，不再返回 {@code SCREEN_TARGET_CHANGED}（#140）。按老约定把
+   * {@code SCREEN_TARGET_CHANGED} 当成「没执行、可以直接重试」的插件，必须先 {@code see}
+   * 复核再决定是否重试。
    */
-  private static final int BRIDGE_PROTOCOL = 3;
+  private static final int BRIDGE_PROTOCOL = 4;
 
   /**
    * {@code /app/version}：桥协议与 App 版本，给插件做特性检测。

@@ -119,6 +119,9 @@ public final class VirtualScreenAccessibility {
       b.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, end);
       boolean selected = target.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, b);
       return ok().put("selectionApplied", selected);
+    } catch (com.deepseekharness.app.DshaAccessibilityService.TargetChangedException rejected) {
+      // 动作之前目标/运行状态就变了：动作没有落地，给调用方一个「未执行」的稳定码（#140）。
+      return fail("SCREEN_TARGET_CHANGED");
     } catch (Throwable error) {
       return fail("ACCESSIBILITY_OPERATION_UNKNOWN");
     } finally {
