@@ -19,7 +19,7 @@
 - 上游 client 摘要 `1403ab28a1f3478c2a7a11236830f242140e2de7463b7ccb384e469e93bd3ffa`；本地差异由 `tools/apply-mobile-client-patches.mjs` 与 `tools/mobile-server/` 管理。不是未修改的上游产物。
 - 许可全文：`app/src/main/assets/builtin-plugins/dsh-web-mobile/LICENSE`。当前产物摘要：
 
-- `client.js`：`a5991fe7b504da60c974b819d546ee25718d605e0fba3ec068432a76d6808b62`
+- `client.js`：`83c607c83c9c91cfeb24217d192131004ef02f0b071db2e1f9db14a9e10c33d2`
 - `index.js`：`607ea57134e8772fa5e9bb1778c556703ba21191f8ef198ec278b764f945797a`
 - `compress.js`：`f5902f4f036d0f7a67d2ce6e4c71b01a98227cb4365abde7a4bf8f1bf5e6de0c`
 - `delete-session.js`：`f4f8caf0fd54ab49ad264908296b12d9d46868542b082136927afe3c21d32b19`
