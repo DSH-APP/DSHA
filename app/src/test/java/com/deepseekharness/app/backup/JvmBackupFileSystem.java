@@ -5,6 +5,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /** 测试使用真实文件读写、同步、移动和链接，不把事务操作全部 mock。 */
 public class JvmBackupFileSystem implements BackupFileSystem {
@@ -18,13 +19,15 @@ public class JvmBackupFileSystem implements BackupFileSystem {
               .name()
               .hashCode();
       int mode = 0700;
+      long ctime = 0;
       try {
         Map<String, Object> unix =
-            Files.readAttributes(file.toPath(), "unix:dev,mode", LinkOption.NOFOLLOW_LINKS);
+            Files.readAttributes(file.toPath(), "unix:dev,mode,ctime", LinkOption.NOFOLLOW_LINKS);
         device = ((Number) unix.get("dev")).longValue();
         mode = ((Number) unix.get("mode")).intValue() & 0777;
+        ctime = ((FileTime) unix.get("ctime")).to(TimeUnit.NANOSECONDS);
       } catch (UnsupportedOperationException ignored) {
-        /* Windows 无 unix view；FileStore 身份仍真实分域。 */
+        /* Windows 无 unix view；FileStore 身份仍真实分域，且见证缺失时复用会被放弃。 */
       }
       return new Node(
           a.isSymbolicLink()
@@ -34,7 +37,8 @@ public class JvmBackupFileSystem implements BackupFileSystem {
           a.size(),
           a.lastModifiedTime().toMillis(),
           device,
-          mode);
+          mode,
+          ctime);
     } catch (NoSuchFileException e) {
       return new Node("MISSING", "", 0, 0, 0, 0);
     }

@@ -9,9 +9,23 @@ public interface BackupFileSystem {
     public final String type, key;
     public final com.deepseekharness.app.util.FileKind kind;
     public final long size, modified, device;
+
+    /**
+     * 变更见证：inode 的 ctime（纳秒）。写入者可以恢复 {@link #modified}（{@code utimensat}），
+     * 但没有任何非内核接口可以恢复 ctime，所以「ctime 未变」比「mtime 未变」更适合当作
+     * 「这个 inode 自上次登记以来没被写过」的证据。0 表示该实现不提供见证。
+     */
+    public final long ctime;
+
     public final int mode;
 
+    /** 不带见证的节点：{@link #ctime} 为 0，需要见证的调用方必须放弃复用（见 TreeDigestCache）。 */
     public Node(String type, String key, long size, long modified, long device, int mode) {
+      this(type, key, size, modified, device, mode, 0);
+    }
+
+    public Node(
+        String type, String key, long size, long modified, long device, int mode, long ctime) {
       this.kind = com.deepseekharness.app.util.FileKind.fromWire(type);
       this.type = kind.wire();
       this.key = key;
@@ -19,8 +33,13 @@ public interface BackupFileSystem {
       this.modified = modified;
       this.device = device;
       this.mode = mode;
+      this.ctime = ctime;
     }
 
+    /**
+     * 不含 {@link #ctime}：本方法用在遍历期间的同树复核（SOURCE_CHANGED），把见证算进去会让
+     * 所有 6 参数构造的调用点（AndroidTrustedAssetFileSystem 等）把「没有见证」误报成源已变化。
+     */
     public boolean same(Node other) {
       return other != null
           && type.equals(other.type)

@@ -82,20 +82,30 @@ public final class ColdInstallTransaction {
   private final Fault fault;
   private final Candidate candidate;
 
+  /** 候选树在一次事务里要被摘要多次；未变化时复用，避免对刚解压的数百 MiB 重复读取内容。 */
+  private final TreeDigestCache digests;
+
   private ColdInstallTransaction(
       BackupFileSystem fs,
       ColdInstallPackages.HostRoot host,
       File directory,
       Map<String, Object> intent,
-      Fault fault)
+      Fault fault,
+      TreeDigestCache digests)
       throws IOException {
     this.fs = fs;
     this.host = host;
     this.directory = directory;
     this.intent = intent;
     this.fault = fault == null ? at -> {} : fault;
+    this.digests = digests;
     live = fs.child(host.files, "linux");
     candidate = new Candidate(this);
+  }
+
+  /** 与 BackupTree.digest 语义相同；树未变化时不再读取文件内容。 */
+  private String digestOf(File root) throws IOException {
+    return digests.digest(fs, root, new BackupControl(null));
   }
 
   private static boolean same(BackupFileSystem.Node a, BackupFileSystem.Node b) {
@@ -121,7 +131,8 @@ public final class ColdInstallTransaction {
             .type
             .equals("MISSING")) throw new IOException("COLD_EXISTING_DATA_DOMAIN");
     var old = fs.stat(live);
-    String oldDigest = BackupTree.digest(fs, live, new BackupControl(null));
+    TreeDigestCache digests = new TreeDigestCache();
+    String oldDigest = digests.digest(fs, live, new BackupControl(null));
     File home = fs.child(host.files, HOME);
     if (fs.stat(home).type.equals("MISSING")) fs.directory(home);
     File directory = fs.child(home, UUID.randomUUID().toString());
@@ -138,7 +149,8 @@ public final class ColdInstallTransaction {
     intent.put("oldDigest", oldDigest);
     intent.put("candidateKey", fs.stat(linux).key);
     fs.atomic(directory, "intent.json", BackupJson.write(intent, 8192));
-    ColdInstallTransaction result = new ColdInstallTransaction(fs, host, directory, intent, fault);
+    ColdInstallTransaction result =
+        new ColdInstallTransaction(fs, host, directory, intent, fault, digests);
     ACTIVE.add(directory.getAbsolutePath());
     return result;
   }
@@ -233,7 +245,7 @@ public final class ColdInstallTransaction {
     if (Boolean.TRUE.equals(intent.get("had"))
         ? !node.type.equals("DIRECTORY") || !node.key.equals(intent.get("oldKey"))
         : !node.type.equals("MISSING")) throw new IOException("COLD_ORIGINAL_CHANGED");
-    if (!intent.get("oldDigest").equals(BackupTree.digest(fs, live, new BackupControl(null))))
+    if (!intent.get("oldDigest").equals(digestOf(live)))
       throw new IOException("COLD_ORIGINAL_CHANGED");
   }
 
@@ -254,7 +266,7 @@ public final class ColdInstallTransaction {
                 "key",
                 fs.stat(candidate.linux()).key,
                 "digest",
-                BackupTree.digest(fs, candidate.linux(), new BackupControl(null))),
+                digestOf(candidate.linux())),
             8192));
     mark("guest-closed");
   }
@@ -273,9 +285,7 @@ public final class ColdInstallTransaction {
     var proof = BackupJson.read(fs.small(fs.child(directory, "prepared.json"), 8192), 8192);
     if (!directory.getName().equals(proof.get("id"))
         || !intent.get("candidateKey").equals(proof.get("key"))
-        || !proof
-            .get("digest")
-            .equals(BackupTree.digest(fs, candidate.linux(), new BackupControl(null))))
+        || !proof.get("digest").equals(digestOf(candidate.linux())))
       throw new IOException("COLD_PREPARED_CHANGED");
     if (!marker(fs, directory, "guest-closed")) throw new IOException("COLD_GUEST_EXIT_REQUIRED");
     try {
@@ -314,11 +324,7 @@ public final class ColdInstallTransaction {
         directory,
         "failure-tree.json",
         BackupJson.write(
-            Map.of(
-                "key",
-                fs.stat(candidate.linux()).key,
-                "digest",
-                BackupTree.digest(fs, candidate.linux(), new BackupControl(null))),
+            Map.of("key", fs.stat(candidate.linux()).key, "digest", digestOf(candidate.linux())),
             8192));
     mark("failed-closed");
   }

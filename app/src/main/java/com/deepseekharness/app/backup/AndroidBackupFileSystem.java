@@ -78,7 +78,11 @@ public class AndroidBackupFileSystem implements BackupFileSystem {
         stat.st_size,
         stat.st_mtime,
         stat.st_dev,
-        stat.st_mode & 0777);
+        stat.st_mode & 0777,
+        // 见证用 ctime。纳秒级的 st_ctim 是 API 34 才有的字段，而这份源码两个 flavor 共用、
+        // low 的 minSdk 是 23，因此这里只有秒级精度；TreeDigestCache 用「摘要前的遍历与登记时的
+        // 遍历都必须晚于树内最新 ctime 所在秒」的封印条件把秒级精度的同秒别名窗口关掉。
+        stat.st_ctime * 1_000_000_000L);
   }
 
   @Override
