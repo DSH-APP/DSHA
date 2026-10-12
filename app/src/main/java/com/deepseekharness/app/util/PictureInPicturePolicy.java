@@ -64,4 +64,22 @@ public final class PictureInPicturePolicy {
     long fitted = Math.round((double) preferred[0] * windowHeight / windowWidth);
     return new int[] {preferred[0], (int) Math.max(1, Math.min(16384, fitted))};
   }
+
+  /**
+   * 逻辑视口没有变化时，容器是否仍要把本次测量/布局分发给子页面。
+   *
+   * <p>几何缓存只能去重「没有变化的重排」，不能吞掉子页面自己发起的布局请求：小窗期间逻辑视口
+   * 是冻结的，而网页内容变化会让原生子树 requestLayout()。若只比较尺寸相等就跳过，子页面拿到的
+   * 永远是上一次的测量结果，请求也不会被满足，布局与绘制状态就不同步（小窗中下部反复闪白/空白）。
+   */
+  public static boolean mustDispatchChildLayout(
+      int viewportWidth,
+      int viewportHeight,
+      int cachedViewportWidth,
+      int cachedViewportHeight,
+      boolean childRequestedLayout) {
+    return childRequestedLayout
+        || viewportWidth != cachedViewportWidth
+        || viewportHeight != cachedViewportHeight;
+  }
 }
