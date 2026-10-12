@@ -499,10 +499,10 @@ public class DshaAccessibilityService extends AccessibilityService {
             : !TextUtils.isEmpty(t) ? t.toString() : (!TextUtils.isEmpty(d) ? d.toString() : "");
     android.graphics.Rect r = new android.graphics.Rect();
     node.getBoundsInScreen(r);
-    // 只输出「有文字」或「能点/能输入」的节点：全量节点树对 agent 是噪音
-    if ((!label.isEmpty() || clickable || editable)
-        && com.deepseekharness.app.util.AccessibilityDumpBounds.ordered(
-            r.left, r.top, r.right, r.bottom)) {
+    // 只输出「有文字」或「能点/能输入」的节点，且矩形必须能用来定位：全量节点树对 agent 是噪音，
+    // 反序矩形则连定位都做不到（issue #143 就是这么漏出去的）。
+    if (com.deepseekharness.app.util.AccessibilityDumpBounds.reportable(
+        !label.isEmpty(), clickable || editable, r.left, r.top, r.right, r.bottom)) {
       count[0]++;
       sb.append('[').append(count[0]).append("] ");
       if (!label.isEmpty()) sb.append('"').append(label.replace('\n', ' ')).append('"');

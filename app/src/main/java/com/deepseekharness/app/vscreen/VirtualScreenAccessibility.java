@@ -5,6 +5,7 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
+import com.deepseekharness.app.util.AccessibilityDumpBounds;
 import org.json.*;
 import java.util.*;
 
@@ -137,11 +138,19 @@ public final class VirtualScreenAccessibility {
     if (depth > 24 || tree.length() >= 200) return;
     String text =
         node.isPassword() ? "" : String.valueOf(node.getText() == null ? "" : node.getText());
-    if (!text.isEmpty() || node.isClickable() || node.isEditable() || node.isScrollable()) {
+    Rect rect = new Rect();
+    node.getBoundsInScreen(rect);
+    // 与主屏 dump 同一条不变量：反序矩形不是「空节点」，它的四条边都不能用来定位，
+    // 报出去只会让调用方按一个错坐标点屏幕（issue #143）。
+    if (AccessibilityDumpBounds.reportable(
+        !text.isEmpty(),
+        node.isClickable() || node.isEditable() || node.isScrollable(),
+        rect.left,
+        rect.top,
+        rect.right,
+        rect.bottom)) {
       String id = UUID.randomUUID().toString();
       nodes.put(id, AccessibilityNodeInfo.obtain(node));
-      Rect rect = new Rect();
-      node.getBoundsInScreen(rect);
       tree.put(
           new JSONObject()
               .put("nodeId", id)
