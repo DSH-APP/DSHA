@@ -4,9 +4,9 @@ import java.util.List;
 public final class BuiltinPluginRegistry {
     private BuiltinPluginRegistry() { }
     public static final List<String> DEFAULT = List.of("dsh-device-shell-guide", "dsh-task-notifier", "dsh-status-overlay", "dsh-web-mobile", "dsh-computer-use-android", "dsh-auto-review", "dsh-tool-vscreen");
-    public static final List<String> SIGNED = List.of("dsh-device-shell-guide", "dsh-task-notifier", "dsh-status-overlay", "dsh-web-mobile", "dsh-computer-use-android", "dsh-auto-review", "dsh-tool-vscreen", "dsh-app-integration");
+    public static final List<String> SIGNED = List.of("dsh-device-shell-guide", "dsh-task-notifier", "dsh-status-overlay", "dsh-web-mobile", "dsh-computer-use-android", "dsh-auto-review", "dsh-tool-vscreen", "dsh-app-integration", "dsh-destructive-guard");
     public static final List<String> OFFICIAL = List.of("@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app");
-    public static final List<String> INTERNAL = List.of("dsh-app-integration", "@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app");
+    public static final List<String> INTERNAL = List.of("dsh-app-integration", "dsh-destructive-guard", "@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app");
     public static String guestDirectory(String name) {
         if (name == null) return "";
         return switch(name) {
@@ -18,6 +18,7 @@ public final class BuiltinPluginRegistry {
             case "dsh-auto-review" -> "/root/dsha-auto-review";
             case "dsh-tool-vscreen" -> "/root/dsha-tool-vscreen";
             case "dsh-app-integration" -> "/root/dsha-app-integration";
+            case "dsh-destructive-guard" -> "/root/dsha-destructive-guard";
             default -> "";
         };
     }
@@ -32,6 +33,7 @@ public final class BuiltinPluginRegistry {
             case "dsh-auto-review" -> "lib/index.js";
             case "dsh-tool-vscreen" -> "lib/index.js";
             case "dsh-app-integration" -> "index.js";
+            case "dsh-destructive-guard" -> "lib/index.js";
             default -> "";
         };
     }

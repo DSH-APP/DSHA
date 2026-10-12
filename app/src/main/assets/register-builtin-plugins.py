@@ -69,6 +69,9 @@ _REGISTRY_ROWS, _OFFICIAL_ROWS = _registry()
 DEFAULT_BUILTINS = tuple(row['name'] for row in _REGISTRY_ROWS)
 OFFICIAL_BUNDLES = tuple(row['name'] for row in _OFFICIAL_ROWS)
 BUILTIN_DIRECTORIES = {row['name']: row['guestDirectory'] for row in _REGISTRY_ROWS}
+# APK 独占的插件（源码随包提供，不进用户备份，也不允许用户移除）：由注册表声明，
+# 不要在别处再写一份硬编码名单。
+INTERNAL_BUILTINS = tuple(row['name'] for row in _REGISTRY_ROWS if row.get('internal'))
 
 PROFILE_PATCH_TEMPLATE = (
     "# Your patch layer for this dsh profile, applied after every bundle layer:\n"
@@ -664,6 +667,8 @@ def disable_plugin(name):
     """--disable：写禁用标记、移出 bundles，并从加载路径摘除系统插件旧实体。"""
     lines = ["== " + time.strftime("%Y-%m-%d %H:%M:%S") + " 禁用 " + name]
     try:
+        if name in INTERNAL_BUILTINS:
+            raise RuntimeError("该插件随 APK 提供且不可停用（硬约束）：" + name)
         d = entity_dir(name)
         if d is not None:
             os.makedirs(os.path.dirname(marker_path(name)), exist_ok=True)
@@ -730,6 +735,7 @@ def register():
     present = {}
     disabled = {}
     skipped = []
+    forced = []
     missing = []
     for name in names:
         d = entity_dir(name)
@@ -737,6 +743,18 @@ def register():
             missing.append(name)
             continue
         if is_disabled(name):
+            if name in INTERNAL_BUILTINS:
+                # APK 独占的插件（例如删除确认守卫）不允许被停用：它能被一个空标记
+                # 关掉的话就等于没有约束。原生侧 WebLifecycleController /
+                # StartupRepairs 早已按同一口径挡住停用与替换，这里补齐 guest 侧，
+                # 顺手把标记清掉，让状态收敛而不是每次启动都矛盾。
+                try:
+                    os.remove(marker_path(name))
+                except OSError:
+                    pass
+                forced.append(name)
+                present[name] = d
+                continue
             skipped.append(name)  # 用户禁用过的：尊重标记，不补回
             disabled[name] = d
             continue
@@ -801,6 +819,8 @@ def register():
             print('BUILTIN_REGISTER_FAIL: ' + str(error))
             return 1
 
+    if forced:
+        lines.append("APK 独占插件不可停用，已恢复：%s" % ", ".join(forced))
     if skipped:
         lines.append("尊重禁用标记跳过：%s" % ", ".join(skipped))
     if not present:

@@ -231,6 +231,18 @@
       "cli": "no positional arguments; see explicit environment/requirements"
     },
     {
+      "path": "tools/test-builtin-internal-guard.py",
+      "stage": "fast",
+      "reason": "APK 独占内置插件不可停用的回归；假 root 跑真脚本，不用设备、不用构建",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "python39"
+      ],
+      "environment": {},
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
       "path": "tools/test-chat-render-performance.mjs",
       "stage": "runtime",
       "reason": "Current source/verified runtime host fixture; explicit dependencies and sandbox HOME; no Android device operations",
@@ -343,6 +355,18 @@
       "environment": {
         "DSHA_RUNTIME_ARCHIVE": "{runtimeArchive}"
       },
+      "cli": "no positional arguments; see explicit environment/requirements"
+    },
+    {
+      "path": "tools/test-destructive-guard.mjs",
+      "stage": "fast",
+      "reason": "破坏性命令识别与确认闸门的纯逻辑回归；假 FS/假 ctx 打桩，不用设备、不用构建",
+      "args": [],
+      "timeoutSeconds": 300,
+      "requires": [
+        "node24"
+      ],
+      "environment": {},
       "cli": "no positional arguments; see explicit environment/requirements"
     },
     {

@@ -1003,7 +1003,7 @@ def cmd_list(message="插件状态已同步"):
                           exportable=not official and directory is not None,
                           deletable=not official and name not in system_names and not runtime_provided
                                     and (name in deps or name in bundles),
-                          internal=official or name == 'dsh-app-integration',
+                          internal=official or name in builtin.INTERNAL_BUILTINS,
                           detected=name in discovered and name not in deps and name not in bundles,
                           location='随 DSH 安装提供' if runtime_provided else '、'.join(discovered.get(name, {}).get('locations', []))))
         update = updates.get(name, {})
