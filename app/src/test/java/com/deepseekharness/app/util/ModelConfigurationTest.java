@@ -98,6 +98,27 @@ public class ModelConfigurationTest {
   }
 
   @Test
+  public void emptyExistingCatalogIsSavedAsAnExplicitEmptyArray() {
+    JsonObject original =
+        JsonParser.parseString("{\"models\":[{\"id\":\"old\"}],\"api\":\"openai-completions\"}")
+            .getAsJsonObject();
+    JsonObject edited = original.deepCopy();
+    edited.add("models", new JsonArray());
+
+    ModelConfiguration.validateModels(edited.get("models").toString(), false);
+    JsonArray changes = ModelConfiguration.diff(new JsonArray(), original, edited);
+    assertEquals(1, changes.size());
+    assertEquals("set", changes.get(0).getAsJsonObject().get("op").getAsString());
+    assertEquals(
+        "models", changes.get(0).getAsJsonObject().getAsJsonArray("path").get(0).getAsString());
+    assertEquals(new JsonArray(), changes.get(0).getAsJsonObject().get("value"));
+    assertEquals(1, original.getAsJsonArray("models").size());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ModelConfiguration.validateModels(edited.get("models").toString(), true));
+  }
+
+  @Test
   public void protocolChoicesComeFromSchemaNotHardcodedIds() {
     JsonObject schema =
         JsonParser.parseString(
