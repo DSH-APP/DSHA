@@ -1,6 +1,8 @@
 package com.deepseekharness.app.ui;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -28,5 +30,22 @@ public final class ModelSetupDraftTest {
     assertTrue(retained.shouldShowDiscovery(1));
     retained.clear();
     assertFalse(retained.shouldShowDiscovery(1));
+  }
+
+  @Test
+  public void clearingCatalogOnlyChangesDraftModels() {
+    ModelSetupActivity.Draft retained = new ModelSetupActivity.Draft();
+    retained.value =
+        JsonParser.parseString("{\"models\":[{\"id\":\"keep\"}]}").getAsJsonObject();
+    retained.modelList = retained.value.getAsJsonArray("models").deepCopy();
+    JsonArray previous = retained.modelList;
+
+    retained.clearModels();
+
+    assertTrue(retained.modelList.isEmpty());
+    assertEquals(
+        "keep",
+        retained.value.getAsJsonArray("models").get(0).getAsJsonObject().get("id").getAsString());
+    assertEquals(1, previous.size());
   }
 }

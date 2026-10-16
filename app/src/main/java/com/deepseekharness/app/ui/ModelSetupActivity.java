@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.view.*;
 import android.widget.*;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
@@ -44,6 +45,10 @@ public final class ModelSetupActivity extends AppCompatActivity {
 
     void consumeDiscovery(long serial) {
       handledDiscovery = Math.max(handledDiscovery, serial);
+    }
+
+    void clearModels() {
+      modelList = new JsonArray();
     }
 
     void clear() {
@@ -490,6 +495,8 @@ public final class ModelSetupActivity extends AppCompatActivity {
       fetchModels.setEnabled(!Boolean.TRUE.equals(repository.busy.getValue()));
     }
     page.button(models, t("添加模型", "Add model"), false, () -> editModel(-1));
+    page.button(models, t("删除所有模型", "Remove all models"), false, this::deleteAllModels)
+        .setEnabled(!draft.modelList.isEmpty());
     models.addView(
         page.text(
             t(
@@ -497,6 +504,34 @@ public final class ModelSetupActivity extends AppCompatActivity {
                 "Unchanged catalogs retain the provider's models and capabilities."),
             11,
             R.color.text_muted));
+  }
+
+  private void deleteAllModels() {
+    new DshaDialogBuilder(this)
+        .setTitle(t("删除所有模型？", "Remove all models?"))
+        .setMessage(
+            t(
+                "将清空当前服务商目录中的 " + draft.modelList.size() + " 个模型。保存并同步后才会生效。",
+                "This clears "
+                    + draft.modelList.size()
+                    + " models from this provider's catalog. Save and sync to apply.")
+                + (draft.custom
+                    ? t(
+                        "\n新建自定义服务商至少需要一个模型，清空后请重新添加才能保存。",
+                        "\nA new custom provider needs at least one model. Add one before saving.")
+                    : ""))
+        .setNegativeButton(t("取消", "Cancel"), null)
+        .setPositiveButton(
+            t("清空目录", "Clear catalog"),
+            (dialog, which) -> {
+              draft.clearModels();
+              renderModels();
+              status.setText(
+                  t(
+                      "当前服务商的模型目录已在草稿中清空；保存并同步后生效。",
+                      "This provider's model catalog is empty in the draft. Save and sync to apply."));
+            })
+        .show();
   }
 
   private void fetchModels() {
@@ -551,38 +586,73 @@ public final class ModelSetupActivity extends AppCompatActivity {
               + (display.isEmpty() || display.equals(id) ? "" : " · " + display)
               + (exists ? t("（已在目录）", " (already in catalog)") : "");
     }
-    new DshaDialogBuilder(this)
-        .setTitle(t("选择可用模型", "Choose available models"))
-        .setMultiChoiceItems(labels, selected, (dialog, which, on) -> selected[which] = on)
-        .setNegativeButton(t("取消", "Cancel"), (dialog, which) -> draft.consumeDiscovery(serial))
-        .setPositiveButton(
-            t("合并所选模型", "Add selected models"),
-            (dialog, which) -> {
-              Set<String> picked = new LinkedHashSet<>();
-              for (int i = 0; i < found.size(); i++)
-                if (selected[i]) picked.add(s(found.get(i).getAsJsonObject(), "id"));
-              int before = draft.modelList.size();
-              draft.modelList =
-                  ModelConfiguration.mergeDiscoveredModels(draft.modelList, found, picked);
-              renderModels();
-              int added = draft.modelList.size() - before;
-              draft.consumeDiscovery(serial);
-              status.setText(
-                  added == 0
-                      ? t(
-                          "所选模型已在目录中，现有详情保持不变。",
-                          "The selected models are already in the catalog. Existing details were preserved.")
-                      : t("已将 ", "Added ")
-                          + added
-                          + t(
-                              " 个模型合并到草稿；保存后同步到 Web UI。",
-                              " models to the draft. Save to sync them with Web UI."));
-            })
-        .setOnCancelListener(
-            dialog -> {
-              if (!isChangingConfigurations()) draft.consumeDiscovery(serial);
-            })
-        .show();
+    LinearLayout title = page.column();
+    title.setPadding(page.dp(20), page.dp(12), page.dp(20), 0);
+    TextView heading = page.text(t("选择可用模型", "Choose available models"), 18, R.color.text);
+    heading.setTypeface(null, android.graphics.Typeface.BOLD);
+    title.addView(heading);
+    CheckBox selectAll = new CheckBox(this);
+    selectAll.setText(t("全选", "Select all"));
+    selectAll.setChecked(true);
+    selectAll.setMinHeight(page.dp(48));
+    title.addView(selectAll);
+    boolean[] updating = {false};
+    AlertDialog selectionDialog =
+        new DshaDialogBuilder(this)
+            .setCustomTitle(title)
+            .setMultiChoiceItems(
+                labels,
+                selected,
+                (dialog, which, on) -> {
+                  selected[which] = on;
+                  updating[0] = true;
+                  selectAll.setChecked(allSelected(selected));
+                  updating[0] = false;
+                })
+            .setNegativeButton(t("取消", "Cancel"), (dialog, which) -> draft.consumeDiscovery(serial))
+            .setPositiveButton(
+                t("合并所选模型", "Add selected models"),
+                (dialog, which) -> {
+                  Set<String> picked = new LinkedHashSet<>();
+                  for (int i = 0; i < found.size(); i++)
+                    if (selected[i]) picked.add(s(found.get(i).getAsJsonObject(), "id"));
+                  int before = draft.modelList.size();
+                  draft.modelList =
+                      ModelConfiguration.mergeDiscoveredModels(draft.modelList, found, picked);
+                  renderModels();
+                  int added = draft.modelList.size() - before;
+                  draft.consumeDiscovery(serial);
+                  status.setText(
+                      picked.isEmpty()
+                          ? t("未选择模型，目录保持不变。", "No models selected. The catalog is unchanged.")
+                          : added == 0
+                              ? t(
+                                  "所选模型已在目录中，现有详情保持不变。",
+                                  "The selected models are already in the catalog. Existing details were preserved.")
+                              : t("已将 ", "Added ")
+                                  + added
+                                  + t(
+                                      " 个模型合并到草稿；保存后同步到 Web UI。",
+                                      " models to the draft. Save to sync them with Web UI."));
+                })
+            .setOnCancelListener(
+                dialog -> {
+                  if (!isChangingConfigurations()) draft.consumeDiscovery(serial);
+                })
+            .create();
+    selectAll.setOnCheckedChangeListener(
+        (button, checked) -> {
+          if (updating[0]) return;
+          Arrays.fill(selected, checked);
+          ListView list = selectionDialog.getListView();
+          for (int i = 0; i < selected.length; i++) list.setItemChecked(i, checked);
+        });
+    selectionDialog.show();
+  }
+
+  private static boolean allSelected(boolean[] selected) {
+    for (boolean item : selected) if (!item) return false;
+    return true;
   }
 
   private void editModel(int index) {
