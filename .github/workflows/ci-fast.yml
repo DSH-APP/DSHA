@@ -23,7 +23,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ steps.toolchain.outputs.java }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ steps.toolchain.outputs.node }}
       - name: Verify checked-in contracts
