@@ -108,12 +108,17 @@ export function installResponseCompression({ matches = () => true } = {}) {
     }
     function flush(res) {
         const pending = take(res);
-        if (pending !== undefined && !res.destroyed)
-            origWriteHead.apply(res, pending.args);
+        if (pending === undefined || res.destroyed) return false;
+        origWriteHead.apply(res, pending.args);
+        return true;
     }
     function patchedWriteHead(...args) {
-        flush(this);
+        const flushed = flush(this);
         const raw = typeof args[1] === 'string' ? args[2] : args[1];
+        // This call committed the deferred header write: a status-only re-entry is
+        // the middleware's implicit head write and must stay a no-op, matching
+        // Node's _implicitHeader once _header is set.
+        if (flushed && raw === undefined) return this;
         // Raw header arrays, including duplicate headers, keep Node's exact path.
         if (Array.isArray(raw) || (raw !== undefined && (raw === null || typeof raw !== 'object')))
             return origWriteHead.apply(this, args);

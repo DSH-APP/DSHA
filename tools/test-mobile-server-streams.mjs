@@ -274,3 +274,44 @@ test('writeHead validates native status/header errors synchronously; callback er
     assert.equal(callbackError, 'ERR_STREAM_WRITE_AFTER_END'); assert.equal(responseError, callbackError);
   });
 });
+
+test('host gzip wrapper: implicit writeHead after deferred headers stays a no-op', async () => {
+  // 宿主 compression 的 on-headers 包装：把 writeHead 的头部并入响应头表，只把
+  // statusCode 传给下一层；compression 的 end 代理在头未发出时补一次隐式 writeHead。
+  // 小 JSON + Content-Length 低于宿主压缩阈值时，这条路径会走延迟分支。
+  const body = JSON.stringify({ ok: true, note: 'y'.repeat(100) });
+  let failure;
+  await fixture((_req, res) => {
+    const writeHead = res.writeHead;
+    res.writeHead = function (statusCode, reasonOrHeaders, headers) {
+      const raw = typeof reasonOrHeaders === 'string' ? headers : reasonOrHeaders;
+      if (raw !== undefined && raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
+        for (const [name, value] of Object.entries(raw)) this.setHeader(name, value);
+      }
+      return writeHead.call(this, statusCode, ...(typeof reasonOrHeaders === 'string' ? [reasonOrHeaders] : []));
+    };
+    const end = res.end;
+    res.end = function (...args) {
+      if (!this.headersSent) this.writeHead(this.statusCode);
+      return end.apply(this, args);
+    };
+    try {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Length': Buffer.byteLength(body),
+        'Cache-Control': 'no-store',
+      });
+      res.end(body);
+    } catch (error) {
+      failure = error;
+      res.destroy();
+    }
+  }, async port => {
+    const result = await fetch(port).catch(error => ({ error }));
+    assert.equal(failure, undefined, failure && `${failure.code}: ${failure.message}`);
+    assert.ok(!('error' in result), 'the response must complete');
+    assert.equal(result.body.toString(), body);
+    assert.equal(result.res.headers['content-length'], String(Buffer.byteLength(body)));
+    assert.equal(result.res.headers['content-encoding'], undefined);
+  });
+});
