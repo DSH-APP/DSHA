@@ -200,9 +200,10 @@ public final class ModelSetupDraftTest {
   }
 
   @Test
-  public void launchLogKeepsItsOwnScrollAndSelection() {
+  public void launchLogKeepsItsOwnScrollAndSelection() throws Exception {
     MiuixLaunch page = new MiuixLaunch(activity());
-    page.logText.setText("line\n".repeat(1000));
+    page.logText.setTextColor(android.graphics.Color.MAGENTA);
+    page.logText.setText("本地布局测试日志 · sample output\n".repeat(1000));
     show(page);
     assertTrue(page.logText.isTextSelectable());
     page.logScroll.scrollTo(0, 100);
@@ -210,6 +211,47 @@ public final class ModelSetupDraftTest {
     page.logText.append("new line\n");
     compose.waitForIdle();
     assertEquals(100, page.logScroll.getScrollY());
+    int end =
+        page.logScroll.getChildAt(0).getHeight()
+            - page.logScroll.getHeight()
+            + page.logScroll.getPaddingTop()
+            + page.logScroll.getPaddingBottom();
+    for (int scroll : new int[] {100, end}) {
+      page.logScroll.scrollTo(0, scroll);
+      compose.waitForIdle();
+      int[] pagePosition = new int[2];
+      int[] logPosition = new int[2];
+      page.getLocationInWindow(pagePosition);
+      page.logScroll.getLocationInWindow(logPosition);
+      android.graphics.Rect viewport =
+          new android.graphics.Rect(
+              logPosition[0] - pagePosition[0],
+              logPosition[1] - pagePosition[1],
+              logPosition[0] - pagePosition[0] + page.logScroll.getWidth(),
+              logPosition[1] - pagePosition[1] + page.logScroll.getHeight());
+      android.graphics.Bitmap image =
+          android.graphics.Bitmap.createBitmap(
+              page.getWidth(), page.getHeight(), android.graphics.Bitmap.Config.ARGB_8888);
+      try {
+        page.draw(new android.graphics.Canvas(image));
+        int logPixels = 0;
+        for (int y = 0; y < image.getHeight(); y++) {
+          for (int x = 0; x < image.getWidth(); x++) {
+            if (image.getPixel(x, y) != android.graphics.Color.MAGENTA) continue;
+            logPixels++;
+            assertTrue(
+                "长日志不能绘制到操作卡片上：" + viewport + " pixel=" + x + "," + y, viewport.contains(x, y));
+          }
+        }
+        assertTrue(
+            "日志框内仍须有可读的日志 scroll=" + page.logScroll.getScrollY() + " rect=" + viewport,
+            logPixels > 20);
+      } finally {
+        image.recycle();
+      }
+    }
+    assertTrue(page.logScroll.shouldFollowEnd());
+    screenshot("launch-long-log", page);
   }
 
   @Test

@@ -1,6 +1,7 @@
 package com.deepseekharness.app.ui;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,6 +28,20 @@ public final class LogScrollView extends ScrollView {
       available = Math.min(available, View.MeasureSpec.getSize(heightSpec));
     super.onMeasure(
         widthSpec, View.MeasureSpec.makeMeasureSpec(available, View.MeasureSpec.EXACTLY));
+  }
+
+  @Override
+  protected void dispatchDraw(Canvas canvas) {
+    // Compose 的 AndroidView 宿主不保证裁剪，日志框自行限制子控件的绘制范围。
+    // Canvas 已带滚动位移，裁剪区域也须带上滚动量，才能保留正在查看的日志。
+    int saved = canvas.save();
+    try {
+      canvas.clipRect(
+          getScrollX(), getScrollY(), getScrollX() + getWidth(), getScrollY() + getHeight());
+      super.dispatchDraw(canvas);
+    } finally {
+      canvas.restoreToCount(saved);
+    }
   }
 
   @Override
