@@ -48,8 +48,14 @@ def gradle_coordinates(root=ROOT):
 
 
 def native_members(root=ROOT):
-    return sorted(p.relative_to(root).as_posix() for flavor in ('main', 'low')
-                  for p in (root / f'app/src/{flavor}/jniLibs').rglob('*.so'))
+    paths = {p.relative_to(root).as_posix() for flavor in ('main', 'low')
+             for p in (root / f'app/src/{flavor}/jniLibs').rglob('*.so')}
+    # Source checkouts can omit generated bxroot binaries; keep their locked license notices.
+    lock = root / 'tools/bxroot/lock.json'
+    if lock.is_file():
+        paths.update('app/src/main/jniLibs/arm64-v8a/' + row['name']
+                     for row in json.loads(lock.read_text(encoding='utf-8'))['artifacts'])
+    return sorted(paths)
 
 
 def render():
@@ -128,6 +134,14 @@ def render():
 当前 Gradle 直接运行依赖坐标（不包含测试依赖；完整传递依赖许可审查仍需实际解析结果）：
 
 {android}
+
+## Miuix 与 Compose 原生界面
+
+- Miuix `top.yukonga.miuix.kmp:miuix:0.8.8`：Apache-2.0，源码与许可见 https://github.com/compose-miuix-ui/miuix/tree/v0.8.8 。
+- AndroidX Compose UI / Foundation 1.10.5 与 AppCompat 1.7.1：Apache-2.0，源码见 https://android.googlesource.com/platform/frameworks/support/ 。
+- Compose 的 Android 图形库 `androidx.graphics:graphics-path:1.0.1`：Apache-2.0；两版 APK 均包含 ARM64 `libandroidx.graphics.path.so`，AAR 及成员摘要由 `tools/native-dependencies.lock.json` 与实际 APK 门禁核对。
+- Kotlin Compose 编译器 2.3.20：Apache-2.0，仅在构建时使用，源码见 https://github.com/JetBrains/kotlin 。
+- Android 依赖由 Maven 获取固定发布版本，其 SHA-256 由 `gradle/verification-metadata.xml` 核验。
 
 ## 实际入库 JNI 成员与来源边界
 

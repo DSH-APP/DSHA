@@ -5,14 +5,14 @@ import android.view.Gravity;
 import android.widget.*;
 import com.deepseekharness.app.R;
 
-/** 首次引导共用排版。内容可滚动，底部主操作始终可见。 */
+/** 首次引导共用排版。说明与操作一起滚动，大字体横屏仍可读完并继续。 */
 final class OnboardingUi {
   final Activity activity;
   final LinearLayout page, body, footer;
 
   OnboardingUi(Activity owner, String step, String title, String subtitle) {
     activity = owner;
-    page = new LinearLayout(owner);
+    page = new PageColumn(owner);
     page.setOrientation(LinearLayout.VERTICAL);
     page.setBackgroundColor(owner.getColor(R.color.surface));
     page.setPadding(dp(24), dp(18), dp(24), dp(18));
@@ -21,13 +21,16 @@ final class OnboardingUi {
     TextView brand = text("DSHA", 18, R.color.text);
     brand.setTypeface(null, android.graphics.Typeface.BOLD);
     header.addView(brand, new LinearLayout.LayoutParams(0, -2, 1));
-    header.addView(text(step, 11, R.color.text_muted));
+    header.addView(text(step, 13, R.color.text_muted));
     page.addView(header);
     ScrollView scroll = new ScrollView(owner);
     body = new LinearLayout(owner);
     body.setOrientation(LinearLayout.VERTICAL);
     body.setPadding(0, dp(24), 0, dp(16));
-    scroll.addView(body);
+    LinearLayout sections = new LinearLayout(owner);
+    sections.setOrientation(LinearLayout.VERTICAL);
+    sections.addView(body);
+    scroll.addView(sections);
     page.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
     TextView heading = text(title, 27, R.color.text);
     heading.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -35,7 +38,7 @@ final class OnboardingUi {
     note(subtitle);
     footer = new LinearLayout(owner);
     footer.setOrientation(LinearLayout.VERTICAL);
-    page.addView(footer);
+    sections.addView(footer);
     owner.setContentView(page);
   }
 
@@ -65,14 +68,13 @@ final class OnboardingUi {
     LinearLayout card = new LinearLayout(activity);
     card.setOrientation(LinearLayout.VERTICAL);
     card.setPadding(dp(16), dp(14), dp(16), dp(14));
-    card.setBackgroundResource(R.drawable.bg_card);
-    card.addView(text(label, 11, R.color.text_muted));
+    card.addView(text(label, 13, R.color.text_secondary));
     TextView content = text(value, 16, R.color.text);
     content.setPadding(0, dp(7), 0, 0);
     card.addView(content);
     LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
     p.bottomMargin = dp(10);
-    body.addView(card, p);
+    body.addView(com.deepseekharness.app.ui.miuix.MiuixUi.card(activity, card), p);
   }
 
   void primary(String title, Runnable action) {

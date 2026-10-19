@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="page_runtime_access">Runtime and tool permissions</string>
+    <string name="page_network">Ports and network</string>
+    <string name="page_saved_key">Saved fallback key</string>
+    <string name="page_files_skills">Files and skills</string>
+    <string name="page_grants_hint">Configure the capabilities you need. Each card has its own connection status and actions. Enabling one capability does not grant the others.</string>
+    <string name="page_plugin_search">Search installed plugins</string>
+    <string name="page_report_hint">Describe the steps, expected result and actual result. Check for personal information before exporting.</string>
+    <string name="page_web_error">Conversation connection status</string>
+    <string name="page_terminal_command">Enter a terminal command and press Send to run it</string>
+</resources>

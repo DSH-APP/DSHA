@@ -127,7 +127,10 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
                         : scene.startsWith("launch") ? "fragment_launch" : scene,
                 "layout",
                 getPackageName());
-    View body = getLayoutInflater().inflate(layout, null, false);
+    View body =
+        scene.startsWith("launch")
+            ? new com.deepseekharness.app.ui.miuix.MiuixLaunch(this)
+            : getLayoutInflater().inflate(layout, null, false);
     boolean fragment =
         scene.startsWith("fragment_") || scene.startsWith("plugins") || scene.startsWith("launch");
     canvas = fragment ? getLayoutInflater().inflate(R.layout.activity_main, null, false) : body;
@@ -160,8 +163,7 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
       ((TextView) canvas.findViewById(R.id.btn_theme))
           .setText(
               com.deepseekharness.app.util.UiText.text(ThemeController.isDark(this) ? "黑夜" : "白天"));
-      com.google.android.material.bottomnavigation.BottomNavigationView nav =
-          canvas.findViewById(R.id.bottom_nav);
+      com.deepseekharness.app.ui.miuix.MiuixNavigation nav = canvas.findViewById(R.id.bottom_nav);
       nav.setSelectedItemId(
           title.equals("插件")
               ? R.id.nav_plugins
@@ -252,15 +254,14 @@ public final class LayoutPreviewActivity extends AppCompatActivity {
         throw new IllegalStateException(error);
       }
     } else if (scene.startsWith("launch")) {
-      text(
-          R.id.launch_status,
-          scene.equals("launch_error") ? "连续启动失败，自动重启已暂停。可检查插件后再试。" : "准备好后点击启动，进入本机对话。");
-      text(R.id.launch_log, "[布局样例] 检查运行环境\n[布局样例] 等待启动\n\n本页面不启动 dsh，不执行模型请求。");
-      if (scene.equals("launch_error")) {
-        visible(R.id.launch_recovery, true);
-        text(R.id.launch_recovery, "恢复选项");
-        text(R.id.launch_run_state, "自动重启已暂停");
-      }
+      com.deepseekharness.app.ui.miuix.MiuixLaunch launch =
+          (com.deepseekharness.app.ui.miuix.MiuixLaunch) canvas.findViewById(R.id.launch_panel);
+      launch.status.setText(
+          com.deepseekharness.app.util.UiText.text(
+              scene.equals("launch_error") ? "连续启动失败，自动重启已暂停。可检查插件后再试。" : "准备好后点击启动，进入本机对话。"));
+      launch.logText.setText("[布局样例] 检查运行环境\n[布局样例] 等待启动\n\n本页面不启动 dsh，不执行模型请求。");
+      if (scene.equals("launch_error"))
+        launch.runState.setText(com.deepseekharness.app.util.UiText.text("自动重启已暂停"));
     } else if (scene.startsWith("plugins")) {
       boolean management = scene.equals("plugins_installed");
       visible(R.id.pluginMarketCard, !management);

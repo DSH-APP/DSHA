@@ -23,7 +23,7 @@ final class StartupRecoveryLayout {
     root = new ScrollView(context);
     root.setFillViewport(true);
     root.setBackgroundColor(context.getColor(R.color.surface));
-    content = column();
+    content = new PageColumn(context);
     content.setPadding(dp(20), dp(12), dp(20), dp(20));
     root.addView(content);
     View backRow = action(content, t("返回", "Back"), R.drawable.ic_recovery_right, back, false);
@@ -75,7 +75,7 @@ final class StartupRecoveryLayout {
                 "Keeps three healthy-start and three pre-repair snapshots. Saves configuration only, without sessions, workspaces, or dependency directories."),
             R.drawable.ic_recovery_database);
     plugins = card(t("插件卸载", "Remove plugins"), "", R.drawable.ic_recovery_document);
-    pluginCard = (View) plugins.getParent();
+    pluginCard = (View) plugins.getParent().getParent();
     pluginCard.setVisibility(View.GONE);
   }
 
@@ -101,10 +101,9 @@ final class StartupRecoveryLayout {
   private LinearLayout card(String title, String subtitle, int icon) {
     LinearLayout card = column();
     card.setPadding(dp(12), dp(12), dp(12), dp(12));
-    card.setBackgroundResource(R.drawable.bg_card);
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
     params.topMargin = dp(12);
-    content.addView(card, params);
+    content.addView(com.deepseekharness.app.ui.miuix.MiuixUi.card(context, card), params);
     LinearLayout heading = new LinearLayout(context);
     heading.setGravity(Gravity.TOP);
     card.addView(heading);

@@ -46,7 +46,7 @@ public final class UiMotionAudit extends Instrumentation {
       if (activity == null) throw new AssertionError("主页面未就绪");
       ui(
           () ->
-              ((com.google.android.material.bottomnavigation.BottomNavigationView)
+              ((com.deepseekharness.app.ui.miuix.MiuixNavigation)
                       activity.findViewById(R.id.bottom_nav))
                   .setSelectedItemId(R.id.nav_settings));
       settle();
@@ -59,9 +59,18 @@ public final class UiMotionAudit extends Instrumentation {
           final int row = index;
           ui(
               () ->
-                  ((ViewGroup) activity.findViewById(R.id.settings_tabs))
-                      .getChildAt(row)
-                      .performClick());
+                  ((SettingsFragment)
+                          activity
+                              .getSupportFragmentManager()
+                              .findFragmentById(R.id.fragment_container))
+                      .open(
+                          new int[] {
+                                R.id.settings_install,
+                                R.id.settings_config,
+                                R.id.settings_data,
+                                R.id.settings_device
+                              }
+                              [row]));
           settle();
           ui(() -> activity.findViewById(R.id.sub_back).performClick());
           settle();

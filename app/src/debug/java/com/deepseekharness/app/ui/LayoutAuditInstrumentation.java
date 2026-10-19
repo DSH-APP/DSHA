@@ -324,15 +324,17 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
     String port = store.getPort();
     ui(
         () ->
-            ((com.google.android.material.bottomnavigation.BottomNavigationView)
+            ((com.deepseekharness.app.ui.miuix.MiuixNavigation)
                     MainActivity.active().findViewById(R.id.bottom_nav))
                 .setSelectedItemId(R.id.nav_settings));
-    until(() -> MainActivity.active().findViewById(R.id.settings_tabs) != null, "设置页未打开");
+    until(() -> MainActivity.active().findViewById(R.id.settings_page) != null, "设置页未打开");
     ui(
         () ->
-            ((ViewGroup) MainActivity.active().findViewById(R.id.settings_tabs))
-                .getChildAt(1)
-                .performClick());
+            ((SettingsFragment)
+                    MainActivity.active()
+                        .getSupportFragmentManager()
+                        .findFragmentById(R.id.fragment_container))
+                .open(R.id.settings_config));
     until(() -> MainActivity.active().findViewById(R.id.config_save) != null, "配置页未打开");
     require(
         ((TextView) MainActivity.active().findViewById(R.id.app_title))
@@ -359,7 +361,7 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
             .equals("39081"),
         "主题切换丢失未保存输入");
     ui(() -> MainActivity.active().findViewById(R.id.sub_back).performClick());
-    until(() -> MainActivity.active().findViewById(R.id.settings_tabs) != null, "返回设置失败");
+    until(() -> MainActivity.active().findViewById(R.id.settings_page) != null, "返回设置失败");
     require(
         MainActivity.active().findViewById(R.id.sub_back).getVisibility() == View.GONE,
         "根页面仍显示子页返回");

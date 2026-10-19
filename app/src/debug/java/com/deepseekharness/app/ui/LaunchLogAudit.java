@@ -6,9 +6,10 @@ import android.os.Bundle;
 import android.view.*;
 import android.widget.*;
 import com.deepseekharness.app.R;
+import com.deepseekharness.app.ui.miuix.MiuixLaunch;
 import java.lang.reflect.Method;
 
-/** #61：真实启动 Fragment 的长日志、独立滚动、短窗口和横屏布局回归。 */
+/** #61：真实启动 Fragment 的日志边界、独立滚动和旋转回归；Compose 控件可达性由 UI 包测试验证。 */
 public final class LaunchLogAudit extends Instrumentation {
   private FragmentSessionTestActivity page;
   private LaunchFragment fragment;
@@ -69,15 +70,12 @@ public final class LaunchLogAudit extends Instrumentation {
     log(1000);
     ui(
         () -> {
-          View root = fragment.requireView(),
-              controls = root.findViewById(R.id.launch_controls),
-              scroll = root.findViewById(R.id.launch_log_scroll);
-          check(
-              rect(controls, root).top >= 0 && rect(controls, root).bottom <= root.getHeight(),
-              "实际窗口操作栏越界");
-          check(
-              scroll.getHeight() > 0 && rect(scroll, root).bottom <= root.getHeight(), "实际窗口日志越界");
-          check(root.getScrollY() == 0, "实际窗口发生整页滚动");
+          MiuixLaunch root = (MiuixLaunch) fragment.requireView();
+          View scroll = root.logScroll;
+          int limit = Math.round(220 * root.getResources().getDisplayMetrics().density);
+          check(root.getWidth() > 0 && root.getHeight() > 0, "Compose 页面未取得实际窗口尺寸");
+          check(scroll.getHeight() > 0 && scroll.getHeight() <= limit, "日志未限制自身高度");
+          check(scroll.getWidth() <= root.getWidth(), "日志超出页面宽度");
         });
   }
 
@@ -164,7 +162,7 @@ public final class LaunchLogAudit extends Instrumentation {
     Thread.sleep(250);
     waitForIdleSync();
     log(1);
-    View controls = root.findViewById(R.id.launch_controls);
+    View controls = ((MiuixLaunch) root).logScroll;
     ScrollView scroll = root.findViewById(R.id.launch_log_scroll);
     android.graphics.Rect[] anchor = {null};
     ui(() -> anchor[0] = rect(controls, root));
@@ -174,14 +172,8 @@ public final class LaunchLogAudit extends Instrumentation {
           () -> {
             check(
                 rect(controls, root).equals(anchor[0]),
-                "日志 " + lines + " 行移动了操作栏 " + width + "x" + height);
-            check(anchor[0].top >= 0 && anchor[0].bottom <= root.getHeight(), "操作栏超出窗口");
-            check(
-                scroll.getHeight() > 0 && rect(scroll, root).bottom <= root.getHeight(),
-                "日志没有被剩余高度约束");
-            check(
-                root.getScrollY() == 0 && root.findViewById(R.id.launch_sections).getScrollY() == 0,
-                "整页产生了滚动");
+                "日志 " + lines + " 行改变了日志容器边界 " + width + "x" + height);
+            check(scroll.getHeight() > 0 && scroll.getWidth() <= root.getWidth(), "日志未获得独立有界的滚动区域");
           });
     }
     int[] historical = {0};
@@ -204,7 +196,7 @@ public final class LaunchLogAudit extends Instrumentation {
                     == Math.max(0, scroll.getChildAt(0).getHeight() - scroll.getHeight()),
                 "回到底部后未继续跟随"));
     Bundle progress = new Bundle();
-    progress.putString("stream", "PASS " + width + "x" + height + "dp：1/50/1000 行、顶部按钮、独立滚动与跟随\n");
+    progress.putString("stream", "PASS " + width + "x" + height + "dp：1/50/1000 行、容器边界、独立滚动与跟随\n");
     sendStatus(0, progress);
   }
 
@@ -249,11 +241,11 @@ public final class LaunchLogAudit extends Instrumentation {
       boolean[] clicked = {false};
       ui(
           () -> {
-            View button = fragment.requireView().findViewById(R.id.launch_start);
+            MiuixLaunch.Action button = ((MiuixLaunch) fragment.requireView()).start;
             button.setOnClickListener(v -> clicked[0] = true);
             button.setEnabled(true);
-            button.performClick();
-            check(clicked[0], "长日志后启动按钮不可点击");
+            button.click();
+            check(clicked[0], "长日志后启动动作未派发");
           });
       result.putString("result", "PASS");
       result.putInt("checks", checks);

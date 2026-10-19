@@ -269,9 +269,11 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 
 ## 架构
 
+原生首页、设置、底部导航与共用管理卡片接入 Miuix；复杂表单与网页界面继续使用原有实现。迁移结构及验证范围见 [Miuix UI 说明](docs/ui-miuix.md)。
+
 ```
 ┌──────────────────────── APK ────────────────────────┐
-│ 原生 Android（Java 17 · Material3 · 单模块 :app）    │
+│ 原生 Android（Java 17 · Miuix / Compose · 单模块 :app）    │
 │  ├ 启动 / 安装修复 / 配置 / 工作区 / 插件 / 终端     │
 │  ├ 网页内核：系统 WebView（Standard）/ Gecko（Low）  │
 │  ├ 前台服务 + 看门狗 + 通知 + 画中画                 │

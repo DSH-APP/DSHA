@@ -48,7 +48,9 @@ public final class RecoveryActivity extends AppCompatActivity {
             R.color.text_secondary));
     status = page.text("", 15, R.color.text);
     status.setTextIsSelectable(true);
+    status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
     intro.addView(status);
+    page.label(t("应急会话", "Emergency session"));
     LinearLayout actions = page.card();
     actions.addView(
         page.text(
@@ -61,6 +63,11 @@ public final class RecoveryActivity extends AppCompatActivity {
     temporaryKey.setSingleLine(true);
     temporaryKey.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
     temporaryKey.setSaveEnabled(false);
+    temporaryKey.setContentDescription(
+        t("本次应急会话的临时 API Key", "Temporary API key for this emergency session"));
+    temporaryKey.setMinimumHeight(page.dp(56));
+    temporaryKey.setPadding(page.dp(12), page.dp(12), page.dp(12), page.dp(12));
+    temporaryKey.setBackgroundResource(R.drawable.bg_input);
     temporaryKey.setTextSize(15);
     temporaryKey.setHint(t("留空时尝试已有可读凭据", "Leave blank to try an existing readable key"));
     actions.addView(temporaryKey, new LinearLayout.LayoutParams(-1, -2));
@@ -125,8 +132,10 @@ public final class RecoveryActivity extends AppCompatActivity {
     page.content.addView(operation);
     page.button(
         actions, t("查看无需模型的修复选项", "Review repairs without a model"), false, this::repairOptions);
+    page.label(t("待确认的修复", "Repairs awaiting confirmation"));
     proposals = page.card();
     renderPlans(new JSONArray());
+    page.label(t("诊断与数据保护", "Diagnostics and data protection"));
     LinearLayout tools = page.card();
     page.button(
         tools,

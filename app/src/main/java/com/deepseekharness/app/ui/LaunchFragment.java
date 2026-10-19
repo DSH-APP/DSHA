@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import com.deepseekharness.app.ui.miuix.MiuixLaunch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -83,61 +83,58 @@ public class LaunchFragment extends Fragment {
       @NonNull LayoutInflater inflater,
       @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
-    View v = inflater.inflate(R.layout.fragment_launch, container, false);
+    MiuixLaunch v = new MiuixLaunch(requireContext());
 
     controller = HarnessController.get(requireContext());
     final Activity activity = requireActivity();
-    TextView status = v.findViewById(R.id.launch_status);
-    Button start = v.findViewById(R.id.launch_start);
-    Button restart = v.findViewById(R.id.launch_open);
-    Button stop = v.findViewById(R.id.launch_stop);
-    lanAddrText = v.findViewById(R.id.lan_addr);
-    launchLog = v.findViewById(R.id.launch_log);
+    MiuixLaunch.Label status = v.status;
+    MiuixLaunch.Action start = v.start;
+    MiuixLaunch.Action restart = v.restart;
+    MiuixLaunch.Action stop = v.stop;
+    lanAddrText = v.lanAddress;
+    launchLog = v.logText;
     logRevision = -1;
     logUrl = "";
-    v.findViewById(R.id.launch_download_logs)
-        .setOnClickListener(x -> startActivity(DiagnosticActivity.downloadLogs(requireContext())));
+    v.downloadLogs.setOnClickListener(
+        x -> startActivity(DiagnosticActivity.downloadLogs(requireContext())));
 
-    v.findViewById(R.id.launch_models)
-        .setOnClickListener(
-            x -> startActivity(new Intent(requireContext(), ModelSetupActivity.class)));
-    v.findViewById(R.id.launch_address)
-        .setOnClickListener(
-            x -> {
-              String local = controller.getWebAuthUrl();
-              String addresses =
-                  local.isEmpty()
-                      ? com.deepseekharness.app.util.UiText.choose(
-                          "启动后可查看访问地址。", "Start DSH to view access addresses.")
-                      : local;
-              if (lanAddrText != null && lanAddrText.getVisibility() == View.VISIBLE)
-                addresses += "\n\n" + lanAddrText.getText();
-              var dialog =
-                  new DshaDialogBuilder(requireContext())
-                      .setTitle(R.string.ui2_address)
-                      .setMessage(addresses)
-                      .setNegativeButton(android.R.string.cancel, null);
-              if (!local.isEmpty())
-                dialog.setPositiveButton(
-                    com.deepseekharness.app.util.UiText.choose("复制本机地址", "Copy local URL"),
-                    (d, w) -> copyAddr("DSH", local));
-              dialog.show();
-            });
+    v.models.setOnClickListener(
+        x -> startActivity(new Intent(requireContext(), ModelSetupActivity.class)));
+    v.address.setOnClickListener(
+        x -> {
+          String local = controller.getWebAuthUrl();
+          String addresses =
+              local.isEmpty()
+                  ? com.deepseekharness.app.util.UiText.choose(
+                      "启动后可查看访问地址。", "Start DSH to view access addresses.")
+                  : local;
+          if (lanAddrText != null && lanAddrText.getVisibility() == View.VISIBLE)
+            addresses += "\n\n" + lanAddrText.getText();
+          var dialog =
+              new DshaDialogBuilder(requireContext())
+                  .setTitle(R.string.ui2_address)
+                  .setMessage(addresses)
+                  .setNegativeButton(android.R.string.cancel, null);
+          if (!local.isEmpty())
+            dialog.setPositiveButton(
+                com.deepseekharness.app.util.UiText.choose("复制本机地址", "Copy local URL"),
+                (d, w) -> copyAddr("DSH", local));
+          dialog.show();
+        });
     restart.setText(R.string.ui2_restart);
-    v.findViewById(R.id.launch_recovery).setOnClickListener(x -> showRecovery());
-    v.findViewById(R.id.launch_safe)
-        .setOnClickListener(
-            x ->
-                new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
-                    .setTitle(com.deepseekharness.app.util.UiText.text("安全启动 Web？"))
-                    .setMessage(
-                        com.deepseekharness.app.util.UiText.text(
-                            "停止当前启动，只加载官方基础界面。原插件开关、会话、模型和配置保留；普通重启后回到原配置。安全界面不加载移动插件等扩展。"))
-                    .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null)
-                    .setPositiveButton(
-                        com.deepseekharness.app.util.UiText.text("安全启动"),
-                        (dialog, which) -> doStart(activity, status, start, true))
-                    .show());
+    v.recovery.setOnClickListener(x -> showRecovery());
+    v.safe.setOnClickListener(
+        x ->
+            new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
+                .setTitle(com.deepseekharness.app.util.UiText.text("安全启动 Web？"))
+                .setMessage(
+                    com.deepseekharness.app.util.UiText.text(
+                        "停止当前启动，只加载官方基础界面。原插件开关、会话、模型和配置保留；普通重启后回到原配置。安全界面不加载移动插件等扩展。"))
+                .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null)
+                .setPositiveButton(
+                    com.deepseekharness.app.util.UiText.text("安全启动"),
+                    (dialog, which) -> doStart(activity, status, start, true))
+                .show());
 
     // 启动按钮：未就绪时是「启动」；鉴权链接就绪后自动变为「进入」，点击进 WebUI。
     start.setOnClickListener(
@@ -190,11 +187,12 @@ public class LaunchFragment extends Fragment {
   }
 
   /** 启动 dsh：记录启动时刻，鉴权链接就绪后把「启动」变「进入」并输出 URL 到日志。 */
-  private void doStart(Activity activity, TextView status, Button start) {
+  private void doStart(Activity activity, MiuixLaunch.Label status, MiuixLaunch.Action start) {
     doStart(activity, status, start, false);
   }
 
-  private void doStart(Activity activity, TextView status, Button start, boolean safeMode) {
+  private void doStart(
+      Activity activity, MiuixLaunch.Label status, MiuixLaunch.Action start, boolean safeMode) {
     if (!safeMode && (controller.isStarting() || controller.isStopping())) return;
     if (startRefusal != null && startRefusal.isShowing()) return;
     final View root = getView();
@@ -319,8 +317,7 @@ public class LaunchFragment extends Fragment {
     final long generation = webEntryGeneration();
     final long request = ++enterRequest;
     enteringWeb = true;
-    ((TextView) root.findViewById(R.id.launch_status))
-        .setText(com.deepseekharness.app.util.UiText.text("正在验证 Web 访问权限…"));
+    ((MiuixLaunch) root).status.setText(com.deepseekharness.app.util.UiText.text("正在验证 Web 访问权限…"));
     refreshRunState();
     try {
       new Thread(
@@ -355,8 +352,9 @@ public class LaunchFragment extends Fragment {
                       }
                       try {
                         openWebEntry(activity, url, authCookie);
-                        ((TextView) root.findViewById(R.id.launch_status))
-                            .setText(com.deepseekharness.app.util.UiText.text("鉴权成功，正在打开 Web…"));
+                        ((MiuixLaunch) root)
+                            .status.setText(
+                                com.deepseekharness.app.util.UiText.text("鉴权成功，正在打开 Web…"));
                         refreshLanAddr();
                       } catch (RuntimeException error) {
                         finishWebEntry(
@@ -396,7 +394,7 @@ public class LaunchFragment extends Fragment {
     webEntryFailure = message == null ? "" : message;
     webEntryFailureGeneration = webEntryGeneration();
     webEntryFailureUrl = webEntryUrl();
-    TextView status = root.findViewById(R.id.launch_status);
+    MiuixLaunch.Label status = ((MiuixLaunch) root).status;
     status.setText(com.deepseekharness.app.util.UiStateText.render(webEntryFailure));
     status.setVisibility(webEntryFailure.isEmpty() ? View.GONE : View.VISIBLE);
     refreshRunState();
@@ -422,7 +420,7 @@ public class LaunchFragment extends Fragment {
   private void updateLog(String text) {
     View root = getView();
     if (root == null || launchLog == null) return;
-    LogScrollView scroll = root.findViewById(R.id.launch_log_scroll);
+    LogScrollView scroll = ((MiuixLaunch) root).logScroll;
     boolean follow = scroll.shouldFollowEnd();
     launchLog.setText(text);
     if (follow) scroll.followEndAfterLayout();
@@ -441,8 +439,8 @@ public class LaunchFragment extends Fragment {
     // 页面不可见时撤销自动进入：用户离开了启动页，回来不该被"突袭"打开 Web。
     pendingAutoEnter = false;
     if (enteringWeb && getView() != null) {
-      ((TextView) getView().findViewById(R.id.launch_status))
-          .setText(com.deepseekharness.app.util.UiText.text("返回后可重新进入 Web"));
+      ((MiuixLaunch) getView())
+          .status.setText(com.deepseekharness.app.util.UiText.text("返回后可重新进入 Web"));
     }
     invalidateWebEntry();
     ui.removeCallbacks(refreshState);
@@ -463,8 +461,8 @@ public class LaunchFragment extends Fragment {
     try {
       View root = getView();
       if (root == null) return;
-      TextView runState = root.findViewById(R.id.launch_run_state);
-      Button start = root.findViewById(R.id.launch_start);
+      MiuixLaunch.Label runState = ((MiuixLaunch) root).runState;
+      MiuixLaunch.Action start = ((MiuixLaunch) root).start;
       if (runState == null) return;
       boolean starting = controller.isStarting();
       boolean stopping = controller.isStopping();
@@ -513,12 +511,11 @@ public class LaunchFragment extends Fragment {
                               : controller.isUserStopped()
                                   ? getString(R.string.ui2_stopped)
                                   : getString(R.string.ui2_stopped));
-      ((TextView) root.findViewById(R.id.launch_port))
-          .setText(ready ? String.valueOf(controller.getWebPort()) : "—");
-      ((TextView) root.findViewById(R.id.launch_environment))
-          .setText(EnvironmentUiStatus.get(requireContext()).ready ? "READY" : "—");
-      ((TextView) root.findViewById(R.id.launch_subtitle))
-          .setText(
+      ((MiuixLaunch) root).port.setText(ready ? String.valueOf(controller.getWebPort()) : "—");
+      ((MiuixLaunch) root)
+          .environment.setText(EnvironmentUiStatus.get(requireContext()).ready ? "READY" : "—");
+      ((MiuixLaunch) root)
+          .subtitle.setText(
               ready
                   ? (controller.isWebCompatibilityFallback()
                           ? "proot"
@@ -526,8 +523,8 @@ public class LaunchFragment extends Fragment {
                       + " · dsh "
                       + com.deepseekharness.app.util.Constants.DSH_VERSION
                   : getString(R.string.ui2_launch_hint));
-      root.findViewById(R.id.launch_status)
-          .setVisibility(
+      ((MiuixLaunch) root)
+          .status.setVisibility(
               enteringWeb
                       || !webEntryFailure.isEmpty()
                       || starting
@@ -537,8 +534,8 @@ public class LaunchFragment extends Fragment {
                   ? View.VISIBLE
                   : View.GONE);
       if (starting)
-        ((TextView) root.findViewById(R.id.launch_status))
-            .setText(
+        ((MiuixLaunch) root)
+            .status.setText(
                 com.deepseekharness.app.util.UiText.format(
                     "%s · 本阶段 %s 秒 · 总计 %s 秒\n%s",
                     trace.stage,
@@ -548,14 +545,13 @@ public class LaunchFragment extends Fragment {
                         ? com.deepseekharness.app.util.UiText.text("下方实时显示启动输出；等待不会自动终止。")
                         : com.deepseekharness.app.util.UiText.text("检测到插件或配置异常，可查看恢复选项。")));
       else if (!webEntryFailure.isEmpty())
-        ((TextView) root.findViewById(R.id.launch_status))
-            .setText(com.deepseekharness.app.util.UiStateText.render(webEntryFailure));
+        ((MiuixLaunch) root)
+            .status.setText(com.deepseekharness.app.util.UiStateText.render(webEntryFailure));
       else if (expiredEntryFailure)
-        ((TextView) root.findViewById(R.id.launch_status))
-            .setText(com.deepseekharness.app.util.UiStateText.render(trace.stage));
-      root.findViewById(R.id.launch_busy)
-          .setVisibility(starting || stopping ? View.VISIBLE : View.GONE);
-      Button recovery = root.findViewById(R.id.launch_recovery);
+        ((MiuixLaunch) root)
+            .status.setText(com.deepseekharness.app.util.UiStateText.render(trace.stage));
+      ((MiuixLaunch) root).busy.setVisibility(starting || stopping ? View.VISIBLE : View.GONE);
+      MiuixLaunch.Action recovery = ((MiuixLaunch) root).recovery;
       int failures = controller.config().getWebFailures();
       recovery.setVisibility(View.VISIBLE);
       recovery.setText(com.deepseekharness.app.util.UiText.text("恢复选项"));
@@ -575,15 +571,15 @@ public class LaunchFragment extends Fragment {
                     : getString(R.string.ui2_start));
         start.setEnabled(!enteringWeb && !starting && !stopping);
       }
-      Button restart = root.findViewById(R.id.launch_open);
+      MiuixLaunch.Action restart = ((MiuixLaunch) root).restart;
       if (restart != null) restart.setEnabled(!starting && !stopping);
-      Button stop = root.findViewById(R.id.launch_stop);
+      MiuixLaunch.Action stop = ((MiuixLaunch) root).stop;
       if (stop != null) stop.setEnabled(!stopping);
       if (EnvironmentUiStatus.get(requireContext()).recovery) {
         runState.setText(com.deepseekharness.app.util.UiText.text("环境需要恢复"));
         if (start != null) start.setEnabled(false);
         if (restart != null) restart.setEnabled(false);
-        root.findViewById(R.id.launch_safe).setEnabled(false);
+        ((MiuixLaunch) root).safe.setEnabled(false);
         recovery.setVisibility(View.VISIBLE);
         recovery.setText(com.deepseekharness.app.util.UiText.text("环境维护"));
         recovery.setContentDescription(com.deepseekharness.app.util.UiText.text("查看环境维护与恢复选项"));
@@ -593,7 +589,7 @@ public class LaunchFragment extends Fragment {
                     new Intent(requireContext(), ExtractActivity.class)
                         .putExtra("review_only", true)));
       } else {
-        root.findViewById(R.id.launch_safe).setEnabled(!starting && !stopping);
+        ((MiuixLaunch) root).safe.setEnabled(!starting && !stopping);
         recovery.setOnClickListener(v -> showRecovery());
       }
     } catch (RuntimeException failure) {
@@ -602,7 +598,7 @@ public class LaunchFragment extends Fragment {
             getContext(), "UI_REFRESH_FAILED", failure.getClass().getSimpleName());
       View view = getView();
       if (view != null) {
-        TextView state = view.findViewById(R.id.launch_run_state);
+        MiuixLaunch.Label state = ((MiuixLaunch) view).runState;
         if (state != null)
           state.setText(
               com.deepseekharness.app.util.UiText.choose(
@@ -615,7 +611,8 @@ public class LaunchFragment extends Fragment {
     startActivity(new Intent(requireContext(), StartupRecoveryActivity.class));
   }
 
-  private void offerForceStop(Activity activity, View root, TextView status, long generation) {
+  private void offerForceStop(
+      Activity activity, View root, MiuixLaunch.Label status, long generation) {
     // 进程与文件身份核验放在工作线程；本次候选只捕获一次，由对话框局部持有至确认。
     new Thread(
             () -> {

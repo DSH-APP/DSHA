@@ -33,7 +33,14 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
     super.onCreate(state);
     container = new LinearLayout(this);
     container.setOrientation(LinearLayout.VERTICAL);
+    container.setBackgroundColor(getColor(com.deepseekharness.app.R.color.surface));
+    UiNavigation.addHeader(
+        this, container, UiText.choose("恢复旧端口草稿", "Restore previous-port drafts"), this::finish);
     status = new TextView(this);
+    status.setTextSize(14);
+    status.setTextColor(getColor(com.deepseekharness.app.R.color.text));
+    status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+    status.setTextIsSelectable(true);
     status.setPadding(20, 20, 20, 20);
     container.addView(status);
     setContentView(container);

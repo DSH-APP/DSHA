@@ -34,8 +34,10 @@ public final class AboutFragment extends Fragment {
             12,
             R.color.text_secondary);
     version.setGravity(Gravity.CENTER);
+    version.setTextIsSelectable(true);
     version.setPadding(0, 0, 0, ui.dp(24));
     ui.content.addView(version);
+    ui.label(UiText.choose("应用信息", "Application information"));
     LinearLayout metadata = ui.card();
     ui.kv(metadata, UiText.choose("包名", "Package"), BuildConfig.APPLICATION_ID);
     ui.kv(

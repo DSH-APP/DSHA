@@ -12,7 +12,7 @@ import androidx.fragment.app.Fragment;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.core.ConfigStore;
 import com.deepseekharness.app.core.HarnessController;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.deepseekharness.app.ui.miuix.MiuixNavigation;
 
 /**
  * 主界面外壳：启动门禁 + 底部导航（启动 / 插件 / 设置 / 终端）+ 顶栏标题 + 关于入口。
@@ -154,11 +154,11 @@ public class MainActivity extends AppCompatActivity {
     ((android.widget.ImageView) quickEntries.getChildAt(0)).setImageResource(R.drawable.ic_about);
     quickEntries.setOnClickListener(v -> AboutDialog.show(this));
 
-    BottomNavigationView nav = findViewById(R.id.bottom_nav);
+    MiuixNavigation nav = findViewById(R.id.bottom_nav);
     nav.setOnItemSelectedListener(
-        item -> {
+        id -> {
           // 当前根页面再次点选时保留输入和滚动；从子页返回或外部打开插件仍执行导航。
-          if (nav.getSelectedItemId() == item.getItemId()
+          if (nav.getSelectedItemId() == id
               && getSupportFragmentManager().getBackStackEntryCount() == 0
               && getSupportFragmentManager().findFragmentById(R.id.fragment_container) != null
               && !(getSupportFragmentManager().findFragmentById(R.id.fragment_container)
@@ -169,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
                 .popBackStackImmediate(
                     null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
           Fragment f;
-          int id = item.getItemId();
           if (id == R.id.nav_launch) {
             f = new LaunchFragment();
             if (pendingOpenWeb) {
@@ -291,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
     setIntent(intent);
-    BottomNavigationView nav = findViewById(R.id.bottom_nav);
+    MiuixNavigation nav = findViewById(R.id.bottom_nav);
     if (nav != null && intent.getBooleanExtra("open_plugins", false))
       nav.setSelectedItemId(R.id.nav_plugins);
     if (nav != null && intent.getBooleanExtra("open_launch", false)) {
@@ -349,7 +348,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void consumeTaskTarget(Intent intent) {
-    BottomNavigationView nav = findViewById(R.id.bottom_nav);
+    MiuixNavigation nav = findViewById(R.id.bottom_nav);
     if (nav == null) return;
     if (intent.getBooleanExtra("open_terminal", false)) {
       intent.removeExtra("open_terminal");
@@ -379,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
   private void consumeOpenWeb(Intent intent) {
     if (intent == null || !intent.getBooleanExtra("open_web", false)) return;
     intent.removeExtra("open_web");
-    BottomNavigationView nav = findViewById(R.id.bottom_nav);
+    MiuixNavigation nav = findViewById(R.id.bottom_nav);
     if (nav == null) return;
     pendingOpenWeb = true;
     if (nav.getSelectedItemId() != R.id.nav_launch) {

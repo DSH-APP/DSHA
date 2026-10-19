@@ -138,7 +138,7 @@ public final class NativeDataActivity extends AppCompatActivity {
     ScrollView scroll = new ScrollView(this);
     scroll.setFillViewport(true);
     scroll.setBackgroundColor(getColor(R.color.surface));
-    page = new LinearLayout(this);
+    page = new PageColumn(this);
     page.setOrientation(LinearLayout.VERTICAL);
     int pad = dp(20);
     page.setPadding(pad, dp(12), pad, pad);
@@ -187,6 +187,7 @@ public final class NativeDataActivity extends AppCompatActivity {
         13);
     status = text("", 14);
     status.setTextIsSelectable(true);
+    status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
     status.setBackgroundResource(R.drawable.bg_card);
     status.setPadding(dp(16), dp(12), dp(16), dp(12));
     section(t("选择数据范围", "Choose data scope"));
@@ -1146,7 +1147,8 @@ public final class NativeDataActivity extends AppCompatActivity {
 
   private Button button(String label, Runnable click) {
     Button button = new androidx.appcompat.widget.AppCompatButton(this);
-    button.setTextSize(13);
+    button.setTextSize(15);
+    button.setPadding(dp(12), dp(12), dp(12), dp(12));
     button.setBackgroundResource(R.drawable.bg_action_plain);
     button.setTextColor(getColor(R.color.primary));
     button.setText(label);
@@ -1165,10 +1167,9 @@ public final class NativeDataActivity extends AppCompatActivity {
     body = new LinearLayout(this);
     body.setOrientation(LinearLayout.VERTICAL);
     body.setPadding(dp(14), dp(10), dp(14), dp(14));
-    body.setBackgroundResource(R.drawable.bg_card);
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
     params.topMargin = dp(16);
-    page.addView(body, params);
+    page.addView(com.deepseekharness.app.ui.miuix.MiuixUi.card(this, body), params);
     text(title, 16).setTypeface(null, android.graphics.Typeface.BOLD);
   }
 

@@ -1,5 +1,9 @@
 # AGENTS.md
 
+> Miuix 独立体验版：`standardPersonal` 使用包名 `com.dsh.client.miuix`、名称 DSHA Miuix、本机签名和 `debuggable=false`，可与原应用并存且数据独立。该构建类型不替换正式版 E7E3 签名规则，也不进入正式 release 目录。构建方式与验证边界见 `docs/ui-miuix.md`。
+
+> 2026-10-17 UI 更新：按用户指定接入 `compose-miuix-ui/miuix`，覆盖历史“无 Kotlin / 仅 Material3”界面限制。Kotlin 限于 `ui/miuix` 的 Compose 展示层，业务保持 Java 17、单模块 `:app`。固定 Miuix 0.8.8 / Compose Android 1.10.5 / Kotlin Compose 编译器 2.3.20；保留 Standard API 30、Low API 23。当前迁移范围、定向检查与未验边界见 `docs/ui-miuix.md`；不将源码验证写成正式 APK 或真机交付。
+
 > 2026-10-15 本轮新增授权：仅同步当前应用源码、构建脚本、必要文档与 Star History 到 GitHub；不上传 APK、离线归档、设备取证、密钥或本机交付资料，不发布 Release 或网站。下方历史“未上传”描述对应各自当时的本地交付状态，本轮源码同步范围见 docs/source-updates/build173.md。
 
 > build173 PiP 补充交付（2026-10-15）：C17 标准包修复“小窗显示时停止 → 重启 → 再进入”残留 Task 0.275 缩放；失效空宿主退休，新代次使用新 Task，同代网页实例继续保留。62 项定向 Activity 宿主回归、76 项开机边界恢复关联测试及最终 37 项软件门禁通过；两版 JUnit 各1700项、40 skip，Release Lint/完整资产/历史签名通过。正式同签名 Android13 原应用覆盖后，真实重启恢复、受管更新、PiP 停止及导出停止后的新窗口5/30秒、同代恢复/返回/旋转均有实际记录。1269条数据无增删，个人配置、会话、附件字节保留；历史4条未知记录与1条追加消息缺口继续保留。有限日志有2次 renderer 报告和2次 SAF 系统捕获 NPE，实际导出成功，不作零崩溃结论。标准 APK SHA c11abc4197f747b690897ea2198c990514eedd5d6ca10b9111ce7da90ed02f57 / 288099627 bytes，已替换 release 同名 rc2.1 标准包；C14 原件及封存材料保留，Low172 原字节不动。回执 artifacts/deliveries/build173-standard-pip-fix.json，源码 artifacts/source/build173-pip-fix/，补充报告 docs/releases/v0.2.24-build173-pip-20261015.md；不发布 GitHub、网站或 Release。
@@ -13,7 +17,7 @@
 - 本轮新增修复只看仍开放的 issue / PR，已关闭条目不追做，插件收录跳过。QuickChat 已按用户要求撤回，不再恢复其生产入口。标准版优先，Low 不安装、不做设备验收，既有 Low172 交付文件和校验保持原字节；不能把软件双版通过写成设备双版通过。
 - 引擎只保留 bxroot / proot。首次升级优先 bxroot；升级后的显式 proot 选择保留。启动阶段明确引擎失败、无插件故障和用户业务提交，且本轮受管后代树与 launcher 都已确认退出，才允许一次自动 proot 重试。慢启动、超时、未知执行结果和已开始的写任务不能借此重放。proroot 只保留历史记录读取，不保留生产执行。
 - 彻底重装/完整格式化功能移除，包括生产入口、Intent 触发和擦除后端。外置工作区维护只能断开私有引用，不遍历清理、覆盖或改名其内容；旧恢复日志不能自动重放外置写删。冷测速等合法私有临时清理必须使用受控目标及 NOFOLLOW，不能继承完整格式化能力。
-- 原生外壳继续 Java17 / Material3 和现有导航，只迁移透明状态栏、背景跟色、图标明暗与 Insets。状态栏保持可见，键盘、挖孔和 PiP 的安全区规则保留；双网页内核使用同一个网页实例切换全屏 / PiP / 隐藏。恢复全屏时按系统当前 PiP 状态同步并幂等清除自有缩放与位移，不能依赖旧几何缓存宣称变换已清除。
+- 原生外壳的业务继续 Java 17，导航流程保持；界面允许按本轮 Miuix 迁移说明使用 Kotlin / Compose。透明状态栏、背景跟色、图标明暗与 Insets 继续共用原生处理。状态栏保持可见，键盘、挖孔和 PiP 的安全区规则保留；双网页内核使用同一个网页实例切换全屏 / PiP / 隐藏。恢复全屏时按系统当前 PiP 状态同步并幂等清除自有缩放与位移，不能依赖旧几何缓存宣称变换已清除。
 - 内置移动插件固定 3.1.0 / ab3a85bead1c53b723e8627f5b44e3c306d85604；DSH 仍 0.2.0-rc.2，Ubuntu base10 不变。上游已吸收的本地差异退休，安全服务端替换、快捷键搜索、可见区域 CSS 和视口合并仍须实际回归。
 - 屏幕确认策略为全部手动 / 按应用自定义 / 全部允许。全部允许覆盖敏感页面，仅免 DSHA 确认；系统能力、实际目标、运行代次、最新帧与节点身份仍校验。持久规则只在本机，停止使本轮许可失效，规则修改或撤销使排队请求失效，不从备份导入授权。
 - 不实现整合包/市场及插件收录。任务通知采用标准进度通知，不请求系统 promoted 胶囊；原生终端、插件安装及生命周期脚本继续开放，工具审批不能宣称强沙箱。
@@ -28,8 +32,7 @@ DSHA 重构骨架。本文让你不扫全库就能上手 —— 读它之前先�
 ## 一句话
 
 APK 用 bxroot/proot 把完整 Ubuntu rootfs 搬进 app 私有目录，在里面跑 Node 24 +
-pnpm + `@deepseek-ai/dsh`（**0.2.0-rc.2**）的 Web UI（默认动态端口，手动模式可指定 `3080`）。原生层是纯 Java 17、
-Material3、单 Gradle 模块 `:app`。
+pnpm + `@deepseek-ai/dsh`（**0.2.0-rc.2**）的 Web UI（默认动态端口，手动模式可指定 `3080`）。原生业务层是 Java 17，界面使用 Miuix / Compose 与既有 Material3 控件，单 Gradle 模块 `:app`。
 
 ## 技术约束（围绕这些设计）
 
@@ -55,7 +58,7 @@ Material3、单 Gradle 模块 `:app`。
 - **签名规则（最新验收要求）**：`release` 和手机验收统一沿用 E7E3 历史发布证书（完整指纹见 build 131 记录）；A3F4 仅保留为历史手机验收规则，不得用于本轮正式验收或放入 `release`。覆盖安装前核对包名、版本码、证书和 `debuggable=false`，不得卸载后用错误证书替代。
 
 - **发布交付目录为 `F:\DSHA_RESTART\release\<APK文件名版本>\`**：只放两版 APK 和对应 `.apk.sha256`，同组历史 APK 放该版本的 `history/`。源码放 `artifacts/source/`，回执放 `artifacts/deliveries/`，其他历史原件移至 `artifacts/release-history/`；迁移记录保留原始 SHA，旧封档正文不改。
-- **Java 17，无 Kotlin**，单模块 `:app`。
+- **业务 Java 17，Kotlin 仅用于 Miuix 界面**，单模块 `:app`。
 - `applicationId com.dsh.client`；Java 包 `com.deepseekharness.app`；标准版 `minSdk 30`、兼容版 `minSdk 23`，
   `compileSdk/targetSdk 37`（SDK 平台包 `android-37.0`）、AGP 9.1.1、Gradle 9.3.1、NDK 26、**arm64-v8a only**。
 - 离线 rootfs（`assets/offline-rootfs.bin`）等大型生成归档**不提交**；正式本地/CI 包必须含经过核对的完整 Ubuntu 与 DSH 分包，不能把源码检出缺少归档当作正式精简交付。

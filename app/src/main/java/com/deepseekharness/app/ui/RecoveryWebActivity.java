@@ -51,12 +51,13 @@ public final class RecoveryWebActivity extends AppCompatActivity {
     root.setOrientation(LinearLayout.VERTICAL);
     root.setBackgroundColor(getColor(R.color.surface));
     setContentView(root);
-    LinearLayout toolbar = new LinearLayout(this);
+    LinearLayout toolbar = new ActionRow(this);
     toolbar.setOrientation(LinearLayout.HORIZONTAL);
     root.addView(toolbar, new LinearLayout.LayoutParams(-1, -2));
     Button repairs = new androidx.appcompat.widget.AppCompatButton(this);
     repairs.setText(UiText.choose("应急 DSH · 修复提案", "Emergency DSH · Repairs"));
     repairs.setTextSize(14);
+    repairs.setMinHeight(Math.round(48 * getResources().getDisplayMetrics().density));
     repairs.setAllCaps(false);
     repairs.setBackgroundResource(R.drawable.bg_btn);
     repairs.setTextColor(getColorStateList(R.color.button_text));
@@ -66,6 +67,7 @@ public final class RecoveryWebActivity extends AppCompatActivity {
     retry.setText(UiText.choose("重载", "Reload"));
     retry.setContentDescription(UiText.choose("重新加载应急页面", "Reload emergency page"));
     retry.setTextSize(14);
+    retry.setMinHeight(Math.round(48 * getResources().getDisplayMetrics().density));
     retry.setAllCaps(false);
     retry.setBackgroundResource(R.drawable.bg_action_plain);
     retry.setTextColor(getColorStateList(R.color.button_text));

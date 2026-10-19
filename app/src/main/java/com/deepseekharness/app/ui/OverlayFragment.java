@@ -33,6 +33,7 @@ public final class OverlayFragment extends Fragment {
             requireContext(),
             UiText.choose("悬浮条", "Floating status"),
             UiText.choose("在其他应用中，轻量查看任务进展。", "Follow progress while using other apps."));
+    ui.label(UiText.choose("实时预览与权限", "Live preview and access"));
     LinearLayout preview = ui.card();
     enabled =
         toggle(
@@ -78,6 +79,7 @@ public final class OverlayFragment extends Fragment {
             });
     previewAction.setId(R.id.overlay_preview_button);
     previewAction.setContentDescription(UiText.choose("显示系统悬浮条预览", "Show system overlay preview"));
+    ui.label(UiText.choose("外观", "Appearance"));
     LinearLayout appearance = ui.card();
     opacityLabel = ui.text("", 13, R.color.text);
     appearance.addView(opacityLabel);
@@ -139,6 +141,7 @@ public final class OverlayFragment extends Fragment {
                 : saved.getInt("font"))
             - 6);
     appearance.addView(font, new LinearLayout.LayoutParams(-1, ui.dp(48)));
+    ui.label(UiText.choose("显示内容", "Visible content"));
     LinearLayout behavior = ui.card();
     reasoning =
         toggle(

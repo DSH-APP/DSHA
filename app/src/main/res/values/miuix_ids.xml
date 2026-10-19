@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="settings_page" type="id" />
+    <item name="settings_install" type="id" />
+    <item name="settings_config" type="id" />
+    <item name="settings_data" type="id" />
+    <item name="settings_device" type="id" />
+</resources>

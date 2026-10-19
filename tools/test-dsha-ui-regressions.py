@@ -27,10 +27,9 @@ class LanguageDiscoverability(unittest.TestCase):
     def test_language_entry_shows_english_on_chinese_ui(self):
         # 中文界面下标题仍含 Latin 的 "Language"（原来只有「语言 · 简体中文」）
         import xml.etree.ElementTree as ET
-        root = ET.fromstring(read('app/src/main/res/layout/fragment_settings.xml'))
-        a = '{http://schemas.android.com/apk/res/android}'
-        row = next(node for node in root.iter() if node.get(a+'id') == '@+id/settings_appearance')
-        self.assertEqual(row.get(a+'focusable'), 'true')
+        page = read('app/src/main/java/com/deepseekharness/app/ui/miuix/MiuixSettings.kt')
+        self.assertIn('Entry(stringResource(R.string.ui_language_title)', page)
+        self.assertIn('open.accept(R.id.settings_appearance)', page)
         strings = {}
         for file in sorted((ROOT / 'app/src/main/res/values').glob('*.xml')):
             for resource in ET.parse(file).getroot().findall('string'):
@@ -44,13 +43,14 @@ class LanguageDiscoverability(unittest.TestCase):
                 self.assertIn(name, strings, 'language title references a missing string')
                 value = strings[name]
             return value
-        self.assertTrue(any('Language' in resolve(node.get(a+'text', '')) for node in row.iter()),
-                        'The resolved Chinese-page language entry must remain discoverable in English')
+        self.assertIn('Language', resolve('@string/ui_language_title'),
+                      'Chinese-page language entry must remain discoverable in English')
 
-    def test_language_entry_uses_stable_resource_id(self):
-        self.assertIn('v.findViewById(R.id.settings_language)', self.settings)
-        self.assertNotIn('appearance.getChildAt', self.settings)
-        self.assertIn('@+id/settings_language', read('app/src/main/res/layout/fragment_settings.xml'))
+    def test_language_entry_uses_stable_action_id(self):
+        page = read('app/src/main/java/com/deepseekharness/app/ui/miuix/MiuixSettings.kt')
+        self.assertIn('R.id.settings_appearance', page)
+        self.assertIn('id == R.id.settings_appearance', self.settings)
+        self.assertIn('selectLanguage();', self.settings)
 
     def test_language_dialog_offers_follow_system(self):
         self.assertIn('UiLanguagePreference.SYSTEM', self.settings,

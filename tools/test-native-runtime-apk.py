@@ -52,9 +52,20 @@ class NativeApkGateTests(unittest.TestCase):
             coordinate='org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653',
             flavor='low',aarSha256=digest(archive.read_bytes()),members=[dict(name='libmozglue.so',
                 aarMember='jni/arm64-v8a/libmozglue.so',sha256=digest(self.gecko),size=len(self.gecko))])])
+        self.graphics=binary(3,('libc.so',))+b'graphics'
+        graphics=gradle/'caches/modules-2/files-2.1/androidx.graphics/graphics-path/1.0.1/fixed/graphics-path-1.0.1.aar'
+        graphics.parent.mkdir(parents=True)
+        with zipfile.ZipFile(graphics,'w') as aar:
+            aar.writestr('jni/arm64-v8a/libandroidx.graphics.path.so',self.graphics)
+            aar.writestr('jni/x86_64/libandroidx.graphics.path.so',binary(3))
+        dependency['artifacts'].append(dict(coordinate='androidx.graphics:graphics-path:1.0.1',
+            flavor='common',aarSha256=digest(graphics.read_bytes()),members=[dict(
+                name='libandroidx.graphics.path.so',aarMember='jni/arm64-v8a/libandroidx.graphics.path.so',
+                sha256=digest(self.graphics),size=len(self.graphics))]))
+        self.graphics_archive=graphics
         (self.root/'tools/native-dependencies.lock.json').write_text(json.dumps(dependency),encoding='utf8')
         build=self.root/'app/build.gradle';build.parent.mkdir(parents=True,exist_ok=True)
-        build.write_text("lowImplementation 'org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653'",encoding='utf8')
+        build.write_text("implementation 'androidx.graphics:graphics-path:1.0.1'\nlowImplementation 'org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653'",encoding='utf8')
         names=set(COMMON_RECOVERY_NAMES+PROOT_NAMES['standard']+('libprootloader32.so',))
         for name in names:
             path=self.root/'app/src/main/jniLibs/arm64-v8a'/name;path.parent.mkdir(parents=True,exist_ok=True)
@@ -88,6 +99,8 @@ class NativeApkGateTests(unittest.TestCase):
         with zipfile.ZipFile(target,'w') as apk:
             for name,path in source_native_members(self.root,flavor).items():
                 if name!=omit:apk.writestr('lib/arm64-v8a/'+name,(changed or {}).get(name,path.read_bytes()))
+            if omit!='libandroidx.graphics.path.so':
+                apk.writestr('lib/arm64-v8a/libandroidx.graphics.path.so',(changed or {}).get('libandroidx.graphics.path.so',self.graphics))
             if flavor=='low' and omit!='libmozglue.so':
                 apk.writestr('lib/arm64-v8a/libmozglue.so',(changed or {}).get('libmozglue.so',self.gecko))
             for name,data in (extra or {}).items():apk.writestr(name,data)
@@ -137,6 +150,27 @@ class NativeApkGateTests(unittest.TestCase):
         lock.write_text(json.dumps(value),encoding='utf8')
         with self.assertRaisesRegex(ValueError,'AAR_CLOSURE'):
             gate.verify(self.apk('low'),'low',self.root)
+
+    def test_compose_dependency_is_required_and_byte_pinned_in_both_flavors(self):
+        for flavor in ('standard','low'):
+            with self.subTest(flavor=flavor):
+                with self.assertRaisesRegex(ValueError,'MEMBER_CLOSURE'):
+                    gate.verify(self.apk(flavor,omit='libandroidx.graphics.path.so'),flavor,self.root)
+                with self.assertRaisesRegex(ValueError,'DEPENDENCY_CHANGED'):
+                    gate.verify(self.apk(flavor,changed={'libandroidx.graphics.path.so':self.graphics+b'changed'}),flavor,self.root)
+
+    def test_compose_resolved_aar_and_lock_cannot_be_substituted(self):
+        original=self.graphics_archive.read_bytes()
+        self.graphics_archive.write_bytes(original+b'changed')
+        with self.assertRaisesRegex(ValueError,'RESOLVED_AAR_CHANGED'):
+            gate.verify(self.apk(),'standard',self.root)
+        self.graphics_archive.write_bytes(original)
+        lock=self.root/'tools/native-dependencies.lock.json'
+        value=json.loads(lock.read_text())
+        value['artifacts'].pop()
+        lock.write_text(json.dumps(value))
+        with self.assertRaisesRegex(ValueError,'DEPENDENCY_LOCK'):
+            gate.verify(self.apk(),'standard',self.root)
 
     def test_packed_native_bytes_must_equal_source_and_lock(self):
         raw=bytearray(binary());raw[-1]=1

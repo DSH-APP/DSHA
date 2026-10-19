@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="page_runtime_access">运行方式与工具权限</string>
+    <string name="page_network">端口与网络</string>
+    <string name="page_saved_key">本机备用密钥</string>
+    <string name="page_files_skills">文件与技能</string>
+    <string name="page_grants_hint">按需要配置下方能力。每张卡片分别显示连接状态与操作，开启一种能力不会自动授予其他能力。</string>
+    <string name="page_plugin_search">搜索已安装插件</string>
+    <string name="page_report_hint">描述操作步骤、预期结果与实际结果；导出前请检查是否包含个人信息。</string>
+    <string name="page_web_error">对话页面连接提示</string>
+    <string name="page_terminal_command">输入终端命令，按发送执行</string>
+</resources>

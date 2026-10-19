@@ -33,7 +33,8 @@ final class UiNavigation {
     label.setTextSize(18);
     label.setTextColor(context.getColor(R.color.text));
     label.setTypeface(null, android.graphics.Typeface.BOLD);
-    row.addView(label);
+    androidx.core.view.ViewCompat.setAccessibilityHeading(label, true);
+    row.addView(label, new LinearLayout.LayoutParams(0, -2, 1));
     root.addView(row, 0);
   }
 

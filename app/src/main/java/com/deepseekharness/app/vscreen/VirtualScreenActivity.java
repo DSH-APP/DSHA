@@ -35,16 +35,15 @@ public final class VirtualScreenActivity extends AppCompatActivity {
   protected void onCreate(Bundle saved) {
     super.onCreate(saved);
     manager = VirtualScreenManager.from(this);
-    LinearLayout root = new LinearLayout(this);
+    LinearLayout root = new com.deepseekharness.app.ui.PageColumn(this);
     root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(dp(12), dp(10), dp(12), dp(12));
     root.setBackgroundResource(R.color.surface);
-    LinearLayout navigation = new LinearLayout(this);
+    LinearLayout navigation = new com.deepseekharness.app.ui.ActionRow(this);
     navigation.addView(
-        button(t("返回", "Back"), this::finish), new LinearLayout.LayoutParams(0, dp(40), 1));
+        button(t("返回", "Back"), this::finish), new LinearLayout.LayoutParams(0, -2, 1));
     navigation.addView(
-        button(t("使用说明", "How to use"), this::showUsage),
-        new LinearLayout.LayoutParams(0, dp(40), 1));
+        button(t("使用说明", "How to use"), this::showUsage), new LinearLayout.LayoutParams(0, -2, 1));
     root.addView(navigation);
     state =
         label(
@@ -52,9 +51,14 @@ public final class VirtualScreenActivity extends AppCompatActivity {
                 "先连接设备通道，再点“创建竖屏”或“创建横屏”。",
                 "Connect a device channel, then tap Create portrait or Create landscape."),
             14);
-    root.addView(state);
-    detail = label("", 11);
-    root.addView(detail);
+    LinearLayout status = new LinearLayout(this);
+    status.setOrientation(LinearLayout.VERTICAL);
+    status.setPadding(dp(16), dp(12), dp(16), dp(12));
+    status.addView(state);
+    state.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+    detail = label("", 13);
+    status.addView(detail);
+    root.addView(com.deepseekharness.app.ui.miuix.MiuixUi.card(this, status));
     preview = new VirtualScreenPreviewView(this);
     preview.listener =
         new VirtualScreenPreviewView.Touch() {
@@ -108,35 +112,35 @@ public final class VirtualScreenActivity extends AppCompatActivity {
 
           public void onStopTrackingTouch(SeekBar b) {}
         });
-    root.addView(size, new LinearLayout.LayoutParams(-1, dp(32)));
-    LinearLayout orientation = new LinearLayout(this);
+    root.addView(size, new LinearLayout.LayoutParams(-1, dp(48)));
+    LinearLayout orientation = new com.deepseekharness.app.ui.ActionRow(this);
     orientation.addView(
         button(t("创建竖屏", "Create portrait"), () -> create("portrait")),
-        new LinearLayout.LayoutParams(0, dp(40), 1));
+        new LinearLayout.LayoutParams(0, -2, 1));
     orientation.addView(
         button(t("创建横屏", "Create landscape"), () -> create("landscape")),
-        new LinearLayout.LayoutParams(0, dp(40), 1));
-    root.addView(orientation);
-    LinearLayout tools = new LinearLayout(this);
+        new LinearLayout.LayoutParams(0, -2, 1));
+    root.addView(com.deepseekharness.app.ui.miuix.MiuixUi.card(this, orientation));
+    LinearLayout tools = new com.deepseekharness.app.ui.ActionRow(this);
     tools.setGravity(Gravity.CENTER);
     tools.addView(
         button(t("应用", "App"), () -> toggle(packagePanel)),
-        new LinearLayout.LayoutParams(0, dp(40), 1));
+        new LinearLayout.LayoutParams(0, -2, 1));
     tools.addView(
         button(t("键盘", "Keyboard"), () -> toggle(textPanel)),
-        new LinearLayout.LayoutParams(0, dp(40), 1));
+        new LinearLayout.LayoutParams(0, -2, 1));
     tools.addView(
-        button(t("控件树", "AI tree"), this::showTree), new LinearLayout.LayoutParams(0, dp(40), 1));
+        button(t("控件树", "AI tree"), this::showTree), new LinearLayout.LayoutParams(0, -2, 1));
     tools.addView(
         button(t("关闭", "Close"), () -> run(() -> manager.close())),
-        new LinearLayout.LayoutParams(0, dp(40), 1));
+        new LinearLayout.LayoutParams(0, -2, 1));
     root.addView(tools);
-    LinearLayout apps = new LinearLayout(this);
+    LinearLayout apps = new com.deepseekharness.app.ui.ActionRow(this);
     apps.setOrientation(LinearLayout.HORIZONTAL);
     packageInput = edit(t("选择应用后会自动填入包名", "Choose an app to fill its package"));
-    apps.addView(packageInput, new LinearLayout.LayoutParams(0, dp(44), 1));
+    apps.addView(packageInput, new LinearLayout.LayoutParams(0, -2, 1));
     apps.addView(
-        button(t("选择", "Choose"), this::chooseApp), new LinearLayout.LayoutParams(dp(76), dp(44)));
+        button(t("选择", "Choose"), this::chooseApp), new LinearLayout.LayoutParams(dp(76), -2));
     apps.addView(
         button(
             t("启动", "Launch"),
@@ -144,14 +148,14 @@ public final class VirtualScreenActivity extends AppCompatActivity {
               String pkg = packageInput.getText().toString().trim();
               run(() -> manager.launch(pkg));
             }),
-        new LinearLayout.LayoutParams(dp(76), dp(44)));
+        new LinearLayout.LayoutParams(dp(76), -2));
     packagePanel = apps;
     apps.setVisibility(View.GONE);
     root.addView(apps);
-    LinearLayout keyboard = new LinearLayout(this);
+    LinearLayout keyboard = new com.deepseekharness.app.ui.ActionRow(this);
     keyboard.setOrientation(LinearLayout.HORIZONTAL);
     textInput = edit(t("本机键盘输入（中文需无障碍）", "Keyboard input (accessibility for Unicode)"));
-    keyboard.addView(textInput, new LinearLayout.LayoutParams(0, dp(44), 1));
+    keyboard.addView(textInput, new LinearLayout.LayoutParams(0, -2, 1));
     keyboard.addView(
         button(
             t("发送", "Send"),
@@ -160,7 +164,7 @@ public final class VirtualScreenActivity extends AppCompatActivity {
               long seq = frameSeq;
               run(() -> manager.type(gen, seq, text));
             }),
-        new LinearLayout.LayoutParams(dp(88), dp(44)));
+        new LinearLayout.LayoutParams(dp(88), -2));
     Button enter =
         button(
             "↵",
@@ -169,7 +173,8 @@ public final class VirtualScreenActivity extends AppCompatActivity {
               long seq = frameSeq;
               run(() -> manager.action("key", gen, seq, "keycode=66"));
             });
-    keyboard.addView(enter, new LinearLayout.LayoutParams(dp(44), dp(44)));
+    enter.setContentDescription(t("发送回车键", "Send Enter key"));
+    keyboard.addView(enter, new LinearLayout.LayoutParams(dp(48), -2));
     textPanel = keyboard;
     keyboard.setVisibility(View.GONE);
     root.addView(keyboard);
@@ -266,17 +271,19 @@ public final class VirtualScreenActivity extends AppCompatActivity {
   private EditText edit(String hint) {
     EditText e = new EditText(this);
     e.setSingleLine(true);
-    e.setTextSize(12);
+    e.setTextSize(14);
     e.setHint(hint);
-    e.setMinHeight(dp(44));
-    e.setPadding(dp(8), 0, dp(8), 0);
+    e.setContentDescription(hint);
+    e.setBackgroundResource(R.drawable.bg_input);
+    e.setMinHeight(dp(56));
+    e.setPadding(dp(12), dp(12), dp(12), dp(12));
     return e;
   }
 
   private TextView label(String text, int sp) {
     TextView v = new TextView(this);
     v.setText(text);
-    v.setTextSize(sp);
+    v.setTextSize(Math.max(13, sp));
     v.setTextColor(getColor(R.color.text));
     v.setPadding(0, dp(3), 0, dp(3));
     return v;
@@ -286,9 +293,9 @@ public final class VirtualScreenActivity extends AppCompatActivity {
     Button b = new androidx.appcompat.widget.AppCompatButton(this);
     b.setText(text);
     b.setAllCaps(false);
-    b.setTextSize(12);
-    b.setMinHeight(dp(40));
-    b.setPadding(dp(5), 0, dp(5), 0);
+    b.setTextSize(14);
+    b.setMinHeight(dp(48));
+    b.setPadding(dp(12), dp(8), dp(12), dp(8));
     b.setBackgroundResource(R.drawable.bg_btn);
     b.setTextColor(getColorStateList(R.color.button_text));
     b.setOnClickListener(v -> click.run());

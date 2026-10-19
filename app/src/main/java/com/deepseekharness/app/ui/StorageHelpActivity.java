@@ -28,7 +28,7 @@ public final class StorageHelpActivity extends AppCompatActivity {
             this, UiText.text("存储、备份与重建说明"), UiText.text("先看保留范围，再选择操作。打开本页不会修改文件或停止 DSH。"));
     UiNavigation.addHeader(this, page.root, UiText.text("存储、备份与重建说明"), this::finish);
     page.content.removeViewAt(0);
-    page.root.removeView(page.footer);
+    page.footer.setVisibility(android.view.View.GONE);
 
     LinearLayout start = section("只想腾空间，从这里开始");
     paragraph(

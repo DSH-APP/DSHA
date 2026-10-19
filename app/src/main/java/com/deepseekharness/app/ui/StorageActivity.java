@@ -29,6 +29,7 @@ public final class StorageActivity extends AppCompatActivity {
                 "完整 Linux 环境约占 1 GB。历史环境和回退副本另行保留；它们不等于聊天数据。以下为文件大小估算。",
                 "The full Linux environment uses about 1 GB. Older environments and rollback copies are retained separately from chats. Sizes below are estimates."));
     UiNavigation.addHeader(this, page.root, t("存储与文件", "Storage and files"), this::finish);
+    page.label(t("工作目录与访问", "Workspace and access"));
     var files = page.card();
     page.kv(
         files,
@@ -46,8 +47,10 @@ public final class StorageActivity extends AppCompatActivity {
                 t(
                     "在文件管理器中添加本地存储，选择 DocumentsProvider → DSHA。找不到 DSHA 时，先打开本 App 后重试。",
                     "Add local storage in your file manager and select DocumentsProvider → DSHA. Open this app first if DSHA is missing.")));
+    page.label(t("空间占用", "Storage usage"));
     rows = page.card();
     state = page.text("", 12, R.color.text_secondary);
+    state.setAccessibilityLiveRegion(android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE);
     page.content.addView(state);
     clean =
         page.button(

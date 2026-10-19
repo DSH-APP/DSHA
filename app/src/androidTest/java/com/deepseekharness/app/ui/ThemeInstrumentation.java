@@ -261,10 +261,10 @@ public final class ThemeInstrumentation extends Instrumentation {
         MainActivity current = MainActivity.active();
         runOnMainSync(
             () ->
-                ((com.google.android.material.bottomnavigation.BottomNavigationView)
+                ((com.deepseekharness.app.ui.miuix.MiuixNavigation)
                         current.findViewById(R.id.bottom_nav))
                     .setSelectedItemId(R.id.nav_settings));
-        until(() -> MainActivity.active().findViewById(R.id.settings_tabs) != null, "设置页未加载");
+        until(() -> MainActivity.active().findViewById(R.id.settings_page) != null, "设置页未加载");
         runOnMainSync(
             () ->
                 audit(MainActivity.active().findViewById(android.R.id.content), "actual-settings"));
@@ -275,7 +275,7 @@ public final class ThemeInstrumentation extends Instrumentation {
         require(PtyTerminalFragment.preferred(getTargetContext()), "当前选择简易终端，需使用独立 PTY 验收");
         runOnMainSync(
             () ->
-                ((com.google.android.material.bottomnavigation.BottomNavigationView)
+                ((com.deepseekharness.app.ui.miuix.MiuixNavigation)
                         MainActivity.active().findViewById(R.id.bottom_nav))
                     .setSelectedItemId(R.id.nav_terminal));
         until(
@@ -321,10 +321,10 @@ public final class ThemeInstrumentation extends Instrumentation {
           MainActivity current = MainActivity.active();
           runOnMainSync(
               () ->
-                  ((com.google.android.material.bottomnavigation.BottomNavigationView)
+                  ((com.deepseekharness.app.ui.miuix.MiuixNavigation)
                           current.findViewById(R.id.bottom_nav))
                       .setSelectedItemId(R.id.nav_settings));
-          until(() -> MainActivity.active().findViewById(R.id.settings_tabs) != null, "外观设置未加载");
+          until(() -> MainActivity.active().findViewById(R.id.settings_page) != null, "外观设置未加载");
           runOnMainSync(
               () -> ThemeController.select(MainActivity.active(), dark ? "dark" : "light"));
           until(
@@ -367,7 +367,7 @@ public final class ThemeInstrumentation extends Instrumentation {
         until(
             () -> MainActivity.active() != before && !ThemeController.isDark(MainActivity.active()),
             "顶部切换无效");
-        require(MainActivity.active().findViewById(R.id.settings_tabs) != null, "切换丢失当前页面");
+        require(MainActivity.active().findViewById(R.id.settings_page) != null, "切换丢失当前页面");
         runOnMainSync(() -> ThemeController.select(MainActivity.active(), "dark"));
         until(() -> ThemeController.isDark(MainActivity.active()), "持久性检查准备失败");
         output.putString("result", "PASS");

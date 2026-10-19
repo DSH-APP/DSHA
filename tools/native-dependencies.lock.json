@@ -80,6 +80,20 @@
           "size": 146552384
         }
       ]
+    },
+    {
+      "coordinate": "androidx.graphics:graphics-path:1.0.1",
+      "flavor": "common",
+      "aarSha256": "8ca4032b6d79b351f0b59ad4b580eddbb9423e1652f7c958830687f1eee2ec03",
+      "url": "https://dl.google.com/dl/android/maven2/androidx/graphics/graphics-path/1.0.1/graphics-path-1.0.1.aar",
+      "members": [
+        {
+          "name": "libandroidx.graphics.path.so",
+          "aarMember": "jni/arm64-v8a/libandroidx.graphics.path.so",
+          "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+          "size": 10096
+        }
+      ]
     }
   ]
 }

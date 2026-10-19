@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.*;
 import com.deepseekharness.app.R;
 
-/** 内容短时收紧，长时滚动正文并保留底部操作。 */
+/** 内容短时收紧，长时让正文和操作一起滚动，整体高度受窗口限制。 */
 final class CardSheet {
   static androidx.appcompat.app.AlertDialog create(Context context, CardPage page) {
     page.root.setBackgroundResource(R.drawable.bg_card);

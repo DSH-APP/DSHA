@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 // 两版共用功能和离线环境；只有 low 携带兼容旧 Android 的 Gecko 内核。
@@ -85,6 +86,15 @@ android {
             if (!unsignedPackage) signingConfig signingConfigs.publish
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+        // 用户授权的独立安装版；与正式应用分开保存数据，沿用本机密钥便于以后覆盖更新。
+        personal {
+            initWith release
+            applicationIdSuffix '.miuix'
+            versionNameSuffix '-miuix'
+            debuggable false
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['release']
+        }
     }
 
     packagingOptions {
@@ -112,7 +122,12 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests.includeAndroidResources = true
+    }
+
     buildFeatures {
+        compose = true
         resValues = true
         aidl = true
         buildConfig = true
@@ -125,6 +140,18 @@ android {
         // Both browser test entry points load one test-only HTML fixture.
         debug.assets.srcDir(rootProject.file("tools/fixtures/web-state"))
         androidTest.assets.srcDir(rootProject.file("tools/fixtures/web-state"))
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
+
+androidComponents {
+    beforeVariants(selector().withBuildType('personal')) { variant ->
+        variant.enableUnitTest = true
     }
 }
 
@@ -332,7 +359,8 @@ def verifyBackupDependencies = tasks.register("verifyBackupDependencies") {
             }
             hash.digest().encodeHex().toString()
         }
-        ["standardReleaseRuntimeClasspath", "lowReleaseRuntimeClasspath"].each { name ->
+        ["standardReleaseRuntimeClasspath", "lowReleaseRuntimeClasspath",
+         "standardPersonalRuntimeClasspath", "lowPersonalRuntimeClasspath"].each { name ->
             def resolved = configurations.getByName(name).resolvedConfiguration.resolvedArtifacts
             lock.dependencies.each { expected ->
                 def selected = resolved.findAll { it.moduleVersion.id.group == expected.group && it.name == expected.name }
@@ -360,14 +388,26 @@ def prepareUiLanguages = tasks.register("prepareUiLanguages", Exec) {
             "--output", layout.buildDirectory.dir("generated/uiLanguage").get().asFile.absolutePath)
 }
 tasks.named("preBuild").configure { dependsOn(prepareUiLanguages) }
+// Kotlin 同样读取 Java 文案生成目录；显式声明生成顺序，支持独立 UI 编译。
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    dependsOn(prepareUiLanguages)
+}
+tasks.withType(JavaCompile).configureEach { dependsOn(prepareUiLanguages) }
 
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     lowImplementation 'org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    // 1.7 的 Dialog 提供 Compose 所需的视图生命周期。
+    implementation 'androidx.appcompat:appcompat:1.7.1'
     // 1.15 保留 API 23；1.16 起要求 API 24，不能用于兼容版。
     implementation 'androidx.webkit:webkit:1.15.0'
     implementation 'com.google.android.material:material:1.11.0'
+    // Miuix 0.8.8 保留 API 23；界面使用 Kotlin，业务与运行时继续使用 Java 17。
+    implementation 'top.yukonga.miuix.kmp:miuix:0.8.8'
+    implementation 'androidx.compose.ui:ui:1.10.5'
+    implementation 'androidx.compose.foundation:foundation:1.10.5'
+    // Compose 的图形原生依赖也纳入实际 APK 成员校验。
+    implementation 'androidx.graphics:graphics-path:1.0.1'
     standardImplementation 'dev.rikka.shizuku:api:13.1.5'
     standardImplementation 'dev.rikka.shizuku:provider:13.1.5'
     // 13.1.5 从 API 24 起可用；兼容版以 12.2.0 的相同 Binder 协议支持 Android 6。
@@ -382,6 +422,7 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15to18:1.85.2'
     // 宿主凭据 YAML 仅使用 data-only SafeConstructor；来源、JAR 和许可由备份锁核验。
     implementation 'org.yaml:snakeyaml:2.4'
+    testImplementation 'androidx.compose.ui:ui-test-junit4:1.10.5'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.15.1'
 }

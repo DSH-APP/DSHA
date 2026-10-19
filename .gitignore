@@ -1,5 +1,6 @@
 # Gradle / Android 构建产物
 .gradle/
+.kotlin/
 .gradle-user-home/
 .pnpm-store/
 build/

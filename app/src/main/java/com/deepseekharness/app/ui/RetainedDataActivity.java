@@ -57,7 +57,7 @@ public final class RetainedDataActivity extends AppCompatActivity {
     model = new ViewModelProvider(this).get(Model.class);
     ScrollView scroll = new ScrollView(this);
     scroll.setBackgroundColor(getColor(R.color.surface));
-    LinearLayout body = new LinearLayout(this);
+    LinearLayout body = new PageColumn(this);
     body.setOrientation(LinearLayout.VERTICAL);
     int p = (int) (20 * getResources().getDisplayMetrics().density);
     body.setPadding(p, p, p, p);
@@ -99,6 +99,10 @@ public final class RetainedDataActivity extends AppCompatActivity {
           if (model.control != null) model.control.cancel();
         });
     report = new TextView(this);
+    report.setTextColor(getColor(R.color.text));
+    report.setTextSize(14);
+    report.setTextIsSelectable(true);
+    report.setAccessibilityLiveRegion(android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE);
     body.addView(report);
     pageStatus = new TextView(this);
     pageStatus.setTextColor(getColor(R.color.text_secondary));
@@ -255,7 +259,6 @@ public final class RetainedDataActivity extends AppCompatActivity {
       }
       LinearLayout card = new LinearLayout(this);
       card.setOrientation(LinearLayout.VERTICAL);
-      card.setBackgroundResource(R.drawable.bg_polished_card);
       int pad = (int) (12 * getResources().getDisplayMetrics().density);
       card.setPadding(pad, pad, pad, pad);
       CheckBox selected = new CheckBox(this);
@@ -275,7 +278,7 @@ public final class RetainedDataActivity extends AppCompatActivity {
       button(card, t("查看与操作", "Details and actions"), () -> details(entry));
       LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(-1, -2);
       layout.bottomMargin = pad;
-      rows.addView(card, layout);
+      rows.addView(com.deepseekharness.app.ui.miuix.MiuixUi.card(this, card), layout);
     }
     if (model.page > 0)
       button(

@@ -127,23 +127,40 @@ def source_native_members(root=ROOT, flavor='standard'):
 
 
 def dependency_native_members(root=ROOT, flavor='standard'):
-    """Exact native members from the pinned Gecko AAR, only for the Low flavor."""
+    """Verify pinned AAR bytes and return the ARM64 members used by this flavor."""
     if flavor not in PROOT_NAMES:
         raise ValueError('NATIVE_FLAVOR')
-    if flavor == 'standard':
-        return {}
     lock=json.loads((Path(root)/'tools/native-dependencies.lock.json').read_text(encoding='utf8'))
     artifacts=lock.get('artifacts',[])
-    if lock.get('schema')!=1 or len(artifacts)!=1:
+    expected = {
+        'org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653': 'low',
+        'androidx.graphics:graphics-path:1.0.1': 'common',
+    }
+    if lock.get('schema')!=1 or len(artifacts)!=len(expected) \
+            or {row.get('coordinate') for row in artifacts}!=set(expected):
         raise ValueError('NATIVE_DEPENDENCY_LOCK')
-    artifact=artifacts[0]
-    coordinate='org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653'
-    if artifact.get('coordinate')!=coordinate or artifact.get('flavor')!='low' \
-            or not re.fullmatch('[a-f0-9]{64}',str(artifact.get('aarSha256',''))):
-        raise ValueError('NATIVE_DEPENDENCY_COORDINATE')
-    declaration="lowImplementation '"+coordinate+"'"
-    if declaration not in (Path(root)/'app/build.gradle').read_text(encoding='utf8'):
-        raise ValueError('NATIVE_DEPENDENCY_BUILD_DECLARATION')
+    build=(Path(root)/'app/build.gradle').read_text(encoding='utf8')
+    members={}
+    for artifact in artifacts:
+        coordinate=artifact['coordinate']
+        scope=expected[coordinate]
+        if artifact.get('flavor')!=scope \
+                or not re.fullmatch('[a-f0-9]{64}',str(artifact.get('aarSha256',''))):
+            raise ValueError('NATIVE_DEPENDENCY_COORDINATE')
+        declaration=('implementation' if scope=='common' else 'lowImplementation')+" '"+coordinate+"'"
+        if declaration not in build:
+            raise ValueError('NATIVE_DEPENDENCY_BUILD_DECLARATION')
+        if scope not in ('common',flavor):
+            continue
+        resolved=dependency_artifact_members(artifact)
+        if set(members)&set(resolved):
+            raise ValueError('NATIVE_DEPENDENCY_DUPLICATE_MEMBER')
+        members.update(resolved)
+    return members
+
+
+def dependency_artifact_members(artifact):
+    coordinate=artifact['coordinate']
     rows=artifact.get('members',[])
     if not rows or len({row.get('name') for row in rows})!=len(rows):
         raise ValueError('NATIVE_DEPENDENCY_MEMBERS')
@@ -157,8 +174,9 @@ def dependency_native_members(root=ROOT, flavor='standard'):
             raise ValueError('NATIVE_DEPENDENCY_MEMBER_PROOF')
         members[name]={**row,'coordinate':coordinate,'aarSha256':artifact['aarSha256']}
     gradle=Path(os.environ.get('GRADLE_USER_HOME') or Path.home()/'.gradle')
-    cache=gradle/'caches/modules-2/files-2.1/org.mozilla.geckoview/geckoview-arm64-v8a/143.0.20251003115653'
-    archives=list(cache.glob('*/geckoview-arm64-v8a-143.0.20251003115653.aar'))
+    group, name, version = coordinate.split(':')
+    cache=gradle/'caches/modules-2/files-2.1'/group/name/version
+    archives=list(cache.glob('*/'+name+'-'+version+'.aar'))
     if len(archives)!=1:
         raise ValueError('NATIVE_DEPENDENCY_RESOLVED_AAR_COUNT')
     sha=hashlib.sha256()
@@ -170,7 +188,7 @@ def dependency_native_members(root=ROOT, flavor='standard'):
         names=source.namelist()
         if len(names)!=len(set(names)):
             raise ValueError('NATIVE_DEPENDENCY_AAR_DUPLICATE_MEMBER')
-        actual={name for name in names if name.startswith('jni/') and not name.endswith('/')}
+        actual={name for name in names if name.startswith('jni/arm64-v8a/') and not name.endswith('/')}
         if actual!={row['aarMember'] for row in rows}:
             raise ValueError('NATIVE_DEPENDENCY_AAR_CLOSURE')
         for row in rows:

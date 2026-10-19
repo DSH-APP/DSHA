@@ -7,8 +7,8 @@
     <color name="primary_dark">#3A75DA</color>
     <color name="accent_on">#081428</color>
     <color name="surface">#000000</color>
-    <color name="card">#111214</color>
-    <color name="raised">#1A1C20</color>
+    <color name="card">#242424</color>
+    <color name="raised">#303030</color>
     <color name="line">#292C32</color>
     <color name="text">#E4E8F0</color>
     <color name="text_secondary">#ADB8C9</color>

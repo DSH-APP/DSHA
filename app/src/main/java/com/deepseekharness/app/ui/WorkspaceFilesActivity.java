@@ -183,14 +183,15 @@ public final class WorkspaceFilesActivity extends AppCompatActivity {
     body.setPadding(dp(12), dp(6), dp(12), dp(12));
     setContentView(body);
     UiNavigation.addHeader(this, body, UiText.choose("作品文件导出", "Export work files"), this::finish);
+    LinearLayout details = new PageColumn(this);
     TextView note =
         text(
             UiText.choose(
                 "选择工作目录里的作品文件，保存到手机或分享给其他应用。无需 Root；这是普通文件导出，完整数据备份另有入口。",
                 "Choose a file from your workspace to save on the device or share with another app. No root is needed. Full data backups have a separate entry."),
             13);
-    body.addView(note);
-    LinearLayout navigation = new LinearLayout(this);
+    details.addView(note);
+    LinearLayout navigation = new ActionRow(this);
     workspace = button(UiText.choose("工作目录", "Workspace"), () -> load(workspaceId, 0, true));
     root = button("DSHA", () -> load("root"));
     up = button(UiText.choose("上一级", "Up"), this::parent);
@@ -200,14 +201,14 @@ public final class WorkspaceFilesActivity extends AppCompatActivity {
       params.setMargins(dp(2), dp(6), dp(2), dp(6));
       navigation.addView(button, params);
     }
-    body.addView(navigation);
+    details.addView(navigation);
     location = text("", 13);
     location.setTextIsSelectable(true);
-    body.addView(location);
+    details.addView(location);
     status = text("", 13);
     status.setTextIsSelectable(true);
-    status.setMaxLines(5);
-    body.addView(status);
+    status.setAccessibilityLiveRegion(android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE);
+    details.addView(status);
     cancel =
         button(
             UiText.choose("取消导出", "Cancel export"),
@@ -215,11 +216,12 @@ public final class WorkspaceFilesActivity extends AppCompatActivity {
               BackupControl control = model.control;
               if (control != null) control.cancel();
             });
-    body.addView(cancel);
+    details.addView(cancel);
     files = new ListView(this);
+    files.addHeaderView(details, null, false);
     files.setDividerHeight(dp(1));
     body.addView(files, new LinearLayout.LayoutParams(-1, 0, 1));
-    pagination = new LinearLayout(this);
+    pagination = new ActionRow(this);
     previousPage =
         button(
             UiText.choose("上一页", "Previous page"),
@@ -234,7 +236,7 @@ public final class WorkspaceFilesActivity extends AppCompatActivity {
     files.setOnItemClickListener(
         (parent, view, position, id) -> {
           if (model.working.get() || model.choosingDestination) return;
-          Entry entry = (Entry) files.getAdapter().getItem(position);
+          if (!(files.getItemAtPosition(position) instanceof Entry entry)) return;
           if (entry.directory) load(entry.id);
           else actions(entry);
         });

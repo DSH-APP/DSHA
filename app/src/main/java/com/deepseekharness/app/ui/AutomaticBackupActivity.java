@@ -58,6 +58,7 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
                 "On by default. Saves conversations, attachments, settings and plugins, without copying Ubuntu. Use manual backup for personal projects."));
     UiNavigation.addHeader(this, page.root, t("自动备份", "Automatic backups"), this::finish);
     var prefs = AutomaticBackups.prefs(this);
+    page.label(t("备份计划", "Backup schedule"));
     LinearLayout settings = page.card();
     var enabled = new com.google.android.material.materialswitch.MaterialSwitch(this);
     enabled.setText(t("自动备份", "Automatic backups"));
@@ -164,7 +165,9 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
     localHint.setPadding(0, page.dp(10), 0, 0);
     settings.addView(localHint);
     state = page.text("", 12, R.color.text_secondary);
+    state.setAccessibilityLiveRegion(android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE);
     page.content.addView(state);
+    page.label(t("本机副本", "Local copies"));
     copies = page.card();
     page.button(
         page.footer,

@@ -300,6 +300,8 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
     label.setPadding(0, page.dp(10), 0, page.dp(8));
     card.addView(label);
     EditText input = new EditText(this);
+    input.setId(android.view.View.generateViewId());
+    label.setLabelFor(input.getId());
     input.setText(value);
     input.setTextSize(14);
     input.setTextColor(getColor(com.deepseekharness.app.R.color.text));

@@ -177,10 +177,9 @@ public final class ModelSetupActivity extends AppCompatActivity {
   private LinearLayout card(String title) {
     LinearLayout c = page.column();
     c.setPadding(page.dp(16), page.dp(14), page.dp(16), page.dp(14));
-    c.setBackgroundResource(R.drawable.bg_card);
     LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
     p.bottomMargin = page.dp(12);
-    body.addView(c, p);
+    body.addView(com.deepseekharness.app.ui.miuix.MiuixUi.card(this, c), p);
     if (!title.isEmpty()) {
       TextView heading = page.text(title, 16, R.color.text);
       heading.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -337,12 +336,15 @@ public final class ModelSetupActivity extends AppCompatActivity {
             namespace(s(draft.entry, "settingsNs")).getAsJsonObject("schema"), protocolPath));
     if (!draft.protocol.isEmpty() && !protocols.contains(draft.protocol))
       protocols.add(draft.protocol);
-    label(connection, t("连接协议", "Protocol"));
+    TextView protocolLabel = label(connection, t("连接协议", "Protocol"));
     protocol = new DshaSelectView(this);
+    protocol.setId(View.generateViewId());
+    protocolLabel.setLabelFor(protocol.getId());
+    protocol.setMinimumHeight(page.dp(56));
     protocol.setPrompt(t("连接协议", "Protocol"));
     protocol.setAdapter(new ArrayAdapter<>(this, R.layout.item_data_choice, protocols));
     protocol.setSelection(Math.max(0, protocols.indexOf(draft.protocol)));
-    connection.addView(protocol, new LinearLayout.LayoutParams(-1, page.dp(50)));
+    connection.addView(protocol, new LinearLayout.LayoutParams(-1, -2));
     key =
         field(
             connection,
@@ -371,16 +373,19 @@ public final class ModelSetupActivity extends AppCompatActivity {
     save.setEnabled(!Boolean.TRUE.equals(repository.busy.getValue()));
   }
 
-  private void label(LinearLayout parent, String title) {
+  private TextView label(LinearLayout parent, String title) {
     TextView view = page.text(title, 12, R.color.text_secondary);
     view.setPadding(0, page.dp(12), 0, page.dp(7));
     parent.addView(view);
+    return view;
   }
 
   private EditText field(
       LinearLayout parent, String title, String hint, String value, boolean secret) {
-    label(parent, title);
+    TextView caption = label(parent, title);
     EditText input = new EditText(this);
+    input.setId(View.generateViewId());
+    caption.setLabelFor(input.getId());
     input.setTextSize(14);
     input.setTextColor(getColor(R.color.text));
     input.setHintTextColor(getColor(R.color.text_muted));

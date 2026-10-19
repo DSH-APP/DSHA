@@ -91,7 +91,7 @@ public final class SkillsActivity extends AppCompatActivity {
     ScrollView scroll = new ScrollView(this);
     scroll.setFillViewport(true);
     scroll.setBackgroundColor(getColor(R.color.surface));
-    LinearLayout body = new LinearLayout(this);
+    LinearLayout body = new PageColumn(this);
     body.setOrientation(LinearLayout.VERTICAL);
     int padding = dp(20);
     body.setPadding(padding, padding, padding, padding);
@@ -121,6 +121,7 @@ public final class SkillsActivity extends AppCompatActivity {
     refreshButton = button(body, t("刷新技能", "Refresh skills"), () -> start(null));
     cancelButton = button(body, t("取消读取", "Cancel reading"), model::cancel);
     status = text(body, "", 14, R.color.text);
+    status.setAccessibilityLiveRegion(android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE);
     status.setTextIsSelectable(true);
     listStatus = text(body, "", 14, R.color.text_secondary);
     rows = new LinearLayout(this);
@@ -186,11 +187,18 @@ public final class SkillsActivity extends AppCompatActivity {
           14,
           R.color.text_secondary);
     for (SkillImports.Entry entry : catalogue.entries) {
-      TextView name = text(rows, UiText.raw(entry.document.name), 18, R.color.text);
+      LinearLayout card = new LinearLayout(this);
+      card.setOrientation(LinearLayout.VERTICAL);
+      card.setPadding(dp(16), dp(8), dp(16), dp(16));
+      LinearLayout.LayoutParams spacing = new LinearLayout.LayoutParams(-1, -2);
+      spacing.bottomMargin = dp(12);
+      rows.addView(com.deepseekharness.app.ui.miuix.MiuixUi.card(this, card), spacing);
+      TextView name = text(card, UiText.raw(entry.document.name), 18, R.color.text);
       name.setTypeface(null, android.graphics.Typeface.BOLD);
-      text(rows, UiText.raw(entry.document.description), 14, R.color.text_secondary);
-      text(rows, UiText.raw(entry.guestPath()), 12, R.color.text_secondary);
-      button(rows, t("查看 SKILL.md", "View SKILL.md"), () -> show(entry));
+      text(card, UiText.raw(entry.document.description), 14, R.color.text_secondary);
+      text(card, UiText.raw(entry.guestPath()), 13, R.color.text_secondary)
+          .setTextIsSelectable(true);
+      button(card, t("查看 SKILL.md", "View SKILL.md"), () -> show(entry));
     }
   }
 

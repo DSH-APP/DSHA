@@ -1,14 +1,16 @@
 # DSHA 现行构建说明
 
+> Miuix 独立体验版：使用 `:app:assembleStandardPersonal` 构建 `com.dsh.client.miuix`（DSHA Miuix），本机签名、非调试、数据独立，可保留原应用。此包不进入正式 release；正式版继续使用 E7E3 签名。完整离线资产仍是打包前提，见 [UI 迁移说明](docs/ui-miuix.md)。
+
 先读 [README](README.md)、[AGENTS](AGENTS.md)、[贡献流程](CONTRIBUTING.md) 与[接手指南](docs/接手指南.md)。应用版本以 `app/build.gradle` 为准，DSH 依赖以 `tools/dsh-runtime/package.json`/锁文件为准，完整交付和未验证范围以本轮报告为准。
 
-本轮只做本地正式产物与软件验证，不操作手机、不生成额外调试/审计 APK、不上传 GitHub 或部署网站。JVM 测试名称中的 Debug 表示测试变体，不授权 assembleDebug 或安装额外 APK。
+本次 UI PR 提交源码、构建配置与必要文档，不上传 APK、离线归档、设备取证或密钥，不发布 Release 或网站。JVM 测试名称中的 Debug 表示测试变体；独立体验版通过 Personal 构建类型生成。
 
 ## 环境与 flavor
 
 | 输入 | 现行要求 |
 |---|---|
-| JDK / 原生语言 | Java 17，无 Kotlin |
+| JDK / 原生语言 | Java 17；Miuix 展示层使用 Kotlin 2.3.20 / Compose 编译器，JVM 目标仍为 17 |
 | Gradle / AGP | 仓库 Wrapper 9.3.1 / AGP 9.1.1 |
 | Android SDK | `platforms;android-37.0`、build-tools 36.0.0；compile/target API 37 |
 | NDK | 26.3.11579264；终端与 Low proot 按各自受管入口使用 API 23 与真实 ELF 对齐检查 |
@@ -19,6 +21,8 @@
 两版共用 `com.dsh.client` 与用户数据，不能并排安装。最低 API、ELF 16 KiB 对齐与实际 Android 6/7/16 KiB 设备可用性是不同证据。Windows 可以开发和构建；Linux 特有用例不能用 Windows 跳过结果代替。
 
 配置本机 `local.properties` 的 `sdk.dir`，并将 JAVA_HOME、ANDROID_SDK_ROOT/ANDROID_HOME、DSHA_PYTHON 指向已有工具。不要复制开发者的绝对工具链目录。版本与固定 APK 文件名由 `app/build.gradle` 的 `versionCode`、`versionName` 和 `dshaApkNameVersion` 定义，不在本页再维护另一组当前数字。
+
+Miuix UI 的依赖、混合界面边界与不依赖离线归档的定向检查见 [UI 迁移说明](docs/ui-miuix.md)。AGP 9.1.1 使用内置 Kotlin 支持，不重复应用旧 `org.jetbrains.kotlin.android` 插件。
 
 ## 输入准备与证明
 

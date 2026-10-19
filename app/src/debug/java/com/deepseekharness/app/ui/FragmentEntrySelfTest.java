@@ -51,14 +51,19 @@ public final class FragmentEntrySelfTest {
           driver,
           () -> {
             for (int i = 0; i < 30; i++)
-              entry.requireView().findViewById(R.id.launch_start).performClick();
-            require(!entry.requireView().findViewById(R.id.launch_start).isEnabled(), "鉴权中按钮未禁用");
+              ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView()).start.click();
             require(
-                entry.requireView().findViewById(R.id.launch_status).getVisibility()
+                !((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                    .start.getEnabled(),
+                "鉴权中按钮未禁用");
+            require(
+                ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                        .status.getVisibility()
                     == View.VISIBLE,
                 "鉴权状态被隐藏");
             require(
-                ((TextView) entry.requireView().findViewById(R.id.launch_status))
+                ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                    .status
                     .getText()
                     .toString()
                     .contains("验证"),
@@ -71,7 +76,7 @@ public final class FragmentEntrySelfTest {
           driver,
           () -> {
             for (int i = 0; i < 30; i++)
-              entry.requireView().findViewById(R.id.launch_start).performClick();
+              ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView()).start.click();
           });
       require(entry.auth.get() == 1 && entry.opened.get() == 1, "已打开后重复进入");
 
@@ -94,23 +99,31 @@ public final class FragmentEntrySelfTest {
           driver,
           () ->
               require(
-                  !entry.requireView().findViewById(R.id.launch_start).isEnabled(), "旧回调解除了新请求的锁"));
+                  !((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                      .start.getEnabled(),
+                  "旧回调解除了新请求的锁"));
       entry.release.countDown();
       until(() -> entry.opened.get() == 2);
 
       rebuild(driver, host, entry);
       entry.throwAuth = true;
       click(driver, entry);
-      untilUi(driver, () -> entry.requireView().findViewById(R.id.launch_start).isEnabled());
+      untilUi(
+          driver,
+          () ->
+              ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                  .start.getEnabled());
       // 超过一次正常状态刷新，失败原因仍必须实际显示，不能只在隐藏的 TextView 中保留文本。
       Thread.sleep(1200);
       main(
           driver,
           () ->
               require(
-                  entry.requireView().findViewById(R.id.launch_status).getVisibility()
+                  ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                              .status.getVisibility()
                           == View.VISIBLE
-                      && ((TextView) entry.requireView().findViewById(R.id.launch_status))
+                      && ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                          .status
                           .getText()
                           .toString()
                           .contains("鉴权失败"),
@@ -120,26 +133,37 @@ public final class FragmentEntrySelfTest {
 
       entry.emptyCookie = true;
       click(driver, entry);
-      untilUi(driver, () -> entry.requireView().findViewById(R.id.launch_start).isEnabled());
+      untilUi(
+          driver,
+          () ->
+              ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                  .start.getEnabled());
       main(
           driver,
           () ->
               require(
-                  entry.requireView().findViewById(R.id.launch_status).getVisibility()
+                  ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                          .status.getVisibility()
                       == View.VISIBLE,
                   "空 cookie 失败原因被隐藏"));
       require(entry.opened.get() == 2, "空 cookie 仍打开页面");
       entry.emptyCookie = false;
       entry.throwOpen = true;
       click(driver, entry);
-      untilUi(driver, () -> entry.requireView().findViewById(R.id.launch_start).isEnabled());
+      untilUi(
+          driver,
+          () ->
+              ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                  .start.getEnabled());
       main(
           driver,
           () ->
               require(
-                  entry.requireView().findViewById(R.id.launch_status).getVisibility()
+                  ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                              .status.getVisibility()
                           == View.VISIBLE
-                      && ((TextView) entry.requireView().findViewById(R.id.launch_status))
+                      && ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                          .status
                           .getText()
                           .toString()
                           .contains("无法打开"),
@@ -162,7 +186,11 @@ public final class FragmentEntrySelfTest {
       until(() -> entry.auth.get() == authBefore + 1);
       main(driver, () -> entry.generation++);
       entry.release.countDown();
-      untilUi(driver, () -> entry.requireView().findViewById(R.id.launch_start).isEnabled());
+      untilUi(
+          driver,
+          () ->
+              ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView())
+                  .start.getEnabled());
       require(entry.opened.get() == 2, "Web 代次变化后仍打开旧页面");
       result.accept("launch=PASS：连点只进入一次，进入失败实际可见，旧视图/代次/URL 失效后不残留错误");
 
@@ -241,11 +269,14 @@ public final class FragmentEntrySelfTest {
   }
 
   private static void click(Instrumentation driver, EntryProbe entry) {
-    main(driver, () -> entry.requireView().findViewById(R.id.launch_start).performClick());
+    main(
+        driver,
+        () -> ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView()).start.click());
   }
 
   private static boolean visibleStatusContains(EntryProbe entry, String text) {
-    TextView status = entry.requireView().findViewById(R.id.launch_status);
+    com.deepseekharness.app.ui.miuix.MiuixLaunch.Label status =
+        ((com.deepseekharness.app.ui.miuix.MiuixLaunch) entry.requireView()).status;
     return status.getVisibility() == View.VISIBLE && status.getText().toString().contains(text);
   }
 

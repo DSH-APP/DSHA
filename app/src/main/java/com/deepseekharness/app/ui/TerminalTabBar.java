@@ -33,7 +33,14 @@ final class TerminalTabBar {
                   current != null && current.id == tab.id
                       ? R.color.primary
                       : R.color.text_secondary));
-      name.setTextSize(13);
+      name.setTextSize(14);
+      name.setSelected(current != null && current.id == tab.id);
+      androidx.core.view.ViewCompat.setStateDescription(
+          name,
+          current != null && current.id == tab.id
+              ? com.deepseekharness.app.util.UiText.choose("当前终端", "Current terminal")
+              : null);
+      name.setBackgroundResource(R.drawable.bg_action_plain);
       name.setIncludeFontPadding(false);
       name.setGravity(Gravity.CENTER);
       name.setSingleLine();
@@ -50,12 +57,13 @@ final class TerminalTabBar {
       close.setGravity(Gravity.CENTER);
       close.setTextColor(root.getContext().getColor(R.color.text_secondary));
       close.setMinHeight(dp(root, 48));
+      close.setBackgroundResource(R.drawable.bg_action_plain);
       close.setContentDescription(
           com.deepseekharness.app.util.UiText.format("关闭终端 %s", tab.number));
       close.setEnabled(!tab.isClosing());
       close.setAlpha(tab.isClosing() ? 0.4f : 1f);
       close.setOnClickListener(v -> actions.close(tab.id));
-      chip.addView(close, new LinearLayout.LayoutParams(dp(root, 48), dp(root, 48)));
+      chip.addView(close, new LinearLayout.LayoutParams(dp(root, 48), -2));
       LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
       lp.setMarginEnd(dp(root, 6));
       row.addView(chip, lp);

@@ -103,7 +103,7 @@ public final class PluginUiInstrumentation extends Instrumentation {
       until(() -> page != null, "主界面未就绪");
       runOnMainSync(
           () ->
-              ((com.google.android.material.bottomnavigation.BottomNavigationView)
+              ((com.deepseekharness.app.ui.miuix.MiuixNavigation)
                       page.findViewById(R.id.bottom_nav))
                   .setSelectedItemId(R.id.nav_plugins));
       until(() -> page.findViewById(R.id.btnPluginInstall) != null, "插件页没有加载");

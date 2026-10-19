@@ -79,7 +79,11 @@ public final class LanguageSettingsAudit extends Instrumentation {
   }
 
   private void choose(String label) throws Exception {
-    ui(() -> page.findViewById(R.id.settings_language).performClick());
+    ui(
+        () ->
+            ((SettingsFragment)
+                    page.getSupportFragmentManager().findFragmentById(R.id.fragment_container))
+                .open(R.id.settings_appearance));
     Thread.sleep(250);
     AccessibilityNodeInfo option = find(getUiAutomation().getRootInActiveWindow(), label);
     check(option != null, "语言选项不可见：" + label);
@@ -171,9 +175,8 @@ public final class LanguageSettingsAudit extends Instrumentation {
       check(page != null, "测试宿主未打开");
       mount(new SettingsFragment());
       check(
-          ((TextView) page.findViewById(R.id.settings_language))
-              .getText()
-              .toString()
+          ((com.deepseekharness.app.ui.miuix.MiuixSettings) page.findViewById(R.id.settings_page))
+              .getLanguage()
               .contains("简体中文"),
           "默认中文未显示");
       choose("English");

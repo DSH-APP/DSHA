@@ -50,9 +50,11 @@ public final class BackgroundTasksActivity extends AppCompatActivity {
                 "View active operations and progress. Open the related page to cancel safely."));
     UiNavigation.addHeader(this, page.root, t("后台任务", "Background tasks"), this::finish);
     page.content.removeViewAt(0);
-    status = page.text("", 13, R.color.text);
+    page.label(t("当前进度", "Current progress"));
+    status = page.text("", 15, R.color.text);
     status.setTextIsSelectable(true);
     page.card().addView(status);
+    page.label(t("打开对应页面", "Open the related page"));
     var links = page.card();
     page.button(
         links,

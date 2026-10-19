@@ -39,7 +39,8 @@ public final class AgentTasksActivity extends AppCompatActivity {
                 "View actual conversation progress. Stop affects only the selected task. Shows up to 32 active tasks and the 5 most recent ended states."));
     UiNavigation.addHeader(this, page.root, UiText.choose("Agent 任务", "Agent tasks"), this::finish);
     page.content.removeViewAt(0);
-    tasks = page.content;
+    tasks = page.column();
+    page.content.addView(tasks);
     setContentView(page.root);
   }
 
@@ -81,11 +82,11 @@ public final class AgentTasksActivity extends AppCompatActivity {
     tasks.removeAllViews();
     timings.clear();
     if (rows.isEmpty()) {
-      tasks.addView(page.text(UiText.choose("暂无任务记录", "No task records"), 14, R.color.text));
+      tasks.addView(page.text(UiText.choose("暂无任务记录", "No task records"), 16, R.color.text));
       return;
     }
     for (var row : rows) {
-      var card = page.card();
+      var card = page.card(tasks);
       card.addView(page.text(AgentTaskNotifications.phase(row), 16, R.color.text));
       var elapsed = page.text(timing(row), 12, R.color.text);
       timings.put(row.key(), elapsed);

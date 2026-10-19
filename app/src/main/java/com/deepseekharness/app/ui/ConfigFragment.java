@@ -253,8 +253,15 @@ public class ConfigFragment extends Fragment {
           try {
             if (!automaticPort.isChecked())
               com.deepseekharness.app.util.ConfigInput.port(port.getText().toString());
+            port.setError(null);
+            apiKey.setError(
+                apiKey.getText().length() > 16384
+                    ? com.deepseekharness.app.util.UiText.choose(
+                        "API Key 过长，请检查输入。", "API key is too long. Check the value.")
+                    : null);
             save.setEnabled(apiKey.getText().length() <= 16384);
           } catch (IllegalArgumentException invalid) {
+            port.setError(invalid.getMessage());
             save.setEnabled(false);
           }
         };
