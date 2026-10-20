@@ -154,12 +154,16 @@ try{
  const home='/root/.dsha-runtime-trial-'+ 'a'.repeat(32)+'/isolated-user-home';
  const readyFrame={type:'item',streamId:'test-stream',value:{type:'ready',clientId:'test-client',host:{home}}};
  const source=(await fs.readFile(path.join(repository,'app/src/main/assets/runtime-trial-page.js'),'utf8')).replace('__DSHA_TRIAL_NONCE__','a'.repeat(32)).replace('__DSHA_TRIAL_HOME__',JSON.stringify(home));
- function browser(responses){let tick,cleared=0,requests=0;const sockets=[];
+ function browser(responses){let tick,cleared=0,requests=0;const sockets=[],bodies=[];let clock=Date.now();
   function Socket(){this.events={};this.addEventListener=(name,fn)=>{this.events[name]=fn};sockets.push(this)}
-  const context={window:{WebSocket:Socket,addEventListener(){}},URL,Object,JSON,location:{href:'http://127.0.0.1:3080/',host:'127.0.0.1:3080'},
+  const context={window:{WebSocket:Socket,addEventListener(){}},URL,Object,JSON,Date:{now:()=>clock},location:{href:'http://127.0.0.1:3080/',host:'127.0.0.1:3080'},
    document:{getElementById:()=>({children:[{}]}),querySelector:()=>null},setInterval(fn){tick=fn;return 7},clearInterval(id){assert.equal(id,7);cleared++},
-   fetch:async()=>{requests++;const response=responses.shift();if(response instanceof Error)throw response;return response||{ok:true}}};
-  vm.runInNewContext(source,context);return{connect(url='ws://127.0.0.1:3080/api/remote.mux',frame=readyFrame){new context.window.WebSocket(url);const socket=sockets.at(-1);socket.events.open?.();socket.events.message?.({data:JSON.stringify(frame)});},async tick(){tick();await new Promise(resolve=>setImmediate(resolve));},get requests(){return requests},get cleared(){return cleared}};
+   fetch:async(url,init)=>{requests++;bodies.push(JSON.parse(init.body));const response=responses.shift();if(response instanceof Error)throw response;return response||{ok:true}}};
+  vm.runInNewContext(source,context);
+  return{connect(url='ws://127.0.0.1:3080/api/remote.mux',frame=readyFrame){new context.window.WebSocket(url);const socket=sockets.at(-1);socket.events.open?.();socket.events.message?.({data:JSON.stringify(frame)});return socket},
+   openOnly(url='ws://127.0.0.1:3080/api/remote.mux'){new context.window.WebSocket(url);const socket=sockets.at(-1);socket.events.open?.();return socket},
+   async tick(){tick();await new Promise(resolve=>setImmediate(resolve))},advance(ms){clock+=ms},
+   get requests(){return requests},get cleared(){return cleared},get bodies(){return bodies}};
  }
  for(const response of [{ok:false},new Error('synthetic_network_failure')])await test('synthetic_renderer_retry_'+(response instanceof Error?'network':'http'),async()=>{
   const page=browser([response,{ok:true}]);page.connect();await page.tick();assert.equal(page.requests,1);assert.equal(page.cleared,0);
@@ -168,6 +172,25 @@ try{
  await test('synthetic_foreign_socket_cannot_acknowledge_trial',async()=>{const page=browser([]);page.connect('ws://127.0.0.1:9999/socket');await page.tick();assert.equal(page.requests,0);assert.equal(page.cleared,0);});
  await test('synthetic_error_or_unrelated_frame_is_not_a_backend_handshake',async()=>{for(const frame of [{type:'error',streamId:'bad',error:{}},{type:'item',streamId:'another',value:{message:'not ready'}}]){const page=browser([]);page.connect(undefined,frame);await page.tick();assert.equal(page.requests,0)}});
  await test('synthetic_wrong_trial_home_cannot_acknowledge',async()=>{const page=browser([]);page.connect(undefined,{...readyFrame,value:{...readyFrame.value,host:{home:'/other-generation'}}});await page.tick();assert.equal(page.requests,0)});
+ // 未完成握手时只上报诊断进度，且不能清掉重试定时器或冒充成功。
+ await test('synthetic_progress_report_exposes_page_state',async()=>{
+  const page=browser([]);page.openOnly();await page.tick();assert.equal(page.requests,0);
+  page.advance(4500);await page.tick();assert.equal(page.requests,1);
+  const body=page.bodies[0];assert.equal(body.kind,'progress');assert.equal(body.ready,true);assert.equal(body.transport,false);
+  assert.equal(body.failure,false);assert.equal(body.boot,false);assert.equal(body.socket.state,'open');assert.equal(body.socket.code,0);
+  assert.equal(page.cleared,0);
+ });
+ await test('synthetic_socket_close_code_is_reported',async()=>{
+  const page=browser([]);const socket=page.openOnly();socket.events.close?.({code:1006,wasClean:false});
+  page.advance(4500);await page.tick();assert.equal(page.requests,1);
+  const body=page.bodies[0];assert.equal(body.transport,false);assert.equal(body.socket.state,'closed');
+  assert.equal(body.socket.code,1006);assert.equal(body.socket.clean,false);
+ });
+ await test('synthetic_progress_report_is_throttled',async()=>{
+  const page=browser([]);page.openOnly();page.advance(4500);await page.tick();assert.equal(page.requests,1);
+  page.advance(600);await page.tick();assert.equal(page.requests,1);
+  page.advance(2500);await page.tick();assert.equal(page.requests,2);
+ });
 }catch{process.exitCode=1;}
 finally{
  const report={version:1,platform:process.platform,node:process.version,fixture:'synthetic, private temporary directory',androidRendererVerified:false,results};

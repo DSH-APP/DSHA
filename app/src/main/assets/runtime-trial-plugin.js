@@ -104,13 +104,30 @@ async function initialize(ctx){
  try{await writer.flush()}finally{await writer.close()}
  const reader=await ctx.sessionPersistence.open(sample.id,'read');
  try{const state=await reader.read();if(reader.header.id!==sample.id||reader.header.version!==4||state.events.length!==0)throw Error('Trial session reopen mismatch')}finally{await reader.close()}
- const hash=createHash('sha256').update(read).digest('hex');let renderer=false,failure='';
+ const hash=createHash('sha256').update(read).digest('hex');let renderer=false,failure='',pageState='';
+ // 网页侧进度上报只用于诊断：写进行输出（宿主保存在失败记录的 output 里），
+ // 不回退已经确认的 renderer，也不能把进度上报当成握手成功。
+ function reportPage(value){
+  if(!value||typeof value!=='object')return;
+  try{
+   const socket=value.socket&&typeof value.socket==='object'?value.socket:{};
+   const code=typeof socket.code==='number'&&Number.isFinite(socket.code)?Math.trunc(socket.code):-1;
+   const text=JSON.stringify({
+    kind:typeof value.kind==='string'?value.kind.slice(0,16):'',
+    ready:value.ready===true,transport:value.transport===true,failure:value.failure===true,boot:value.boot===true,
+    socket:{state:typeof socket.state==='string'?socket.state.slice(0,12):'',code:code,clean:socket.clean===true},
+   });
+   if(text===pageState)return;
+   pageState=text;
+   process.stdout.write('DSHA_TRIAL_PAGE_STATE '+text+'\n');
+  }catch{}
+ }
  const endpoint='/dsha-runtime-trial/'+nonce;
  ctx.effect(()=>ctx.webServer.register({kind:'exact',path:endpoint,handler:async(req,res)=>{
   const rejection=ctx.connection.requestRejection(req);if(rejection!==undefined){res.writeHead(rejection);res.end();return}
   if(req.method==='POST'){
    let body='';for await(const chunk of req){body+=chunk;if(body.length>4096){res.writeHead(413);res.end();return}}
-   try{const value=JSON.parse(body);if(value.nonce!==nonce)throw Error('nonce');if(value.failure)failure='TRIAL_RENDERER_FAILED';else renderer=value.ready===true&&value.transport===true;}catch{res.writeHead(400);res.end();return}
+   try{const value=JSON.parse(body);if(value.nonce!==nonce)throw Error('nonce');if(value.failure)failure='TRIAL_RENDERER_FAILED';else if(value.ready===true&&value.transport===true)renderer=true;reportPage(value)}catch{res.writeHead(400);res.end();return}
   }
   res.setHeader('content-type','application/json');res.setHeader('cache-control','no-store');res.end(JSON.stringify({nonce,pid:process.pid,port:ctx.webServer.port,dataRead:read===payload,dataWrite:true,storageReopened:true,storageFreshReopened:true,sessionReopened:true,hash,renderer,failure}));
  }}));
