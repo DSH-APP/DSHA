@@ -364,6 +364,11 @@ def make_backup(root, output, scope, app_version="unknown", app_code=0,
                 except OSError:
                     pass
         for path, previous, excluded in checks:
+            if excluded == 'DSHA_MANAGED_PACKAGE_PROOF':
+                current = plugin_support('register-builtin-plugins.py').package_content_proof(path)
+                if current != previous:
+                    raise ValueError('备份期间受管插件内容变化，请停止 Web 后重试：' + str(path))
+                continue
             if excluded is None:
                 now = path.stat()
                 current = (now.st_size, now.st_mtime_ns)
@@ -522,14 +527,67 @@ def inspect_archive(archive, stage, filename_scope="full"):
             "manifest": manifest or {}, "dsh": str(dsh), "legacy": not manifest or manifest.get("formatVersion") not in (3, 4)}
 
 
-def recover(root):
-    """重启后的日志回滚；备份文件只有本机生成的随机事务路径。"""
-    root = Path(root)
-    journal = root / ".dsha-restore-journal.json"
-    if not journal.exists():
-        return
+def private_target(root, target):
+    """A maintenance destination stays under its trusted private root; links are leaf objects."""
+    root = Path(os.path.abspath(root))
+    target = Path(target)
+    if not target.is_absolute() or str(target) != os.path.abspath(target):
+        raise ValueError("RESTORE_PRIVATE_PATH")
+    if target == root or not target.is_relative_to(root):
+        raise ValueError("RESTORE_EXTERNAL_TARGET_PRESERVED")
+    mode = root.lstat().st_mode
+    if not stat.S_ISDIR(mode):
+        raise ValueError("RESTORE_PRIVATE_ROOT")
+    at = root
+    for part in target.relative_to(root).parts[:-1]:
+        at /= part
+        try:
+            mode = at.lstat().st_mode
+        except FileNotFoundError:
+            continue
+        if not stat.S_ISDIR(mode):
+            raise ValueError("RESTORE_PARENT_LINK_OR_SPECIAL")
+    return target
+
+
+def journal_state(root):
+    """Validate every historic row before the first mutation; retain unsupported originals."""
+    journal = private_target(root, Path(root) / ".dsha-restore-journal.json")
+    if not os.path.lexists(journal):
+        return journal, None
+    if not stat.S_ISREG(journal.lstat().st_mode) or journal.stat().st_size > 1024 * 1024:
+        raise ValueError("RESTORE_JOURNAL_TYPE")
     state = json.loads(journal.read_text(encoding="utf-8"))
-    if not state.get("complete"):
+    if (not isinstance(state, dict) or not isinstance(state.get("complete"), bool)
+            or not isinstance(state.get("steps"), list) or len(state["steps"]) > 2048):
+        raise ValueError("RESTORE_JOURNAL_SCHEMA")
+    seen = set()
+    for row in state["steps"]:
+        if not isinstance(row, dict) or not isinstance(row.get("existed"), bool):
+            raise ValueError("RESTORE_JOURNAL_ROW")
+        values = []
+        for key in ("dst", "old", "new"):
+            if not isinstance(row.get(key), str):
+                raise ValueError("RESTORE_JOURNAL_ROW")
+            values.append(private_target(root, row[key]))
+        dst, old, new = values
+        token = new.name.removeprefix(dst.name + ".restore-stage-")
+        if (not re.fullmatch(r"[0-9]{8}-[0-9]{6}-[a-f0-9]{8}", token)
+                or new != dst.with_name(dst.name + ".restore-stage-" + token)
+                or old != dst.with_name(dst.name + ".pre-restore-" + token)
+                or str(dst) in seen):
+            raise ValueError("RESTORE_JOURNAL_BINDING")
+        seen.add(str(dst))
+    return journal, state
+
+
+def recover(root):
+    """Replay only fully checked private rows; an external/unknown old journal stays untouched."""
+    root = Path(os.path.abspath(root))
+    journal, state = journal_state(root)
+    if state is None:
+        return
+    if not state["complete"]:
         for row in reversed(state["steps"]):
             dst, old, new = map(Path, (row["dst"], row["old"], row["new"]))
             if os.path.lexists(old):
@@ -644,17 +702,17 @@ def workspace_replacements(source, root, stage):
         return []
     data = json.loads(registry.read_text(encoding="utf-8"))
     replacements = []
-    allowed = (root.resolve(), Path("/sdcard"), Path("/storage/emulated/0")) if str(root) == "/root" else (root.resolve(),)
     for record in ((data.get("tables") or {}).get("workspaces") or {}).values():
         value = (record or {}).get("path")
         if not isinstance(value, str) or not value.startswith("/"):
             continue
         path = Path(value)
+        try:
+            resolved = private_target(root, path)
+        except ValueError:
+            continue  # Keep external workspace references; never recreate their contents.
         if path.is_dir():
             continue
-        resolved = path.resolve()
-        if not any(resolved.is_relative_to(base) for base in allowed):
-            raise ValueError("会话工作目录在当前设备不可用，请先创建或挂载：" + value)
         empty = stage / ("workspace-" + uuid.uuid4().hex[:12])
         empty.mkdir()
         replacements.append((empty, resolved))
@@ -669,7 +727,8 @@ def workspace_replacements(source, root, stage):
 
 def commit(root, replacements, fail_after=None, defer=False):
     """所有副本先落到目标所在文件系统，再记录日志并切换；旧数据保留。"""
-    root = Path(root)
+    root = Path(os.path.abspath(root))
+    replacements = [(Path(src), private_target(root, dst)) for src, dst in replacements]
     recover(root)
     token = time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:8]
     steps = []
@@ -706,9 +765,10 @@ def commit(root, replacements, fail_after=None, defer=False):
 
 
 def finalize(root):
-    root = Path(root)
-    journal = root / ".dsha-restore-journal.json"
-    state = json.loads(journal.read_text(encoding="utf-8"))
+    root = Path(os.path.abspath(root))
+    journal, state = journal_state(root)
+    if state is None:
+        raise ValueError("RESTORE_JOURNAL_MISSING")
     state["complete"] = True
     dump(journal, state)
     recover(root)
@@ -787,16 +847,12 @@ def restore_archive(root, archive, filename_scope="full", workdir="deepseek-harn
                 continue
             dst = candidate / name
             remove(dst)
-            if name in HOT and (current / name).is_symlink():
-                public = (current / name).resolve(strict=False)
-                # 仅沿用本机现有公开链接；从归档带来的链接不会成为写入目标。
-                replacements.append((src, public))
-                dst.symlink_to(public, target_is_directory=src.is_dir())
+            # A selected external link is replaced only inside the private candidate.
+            # The external original remains at its existing path and is never renamed.
+            if name == CREDENTIAL_FILE:
+                copy_credentials(src, dst)
             else:
-                if name == CREDENTIAL_FILE:
-                    copy_credentials(src, dst)
-                else:
-                    copy_data(src, dst, exclude_root=root_exclusions(name))
+                copy_data(src, dst, exclude_root=root_exclusions(name))
         manifest = info["manifest"]
         if scope in ("full", "plugins"):
             signed_system = signed_system_plugins()
@@ -860,6 +916,7 @@ def restore_archive(root, archive, filename_scope="full", workdir="deepseek-harn
                 nm.symlink_to(os.path.relpath(plugin_stage / relative, nm.parent), target_is_directory=True)
             repair_profile_links(candidate, stage, root, generation, plugin_stage,
                                  manifest.get("plugins", []), signed_system)
+        restore_warnings = list(info.get("warnings") or [])
         if scope == "full":
             wd = Path(workdir)
             if not wd.is_absolute():
@@ -867,7 +924,12 @@ def restore_archive(root, archive, filename_scope="full", workdir="deepseek-harn
             for name in (".env", "dsh-web.log"):
                 src = stage / ".dsha-workdir" / name
                 if src.exists():
-                    replacements.append((src, wd / name))
+                    try:
+                        target = private_target(root, wd / name)
+                    except ValueError:
+                        restore_warnings.append("EXTERNAL_WORKSPACE_PRESERVED:" + name)
+                        continue
+                    replacements.append((src, target))
         # 原生设置仍由 ConfigStore 导入，不让 Python 接触 Android 私有偏好文件。
         native = stage / ".dsha-native-config.json"
         native_data = json.loads(native.read_text(encoding="utf-8")) if native.exists() and scope in ("full", "settings") else None
@@ -878,7 +940,8 @@ def restore_archive(root, archive, filename_scope="full", workdir="deepseek-harn
         replacements.append((candidate, current))
         backups = commit(root, replacements, fail_after, defer)
         return {"scope": scope, "files": info["files"], "legacy": info["legacy"],
-                "previous": backups, "nativeConfig": native_data, "committed": True}
+                "previous": backups, "nativeConfig": native_data, "committed": True,
+                "warnings": restore_warnings}
 
 
 @contextmanager

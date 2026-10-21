@@ -31,6 +31,7 @@ final class RuntimeTools {
   }
 
   private static void prepare(Context context, File rootfs, boolean requireNpm) throws IOException {
+    GuestScriptBudget.checkpoint();
     rootfs = RuntimeAssetFiles.root(context, rootfs);
     try (RuntimeHostPorts.Scope scope =
         RuntimeHostPorts.fromOwner(context.getApplicationContext()).open()) {
@@ -39,15 +40,10 @@ final class RuntimeTools {
       RuntimeHostPorts.Settings settings =
           RuntimeHostPorts.fromOwner(context.getApplicationContext()).settings();
       synchronized (LOCK) {
+        GuestScriptBudget.checkpoint();
         // 预配置工具归档不运行旧 install-ubuntu-tools 的 mkdir /tmp；普通启动也修复缺失目录。
         RuntimeTemporaryDirectories.prepare(
             new com.deepseekharness.app.backup.AndroidBackupFileSystem(), rootfs);
-        try {
-          com.deepseekharness.app.backup.ScratchCleanup.prepare(
-              new com.deepseekharness.app.backup.AndroidBackupFileSystem(), rootfs);
-        } catch (IOException unavailable) {
-          android.util.Log.w("DSHA", "DSHA scratch directory unavailable", unavailable);
-        }
         try {
           prepareResolver(context, rootfs, settings, deviceDns);
         } catch (IOException error) {
@@ -90,22 +86,7 @@ final class RuntimeTools {
         preparedFiles.clear();
         String managedIdentity = assetRuntimeId(context);
         installManagedAssets(context, rootfs);
-        for (String command : new String[] {"npm", "npx"}) {
-          File cli = new File(rootfs, "usr/local/lib/node_modules/npm/bin/" + command + "-cli.js");
-          if (requireNpm && !cli.isFile())
-            throw new IOException(
-                com.deepseekharness.app.util.UiText.format("内置 npm 文件缺失：%s-cli.js", command));
-          if (requireNpm) preparedFiles.add(cli);
-          File wrapper = new File(rootfs, "root/dsh-bin/" + command);
-          writeIfChanged(
-              context,
-              wrapper,
-              ("#!/bin/sh\nexec /usr/local/bin/node /usr/local/lib/node_modules/npm/bin/"
-                      + command
-                      + "-cli.js \"$@\"\n")
-                  .getBytes(java.nio.charset.StandardCharsets.UTF_8),
-              true);
-        }
+        preparePackageCommands(context, rootfs, requireNpm);
         applyPatchChain(context, rootfs);
         writeIfChanged(
             context,
@@ -118,6 +99,43 @@ final class RuntimeTools {
         preparedStamp = stamp(rootfs);
       }
     }
+  }
+
+  /** The Web host and every child process need these before any profile/package command. */
+  static void preparePackageCommands(Context context, File rootfs, boolean requireNpm)
+      throws IOException {
+    RootfsInstaller.pnpm(context, rootfs);
+    for (String path :
+        new String[] {
+          "usr/local/lib/dsha-pnpm/bin/pnpm.cjs",
+          "usr/local/lib/dsha-pnpm/dist/pnpm.cjs",
+          "usr/local/lib/dsha-pnpm/package.json",
+          "root/.dsha-pnpm-version",
+          "root/dsh-bin/pnpm"
+        }) preparedFiles.add(new File(rootfs, path));
+    for (String command : new String[] {"npm", "npx"}) {
+      File cli = new File(rootfs, "usr/local/lib/node_modules/npm/bin/" + command + "-cli.js");
+      if (requireNpm && !cli.isFile())
+        throw new IOException(
+            com.deepseekharness.app.util.UiText.format("内置 npm 文件缺失：%s-cli.js", command));
+      if (requireNpm) preparedFiles.add(cli);
+      File wrapper = new File(rootfs, "root/dsh-bin/" + command);
+      writeIfChanged(
+          context,
+          wrapper,
+          ("#!/bin/sh\nexec /usr/local/bin/node /usr/local/lib/node_modules/npm/bin/"
+                  + command
+                  + "-cli.js \"$@\"\n")
+              .getBytes(java.nio.charset.StandardCharsets.UTF_8),
+          true);
+    }
+    File dsh = new File(rootfs, "root/dsh-bin/dsh");
+    writeIfChanged(
+        context,
+        dsh,
+        com.deepseekharness.app.util.DshEntrypoint.wrapper()
+            .getBytes(java.nio.charset.StandardCharsets.UTF_8),
+        true);
   }
 
   static void invalidate() {
@@ -213,23 +231,29 @@ final class RuntimeTools {
         && before.same(fs.stat(file));
   }
 
-  /** All preparation paths use this registry; retired recipes are never executed. */
-  private static void applyPatchChain(Context context, File rootfs) throws IOException {
+  /** Load the actual APK AssetManager input and enforce its native startup generation. */
+  static org.json.JSONObject readPatchRegistry(Context context) throws IOException {
     try {
       org.json.JSONObject registry = assetObject(context, "runtime-patches.json");
       if (registry.getInt("schema") != 1) throw new IOException("PATCH_REGISTRY_SCHEMA");
-      File pkg = new File(rootfs, "usr/local/lib/node_modules/@deepseek-ai/dsh/package.json");
-      if (!pkg.isFile()) return;
-      preparedFiles.add(pkg);
-      String version = fileObject(pkg).getString("version");
-      if (!com.deepseekharness.app.util.Constants.DSH_VERSION.equals(
-          registry.getString("dshVersion"))) throw new IOException("PATCH_REGISTRY_VERSION");
-      if (!version.equals(registry.getString("dshVersion"))) {
-        RuntimeHostPorts.fromOwner(context.getApplicationContext())
-            .record("PATCH_RUNTIME_VERSION_MISMATCH", version);
-        return;
-      }
-      removeLegacyPluginReviewPatches(context, rootfs);
+      String version = registry.getString("dshVersion");
+      if (!com.deepseekharness.app.util.Constants.DSH_VERSION.equals(version))
+        throw new IOException(
+            "PATCH_REGISTRY_VERSION: APK="
+                + com.deepseekharness.app.util.Constants.DSH_VERSION
+                + " registry="
+                + version);
+      return registry;
+    } catch (org.json.JSONException error) {
+      throw new IOException("PATCH_REGISTRY_FORMAT", error);
+    }
+  }
+
+  static java.util.Map<
+          String, java.util.List<com.deepseekharness.app.util.ManagedPatchChain.Recipe>>
+      readPatchChains(Context context, org.json.JSONObject registry, String version)
+          throws IOException {
+    try {
       java.util.Map<String, java.util.List<com.deepseekharness.app.util.ManagedPatchChain.Recipe>>
           groups = new java.util.LinkedHashMap<>();
       java.util.Set<String> ids = new java.util.HashSet<>();
@@ -240,7 +264,13 @@ final class RuntimeTools {
         if (!ids.add(asset)) throw new IOException("PATCH_REGISTRY_DUPLICATE");
         var spec = assetObject(context, asset);
         if (!version.equals(spec.getString("dshVersion")))
-          throw new IOException("PATCH_REGISTRY_VERSION");
+          throw new IOException(
+              "PATCH_REGISTRY_VERSION: recipe="
+                  + asset
+                  + " expected="
+                  + version
+                  + " actual="
+                  + spec.getString("dshVersion"));
         String module = entry.has("module") ? entry.getString("module") : spec.getString("module");
         if (!com.deepseekharness.app.util.ManagedInstallPath.valid(module))
           throw new IOException("PATCH_MODULE_PATH");
@@ -269,6 +299,28 @@ final class RuntimeTools {
       for (int i = 0; i < retired.length(); i++)
         if (ids.contains(retired.getJSONObject(i).getString("asset")))
           throw new IOException("PATCH_RETIRED_ACTIVE");
+      return groups;
+    } catch (org.json.JSONException error) {
+      throw new IOException("PATCH_REGISTRY_FORMAT", error);
+    }
+  }
+
+  /** All preparation paths use this registry; retired recipes are never executed. */
+  private static void applyPatchChain(Context context, File rootfs) throws IOException {
+    try {
+      org.json.JSONObject registry = readPatchRegistry(context);
+      File pkg = new File(rootfs, "usr/local/lib/node_modules/@deepseek-ai/dsh/package.json");
+      if (!pkg.isFile()) return;
+      preparedFiles.add(pkg);
+      String version = fileObject(pkg).getString("version");
+      String registryVersion = registry.getString("dshVersion");
+      if (!version.equals(registryVersion)) {
+        RuntimeHostPorts.fromOwner(context.getApplicationContext())
+            .record("PATCH_RUNTIME_VERSION_MISMATCH", version);
+        return;
+      }
+      removeLegacyPluginReviewPatches(context, rootfs);
+      var groups = readPatchChains(context, registry, version);
       for (var entry : groups.entrySet()) {
         String module = entry.getKey();
         File target =
@@ -310,6 +362,7 @@ final class RuntimeTools {
     preparedStamp = null;
     preparedFiles.clear();
     installManagedAssets(context, rootfs);
+    preparePackageCommands(context, rootfs, true);
     // 覆盖升级保留同一运行时身份时，不能只更新消息兼容层。
     // Web UI 的会话抽屉、预设标题和移动端插件都属于 APK 自有覆盖层，
     // 旧版本在这里提前 return 会让 rootfs 继续使用旧 bundle。
@@ -396,8 +449,45 @@ final class RuntimeTools {
     if (Compat.isSymbolicLink(module)
         || !module.getCanonicalPath().startsWith(rootfs.getCanonicalPath() + File.separator))
       throw new IOException("LAN_SETTINGS_MODULE_PATH");
-    String source = Compat.readAll(module);
+    byte[] bytes = Compat.readAllBytes(module);
+    String source = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
     try {
+      File pkg = new File(rootfs, "usr/local/lib/node_modules/@deepseek-ai/dsh/package.json");
+      String version = fileObject(pkg).getString("version");
+      if ("0.2.1-rc.2".equals(version)) {
+        // This upstream generation writes through the Host mirror for every client.
+        // Retire the old text replacement only for the signed, byte-exact implementation.
+        var contract = assetObject(context, "lan-settings-upstream-contract.json");
+        if (contract.getInt("schema") != 1
+            || !version.equals(contract.getString("dshVersion"))
+            || !"@deepseek-ai/dsh-client-ui-settings/lib/client.js"
+                .equals(contract.getString("module")))
+          throw new IOException("LAN_SETTINGS_CONTRACT");
+        String digest =
+            com.deepseekharness.app.util.FileIntegrity.copy(
+                    new java.io.ByteArrayInputStream(bytes), null, bytes.length)
+                .sha256;
+        if (!digest.equals(contract.getString("sourceSha256")))
+          throw new IOException("LAN_SETTINGS_SOURCE_MISMATCH");
+        var required = contract.getJSONArray("requiredAnchors");
+        if (required.length() != 4) throw new IOException("LAN_SETTINGS_CONTRACT");
+        for (int i = 0; i < required.length(); i++) {
+          String anchor = required.getString(i);
+          int position = source.indexOf(anchor);
+          if (anchor.isEmpty()
+              || position < 0
+              || source.indexOf(anchor, position + anchor.length()) >= 0)
+            throw new IOException("LAN_SETTINGS_HOST_SEMANTICS");
+        }
+        var forbidden = contract.getJSONArray("forbiddenAnchors");
+        if (forbidden.length() != 2) throw new IOException("LAN_SETTINGS_CONTRACT");
+        for (int i = 0; i < forbidden.length(); i++)
+          if (source.contains(forbidden.getString(i)))
+            throw new IOException("LAN_SETTINGS_HOST_SEMANTICS");
+        preparedFiles.add(module);
+        return;
+      }
+      if (!"0.2.0-rc.2".equals(version)) throw new IOException("LAN_SETTINGS_VERSION");
       String patched =
           com.deepseekharness.app.util.ExactTextPatch.apply(
               source,
@@ -407,24 +497,23 @@ final class RuntimeTools {
       if (!source.equals(patched))
         writeIfChanged(
             context, module, patched.getBytes(java.nio.charset.StandardCharsets.UTF_8), false);
-    } catch (IllegalArgumentException error) {
+    } catch (IllegalArgumentException | org.json.JSONException error) {
       throw new IOException("LAN_SETTINGS_PATCH_MISMATCH", error);
     }
   }
 
   /** 冷安装与受管候选共用；只准备内置实体依赖，不注册或改写用户 web profile。 */
   static void prepareBuiltinDependencies(File rootfs) throws IOException {
-    prepareBuiltinDependencies(
-        new com.deepseekharness.app.backup.AndroidBackupFileSystem(), rootfs.getCanonicalFile());
-  }
-
-  static void prepareBuiltinDependencies(
-      com.deepseekharness.app.backup.BackupFileSystem fs, File root) throws IOException {
+    var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
+    File root = rootfs.getCanonicalFile();
     String target = "../../usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules";
     if (!fs.stat(new File(root, "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules"))
         .type
         .equals("DIRECTORY")) throw new IOException("BUNDLED_MODULES_MISSING");
-    for (String name : com.deepseekharness.app.util.BuiltinPlugins.SIGNED_BUILTINS) {
+    var names =
+        new java.util.ArrayList<>(com.deepseekharness.app.util.BuiltinPlugins.DEFAULT_BUILTINS);
+    names.add("dsh-app-integration");
+    for (String name : names) {
       File link =
           fs.child(
               root,
@@ -530,7 +619,6 @@ final class RuntimeTools {
     // silently add confirmation, frozen-lockfile, or lifecycle blocking.
     environment.put("DSHA_PLUGIN_UNLOCKED", "1");
     environment.put("DSHA_ANDROID_RUNTIME", "1");
-    environment.put("DSHA_CACHE_DIR", com.deepseekharness.app.util.ScratchPaths.GUEST_DIRECTORY);
     environment.put("DSHA_DNS_MODE", settings.dnsMode);
     String preload = "--require=/usr/local/share/dsha/dns-compat.cjs";
     if (new File(rootfs, "usr/local/share/dsha/dns-compat.cjs").isFile()) {
@@ -572,14 +660,13 @@ final class RuntimeTools {
     String relative = "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/" + module;
     File target = new File(rootfs, relative);
     String[] candidate = {relative, "./" + relative};
-    try (ZipFile apk = new ZipFile(context.getPackageCodePath());
-        ManagedModuleStaging owned =
-            ManagedModuleStaging.create(
-                new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
-                context.getFilesDir().getCanonicalFile())) {
+    try (ZipFile apk = new ZipFile(context.getPackageCodePath())) {
       ZipEntry entry = apk.getEntry("assets/dsh-runtime.bin");
       if (entry == null) return null;
-      File staging = owned.directory();
+      File staging =
+          new File(rootfs, ".dsha-managed-module-" + Integer.toHexString(relative.hashCode()));
+      if (staging.exists()) deleteTemporary(staging);
+      staging.mkdirs();
       final boolean[] found = {false};
       try (InputStream input = apk.getInputStream(entry)) {
         TarGzipExtractor.extractSelected(
@@ -596,18 +683,31 @@ final class RuntimeTools {
             });
       }
       if (!found[0]) {
+        deleteTemporary(staging);
         return null;
       }
       File extracted = new File(staging, relative);
       if (!extracted.isFile() || Compat.isSymbolicLink(extracted)) {
+        deleteTemporary(staging);
         return null;
       }
       byte[] bytes = Compat.readAll(extracted).getBytes(java.nio.charset.StandardCharsets.UTF_8);
       if (bytes.length == 0) {
+        deleteTemporary(staging);
         return null;
       }
+      deleteTemporary(staging);
       return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
     }
+  }
+
+  private static void deleteTemporary(File file) {
+    if (file.isDirectory()) {
+      File[] children = file.listFiles();
+      if (children != null) for (File child : children) deleteTemporary(child);
+    }
+    //noinspection ResultOfMethodCallIgnored
+    file.delete();
   }
 
   /** 锁定的文件预览模块：网页与独立 PDF Worker 共用兼容实现，旧内核的文件协议只做窄适配。 */
@@ -688,6 +788,7 @@ final class RuntimeTools {
       byte[] buffer = new byte[8192];
       int count;
       while ((count = input.read(buffer)) != -1) {
+        GuestScriptBudget.checkpoint();
         if (out.size() + count > 2 * 1024 * 1024) throw new IOException("RUNTIME_TEXT_ASSET_LIMIT");
         out.write(buffer, 0, count);
       }
@@ -774,6 +875,7 @@ final class RuntimeTools {
       byte[] buffer = new byte[8192];
       int count;
       while ((count = input.read(buffer)) != -1) {
+        GuestScriptBudget.checkpoint();
         if (bytes.size() + count > 32 * 1024 * 1024) throw new IOException("RUNTIME_ASSET_LIMIT");
         bytes.write(buffer, 0, count);
       }
@@ -789,6 +891,7 @@ final class RuntimeTools {
 
   private static void writeIfChanged(Context context, File file, byte[] content, boolean executable)
       throws IOException {
+    GuestScriptBudget.checkpoint();
     preparedFiles.add(file);
     RuntimeAssetFiles.write(context, file, content, executable);
   }

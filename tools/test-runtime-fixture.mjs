@@ -8,6 +8,14 @@ const sha=file=>createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 const json=file=>JSON.parse(fs.readFileSync(file,'utf8'));
 const canonical=value=>value&&typeof value==='object'?(Array.isArray(value)?value.map(canonical):Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])]))):value;
 const proofHash=entries=>createHash('sha256').update(JSON.stringify(canonical(entries))).digest('hex');
+export function runtimeInputSha(sourceRoot,file,archiveRecipe=false){
+  const physical=path.join(sourceRoot,file);
+  if(archiveRecipe&&file==='app/src/main/assets/managed-runtime-inputs.json'){
+    const installs=json(physical).installs.filter(row=>row.target?.startsWith('usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/dsha-destructive-policy/'));
+    return proofHash(installs);
+  }
+  return sha(physical);
+}
 export function verifyRuntimeContent(directory,proof){
   if(proof.version!==2||proof.installation!=='npm-ci-ignore-scripts'||!/^[a-f0-9]{32}$/.test(proof.installationId||''))throw Error('TEST_FIXTURE_REINSTALL_REQUIRED');
   const expected=proof.contentProof;
@@ -107,7 +115,8 @@ export function testRuntime(kind='raw', environment=kind==='raw'?'DSHA_TEST_RUNT
   if(fs.lstatSync(proofFile).isSymbolicLink()||!fs.lstatSync(proofFile).isFile())throw Error('TEST_FIXTURE_MARKER_TYPE');
   const proof=json(proofFile);
   if(proof.kind!==kind||proof.dshVersion!==expected||proof.lockSha256!==sha(path.join(root,'tools/dsh-runtime/package-lock.json')))throw Error('Stale or wrong fixture kind/version: '+directory);
-  for(const [file,digest] of Object.entries({...proof.archiveRecipeInputs,...proof.overlayInputs}))if(sha(path.join(root,file))!==digest)throw Error('Fixture patch inputs changed: '+file);
+  for(const [file,digest] of Object.entries(proof.archiveRecipeInputs||{}))if(runtimeInputSha(root,file,true)!==digest)throw Error('Fixture patch inputs changed: archive:'+file);
+  for(const [file,digest] of Object.entries(proof.overlayInputs||{}))if(runtimeInputSha(root,file)!==digest)throw Error('Fixture patch inputs changed: overlay:'+file);
   if(!verifyRuntimeSession(directory,proof))verifyRuntimeContent(directory,proof);
   return directory;
 }

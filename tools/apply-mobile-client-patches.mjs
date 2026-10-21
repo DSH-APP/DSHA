@@ -44,9 +44,8 @@ export function applyMobileClientPatches(bytes) {
       throw new Error('补丁模块范围缺失或不唯一: ' + startAnchor);
     source = source.slice(0, start) + after + source.slice(end);
   };
-  // 3.1.0 已吸收分享、WeakMap滚动/手势、焦点归属、聊天流过滤和#173胶囊修复。
-  replaceRange('function syncStableViewportHeight() {', '/** iOS-only: mark documentElement',
-    readFileSync(path.join(project, 'tools/mobile-viewport-sync.js'), 'utf8').trimEnd() + '\n');
+  // 3.2.1 沿用已吸收的可见视口变量、写入去重与销毁清理；最新 main 已撤回
+  // 后续按帧合并试验。保留原 viewport-meta 与 interactive-widget=resizes-content。
   // 按实际鼠标/touch/pen事件分流；不能把用户点击伪造成键盘 detail=0。
   replaceRange('            // DSHA detail=0 follows the host\'s keyboard/programmatic open path.',
     '            // A touch row-tap owns the close (pointerup or the navigation observer);',

@@ -91,9 +91,6 @@ public final class StorageHelpActivity extends AppCompatActivity {
         erase,
         "本机副本会随私有数据一起删除，不能依赖它救回数据。只有事先存到 App 外且可读的导出文件，才可在重新初始化后手动导入其中的数据范围。未导出的私有数据，App 无法恢复。");
 
-    LinearLayout maintenance = section("环境维护与外置工作区");
-    paragraph(maintenance, "环境维护使用“恢复中断维护”或“保护数据并重建”。外置工作区中的文件和备份由用户管理；断开工作区只解除映射，不删除外置目录或文件。");
-
     LinearLayout growth = section("为什么占用会增长");
     paragraph(
         growth,

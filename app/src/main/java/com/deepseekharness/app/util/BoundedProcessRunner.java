@@ -74,18 +74,6 @@ public final class BoundedProcessRunner {
       Consumer<Process> terminate,
       Consumer<String> onLine)
       throws IOException, InterruptedException {
-    return collect(process, timeoutMillis, maxBytes, terminate, onLine, null);
-  }
-
-  /** 在回收前捕获只读诊断；诊断异常不改变超时/退出判定及既有清理。 */
-  public static Result collect(
-      Process process,
-      long timeoutMillis,
-      int maxBytes,
-      Consumer<Process> terminate,
-      Consumer<String> onLine,
-      Consumer<Process> onTimeout)
-      throws IOException, InterruptedException {
     if (timeoutMillis <= 0 || maxBytes < 0)
       throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("无效的进程限制"));
     final long started = System.nanoTime();
@@ -108,16 +96,7 @@ public final class BoundedProcessRunner {
                     throw new InterruptedException(
                         com.deepseekharness.app.util.UiText.text("命令等待已中断"));
                 });
-        if (event.timedOut) {
-          if (onTimeout != null) {
-            try {
-              onTimeout.accept(process);
-            } catch (RuntimeException ignored) {
-              /* 诊断不是成功证据。 */
-            }
-          }
-          return new Result(bytes, -1, true, truncated);
-        }
+        if (event.timedOut) return new Result(bytes, -1, true, truncated);
         if (event.count > 0) {
           bytes.write(buffer, 0, event.count);
           if (onLine != null) {

@@ -6,8 +6,7 @@ import com.deepseekharness.app.util.Ids;
 import java.io.*;
 import java.util.*;
 
-/** Fresh installation only. Never admits a nonempty user root or replaces an existing environment.
- * 每个事务边界继续独立读取完整内容；ctime/墙钟缓存不作为发布或原件保护的权威。 */
+/** Fresh installation only. Never admits a nonempty user root or replaces an existing environment. */
 public final class ColdInstallTransaction {
   public static final String HOME = "cold-install-operations";
   private static final Set<String> ACTIVE = java.util.concurrent.ConcurrentHashMap.newKeySet();

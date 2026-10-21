@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
+  "sourceSha256": "1b8bf9eb266d7b3b7f899175e3f435c89ed8baa8aabc677212759f8c6cd23132",
+  "patches": [
+    {
+      "before": "\t\t\tconst names = [...new Set([\n\t\t\t\t...selected,\n\t\t\t\t...dependencies,\n\t\t\t\t...Object.keys(installation.dependencies ?? {}),\n\t\t\t\t...catalog.keys()\n\t\t\t])];",
+      "after": "\t\t\t// DSHA_RETIRED_MARKET_CATALOG_V1: do not re-offer the retired bundle through another merged source.\n\t\t\tconst names = [...new Set([\n\t\t\t\t...selected,\n\t\t\t\t...dependencies,\n\t\t\t\t...Object.keys(installation.dependencies ?? {}),\n\t\t\t\t...catalog.keys()\n\t\t\t])].filter((name) => name !== \"@deepseek-ai/dsh-experimental-plugin-market-bundle\");"
+    }
+  ]
+}

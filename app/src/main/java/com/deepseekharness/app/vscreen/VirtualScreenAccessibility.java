@@ -10,6 +10,99 @@ import java.util.*;
 
 /** 所有查询和动作均限定在虚拟 displayId，不使用主屏的 activeWindow。 */
 public final class VirtualScreenAccessibility {
+  public interface ObservedPixels {
+    JSONObject capture(boolean retain) throws Exception;
+
+    JSONObject region(String observationId, Rect bounds) throws Exception;
+
+    void release(String observationId);
+
+    java.util.concurrent.ScheduledFuture<?> expireAfter(Runnable cleanup, long millis);
+  }
+
+  private volatile VirtualScreenObservedControl observed;
+
+  @androidx.annotation.RequiresApi(30)
+  private synchronized VirtualScreenObservedControl observedOwner() {
+    if (observed == null) observed = new VirtualScreenObservedControl();
+    return observed;
+  }
+
+  public JSONObject observedControl(
+      AccessibilityService service,
+      int displayId,
+      String operation,
+      JSONObject args,
+      com.deepseekharness.app.screen.ScreenRequestContext context,
+      ObservedPixels pixels) {
+    if (com.deepseekharness.app.BuildConfig.LOW_ANDROID) return fail("VSCREEN_UNSUPPORTED_LOW");
+    if (android.os.Build.VERSION.SDK_INT < 30) return fail("VSCREEN_API_30_REQUIRED");
+    return observedOwner()
+        .run(
+            service,
+            displayId,
+            operation,
+            args,
+            context,
+            pixels,
+            (node, root, request, submitted, leaseCurrent) -> {
+              ActionGuard guard = new ActionGuard(request, displayId);
+              guard.root = root;
+              guard.leaseCurrent = leaseCurrent;
+              return perform(node, submitted, guard, AccessibilityNodeInfo.ACTION_CLICK);
+            });
+  }
+
+  void invalidateObserved() {
+    if (android.os.Build.VERSION.SDK_INT >= 30 && observed != null) observed.invalidate();
+  }
+
+  void clearObserved() {
+    if (android.os.Build.VERSION.SDK_INT >= 30 && observed != null) observed.clear();
+  }
+
+  private static final class ActionGuard {
+    final com.deepseekharness.app.screen.ScreenRequestContext context;
+    final com.deepseekharness.app.screen.NativeScreenControlLease.Action nativeAction;
+    final int display;
+    AccessibilityNodeInfo root;
+    java.util.function.BooleanSupplier leaseCurrent;
+
+    ActionGuard(com.deepseekharness.app.screen.ScreenRequestContext context, int display) {
+      this(context, display, null);
+    }
+
+    ActionGuard(
+        com.deepseekharness.app.screen.ScreenRequestContext context,
+        int display,
+        com.deepseekharness.app.screen.NativeScreenControlLease.Action nativeAction) {
+      this.context = context;
+      this.display = display;
+      this.nativeAction = nativeAction;
+    }
+
+    void validate() {
+      if (nativeAction != null) {
+        nativeAction.validateRoot(display, root);
+        nativeAction.validateCurrentTarget();
+        if (!nativeAction.claimDispatch() || !nativeAction.current())
+          throw new com.deepseekharness.app.DshaAccessibilityService.TargetChangedException();
+        return;
+      }
+      if (leaseCurrent != null && !leaseCurrent.getAsBoolean())
+        throw new com.deepseekharness.app.DshaAccessibilityService.TargetChangedException();
+      if (context != null) {
+        context.validateRoot(display, root);
+        if (leaseCurrent != null && !leaseCurrent.getAsBoolean())
+          throw new com.deepseekharness.app.DshaAccessibilityService.TargetChangedException();
+        if (!context.claimDispatch())
+          throw new com.deepseekharness.app.DshaAccessibilityService.TargetChangedException();
+        if (leaseCurrent != null && !leaseCurrent.getAsBoolean())
+          throw new com.deepseekharness.app.DshaAccessibilityService.TargetChangedException();
+      }
+    }
+  }
+
   private final Map<String, AccessibilityNodeInfo> nodes = new LinkedHashMap<>();
   private int treeDisplay = -1;
   private long treeAt;
@@ -17,8 +110,97 @@ public final class VirtualScreenAccessibility {
 
   VirtualScreenAccessibility() {}
 
+  /** Only an explicit native owner can enter this path; remote null contexts remain rejected. */
+  synchronized JSONObject runNative(
+      com.deepseekharness.app.screen.NativeScreenControlLease lease,
+      int displayId,
+      String operation,
+      JSONObject args) {
+    if (!operation.equals("tree") && !operation.equals("node"))
+      return fail("INVALID_NATIVE_NODE_OPERATION");
+    if (lease == null || lease.service() == null)
+      return com.deepseekharness.app.screen.ScreenReply.unavailable();
+    boolean tree = operation.equals("tree");
+    if (tree) clear();
+    var action = lease.begin(displayId, tree ? null : treeTarget, tree);
+    if (action == null)
+      return com.deepseekharness.app.screen.ScreenReply.refused("NATIVE_CONTROL_REVOKED");
+    try (action) {
+      JSONObject value = run(lease.service(), displayId, operation, args, null, action);
+      if (!action.current()) {
+        clear();
+        return nativeFailure(action, !tree, "SCREEN_TARGET_CHANGED");
+      }
+      if (value.optBoolean("ok")) {
+        action.validateCurrentTarget();
+        if (tree) {
+          JSONArray rows = value.optJSONArray("nodes");
+          if (rows != null)
+            for (int i = 0; i < rows.length(); i++) {
+              JSONObject row = rows.getJSONObject(i);
+              AccessibilityNodeInfo node = nodes.get(row.optString("nodeId"));
+              if (node != null)
+                row.put("enabled", node.isEnabled())
+                    .put("password", node.isPassword())
+                    .put(
+                        "textTruncated",
+                        !node.isPassword()
+                            && node.getText() != null
+                            && node.getText().length() > 1000)
+                    .put("setTextSupported", nativeTextSupported(node));
+            }
+          value.put("treeTtlMs", 30_000);
+          if (treeTarget != null)
+            value.put("packageName", treeTarget.packageName).put("windowId", treeTarget.windowId);
+        }
+      }
+      return value;
+    } catch (Throwable changed) {
+      clear();
+      return nativeFailure(action, !tree, "SCREEN_TARGET_CHANGED");
+    }
+  }
+
+  private static boolean nativeTextSupported(AccessibilityNodeInfo node) {
+    return node.isEnabled()
+        && node.isEditable()
+        && !node.isPassword()
+        && node.getActionList().contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
+  }
+
+  private static JSONObject nativeFailure(
+      com.deepseekharness.app.screen.NativeScreenControlLease.Action action,
+      boolean mutation,
+      String code) {
+    return com.deepseekharness.app.screen.ScreenReply.of(
+        mutation && action.mayHaveSubmitted()
+            ? com.deepseekharness.app.capabilities.CapabilityResult.unknown(
+                "VIRTUAL_INPUT_RESULT_UNKNOWN", "")
+            : com.deepseekharness.app.capabilities.CapabilityResult.notSent(code, ""));
+  }
+
   public synchronized JSONObject run(
       AccessibilityService service, int displayId, String operation, JSONObject args) {
+    return run(service, displayId, operation, args, null);
+  }
+
+  public synchronized JSONObject run(
+      AccessibilityService service,
+      int displayId,
+      String operation,
+      JSONObject args,
+      com.deepseekharness.app.screen.ScreenRequestContext context) {
+    return run(service, displayId, operation, args, context, null);
+  }
+
+  private JSONObject run(
+      AccessibilityService service,
+      int displayId,
+      String operation,
+      JSONObject args,
+      com.deepseekharness.app.screen.ScreenRequestContext context,
+      com.deepseekharness.app.screen.NativeScreenControlLease.Action nativeAction) {
+    ActionGuard guard = new ActionGuard(context, displayId, nativeAction);
     AccessibilityNodeInfo root = null, target = null;
     boolean[] submitted = {false};
     try {
@@ -33,7 +215,13 @@ public final class VirtualScreenAccessibility {
                 "treeUnavailable",
                 com.deepseekharness.app.DshaAccessibilityService.windowDiagnostic());
       }
-      com.deepseekharness.app.DshaAccessibilityService.validateActionRoot(displayId, root);
+      if (nativeAction != null) nativeAction.validateRoot(displayId, root);
+      else if (context == null)
+        com.deepseekharness.app.DshaAccessibilityService.validateActionRoot(displayId, root);
+      else context.validateRoot(displayId, root);
+      guard.root = root;
+      // Read-only text is sensitive too: the approved request is one-use before traversal.
+      if (operation.equals("tree") || operation.equals("editor")) guard.validate();
       if (operation.equals("tree")) {
         JSONArray tree = new JSONArray();
         var budget = new com.deepseekharness.app.util.AccessibilityTreeBudget();
@@ -49,6 +237,9 @@ public final class VirtualScreenAccessibility {
               com.deepseekharness.app.DshaAccessibilityService.refreshVirtualRoot(displayId, root);
           root.recycle();
           root = refreshed;
+          guard.root = root;
+          if (context != null && root != null) context.validateRoot(displayId, root);
+          if (nativeAction != null && root != null) nativeAction.validateRoot(displayId, root);
           if (root != null) {
             budget = new com.deepseekharness.app.util.AccessibilityTreeBudget();
             walk(root, tree, 0, budget);
@@ -93,29 +284,37 @@ public final class VirtualScreenAccessibility {
         if (target == null || !target.refresh() || target.getWindowId() != root.getWindowId())
           return fail("STALE_NODE");
         String action = args.optString("action");
+        if (nativeAction != null
+            && (!target.isEnabled()
+                || action.equals("click") && !target.isClickable()
+                || action.equals("set_text") && !nativeTextSupported(target)))
+          return fail("NATIVE_NODE_ACTION_UNAVAILABLE");
+        if (nativeAction != null && !action.equals("click") && !action.equals("set_text"))
+          return fail("INVALID_NATIVE_NODE_ACTION");
         boolean result;
         switch (action) {
           case "click":
-            result = perform(target, submitted, AccessibilityNodeInfo.ACTION_CLICK);
+            result = perform(target, submitted, guard, AccessibilityNodeInfo.ACTION_CLICK);
             break;
           case "long_click":
-            result = perform(target, submitted, AccessibilityNodeInfo.ACTION_LONG_CLICK);
+            result = perform(target, submitted, guard, AccessibilityNodeInfo.ACTION_LONG_CLICK);
             break;
           case "scroll_forward":
-            result = perform(target, submitted, AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+            result = perform(target, submitted, guard, AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
             break;
           case "scroll_backward":
-            result = perform(target, submitted, AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+            result =
+                perform(target, submitted, guard, AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
             break;
           case "focus":
-            result = perform(target, submitted, AccessibilityNodeInfo.ACTION_FOCUS);
+            result = perform(target, submitted, guard, AccessibilityNodeInfo.ACTION_FOCUS);
             break;
           case "set_text":
             Bundle b = new Bundle();
             String value = args.optString("text");
             if (value.length() > 16000) return fail("TEXT_LIMIT");
             b.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value);
-            result = perform(target, submitted, AccessibilityNodeInfo.ACTION_SET_TEXT, b);
+            result = perform(target, submitted, guard, AccessibilityNodeInfo.ACTION_SET_TEXT, b);
             break;
           default:
             return fail("INVALID_NODE_ACTION");
@@ -138,6 +337,7 @@ public final class VirtualScreenAccessibility {
         return perform(
                 target,
                 submitted,
+                guard,
                 AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.getId())
             ? ok()
             : fail("IME_ACTION_UNAVAILABLE");
@@ -151,19 +351,32 @@ public final class VirtualScreenAccessibility {
           || end > text.length()) return fail("INVALID_EDITOR_RANGE");
       Bundle b = new Bundle();
       b.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text);
-      if (!perform(target, submitted, AccessibilityNodeInfo.ACTION_SET_TEXT, b))
+      if (!perform(target, submitted, guard, AccessibilityNodeInfo.ACTION_SET_TEXT, b))
         return fail("EDITOR_WRITE_REJECTED");
       b = new Bundle();
       b.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, start);
       b.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, end);
-      boolean selected = perform(target, submitted, AccessibilityNodeInfo.ACTION_SET_SELECTION, b);
+      boolean selected =
+          perform(target, submitted, guard, AccessibilityNodeInfo.ACTION_SET_SELECTION, b);
       return ok().put("selectionApplied", selected);
     } catch (com.deepseekharness.app.DshaAccessibilityService.TargetChangedException rejected) {
       clear();
+      if (nativeAction != null)
+        return nativeFailure(nativeAction, operation.equals("node"), "SCREEN_TARGET_CHANGED");
       // 动作之前目标/运行状态就变了：动作没有落地，给调用方一个「未执行」的稳定码（#140）。
+      if (submitted[0]) {
+        JSONObject value = fail("VIRTUAL_INPUT_RESULT_UNKNOWN");
+        try {
+          value.put("executionUnknown", true).put("state", "PARTIAL");
+        } catch (Exception ignored) {
+        }
+        return value;
+      }
       return fail("SCREEN_TARGET_CHANGED");
     } catch (Throwable error) {
       clear();
+      if (nativeAction != null)
+        return nativeFailure(nativeAction, operation.equals("node"), "SCREEN_TARGET_CHANGED");
       JSONObject value = fail("ACCESSIBILITY_OPERATION_UNKNOWN");
       if (submitted[0])
         try {
@@ -177,17 +390,24 @@ public final class VirtualScreenAccessibility {
     }
   }
 
-  private static boolean perform(AccessibilityNodeInfo target, boolean[] submitted, int action) {
-    return perform(target, submitted, action, null);
+  private static boolean perform(
+      AccessibilityNodeInfo target, boolean[] submitted, ActionGuard guard, int action) {
+    return perform(target, submitted, guard, action, null);
   }
 
   private static boolean perform(
-      AccessibilityNodeInfo target, boolean[] submitted, int action, Bundle args) {
+      AccessibilityNodeInfo target,
+      boolean[] submitted,
+      ActionGuard guard,
+      int action,
+      Bundle args) {
+    guard.validate();
     submitted[0] = true;
     return target.performAction(action, args);
   }
 
   public synchronized void clear() {
+    clearObserved();
     for (var node : nodes.values()) node.recycle();
     nodes.clear();
     treeDisplay = -1;

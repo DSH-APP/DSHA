@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
-from runtime_input_contract import load, asset_paths, launcher_paths, bridge_protocol
+from runtime_input_contract import load, asset_paths, launcher_paths
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -17,6 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 # a future runtime must add a reviewed entry here after comparing its readers.
 READ_COMPATIBILITY = {
     '0.2.0-rc.2': ['dsh-0.1.7-rc.1', 'dsh-0.1.7-rc.2'],
+    # build190: verified old storage and V4 none/zstd logs with the real new readers.
+    # This is forward reading only; it does not authorize an old runtime rollback.
+    '0.2.1-rc.2': ['dsh-0.1.7-rc.1', 'dsh-0.1.7-rc.2', 'dsh-0.2.0-rc.2'],
 }
 
 def digest(path):
@@ -36,7 +39,7 @@ def build_descriptor(root):
     previous = READ_COMPATIBILITY.get(version, [])
     contract = {'baseVersion': (assets / 'offline-rootfs.version').read_text().strip(),
                 'dshVersion': version, 'launcherContract': 'DSHA_ARM64_V2',
-                'launcherInputs': launchers, 'bridgeProtocol': bridge_protocol(root),
+                'launcherInputs': launchers, 'bridgeProtocol': 3,
                 'dataRead': previous + ['dsh-' + version], 'dataWrite': 'dsh-' + version,
                 'inputs': inputs}
     identity = hashlib.sha256(json.dumps(contract, sort_keys=True, separators=(',', ':')).encode()).hexdigest()

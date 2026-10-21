@@ -84,8 +84,8 @@ public class BridgeRouteProbe {
 
     def test_http_dispatch_keeps_protocol_and_auth_before_handlers(self):
         src = JAVA.read_text(encoding='utf-8')
-        method = src.split('private void handle(Socket client, long headerDeadline)', 1)[1]
-        method = method.split('private String dispatch(', 1)[0]
+        method = src.split('private void handle(Socket client, long headerDeadline, RequestScope scope)', 1)[1]
+        method = method.split('private void cancelScope(', 1)[0]
         self.assertLess(method.index('HttpProtocol.readHead('),
                         method.index('BridgeRoutes.match(route)'))
         self.assertLess(method.index('request.method.equals("POST")'),

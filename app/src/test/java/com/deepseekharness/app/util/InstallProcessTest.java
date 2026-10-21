@@ -27,32 +27,6 @@ public class InstallProcessTest {
   }
 
   @Test
-  public void diagnosticHookRunsBeforeDestroyAndItsFailureDoesNotReplaceCancellation() {
-    FakeProcess process = new FakeProcess("");
-    List<String> calls = new ArrayList<>();
-    var failure =
-        assertThrows(
-            InstallTask.Cancelled.class,
-            () ->
-                InstallProcess.read(
-                    process,
-                    5000,
-                    true,
-                    () -> true,
-                    line -> {},
-                    p -> {
-                      calls.add("destroy");
-                      process.alive = false;
-                    },
-                    () -> {
-                      calls.add("diagnostic");
-                      throw new IllegalStateException("hook unavailable");
-                    }));
-    assertEquals(List.of("diagnostic", "destroy"), calls);
-    assertEquals("hook unavailable", failure.getSuppressed()[0].getMessage());
-  }
-
-  @Test
   public void receivesEachLineBeforeProcessExitAndKeepsNonzeroExit() throws Exception {
     Process process = child("stream");
     CountDownLatch first = new CountDownLatch(1);

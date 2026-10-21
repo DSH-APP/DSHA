@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "ndk": "26.3.11579264",
+  "target": "aarch64-linux-gnu",
+  "vendorRuntime": {
+    "path": "app/src/main/jniLibs/arm64-v8a/libproroot-runtime.so",
+    "sha256": "8c47a0a7db32d84c179ebb5bf3640f655a3181860ece5886ae44d92858730c34",
+    "soname": "libproroot-runtime.so",
+    "needed": [
+      "libc.so.6"
+    ]
+  },
+  "proxySoname": "libdsha-proroot-compat.so",
+  "proxySourceSha256": "36f444b3b9ffaa38b5d3d1fb8ffd3375deafc2f327045289794b5b8e9a466e9f",
+  "proxySha256": "c693728a15bfef86eb52731517da2d06e67474459eeb883e31a4fa75dff0592d",
+  "proxyNeeded": [],
+  "proxyRpath": [],
+  "entrySoname": "libdsha-proroot-linker.so",
+  "entrySourceSha256": "f8a6d2c6eea98bf48f42d572b6808bf61b029529d52e023e32bb08be90a97d68",
+  "entrySha256": "26428de01fb2638cb0293469013cabfac8919f6df772bc7d1b6b0506d8b501d7",
+  "gnuSysconf": {
+    "THREAD_STACK_MIN": 75,
+    "MINSIGSTKSZ": 249,
+    "SIGSTKSZ": 250
+  },
+  "aarch64": {
+    "AT_MINSIGSTKSZ": 51,
+    "MINSIGSTKSZ": 5120,
+    "SIGSTKSZ": 16384,
+    "PTHREAD_STACK_MIN": 16384
+  },
+  "originalVendorSha256": {
+    "libproroot.so": "a4e74d75b66cdc02b080adfe863dbf9951c3b30610d77beddc95488d5fe5de01",
+    "libproroot-runtime.so": "8c47a0a7db32d84c179ebb5bf3640f655a3181860ece5886ae44d92858730c34",
+    "libproroot-bridge.so": "1c5bc9537a270e8bf8b1c70222813f57b60b828bfb5503ddf8fe37685092de2f",
+    "libproroot-linker.so": "51a0ec5bfed00e572a0de09e22d9057e2befc386b78e426613d3e0ab03f4ecee",
+    "libproroot-stub-loader.so": "06c6624db3bdc45b9ced151cd781df439a37b47731d244b93e9d6a58cd48cde0"
+  },
+  "sources": [
+    "https://raw.githubusercontent.com/bminor/glibc/release/2.39/master/bits/confname.h",
+    "https://raw.githubusercontent.com/bminor/glibc/release/2.39/master/sysdeps/unix/sysv/linux/aarch64/bits/sigstack.h",
+    "https://raw.githubusercontent.com/bminor/glibc/release/2.39/master/sysdeps/unix/sysv/linux/dl-parse_auxv.h",
+    "https://raw.githubusercontent.com/bminor/glibc/release/2.39/master/sysdeps/unix/sysv/linux/sysconf-sigstksz.h",
+    "https://raw.githubusercontent.com/bminor/glibc/release/2.39/master/sysdeps/unix/sysv/linux/sysconf-pthread_stack_min.h"
+  ],
+  "linuxAarch64KernelStat": {
+    "size": 128,
+    "inodeOffset": 8,
+    "modeOffset": 16,
+    "uidOffset": 24,
+    "source": "NDK 26.3.11579264 sysroot/usr/include/asm-generic/stat.h"
+  },
+  "linuxAarch64OpenFlags": {
+    "O_NOFOLLOW": 32768,
+    "O_CLOEXEC": 524288,
+    "source": "NDK 26.3.11579264 sysroot/usr/include/aarch64-linux-android/asm/fcntl.h"
+  },
+  "vendorOptionalPreload": {
+    "rootEnvironment": "PROROOT_ROOTFS",
+    "suffix": "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+    "position": "one optional pair immediately after original runtime preload",
+    "vendorProducer": "libproroot.so run_child_exec 0xab98..0xaba8; format anchor0x2cd0"
+  }
+}

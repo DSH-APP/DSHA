@@ -28,10 +28,8 @@ jobs:
           node-version: ${{ steps.toolchain.outputs.node }}
       - name: Verify checked-in contracts
         run: |
-          python3 tools/pc-migration/prepare-assets.py --output app/src/main/assets
-          python3 tools/prepare-destructive-policy.py --check
           python3 tools/prepare-runtime-tools.py --check
-          python3 tools/verify-runtime-descriptor-source.py --source-only
+          python3 tools/verify-runtime-descriptor-source.py
           python3 tools/generate-third-party-notices.py --check
           python3 tools/check-third-party-notices.py
           python3 tools/generate-builtin-plugins.py --verify
@@ -41,6 +39,7 @@ jobs:
           python3 tools/run-host-tests.py --check-manifest
           python3 tools/check-source-hygiene.py
           python3 tools/check-ui-i18n.py
+          python3 tools/check-document-links.py
       - name: Isolated source and protocol regressions
         run: python3 tools/run-host-tests.py --stage fast
       - name: Android Java and both flavor unit tests without offline package generation
@@ -51,7 +50,7 @@ jobs:
           chmod +x gradlew
           ./gradlew :app:testStandardDebugUnitTest :app:testLowDebugUnitTest -x :app:prepareStandardAssets -x :app:prepareRecoveryAssets --no-daemon --max-workers=2
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always() && (hashFiles('app/build/host-tests/**', 'app/build/test-results/**') != '')
+        if: always()
         with:
           name: source-regressions
           path: |

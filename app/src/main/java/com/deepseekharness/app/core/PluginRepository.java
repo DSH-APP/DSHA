@@ -37,14 +37,26 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class PluginRepository extends AndroidViewModel {
   private static final long MAX_ARCHIVE = 256L * 1024 * 1024;
   private static final ExecutorService IO = Executors.newSingleThreadExecutor();
+  private final java.util.concurrent.Executor io;
+  private final long queryMillis;
   private final AtomicBoolean working = new AtomicBoolean();
   private final AtomicLong installedRevision = new AtomicLong();
   private final MutableLiveData<State> state =
       new MutableLiveData<>(new State(Collections.emptyList(), false, "选择链接安装或导入本地插件包"));
   private volatile List<Item> items = Collections.emptyList();
+  private volatile boolean itemsKnown;
   private volatile boolean safeMode;
   private volatile boolean installationSucceeded;
   private volatile PluginTask activeTask;
+  private volatile boolean queryRunning;
+  private boolean refreshQueued;
+  private final Runnable queuedRefresh =
+      () -> {
+        if (refreshQueued && !working.get()) {
+          refreshQueued = false;
+          refresh();
+        }
+      };
   private final android.os.Handler main = new android.os.Handler(android.os.Looper.getMainLooper());
   private Preview installedPreview;
   private volatile Preview preparedPreview;
@@ -65,8 +77,9 @@ public final class PluginRepository extends AndroidViewModel {
   }
 
   public static final class Item {
+    private final JSONObject snapshot;
     public final String name, description, version, source;
-    public final String location;
+    public final String location, origin;
     public final boolean detected;
     public final boolean dynamic;
     public final String latestVersion,
@@ -82,9 +95,11 @@ public final class PluginRepository extends AndroidViewModel {
         available,
         exportable,
         deletable,
-        runtimeProvided;
+        runtimeProvided,
+        runtimeLocated;
 
     Item(JSONObject json) {
+      snapshot = json;
       name = json.optString("name");
       description = json.optString("description");
       version = json.optString("version");
@@ -93,9 +108,18 @@ public final class PluginRepository extends AndroidViewModel {
       detected = json.optBoolean("detected");
       dynamic = json.optBoolean("dynamic");
       enabled = json.optBoolean("enabled");
-      builtin = json.optBoolean("builtin");
+      // Names are identities, not an npm-scope classifier. Only the signed
+      // registry and its one explicit historical alias own the builtin role.
+      builtin =
+          json.optBoolean("builtin")
+              && (com.deepseekharness.app.util.BuiltinPlugins.SIGNED_BUILTINS.contains(name)
+                  || "@deepseek-ai/dsh-experimental-auto-review".equals(name));
       runtimeProvided = json.optBoolean("runtimeProvided");
-      official = json.optBoolean("official");
+      runtimeLocated = json.optBoolean("runtimeLocated", runtimeProvided);
+      origin = builtin ? "dsha-signed" : runtimeProvided ? "dsh-managed" : "user";
+      official =
+          json.optBoolean("official")
+              && com.deepseekharness.app.util.BuiltinPluginRegistry.OFFICIAL.contains(name);
       available = json.optBoolean("available");
       exportable = json.optBoolean("exportable");
       deletable = json.optBoolean("deletable");
@@ -107,6 +131,13 @@ public final class PluginRepository extends AndroidViewModel {
       updateAvailable = json.optBoolean("updateAvailable");
       updatable = json.optBoolean("updatable");
       loadState = json.optString("loadState");
+    }
+
+    Item withIntent(boolean enabled) throws Exception {
+      return new Item(
+          new JSONObject(snapshot.toString())
+              .put("enabled", enabled)
+              .put("loadState", enabled ? "queued" : "disabled"));
     }
   }
 
@@ -209,7 +240,6 @@ public final class PluginRepository extends AndroidViewModel {
         if (pkg.optBoolean("existingConflict"))
           text.append(
               com.deepseekharness.app.util.UiText.text("当前已有同名插件，现有版本不会被覆盖。请先到插件管理处理冲突。\n"));
-        text.append(capabilityDescription(pkg.optJSONObject("capabilities")));
         text.append('\n');
       }
       text.append(com.deepseekharness.app.util.UiText.text("来源："))
@@ -260,7 +290,18 @@ public final class PluginRepository extends AndroidViewModel {
   }
 
   public PluginRepository(@NonNull Application app) {
+    this(app, IO);
+  }
+
+  PluginRepository(@NonNull Application app, java.util.concurrent.Executor io) {
+    this(app, io, com.deepseekharness.app.runtime.GuestScriptBudget.QUERY_TIMEOUT_MS);
+  }
+
+  PluginRepository(@NonNull Application app, java.util.concurrent.Executor io, long queryMillis) {
     super(app);
+    this.io = java.util.Objects.requireNonNull(io);
+    if (queryMillis < 1) throw new IllegalArgumentException("PLUGIN_QUERY_BUDGET");
+    this.queryMillis = queryMillis;
   }
 
   public static PluginRepository get(Context context) {
@@ -273,6 +314,10 @@ public final class PluginRepository extends AndroidViewModel {
 
   public boolean isBusy() {
     return working.get();
+  }
+
+  public boolean hasKnownItems() {
+    return itemsKnown;
   }
 
   public long installedRevision() {
@@ -496,11 +541,24 @@ public final class PluginRepository extends AndroidViewModel {
     default boolean includesItems() {
       return false;
     }
+
+    default boolean query() {
+      return false;
+    }
   }
 
   /** 脚本在同一进程中返回变更后的真实列表，避免再次启动容器与重复扫描。 */
   private Work withItems(String command) {
+    return withItems(command, false);
+  }
+
+  private Work withItems(String command, boolean query) {
     return new Work() {
+      @Override
+      public boolean query() {
+        return query;
+      }
+
       @Override
       public boolean includesItems() {
         return true;
@@ -510,6 +568,7 @@ public final class PluginRepository extends AndroidViewModel {
       public String run(ProotBootstrap proot) throws Exception {
         JSONObject output = result(runManager(proot, command));
         items = readItems(proot, output);
+        itemsKnown = true;
         return output.getString("message");
       }
     };
@@ -531,6 +590,10 @@ public final class PluginRepository extends AndroidViewModel {
   private void submit(
       String progress, Work work, Runnable onSuccess, boolean cancellable, Runnable onAccepted) {
     if (!working.compareAndSet(false, true)) {
+      if (work.query()) {
+        if (!queryRunning) refreshQueued = true;
+        return;
+      }
       State shown = state.getValue();
       state.setValue(
           new State(
@@ -584,6 +647,12 @@ public final class PluginRepository extends AndroidViewModel {
       throw error;
     }
     activeTask = task;
+    queryRunning = work.query();
+    var queryBudget =
+        work.query()
+            ? new com.deepseekharness.app.runtime.GuestScriptBudget(
+                queryMillis, task::requested, "PLUGIN_QUERY")
+            : null;
     Runnable poll =
         new Runnable() {
           @Override
@@ -607,7 +676,9 @@ public final class PluginRepository extends AndroidViewModel {
                     items,
                     true,
                     message,
-                    cancellable && !task.requested() && detail.optBoolean("cancellable", true),
+                    cancellable
+                        && !task.requested()
+                        && (work.query() || detail.optBoolean("cancellable", true)),
                     percent));
             main.postDelayed(this, 400);
           }
@@ -617,7 +688,8 @@ public final class PluginRepository extends AndroidViewModel {
       state.setValue(new State(items, true, progress, cancellable, -1));
       main.post(poll);
       DiagnosticLog.record(getApplication(), "PLUGIN_START", progress);
-      IO.execute(() -> runTask(controller, task, lease, runtimeWork, poll, work, onSuccess));
+      io.execute(
+          () -> runTask(controller, task, lease, runtimeWork, poll, work, onSuccess, queryBudget));
     } catch (RuntimeException error) {
       main.removeCallbacks(poll);
       finishTask(
@@ -625,7 +697,9 @@ public final class PluginRepository extends AndroidViewModel {
           lease,
           runtimeWork,
           new State(items, false, "插件任务未开始：" + SensitiveData.redact(String.valueOf(error))),
-          null);
+          null,
+          false,
+          false);
     }
   }
 
@@ -648,10 +722,12 @@ public final class PluginRepository extends AndroidViewModel {
       RuntimeTasks runtimeWork,
       Runnable poll,
       Work work,
-      Runnable onSuccess) {
+      Runnable onSuccess,
+      com.deepseekharness.app.runtime.GuestScriptBudget queryBudget) {
     State completed;
     boolean[] success = {false};
-    try {
+    try (var budgetScope = queryBudget == null ? null : queryBudget.enter()) {
+      if (queryBudget != null) queryBudget.remainingMillis();
       completed =
           lease.run(
               () -> {
@@ -664,6 +740,7 @@ public final class PluginRepository extends AndroidViewModel {
                 try {
                   task.check();
                   if (!proot.isEnvironmentReady()) throw new IOException("环境未就绪，请先完成解压 / 安装");
+                  if (queryBudget != null) queryBudget.remainingMillis();
                   if (work.maintenance()) {
                     // 确认前的排队凭据已经完成职责；维护期间由原有屏障持有同步工作锁。
                     try (RuntimeTasks synchronous = RuntimeTasks.begin()) {
@@ -675,31 +752,32 @@ public final class PluginRepository extends AndroidViewModel {
                   } else message = work.run(proot);
                   success[0] = true;
                 } catch (Exception error) {
-                  message = "操作失败：" + SensitiveData.redact(String.valueOf(error.getMessage()));
+                  message = failureMessage(error);
                 }
                 main.removeCallbacks(poll);
-                // list 也可能 prepare/同步资产，仍在同一凭据内，不能作为只读旁路。
-                try {
-                  if ((!work.includesItems() || !success[0]) && proot.isEnvironmentReady())
-                    items = loadItems(proot);
-                } catch (Exception error) {
-                  message += "\n列表未能同步：" + SensitiveData.redact(String.valueOf(error.getMessage()));
-                }
+                // 错误立即发布，不再同凭据补跑完整列表。成功后的查询独立合并调度。
                 return new State(items, false, message);
               });
     } catch (Exception error) {
-      completed =
-          new State(
-              items, false, "操作失败：" + SensitiveData.redact(String.valueOf(error.getMessage())));
+      completed = new State(items, false, failureMessage(error));
     }
     main.removeCallbacks(poll);
     State result = completed;
     if (!main.post(
-        () -> finishTask(task, lease, runtimeWork, result, success[0] ? onSuccess : null))) {
+        () ->
+            finishTask(
+                task,
+                lease,
+                runtimeWork,
+                result,
+                success[0] ? onSuccess : null,
+                success[0],
+                success[0] && !work.includesItems()))) {
       // 主 Looper 已关闭时不再发布 UI，但清理文件仍先于释放环境凭据。
       task.close();
       runtimeWork.close();
       activeTask = null;
+      queryRunning = false;
       working.set(false);
       lease.close();
     }
@@ -710,7 +788,9 @@ public final class PluginRepository extends AndroidViewModel {
       com.deepseekharness.app.util.EnvironmentTaskGate.Lease lease,
       RuntimeTasks runtimeWork,
       State completed,
-      Runnable onSuccess) {
+      Runnable onSuccess,
+      boolean successful,
+      boolean refreshAfter) {
     // 任一步清理抛错都不交还环境所有权；不能让维护越过尚未完成的结束阶段。
     try {
       task.close();
@@ -726,12 +806,16 @@ public final class PluginRepository extends AndroidViewModel {
     }
     runtimeWork.close();
     activeTask = null;
+    queryRunning = false;
     working.set(false);
     lease.close();
     DiagnosticLog.record(getApplication(), "PLUGIN_RESULT", completed.message);
     state.setValue(completed);
+    if (!successful) refreshQueued = false;
+    else if (refreshAfter) refreshQueued = true;
     // startWeb 等后续动作要在凭据释放之后执行。
     if (onSuccess != null) onSuccess.run();
+    if (refreshQueued && !working.get()) main.post(queuedRefresh);
   }
 
   public void cancelTask() {
@@ -762,7 +846,7 @@ public final class PluginRepository extends AndroidViewModel {
   }
 
   public void refresh() {
-    submit("正在检测 Web、终端和本地安装的插件…", withItems("refresh"), null, false);
+    submit("正在检测 Web、终端和本地安装的插件…", withItems("refresh", true), null, true);
   }
 
   public void install(PluginSource source) {
@@ -1029,18 +1113,48 @@ public final class PluginRepository extends AndroidViewModel {
   public void setEnabled(Item item, boolean enable) {
     submit(
         "正在" + (enable ? "启用 " : "禁用 ") + item.name,
-        withItems((enable ? "enable-list " : "disable-list ") + ShellQuote.arg(item.name)),
-        null,
+        new Work() {
+          @Override
+          public boolean includesItems() {
+            return true;
+          }
+
+          @Override
+          public String run(ProotBootstrap proot) throws Exception {
+            JSONObject output =
+                result(
+                    runManager(
+                        proot,
+                        (enable ? "enable-state " : "disable-state ") + ShellQuote.arg(item.name)));
+            requireIntentReceipt(output, item.name, enable);
+            List<Item> next = new ArrayList<>();
+            for (Item existing : items)
+              next.add(existing.name.equals(item.name) ? existing.withIntent(enable) : existing);
+            items = Collections.unmodifiableList(next);
+            invalidateInstalledState();
+            return output.getString("message");
+          }
+        },
+        () -> {
+          refreshQueued = true;
+          main.post(queuedRefresh);
+        },
         false);
+  }
+
+  static void requireIntentReceipt(JSONObject output, String name, boolean enable)
+      throws Exception {
+    if (!"ok".equals(output.optString("status"))
+        || !name.equals(output.optString("name"))
+        || !(output.opt("enabled") instanceof Boolean)
+        || output.getBoolean("enabled") != enable
+        || !Boolean.TRUE.equals(output.opt("intentVerified")))
+      throw new IOException("插件启停结果未确认；未自动重试，请刷新核对实际状态");
   }
 
   public void delete(Item item) {
     if (!item.deletable) return;
     submit("正在删除 " + item.name + "…", withItems("delete-list " + ShellQuote.arg(item.name)));
-  }
-
-  private List<Item> loadItems(ProotBootstrap proot) throws Exception {
-    return readItems(proot, result(runManager(proot, "list")));
   }
 
   private List<Item> readItems(ProotBootstrap proot, JSONObject output) throws Exception {
@@ -1108,8 +1222,11 @@ public final class PluginRepository extends AndroidViewModel {
 
   private static String operationMessage(JSONObject result) throws Exception {
     String status = result.getString("status");
-    return ("partial".equals(status) ? "部分完成：\n" : "error".equals(status) ? "安装失败：\n" : "")
-        + result.getString("message");
+    String message =
+        ("partial".equals(status) ? "部分完成：\n" : "error".equals(status) ? "安装失败：\n" : "")
+            + result.getString("message");
+    if (!"ok".equals(status)) throw new IOException(message);
+    return message;
   }
 
   private static String shortError(String text) {
@@ -1117,6 +1234,26 @@ public final class PluginRepository extends AndroidViewModel {
     if (text.equals("ENV_NOT_READY")) return "环境未就绪，请先完成解压 / 安装";
     String safe = SensitiveData.redact(text.trim());
     return safe.length() <= 800 ? safe : safe.substring(safe.length() - 800);
+  }
+
+  private static String failureMessage(Exception error) {
+    String detail = String.valueOf(error.getMessage());
+    Throwable cause = error.getCause();
+    for (int depth = 0; cause != null && depth < 8; depth++, cause = cause.getCause()) {
+      String nested = String.valueOf(cause.getMessage());
+      if (nested.equals("PLUGIN_QUERY_CANCELLED")
+          || nested.equals("PLUGIN_QUERY_TIMEOUT")
+          || nested.equals("PLUGIN_INTENT_TIMEOUT")
+          || nested.equals("PLUGIN_INTENT_CANCELLED")) {
+        detail = nested;
+        break;
+      }
+    }
+    if ("PLUGIN_QUERY_CANCELLED".equals(detail)) return "已取消插件列表读取";
+    if ("PLUGIN_QUERY_TIMEOUT".equals(detail)) return "插件列表读取已超时，保留上次结果；请刷新重试";
+    if ("PLUGIN_INTENT_TIMEOUT".equals(detail) || "PLUGIN_INTENT_CANCELLED".equals(detail))
+      return "插件启停结果未确认；未自动重试，请刷新核对实际状态";
+    return "操作失败：" + SensitiveData.redact(detail);
   }
 
   private void copy(InputStream in, OutputStream out) throws IOException {

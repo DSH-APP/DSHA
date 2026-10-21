@@ -10,6 +10,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+import zipfile
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -55,6 +56,28 @@ class UnitRunnerTest(unittest.TestCase):
         self.assertIn('PASS compiled helper invoked', captured.getvalue())
         self.assertTrue((self.root / 'work/test/Helper.class').is_file())
         self.assertTrue((self.root / 'work/test/org/junit/runner/JUnitCore.class').is_file())
+
+    def test_resources_binary_dependency_is_kept_but_classifier_jars_are_excluded(self):
+        source = self.root / 'resource-source/resources/ResourceMarker.java'
+        source.parent.mkdir(parents=True)
+        source.write_text('package resources; public class ResourceMarker { public static int answer() { return 42; } }', encoding='utf-8')
+        classes = self.root / 'resource-classes'
+        runner._javac([str(source)], classes, [])
+        artifact = self.root / 'caches/modules-2/files-2.1/org.fixture/resources/1.0/hash/resources-1.0.jar'
+        artifact.parent.mkdir(parents=True)
+        with zipfile.ZipFile(artifact, 'w') as archive:
+            archive.write(classes / 'resources/ResourceMarker.class', 'resources/ResourceMarker.class')
+        for classifier in ('sources', 'javadoc'):
+            artifact.with_name('resources-1.0-' + classifier + '.jar').write_bytes(b'not executable jar content')
+        self.put('src/main/java/Production.java', 'public class Production { public static int answer() { return resources.ResourceMarker.answer(); } }')
+        self.put('src/test/java/DependentTest.java', 'public class DependentTest { public static int value = Production.answer(); }')
+        with patch.object(runner, 'ROOT', self.root), patch.object(runner, 'APP', self.app), \
+                patch.object(runner, 'r_classpath_entry', return_value=str(self.root)), \
+                patch.dict(os.environ, {'DSHA_ONLY': ''}), contextlib.redirect_stdout(io.StringIO()) as captured:
+            self.assertEqual(artifact, runner.find_jar(self.root, 'resources-1.0'))
+            code = runner.run_compiled_tests(self.root / 'work-resources', self.root, self.root, self.root, self.root)
+        self.assertEqual(0, code, captured.getvalue())
+        self.assertIn('PASS compiled helper invoked', captured.getvalue())
 
     def test_real_compile_failure_cleans_main_temporary_directory(self):
         captured = []

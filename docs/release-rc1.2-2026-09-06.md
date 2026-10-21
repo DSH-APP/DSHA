@@ -12,7 +12,7 @@
 | dsha-1.2.0-rc1.2.apk | 222706812 | 4a33cef0f718ceddb249478d5402aab39a33d9fb4175cfd35831d687b1734796 |
 | dsha-1.2.0-rc1.2low.apk | 303522074 | dcc64d925ea1697e930753378e95724125cd4688dd58335348bd0c3887928403 |
 
-两版 versionCode 均为 111，applicationId 为 `com.dsh.client`，标准版最低 API 30，兼容版最低 API 23，目标 API 37；仅 arm64-v8a。
+两版 versionCode 均为 111，applicationId 为 `dsh.android.client`，标准版最低 API 30，兼容版最低 API 23，目标 API 37；仅 arm64-v8a。
 发布证书 SHA-256 为 `e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5`，与 rc1.1 一致。
 环境版本仍为 9，不触发离线环境重新解压。
 

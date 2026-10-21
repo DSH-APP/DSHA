@@ -52,7 +52,7 @@ def main():
         if not source.name.endswith("-unsigned.apk"):
             raise ValueError("ONLY_VERIFIED_UNSIGNED_INPUT")
         badging = run([tools / ("aapt" + suffix), "dump", "badging", source]).decode("utf-8")
-        expected = f"package: name='com.dsh.client' versionCode='{version}' versionName='{expected_name}'"
+        expected = f"package: name='dsh.android.client' versionCode='{version}' versionName='{expected_name}'"
         if expected not in badging or "application-debuggable" in badging \
                 or f"sdkVersion:'{minimum}'" not in badging or "native-code: 'arm64-v8a'" not in badging:
             raise ValueError("UNSIGNED_INPUT_MANIFEST")

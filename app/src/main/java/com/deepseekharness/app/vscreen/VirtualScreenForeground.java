@@ -201,6 +201,7 @@ public final class VirtualScreenForeground {
                     bitmap = frame.bitmap;
                     image.setImageBitmap(bitmap);
                     if (old != null) old.recycle();
+                    frame.adopted();
                   }
                 });
   }

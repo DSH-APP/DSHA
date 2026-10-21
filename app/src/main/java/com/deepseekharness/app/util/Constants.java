@@ -18,7 +18,7 @@ public final class Constants {
   public static final String SITE_URL = "https://" + SITE_HOST + "/";
 
   // ================= 端口契约（框架不变式，见 AGENTS.md） =================
-  /** 历史手动端口缺省值；自动模式由本轮 Web 监听分配实际端口。 */
+  /** WebUI 默认端口 */
   public static final int DSH_WEB_PORT = 3080;
 
   /** App 能力桥（agent 调 Android）端口 */
@@ -39,7 +39,7 @@ public final class Constants {
    * 当前 APK 内置 dsh 版本（不是远端 latest 标签）。
    * 对应上游 deepseek-ai/deepseek-harness 仓库。
    */
-  public static final String DSH_VERSION = "0.2.0-rc.2";
+  public static final String DSH_VERSION = "0.2.1-rc.2";
 
   public static final String DSH_RUNTIME_ID = "dsh-v" + DSH_VERSION;
 
@@ -72,6 +72,10 @@ public final class Constants {
 
   /** 仅内置 DSH 网页支持画中画，默认关闭。 */
   public static final String KEY_PICTURE_IN_PICTURE = "picture_in_picture";
+
+  /** 本机设置页的明确选择；旧默认值和归档导入不能代替用户开启。 */
+  public static final String KEY_PICTURE_IN_PICTURE_USER_CHOICE =
+      "picture_in_picture_user_choice_v1";
 
   public static final String KEY_PICTURE_IN_PICTURE_LAYOUT = "picture_in_picture_layout";
 

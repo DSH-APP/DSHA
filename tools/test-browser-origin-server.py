@@ -13,14 +13,15 @@ def main():
     parser.add_argument('--jdk',type=Path,default=Path(os.environ.get('DSHA_JAVA17','F:/DSHA/_toolchains/jdk-17')))
     parser.add_argument('--gradle-home',type=Path,default=Path.home()/'.gradle')
     args=parser.parse_args()
-    output=ROOT/'artifacts/pr171/web/java-server'
+    output=ROOT/'app/build/browser-origin190/java-server'
     output.mkdir(parents=True,exist_ok=True)
     framework=next(args.gradle_home.glob('caches/modules-2/files-2.1/org.robolectric/android-all/14-robolectric-10818077/**/android-all-14-robolectric-10818077.jar'))
     # Same pinned real Android framework/JSONObject generation as uploads-framework; not android.jar stubs.
     compiled=ROOT/'app/build/intermediates/javac/standardRelease/compileStandardReleaseJavaWithJavac/classes'
     cp=os.pathsep.join(map(str,[framework,compiled]))
     sources=[ROOT/'app/src/main/java/com/deepseekharness/app'/p for p in [
-        'ui/BrowserOriginRestoreServer.java','backup/BackupFileSystem.java','backup/BackupLimits.java','util/FileKind.java']]
+        'ui/BrowserOriginRestoreServer.java','backup/BackupFileSystem.java','backup/BackupLimits.java','util/FileKind.java',
+        'util/ColdInstallPackages.java']]
     sources += [ROOT/'app/src/test/java/com/deepseekharness/app/backup/JvmBackupFileSystem.java',ROOT/'tools/fixtures/browser-origin/BrowserOriginRestoreServerTest.java']
     suffix='.exe' if os.name=='nt' else ''
     command=[str(args.jdk/('bin/javac'+suffix)),'-encoding','UTF-8','--release','17','-cp',cp,'-d',str(output),*map(str,sources)]

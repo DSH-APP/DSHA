@@ -50,4 +50,77 @@ public class OneShotLaunchAuthorityTest {
     assertFalse(authority.issue(TICKET, COMMAND, 2, 0, 10));
     assertFalse(authority.authorize(TICKET, COMMAND, 1, 10));
   }
+
+  @Test
+  public void onlyTheExactLiveUncommittedPermitCanBeWithdrawn() {
+    OneShotLaunchAuthority authority = new OneShotLaunchAuthority();
+    assertTrue(authority.issue(TICKET, COMMAND, 4, 100, 30_000));
+    assertTrue(authority.authorize(TICKET, COMMAND, 4, 101));
+    assertFalse(authority.withdrawUncommitted("f".repeat(48), COMMAND, 4, 102));
+    assertFalse(authority.withdrawUncommitted(TICKET, COMMAND + "x", 4, 102));
+    assertFalse(authority.withdrawUncommitted(TICKET, COMMAND, 5, 102));
+    assertTrue(authority.withdrawUncommitted(TICKET, COMMAND, 4, 102));
+    assertFalse(authority.commit(TICKET, 4, 103));
+    assertFalse(authority.withdrawUncommitted(TICKET, COMMAND, 4, 103));
+  }
+
+  @Test
+  public void consumedExpiredCanceledAndOldPermitsNeverProveNotSent() {
+    for (String disposition : new String[] {"consumed", "expired", "canceled", "old"}) {
+      OneShotLaunchAuthority authority = new OneShotLaunchAuthority();
+      assertTrue(authority.issue(TICKET, COMMAND, 4, 100, 30));
+      assertTrue(authority.authorize(TICKET, COMMAND, 4, 101));
+      if (disposition.equals("consumed")) assertTrue(authority.commit(TICKET, 4, 102));
+      else if (disposition.equals("expired"))
+        assertEquals("", authority.ticketFor(COMMAND, 4, 130));
+      else {
+        authority.cancel(4);
+        if (disposition.equals("old"))
+          assertTrue(authority.issue("f".repeat(48), COMMAND, 5, 103, 30));
+      }
+      assertFalse(disposition, authority.withdrawUncommitted(TICKET, COMMAND, 4, 104));
+    }
+  }
+
+  @Test
+  public void commitAndWithdrawalHaveExactlyOneAtomicWinner() throws Exception {
+    for (int attempt = 0; attempt < 64; attempt++) {
+      OneShotLaunchAuthority authority = new OneShotLaunchAuthority();
+      assertTrue(authority.issue(TICKET, COMMAND, 4, 100, 30_000));
+      assertTrue(authority.authorize(TICKET, COMMAND, 4, 101));
+      var start = new java.util.concurrent.CountDownLatch(1);
+      var committed = new java.util.concurrent.atomic.AtomicBoolean();
+      var withdrawn = new java.util.concurrent.atomic.AtomicBoolean();
+      Thread commit =
+          new Thread(
+              () -> {
+                try {
+                  start.await();
+                  committed.set(authority.commit(TICKET, 4, 102));
+                } catch (InterruptedException interrupted) {
+                  Thread.currentThread().interrupt();
+                }
+              });
+      Thread withdraw =
+          new Thread(
+              () -> {
+                try {
+                  start.await();
+                  withdrawn.set(authority.withdrawUncommitted(TICKET, COMMAND, 4, 102));
+                } catch (InterruptedException interrupted) {
+                  Thread.currentThread().interrupt();
+                }
+              });
+      commit.start();
+      withdraw.start();
+      start.countDown();
+      commit.join(5000);
+      withdraw.join(5000);
+      assertFalse(commit.isAlive());
+      assertFalse(withdraw.isAlive());
+      assertTrue(committed.get() ^ withdrawn.get());
+      assertFalse(authority.commit(TICKET, 4, 103));
+      assertFalse(authority.withdrawUncommitted(TICKET, COMMAND, 4, 103));
+    }
+  }
 }

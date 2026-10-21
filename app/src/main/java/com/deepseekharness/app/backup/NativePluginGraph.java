@@ -80,11 +80,6 @@ public final class NativePluginGraph {
       for (String profile : fs.list(profileRoot)) {
         BackupLimits.path(profile);
         if (profile.contains("/") || profile.length() > 128) throw new IOException("PROFILE_NAME");
-        File profileDirectory = resolver.resolve(new File(profileRoot, profile)).file;
-        if (!fs.stat(profileDirectory).type.equals("DIRECTORY")) {
-          warnings.add("PROFILE_DIRECTORY_TYPE");
-          continue;
-        }
         File packageFile = new File(profileRoot, profile + "/package.json");
         if (!fs.stat(packageFile).type.equals("FILE")) continue;
         Map<String, Object> metadata;
@@ -127,8 +122,44 @@ public final class NativePluginGraph {
         collectDirectory(new File(profileRoot, profile + "/node_modules"), bindings, control);
       }
     collectDirectory(new File(dsh, "node_modules"), shared, control);
+    collectRuntimeBundles(control);
     collectDetachedSystemCopies(new File(dsh, "plugin-src"));
     collectDetachedSystemCopies(new File(dsh, "plugin-history"));
+  }
+
+  /** A terminal install may not yet have the shared/global aliases registration creates. */
+  private void collectRuntimeBundles(BackupControl control) throws IOException {
+    File modules = new File(rootfs, "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules");
+    if (!fs.stat(modules).type.equals("DIRECTORY")) return;
+    covered.put(modules.getAbsolutePath(), directoryProof(modules));
+    for (String entry : fs.list(modules)) {
+      control.check();
+      if (!packageName(entry) && !entry.matches("@[a-z0-9][a-z0-9._-]*")) continue;
+      List<String> names = new ArrayList<>();
+      File candidate = new File(modules, entry);
+      if (entry.startsWith("@") && fs.stat(candidate).type.equals("DIRECTORY")) {
+        covered.put(candidate.getAbsolutePath(), directoryProof(candidate));
+        for (String child : fs.list(candidate)) names.add(entry + "/" + child);
+      } else names.add(entry);
+      for (String name : names) {
+        if (!packageName(name) || BuiltinPlugins.system(name)) continue;
+        File source = new File(modules, name);
+        try {
+          File manifest = new File(resolver.resolve(source).file, "package.json");
+          if (!fs.stat(manifest).type.equals("FILE")) continue;
+          Object dshValue = metadata(manifest).get("dsh");
+          if (!(dshValue instanceof Map)) continue;
+          Object bundle = ((Map<?, ?>) dshValue).get("bundle");
+          if (!(bundle instanceof Map) || !((Map<?, ?>) bundle).containsKey("patch")) continue;
+          String id = visit(source, control);
+          if (id != null) binding(shared, name, id);
+        } catch (InterruptedIOException cancelled) {
+          throw cancelled;
+        } catch (IOException unreadable) {
+          warnings.add("PLUGIN_RUNTIME_BUNDLE_UNREADABLE");
+        }
+      }
+    }
   }
 
   private void collectDetachedSystemCopies(File directory) throws IOException {
@@ -184,10 +215,13 @@ public final class NativePluginGraph {
 
   private File find(File owner, String name) throws IOException {
     for (File base :
-        Arrays.asList(new File(owner, "node_modules"), new File(dsh, "node_modules"), global)) {
+        Arrays.asList(
+            new File(owner, "node_modules"),
+            new File(dsh, "node_modules"),
+            global,
+            new File(rootfs, "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules"))) {
       File candidate = new File(base, name);
       GuestDataResolver.Resolved resolved = resolver.resolve(candidate);
-      if (!fs.stat(resolved.file).type.equals("DIRECTORY")) continue;
       if (fs.stat(new File(resolved.file, "package.json")).type.equals("FILE")) {
         aliases.put(candidate.getAbsolutePath(), resolved.proof);
         return candidate;

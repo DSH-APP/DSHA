@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-timeout/lib/index.js",
+  "patches": [
+    {
+      "before": "\t\t\tif (outstanding) throw new Error(\"idleWatchdog next is already outstanding\");\n\t\t\toutstanding = true;\n\t\t\tarm();\n\t\t\tconst expired = Promise.withResolvers();\n\t\t\tconst onAbort = () => {\n\t\t\t\texpired.reject(reason);\n\t\t\t};\n\t\t\ttimeout.signal.addEventListener(\"abort\", onAbort, { once: true });\n\t\t\ttry {\n\t\t\t\treturn await Promise.race([iterator.next().finally(() => {\n\t\t\t\t\ttimeout.signal.removeEventListener(\"abort\", onAbort);\n\t\t\t\t}), expired.promise]);\n\t\t\t} finally {\n\t\t\t\tclearTimeout(timer);",
+      "after": "\t\t\tif (outstanding) throw new Error(\"idleWatchdog next is already outstanding\");\n\t\t\t// DSHA_STREAM_CANCEL_SIGNAL_RC2_V1: user cancellation must wake an outstanding read, with its own reason.\n\t\t\tsignal.throwIfAborted();\n\t\t\toutstanding = true;\n\t\t\tarm();\n\t\t\tconst expired = Promise.withResolvers();\n\t\t\tconst onAbort = () => {\n\t\t\t\texpired.reject(signal.reason);\n\t\t\t};\n\t\t\tsignal.addEventListener(\"abort\", onAbort, { once: true });\n\t\t\ttry {\n\t\t\t\tsignal.throwIfAborted();\n\t\t\t\tconst next = await Promise.race([iterator.next(), expired.promise]);\n\t\t\t\tsignal.throwIfAborted();\n\t\t\t\treturn next;\n\t\t\t} finally {\n\t\t\t\tsignal.removeEventListener(\"abort\", onAbort);\n\t\t\t\tclearTimeout(timer);"
+    }
+  ]
+}

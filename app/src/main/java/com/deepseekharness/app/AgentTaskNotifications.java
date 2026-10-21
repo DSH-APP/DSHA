@@ -59,6 +59,16 @@ public final class AgentTaskNotifications {
     return instance;
   }
 
+  /** 只撤销已存在通知所有者的同代票据，不创建实例，也不反向获取生命周期锁。 */
+  public static synchronized void invalidateRuntime(long generation, String identity) {
+    if (instance != null) instance.invalidate(generation, identity);
+  }
+
+  private synchronized void invalidate(long generation, String identity) {
+    state.invalidate(generation, identity);
+    main.post(this::render);
+  }
+
   private PreviewPageSession.Identity sync() {
     var current = HarnessController.get(context).getReadyWebPageIdentity();
     state.identity(
@@ -96,13 +106,22 @@ public final class AgentTaskNotifications {
           .put("port", actualPort)
           .toString();
     }
+    return registration.whileActive(
+        () -> applyBridge(operation, value, client, identity), "[TASK_NOT_READY]");
+  }
+
+  private String applyBridge(
+      String operation, JSONObject value, String client, PreviewPageSession.Identity identity) {
     var key = key(value);
     if (!state.matches(key.generation(), key.instance(), client)) return "[TASK_STALE]";
     if (operation.equals("claim")) {
       var command = state.claim(client, key.generation(), key.instance());
-      return command == null
-          ? "{}"
-          : json(command.key()).put("action", command.action()).toString();
+      if (command == null) return "{}";
+      try {
+        return json(command.key()).put("action", command.action()).toString();
+      } catch (Exception malformed) {
+        return "[TASK_REJECTED]";
+      }
     }
     if (!key.owner().matches("[a-f0-9]{32}")) return "[TASK_OWNER_REJECTED]";
     boolean accepted =

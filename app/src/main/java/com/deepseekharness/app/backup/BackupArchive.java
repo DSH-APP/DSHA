@@ -330,20 +330,18 @@ public final class BackupArchive {
       bytes = BackupLimits.add(bytes, record.size, BackupLimits.BYTES);
       String key = BackupLimits.collisionKey(record.root, record.path);
       keys = BackupLimits.add(keys, key.length() * 2L, 8L * 1024 * 1024);
-      if (!paths.add(key)) throw BackupPathFailure.at("DUPLICATE_PATH", record.root, record.path);
+      if (!paths.add(key)) throw new IOException("DUPLICATE_PATH");
       roots.add(record.root);
       scopes.computeIfAbsent(record.root, ignored -> new HashSet<>()).add(record.scope);
       String parent = key;
       while (parent.contains("/")) {
         parent = parent.substring(0, parent.lastIndexOf('/'));
-        if (nonDirectories.contains(parent))
-          throw BackupPathFailure.at("PATH_TYPE_CONFLICT", record.root, record.path);
+        if (nonDirectories.contains(parent)) throw new IOException("PATH_TYPE_CONFLICT");
       }
       if (!record.kind.equals("DIRECTORY")) {
         // 记录必须父目录先于子项；空根目录记录同样参与检查。
         String prefix = key + "/", next = paths.ceiling(prefix);
-        if (next != null && next.startsWith(prefix))
-          throw BackupPathFailure.at("PATH_TYPE_CONFLICT", record.root, record.path);
+        if (next != null && next.startsWith(prefix)) throw new IOException("PATH_TYPE_CONFLICT");
         nonDirectories.add(key);
       }
       incomplete |= record.kind.equals("MISSING") || record.kind.equals("UNREADABLE");

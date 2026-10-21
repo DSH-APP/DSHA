@@ -1,12 +1,107 @@
 package com.deepseekharness.app.util;
 
 import org.junit.Test;
+import com.deepseekharness.app.capabilities.CapabilityBroker;
+import com.deepseekharness.app.capabilities.CapabilityRequest;
+import com.deepseekharness.app.capabilities.ScreenTargetEvidence;
+import com.deepseekharness.app.core.RuntimeSnapshot;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.Assert.*;
 
 public class BridgeConfirmationsTest {
+  @Test
+  public void repeatedDiagnosticIdCannotReplayOldNativeConfirmation() throws Exception {
+    var broker = new CapabilityBroker(() -> 100L);
+    var gate = new BridgeConfirmations();
+    var runtime = new RuntimeSnapshot.Epoch("install-a", 7, "runtime-a");
+    var target = new ScreenTargetEvidence(0, 1, "com.example.app");
+    var oldContext =
+        new CapabilityRequest(
+            "same-client-correlation",
+            "screen",
+            "tap",
+            runtime,
+            "install-a",
+            "bridge-a",
+            target,
+            3,
+            broker.epoch("screen"),
+            200);
+    var old = gate.begin(broker, oldContext, 11);
+    gate.finish(old);
+    var nextContext =
+        new CapabilityRequest(
+            "same-client-correlation",
+            "screen",
+            "tap",
+            runtime,
+            "install-a",
+            "bridge-a",
+            target,
+            3,
+            broker.epoch("screen"),
+            200);
+    var next = gate.begin(broker, nextContext, 11);
+    assertEquals(old.context.requestId, next.context.requestId);
+    assertNotEquals(old.identity, next.identity);
+    assertFalse(gate.resolve(11, old.identity, true));
+    assertNull(next.answer());
+    assertTrue(gate.pending(next));
+    assertTrue(gate.resolve(11, next.identity, false));
+    assertEquals(Boolean.FALSE, next.answer());
+    assertFalse(next.await(0, TimeUnit.MILLISECONDS));
+  }
+
+  @Test
+  public void explicitContextIsFencedAcrossAsyncNotificationAndOldCleanup() throws Exception {
+    var broker = new CapabilityBroker(() -> 100L);
+    var gate = new BridgeConfirmations();
+    var runtime = new RuntimeSnapshot.Epoch("install-a", 7, "runtime-a");
+    var firstContext =
+        CapabilityRequest.create(
+            "screen",
+            "tap",
+            runtime,
+            "install-a",
+            "bridge-a",
+            new ScreenTargetEvidence(0, 1, "com.example.app"),
+            3,
+            broker.epoch("screen"),
+            200);
+    var first = gate.begin(broker, firstContext, 11);
+    assertSame(firstContext, first.context);
+    assertNull(gate.begin(broker, firstContext, 11));
+    broker.revoke("screen");
+    assertFalse(first.await(0, TimeUnit.MILLISECONDS));
+    assertNull(first.answer());
+    assertFalse(gate.resolve(11, first.identity, true));
+    gate.finish(first);
+    var nextContext =
+        CapabilityRequest.create(
+            "screen",
+            "tap",
+            runtime,
+            "install-a",
+            "bridge-b",
+            new ScreenTargetEvidence(0, 1, "com.example.app"),
+            4,
+            broker.epoch("screen"),
+            200);
+    var next = gate.begin(broker, nextContext, 12);
+    assertNotNull(next);
+    gate.finish(first);
+    assertFalse(gate.resolve(12, first.identity, true));
+    assertTrue(gate.pending(next));
+    assertTrue(gate.resolve(12, next.identity, true));
+  }
+
+  @Test
+  public void emptyCleanupIsIdempotent() {
+    new BridgeConfirmations().finish(null);
+  }
+
   @Test
   public void oldNotificationCannotResolveNextRequestOrNewService() throws Exception {
     BridgeConfirmations gate = new BridgeConfirmations();

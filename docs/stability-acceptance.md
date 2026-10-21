@@ -5,7 +5,7 @@
 
 基线是 `main` 的 `dca04aed7c1a1468827a953bfd6295fc3ca44170` **加原有 build 130 未提交修改**，不是公开仓库该提交本身。开始时保存了 170 个已有变更文件、二进制补丁及逐文件摘要：`app/build/stability-20260914/baseline*`。build 130 的两份发布 APK 与其交付记录一致，原件继续保留。本轮版本为 `0.1.5-rc2.1` / `0.1.5-rc2.1low`、versionCode 131，dsh `0.1.5-rc.2`、Ubuntu base 10、包名和历史证书不变。
 
-本轮只做本地交付；没有 git 提交、推送、上传、修改 Release，也没有卸载或覆盖手机正式 `com.dsh.client`。审计包不是交付 APK。
+本轮只做本地交付；没有 git 提交、推送、上传、修改 Release，也没有卸载或覆盖手机正式 `dsh.android.client`。审计包不是交付 APK。
 
 ## 2–10 逐项证据表
 
@@ -44,8 +44,8 @@ LAN 总头 64 KiB、请求行与字段各 16 KiB、最多 100 字段。本地设
 ## 实际设备与测量
 
 - Redmi M2012K10C，Android 13 / API 33，arm64，4096 字节页；Linux 4.14.186-g7d6e94993-dirty；WebView 116，low 内置 Gecko 143。
-- 包名 `com.dsh.client.rc21audit`，历史证书，非 debuggable；与发布代码共享构建，增加审计 Instrumentation/Provider/Activity 与合成测试资产。固定包名、清单和签名在安装前校验。正式 `com.dsh.client` 的版本码 129 和安装时间未改变。
-- 首次独立 `com.dsh.client.stabilityaudit` 安装返回 `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user`（`03dfe1bb-9d92-4e2e-bce5-211cd449ed6f`）。这是手机安装许可，不是沙箱自动审批；没有重试覆盖正式版，也没有把旧环境当全新安装。
+- 包名 `dsh.android.client.rc21audit`，历史证书，非 debuggable；与发布代码共享构建，增加审计 Instrumentation/Provider/Activity 与合成测试资产。固定包名、清单和签名在安装前校验。正式 `dsh.android.client` 的版本码 129 和安装时间未改变。
+- 首次独立 `dsh.android.client.stabilityaudit` 安装返回 `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user`（`03dfe1bb-9d92-4e2e-bce5-211cd449ed6f`）。这是手机安装许可，不是沙箱自动审批；没有重试覆盖正式版，也没有把旧环境当全新安装。
 - 标准版网络最终代表记录 `f9eca619-3820-415c-9856-fc6776738b64`：48 连接负载、最多 16 排队，峰值登记 25、拒绝 24；慢头 5003 ms；两条 SSE 下 8 次普通往返 63 ms。FD 从 158 到负载 219、夹具全部清理后 143；线程从 26 回到 26。PSS 初始 69465 KiB、SSE 93754、负载 94111、清理后 95086，不能宣称堆内存恢复原值。这是包含客户端和模拟后端的整个审计进程，不是代理独占开销。
 - `app/build/stability-measurements/4d9bdf92-d3e2-43f3-a6dc-2a895066515a/measurement.json`：30 秒指定窗口内 5 次串行采样，兼容版试运行，USB 充电，前台 Awake。宿主和 `:tab8`/`:gpu`/`:crashhelper` 分进程 PSS 保留，未累加共享内存；Node 进程未被取得，不以 0 代替。不同 PID 采样时刻不完全同时。电流/电压 sysfs Permission denied；没有应用归因的耗电数值。
 - `plugin-startup-inspection.log` 中一次已有环境启动：检查工具 0.3 s、创建进程 0.7 s，proroot glibc 退出后单次 proot 重试，实际官方鉴权行 8.6 s。它不是冷安装、不是最终网页就绪总耗时，也不是与旧版的速度比较。运行时 trial 另外实际验证了网页握手；慢等待未强杀。
@@ -65,7 +65,7 @@ $env:GRADLE_USER_HOME='<gradle-user-home>'
 
 实际工具目录虽名为 `jdk-17`，执行返回的是 **Oracle JDK 25.0.4**，Gradle 9.3.1 的 JVM 也指向 `D:/develop/JDK`；代码仍保持 Java 17 source/target，未升级项目语言要求。两项旧进程夹具此前依赖 Windows 标准输出默认编码，重跑出现 GBK/UTF-8 差异；现显式声明夹具 stdout/stderr UTF-8，保留原字节/保密断言。新增报告模板测试发现较短模板抢先匹配，现按完整模板特异性排序，未对任意用户文本做替换。
 
-独立设备复测：先用 `--init-script tools/device-backup-audit.init.gradle '-Pdsha.auditPackage=com.dsh.client.stabilityaudit' :app:assembleStandardDeviceAudit :app:assembleLowDeviceAudit` 构建；在新测试设备允许安装后用 `tools/run-backup-device-audit.py --serial <serial> --package com.dsh.client.stabilityaudit --apk <对应审计APK> --mode <模式>`。现有已授权审计包使用默认 `.rc21audit`，不传正式包名。
+独立设备复测：先用 `--init-script tools/device-backup-audit.init.gradle '-Pdsha.auditPackage=dsh.android.client.stabilityaudit' :app:assembleStandardDeviceAudit :app:assembleLowDeviceAudit` 构建；在新测试设备允许安装后用 `tools/run-backup-device-audit.py --serial <serial> --package dsh.android.client.stabilityaudit --apk <对应审计APK> --mode <模式>`。现有已授权审计包使用默认 `.rc21audit`，不传正式包名。
 
 最低 API 23/24/30、Android 16 平板与 16 KiB 设备：运行支持 flavor 的 `core,runtime,network,bridge,credential,plugins,plugin_workflow,plugin_recovery,retained,workflow,io,ui,issue67,attachments`；`style --language zh/en` 验证所有原生样式。补测终端标签/维护、真实多文件/图片/流式附件、系统文件回调、息屏后 Web/终端恢复。真机数据必须为合成或明确获准的数据，不提高最低 API 绕过。
 

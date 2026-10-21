@@ -1,10 +1,66 @@
 {
-  "dshVersion": "0.2.0-rc.2",
+  "dshVersion": "0.2.1-rc.2",
   "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
   "patches": [
     {
-      "before": "\t\tasync runPnpm(args, signal, requestId) {",
-      "after": "\t\tasync runPnpm(args, signal, requestId) {\n            // DSHA 0.2.0-rc2: keep upstream pnpm arguments; the native manager now permits unlocked installs and lifecycle hooks."
+      "before": "async function runProfilePnpm(context, args, options) {",
+      "after": "async function runProfilePnpm(context, args, options) {\n\t// DSHA_PLUGIN_UNLOCKED_PNPM_V2: the user's repair/install policy permits\n\t// dependency and Git prepare hooks. pnpm 10 otherwise refuses Git builds.\n\t// Keep registry/spec/lock choices; fetch retries repeat only read requests.\n\tif (process.env.DSHA_PLUGIN_UNLOCKED === \"1\") options = {\n\t\t...options,\n\t\targs: [...options.args ?? [],\n\t\t\t\"--config.dangerously-allow-all-builds=true\", \"--config.ignore-scripts=false\",\n\t\t\t\"--config.ignore-dep-scripts=false\", \"--config.update-notifier=false\",\n\t\t\t\"--config.fetch-retries=1\", \"--config.fetch-retry-mintimeout=1000\",\n\t\t\t\"--config.fetch-retry-maxtimeout=3000\", \"--config.fetch-timeout=60000\",\n\t\t\t\"--reporter=append-only\"]\n\t};"
+    },
+    {
+      "before": "\t\tconst environment = {\n\t\t\t...options.execution === \"cli\" ? process.env : scrubbedParentEnv(),\n\t\t\t...options.env\n\t\t};",
+      "after": "\t\tconst environment = {\n\t\t\t...options.execution === \"cli\" ? process.env : scrubbedParentEnv(),\n\t\t\t...options.env\n\t\t};\n\t\t// DSHA_PLUGIN_HTTPS_GITHUB_V1: pnpm's hosted-Git probe may choose SSH\n\t\t// after an intermittent HTTPS error. A browser-supplied HTTPS source\n\t\t// remains on GitHub HTTPS; this invocation never edits global Git config.\n\t\t// Existing explicit command-level Git configuration keeps precedence.\n\t\tif (process.env.DSHA_PLUGIN_UNLOCKED === \"1\"\n\t\t\t&& namedSpecs(args).some((spec) => /^https:\\/\\/github\\.com\\//i.test(spec))\n\t\t\t&& (!environment.GIT_CONFIG_COUNT || environment.GIT_CONFIG_COUNT === \"0\")) {\n\t\t\tenvironment.GIT_CONFIG_COUNT = \"3\";\n\t\t\tfor (const [index, prefix] of [\"git+ssh://git@github.com/\", \"ssh://git@github.com/\", \"git@github.com:\"].entries()) {\n\t\t\t\tenvironment[\"GIT_CONFIG_KEY_\" + index] = \"url.https://github.com/.insteadOf\";\n\t\t\t\tenvironment[\"GIT_CONFIG_VALUE_\" + index] = prefix;\n\t\t\t}\n\t\t}"
+    },
+    {
+      "before": "\t\t\t\t\t\tif (failedAt !== \"registry\" || index === plan.length - 1) break;",
+      "after": "\t\t\t\t\t\t// DSHA_PLUGIN_SINGLE_INSTALL_V1: hooks may already have run before a\n\t\t\t\t\t\t// registry error. Never replay the whole unlocked install automatically.\n\t\t\t\t\t\tif (process.env.DSHA_PLUGIN_UNLOCKED === \"1\" || failedAt !== \"registry\" || index === plan.length - 1) break;"
+    },
+    {
+      "before": "import { randomUUID } from \"node:crypto\";",
+      "after": "import { randomUUID, createHash as dshaCreateHash } from \"node:crypto\";\nimport { constants as dshaFsConstants, promises as dshaFs } from \"node:fs\";\nimport { setImmediate as dshaYield } from \"node:timers/promises\";"
+    },
+    {
+      "before": "const GIT_SHORTHAND =",
+      "after": "// DSHA_PLUGIN_PROVENANCE_V2: exact APK content, with bounded asynchronous work.\n// Per-request evidence is never a cross-request mtime trust cache.\nconst dshaSignedPluginNames = new Set([\"dsh-device-shell-guide\", \"dsh-task-notifier\", \"dsh-status-overlay\", \"dsh-web-mobile\", \"dsh-computer-use-android\", \"dsh-auto-review\", \"dsh-tool-vscreen\", \"dsh-app-integration\", \"@deepseek-ai/dsh-base\", \"@deepseek-ai/dsh-web-app\", \"@deepseek-ai/dsh-experimental-auto-review\"]);\nlet dshaProofActive = 0;\nconst dshaProofWaiters = [];\nasync function dshaProofSlot(work) {\n if (dshaProofActive >= 2) {\n  if (dshaProofWaiters.length >= 32) throw Error(\"PACKAGE_PROOF_BUSY\");\n  await new Promise(resolve => dshaProofWaiters.push(resolve));\n } else dshaProofActive++;\n try { return await work(); }\n finally {\n  const next = dshaProofWaiters.shift();\n  if (next) next(); else dshaProofActive--;\n }\n}\nfunction dshaProofCurrent(session) {\n session.signal?.throwIfAborted();\n if (Date.now() > session.deadline) throw Error(\"PACKAGE_PROOF_DEADLINE\");\n}\nfunction dshaSameProofNode(before, after) {\n return before.dev === after.dev && before.ino === after.ino && before.mode === after.mode\n  && before.size === after.size && before.mtimeNs === after.mtimeNs && before.ctimeNs === after.ctimeNs;\n}\nasync function dshaReadProofSession(profile, signal) {\n const session = { packages: {}, cache: new Map(), signal, deadline: Date.now() + 30000 };\n dshaProofCurrent(session);\n const expected = process.env.DSHA_MANAGED_PACKAGE_PROOFS_SHA256;\n if (!/^[a-f0-9]{64}$/.test(expected || \"\")) return session;\n const proofFile = resolve(profile.dir, \"..\", \"..\", \"managed-package-proofs.json\");\n try {\n  const before = await dshaFs.lstat(proofFile, { bigint: true });\n  if (!before.isFile() || before.isSymbolicLink() || before.size > 2097152n) return session;\n  const handle = await dshaFs.open(proofFile, dshaFsConstants.O_RDONLY | (dshaFsConstants.O_NOFOLLOW || 0));\n  let bytes;\n  try {\n   if (!dshaSameProofNode(before, await handle.stat({ bigint: true }))) throw Error(\"PACKAGE_PROOFS_CHANGED\");\n   bytes = await handle.readFile();\n   if (bytes.length > 2097152 || !dshaSameProofNode(before, await handle.stat({ bigint: true }))) throw Error(\"PACKAGE_PROOFS_CHANGED\");\n  } finally { await handle.close(); }\n  if (!dshaSameProofNode(before, await dshaFs.lstat(proofFile, { bigint: true }))) throw Error(\"PACKAGE_PROOFS_CHANGED\");\n  if (dshaCreateHash(\"sha256\").update(bytes).digest(\"hex\") !== expected) return session;\n  const proof = JSON.parse(bytes);\n  if (proof.version === 1 && proof.packages && typeof proof.packages === \"object\" && !Array.isArray(proof.packages)) session.packages = proof.packages;\n } catch (error) {\n  if (error?.code === \"ENOENT\") return session;\n  throw error;\n }\n return session;\n}\nasync function dshaPackageContentProof(directory, session) {\n return dshaProofSlot(async () => {\n  dshaProofCurrent(session);\n  const rows = new Map(), buffer = Buffer.alloc(65536);\n  let bytes = 0n, entries = 0;\n  const walk = async (file, relative) => {\n   dshaProofCurrent(session);\n   if (++entries > 200000) throw Error(\"PACKAGE_PROOF_LIMIT\");\n   const before = await dshaFs.lstat(file, { bigint: true });\n   if (before.isDirectory()) {\n    const members = (await dshaFs.readdir(file)).sort();\n    for (const name of members) await walk(join(file, name), relative ? relative + \"/\" + name : name);\n    const after = await dshaFs.lstat(file, { bigint: true });\n    const current = (await dshaFs.readdir(file)).sort();\n    if (!dshaSameProofNode(before, after) || JSON.stringify(members) !== JSON.stringify(current)) throw Error(\"PACKAGE_PROOF_CHANGED\");\n    return;\n   }\n   let row;\n   if (before.isFile()) {\n    if ((bytes += before.size) > 8589934592n) throw Error(\"PACKAGE_PROOF_LIMIT\");\n    const handle = await dshaFs.open(file, dshaFsConstants.O_RDONLY | (dshaFsConstants.O_NOFOLLOW || 0));\n    const digest = dshaCreateHash(\"sha256\");\n    try {\n     if (!dshaSameProofNode(before, await handle.stat({ bigint: true }))) throw Error(\"PACKAGE_PROOF_CHANGED\");\n     let read = 0n;\n     for (;;) {\n      dshaProofCurrent(session);\n      const { bytesRead } = await handle.read(buffer, 0, buffer.length, null);\n      if (!bytesRead) break;\n      if ((read += BigInt(bytesRead)) > before.size) throw Error(\"PACKAGE_PROOF_CHANGED\");\n      digest.update(buffer.subarray(0, bytesRead));\n      await dshaYield();\n     }\n     if (read !== before.size || !dshaSameProofNode(before, await handle.stat({ bigint: true }))) throw Error(\"PACKAGE_PROOF_CHANGED\");\n    } finally { await handle.close(); }\n    row = relative + \"\\0FILE\\0\" + Number(before.mode & 511n) + \"\\0\" + digest.digest(\"hex\") + \"\\n\";\n   } else if (before.isSymbolicLink()) row = relative + \"\\0LINK\\0\" + await dshaFs.readlink(file) + \"\\n\";\n   else throw Error(\"PACKAGE_PROOF_TYPE\");\n   if (!dshaSameProofNode(before, await dshaFs.lstat(file, { bigint: true }))) throw Error(\"PACKAGE_PROOF_CHANGED\");\n   rows.set(relative, row);\n  };\n  await walk(directory, \"\");\n  dshaProofCurrent(session);\n  const digest = dshaCreateHash(\"sha256\");\n  let emitted = 0;\n  for (const key of [...rows.keys()].sort()) {\n   dshaProofCurrent(session);\n   digest.update(rows.get(key));\n   if (++emitted % 128 === 0) await dshaYield();\n  }\n  return digest.digest(\"hex\");\n });\n}\nasync function dshaManagedInstallationBundle(name, profile, session) {\n const digest = session.packages[name];\n if (!/^[a-f0-9]{64}$/.test(digest || \"\")) return false;\n // Installation dependencies include many SDKs/libraries. Only actual bundles need a content scan.\n const metadata = bundleManifest(name, profile.dir, profile.installAnchor);\n if (!metadata || metadata.name !== name) return false;\n let directory;\n try {\n  directory = await dshaFs.realpath(join(dirname(profile.installAnchor), \"node_modules\", name));\n  if (directory !== await dshaFs.realpath(resolveBundleDir(\"dsh\", name, profile.installAnchor, profile.dir))) return false;\n } catch (error) { if (error?.code === \"ENOENT\") return false; throw error; }\n let current = session.cache.get(directory);\n if (!current) {\n  current = dshaPackageContentProof(directory, session);\n  session.cache.set(directory, current);\n }\n const observed = await current;\n dshaProofCurrent(session);\n if (directory !== await dshaFs.realpath(join(dirname(profile.installAnchor), \"node_modules\", name))\n  || directory !== await dshaFs.realpath(resolveBundleDir(\"dsh\", name, profile.installAnchor, profile.dir)))\n  throw Error(\"PACKAGE_PROOF_CHANGED\");\n return observed === digest;\n}\n\nconst GIT_SHORTHAND ="
+    },
+    {
+      "before": "\t\t\t\tconst shipped = Object.hasOwn(installation.dependencies ?? {}, name);",
+      "after": "\t\t\t\tconst shipped = await dshaManagedInstallationBundle(name, this.profile, dshaProofSession);"
+    },
+    {
+      "before": "\t\t\t\tconst official = optional || offered !== void 0;",
+      "after": "\t\t\t\tconst official = (optional || offered !== void 0) && (shipped || !installed && (() => { try { return bundleManifest(name, this.profile.dir, this.profile.installAnchor) === void 0; } catch { return true; } })());"
+    },
+    {
+      "before": "\t\t\t\tconst removable = owned || enabled && !installed && !shipped;",
+      "after": "\t\t\t\tconst removable = !dshaSignedPluginNames.has(name) && (owned || enabled && !installed && !shipped);"
+    },
+    {
+      "before": "\t\t\t\tconst sourceOf = (packageName) => owned ? { source: dependencySpec(name, recorded[name], this.profile.dir, packageName) } : {};",
+      "after": "\t\t\t\tconst sourceOf = (packageName) => ({ origin: shipped ? \"dsh-managed\" : \"user\", ...owned ? { source: dependencySpec(name, recorded[name], this.profile.dir, packageName) } : {} });"
+    },
+    {
+      "before": "\t\t\t\tconst known = specPackageName(spec, before, this.profile.dir);",
+      "after": "\t\t\t\tconst known = specPackageName(spec, before, this.profile.dir);\n\t\t\t\tif (dshaSignedPluginNames.has(known)) throw new ManagementFailure(\"not-removable\");"
+    },
+    {
+      "before": "\t\t\t\t\tname = target;\n\t\t\t\t\tconst dir = resolveBundleDir",
+      "after": "\t\t\t\t\tname = target;\n\t\t\t\t\tif (dshaSignedPluginNames.has(name)) throw new ManagementFailure(\"not-removable\");\n\t\t\t\t\tconst dir = resolveBundleDir"
+    },
+    {
+      "before": "\t\tlistBundles() {",
+      "after": "\t\tasync listBundles(dshaOnlyName) {"
+    },
+    {
+      "before": "\t\t\tconst bundles = [];\n\t\t\tconst runtimeVersion = getDshRuntimeVersion();\n\t\t\tfor (const name of names) {",
+      "after": "\t\t\tconst bundles = [];\n\t\t\tconst dshaProofSession = await dshaReadProofSession(this.profile, this.abort?.signal);\n\t\t\tconst runtimeVersion = getDshRuntimeVersion();\n\t\t\tif (dshaOnlyName !== undefined) for (let index = names.length - 1; index >= 0; index--)\n\t\t\t\tif (names[index] !== dshaOnlyName) names.splice(index, 1);\n\t\t\tfor (const name of names) {"
+    },
+    {
+      "before": "\t\tremoveBundle(name) {\n\t\t\treturn this.change(async (result) => {",
+      "after": "\t\tasync removeBundle(name) {\n\t\t\t// Full preflight yields outside the writer/HMR locks. Commit rechecks only this target.\n\t\t\tawait this.listBundles(name);\n\t\t\treturn this.change(async (result) => {"
+    },
+    {
+      "before": "\t\t\t\t\tconst bundle = (await this.listBundles()).find((item) => item.name === name);",
+      "after": "\t\t\t\t\tconst bundle = (await this.listBundles(name)).find((item) => item.name === name);"
     }
   ]
 }

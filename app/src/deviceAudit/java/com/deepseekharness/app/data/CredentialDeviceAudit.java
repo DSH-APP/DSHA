@@ -53,12 +53,11 @@ public final class CredentialDeviceAudit extends Instrumentation {
             ConfigFragment fragment=new ConfigFragment();ui(()->host.getSupportFragmentManager().beginTransaction().replace(android.R.id.content,fragment).commitNow());
             SharedPreferences storage=prefs;
             ui(()->{
-                View view=fragment.requireView();check(view.findViewById(R.id.config_credential_state).getVisibility()==View.VISIBLE,"ERROR_UI_MISSING");
+                View view=fragment.requireView();
+                check(context.getResources().getIdentifier("config_api_key","id",context.getPackageName())==0,"RETIRED_KEY_EDITOR_ID_PRESENT");
+                check(context.getResources().getIdentifier("config_models","id",context.getPackageName())==0,"RETIRED_MODEL_EDITOR_ID_PRESENT");
                 ((Button)view.findViewById(R.id.config_save)).performClick();check(storage.getString(Constants.KEY_API_KEY,"").equals("invalid-owned-ciphertext"),"OTHER_SETTINGS_CLEARED_KEY");
-                ((EditText)view.findViewById(R.id.config_api_key)).setText("owned replacement after review");((Button)view.findViewById(R.id.config_save)).performClick();
-                check("owned replacement after review".equals(new ConfigStore(context).getApiKey()),"UI_REENTRY_FAILED");
-                check(view.findViewById(R.id.config_credential_state).getVisibility()==View.GONE,"ERROR_UI_NOT_CLEARED");
-            });pass("real_configuration_ui_preserves_unreadable_key_and_accepts_explicit_reentry");
+            });pass("configuration_ui_preserves_unreadable_key_without_a_native_credential_editor");
         }catch(Throwable failure){result.putString("failure",SensitiveData.redact(android.util.Log.getStackTraceString(failure)));}
         finally{
             if(prefs!=null){SharedPreferences.Editor edit=prefs.edit();if(had)edit.putString(Constants.KEY_API_KEY,original);else edit.remove(Constants.KEY_API_KEY);if(!edit.commit())result.putString("cleanupFailure","ORIGINAL_PREF_RESTORE_FAILED");}

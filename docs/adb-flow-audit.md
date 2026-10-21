@@ -11,14 +11,14 @@
 
 以下保留复现步骤与实现边界；入口创建时的“没有操作设备”仅描述协作者当时分工。
 
-入口：`com.dsh.client/com.deepseekharness.app.ui.AdbFlowAudit`，已在 `app/src/debug/AndroidManifest.xml` 注册。同一个 debug APK 自插桩，不需要单独测试 APK；release 不包含此入口。没有运行 Gradle 或操作设备，以下命令由主线程/测试者执行。
+入口：`dsh.android.client/com.deepseekharness.app.ui.AdbFlowAudit`，已在 `app/src/debug/AndroidManifest.xml` 注册。同一个 debug APK 自插桩，不需要单独测试 APK；release 不包含此入口。没有运行 Gradle 或操作设备，以下命令由主线程/测试者执行。
 
 ## 最短实测步骤
 
 先安装主线程构建的 debug APK。在终端一启动监听，并等到 `AdbFlowAudit READY`：
 
 ```powershell
-& '<TOOLCHAIN_ROOT>/android-sdk/platform-tools/adb.exe' shell am instrument -w -e mode listen -e seconds 1800 com.dsh.client/com.deepseekharness.app.ui.AdbFlowAudit
+& '<TOOLCHAIN_ROOT>/android-sdk/platform-tools/adb.exe' shell am instrument -w -e mode listen -e seconds 1800 dsh.android.client/com.deepseekharness.app.ui.AdbFlowAudit
 ```
 
 多台设备时，在 `shell` 前加 `-s <USB序列号>`；下列助手也加同一个 `--serial`。

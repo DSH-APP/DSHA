@@ -85,7 +85,7 @@ public class ExtractActivity extends AppCompatActivity {
         v -> {
           boolean recovery = task.pendingMaintenance();
           boolean update = !rebuildRequested && controller.proot().canUpdateManagedRuntime();
-          new com.deepseekharness.app.ui.DshaDialogBuilder(this)
+          new com.deepseekharness.app.ui.DshaDialogBuilder(this, true)
               .setTitle(
                   recovery
                       ? com.deepseekharness.app.util.UiText.text("恢复原环境？")
@@ -140,7 +140,7 @@ public class ExtractActivity extends AppCompatActivity {
           getSharedPreferences("dsha_environment_upgrade", MODE_PRIVATE);
       String attemptKey = "";
       try {
-        attemptKey = com.deepseekharness.app.core.EnvironmentAccess.candidateAttemptKey(controller);
+        attemptKey = "runtime:" + controller.proot().expectedRuntimeDescriptor().id();
       } catch (java.io.IOException invalid) {
       }
       if (!force
@@ -226,32 +226,17 @@ public class ExtractActivity extends AppCompatActivity {
         mine
             && (s.status == BackupTaskState.Status.FAILED
                 || s.status == BackupTaskState.Status.INTERRUPTED);
-    if (failed) {
-      boolean rolledBack =
-          com.deepseekharness.app.core.EnvironmentMaintenance.runtimeRollbackRecorded(
-              this, s.detail);
-      String originals =
-          rolledBack
-              ? com.deepseekharness.app.util.UiText.choose(
-                  "原件状态：本次受管运行时事务已回切，更新仍未完成。请查看日志后重试更新。",
-                  "Original state: this managed runtime transaction was rolled back; the update remains incomplete. Review the log before retrying the update.")
-              : com.deepseekharness.app.util.UiText.choose(
-                  "原件状态：尚未确认恢复完成。请查看维护记录；也可进入受限主界面导出可读副本。",
-                  "Original state: recovery has not been confirmed. Inspect the maintenance record, or enter the limited interface to export readable copies.");
+    if (failed)
       detail.setText(
           com.deepseekharness.app.util.UiText.format(
-              com.deepseekharness.app.util.UiText.choose(
-                  "未完成的操作：%s\n最后记录阶段：%s\n\n%s\n\n%s",
-                  "Incomplete operation: %s\nLast recorded stage: %s\n\n%s\n\n%s"),
+              "未完成的操作：%s\n最后记录阶段：%s\n\n%s\n\n原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。",
               com.deepseekharness.app.util.UiStateText.render(s.kind),
               s.lastStage.isEmpty()
                   ? com.deepseekharness.app.util.UiText.choose(
                       "旧记录未提供；请查看维护日志", "Not available in the old record; inspect maintenance logs")
                   : com.deepseekharness.app.util.LogCompactor.compactReason(
                       com.deepseekharness.app.util.UiStateText.render(s.lastStage), 240),
-              com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail),
-              originals));
-    }
+              com.deepseekharness.app.util.MaintenanceErrorText.render(s.detail)));
     boolean incomplete = mine && s.status == BackupTaskState.Status.SUCCEEDED && !ready;
     error.setVisibility(failed || incomplete || automaticDeclined ? View.VISIBLE : View.GONE);
     error.setText(
@@ -313,12 +298,8 @@ public class ExtractActivity extends AppCompatActivity {
         task.maintenanceBusy() || task.pendingMaintenance() || !controller.isEnvironmentReady();
     if (limited) controller.config().allowLimitedEntry(controller.proot().environmentIdentity());
     Intent intent =
-        new Intent(
-            this,
-            getIntent().getBooleanExtra("first_setup", false) && !limited
-                ? ModelSetupActivity.class
-                : MainActivity.class);
-    intent.putExtra("first_run", getIntent().getBooleanExtra("first_setup", false));
+        FirstRunWebStart.mainIntent(
+            this, getIntent().getBooleanExtra("first_setup", false) && !limited);
     intent.putExtra("limited_entry", limited);
     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
     startActivity(intent);

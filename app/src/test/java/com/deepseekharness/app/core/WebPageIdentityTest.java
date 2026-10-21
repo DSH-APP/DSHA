@@ -3,8 +3,12 @@ package com.deepseekharness.app.core;
 import static org.junit.Assert.*;
 
 import com.deepseekharness.app.core.WebLifecycleController.WebRun;
+import com.deepseekharness.app.runtime.StoredWebSession;
+import com.deepseekharness.app.util.BrowserTaskPolicy;
+import com.deepseekharness.app.util.Compat;
 import com.deepseekharness.app.util.PreviewPageSession;
 import com.deepseekharness.app.util.WebLifecycle;
+import com.deepseekharness.app.util.WebSessionProof;
 import org.junit.Test;
 
 public class WebPageIdentityTest {
@@ -61,5 +65,38 @@ public class WebPageIdentityTest {
     run.launcher.destroy();
     assertNull(WebLifecycleController.readyWebPageIdentity(gate, run, false));
     assertFalse(page.isCurrent(WebLifecycleController.readyWebPageIdentity(gate, run, false)));
+  }
+
+  @Test
+  public void failedRecoveredProofCannotAuthorizePageWhileOriginalLauncherLives() {
+    WebLifecycle gate = new WebLifecycle();
+    WebRun run = ready(gate);
+    var original = WebLifecycleController.readyWebPageIdentity(gate, run, false);
+    PreviewPageSession page = new PreviewPageSession();
+    assertTrue(page.claim(original));
+    String nonce = "ab".repeat(32);
+    var proof =
+        new WebSessionProof.Saved(
+            "12345678-1234-1234-1234-123456789abc",
+            run.generation,
+            run.instanceId,
+            nonce,
+            101,
+            1234,
+            "node /usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js web",
+            100,
+            1233,
+            "/app/lib/libproot.so");
+    run.recovered = new StoredWebSession.Record(proof, URL, "app", "root", "runtime", false, nonce);
+    run.recoveredLive = true;
+    assertEquals(original, WebLifecycleController.readyWebPageIdentity(gate, run, false));
+
+    // 后台核验失败后，原启动器仍活也不能恢复旧页面或继续批准旧DOM回调。
+    run.recoveredLive = false;
+    assertTrue(Compat.isAlive(run.launcher));
+    var current = WebLifecycleController.readyWebPageIdentity(gate, run, false);
+    assertNull(current);
+    assertFalse(page.isCurrent(current));
+    assertFalse(BrowserTaskPolicy.resumeBackground(original, current, true, false, false, true));
   }
 }

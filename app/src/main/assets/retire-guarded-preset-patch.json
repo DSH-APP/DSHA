@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-permission-presets/lib/index.js",
+  "sourceSha256": "4f23c620145098d611d04d8363bc6716f49b26930c9141a21dc9a8df2b72ba63",
+  "patches": [
+    {
+      "before": "return [...Object.keys(this.presets), ...this.autoAdmit === void 0 ? [] : [AUTO_PRESET]];",
+      "after": "return [...Object.keys(this.presets).filter(name => name !== \"guarded-full-access\"), ...this.autoAdmit === void 0 ? [] : [AUTO_PRESET]]; // DSHA_GUARDED_PRESET_READ_COMPAT_ONLY_V1"
+    },
+    {
+      "before": "defaultOptions: Object.keys(this.presets).map((name) => this.optionOf(name)),",
+      "after": "defaultOptions: Object.keys(this.presets).filter(name => name !== \"guarded-full-access\").map((name) => this.optionOf(name)),"
+    }
+  ]
+}

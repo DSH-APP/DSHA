@@ -3,21 +3,56 @@
   'use strict';
   const LIMIT = 256 * 1024 * 1024, MAX_KEYS = 4096, MAX_TEXT = 8 * 1024 * 1024;
   const REV = 'dsha.images.revision:', DELETED = 'dsha.images.deleted:';
+  const WIDTH = 'dsh.conversation.contentWidth';
   const req = value => new Promise((resolve, reject) => { value.onsuccess = () => resolve(value.result); value.onerror = () => reject(value.error); });
   const complete = tx => new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = tx.onabort = () => reject(tx.error || Error('RESTORE_TRANSACTION')); });
   function keyAllowed(key) {
-    return typeof key === 'string' && key.length <= 560 && (key === 'dsha.reading-position'
+    return typeof key === 'string' && key !== WIDTH && key.length <= 560 && (key === 'dsha.reading-position'
       || /^dsh\.(?:conversation\.|sidebar-right\.v1\.)[^\x00-\x1f]+$/.test(key));
+  }
+  function draftValid(value) {
+    // Official rc2 parseStoredDraft accepts legacy strings and semantic snapshots.
+    if (typeof value === 'string') return true;
+    if (!value || typeof value !== 'object' || Array.isArray(value)
+        || Object.keys(value).some(k => !['text','references','command'].includes(k))
+        || typeof value.text !== 'string' || !Array.isArray(value.references) || value.references.length > MAX_KEYS) return false;
+    let end = 0;
+    if (value.command !== undefined) {
+      const command = value.command;
+      if (!command || typeof command !== 'object' || Array.isArray(command)
+          || Object.keys(command).some(k => k !== 'token') || typeof command.token !== 'string') return false;
+      const spelling = command.token.trimEnd();
+      if (!/^\/\S/u.test(spelling) || !value.text.startsWith(spelling)) return false;
+      end = spelling.length;
+    }
+    for (const reference of value.references) {
+      if (!reference || typeof reference !== 'object' || Array.isArray(reference)
+          || Object.keys(reference).some(k => !['source','ref','offset','length','label','appearance','clipboardText','invalid'].includes(k))
+          || !['source','ref','label','clipboardText'].every(k => typeof reference[k] === 'string')
+          || !Number.isSafeInteger(reference.offset) || reference.offset < end
+          || !Number.isSafeInteger(reference.length) || reference.length <= 0 || reference.length !== reference.clipboardText.length
+          || (reference.appearance !== undefined && !['session','file','folder'].includes(reference.appearance))
+          || (reference.invalid !== undefined && typeof reference.invalid !== 'boolean')) return false;
+      end = reference.offset + reference.length;
+      if (end > value.text.length || value.text.slice(reference.offset,end) !== reference.clipboardText) return false;
+    }
+    return true;
+  }
+  function draftEmpty(value) {
+    return value === '' || (draftValid(value) && typeof value === 'object'
+      && value.text === '' && value.references.length === 0 && value.command === undefined);
   }
   function textValid(key, raw) {
     if (!keyAllowed(key) || typeof raw !== 'string' || raw.length > 2 * 1024 * 1024) return false;
     try {
       const value = JSON.parse(raw);
       if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-      if (key.startsWith('dsh.conversation.')) return typeof value.draft === 'string'
+      if (key.startsWith('dsh.conversation.')) return draftValid(value.draft)
         && Object.keys(value).every(k => ['draft','view','viewRequest'].includes(k))
         && (value.view === null || typeof value.view === 'string')
-        && (value.viewRequest === null || (value.viewRequest && typeof value.viewRequest.view === 'string'));
+        && (value.viewRequest === null || (value.viewRequest && !Array.isArray(value.viewRequest)
+          && typeof value.viewRequest.view === 'string' && Object.keys(value.viewRequest).every(k => ['view','focus'].includes(k))
+          && (value.viewRequest.focus === undefined || typeof value.viewRequest.focus === 'boolean')));
       if (key === 'dsha.reading-position') return typeof value.id === 'string' && typeof value.url === 'string'
         && value.url.startsWith('/') && !/[?#]/.test(value.url) && Array.isArray(value.positions) && value.positions.length <= 8;
       const id = key.slice('dsh.sidebar-right.v1.'.length), surface = value.bySession?.[id], layout = surface?.layout;
@@ -127,12 +162,13 @@
     let applied = 0, conflicts = 0;
     for (const row of manifest.rows) {
       await guard();
+      if (row.key === WIDTH) continue; // Earlier retained candidates may contain this global preference.
       if (!textValid(row.key,row.value)) { conflicts++; continue; }
       const before = storage.getItem(row.key);
       let empty = false, next = row.value;
       if (row.key.startsWith('dsh.conversation.') && before !== null && textValid(row.key,before)) {
         const target = JSON.parse(before), source = JSON.parse(row.value);
-        empty = target.draft === '';
+        empty = draftEmpty(target.draft);
         if (empty) {
           // Filling a blank draft does not replace a newer target View selection/request.
           next = JSON.stringify({...target,draft:source.draft});

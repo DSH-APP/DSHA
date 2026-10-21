@@ -18,6 +18,31 @@ module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 
 class RecoveryAssetTests(unittest.TestCase):
+    def test_signed_capsule_dependencies_are_complete_and_bound_to_files(self):
+        assets = module.ROOT / 'app/src/main/assets'
+        proof = {}
+        rows = module.capsule_dependencies(assets, proof, [])
+        self.assertEqual(len(rows), 5)
+        for row in rows:
+            self.assertEqual(row['sha256'], module.digest(assets / row['asset']))
+            self.assertEqual(proof[row['path']], {key: row[key] for key in ('path', 'sha256', 'bytes')})
+        self.assertEqual(rows[-1]['path'], 'run/dsha-launcher/native-consent.cjs')
+
+    def test_capsule_dependency_collision_does_not_partially_publish(self):
+        assets = module.ROOT / 'app/src/main/assets'
+        target = next(iter(module.CAPSULE_DEPENDENCIES.values()))
+        for proof, links in [({target: {'path': target}}, []), ({}, [{'path': target}])]:
+            original = copy.deepcopy(proof)
+            with self.assertRaisesRegex(ValueError, 'RECOVERY_CAPSULE_DEPENDENCY_COLLISION'):
+                module.capsule_dependencies(assets, proof, links)
+            self.assertEqual(proof, original)
+
+    def test_exact_overlay_accepts_complete_preapplied_patch_but_rejects_extra_old_anchor(self):
+        self.assertEqual(browser_overlay.exact('before + extra', 'before', 'before patched'), 'before patched + extra')
+        self.assertEqual(browser_overlay.exact('before patched + extra', 'before', 'before patched'), 'before patched + extra')
+        with self.assertRaisesRegex(ValueError, 'RECOVERY_OVERLAY_ANCHOR'):
+            browser_overlay.exact('before patched + before', 'before', 'before patched')
+
     def layout(self, root):
         shared, store, output = root / 'shared', root / 'pinned', root / 'output'
         shared.mkdir(); store.mkdir()

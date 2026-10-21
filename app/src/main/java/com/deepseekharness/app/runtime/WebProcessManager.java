@@ -209,7 +209,17 @@ public class WebProcessManager {
   WebProcessManager(ProotBootstrap proot, File records) throws IOException {
     this.proot = proot;
     this.records = records;
-    TrialPaths.requirePayload(proot.context().getFilesDir(), records);
+    File home =
+        new File(proot.getRootfsDir().getParentFile().getParentFile(), "runtime-trials")
+            .getCanonicalFile();
+    if (!records.getCanonicalFile().equals(records.getAbsoluteFile())
+        || !records.getParentFile().getParentFile().equals(home)
+        || !records.getName().equals("payload")
+        || !records
+            .getParentFile()
+            .getName()
+            .matches(com.deepseekharness.app.util.Ids.UUID_PATTERN))
+      throw new IOException("TRIAL_RECORD_DIRECTORY");
   }
 
   private File root() {
@@ -288,7 +298,7 @@ public class WebProcessManager {
    * 隔离 stale pid；同 UID 但内容不可读仍按未知进程阻塞，避免把权限错误当作
    * 已停止而继续切换运行时。
    */
-  private static Integer processOwner(int pid) {
+  Integer processOwner(int pid) {
     try {
       return Os.stat("/proc/" + pid).st_uid;
     } catch (ErrnoException ignored) {
@@ -524,6 +534,166 @@ public class WebProcessManager {
     }
   }
 
+  public boolean hasRecordedSession() throws IOException {
+    return pidRecord() != null;
+  }
+
+  /** 宿主重建后只读核验仍活跃实例的内核身份。 */
+  com.deepseekharness.app.util.WebSessionProof.Process recoveryProcess(int pid) throws IOException {
+    ProcessState state = inspect(pid);
+    if (state.kind == Kind.GONE)
+      return new com.deepseekharness.app.util.WebSessionProof.Process(
+          pid, 0, -1, "", "", "", "", false);
+    Integer uid = processOwner(pid);
+    if (uid == null || state.identity == null || state.kind == Kind.DENIED)
+      throw new IOException("WEB_SESSION_PROCESS_UNREADABLE");
+    java.util.Map<String, String> env = new java.util.HashMap<>();
+    for (String value : readProcessFile(pid, "environ").split("\u0000")) {
+      int equals = value.indexOf('=');
+      if (equals < 1) continue;
+      String key = value.substring(0, equals);
+      if (!java.util.Set.of("DSHA_WEB_GENERATION", "DSH_TASK_INSTANCE", "DSH_TASK_TOKEN")
+          .contains(key)) continue;
+      if (env.put(key, value.substring(equals + 1)) != null)
+        throw new IOException("WEB_SESSION_ENV_DUPLICATE");
+    }
+    ProcessState again = inspect(pid);
+    if (again.identity == null
+        || !state.identity.sameProcess(again.identity)
+        || !state.command.equals(again.command)
+        || !uid.equals(processOwner(pid))) throw new IOException("WEB_SESSION_PROCESS_CHANGED");
+    return new com.deepseekharness.app.util.WebSessionProof.Process(
+        pid,
+        state.identity.started,
+        uid,
+        state.command,
+        env.get("DSHA_WEB_GENERATION"),
+        env.get("DSH_TASK_INSTANCE"),
+        env.get("DSH_TASK_TOKEN"),
+        true);
+  }
+
+  String recoveryBoot() throws IOException {
+    String boot;
+    try (var input = new FileInputStream("/proc/sys/kernel/random/boot_id")) {
+      byte[] bytes = new byte[81];
+      int count = input.read(bytes);
+      if (count < 1 || count == bytes.length) throw new IOException("WEB_SESSION_BOOT_LIMIT");
+      boot = new String(bytes, 0, count, StandardCharsets.US_ASCII).trim();
+    }
+    if (!boot.matches(com.deepseekharness.app.util.Ids.UUID_PATTERN))
+      throw new IOException("WEB_SESSION_BOOT_UNREADABLE");
+    return boot;
+  }
+
+  public com.deepseekharness.app.util.WebSessionProof.Saved captureSession(
+      long generation, String instance, String nonce, Process launcher) throws IOException {
+    if (records != null || launcher == null) throw new IOException("WEB_SESSION_LAUNCHER_MISSING");
+    String record = pidRecord();
+    int pid = WebProcSel.parsePid(record);
+    var web = recoveryProcess(pid);
+    int launcherPid =
+        com.deepseekharness.app.util.ProcessIdentity.androidPid(
+            launcher.getClass().getName(), launcher.toString());
+    var parent = recoveryProcess(launcherPid);
+    var saved =
+        new com.deepseekharness.app.util.WebSessionProof.Saved(
+            recoveryBoot(),
+            generation,
+            instance,
+            nonce,
+            pid,
+            web.started(),
+            web.command(),
+            launcherPid,
+            parent.started(),
+            parent.command());
+    if (!record.equals(pidRecord()) || !web.alive() || !parent.alive() || !verifySession(saved))
+      throw new IOException("WEB_SESSION_CAPTURE_UNCONFIRMED");
+    return saved;
+  }
+
+  public boolean verifySession(com.deepseekharness.app.util.WebSessionProof.Saved saved)
+      throws IOException {
+    if (saved == null || records != null) return false;
+    String record = pidRecord();
+    if (WebProcSel.parsePid(record) != saved.webPid()
+        || !java.util.Objects.equals(
+            savedIdentity(saved.webPid()), saved.webPid() + " " + saved.webStarted())) return false;
+    var web = recoveryProcess(saved.webPid());
+    var launcher = recoveryProcess(saved.launcherPid());
+    return record.equals(pidRecord())
+        && com.deepseekharness.app.util.WebSessionProof.matches(
+            saved, recoveryBoot(), android.os.Process.myUid(), web, launcher);
+  }
+
+  public enum SessionObservation {
+    LIVE,
+    UNKNOWN,
+    EXITED
+  }
+
+  /** 拒读或标记不匹配只表示未知；只有原boot结束、原PID退出或出生变化才能确认原guest退出。 */
+  public SessionObservation observeSession(
+      com.deepseekharness.app.util.WebSessionProof.Saved saved) {
+    if (saved == null || records != null) return SessionObservation.UNKNOWN;
+    try {
+      if (!saved.boot().equals(recoveryBoot())) return SessionObservation.EXITED;
+      var web = recoveryProcess(saved.webPid());
+      if (!web.alive() || web.started() != saved.webStarted()) return SessionObservation.EXITED;
+      return verifySession(saved) ? SessionObservation.LIVE : SessionObservation.UNKNOWN;
+    } catch (IOException | RuntimeException unavailable) {
+      return SessionObservation.UNKNOWN;
+    }
+  }
+
+  /** 未知继续阻挡；PID已复用只证明记录中的原启动器已退出。 */
+  public boolean recoveredLauncherExited(com.deepseekharness.app.util.WebSessionProof.Saved saved)
+      throws IOException {
+    if (saved == null) return true;
+    if (!saved.boot().equals(recoveryBoot())) return true;
+    var process = recoveryProcess(saved.launcherPid());
+    return !process.alive() || process.started() != saved.launcherStarted();
+  }
+
+  /** 旧记录无法解密时，只读核对同UID的Web启动器已全部消失；绝不按名称发送信号。 */
+  public boolean confirmNoUntrackedWebLaunchers() throws IOException {
+    String[] entries = recoveryProcessEntries();
+    if (entries == null) throw new IOException("WEB_SESSION_LAUNCHER_SCAN_UNREADABLE");
+    for (String entry : entries) {
+      int pid = WebProcSel.parsePid(entry);
+      if (pid < 0 || pid == recoveryHostPid()) continue;
+      Integer uid = processOwner(pid);
+      if (uid == null || uid != recoveryHostUid()) continue;
+      ProcessState value = inspect(pid);
+      if (value.kind == Kind.GONE) continue;
+      if (value.kind == Kind.DENIED || value.identity == null)
+        throw new IOException("WEB_SESSION_LAUNCHER_SCAN_UNCONFIRMED");
+      String[] argv = value.command.split("\u0000");
+      if (argv.length == 0) throw new IOException("WEB_SESSION_LAUNCHER_COMMAND_UNREADABLE");
+      String name = new File(argv[0]).getName();
+      if (!(name.startsWith("libproot")
+          || name.startsWith("libproroot")
+          || name.startsWith("libdsha-proroot"))) continue;
+      // 此处只证明“没有”，不授予signal权限。旧记录缺少可信标记时，
+      // 同UID的任何此类启动器都保留屏障；不能把未识别的终端或旧argv当作已经退出。
+      return false;
+    }
+    return true;
+  }
+
+  String[] recoveryProcessEntries() {
+    return new File("/proc").list();
+  }
+
+  int recoveryHostPid() {
+    return android.os.Process.myPid();
+  }
+
+  int recoveryHostUid() {
+    return android.os.Process.myUid();
+  }
+
   /** 权限错误本身不构成放行依据，还须确认启动器已退出且没有本应用 Web。 */
   public boolean confirmStopped(boolean trackedProcessAlive) throws IOException {
     if (trackedProcessAlive) return false;
@@ -592,7 +762,8 @@ public class WebProcessManager {
     if (records == null)
       try {
         var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
-        File home = TrialPaths.home(proot.context().getFilesDir());
+        File files = proot.getRootfsDir().getParentFile().getParentFile().getCanonicalFile();
+        File home = fs.child(files, "runtime-trials");
         if (!fs.stat(home).type.equals("MISSING")) {
           java.util.List<String> entries = fs.list(home);
           if (entries.size() > com.deepseekharness.app.backup.BackupLimits.TRANSACTION_RECORDS)

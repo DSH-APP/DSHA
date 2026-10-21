@@ -10,7 +10,7 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument('modules', type=Path); args = ap.parse_args()
     modules = args.modules.resolve()
     expected = json.loads((ROOT/'tools/dsh-runtime/package.json').read_text())['dependencies']['@deepseek-ai/dsh']
-    if expected != '0.2.0-rc.2': raise ValueError('TOOL_IDENTITY_DSH_VERSION')
+    if expected != '0.2.1-rc.2': raise ValueError('TOOL_IDENTITY_DSH_VERSION')
     def recipe(asset, module, patches):
         file = modules/module; source = file.read_text(encoding='utf8')
         package = json.loads((modules/Path(module).parts[0]/Path(module).parts[1]/'package.json').read_text())

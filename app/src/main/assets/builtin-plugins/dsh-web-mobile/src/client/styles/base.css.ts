@@ -32,37 +32,41 @@ export const BASE_CSS = `
   outline-offset: 1px;
 }
 
-/* Drawer footer action: the relocated Session log download. The Files entry
-   was removed on 2026-09-17 (see
-   docs/specs/2026-09-17-sidebar-files-coexistence-design.md). */
-[data-mobile-nav="drawer-actions"] {
+/* Drawer brand-row session-log icon (issue #225): the plugin-owned button is
+   injected into the host's logo row by effects/drawer-session-log.ts, so it
+   sizes as a compact icon control instead of the old footer pill. The host
+   brand button is flex:1 and gives up exactly this width. The wrapper keeps the
+   button out of the row's direct-button set: the third-party dsh-web-all layer
+   adopts that row's last direct button as its sidebar toggle (see
+   effects/drawer-session-log.ts#mount). */
+[data-mobile-nav="session-log-wrap"] {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
 }
 [data-mobile-nav="session-log"] {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, .12));
-  border-radius: 12px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--dsw-radius-md, 8px);
   background: transparent;
-  color: var(--dsw-alias-label-primary, inherit);
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 20px;
+  color: var(--dsw-alias-label-secondary, inherit);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-[data-mobile-nav="session-log"]:hover:not(:disabled) {
+[data-mobile-nav="session-log"]:hover:not(:disabled),
+[data-mobile-nav="session-log"]:active:not(:disabled) {
   background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
 }
 [data-mobile-nav="session-log"]:disabled {
   color: var(--dsw-alias-label-dimmed, rgba(0, 0, 0, .35));
   cursor: default;
+  background: transparent;
 }
 
 [data-mobile-nav="delete-confirm-title"] {
@@ -375,6 +379,20 @@ export const BASE_CSS = `
        aria-label) also shrink a touch. */
     :where(button:has(> svg:only-child), button[aria-label]:not(:has(> span, > div))):where(:active):where(:not(:disabled, [aria-disabled="true"])) {
       transform: scale(.96);
+    }
+    /* 例外（2026-10-20，店主）：头部那两颗芯片不要按压反馈。
+       症状：点「智能体团队」图标开面板、再点它关闭时，图标周围闪一块浅灰
+       （:active 的 inset 填充 + 图标缩到 .96）；「子智能体 / N 个子代理」芯片同样。
+       为什么要去掉：这两颗**开启态本来就有宿主自己的反馈** —— 团队图标打开时变粗，
+       子智能体芯片右侧有 chevron；按压灰圈和它们说的是同一件事，等于两份反馈叠在
+       一起，功能重复。加上两颗平时没有底色，整块浮灰在浅色壁纸上像一块脏。所以
+       只给它们清掉，其它按钮（抽屉行、菜单项、标签页、回形针等）的按压反馈原样保留。
+       两个标记都是宿主稳定的 data-*（不是哈希类）；宿主换标记时本块惰性失效，
+       届时按新标记改选择器即可，不必连带改上面两条通用规则。 */
+    [data-team-action] > button:active,
+    [data-dsha-lineage-trigger]:active {
+      box-shadow: none;
+      transform: none;
     }
     @media (prefers-reduced-motion: reduce) {
       :where(button, [role="button"], [role="menuitem"], [role="menuitemradio"], [role="option"], [role="tab"], [role="treeitem"], a[href]) {

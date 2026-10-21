@@ -135,12 +135,10 @@ class Dependencies:
         """只读核对现存 npm/pnpm 图；循环依赖按节点去重，不运行任何入口。"""
         spec = importlib.util.spec_from_file_location('dependency_graph_reader', os.path.join(os.path.dirname(__file__), 'backup-plugin-graph.py'))
         graph_reader = importlib.util.module_from_spec(spec); spec.loader.exec_module(graph_reader)
-        seed_spec = importlib.util.spec_from_file_location('client_seed_reader', os.path.join(os.path.dirname(__file__), 'plugin-client-seeds.py'))
-        seed_reader = importlib.util.module_from_spec(seed_spec); seed_spec.loader.exec_module(seed_reader)
         global_dirs = [Path(self.g['local'](value)) for value in (self.g['DSH_HOME'] + '/node_modules',
                        '/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules', '/usr/local/lib/node_modules')]
         shared = {path.resolve() for path in global_dirs if path.is_dir()}
-        pending = [Path(root).resolve(strict=True)]; root_path = pending[0]; queued = {str(pending[0])}; graph = {}; missing = []
+        pending = [Path(root).resolve(strict=True)]; queued = {str(pending[0])}; graph = {}; missing = []
         count = total = edge_count = 0
         while pending:
             source = pending.pop(0)
@@ -194,8 +192,7 @@ class Dependencies:
                     raise ValueError('插件依赖声明必须是对象')
                 for name, requested in declared.items():
                     requirements[name] = (requested, section)
-            optional.update(name for name, meta in (pkg.get('peerDependenciesMeta') or {}).items()
-                            if name not in (pkg.get('dependencies') or {}) and isinstance(meta, dict) and meta.get('optional'))
+            optional.update(name for name, meta in (pkg.get('peerDependenciesMeta') or {}).items() if isinstance(meta, dict) and meta.get('optional'))
             embedded = source / 'node_modules'
             if embedded.is_dir() and embedded.resolve() not in shared:
                 for child in sorted(embedded.iterdir()):
@@ -204,7 +201,6 @@ class Dependencies:
                             name = child.name + '/' + candidate.name if child.name.startswith('@') else candidate.name
                             requirements.setdefault(name, ('*', 'bundled'))
             edges = {}
-            client_peers = seed_reader.client_peers(source, pkg, global_dirs, graph_reader.resolve_module)
             for name, (requested, kind) in sorted(requirements.items()):
                 edge_count += 1
                 if edge_count > 50000:
@@ -221,10 +217,7 @@ class Dependencies:
                     edges[name] = {'requested': requested, 'kind': kind, 'target': str(target)}
                     if str(target) not in queued:
                         queued.add(str(target)); pending.append(target)
-                if kind == 'peerDependencies' and name in client_peers:
-                    edges[name].update(client_peers[name])
             graph[str(source)] = {'name': pkg['name'], 'version': str(pkg.get('version', '')), 'codeSha256': code.hexdigest(), 'dependencies': edges}
-        missing = seed_reader.required_missing(graph, root_path)
         encoded = json.dumps(graph, sort_keys=True, ensure_ascii=True, separators=(',', ':')).encode()
         if len(encoded) > 8 * 1024 * 1024:
             raise ValueError('插件依赖图超过审阅上限')

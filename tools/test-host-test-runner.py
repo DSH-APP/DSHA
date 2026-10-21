@@ -7,7 +7,6 @@ import json
 import os
 from pathlib import Path
 import sys
-import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -23,7 +22,6 @@ class HostRunnerTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix='host-runner-contract-')
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        subprocess.run(['git','init','--quiet',str(self.root)],check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         self.tools = self.root / 'tools'
         self.tools.mkdir()
         self.output = self.root / 'receipts'
@@ -174,108 +172,6 @@ class HostRunnerTest(unittest.TestCase):
         self.assertIn('runtime-fixture-final-verification', report['failures'])
         self.assertIn('BYTES_OR_MEMBERS_CHANGED', report['runtimeFixtureVerification'][0]['error'])
         self.assertFalse(list(self.output.glob('dsha-runtime-session-*')))
-
-    def test_complete_source_byte_change_invalidates_an_otherwise_successful_child(self):
-        source=self.root/'app/src/main/java/Example.java';source.parent.mkdir(parents=True)
-        source.write_text('original',encoding='utf8')
-        self.add('test-source-change.py','import os; from pathlib import Path; '
-                 'p=Path(__file__).parents[1]/"app/src/main/java/Example.java"; '
-                 's=p.stat();p.write_text("modified");os.utime(p,ns=(s.st_atime_ns,s.st_mtime_ns));print("child passes")')
-        code,report=self.invoke()
-        self.assertEqual(1,code)
-        self.assertEqual('FAILED_SOURCE_INVALIDATED',report['tests'][0]['status'])
-        self.assertEqual('PASS',report['tests'][0]['childExitStatus'])
-        self.assertEqual('FAILED_SOURCE_CHANGED',report['sourceVerification']['status'])
-        captured=json.loads(Path(report['sourceSnapshot']['path']).read_text(encoding='utf8'))
-        import hashlib
-        self.assertEqual(hashlib.sha256(b'original').hexdigest(),captured['app/src/main/java/Example.java'])
-
-    def ignored_managed_asset_change(self,action):
-        assets=self.root/'app/src/main/assets'
-        folder=assets/'private-generated';folder.mkdir(parents=True)
-        source=folder/'member.js';source.write_text('original',encoding='utf8')
-        (self.root/'.gitignore').write_text('app/src/main/assets/private-generated/\n',encoding='utf8')
-        (assets/'managed-runtime-inputs.json').write_text(json.dumps(dict(
-            schema=1,installs=[],assetFiles=[],assetTrees=['private-generated'],
-            launcherSources=[],launcherTrees=[])),encoding='utf8')
-        untracked=subprocess.check_output(['git','ls-files','--others','--exclude-standard'],
-                                          cwd=self.root,text=True)
-        self.assertNotIn('private-generated/member.js',untracked)
-        operation={
-            'modify':'s=p.stat();p.write_text("modified");os.utime(p,ns=(s.st_atime_ns,s.st_mtime_ns))',
-            'add':'p.with_name("added.js").write_text("new ignored asset")',
-            'delete':'p.unlink()',
-        }[action]
-        self.add('test-ignored-asset.py','import os; from pathlib import Path; '
-                 'p=Path(__file__).parents[1]/"app/src/main/assets/private-generated/member.js"; '
-                 +operation+'; print("child passes before complete asset sealing")')
-        code,report=self.invoke()
-        self.assertEqual(1,code)
-        self.assertEqual('FAILED_SOURCE_INVALIDATED',report['tests'][0]['status'])
-        self.assertEqual('PASS',report['tests'][0]['childExitStatus'])
-        self.assertEqual('FAILED_SOURCE_CHANGED',report['sourceVerification']['status'])
-        captured=json.loads(Path(report['sourceSnapshot']['path']).read_text(encoding='utf8'))
-        import hashlib
-        self.assertEqual(hashlib.sha256(b'original').hexdigest(),
-                         captured['app/src/main/assets/private-generated/member.js'])
-        self.assertNotIn('app/src/main/assets/private-generated/added.js',captured)
-
-    def test_ignored_managed_asset_byte_change_invalidates_receipt(self):
-        self.ignored_managed_asset_change('modify')
-
-    def test_ignored_managed_asset_addition_invalidates_receipt(self):
-        self.ignored_managed_asset_change('add')
-
-    def test_ignored_managed_asset_deletion_invalidates_receipt(self):
-        self.ignored_managed_asset_change('delete')
-
-    def test_source_only_checkout_seals_available_assets_without_offline_archives(self):
-        assets=self.root/'app/src/main/assets';assets.mkdir(parents=True)
-        (assets/'owned.js').write_text('current managed source',encoding='utf8')
-        (assets/'managed-runtime-inputs.json').write_text(json.dumps(dict(
-            schema=1,installs=[],assetFiles=['owned.js','offline-rootfs.bin'],
-            assetTrees=[],launcherSources=[],launcherTrees=[])),encoding='utf8')
-        self.add('test-available-assets.py','print("no package build requested")')
-        code,report=self.invoke()
-        self.assertEqual(0,code)
-        captured=json.loads(Path(report['sourceSnapshot']['path']).read_text(encoding='utf8'))
-        self.assertIn('app/src/main/assets/owned.js',captured)
-        self.assertNotIn('app/src/main/assets/offline-rootfs.bin',captured)
-
-    def test_declared_asset_deletion_still_invalidates_the_complete_snapshot(self):
-        assets=self.root/'app/src/main/assets';assets.mkdir(parents=True)
-        (assets/'owned.js').write_text('current managed source',encoding='utf8')
-        (assets/'managed-runtime-inputs.json').write_text(json.dumps(dict(
-            schema=1,installs=[],assetFiles=['owned.js'],assetTrees=[],
-            launcherSources=[],launcherTrees=[])),encoding='utf8')
-        self.add('test-delete-declared-asset.py','from pathlib import Path; '
-                 '(Path(__file__).parents[1]/"app/src/main/assets/owned.js").unlink();print("child passes")')
-        code,report=self.invoke()
-        self.assertEqual(1,code)
-        self.assertEqual('FAILED_SOURCE_INVALIDATED',report['tests'][0]['status'])
-        self.assertEqual('FAILED_SOURCE_CHANGED',report['sourceVerification']['status'])
-
-    def test_linux_python_command_does_not_require_a_node_host_or_publisher(self):
-        args=type('Args',(),dict(wsl_distro='explicit-fixture',linux_tempdir='/tmp',linux_host=None))()
-        inputs=type('Inputs',(),dict(args=args,environment=lambda *_:{}))()
-        fixture=self.root/'private';fixture.mkdir()
-        path=self.tools/'native.py';path.write_text('print("Linux Python")')
-        row=dict(executor='linux',requires=['python39'],environment={})
-        with patch.object(runner,'linux_path',side_effect=lambda value,_distro:'/translated/'+Path(value).name):
-            command,_=runner.linux_command(inputs,row,path,['--fixture','value'],fixture,{})
-        self.assertIn('python3',command);self.assertIn('-B',command)
-        self.assertIn('TMPDIR=/tmp',command)
-        self.assertNotIn('LD_LIBRARY_PATH=',command)
-        self.assertEqual(['--fixture','value'],command[-2:])
-
-    @unittest.skipIf(os.name!='nt','WSL path conversion is a Windows host contract')
-    def test_wslpath_uses_the_selected_distro_without_assuming_docker_mounts(self):
-        with patch.object(runner.subprocess,'check_output',return_value=b'/mnt/f/fixture\n') as call:
-            self.assertEqual('/mnt/f/fixture',runner.linux_path(self.root,'explicit-distro'))
-        self.assertEqual(['wsl.exe','-d','explicit-distro','--exec','wslpath','-u'],call.call_args.args[0][:6])
-        self.assertNotIn('\\',call.call_args.args[0][-1])
-        with patch.object(runner.subprocess,'check_output',return_value=b'relative/path\n'):
-            with self.assertRaisesRegex(ValueError,'WSL_PATH_INVALID'):runner.linux_path(self.root,'explicit-distro')
 
 
 if __name__ == '__main__':

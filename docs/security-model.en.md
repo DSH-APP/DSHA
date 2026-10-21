@@ -1,6 +1,8 @@
 # DSHA security model
 
-This page describes current source policy. Historical documentation is preserved under tools/history. Formal terminals and third-party plugins are open under the current user policy; the independent recovery runtime retains five controlled tools and native write confirmation. The [threat-model ADR 0002](adr/0002-current-threat-model.md) records the assets, actors and scope of individual controls.
+> Maintained English entry: [Security model](en/security-model.md). See the [complete English index](en/index.md) and [current delivery scope](en/release-introduction.md). Historical examples below retain their original identity.
+
+This page describes current source policy. Historical documentation is preserved under tools/history. Formal terminals and third-party plugins are open under the current user policy; the independent recovery runtime retains five controlled tools and native write confirmation. The [threat-model ADR 0002](en/adr/0002-current-threat-model.md) records the assets, actors and scope of individual controls.
 
 ## Assets and actors
 
@@ -51,4 +53,4 @@ Stopping requires birth identity, session and exit evidence; bare PID, port or n
 
 ## Delivery and evidence limits
 
-Formal packages retain com.dsh.client, the historical E7E3 certificate and v1/v2/v3 signatures. Release passwords are explicit and another certificate is never substituted. This round performs no phone actions as requested. Software tests, APK/ELF/signature checks and physical overwrite installation are separate evidence. Current results come from the audit and delivery report linked by README; previous reports do not establish the current verification scope.
+Formal packages retain dsh.android.client, the historical E7E3 certificate and v1/v2/v3 signatures. Release passwords are explicit and another certificate is never substituted. This round performs no phone actions as requested. Software tests, APK/ELF/signature checks and physical overwrite installation are separate evidence. Current results come from the audit and delivery report linked by README; previous reports do not establish the current verification scope.

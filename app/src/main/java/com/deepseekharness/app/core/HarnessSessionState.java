@@ -20,6 +20,16 @@ public final class HarnessSessionState {
   final java.util.concurrent.CopyOnWriteArraySet<Runnable> readyWebPageListeners =
       new java.util.concurrent.CopyOnWriteArraySet<>();
   volatile WebLifecycleController.WebRun currentRun;
+  volatile boolean restoreChecking, restoreChecked, restoreUnknown;
+  boolean recheckPending;
+  final java.util.concurrent.CopyOnWriteArrayList<Runnable> recheckListeners =
+      new java.util.concurrent.CopyOnWriteArrayList<>();
+  volatile com.deepseekharness.app.util.WebSessionProof.Saved retainedWebStopProof;
+  volatile boolean unreadableWebStopProof;
+  volatile boolean webStopProofLoaded;
+  final Object webStopProofLock = new Object();
+  final java.util.concurrent.CopyOnWriteArrayList<Runnable> restoreListeners =
+      new java.util.concurrent.CopyOnWriteArrayList<>();
   Future<?> stopTask;
   WebRecovery recovery;
   StartupDiagnostics diagnostics;

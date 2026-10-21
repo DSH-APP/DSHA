@@ -280,6 +280,31 @@ public final class ShizukuShell {
     }
   }
 
+  /** No Binder call is attempted when readiness is unavailable. */
+  public static com.deepseekharness.app.device.DeviceTransportResult execVirtualScreenTyped(
+      String command) {
+    if (!awaitReady(context, 8000))
+      return com.deepseekharness.app.device.DeviceTransportResult.notSent(
+          "shizuku",
+          "SHIZUKU_SERVICE_NOT_READY",
+          "[SHIZUKU_SERVICE_NOT_READY] " + status() + "\n[EXIT=124]");
+    IShellService current = service;
+    try {
+      return com.deepseekharness.app.device.DeviceTransportResult.fromLegacy(
+          "shizuku",
+          current.execVirtualScreen(command),
+          com.deepseekharness.app.device.DeviceTransportIdentity.unknown());
+    } catch (Throwable error) {
+      fail(error);
+      return com.deepseekharness.app.device.DeviceTransportResult.unknown(
+          "shizuku",
+          "SHIZUKU_EXECUTION_UNKNOWN",
+          "[EXECUTION_UNKNOWN] VSCREEN_RESULT_UNKNOWN\n[EXIT=125]",
+          false,
+          com.deepseekharness.app.device.DeviceTransportIdentity.unknown());
+    }
+  }
+
   /** Dedicated native-only operation; the generic Binder exec still rejects app_process. */
   public static String execVirtualScreen(String command) {
     if (!awaitReady(context, 8000))

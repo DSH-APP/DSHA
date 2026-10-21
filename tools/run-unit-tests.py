@@ -99,7 +99,7 @@ def android_jar() -> Path:
 def find_jar(gh: Path, *needles: str) -> Path:
     for needle in needles:
         hits = [p for p in gh.glob(f'caches/modules-2/files-2.1/**/{needle}*.jar')
-                if p.is_file() and 'sources' not in p.name and 'javadoc' not in p.name]
+                if p.is_file() and not p.name.endswith(('-sources.jar', '-javadoc.jar'))]
         if hits:
             return sorted(hits)[0]
     die(f'Gradle 缓存里找不到 {" 或 ".join(needles)}，先跑一次 Gradle 让它下载依赖')
@@ -213,7 +213,7 @@ def run_compiled_tests(work, gh, aj, junit, hamcrest):
     cp = [str(aj), r_entry, str(junit), str(hamcrest)] + locked
     for jar in list((p for p in gh.glob('caches/9.3.1/transforms/**/classes.jar') if 'instrumented' not in p.parts)) \
             + [p for p in gh.glob('caches/modules-2/files-2.1/**/*.jar')
-               if p.is_file() and 'sources' not in p.name and 'javadoc' not in p.name
+               if p.is_file() and not p.name.endswith(('-sources.jar', '-javadoc.jar'))
                and not any(group in p.parts and name in p.parts for group, name in coordinates)]:
         cp.append(str(jar))
 

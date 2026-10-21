@@ -93,4 +93,58 @@ public class GuestScriptQueueTest {
       assertNotNull(next);
     }
   }
+
+  @Test
+  public void boundedWaitExpiresWithoutExecutingAfterTheOwnerEventuallyExits() throws Exception {
+    var queue = new GuestScriptQueue(4);
+    var owner = queue.enter();
+    AtomicReference<Throwable> outcome = new AtomicReference<>();
+    AtomicBoolean entered = new AtomicBoolean();
+    Thread waiter =
+        new Thread(
+            () -> {
+              try (var ignored = queue.enter(new GuestScriptBudget(60, () -> false, "QUERY"))) {
+                entered.set(true);
+              } catch (Throwable failure) {
+                outcome.set(failure);
+              }
+            });
+    waiter.start();
+    waiter.join(1500);
+    assertFalse(waiter.isAlive());
+    assertFalse(entered.get());
+    assertTrue(outcome.get() instanceof java.io.IOException);
+    assertEquals("QUERY_TIMEOUT", outcome.get().getMessage());
+    owner.close();
+    try (var next = queue.enter()) {
+      assertNotNull(next);
+    }
+    assertFalse(entered.get());
+  }
+
+  @Test
+  public void cooperativeCancellationWithdrawsQueuedReadWithoutInterruptingItsOwner()
+      throws Exception {
+    var queue = new GuestScriptQueue(4);
+    var owner = queue.enter();
+    AtomicBoolean cancel = new AtomicBoolean(), entered = new AtomicBoolean();
+    AtomicReference<Throwable> outcome = new AtomicReference<>();
+    Thread waiter =
+        new Thread(
+            () -> {
+              try (var ignored = queue.enter(new GuestScriptBudget(2000, cancel::get, "QUERY"))) {
+                entered.set(true);
+              } catch (Throwable failure) {
+                outcome.set(failure);
+              }
+            });
+    waiter.start();
+    cancel.set(true);
+    waiter.join(1500);
+    assertFalse(waiter.isAlive());
+    assertFalse(entered.get());
+    assertEquals("QUERY_CANCELLED", outcome.get().getMessage());
+    assertFalse(Thread.currentThread().isInterrupted());
+    owner.close();
+  }
 }

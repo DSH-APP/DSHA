@@ -427,10 +427,9 @@ public class TarGzipExtractorTest {
     }
 
     @Override
-    public TrustedAssetFileSystem.CreatedFile createWithMode(File file, int mode)
-        throws IOException {
+    public CreatedFile createWithMode(File file, int mode) throws IOException {
       OutputStream opened = super.create(file);
-      return new TrustedAssetFileSystem.CreatedFile(opened, stat(file)) {
+      return new CreatedFile(opened, stat(file)) {
         @Override
         public void close() throws IOException {
           super.close();
@@ -474,12 +473,12 @@ public class TarGzipExtractorTest {
     }
 
     @Override
-    public TrustedAssetFileSystem.CreatedFile prepareSmallFile(
-        File file, byte[] bytes, int count, int mode) throws IOException {
+    public CreatedFile prepareSmallFile(File file, byte[] bytes, int count, int mode)
+        throws IOException {
       prepared.add(file.getName());
-      TrustedAssetFileSystem.CreatedFile opened = super.createWithMode(file, mode);
+      CreatedFile opened = super.createWithMode(file, mode);
       opened.write(bytes, 0, count);
-      return new TrustedAssetFileSystem.CreatedFile(opened, opened.identity) {
+      return new CreatedFile(opened, opened.identity) {
         @Override
         public void close() throws IOException {
           super.close();
@@ -564,8 +563,8 @@ public class TarGzipExtractorTest {
     SmallFs raced =
         new SmallFs(root) {
           @Override
-          public TrustedAssetFileSystem.CreatedFile prepareSmallFile(
-              File file, byte[] bytes, int count, int mode) throws IOException {
+          public CreatedFile prepareSmallFile(File file, byte[] bytes, int count, int mode)
+              throws IOException {
             Files.writeString(file.toPath(), "racing owner");
             throw new IOException("INJECTED_EXCLUSIVE_CREATE_RACE");
           }
@@ -640,9 +639,8 @@ public class TarGzipExtractorTest {
           }
 
           @Override
-          public TrustedAssetFileSystem.CreatedFile createWithMode(File file, int mode)
-              throws IOException {
-            TrustedAssetFileSystem.CreatedFile opened = super.createWithMode(file, mode);
+          public CreatedFile createWithMode(File file, int mode) throws IOException {
+            CreatedFile opened = super.createWithMode(file, mode);
             Files.move(file.toPath(), new File(root, "owned-retained").toPath());
             Files.writeString(file.toPath(), "replacement");
             generation++;
@@ -657,5 +655,140 @@ public class TarGzipExtractorTest {
     assertEquals("replacement", Files.readString(new File(root, "tool").toPath()));
     assertArrayEquals(
         new byte[] {1}, Files.readAllBytes(new File(root, "owned-retained").toPath()));
+  }
+
+  private static final class PreparationFs extends JvmBackupFileSystem {
+    long firstWriteDelay;
+    final java.util.concurrent.atomic.AtomicBoolean cancel =
+        new java.util.concurrent.atomic.AtomicBoolean();
+    boolean cancelOnWrite, first = true;
+
+    @Override
+    public OutputStream create(File file) throws IOException {
+      return new FilterOutputStream(super.create(file)) {
+        @Override
+        public void write(byte[] bytes, int offset, int length) throws IOException {
+          out.write(bytes, offset, length);
+          if (!first) return;
+          first = false;
+          if (cancelOnWrite) cancel.set(true);
+          try {
+            Thread.sleep(firstWriteDelay);
+          } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new InterruptedIOException("测试写入被中断");
+          }
+        }
+      };
+    }
+  }
+
+  private GuestPluginScripts realArchivePreparation(
+      File root, PreparationFs fs, java.util.concurrent.atomic.AtomicInteger executions)
+      throws Exception {
+    byte[] bytes = archive(entry("tool", '0', "", new byte[2 * 1024 * 1024]));
+    return new GuestPluginScripts(
+        new GuestPluginScripts.Preparation() {
+          public boolean environmentReady() {
+            return true;
+          }
+
+          public boolean rootPresent() {
+            return true;
+          }
+
+          public boolean pythonReady() {
+            return true;
+          }
+
+          public void pnpm() {}
+
+          public boolean cancelled(String task) {
+            return fs.cancel.get();
+          }
+
+          public void assets() throws IOException {
+            TarGzipExtractor.extractSelected(
+                new ByteArrayInputStream(bytes), root, 0, name -> true, fs);
+          }
+        },
+        (command, timeout) -> {
+          executions.incrementAndGet();
+          return com.deepseekharness.app.util.BoundedProcessRunner.localCompletion("done");
+        });
+  }
+
+  private void assertOriginalAndNoParts(File root) throws Exception {
+    assertEquals("original", Files.readString(new File(root, "tool").toPath()));
+    assertEquals(
+        List.of("tool"), Arrays.stream(root.listFiles()).map(File::getName).sorted().toList());
+  }
+
+  @Test
+  public void realPreparationWriteTimeoutPreservesOriginalCleansPartAndNeverStartsGuest()
+      throws Exception {
+    File root = temp.newFolder();
+    Files.writeString(new File(root, "tool").toPath(), "original");
+    PreparationFs fs = new PreparationFs();
+    fs.firstWriteDelay = 300;
+    var executions = new java.util.concurrent.atomic.AtomicInteger();
+    GuestPluginScripts scripts = realArchivePreparation(root, fs, executions);
+    long started = System.nanoTime();
+    IOException failure =
+        assertThrows(
+            IOException.class,
+            () ->
+                scripts.manager(
+                    "refresh",
+                    "",
+                    com.deepseekharness.app.util.PluginDownloadSource.AUTO,
+                    200,
+                    true));
+    assertTrue(failure.getMessage(), failure.getMessage().contains("PLUGIN_QUERY_TIMEOUT"));
+    assertTrue("单次写入先真实返回，不能强抢其所有权", (System.nanoTime() - started) / 1_000_000 >= 300);
+    assertOriginalAndNoParts(root);
+    assertEquals(0, executions.get());
+    fs.firstWriteDelay = 0;
+    scripts.manager("refresh", "", com.deepseekharness.app.util.PluginDownloadSource.AUTO);
+    assertEquals(1, executions.get());
+    assertEquals(2 * 1024 * 1024, new File(root, "tool").length());
+  }
+
+  @Test
+  public void realPreparationCooperativeCancellationPreservesOriginalAndQueueIsReusable()
+      throws Exception {
+    File root = temp.newFolder();
+    Files.writeString(new File(root, "tool").toPath(), "original");
+    PreparationFs fs = new PreparationFs();
+    fs.cancelOnWrite = true;
+    var executions = new java.util.concurrent.atomic.AtomicInteger();
+    GuestPluginScripts scripts = realArchivePreparation(root, fs, executions);
+    IOException failure =
+        assertThrows(
+            IOException.class,
+            () ->
+                scripts.manager(
+                    "list", "", com.deepseekharness.app.util.PluginDownloadSource.AUTO));
+    assertTrue(failure.getMessage(), failure.getMessage().contains("PLUGIN_QUERY_CANCELLED"));
+    assertOriginalAndNoParts(root);
+    assertEquals(0, executions.get());
+    fs.cancelOnWrite = false;
+    fs.cancel.set(false);
+    scripts.manager("list", "", com.deepseekharness.app.util.PluginDownloadSource.AUTO);
+    assertEquals(1, executions.get());
+  }
+
+  @Test
+  public void preparationWithoutCurrentQueryBudgetKeepsItsOriginalCopyBehavior() throws Exception {
+    File root = temp.newFolder();
+    Files.writeString(new File(root, "tool").toPath(), "original");
+    PreparationFs fs = new PreparationFs();
+    fs.firstWriteDelay = 80;
+    var executions = new java.util.concurrent.atomic.AtomicInteger();
+    GuestPluginScripts scripts = realArchivePreparation(root, fs, executions);
+    scripts.manager(
+        "import fixture", "", com.deepseekharness.app.util.PluginDownloadSource.AUTO, 20, false);
+    assertEquals(1, executions.get());
+    assertEquals(2 * 1024 * 1024, new File(root, "tool").length());
   }
 }

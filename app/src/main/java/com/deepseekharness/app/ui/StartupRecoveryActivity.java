@@ -23,6 +23,7 @@ public final class StartupRecoveryActivity extends AppCompatActivity {
   private final List<View> actions = new ArrayList<>();
   private final android.os.Handler ui = new android.os.Handler(android.os.Looper.getMainLooper());
   private String previousTask = "";
+  private String shownReadError = "";
   private boolean wasBusy;
 
   private static String t(String zh, String en) {
@@ -137,7 +138,14 @@ public final class StartupRecoveryActivity extends AppCompatActivity {
     model.error.observe(
         this,
         value -> {
-          if (value != null && !value.isEmpty()) status(readable(value));
+          if (value != null && !value.isEmpty()) {
+            shownReadError = readable(value);
+            status(shownReadError);
+          } else if (value != null && !shownReadError.isEmpty()) {
+            // A later task result owns its own message; clear only this read's stale error.
+            if (shownReadError.contentEquals(progress.getText())) status("");
+            shownReadError = "";
+          }
           renderAttempts();
         });
     if (model.contents.getValue() == null) model.load();
@@ -176,7 +184,7 @@ public final class StartupRecoveryActivity extends AppCompatActivity {
   }
 
   private void confirm(String title, String detail, Runnable work) {
-    new com.deepseekharness.app.ui.DshaDialogBuilder(this)
+    new com.deepseekharness.app.ui.DshaDialogBuilder(this, true)
         .setTitle(title)
         .setMessage(
             detail
@@ -427,6 +435,7 @@ public final class StartupRecoveryActivity extends AppCompatActivity {
           boolean maintenance = task.maintenanceBusy();
           if (wasBusy && !maintenance) model.load();
           wasBusy = maintenance;
+          model.retryWhenIdle();
           for (View action : actions) StartupRecoveryLayout.enabled(action, !busy);
           ui.removeCallbacks(this);
           ui.postDelayed(this, 700);

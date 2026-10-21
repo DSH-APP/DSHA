@@ -1,30 +1,53 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {browserFixture} from './rc1-browser-fixture.mjs';
-const fixture=await browserFixture();
+import {testRuntime} from './test-runtime-fixture.mjs';
+const fixture=await browserFixture(testRuntime('raw'));
 try {
-  await fixture.load('dsh-client-ui-conversation', ['lexical-claim-patch.json','conversation-materialized-patch.json'].map(name=>JSON.parse(fs.readFileSync('app/src/main/assets/'+name,'utf8'))),
-    'exports.audit={createEditor:ys,root:nl,text:Go,paragraph:es,registerClaimDecoration,refreshClaimDecoration,TOKEN_STYLE,ConversationNodeAssembler};');
+  await fixture.load('dsh-client-ui-conversation', ['lexical-claim-patch.json','conversation-materialized-patch.json','composer-enter-patch.json','queue-dock-patch.json'].map(name=>JSON.parse(fs.readFileSync('app/src/main/assets/'+name,'utf8'))),
+    'exports.audit={DraftEditorRuntime,CommandChipNode,root:nl,undo:Qe$2,redo:Ze$2,ConversationNodeAssembler};');
   const lexical=await fixture.page.evaluate(async()=>{
     const a=auditExports['@deepseek-ai/dsh-client-ui-conversation'].audit;
-    const errors=[];const editor=a.createEditor({namespace:'fixture',onError:e=>errors.push(String(e))});
-    const root=document.createElement('div');root.contentEditable='true';document.body.append(root);editor.setRootElement(root);
-    let token='/test ';const off=a.registerClaimDecoration(editor,()=>token);
-    editor.update(()=>a.root().append(a.paragraph().append(a.text('/test '))),{discrete:true});
-    editor.update(()=>a.root().getFirstChild().getFirstChild().setTextContent('/test 内容'),{discrete:true});
-    const snapshot=()=>editor.getEditorState().read(()=>a.root().getFirstChild().getChildren().map(n=>({text:n.getTextContent(),style:n.getStyle(),key:n.getKey()})));
-    const split=snapshot();
-    editor.update(()=>a.root().getFirstChild().getLastChild().setTextContent('内容输入法'),{discrete:true});
-    const composed=snapshot(); token=null;a.refreshClaimDecoration(editor);await new Promise(r=>setTimeout(r,0));
-    const unclaimed=snapshot();off();editor.setRootElement(null);root.remove();
-    return {errors,split,composed,unclaimed};
+    const lexicon=new Map();let runtime;
+    runtime=new a.DraftEditorRuntime({onUpdate:()=>runtime.refreshProjection(),openReference:()=>false,
+      lexicon:()=>lexicon,resolveLexicon:()=>undefined});
+    const off=runtime.register();
+    const root=document.createElement('div');root.contentEditable='true';root.id='command-fixture';
+    document.body.append(root);runtime.editor.setRootElement(root);root.focus();
+    const snapshot=()=>{runtime.refreshProjection();return runtime.editor.getEditorState().read(()=>({
+      text:runtime.projection.clipboardText,command:runtime.projection.command?.name??null,
+      nodes:a.root().getFirstChild()?.getChildren().map(n=>({type:n.getType(),text:n.getTextContent(),style:n.getStyle?.()??''}))??[],
+      chip:root.querySelector('[data-composer-command]')?.getAttribute('contenteditable')??null
+    }));};
+    runtime.setDraft('/test');runtime.clearHistory();
+    const applied=runtime.insertCommand({start:0,end:5},{name:'fixture',token:'/test ',submit:()=>{throw Error('command must not submit');}},'');
+    const claimed=snapshot();runtime.paste('内容');const pasted=snapshot();
+    runtime.editor.dispatchCommand(a.undo,undefined);await new Promise(r=>setTimeout(r,0));const undone=snapshot();
+    runtime.editor.dispatchCommand(a.redo,undefined);await new Promise(r=>setTimeout(r,0));const redone=snapshot();
+    window.commandFixture={runtime,root,snapshot,off};
+    return {applied,claimed,pasted,undone,redone};
   });
-  assert.deepEqual(lexical.errors,[]);
-  assert.equal(lexical.split.map(x=>x.text).join(''),'/test 内容');
-  assert.equal(lexical.split.length,2);assert.notEqual(lexical.split[0].style,'');assert.equal(lexical.split[1].style,'');
-  assert.equal(lexical.composed.map(x=>x.text).join(''),'/test 内容输入法');
-  assert.equal(lexical.unclaimed.map(x=>x.text).join(''),'/test 内容输入法');
-  assert.ok(lexical.unclaimed.every(x=>!x.style));
+  assert.equal(lexical.applied,true);
+  assert.equal(lexical.claimed.command,'fixture');assert.equal(lexical.claimed.chip,'false');
+  assert.equal(lexical.claimed.nodes[0].type,'command-chip');assert.equal(lexical.claimed.nodes[0].text,'/test');
+  assert.equal(lexical.pasted.text,'/test 内容');assert.equal(lexical.pasted.command,'fixture');
+  assert.equal(lexical.undone.text,'/test ');assert.equal(lexical.undone.command,'fixture');
+  assert.deepEqual(lexical.redone,lexical.pasted);
+  // Browser text input is observed through the mounted editor's real handlers.
+  // Android IME composition remains a separate device acceptance item.
+  await fixture.page.locator('#command-fixture').focus();
+  await fixture.page.keyboard.insertText('输入法');
+  lexical.typed=await fixture.page.evaluate(()=>commandFixture.snapshot());
+  assert.equal(lexical.typed.text,'/test 内容输入法');assert.equal(lexical.typed.command,'fixture');
+  assert.ok(lexical.typed.nodes.filter(n=>n.type==='text').every(n=>n.style===''));
+  lexical.restored=await fixture.page.evaluate(()=>{
+    const {runtime,root,snapshot,off}=commandFixture;
+    const serialized=runtime.editor.getEditorState().toJSON();
+    runtime.editor.setEditorState(runtime.editor.parseEditorState(JSON.stringify(serialized)));
+    const result=snapshot();off();root.remove();delete window.commandFixture;return result;
+  });
+  assert.equal(lexical.restored.text,lexical.typed.text);assert.equal(lexical.restored.command,null);
+  assert.ok(lexical.restored.nodes.every(n=>n.type!=='command-chip'));
   const materialized=await fixture.page.evaluate(()=>{
     const {ConversationNodeAssembler}=auditExports['@deepseek-ai/dsh-client-ui-conversation'].audit;
     const assembler=Object.create(ConversationNodeAssembler.prototype);

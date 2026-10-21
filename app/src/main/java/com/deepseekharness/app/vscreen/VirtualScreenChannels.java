@@ -32,6 +32,11 @@ final class VirtualScreenChannels {
           public String start(Context c, String command) {
             return RootShell.execVirtualScreen(c, command);
           }
+
+          public com.deepseekharness.app.device.DeviceTransportResult startTyped(
+              Context c, String command) {
+            return RootShell.execVirtualScreenTyped(c, command);
+          }
         });
     VirtualScreenChannel shizuku =
         new VirtualScreenChannel() {
@@ -45,6 +50,11 @@ final class VirtualScreenChannels {
 
           public String start(Context c, String command) {
             return ShizukuShell.execVirtualScreen(command);
+          }
+
+          public com.deepseekharness.app.device.DeviceTransportResult startTyped(
+              Context c, String command) {
+            return ShizukuShell.execVirtualScreenTyped(command);
           }
         };
     VirtualScreenChannel adb =
@@ -62,6 +72,19 @@ final class VirtualScreenChannels {
             return ticket.isEmpty()
                 ? "[POLICY_BLOCKED] Native virtual-screen launch ticket missing\n[EXIT=126]"
                 : AdbBridge.executeVirtualScreen(c, command, ticket);
+          }
+
+          public com.deepseekharness.app.device.DeviceTransportResult startTyped(
+              Context c, String command) {
+            String ticket = VirtualScreenManager.from(c).adbLaunchTicketFor(command);
+            return ticket.isEmpty()
+                ? com.deepseekharness.app.device.DeviceTransportResult.unknown(
+                    "adb",
+                    "VSCREEN_ADB_TICKET_UNAVAILABLE",
+                    "[POLICY_BLOCKED] Native virtual-screen launch ticket missing\n[EXIT=126]",
+                    true,
+                    com.deepseekharness.app.device.DeviceTransportIdentity.unknown())
+                : AdbBridge.executeVirtualScreenTyped(c, command, ticket);
           }
         };
     if (sdk >= 37 && "connected".equals(adbState)) {

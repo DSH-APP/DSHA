@@ -64,15 +64,6 @@ public final class HostMaintenancePending {
   static final List<Domain> RECOVERABLE =
       List.of(
           new Domain(
-              "legacy-restore",
-              root -> {
-                String id =
-                    LegacyRestoreJournalRecovery.pending(
-                        new AndroidBackupFileSystem(), root.getCanonicalFile());
-                return id == null ? List.of() : List.of(id);
-              },
-              false),
-          new Domain(
               "cold-install",
               root ->
                   ColdInstallTransaction.pending(

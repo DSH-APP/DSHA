@@ -31,9 +31,6 @@ release/*.apk
 release/*.sha256
 release/_data_backup/
 release/history/
-release/**/*.apk
-release/**/*.apk.sha256
-artifacts/
 
 # 本地临时/中间产物
 tmp_*/

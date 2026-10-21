@@ -91,7 +91,9 @@ public final class WebPageScripts {
 
   public static String presentation(
       Context context, com.deepseekharness.app.util.BrowserThemeGate gate) {
-    return read(context, "web-integration/page.js")
+    return read(context, "web-integration/ime.js")
+        + "\n"
+        + read(context, "web-integration/page.js")
         + "\nwindow.__dshaNativePresentation.install("
         + presentationBinding(gate).toString()
         + ");";
@@ -104,6 +106,19 @@ public final class WebPageScripts {
       request
           .put("sessionId", intent.getStringExtra(BrowserConversationRoute.SESSION))
           .put("requestToken", intent.getStringExtra(BrowserConversationRoute.REQUEST));
+    } catch (org.json.JSONException impossible) {
+      throw new IllegalStateException(impossible);
+    }
+    return request;
+  }
+
+  /** 帧只携带几何与本页身份，不包含 URL、输入内容或模型资料。 */
+  public static org.json.JSONObject imeFrame(
+      com.deepseekharness.app.util.BrowserThemeGate gate, org.json.JSONObject frame) {
+    org.json.JSONObject request = presentationBinding(gate);
+    try {
+      for (String key : new String[] {"frameId", "epoch", "width", "height", "phase"})
+        if (frame.has(key)) request.put(key, frame.get(key));
     } catch (org.json.JSONException impossible) {
       throw new IllegalStateException(impossible);
     }

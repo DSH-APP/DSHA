@@ -13,6 +13,11 @@ public final class VirtualScreenBootstrap {
   private final ByteArrayOutputStream line = new ByteArrayOutputStream();
   private int bytes;
   private String token = "";
+  private VirtualScreenHandshake handshake;
+
+  public VirtualScreenHandshake handshake() {
+    return handshake;
+  }
 
   public String token() {
     return token;
@@ -29,8 +34,12 @@ public final class VirtualScreenBootstrap {
       String prefix = "DSHA_VSCREEN_BOOTSTRAP ";
       if (text.startsWith(prefix)) {
         String secret = text.substring(prefix.length());
-        if (!secret.matches("[a-f0-9]{48}")) throw new IOException("CORE_BOOTSTRAP_INVALID");
-        token = secret;
+        try {
+          handshake = VirtualScreenHandshake.parse(secret);
+          token = handshake.token;
+        } catch (RuntimeException invalid) {
+          throw new IOException("CORE_BOOTSTRAP_INVALID");
+        }
       }
     } else {
       if (line.size() >= 4096) throw new IOException("CORE_BOOTSTRAP_LIMIT");
@@ -89,6 +98,12 @@ public final class VirtualScreenBootstrap {
           "VSCREEN_REVOKED",
           "VSCREEN_START_CANCELLED",
           "VSCREEN_START_RESULT_UNKNOWN",
+          "VSCREEN_START_UNKNOWN",
+          "VSCREEN_DISCONNECTED",
+          "VSCREEN_CLOSE_UNKNOWN",
+          "VSCREEN_JOURNAL_UNAVAILABLE",
+          "VSCREEN_JOURNAL_INVALID",
+          "VSCREEN_TRANSPORT_UNAVAILABLE",
           "DEVICE_CHANNEL_UNAVAILABLE",
           "SCREEN_TARGET_CHANGED",
           "VSCREEN_UNSUPPORTED_LOW",
@@ -123,12 +138,7 @@ public final class VirtualScreenBootstrap {
   public static String failureCode(String stage, int sdk, Throwable failure) {
     String propagated = failure == null ? "" : error("DSHA_VSCREEN_ERROR=" + failure.getMessage());
     if (!propagated.isEmpty() && propagated.startsWith("CORE_")) return propagated;
-    Throwable root = failure;
-    java.util.Set<Throwable> seen =
-        java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
-    for (int i = 0; root != null && root.getCause() != null && i < 16 && seen.add(root); i++)
-      root = root.getCause();
-    String type = VirtualScreenFailures.code(root).substring("VSCREEN_".length());
+    String type = VirtualScreenFailures.code(failure).substring("VSCREEN_".length());
     String safeStage = stage != null && stage.matches("[A-Z_]{1,32}") ? stage : "START";
     return "CORE_" + safeStage + "_SDK" + Math.max(0, sdk) + "_" + type;
   }

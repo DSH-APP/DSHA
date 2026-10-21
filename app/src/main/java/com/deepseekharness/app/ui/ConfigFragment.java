@@ -42,6 +42,8 @@ public class ConfigFragment extends Fragment {
       "android.settings.PICTURE_IN_PICTURE_SETTINGS";
   private View pictureSettings;
   private TextView pictureStatus;
+  private CompoundButton pictureEnabled;
+  private boolean renderingPictureInPicture;
 
   @Nullable
   @Override
@@ -76,24 +78,27 @@ public class ConfigFragment extends Fragment {
     v.findViewById(R.id.config_workspace_entry)
         .setOnClickListener(x -> open(new WorkspaceFragment()));
 
-    v.findViewById(R.id.config_models)
-        .setOnClickListener(
-            x -> startActivity(new Intent(requireContext(), ModelSetupActivity.class)));
-    EditText apiKey = v.findViewById(R.id.config_api_key);
     EditText port = v.findViewById(R.id.config_port);
-    CompoundButton automaticPort = v.findViewById(R.id.config_port_auto);
+    CompoundButton automaticPort = v.findViewById(R.id.config_automatic_port);
     v.findViewById(R.id.config_restore_port_drafts)
         .setOnClickListener(x -> BrowserOriginRestore.show(requireContext()));
     CompoundButton checkUpdate = v.findViewById(R.id.config_check_update);
     CompoundButton desktop = v.findViewById(R.id.config_desktop_mode);
+    pictureEnabled = v.findViewById(R.id.config_picture_in_picture);
+    pictureEnabled.setChecked(c.isPictureInPictureEnabled());
+    pictureEnabled.setOnCheckedChangeListener(
+        (button, enabled) -> {
+          if (renderingPictureInPicture) return;
+          c.setPictureInPictureEnabled(enabled);
+          renderPictureInPictureStatus();
+        });
     pictureSettings = v.findViewById(R.id.config_picture_in_picture_settings);
     pictureStatus = v.findViewById(R.id.config_picture_in_picture_status);
     pictureSettings.setOnClickListener(x -> openPictureInPictureSettings());
     renderPictureInPictureStatus();
     CompoundButton staticLoader = v.findViewById(R.id.config_static_loader),
         noSeccomp = v.findViewById(R.id.config_no_seccomp);
-    staticLoader.setChecked(false);
-    staticLoader.setVisibility(android.view.View.GONE);
+    staticLoader.setChecked(c.isProrootStaticLoader());
     noSeccomp.setChecked(c.isProotSeccompDisabled());
     CompoundButton proroot = v.findViewById(R.id.config_proroot);
     CompoundButton lan = v.findViewById(R.id.config_lan_mode);
@@ -108,97 +113,7 @@ public class ConfigFragment extends Fragment {
                 advBody.setVisibility(
                     advBody.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
 
-    // 回填当前值
-    java.util.concurrent.atomic.AtomicReference<com.deepseekharness.app.util.CredentialRead>
-        credential = new java.util.concurrent.atomic.AtomicReference<>(c.readApiKey());
-    apiKey.setSaveEnabled(false);
-    apiKey.setText("");
-    TextView credentialState = v.findViewById(R.id.config_credential_state);
-    Button retryCredential = v.findViewById(R.id.config_credential_retry),
-        removeCredential = v.findViewById(R.id.config_credential_remove);
-    retryCredential.setText(com.deepseekharness.app.util.UiText.text("重试读取 API Key"));
-    removeCredential.setText(
-        com.deepseekharness.app.util.UiText.choose("移除本机 API Key 记录", "Remove the saved API key"));
-    Runnable renderCredential =
-        () -> {
-          boolean failed = !credential.get().usable();
-          credentialState.setVisibility(View.VISIBLE);
-          credentialState.setText(
-              failed
-                  ? ConfigStore.credentialMessage(credential.get())
-                  : credential.get().state
-                          == com.deepseekharness.app.util.CredentialRead.State.AVAILABLE
-                      ? com.deepseekharness.app.util.UiText.choose(
-                          "API Key 已保存；输入新密钥可替换，留空保持原记录。",
-                          "An API key is saved. Enter a new key to replace it; leave blank to keep it.")
-                      : com.deepseekharness.app.util.UiText.choose(
-                          "尚未保存 API Key；可在上方输入新密钥。",
-                          "No API key is saved. Enter a new key above."));
-          retryCredential.setVisibility(failed ? View.VISIBLE : View.GONE);
-          removeCredential.setVisibility(
-              credential.get().state
-                      == com.deepseekharness.app.util.CredentialRead.State.NOT_CONFIGURED
-                  ? View.GONE
-                  : View.VISIBLE);
-        };
-    renderCredential.run();
-    retryCredential.setOnClickListener(
-        x -> {
-          credential.set(c.readApiKey());
-          renderCredential.run();
-        });
-    removeCredential.setOnClickListener(
-        x ->
-            new DshaDialogBuilder(ctx)
-                .setTitle(
-                    com.deepseekharness.app.util.UiText.choose(
-                        "移除本机 API Key 记录？", "Remove the saved API key?"))
-                .setMessage(
-                    com.deepseekharness.app.util.UiText.text(
-                        "仅移除本机保存的 API Key 记录，不删除对话或配置文件。继续使用相关接口时需要重新提供凭据。"))
-                .setNegativeButton(com.deepseekharness.app.util.UiText.text("取消"), null)
-                .setPositiveButton(
-                    com.deepseekharness.app.util.UiText.text("移除"),
-                    (dialog, which) -> {
-                      var lease =
-                          com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire(
-                              com.deepseekharness.app.util.UiText.text("保存配置"));
-                      if (lease == null) {
-                        toast(com.deepseekharness.app.util.UiText.text("有其他操作正在进行，请稍后重试。"));
-                        return;
-                      }
-                      try {
-                        lease.run(
-                            () -> {
-                              var current = c.readApiKey();
-                              var shown = credential.get();
-                              if (current.state != shown.state
-                                  || current.state
-                                          == com.deepseekharness.app.util.CredentialRead.State
-                                              .AVAILABLE
-                                      && !current.requireValue().equals(shown.requireValue())) {
-                                credential.set(current);
-                                renderCredential.run();
-                                toast(
-                                    com.deepseekharness.app.util.UiText.choose(
-                                        "凭据已变化，请重新确认。", "The credential changed. Confirm again."));
-                                return null;
-                              }
-                              if (c.saveApiKey("")) {
-                                credential.set(c.readApiKey());
-                                apiKey.setText("");
-                                renderCredential.run();
-                              } else
-                                toast(com.deepseekharness.app.util.UiText.text("凭据记录未能保存，原记录已保留。"));
-                              return null;
-                            });
-                      } catch (Exception failure) {
-                        toast(com.deepseekharness.app.util.UiText.text("凭据记录未能保存，原记录已保留。"));
-                      } finally {
-                        lease.close();
-                      }
-                    })
-                .show());
+    // 这里只编辑运行选项；模型与凭据统一由 Web UI 管理。
     port.setText(c.getPort());
     automaticPort.setChecked("auto".equals(c.getWebPortMode()));
     port.setEnabled(!automaticPort.isChecked());
@@ -216,9 +131,13 @@ public class ConfigFragment extends Fragment {
         v,
         R.id.config_runtime_choice,
         com.deepseekharness.app.util.UiText.choose("运行方式", "Runtime"),
-        new String[] {"bxroot", "proot"},
-        c.isProroot() ? 0 : 1,
-        index -> proroot.setChecked(index == 0));
+        new String[] {
+          com.deepseekharness.app.util.UiText.choose("proot（默认，稳定）", "proot (default, stable)"),
+          com.deepseekharness.app.util.UiText.choose(
+              "proroot（可选，实验）", "proroot (optional, experimental)")
+        },
+        c.isProroot() ? 1 : 0,
+        index -> proroot.setChecked(index == 1));
     bindChoice(
         v,
         R.id.config_dns_choice,
@@ -253,7 +172,7 @@ public class ConfigFragment extends Fragment {
           try {
             if (!automaticPort.isChecked())
               com.deepseekharness.app.util.ConfigInput.port(port.getText().toString());
-            save.setEnabled(apiKey.getText().length() <= 16384);
+            save.setEnabled(true);
           } catch (IllegalArgumentException invalid) {
             save.setEnabled(false);
           }
@@ -268,14 +187,12 @@ public class ConfigFragment extends Fragment {
 
           public void afterTextChanged(android.text.Editable text) {}
         };
-    port.addTextChangedListener(inputWatcher);
-    apiKey.addTextChangedListener(inputWatcher);
     automaticPort.setOnCheckedChangeListener(
         (button, checked) -> {
           port.setEnabled(!checked);
-          port.setError(null);
           validateInputs.run();
         });
+    port.addTextChangedListener(inputWatcher);
     validateInputs.run();
     save.setOnClickListener(
         x -> {
@@ -292,7 +209,6 @@ public class ConfigFragment extends Fragment {
             return;
           }
           port.setError(null);
-          apiKey.setError(null);
           com.deepseekharness.app.util.EnvironmentTaskGate.Lease saving =
               com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire(
                   com.deepseekharness.app.util.UiText.text("保存配置"));
@@ -306,27 +222,6 @@ public class ConfigFragment extends Fragment {
           try {
             saving.run(
                 () -> {
-                  String key = apiKey.getText().toString().trim();
-                  boolean keepKey = key.isEmpty();
-                  if (!keepKey && !c.saveApiKey(key)) {
-                    apiKey.setError(
-                        com.deepseekharness.app.util.UiText.text("密钥加密保存失败，原配置已保留，请重试"));
-                    return null;
-                  }
-                  credential.set(c.readApiKey());
-                  if (!keepKey
-                      && (credential.get().state
-                              != com.deepseekharness.app.util.CredentialRead.State.AVAILABLE
-                          || !key.equals(credential.get().requireValue()))) {
-                    apiKey.setError(
-                        com.deepseekharness.app.util.UiText.choose(
-                            "密钥保存后读取未通过，请重试。", "API key readback failed. Retry."));
-                    renderCredential.run();
-                    return null;
-                  }
-                  boolean keepUnreadable = keepKey && !credential.get().usable();
-                  if (!keepKey) apiKey.setText("");
-                  renderCredential.run();
                   c.setWebPort(automaticPort.isChecked() ? "auto" : "fixed", chosenPort);
                   c.setPermissionMode(permissionMode.get());
                   c.setCheckUpdate(checkUpdate.isChecked());
@@ -357,9 +252,7 @@ public class ConfigFragment extends Fragment {
                   Toast.makeText(
                           ctx,
                           com.deepseekharness.app.util.UiText.text(
-                              keepUnreadable
-                                  ? "其他设置已保存；无法读取的 API Key 原记录保持不变。"
-                                  : "已保存；网页显示选项重新进入对话生效，端口与运行时需重启 Web"),
+                              "已保存；网页显示选项重新进入对话生效，端口与运行时需重启 Web"),
                           Toast.LENGTH_LONG)
                       .show();
                   if (overlay.isChecked() && !OverlayController.permitted(ctx))
@@ -389,6 +282,7 @@ public class ConfigFragment extends Fragment {
   public void onDestroyView() {
     pictureSettings = null;
     pictureStatus = null;
+    pictureEnabled = null;
     super.onDestroyView();
   }
 
@@ -416,14 +310,22 @@ public class ConfigFragment extends Fragment {
     Context ctx = getContext();
     if (ctx == null || pictureSettings == null || pictureStatus == null) return;
     boolean supported = PictureInPictureActivity.supported(ctx);
+    if (pictureEnabled != null) {
+      renderingPictureInPicture = true;
+      pictureEnabled.setChecked(new ConfigStore(ctx).isPictureInPictureEnabled());
+      pictureEnabled.setEnabled(supported);
+      renderingPictureInPicture = false;
+    }
     pictureSettings.setEnabled(supported);
     pictureSettings.setAlpha(supported ? 1f : 0.55f);
     pictureStatus.setText(
         !supported
             ? R.string.picture_in_picture_unsupported
-            : PictureInPictureActivity.allowed(ctx)
-                ? R.string.picture_in_picture_allowed
-                : R.string.picture_in_picture_disabled);
+            : !new ConfigStore(ctx).isPictureInPictureEnabled()
+                ? R.string.picture_in_picture_opted_out
+                : PictureInPictureActivity.allowed(ctx)
+                    ? R.string.picture_in_picture_allowed
+                    : R.string.picture_in_picture_disabled);
   }
 
   private void openOverlayPermission() {

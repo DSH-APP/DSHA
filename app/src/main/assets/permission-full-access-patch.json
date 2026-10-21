@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-client-ui-permission-presets/lib/client.js",
+  "patches": [
+    {
+      "before": "\t\t\t\"remote.permissionPresets\",\n\t\t\t\"remote.settings\",",
+      "after": "\t\t\t\"remote.permissionPresets\",\n\t\t\t\"remote.session\",\n\t\t\t\"remote.settings\","
+    },
+    {
+      "before": "\t\t\tconst submit = async (sessionId, preset) => {\n\t\t\t\tconst live = sessions.binding(sessionId)?.session;\n\t\t\t\tif (live === void 0) throw new Error(\"this session is not materialized yet\");\n\t\t\t\tconst result = await live.command(`/permission ${preset}`);\n\t\t\t\tif (!result.ok) throw new Error(`permission switch failed: ${result.error.code}: ${result.error.message}`);\n\t\t\t\tif (!result.value.matched) throw new Error(\"the host offers no /permission command\");\n\t\t\t\treturn true;\n\t\t\t};",
+      "after": "\t\t\tconst dshaPermission = createDshaPermissionSubmit(ctx, ctx.configForms.describe());\n\t\t\tctx.effect(() => () => dshaPermission.dispose(), \"dsha-current-default-permission\");\n\t\t\tconst submit = (sessionId, preset) => dshaPermission.submit(sessionId, preset);",
+      "prependAsset": "web-integration/permission-full-access.js"
+    },
+    {
+      "before": "\t\t\tconst [pick, setPick] = (0, react.useState)(null);",
+      "after": "\t\t\tconst [pick, setPick] = (0, react.useState)(null);\n\t\t\tconst [dshaPermissionError, setDshaPermissionError] = (0, react.useState)(null);"
+    },
+    {
+      "before": "\t\t\tconst submit = (id) => {\n\t\t\t\tsetPick(id);\n\t\t\t\tselect(id).catch(() => false).then(() => {\n\t\t\t\t\tsetPick(null);\n\t\t\t\t});\n\t\t\t};",
+      "after": "\t\t\tconst submit = (id) => {\n\t\t\t\tsetPick(id);\n\t\t\t\tsetDshaPermissionError(null);\n\t\t\t\tselect(id).catch((error) => {\n\t\t\t\t\tsetDshaPermissionError(error instanceof Error ? error.message : \"权限设置未完成，请核对后重新选择。\");\n\t\t\t\t}).finally(() => { setPick(null); });\n\t\t\t};"
+    },
+    {
+      "before": "\t\t\t\tif (id === selection.currentValue) return;",
+      "after": "\t\t\t\tif (id === selection.currentValue) {\n\t\t\t\t\tif (id === \"danger-full-access\") submit(id);\n\t\t\t\t\treturn;\n\t\t\t\t}"
+    },
+    {
+      "before": "\t\t\t\tonConfirm: () => {\n\t\t\t\t\tconfirmSelection(confirmation);\n\t\t\t\t}\n\t\t\t})] });",
+      "after": "\t\t\t\tonConfirm: () => {\n\t\t\t\t\tconfirmSelection(confirmation);\n\t\t\t\t}\n\t\t\t}), dshaPermissionError !== null && (0, react_jsx_runtime.jsx)(\"span\", {\n\t\t\t\trole: \"alert\", \"data-dsha-permission-error\": true,\n\t\t\t\tstyle: { fontSize: 12, maxWidth: 300, whiteSpace: \"normal\" },\n\t\t\t\tchildren: dshaPermissionError\n\t\t\t})] });"
+    },
+    {
+      "before": "\"preset.fullAccess\": \"完全权限\",\n\t\t\t\"confirm.title\": \"确认启用完全权限？\",\n\t\t\t\"confirm.description\": \"启用完全权限后，新会话将减少确认步骤，并且可以直接执行更多操作，包括敏感操作、文件修改或外部命令。仅建议在你信任后续任务时使用。\",",
+      "after": "\"preset.fullAccess\": \"完全访问\",\n\t\t\t\"confirm.title\": \"确认启用完全访问？\",\n\t\t\t\"confirm.description\": \"此设置用于之后新建的会话。完全访问不再逐次请求 DSH 工具审批；Android 和设备系统授权仍单独处理。\","
+    },
+    {
+      "before": "\"preset.fullAccess\": \"完全权限\",\n\t\t\t\"confirm.title\": \"确认启用完全权限？\",\n\t\t\t\"confirm.description\": \"启用完全权限后，智能体将减少确认步骤，并且可以直接执行更多操作，包括敏感操作、文件修改或外部命令。仅建议在你信任当前任务时使用。\",",
+      "after": "\"preset.fullAccess\": \"完全访问\",\n\t\t\t\"confirm.title\": \"确认启用完全访问？\",\n\t\t\t\"confirm.description\": \"本次选择同时应用于当前会话和之后新建的会话；其他已有会话不变。完全访问不再逐次请求 DSH 工具审批；Android 和设备系统授权仍单独处理。\","
+    },
+    {
+      "before": "\"confirm.cancel\": \"取消\",\n\t\t\t\"confirm.enable\": \"启用完全权限\"\n\t\t};",
+      "after": "\"confirm.cancel\": \"取消\",\n\t\t\t\"confirm.enable\": \"启用完全访问\"\n\t\t};"
+    },
+    {
+      "before": "\"confirm.cancel\": \"取消\",\n\t\t\t\"confirm.enable\": \"启用完全权限\",\n\t\t\t\"auto.label\"",
+      "after": "\"confirm.cancel\": \"取消\",\n\t\t\t\"confirm.enable\": \"启用完全访问\",\n\t\t\t\"auto.label\""
+    },
+    {
+      "before": "\"confirm.description\": \"Full access reduces confirmation steps and lets the agent perform more actions directly, including sensitive operations, file changes, or external commands. Only use it when you trust the current task.\",",
+      "after": "\"confirm.description\": \"Apply Full access to this session and the default for new sessions; other existing sessions stay unchanged. DSH tool approval prompts are disabled. Android and device system permissions remain separate.\","
+    },
+    {
+      "before": "const zh = {",
+      "after": "const zh = {\n\t\t\t\"preset.retired\": \"历史权限配置\","
+    },
+    {
+      "before": "const en = {",
+      "after": "const en = {\n\t\t\t\"preset.retired\": \"Legacy permission settings\","
+    },
+    {
+      "before": "const accessZh = {",
+      "after": "const accessZh = {\n\t\t\t\"preset.retired\": \"历史权限配置\","
+    },
+    {
+      "before": "const accessEn = {",
+      "after": "const accessEn = {\n\t\t\t\"preset.retired\": \"Legacy permission settings\","
+    },
+    {
+      "before": "\t\tfunction displayPermissionPreset(value, name, t) {",
+      "after": "\t\tfunction displayPermissionPreset(value, name, t) {\n\t\t\tif (value === \"guarded-full-access\") return t?.(\"preset.retired\") ?? \"Legacy permission settings\";"
+    },
+    {
+      "before": "if (!options.some((option) => option.id === currentValue)) throw new Error(\"permission catalog does not advertise its current default\");",
+      "after": "if (currentValue !== \"guarded-full-access\" && !options.some((option) => option.id === currentValue)) throw new Error(\"permission catalog does not advertise its current default\");"
+    },
+    {
+      "before": "const label = selected !== void 0 ? optionLabel(selected) : busy ? t(\"loading\") : t(\"unavailable\");",
+      "after": "const label = state.currentValue === \"guarded-full-access\" ? t(\"preset.retired\") : selected !== void 0 ? optionLabel(selected) : busy ? t(\"loading\") : t(\"unavailable\");"
+    },
+    {
+      "before": "\t\t\tasync select(preset) {\n\t\t\t\tconst state = this.store.getSnapshot();",
+      "after": "\t\t\tasync select(preset) {\n\t\t\t\tif (preset === \"guarded-full-access\") { this.fail(new Error(\"历史权限配置仅兼容读取，不再提供新选择。\")); return; }\n\t\t\t\tconst state = this.store.getSnapshot();"
+    }
+  ]
+}

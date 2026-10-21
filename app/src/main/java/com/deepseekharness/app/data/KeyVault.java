@@ -29,21 +29,30 @@ public class KeyVault {
   private static final int IV_BYTES = 12;
 
   private final Context ctx;
+  private final String alias;
 
   public KeyVault(Context ctx) {
+    this(ctx, ALIAS);
+  }
+
+  /** 本机能力分别使用独立密钥；旧API凭据继续使用原别名。 */
+  public KeyVault(Context ctx, String alias) {
     this.ctx = ctx;
+    if (alias == null || !alias.matches("[a-z0-9_]{1,64}"))
+      throw new IllegalArgumentException("KEY_ALIAS");
+    this.alias = alias;
   }
 
   private SecretKey getOrCreateKey() throws Exception {
     KeyStore ks = KeyStore.getInstance(KEYSTORE);
     ks.load(null);
-    if (ks.containsAlias(ALIAS)) {
-      return ((KeyStore.SecretKeyEntry) ks.getEntry(ALIAS, null)).getSecretKey();
+    if (ks.containsAlias(alias)) {
+      return ((KeyStore.SecretKeyEntry) ks.getEntry(alias, null)).getSecretKey();
     }
     KeyGenerator kg = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE);
     kg.init(
         new KeyGenParameterSpec.Builder(
-                ALIAS, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                alias, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setRandomizedEncryptionRequired(true)
@@ -92,7 +101,7 @@ public class KeyVault {
       }
       KeyStore store = KeyStore.getInstance(KEYSTORE);
       store.load(null);
-      java.security.Key key = store.getKey(ALIAS, null);
+      java.security.Key key = store.getKey(alias, null);
       if (key == null) return CredentialRead.failed(CredentialRead.Reason.KEY_MISSING);
       byte[] all = Base64.decode(stored, Base64.NO_WRAP);
       if (all.length < IV_BYTES + 16)

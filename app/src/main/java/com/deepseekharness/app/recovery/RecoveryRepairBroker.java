@@ -28,6 +28,7 @@ public final class RecoveryRepairBroker implements AutoCloseable {
   private final File files;
   private final BackupFileSystem fs = new AndroidBackupFileSystem();
   private final String instanceId, token;
+  private final String consentRunId = UUID.randomUUID().toString();
   private final long generation;
   private final ServerSocket listener;
   private final ThreadPoolExecutor workers =
@@ -67,6 +68,42 @@ public final class RecoveryRepairBroker implements AutoCloseable {
 
   public String token() {
     return token;
+  }
+
+  /** Independent recovery facts cannot inherit the formal runtime's global consent. */
+  public JSONObject consentFacts() throws IOException {
+    requireOpen();
+    if (generation > com.deepseekharness.app.util.NativeConsentPolicy.MAX_REVISION)
+      throw new IOException("RECOVERY_CONSENT_GENERATION");
+    String identity =
+        instanceId.substring(0, 8)
+            + "-"
+            + instanceId.substring(8, 12)
+            + "-"
+            + instanceId.substring(12, 16)
+            + "-"
+            + instanceId.substring(16, 20)
+            + "-"
+            + instanceId.substring(20);
+    return json(
+        "schema",
+        1,
+        "available",
+        true,
+        "globalAllow",
+        false,
+        "revision",
+        0,
+        "installationId",
+        identity,
+        "bridgeRunId",
+        consentRunId,
+        "webGeneration",
+        generation,
+        "runtimeInstanceId",
+        consentRunId + ":" + generation,
+        "recoveryInstanceId",
+        instanceId);
   }
 
   /** 同一应急代次不能重新授予写权限；重新启动并核验身份后建立新 broker。 */
@@ -870,6 +907,9 @@ public final class RecoveryRepairBroker implements AutoCloseable {
       JSONObject request = new JSONObject(BackupJson.read(bytes, LIMIT));
       Object result;
       switch (head.target) {
+        case "/v1/consent":
+          result = consentFacts();
+          break;
         case "/v1/diagnostics":
           result = diagnostics();
           break;

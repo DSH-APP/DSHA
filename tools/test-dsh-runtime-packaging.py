@@ -7,6 +7,7 @@ import shutil
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location('dsh_packaging_builder',
                                              Path(__file__).with_name('build-dsh-runtime.py'))
@@ -44,10 +45,15 @@ class DshRuntimePackaging(unittest.TestCase):
         entry.parent.mkdir()
         entry.write_bytes(b'#!/usr/bin/env node\nconsole.log("fixture");\n')
         archive = self.root / 'dsh-runtime.bin'
-        report = builder.build(modules, archive, version)
+        # Keep this small archive fixture honest: use one declared active chain
+        # and exercise its actual archive preparation path, without inventing
+        # empty modules for the production DSH dependency tree.
+        chain = [('fixture-chain', [('console.log("fixture")', 'console.log("prepared")')], [])]
+        with patch.object(builder, 'load_chains', return_value=({builder.PACKAGE + '/lib/bin.js': chain}, [])):
+            report = builder.build(modules, archive, version)
         with tarfile.open(archive, 'r:gz') as output:
             names = output.getnames()
-            self.assertEqual(entry.read_bytes(), output.extractfile(builder.PREFIX + '/lib/bin.js').read())
+            self.assertEqual(entry.read_bytes().replace(b'fixture', b'prepared'), output.extractfile(builder.PREFIX + '/lib/bin.js').read())
             self.assertEqual(version + '\n', output.extractfile('usr/local/share/dsha/dsh-runtime.version').read().decode())
             self.assertFalse(any('/dsha-destructive-policy/' in name for name in names))
             for folder, package in ((builder.HOOKS, 'dsha-runtime-fs'),

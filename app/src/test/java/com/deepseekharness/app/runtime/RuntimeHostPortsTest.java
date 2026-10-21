@@ -11,101 +11,154 @@ import org.junit.Test;
 
 public class RuntimeHostPortsTest {
   @Test
-  public void coldPreparationRequiresClosedFullTrialAndKeepsRequestedDefault() throws Exception {
+  public void coldPreparationIsProvisionalUntilRendererAndGuestExitProof() throws Exception {
     ColdHost host = new ColdHost(false);
     assertThrows(
         IOException.class,
-        () -> host.ports.prepareColdRuntime(host.root, Mode.BXROOT, host.sha, host.runtimeId));
-    try (var scope = host.ports.open()) {
-      host.ports.prepareColdRuntime(host.root, Mode.BXROOT, host.sha, host.runtimeId);
+        () -> host.ports.prepareColdRuntime(host.root, Mode.PROROOT, host.sha, host.runtimeId));
+    try (var invocation = host.ports.open()) {
+      host.ports.prepareColdRuntime(host.root, Mode.PROROOT, host.sha, host.runtimeId);
+      assertTrue(host.ports.settings().proroot);
+      assertFalse(host.current.get().proroot);
+      assertTrue(host.preferences.isEmpty());
       for (String incomplete : java.util.List.of("renderer", "processExited")) {
-        var proof = host.proof("bxroot");
+        var proof = host.proof("proroot");
         proof.put(incomplete, false);
         assertThrows(IOException.class, () -> host.ports.confirmColdRuntime(host.root, proof));
+        assertEquals(0, host.commits);
       }
-      var wrongPlan = host.proof("bxroot");
-      wrongPlan.put("runtimeId", "2".repeat(64));
-      assertThrows(IOException.class, () -> host.ports.confirmColdRuntime(host.root, wrongPlan));
-      host.ports.confirmColdRuntime(host.root, host.proof("bxroot"));
-      assertEquals(Mode.BXROOT, host.committedMode);
-      assertEquals("bxroot", host.current.get().engine);
+      var otherRuntime = host.proof("proroot");
+      otherRuntime.put("runtimeId", "2".repeat(64));
+      assertThrows(IOException.class, () -> host.ports.confirmColdRuntime(host.root, otherRuntime));
+      host.ports.confirmColdRuntime(host.root, host.proof("proroot"));
       assertEquals(1, host.commits);
+      assertEquals(Mode.PROROOT, host.committedMode);
+      assertTrue(host.current.get().proroot);
       assertThrows(
-          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("bxroot")));
+          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("proroot")));
     }
+    assertTrue(host.ports.settings().proroot);
   }
 
   @Test
-  public void compatibleTrialNeedsClosureAndRecordsActualWithoutOverwritingRequested()
-      throws Exception {
+  public void coldProrootFallbackNeedsTheClosedActualTrialAndKeepsSeccompIntent() throws Exception {
     ColdHost host = new ColdHost(true);
-    try (var scope = host.ports.open()) {
-      host.ports.prepareColdRuntime(host.root, Mode.BXROOT, host.sha, host.runtimeId);
+    try (var invocation = host.ports.open()) {
+      host.ports.prepareColdRuntime(host.root, Mode.PROROOT, host.sha, host.runtimeId);
       var proof = host.proof("proot");
       assertThrows(IOException.class, () -> host.ports.confirmColdRuntime(host.root, proof));
-      proof.put("fallbackFrom", "bxroot");
-      proof.put("fallbackExitCode", "126");
+      proof.put("fallbackFrom", "proroot");
+      proof.put("fallbackExitCode", "127");
       assertThrows(IOException.class, () -> host.ports.confirmColdRuntime(host.root, proof));
-      proof.put("fallbackExitCode", 126L);
+      proof.put("fallbackExitCode", 127L);
       proof.put("processExited", false);
       assertThrows(IOException.class, () -> host.ports.confirmColdRuntime(host.root, proof));
+      assertEquals(0, host.commits);
       proof.put("processExited", true);
       host.ports.confirmColdRuntime(host.root, proof);
       assertEquals(Mode.PROOT_COMPAT, host.committedMode);
-      assertEquals("bxroot", host.current.get().engine);
-      assertTrue(host.current.get().disableProotSeccomp);
-      assertEquals("PROOT_COMPAT", host.preferences.get("cold_runtime_mode"));
+      assertFalse(host.ports.settings().proroot);
+      assertTrue(host.ports.settings().disableProotSeccomp);
     }
+    assertFalse(host.current.get().proroot);
+    assertTrue(host.current.get().disableProotSeccomp);
   }
 
   @Test
-  public void historicalProrootModesAreReadableButCannotBePrepared() throws Exception {
+  public void dynamicLoaderRemainsProvisionalAndOnlyAClosedFullTrialCommitsTheActualFlag()
+      throws Exception {
     ColdHost host = new ColdHost(false);
-    try (var scope = host.ports.open()) {
-      for (Mode retired : java.util.List.of(Mode.PROROOT, Mode.PROROOT_DYNAMIC))
-        assertThrows(
-            IOException.class,
-            () -> host.ports.prepareColdRuntime(host.root, retired, host.sha, host.runtimeId));
+    host.preferences.put("proroot_static_loader", true);
+    try (var invocation = host.ports.open()) {
+      host.ports.prepareColdRuntime(host.root, Mode.PROROOT_DYNAMIC, host.sha, host.runtimeId);
+      assertTrue(host.ports.settings().proroot);
+      assertFalse(host.ports.settings().staticLoader);
+      assertTrue(host.current.get().staticLoader);
+      assertEquals(true, host.preferences.get("proroot_static_loader"));
+      var proof = host.proof("proroot");
+      proof.put("processExited", false);
+      assertThrows(IOException.class, () -> host.ports.confirmColdRuntime(host.root, proof));
       assertEquals(0, host.commits);
+      proof.put("processExited", true);
+      host.ports.confirmColdRuntime(host.root, proof);
+      assertEquals(Mode.PROROOT_DYNAMIC, host.committedMode);
+      assertTrue(host.current.get().proroot);
+      assertFalse(host.current.get().staticLoader);
+      assertEquals(false, host.preferences.get("proroot_static_loader"));
     }
   }
 
   @Test
-  public void explicitProotDoesNotPrepareBxrootAndKeepsVerifiedProotFlags() throws Exception {
-    ColdHost host = new ColdHost(false);
-    host.current.set(new RuntimeHostPorts.Settings("ipv4", "proot", true, false));
-    try (var scope = host.ports.open()) {
+  public void explicitChoiceOrChangedStaticFlagCannotConfirmDynamicAndClosedProotKeepsOldFlag()
+      throws Exception {
+    ColdHost explicit = new ColdHost(false);
+    explicit.automatic = false;
+    try (var invocation = explicit.ports.open()) {
       assertThrows(
           IOException.class,
-          () -> host.ports.prepareColdRuntime(host.root, Mode.BXROOT, host.sha, host.runtimeId));
-      host.ports.prepareColdRuntime(host.root, Mode.PROOT_COMPAT, host.sha, host.runtimeId);
-      host.ports.confirmColdRuntime(host.root, host.proof("proot"));
-      assertEquals("proot", host.current.get().engine);
-      assertTrue(host.current.get().disableProotSeccomp);
+          () ->
+              explicit.ports.prepareColdRuntime(
+                  explicit.root, Mode.PROROOT_DYNAMIC, explicit.sha, explicit.runtimeId));
+    }
+    ColdHost host = new ColdHost(true);
+    host.preferences.put("proroot_static_loader", true);
+    try (var invocation = host.ports.open()) {
+      host.ports.prepareColdRuntime(host.root, Mode.PROROOT_DYNAMIC, host.sha, host.runtimeId);
+      host.preferences.put("proroot_static_loader", false);
+      assertThrows(
+          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("proroot")));
+      host.preferences.put("proroot_static_loader", true);
+      var proof = host.proof("proot");
+      proof.put("fallbackFrom", "proroot");
+      proof.put("fallbackExitCode", 139L);
+      host.ports.confirmColdRuntime(host.root, proof);
+      assertEquals(Mode.PROOT_COMPAT, host.committedMode);
+      assertTrue(host.current.get().staticLoader);
+      assertEquals(true, host.preferences.get("proroot_static_loader"));
     }
   }
 
   @Test
-  public void changedRootOrUserSelectionCannotPublishAndScopeDropsPendingChoice() throws Exception {
+  public void changedRootOrUserSelectionCannotBeConfirmedAndScopeDropsPendingChoice()
+      throws Exception {
     ColdHost host = new ColdHost(false);
-    try (var scope = host.ports.open()) {
-      host.ports.prepareColdRuntime(host.root, Mode.BXROOT, host.sha, host.runtimeId);
+    try (var invocation = host.ports.open()) {
+      host.ports.prepareColdRuntime(host.root, Mode.PROROOT, host.sha, host.runtimeId);
       host.identity = "replacement-root";
       assertThrows(
-          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("bxroot")));
+          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("proroot")));
       host.identity = "published-root";
       host.preferences.put("container_runtime", "proot");
       assertThrows(
-          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("bxroot")));
+          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("proroot")));
       host.preferences.clear();
-      host.current.set(new RuntimeHostPorts.Settings("ipv4", "proot", false, false));
+      host.current.set(new RuntimeHostPorts.Settings("ipv4", false, false, false));
       assertThrows(
-          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("bxroot")));
+          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("proroot")));
       assertEquals(0, host.commits);
     }
+    assertFalse(host.ports.settings().proroot);
     try (var next = host.ports.open()) {
       assertThrows(
-          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("bxroot")));
+          IOException.class, () -> host.ports.confirmColdRuntime(host.root, host.proof("proroot")));
+    }
+  }
+
+  @Test
+  public void explicitProotCannotPrepareProrootAndProotCandidateKeepsItsVerifiedFlags()
+      throws Exception {
+    ColdHost host = new ColdHost(false);
+    host.automatic = false;
+    try (var invocation = host.ports.open()) {
+      assertThrows(
+          IOException.class,
+          () -> host.ports.prepareColdRuntime(host.root, Mode.PROROOT, host.sha, host.runtimeId));
+      assertFalse(host.ports.settings().proroot);
+      host.ports.prepareColdRuntime(host.root, Mode.PROOT_COMPAT, host.sha, host.runtimeId);
+      host.ports.confirmColdRuntime(host.root, host.proof("proot"));
+      assertEquals(Mode.PROOT_COMPAT, host.committedMode);
+      assertTrue(host.current.get().disableProotSeccomp);
+      assertEquals(1, host.commits);
     }
   }
 
@@ -122,7 +175,7 @@ public class RuntimeHostPortsTest {
 
     ColdHost(boolean noSeccomp) {
       current =
-          new AtomicReference<>(new RuntimeHostPorts.Settings("ipv4", "bxroot", true, noSeccomp));
+          new AtomicReference<>(new RuntimeHostPorts.Settings("ipv4", false, true, noSeccomp));
       ports.install(
           new RuntimeHostPorts.Provider() {
             public RuntimeHostPorts.Settings snapshot() {
@@ -153,6 +206,7 @@ public class RuntimeHostPortsTest {
                 java.io.File checked, Mode mode, String packageSha) {
               commits++;
               committedMode = mode;
+              preferences.put("container_runtime", mode.runtime);
               preferences.put("cold_runtime_root", identity);
               preferences.put("cold_runtime_packages", packageSha);
               preferences.put("cold_runtime_mode", mode.name());
@@ -161,9 +215,9 @@ public class RuntimeHostPortsTest {
               var selected =
                   new RuntimeHostPorts.Settings(
                       stored.dnsMode,
-                      stored.engine,
-                      stored.staticLoader,
-                      "bxroot".equals(mode.runtime) ? stored.disableProotSeccomp : mode.noSeccomp);
+                      "proroot".equals(mode.runtime),
+                      mode.staticLoader(stored.staticLoader),
+                      "proroot".equals(mode.runtime) ? stored.disableProotSeccomp : mode.noSeccomp);
               current.set(selected);
               return selected;
             }
@@ -318,7 +372,7 @@ public class RuntimeHostPortsTest {
               String sha) {
             prefs.put("container_runtime", "proot");
             prefs.put("cold_runtime_root", "new-root");
-            var next = new RuntimeHostPorts.Settings("ipv4", true, true, true);
+            var next = new RuntimeHostPorts.Settings("ipv4", false, true, true);
             state.set(next);
             return next;
           }
@@ -329,7 +383,7 @@ public class RuntimeHostPortsTest {
           new java.io.File("root"),
           com.deepseekharness.app.util.ColdInstallPlan.Mode.PROOT_COMPAT,
           "0".repeat(64));
-      assertTrue(ports.settings().proroot);
+      assertFalse(ports.settings().proroot);
       ports.restoreColdSelection(before, "new-root");
       assertTrue(ports.settings().proroot);
       assertFalse(ports.settings().disableProotSeccomp);
@@ -461,7 +515,7 @@ public class RuntimeHostPortsTest {
               String sha) {
             var value =
                 new RuntimeHostPorts.Settings(
-                    current.get().dnsMode, true, current.get().staticLoader, true);
+                    current.get().dnsMode, false, current.get().staticLoader, true);
             current.set(value);
             return value;
           }
@@ -473,14 +527,14 @@ public class RuntimeHostPortsTest {
           new java.io.File("prepared"),
           com.deepseekharness.app.util.ColdInstallPlan.Mode.PROOT_COMPAT,
           "0".repeat(64));
-      assertTrue(ports.settings().proroot);
+      assertFalse(ports.settings().proroot);
       assertTrue(ports.settings().disableProotSeccomp);
       assertEquals("ipv4", ports.settings().dnsMode);
       try (var nested = ports.open()) {
         assertTrue(ports.settings().disableProotSeccomp);
       }
     }
-    assertTrue(ports.settings().proroot);
+    assertFalse(ports.settings().proroot);
     assertTrue(ports.settings().disableProotSeccomp);
   }
 

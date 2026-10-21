@@ -15,9 +15,6 @@ public class InstallPipelineTest {
   static final class Environment implements InstallPipeline.Environment {
     boolean ready = true, empty, cancelDuringRepair, throwRepair, missingResult, earlyExit;
     int launches, tools, pnpm, groups, patches, extractions;
-    long lastTimeout;
-    String evidence;
-    int scopesOpened, scopesClosed;
     final Set<String> failures = new HashSet<>();
     InstallTask active;
 
@@ -68,51 +65,24 @@ public class InstallPipelineTest {
 
     @Override
     public int execute(
-        String script,
-        long timeout,
-        boolean cancellable,
-        InstallTask task,
-        Consumer<String> output,
-        Runnable beforeCleanup)
+        String script, long timeout, boolean cancellable, InstallTask task, Consumer<String> output)
         throws IOException {
       launches++;
-      lastTimeout = timeout;
       active = task;
       assertTrue(cancellable);
       if (earlyExit) {
-        var begin =
-            Pattern.compile("DSHA_CHECK_BEGIN:([a-z]+):([a-f0-9-]+):([0-9]+)").matcher(script);
-        assertTrue(begin.find());
-        output.accept(begin.group());
+        output.accept("DSHA_CHECK_BEGIN:curl");
         return 23;
       }
-      Matcher matcher =
-          Pattern.compile("DSHA_CHECK_BEGIN:([a-z]+):([a-f0-9-]+):([0-9]+)").matcher(script);
+      Matcher matcher = Pattern.compile("DSHA_CHECK_BEGIN:([a-z]+)").matcher(script);
       while (matcher.find()) {
         String key = matcher.group(1);
-        output.accept(matcher.group());
+        output.accept("DSHA_CHECK_BEGIN:" + key);
         output.accept("版本或诊断输出");
         if (!missingResult)
-          output.accept(
-              "DSHA_CHECK_RESULT:"
-                  + key
-                  + ":"
-                  + (failures.contains(key) ? 1 : 0)
-                  + ":"
-                  + matcher.group(2));
+          output.accept("DSHA_CHECK_RESULT:" + key + ":" + (failures.contains(key) ? 1 : 0));
       }
       return 0;
-    }
-
-    @Override
-    public void probeEvidence(String evidence) {
-      this.evidence = evidence;
-    }
-
-    @Override
-    public AutoCloseable runtimeScope() {
-      scopesOpened++;
-      return () -> scopesClosed++;
     }
 
     InstallTask run(boolean repair, int step) throws Exception {
@@ -126,27 +96,6 @@ public class InstallPipelineTest {
     int repairs() {
       return tools + pnpm + groups + patches + extractions;
     }
-  }
-
-  @Test
-  public void pipelineUsesTheSharedPlanAndRetainsCurrentProbeEvidence() throws Exception {
-    Environment environment = new Environment();
-    environment.run(false, 4);
-    assertEquals(125_000, environment.lastTimeout);
-    assertTrue(environment.evidence.contains("key=pnpm budgetMs=90000"));
-    assertTrue(environment.evidence.contains("DSHA_PROBE task="));
-    assertEquals(1, environment.scopesOpened);
-    assertEquals(1, environment.scopesClosed);
-  }
-
-  @Test
-  public void failingProbeClosesTheSameRuntimeScope() throws Exception {
-    var environment = new Environment();
-    environment.earlyExit = true;
-    assertThrows(IOException.class, () -> environment.run(false, 0));
-    assertEquals(1, environment.scopesOpened);
-    assertEquals(1, environment.scopesClosed);
-    assertTrue(environment.evidence.contains("current=curl"));
   }
 
   @Test

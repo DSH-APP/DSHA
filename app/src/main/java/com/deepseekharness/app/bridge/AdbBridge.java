@@ -76,13 +76,22 @@ public final class AdbBridge {
   /** A bounded, one-use input pipe; currently reserved for the 48-byte native VScreen lease. */
   private static String execOwned(
       ProotBootstrap proot, String command, long timeoutMs, byte[] pipedInput) {
+    return execOwnedResult(proot, command, timeoutMs, pipedInput).output;
+  }
+
+  private static AdbVirtualScreenStart.HelperResult execOwnedResult(
+      ProotBootstrap proot, String command, long timeoutMs, byte[] pipedInput) {
     if (!EnvironmentTaskGate.canExecuteCurrentThread())
       throw new IllegalStateException(com.deepseekharness.app.util.UiText.text("ADB 命令缺少环境任务凭据"));
     if (Thread.currentThread().isInterrupted())
-      return com.deepseekharness.app.util.UiText.text("ADB_CANCELLED: 操作已取消，未启动命令");
+      return new AdbVirtualScreenStart.HelperResult(
+          com.deepseekharness.app.util.UiText.text("ADB_CANCELLED: 操作已取消，未启动命令"), true, true);
     if (pipedInput != null && pipedInput.length != 48)
-      return "[POLICY_BLOCKED] Invalid native virtual-screen ticket length\n[EXIT=126]";
+      return new AdbVirtualScreenStart.HelperResult(
+          "[POLICY_BLOCKED] Invalid native virtual-screen ticket length\n[EXIT=126]", true, true);
     StringBuilder output = new StringBuilder();
+    boolean[] complete = {true};
+    boolean helperExited = false;
     Process process = null;
     com.deepseekharness.app.core.RuntimeTasks work =
         com.deepseekharness.app.core.RuntimeTasks.begin();
@@ -103,11 +112,16 @@ public final class AdbBridge {
               true,
               () -> Thread.currentThread().isInterrupted(),
               line -> {
-                if (output.length() < 131072) output.append(line).append('\n');
+                if (line.equals(com.deepseekharness.app.util.UiText.text("[输出行过长，已隐藏]")))
+                  complete[0] = false;
+                if (output.length() + line.length() + 1 <= 131072) output.append(line).append('\n');
+                else complete[0] = false;
               },
               Compat::destroy);
+      helperExited = true; // InstallProcess.read returned only after owning/reaping this process.
       if (exit != 0) output.append("[ADB_PROCESS_EXIT=").append(exit).append("]\n");
     } catch (Exception error) {
+      complete[0] = false;
       if (process != null && !com.deepseekharness.app.util.ProcessTermination.exited(process)) {
         try {
           Compat.destroy(process);
@@ -128,7 +142,8 @@ public final class AdbBridge {
     } finally {
       work.close();
     }
-    return SensitiveData.redact(output.toString());
+    return new AdbVirtualScreenStart.HelperResult(
+        SensitiveData.redact(output.toString()), helperExited, complete[0]);
   }
 
   private static String execOwned(ProotBootstrap proot, String command) {
@@ -137,19 +152,40 @@ public final class AdbBridge {
 
   /** 只供 VirtualScreenManager 使用的受管 app_process 启动入口；票据只经 stdin 传递。 */
   public static String executeVirtualScreen(Context ctx, String command, String ticket) {
-    if (ticket == null || !ticket.matches("[a-f0-9]{48}"))
-      return "[POLICY_BLOCKED] Invalid native virtual-screen ticket\n[EXIT=126]";
-    ProotBootstrap proot = com.deepseekharness.app.core.HarnessController.get(ctx).proot();
-    return environmentResult(
-        proot,
-        com.deepseekharness.app.util.UiText.text("启动虚拟屏核心"),
+    return executeVirtualScreenTyped(ctx, command, ticket).output;
+  }
+
+  public static com.deepseekharness.app.device.DeviceTransportResult executeVirtualScreenTyped(
+      Context ctx, String command, String ticket) {
+    return AdbVirtualScreenStart.executeTyped(
+        ticket,
+        () -> Thread.currentThread().isInterrupted(),
+        () -> com.deepseekharness.app.util.UiText.text("ADB_CANCELLED: 操作已取消，未启动命令"),
+        boundary -> {
+          ProotBootstrap proot = com.deepseekharness.app.core.HarnessController.get(ctx).proot();
+          File files = proot.getRootfsDir().getParentFile().getParentFile();
+          return AdbEnvironmentTask.run(
+              com.deepseekharness.app.util.UiText.text("启动虚拟屏核心"),
+              () ->
+                  com.deepseekharness.app.backup.HostMaintenancePending.blocked(files)
+                      || com.deepseekharness.app.util.MaintenanceGate.shared().isExclusive(),
+              () -> {
+                if (!boundary.enter())
+                  return new AdbVirtualScreenStart.HelperResult(
+                      com.deepseekharness.app.util.UiText.text("ADB_CANCELLED: 操作已取消，未启动命令"),
+                      true,
+                      true);
+                return execOwnedResult(
+                    proot,
+                    "python3 /root/.dsh/adb-shell.py --vscreen-launch --timeout 20 --connect-timeout 20 -- "
+                        + ShellQuote.arg(command),
+                    60_000,
+                    ticket.getBytes(StandardCharsets.US_ASCII));
+              });
+        },
         () ->
-            execOwned(
-                proot,
-                "python3 /root/.dsh/adb-shell.py --vscreen-launch --timeout 20 --connect-timeout 20 -- "
-                    + ShellQuote.arg(command),
-                60_000,
-                ticket.getBytes(StandardCharsets.US_ASCII)));
+            com.deepseekharness.app.vscreen.VirtualScreenManager.from(ctx)
+                .withdrawUncommittedAdbLaunch(ticket, command));
   }
 
   public static boolean injected(ProotBootstrap proot) {

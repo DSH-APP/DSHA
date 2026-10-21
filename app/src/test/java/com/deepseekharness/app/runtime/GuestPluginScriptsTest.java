@@ -149,4 +149,128 @@ public class GuestPluginScriptsTest {
     assertEquals("assets", calls.get(0));
     assertTrue(calls.get(1).contains(" finalize "));
   }
+
+  @Test
+  public void listUsesItsShortBudgetAndPreparationConsumesThatSameDeadline() throws Exception {
+    var calls = new ArrayList<String>();
+    var scripts =
+        new GuestPluginScripts(
+            preparation(calls, true, true),
+            (command, timeout) -> {
+              assertTrue(timeout > 0 && timeout <= GuestPluginScripts.QUERY_TIMEOUT_MS);
+              return null;
+            });
+    scripts.manager("refresh", "", PluginDownloadSource.AUTO);
+    var slow =
+        new GuestPluginScripts(
+            new GuestPluginScripts.Preparation() {
+              public boolean environmentReady() {
+                return true;
+              }
+
+              public boolean rootPresent() {
+                return true;
+              }
+
+              public boolean pythonReady() {
+                try {
+                  Thread.sleep(70);
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                }
+                return true;
+              }
+
+              public void pnpm() {
+                fail("期限过后不继续准备");
+              }
+
+              public void assets() {
+                fail("期限过后不继续准备");
+              }
+            },
+            (command, timeout) -> {
+              fail("准备耗尽预算后不能启动guest");
+              return null;
+            });
+    var timeout =
+        assertThrows(
+            IOException.class, () -> slow.manager("list", "", PluginDownloadSource.AUTO, 30, true));
+    assertEquals("PLUGIN_QUERY_TIMEOUT", timeout.getMessage());
+  }
+
+  @Test
+  public void cancelledPreparationCannotLaunchAQueuedGuestOrConsumeAnotherCommand()
+      throws Exception {
+    var cancelled = new java.util.concurrent.atomic.AtomicBoolean();
+    var scripts =
+        new GuestPluginScripts(
+            new GuestPluginScripts.Preparation() {
+              public boolean environmentReady() {
+                cancelled.set(true);
+                return true;
+              }
+
+              public boolean rootPresent() {
+                return true;
+              }
+
+              public boolean pythonReady() {
+                fail();
+                return false;
+              }
+
+              public void pnpm() {
+                fail();
+              }
+
+              public void assets() {
+                fail();
+              }
+
+              public boolean cancelled(String task) {
+                return cancelled.get();
+              }
+            },
+            (command, timeout) -> {
+              fail("取消后不能启动guest");
+              return null;
+            });
+    var failure =
+        assertThrows(
+            IOException.class,
+            () -> scripts.manager("list", "a".repeat(32), PluginDownloadSource.AUTO));
+    assertEquals("PLUGIN_QUERY_CANCELLED", failure.getMessage());
+    var next =
+        new GuestPluginScripts(
+            preparation(new ArrayList<>(), true, true), (command, timeout) -> null);
+    next.manager("enable-state 'official'", "", PluginDownloadSource.AUTO);
+  }
+
+  @Test
+  public void managerInheritsEarlierSubmissionDeadlineAndRestoresItAfterTheCall() throws Exception {
+    var scripts =
+        new GuestPluginScripts(
+            preparation(new ArrayList<>(), true, true),
+            (command, timeout) -> {
+              fail("提交期限已耗尽，不能重新取得30秒预算");
+              return null;
+            });
+    var submission = new GuestScriptBudget(20, () -> false, "PLUGIN_QUERY");
+    try (var scope = submission.enter()) {
+      Thread.sleep(45);
+      var failure =
+          assertThrows(
+              IOException.class, () -> scripts.manager("list", "", PluginDownloadSource.AUTO));
+      assertEquals("PLUGIN_QUERY_TIMEOUT", failure.getMessage());
+    }
+    var next =
+        new GuestPluginScripts(
+            preparation(new ArrayList<>(), true, true),
+            (command, timeout) -> {
+              assertTrue(timeout > 0);
+              return null;
+            });
+    next.manager("list", "", PluginDownloadSource.AUTO);
+  }
 }

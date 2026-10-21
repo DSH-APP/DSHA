@@ -100,8 +100,6 @@ public class PluginInstallJournalsTest {
                   });
       assertTrue(PluginInstallJournals.pending(counted, home).isEmpty());
       assertEquals(1, historyLists[0]);
-      assertFalse(new File(root, ".completed-proof-v1.json").exists());
-      PluginInstallJournals.archiveCompleted(counted, home);
       calls[0] = historyLists[0] = 0;
       long start = System.nanoTime();
       for (int i = 0; i < 5; i++)
@@ -142,5 +140,38 @@ public class PluginInstallJournalsTest {
     plan(duplicate);
     assertThrows(IOException.class, () -> PluginInstallJournals.pending(fs, home));
     assertTrue(retained.isDirectory());
+  }
+
+  @Test
+  public void casMaterializationFormatThreeStaysPendingUntilExplicitTerminalProof()
+      throws Exception {
+    File work = operation();
+    Files.write(
+        new File(work, "plan.json").toPath(),
+        BackupJson.write(
+            Map.of(
+                "format",
+                3L,
+                "id",
+                work.getName(),
+                "name",
+                "dsha-pnpm-cas-copy",
+                "operation",
+                "materialize-pnpm-cas-files-v1",
+                "casFingerprint",
+                "pnpm-v10-sha512",
+                "entries",
+                List.of(Map.of("path", "package/index.js", "sha512", "a".repeat(128)))),
+            BackupLimits.MANIFEST));
+    Files.writeString(new File(work, "before-0").toPath(), "retained original link fixture");
+    assertEquals(List.of(work), PluginInstallJournals.pending(fs, temp.getRoot()));
+    assertEquals(List.of(work), PluginInstallJournals.pending(fs, temp.getRoot()));
+    assertTrue("Read-only pending must not replay a CAS repair", work.isDirectory());
+    Files.writeString(new File(work, "committed").toPath(), work.getName() + "\ncommitted\n");
+    PluginInstallJournals.archiveCompleted(fs, temp.getRoot());
+    assertTrue(PluginInstallJournals.pending(fs, temp.getRoot()).isEmpty());
+    assertEquals(
+        "retained original link fixture",
+        Files.readString(new File(completed(work), "before-0").toPath()));
   }
 }

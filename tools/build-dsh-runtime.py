@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 import posixpath
 import re
 import tarfile
+from runtime_stable_patches import load_chains, apply as apply_stable_patches
 
 PREFIX = 'usr/local/lib/node_modules/@deepseek-ai/dsh'
 PACKAGE = '@deepseek-ai/dsh'
@@ -23,8 +24,9 @@ COMBO_PATCH = HOOKS.parent / 'client-combo-patch.json'
 COMBO_MODULE = '@deepseek-ai/dsh-client-modules/lib/index.js'
 DEEPSEEK_MESSAGES_PATCH = HOOKS.parent / 'deepseek-messages-compat-patch.json'
 DEEPSEEK_MESSAGES_MODULE = '@deepseek-ai/dsh-llm-deepseek/lib/index.js'
-LEXICAL_CLAIM_PATCH = HOOKS.parent / 'lexical-claim-patch.json'
-LEXICAL_CLAIM_MODULE = '@deepseek-ai/dsh-client-ui-conversation/lib/client.js'
+# The historical filename remains a declared source input. It now records why
+# the old splitText/TOKEN_STYLE transform must not enter the 0.2.1 archive.
+CLAIM_RETIREMENT_PROOF = HOOKS.parent / 'lexical-claim-patch.json'
 CONVERSATION_MATERIALIZED_PATCH = HOOKS.parent / 'conversation-materialized-patch.json'
 CONVERSATION_MATERIALIZED_MODULE = '@deepseek-ai/dsh-client-ui-conversation/lib/client.js'
 RC1_SETTINGS_PATCH = HOOKS.parent / 'rc1-settings-migration-patch.json'
@@ -75,14 +77,40 @@ def recipe_inputs():
     paths += [directory / name for directory in (HOOKS, SESSION_HOOKS, COMBO_HOOKS) for name in ('index.js', 'package.json')]
     paths.append(COMBO_PATCH)
     paths.append(DEEPSEEK_MESSAGES_PATCH)
-    paths.append(LEXICAL_CLAIM_PATCH)
+    paths.append(CLAIM_RETIREMENT_PROOF)
     paths.append(CONVERSATION_MATERIALIZED_PATCH)
     paths.append(RC1_SETTINGS_PATCH)
     paths.append(WORKSPACE_DIRECTORY_PATCH)
     recipe = json.loads(DEEPSEEK_MESSAGES_PATCH.read_text(encoding='utf-8'))
     paths += [HOOKS.parent / patch['prependAsset'] for patch in recipe['patches'] if 'prependAsset' in patch]
+    version = json.loads((LOCK_ROOT / 'package.json').read_text(encoding='utf-8'))['dependencies'][PACKAGE]
+    _, stable_inputs = load_chains(HOOKS.parent, version)
+    paths += [HOOKS.parent / name for name in stable_inputs]
+    paths += [Path(__file__).with_name('runtime_stable_patches.py'), Path(__file__).with_name('runtime_input_contract.py')]
     root = Path(__file__).resolve().parents[1]
-    return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
+    result = {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
+    # Only installation rows affect this archive. Audit/launcher list edits in
+    # the shared source manifest cannot invalidate an otherwise identical DSH.
+    manifest = HOOKS.parent / 'managed-runtime-inputs.json'
+    installs = [row for row in json.loads(manifest.read_text(encoding='utf-8'))['installs']
+                if row.get('target', '').startswith(PREFIX + '/node_modules/dsha-destructive-policy/')]
+    result[manifest.relative_to(root).as_posix()] = hashlib.sha256(
+        json.dumps(installs, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+    return result
+
+
+def validate_command_chip_source(data, proof, expected):
+    """Bind retirement to the reviewed upstream bytes; this is not a UI test."""
+    if (proof.get('version') != 1 or proof.get('module') != CONVERSATION_MATERIALIZED_MODULE
+            or proof.get('dshVersion') != expected or proof.get('retired') is not True
+            or proof.get('patches') != []
+            or hashlib.sha256(data).hexdigest() != proof.get('sourceSha256')):
+        raise ValueError('COMMAND_CHIP_OFFICIAL_SOURCE_OR_RETIREMENT_CHANGED')
+    text = data.decode('utf-8')
+    if (text.count('class CommandChipNode') != 1 or 'TOKEN_STYLE' in text
+            or 'node.splitText(token.length)' in text
+            or 'DSHA_CLAIM_DECOR_OVERFLOW_STYLE_V1' in text):
+        raise ValueError('COMMAND_CHIP_ARCHITECTURE_CHANGED')
 
 
 def patched_content(relative, data):
@@ -120,18 +148,18 @@ def patched_content(relative, data):
                 after = (HOOKS.parent / patch['prependAsset']).read_text(encoding='utf-8') + '\n' + after
             text = text.replace(before, after)
         return text.encode('utf-8')
-    if name == LEXICAL_CLAIM_MODULE:
+    if name == CONVERSATION_MATERIALIZED_MODULE:
         text = data.decode('utf-8')
         expected = json.loads((LOCK_ROOT / 'package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
-        for recipe_path, label in ((LEXICAL_CLAIM_PATCH, 'Lexical claim'),
-                                   (CONVERSATION_MATERIALIZED_PATCH, 'conversation materialized')):
-            recipe = json.loads(recipe_path.read_text(encoding='utf-8'))
-            if recipe.get('module') != name or recipe.get('dshVersion') != expected:
-                raise ValueError(f'{label} 补丁目标或 DSH 版本未锁定')
-            for patch in recipe['patches']:
-                if text.count(patch['before']) != 1:
-                    raise ValueError(f'上游 {label} 结构变化，必须重新检查')
-                text = text.replace(patch['before'], patch['after'])
+        proof = json.loads(CLAIM_RETIREMENT_PROOF.read_text(encoding='utf-8'))
+        validate_command_chip_source(data, proof, expected)
+        recipe = json.loads(CONVERSATION_MATERIALIZED_PATCH.read_text(encoding='utf-8'))
+        if recipe.get('module') != name or recipe.get('dshVersion') != expected:
+            raise ValueError('conversation materialized 补丁目标或 DSH 版本未锁定')
+        for patch in recipe['patches']:
+            if text.count(patch['before']) != 1:
+                raise ValueError('上游 conversation materialized 结构变化，必须重新检查')
+            text = text.replace(patch['before'], patch['after'])
         return text.encode('utf-8')
     if name == RC1_SETTINGS_MODULE:
         text = data.decode('utf-8')
@@ -477,12 +505,15 @@ var DshaRecordHints = class {
         if text.count(create_anchor) != 1:
             raise ValueError('会话 create 结构变化，必须重新检查')
         text = text.replace(create_anchor, create_replacement)
-        # The emitted JS has no private field declarations. Add the field next
-        # to the tracker declaration in the class body instead.
-        class_anchor = '''\ttracker = new JsonlBackendTracker(this.name);\n\tgenerationFormat;'''
+        # 0.2.1 injects the shared tracker from the provider scope so its
+        # lifetime spans consumer cleanup. Keep that constructor and tracker
+        # ownership intact; only add this backend's process-local hints.
+        class_anchor = '''\ttracker;\n\t/** Backend label for diagnostics and effects; shadows `Service.name` without changing the service key. */'''
         if text.count(class_anchor) != 1:
             raise ValueError('会话后端 tracker 结构变化，必须重新检查')
-        text = text.replace(class_anchor, '''\ttracker = new JsonlBackendTracker(this.name);\n\tdshaSessionHints = new DshaSessionHints();\n\tgenerationFormat;''')
+        if text.count('\t\tthis.tracker = tracker;') != 1:
+            raise ValueError('会话后端 tracker 构造器结构变化，必须重新检查')
+        text = text.replace(class_anchor, '''\tdshaSessionHints = new DshaSessionHints();\n''' + class_anchor)
         find_anchor = '''\tasync findLog(id, signal) {\n\t\tconst matches = [];'''
         find_replacement = '''\tasync findLog(id, signal) {\n\t\tconst hinted = this.dshaSessionHints.get(id);\n\t\tif (hinted !== void 0) {\n\t\t\tconst selected = await this.resolveHintedGeneration(hinted, id, signal);\n\t\t\tif (selected !== void 0) return selected;\n\t\t\tthis.dshaSessionHints.forget(id);\n\t\t}\n\t\tconst matches = [];'''
         if text.count(find_anchor) != 1:
@@ -498,7 +529,7 @@ var DshaRecordHints = class {
         if text.count(release_anchor) != 1:
             raise ValueError('会话 releaseHandle 结构变化，必须重新检查')
         text = text.replace(release_anchor, release_replacement)
-        hints_anchor = '''/**\n* The JSONL persistence backend.'''
+        hints_anchor = '''var JsonlSessionPersistence = class extends SessionPersistence {'''
         hints_code = '''/* DSHA_SESSION_DIRECT_HINTS_V1 */\nclass DshaSessionHints {\n\tentries = new Map();\n\tremember(header) {\n\t\tif (header && typeof header.id === "string") this.entries.set(header.id, { id: header.id, cwd: header.cwd });\n\t}\n\tget(id) { return this.entries.get(id); }\n\tforget(id) { this.entries.delete(id); }\n}\n'''
         if text.count(hints_anchor) != 1:
             raise ValueError('会话后端类锚点变化，必须重新检查')
@@ -585,7 +616,13 @@ def omitted(relative, foreign=()):
 
 
 def build(source, output, version):
+    stable_chains, _ = load_chains(HOOKS.parent, version)
+    seen_stable = set()
     source = source.resolve(strict=True)
+    # npm includes upstream documentation paths beyond Win32 MAX_PATH. Use
+    # the extended local path for traversal without changing archive names.
+    if os.name == "nt" and not str(source).startswith("\\\\?\\"):
+        source = Path("\\\\?\\" + str(source))
     package = json.loads((source / PACKAGE / 'package.json').read_text(encoding='utf-8'))
     if package.get('name') != PACKAGE or package.get('version') != version:
         raise ValueError('npm 安装树不是要求的 dsh 版本')
@@ -636,11 +673,16 @@ def build(source, output, version):
                             binaries.append(relative.as_posix())
                         content = patched_content(relative, stream.read()) if relative.as_posix() in PATCHES \
                             or relative.as_posix() in (COMBO_MODULE, DEEPSEEK_MESSAGES_MODULE,
-                                                       LEXICAL_CLAIM_MODULE, CONVERSATION_MATERIALIZED_MODULE,
+                                                       CONVERSATION_MATERIALIZED_MODULE,
                                                        STORAGE_JSON_MODULE,
                                                        WORKSPACE_DIRECTORY_MODULE,
                                                        SESSION_PERSISTENCE_JSONL_MODULE,
                                                        '@deepseek-ai/dsh-session-format-v2-to-v3/lib/index.js') else None
+                        module = relative.as_posix()
+                        if module in stable_chains:
+                            content = apply_stable_patches(
+                                stream.read() if content is None else content, stable_chains[module])
+                            seen_stable.add(module)
                         if content is not None:
                             stream = io.BytesIO(content)
                         item = tarfile.TarInfo(name)
@@ -675,6 +717,8 @@ def build(source, output, version):
                             links.setdefault(destination, posixpath.relpath(target_path(entry_path.relative_to(source)), posixpath.dirname(destination)))
                             if command in ('tsc', 'tsserver'):
                                 links['usr/local/bin/' + command] = posixpath.relpath(target_path(entry_path.relative_to(source)), 'usr/local/bin')
+                if seen_stable != set(stable_chains):
+                    raise ValueError('STABLE_PATCH_MODULE_MISSING: ' + ','.join(sorted(set(stable_chains) - seen_stable)))
                 for directory, package in ((HOOKS, 'dsha-runtime-fs'), (SESSION_HOOKS, 'dsha-session-compat'), (COMBO_HOOKS, 'dsha-client-combo-cache')):
                     for filename in ('package.json', 'index.js'):
                         content = (directory / filename).read_bytes()
@@ -707,10 +751,14 @@ def build(source, output, version):
         temporary.replace(output)
     finally:
         temporary.unlink(missing_ok=True)
-    inputs = {'version': version, 'inputs': recipe_inputs(), 'archive_sha256': hashlib.sha256(output.read_bytes()).hexdigest()}
+    archive_hash = hashlib.sha256()
+    with output.open('rb') as stream:
+        for block in iter(lambda: stream.read(1048576), b''): archive_hash.update(block)
+    archive_sha = archive_hash.hexdigest()
+    inputs = {'version': version, 'inputs': recipe_inputs(), 'archive_sha256': archive_sha}
     write_source_text(output.with_suffix('.inputs.json'),json.dumps(inputs, indent=2) + '\n',encoding='utf-8')
     return {'version': version, 'files': count, 'unpacked_bytes': size,
-            'archive_bytes': output.stat().st_size, 'sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
+            'archive_bytes': output.stat().st_size, 'sha256': archive_sha,
             'arm64_binaries': binaries,
             'omitted_unpacked_bytes': omitted_sizes,
             'omitted_foreign_packages': sorted(item.as_posix() for item in foreign),

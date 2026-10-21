@@ -499,71 +499,6 @@ export const COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
     border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, .12)) !important;
   }
 
-  /* ---------- dsh-model-capabilities: model row must not crush its name ----------
-     On the Models page each catalog model is a flex row:
-     [model id] [display name] [chips] [chevron]. A chip can be long — the
-     reasoning summary prints the whole level list
-     ("reasoning: minimal/low/medium/high/xhigh/max", measured 322px at
-     min-content) — and the chips wrapper inherits the flex default
-     min-width: auto, so it grows past the row and squeezes the model id to
-     its minimum content width. With overflow-wrap: anywhere on the id, the
-     text then breaks one character per line: owner report 2026-10-05,
-     "gpt-6.1-sol" rendering as a 8x270px vertical sliver at 393px (a 223px
-     chip against a 259px row).
-
-     Upstream already declares flex-wrap: wrap on the wrapper — it is MEANT
-     to move to another line — but a single chip alone exceeds the row, so
-     wrapping never triggers. Let the row itself wrap and give the chips a
-     full-width line of their own; the chips then wrap chip-by-chip inside
-     it and every chip keeps a readable width.
-
-     Measured at 393px (id width x height): none 8x270 vertical ->
-     this rule keeps the id one line (72x15 on the widest case) and every
-     chip intact.
-
-     Two things this rule set has to get right beyond the id:
-     - the chips take a FULL line (flex: 1 0 100%) and must therefore be sent
-       after the id/name with order:1; without it the chevron, which is the
-       row's last child, is pushed onto a line of its own at the far LEFT
-       (measured: chevron 237px from the right edge = flush left, the orphaned
-       arrow the first cut of this rule produced).
-     - the chevron then needs margin-left:auto to stay flush right on the
-       first line (measured 10px from the edge on every row).
-     Rejected alternatives: min-width:0 + flex:1 1 auto on the wrapper alone
-     still left the id crushed at 44x60 vertical; white-space:nowrap on the id
-     kept it unreadably narrow at 44px; truncating the over-long chip
-     (white-space:nowrap + ellipsis on the chip) hid the reasoning summary
-     entirely - the user needs to see which levels a model offers.
-     Scoped to the settings dialog and the plugin's own class prefix; the
-     whole file is mobile-gated, so desktop never sees it. */
-  [aria-modal="true"] [class*="Qzh-QG_rowHeader"] {
-    flex-wrap: wrap !important;
-  }
-  [aria-modal="true"] [class*="Qzh-QG_chips"] {
-    order: 1 !important;
-    flex: 1 0 100% !important;
-    min-width: 0 !important;
-    justify-content: flex-start !important;
-  }
-  /* NOTE the :not() guard below: [class*="..._chip"] is a SUBSTRING match and
-     also hits the wrapper ("..._chips" contains "..._chip"), which would put
-     max-width/overflow-wrap on the container too. Exclude the wrapper by its
-     own overlapping prefix, the way this file's other _stat / _header families
-     do (pitfall: 哈希子串). */
-  [aria-modal="true"] [class*="Qzh-QG_chip"]:not([class*="Qzh-QG_chips"]) {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-  }
-  [aria-modal="true"] [class*="Qzh-QG_modelId"] {
-    min-width: 0 !important;
-  }
-  [aria-modal="true"] [class*="Qzh-QG_modelName"] {
-    min-width: 0 !important;
-  }
-  [aria-modal="true"] [class*="Qzh-QG_rowHeader"] > svg {
-    margin-left: auto !important;
-  }
-
   /* ---------- dsh-web-ui polish: explorer sheet ----------
      The aionui explorer was designed for a desktop side column: compact the
      header, search box and tree rows so a phone shows more entries, and pad
@@ -594,23 +529,14 @@ export const COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   }
 
   /* ---------- dsh-web-ui polish: drawer footer ----------
-     The single injected footer action (the session-log download) becomes a
-     full-width pill instead of a text-width capsule. */
-
-  /* The official footerActions row also hosts the remote-web-ui entry
-     row (two icon buttons); without wrapping the two groups squeeze each
-     other on one line. Wrap so each group gets its own full-width row. */
+     The official footerActions row also hosts the remote-web-ui entry row
+     (two icon buttons) and the usage/balance badge; without wrapping the
+     groups squeeze each other on one line. Wrap so each group gets its own
+     row. (The plugin's own footer pill was removed on 2026-10-18 — the
+     session-log entry now lives in the drawer brand row.) */
   [data-mobile-nav="frame"] [class*="_footerActions"] {
     flex-wrap: wrap !important;
     gap: 6px !important;
-  }
-  [data-mobile-nav="drawer-actions"] {
-    width: 100% !important;
-  }
-  [data-mobile-nav="drawer-actions"] > button {
-    flex: 1 1 0 !important;
-    padding: 0 8px !important;
-    white-space: nowrap !important;
   }
 
   /* ---------- dsh-web-ui polish: floating pet ----------
@@ -1303,6 +1229,57 @@ export const COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
      不会把表格撑到无法阅读的宽度。
      平板（768–1023）与桌面不动 —— 店主明确「平板不用」（对齐上游 768px
      分档边界，与 layout.css.ts 的手机档写法一致）。 */
+  /* @patch
+     id: ofm-mobile-cost-ceiling
+     for: dsh-our-free-model 2.0.0 的 ofm_ 私有类名（毛玻璃表面 + 极光层 + 装饰动画）
+     why: 上游把设置页做成一张超长 backdrop-filter 大面 + 常驻全屏极光，插件侧没有手机档成本降级，本插件只能用自己的手机档样式兜
+     until: 上游自己给手机档出成本降级（或拿掉极光层与 blur 表面）——届时本块整节删除
+     test: tests/our-free-model-cost.test.ts
+  */
+  /* ---------- dsh-our-free-model: mobile cost ceiling ----------
+     该插件设置页在手机上卡顿掉帧。实测数字、驱动限制与验证方法见
+     docs/maintenance/pitfalls.md「第三方成本上限」——这里只记为什么这么写。
+
+     选择器用裸的 ofm_ 前缀类名，不加任何祖先锚。设置页经 createPortal 挂到
+     document.body，[data-mobile-nav="frame"] 后代选择器一个都不命中；而
+     .ofm_scrim 与 .ofm_toast 也 portal 到 body，锚 .ofm_root 同样漏。前缀是
+     本插件独占（宿主与全仓 0 命中），锚根买不到隔离，只赔掉 portal 出去的那几块。
+
+     只砍装饰，且按「遮罩 vs 表面」分两组——同一个「去 blur」动作，两类需要相反
+     的补法：表面按半透明设计，只摘 filter 会让页面从下面透出来，故补不透明底；
+     .ofm_scrim 是蒙层，补底等于把整页涂黑，故只摘 filter。
+
+     带状态的动画一律保留（loading 骨架、池子 busy/over 点、状态点、进度条、
+     aria-busy 按钮）。.ofm_scanline 看着像装饰，实则挂在登录等待提示上，上游
+     自己的 prefers-reduced-motion 块也不杀它。
+
+     本块在顶层手机档（≤1023px + pointer: coarse），触屏平板也吃到——有意为之：
+     这是成本修复不是布局修复，与屏宽无关。 */
+  .ofm_aurora {
+    display: none !important;
+  }
+  .ofm_wave,
+  .ofm_bubble,
+  .ofm_fish,
+  .ofm_tankrays {
+    animation: none !important;
+  }
+  .ofm_nav,
+  .ofm_glass,
+  .ofm_hero,
+  .ofm_panel,
+  .ofm_ann,
+  .ofm_modal,
+  .ofm_toast {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: var(--dsw-alias-bg-layer-2, #fff) !important;
+  }
+  .ofm_scrim {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
   @media (max-width: 767px) and (pointer: coarse) {
     [data-mobile-nav="frame"] .md-table-wide {
       overflow-x: auto !important;
@@ -1319,6 +1296,101 @@ export const COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
     [data-mobile-nav="frame"] .md-table-wide > table td {
       min-width: 4.5em !important;
     }
+  }
+
+  /* @patch
+     id: ofm-toast-above-drawer
+     for: dsh-our-free-model 2.0.0 的 .ofm_toasts（公告 toast，portal 到 document.body）
+     why: 该插件把 toast 钉在 z-index 1200 并自称浮在所有层之上，但本插件移动抽屉是 1300、遮罩 1250、宿主原生侧栏 1100 —— 打开抽屉时整条 toast 既不可见也不可点，插件侧没有可调的层级接口
+     until: 上游把 toast 抬到宿主弹层之上（1400+）或宿主提供官方通知层 —— 届时本块删除
+     test: tests/our-free-model-toast-layer.test.ts
+  */
+  /* ---------- dsh-our-free-model: announcement toast above the drawer ----------
+     2026-10-17 店主报障：打开侧边栏时左下角的官方推送消息被抽屉挡住。
+     实测（390×844 触屏仿真）：toast .ofm_toasts rect(18,738,354×88) z1200；
+     本插件 backdrop z1250、抽屉列 z1300 ⇒ elementFromPoint(195,780) 命中抽屉
+     里的 Usage/Balance 按钮、(330,780) 命中遮罩 —— 整条与点击一起没了。
+
+     选择器用 body 直子锚：插件 toastHost() 把 .ofm_toasts 挂在 document.body
+     （不存在才建），.ofm_ 前缀又是本插件独占（宿主与全仓 0 命中，见上一节），
+     所以这层锚既精确又不会误伤。
+
+     1310 的取值：高于抽屉 1300（否则被盖），低于本插件自己的弹层 1400 与
+     file-share toast 1500（公告 toast 不该压过模态）。桌面档没有抽屉，问题
+     只在手机档出现，规则因此留在本顶层手机媒体查询内。
+
+     代价（店主 2026-10-17 选定 A 方案时知情）：toast 通栏 354px 比抽屉 280px
+     宽，浮起后会压住抽屉底部约 88px（用户行/设置按钮区）约 10 秒（插件
+     holdMs 默认 10000），期间那几颗按钮点不到 —— 这是「推送可见」与「抽屉
+     底部可点」的二选一，本次选了前者。 */
+  body > .ofm_toasts {
+    z-index: 1310 !important;
+  }
+}
+
+/* ---------- session inspector: the disclosure triangles are too small ----------
+   2026-10-20 店主报障：手机端「会话数据诊断」面板（宿主实验插件
+   dsh-experimental-session-inspector）里那些深色小三角太小、点不准。
+
+   三处 disclosure 不是一个东西，得分开打：
+   A 表格「类型」列里的行展开箭头 —— 16px 宽、11px 的 ▸/▾ 文本按钮，
+     组件自己只给了 width:16px，没有 height/line-height，实际可点面 ≈16×13px，
+     而它紧贴「选中该行」的类型文本按钮（同一 td 内相邻），手机上很容易点错。
+   B 「原始数据」JSON 树每层 —— 原生 details/summary 的 UA marker，
+     宿主只设了 cursor:pointer，没有任何尺寸声明，随 root 的 11px 字号一起小。
+   C 面板顶部「原始数据 ▾」—— 原生 select 的 UA 箭头，同样 11px。
+   行高 30px 是宿主虚拟化的常量（client.js 里 size/estimateSize 与 sticky 偏移
+   多处写死 30，且没有 measureElement），所以只放大控件本身，绝不改行高。 */
+@media (max-width: 1023px) and (pointer: coarse) {
+  /* @patch
+     id: session-inspector-disclosure-size
+     for: @deepseek-ai/dsh-experimental-session-inspector 0.2.1-rc.2（CSS 模块哈希前缀 GTtnTq）
+     why: 树行展开箭头只有 16×≈13px、字号 11px，低于触控下限，且与相邻的「选中该行」按钮动作不同
+     until: 宿主把 GTtnTq_disclosure 提到 ≥24px，或换成可缩放图标并自带内边距
+     test: tests/css-rules.test.ts
+  */
+  /* A：行箭头。22px 正好等于行内容盒（30px 行高 − 上下 4px 内边距），
+     不会撑高行、也不会打乱虚拟化的行位置模型。 */
+  [class*="GTtnTq_root"] [class*="_disclosure"][aria-expanded] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+  }
+  /* B：JSON 树的原生 marker。字段名的缩进槽是 16px（ul 的 padding-inline-start），
+     15px 字形正好卡进槽里，放大不会把字段名右移。 */
+  [class*="GTtnTq_objectTree"] details > summary::marker {
+    font-size: 15px !important;
+  }
+  /* C：顶部模式选择器（原生 select）。不在虚拟化区域里，可以直接长高。 */
+  [class*="GTtnTq_modeSelector"] {
+    font-size: 13px !important;
+    padding: 4px 6px !important;
+    min-height: 32px !important;
+  }
+  /* D：吸顶祖先行（顶部那一群灰色行）在快速滑动时错乱/拖影。
+     宿主给它们是 position:sticky + 灰底，而整张表是 border-collapse:collapse ——
+     Chromium 里「sticky 的 <tr> + 合并边框」会逐帧重算行盒，甩动时就撕开。
+     两刀都只动呈现、不动布局：①把合并边框换成 separate + 0 间距（每行只有一条
+     border-bottom，视觉与合并边框一致，但行盒不再是合并边框模型）；②给 sticky
+     行独立合成层，吸顶位移整块平移，不再每帧重绘整行。
+     计时器/虚拟区间仍归宿主，这里不碰 scrollTop 与 overflow-anchor。 */
+  /* @patch
+     id: session-inspector-sticky-flicker
+     for: @deepseek-ai/dsh-experimental-session-inspector 0.2.1-rc.2（GTtnTq_table / GTtnTq_sticky）
+     why: sticky 的 <tr> 叠在 border-collapse:collapse 表格上，快速滑动时吸顶祖先行被逐帧重算行盒，出现撕裂/拖影
+     until: 宿主把表格改成 border-collapse:separate，或不再用 sticky <tr> 表达祖先上下文
+     test: tests/css-rules.test.ts
+  */
+  [class*="GTtnTq_table"] {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+  [class*="GTtnTq_table"] [class*="GTtnTq_sticky"] {
+    will-change: transform !important;
   }
 }
 

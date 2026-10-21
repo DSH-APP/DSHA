@@ -13,6 +13,7 @@ const repository=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const selected = path.join(testRuntime('raw'), 'node_modules');
 const modules = path.resolve(process.argv[2] || selected);
 assert.equal(modules, selected, 'Runtime trial must use the current proven raw modules');
+const expectedVersion=JSON.parse(await fs.readFile(path.join(modules,'@deepseek-ai/dsh/package.json'),'utf8')).version;
 const parent=path.resolve(process.argv[3]||path.join(repository,'app/build/backup-upgrade-baseline'));
 if(!parent.startsWith(path.join(repository,'app/build')+path.sep))throw Error('Unsafe test output directory');
 await fs.mkdir(parent,{recursive:true});
@@ -54,7 +55,7 @@ try{
   const rest='--import='+pathToFileURL(other).href+' --conditions=dsha-trial-host-check';
   const child=spawnSync(process.execPath,[path.join(modules,'@deepseek-ai/dsh/lib/bin.js'),'--version'],{encoding:'utf8',timeout:15000,windowsHide:true,env:{...process.env,NODE_OPTIONS:'--import='+pathToFileURL(preload).href+' '+rest}});
   assert.equal(child.error,undefined);assert.equal(child.status,0,child.stderr);
-  assert.equal(child.stdout,'0.2.0-rc.2\n');assert.equal(child.stderr,'DSHA_TEST_OTHER_PRELOAD_READY\n');
+  assert.equal(child.stdout,expectedVersion+'\n');assert.equal(child.stderr,'DSHA_TEST_OTHER_PRELOAD_READY\n');
  });
  await test('private_trial_preload_is_not_inherited_by_fresh_storage_child',async()=>{
   const preload=path.join(owned,'trial-preload.mjs'),other=path.join(owned,'other-preload.mjs'),probe=path.join(owned,'child-probe.mjs');

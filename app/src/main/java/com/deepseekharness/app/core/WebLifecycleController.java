@@ -13,6 +13,7 @@ import com.deepseekharness.app.util.WebProcSel;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,25 +32,29 @@ final class WebLifecycleController {
   private final WebLifecycle lifecycle;
   private final ScheduledExecutorService io;
   private final java.util.concurrent.ConcurrentHashMap<Long, WebRun> webRuns;
+  private final com.deepseekharness.app.runtime.StoredWebSession storedSession;
 
   static final class WebRun {
     final long generation;
-    final String instanceId = java.util.UUID.randomUUID().toString();
+    final String instanceId;
     volatile Process launcher;
     volatile WebProcessSession.BridgeLease bridge;
     volatile String authUrl = "";
-    volatile String startupProfile;
     volatile int port;
-    volatile boolean compatible, engineFailure;
-    volatile boolean portRetried;
-    volatile boolean forceDynamicPort;
-    volatile int bindConflict = -1;
-    volatile int requestedPort;
-    volatile com.deepseekharness.app.backup.HostWebLog log;
+    volatile boolean compatible;
     volatile com.deepseekharness.app.util.AgentTaskRegistration registration;
+    volatile com.deepseekharness.app.runtime.StoredWebSession.Record recovered;
+    volatile boolean recoveredLive;
+    volatile boolean confirmedWebExit;
+    volatile boolean authorityRevocationPending;
 
     WebRun(long generation) {
+      this(generation, java.util.UUID.randomUUID().toString());
+    }
+
+    WebRun(long generation, String instanceId) {
       this.generation = generation;
+      this.instanceId = instanceId;
     }
   }
 
@@ -67,8 +72,33 @@ final class WebLifecycleController {
   private final WebProcessSession processes;
   private final LanAuthBridge lanAuth;
 
+  interface ScreenLifetime {
+    void revoke();
+
+    void stop();
+  }
+
+  private final ScreenLifetime screenLifetime;
+
   WebLifecycleController(HarnessController owner, HarnessSessionState state) {
+    this(
+        owner,
+        state,
+        new ScreenLifetime() {
+          public void revoke() {
+            com.deepseekharness.app.HttpShellService.revokeScreenGrant(owner.context());
+          }
+
+          public void stop() {
+            com.deepseekharness.app.vscreen.VirtualScreenManager.from(owner.context()).stop();
+          }
+        });
+  }
+
+  WebLifecycleController(
+      HarnessController owner, HarnessSessionState state, ScreenLifetime screenLifetime) {
     this.owner = owner;
+    this.screenLifetime = java.util.Objects.requireNonNull(screenLifetime);
     this.ctx = owner.context();
     this.config = owner.config();
     this.proot = owner.proot();
@@ -77,6 +107,7 @@ final class WebLifecycleController {
     this.lifecycle = state.lifecycle;
     this.io = state.io;
     this.webRuns = state.runs;
+    this.storedSession = new com.deepseekharness.app.runtime.StoredWebSession(ctx);
     this.processes = new WebProcessSession(ctx, state, webProc);
     this.lanAuth = new LanAuthBridge(ctx, config, proot, state);
     synchronized (lifecycle) {
@@ -90,9 +121,441 @@ final class WebLifecycleController {
     }
   }
 
+  public boolean isRestoringWebSession() {
+    return state.restoreChecking;
+  }
+
+  public boolean needsWebSessionRestore() {
+    return lifecycle.generation() == 0 && !state.restoreChecked;
+  }
+
+  public boolean hasUnresolvedWebSession() {
+    WebRun run = state.currentRun;
+    return state.restoreUnknown
+        && !lifecycle.isUserStopped()
+        && !lifecycle.isStopping()
+        && (lifecycle.generation() == 0
+            || run != null
+                && lifecycle.isCurrent(run.generation)
+                && run.recovered != null
+                && !run.recoveredLive
+                && !run.confirmedWebExit);
+  }
+
+  public void restoreRunningWebSession(Runnable completed) {
+    synchronized (lifecycle) {
+      if (lifecycle.generation() != 0 || state.restoreChecked) {
+        if (completed != null)
+          new android.os.Handler(android.os.Looper.getMainLooper()).post(completed);
+        return;
+      }
+      if (completed != null) state.restoreListeners.add(completed);
+      if (state.restoreChecking) return;
+      state.restoreChecking = true;
+    }
+    io.execute(
+        () -> {
+          var verifiedAuth = new java.util.concurrent.atomic.AtomicReference<RecoveredAuth>();
+          var result =
+              WebSessionRecovery.recover(
+                  new WebSessionRecovery.Ports() {
+                    public com.deepseekharness.app.runtime.StoredWebSession.Record read()
+                        throws Exception {
+                      try {
+                        var record = storedSession.read();
+                        if (record != null) state.retainedWebStopProof = record.proof();
+                        if (record == null && webProc.hasRecordedSession())
+                          throw new IOException("WEB_SESSION_RECORD_MISSING_FOR_EXISTING_PID");
+                        return record;
+                      } catch (Exception unknown) {
+                        state.unreadableWebStopProof = true;
+                        throw unknown;
+                      }
+                    }
+
+                    public boolean current() {
+                      return lifecycle.generation() == 0 && !lifecycle.isUserStopped();
+                    }
+
+                    public boolean compatible(
+                        com.deepseekharness.app.runtime.StoredWebSession.Record r)
+                        throws Exception {
+                      var installed = proot.installedRuntimeDescriptor();
+                      return r.app().equals(storedSession.appIdentity())
+                          && r.root().equals(proot.getRootfsDir().getCanonicalPath())
+                          && r.descriptor().equals(proot.expectedRuntimeDescriptor().id())
+                          && installed != null
+                          && r.descriptor().equals(installed.id())
+                          && !hasStopSentinel()
+                          && !MaintenanceCoordinator.pending(owner);
+                    }
+
+                    public boolean verify(com.deepseekharness.app.runtime.StoredWebSession.Record r)
+                        throws Exception {
+                      return webProc.verifySession(r.proof());
+                    }
+
+                    public boolean authenticate(
+                        com.deepseekharness.app.runtime.StoredWebSession.Record r) {
+                      var authentication =
+                          com.deepseekharness.app.util.DshAuthSession.exchange(
+                              r.authUrl(),
+                              java.net.URI.create(r.authUrl()).getPort(),
+                              this::current,
+                              5000);
+                      if (authentication.ready())
+                        verifiedAuth.set(new RecoveredAuth(r, authentication));
+                      return authentication.ready();
+                    }
+
+                    public boolean adopt(
+                        com.deepseekharness.app.runtime.StoredWebSession.Record r) {
+                      synchronized (lifecycle) {
+                        if (!current() || !lifecycle.adoptRunning(r.proof().generation()))
+                          return false;
+                        WebRun run = new WebRun(r.proof().generation(), r.proof().instance());
+                        run.recovered = r;
+                        run.recoveredLive = true;
+                        run.authUrl = r.authUrl();
+                        run.port = java.net.URI.create(r.authUrl()).getPort();
+                        run.compatible = r.compatible();
+                        run.registration =
+                            com.deepseekharness.app.util.AgentTaskRegistration.restore(
+                                run.generation, run.instanceId, r.taskToken());
+                        state.currentRun = run;
+                        webRuns.put(run.generation, run);
+                        state.recovery.begin(run.generation, false);
+                        state.diagnostics.begin(run.generation, false);
+                        state.diagnostics.stage(
+                            run.generation,
+                            com.deepseekharness.app.util.UiText.choose(
+                                "已重新接入原 Web 实例", "Reconnected to the existing Web instance"));
+                        return true;
+                      }
+                    }
+                  });
+          state.restoreUnknown = result == WebSessionRecovery.Result.UNKNOWN;
+          state.restoreChecked = true;
+          state.restoreChecking = false;
+          DiagnosticLog.record(ctx, "WEB_SESSION_RESTORE", result.name());
+          if (result == WebSessionRecovery.Result.RESTORED) {
+            WebRun run = state.currentRun;
+            try {
+              if (run != null) processes.acquireBridge(run);
+            } catch (RuntimeException unavailable) {
+              DiagnosticLog.record(
+                  ctx, "WEB_SESSION_BRIDGE", unavailable.getClass().getSimpleName());
+            }
+            notifyReadyWebPageChanged();
+            try {
+              publishRecoveredLan(result, state, verifiedAuth.get(), lanAuth);
+            } catch (RuntimeException unavailable) {
+              DiagnosticLog.record(
+                  ctx, "WEB_SESSION_LAN_AUTH", unavailable.getClass().getSimpleName());
+            }
+          }
+          var main = new android.os.Handler(android.os.Looper.getMainLooper());
+          for (Runnable listener : state.restoreListeners) main.post(listener);
+          state.restoreListeners.clear();
+        });
+  }
+
+  record RecoveredAuth(
+      com.deepseekharness.app.runtime.StoredWebSession.Record record,
+      com.deepseekharness.app.util.DshAuthSession.Result authentication) {}
+
+  /** Strict recovery already checked HTTP; publish only after the second kernel proof and adopt. */
+  static String publishRecoveredLan(
+      WebSessionRecovery.Result result,
+      HarnessSessionState state,
+      RecoveredAuth verified,
+      LanAuthBridge bridge) {
+    if (result != WebSessionRecovery.Result.RESTORED
+        || verified == null
+        || verified.record() == null
+        || verified.record().proof() == null
+        || verified.authentication() == null
+        || !verified.authentication().ready()) return null;
+    WebRun run;
+    String url;
+    int port;
+    synchronized (state.lifecycle) {
+      run = state.currentRun;
+      if (run == null
+          || state.restoreUnknown
+          || run.recovered != verified.record()
+          || !run.recoveredLive
+          || !state.lifecycle.isCurrent(run.generation)
+          || state.lifecycle.isStarting()
+          || state.lifecycle.isStopping()
+          || state.lifecycle.isUserStopped()
+          || run.generation != verified.record().proof().generation()) return null;
+      url = verified.record().authUrl();
+      DshAuthUrl.Parsed parsed = DshAuthUrl.parse(url);
+      if (parsed == null) return null;
+      port = java.net.URI.create(url).getPort();
+      if (!parsed.loopbackBaseUrl.equals("http://127.0.0.1:" + port + "/")
+          || !url.equals(run.authUrl)
+          || port != run.port) return null;
+    }
+    // The bridge rechecks the exact URL/port/generation and the current LAN
+    // switch at bind. No second HTTP request, migration, or start is replayed.
+    return bridge.publishVerified(run.generation, url, port, verified.authentication());
+  }
+
+  /** 前后台共用合并的异步复核；不在主线程读取proc或等待HTTP。 */
+  public void refreshRecoveredWebSession() {
+    requestWebSessionRecheck(null);
+  }
+
+  public void requestWebSessionRecheck(Runnable completed) {
+    synchronized (lifecycle) {
+      if (lifecycle.generation() == 0 && state.restoreUnknown && !state.restoreChecking) {
+        state.restoreChecked = false;
+        restoreRunningWebSession(completed);
+        return;
+      }
+      if (completed != null) state.recheckListeners.add(completed);
+      if (state.recheckPending) return;
+      state.recheckPending = true;
+    }
+    io.execute(
+        () -> {
+          try {
+            checkRecoveredWebSession();
+          } finally {
+            java.util.List<Runnable> listeners;
+            synchronized (lifecycle) {
+              state.recheckPending = false;
+              listeners = java.util.List.copyOf(state.recheckListeners);
+              state.recheckListeners.clear();
+            }
+            var main = new android.os.Handler(android.os.Looper.getMainLooper());
+            for (Runnable listener : listeners) main.post(listener);
+          }
+        });
+  }
+
+  private void checkRecoveredWebSession() {
+    WebRun run = state.currentRun;
+    if (run == null || run.recovered == null) return;
+    var record = run.recovered;
+    if (!finishAuthorityRevocation(
+        state,
+        run,
+        record,
+        () -> {
+          screenLifetime.revoke();
+          com.deepseekharness.app.AgentTaskNotifications.invalidateRuntime(
+              run.generation, run.instanceId);
+        })) return;
+    var outcome =
+        WebSessionRecheck.check(
+            new WebSessionRecheck.Ports() {
+              public boolean current() {
+                return currentRecheck(state, run, record);
+              }
+
+              public boolean alreadyLive() {
+                return run.recoveredLive && !state.restoreUnknown;
+              }
+
+              public WebProcessManager.SessionObservation observe() {
+                return webProc.observeSession(record.proof());
+              }
+
+              public com.deepseekharness.app.util.DshAuthSession.Result authenticate() {
+                return com.deepseekharness.app.util.DshAuthSession.exchange(
+                    record.authUrl(), run.port, this::current, 5000);
+              }
+            });
+    if (!applyRecheckedWebSession(state, run, record, outcome)) return;
+    finishAuthorityRevocation(
+        state,
+        run,
+        record,
+        () -> {
+          screenLifetime.revoke();
+          com.deepseekharness.app.AgentTaskNotifications.invalidateRuntime(
+              run.generation, run.instanceId);
+        });
+    if (outcome.result() == WebSessionRecheck.Result.RESTORED) {
+      publishRecoveredLan(
+          WebSessionRecovery.Result.RESTORED,
+          state,
+          new RecoveredAuth(record, outcome.authentication()),
+          lanAuth);
+      DiagnosticLog.record(ctx, "WEB_SESSION_RECHECK", "RESTORED");
+    } else if (outcome.result() == WebSessionRecheck.Result.EXITED)
+      state.diagnostics.message(run.generation, "WEB_GUEST_EXIT_CONFIRMED");
+    notifyReadyWebPageChanged();
+  }
+
+  static boolean currentRecheck(
+      HarnessSessionState state,
+      WebRun run,
+      com.deepseekharness.app.runtime.StoredWebSession.Record record) {
+    synchronized (state.lifecycle) {
+      return run != null
+          && state.currentRun == run
+          && run.recovered == record
+          && record != null
+          && state.lifecycle.isCurrent(run.generation)
+          && !state.lifecycle.isStarting()
+          && !state.lifecycle.isStopping()
+          && !state.lifecycle.isUserStopped()
+          && record.proof().generation() == run.generation
+          && record.proof().instance().equals(run.instanceId)
+          && record.authUrl().equals(run.authUrl)
+          && java.net.URI.create(record.authUrl()).getPort() == run.port;
+    }
+  }
+
+  static boolean applyRecheckedWebSession(
+      HarnessSessionState state,
+      WebRun run,
+      com.deepseekharness.app.runtime.StoredWebSession.Record record,
+      WebSessionRecheck.Outcome outcome) {
+    synchronized (state.lifecycle) {
+      if (!currentRecheck(state, run, record) || outcome.result() == WebSessionRecheck.Result.STALE)
+        return false;
+      if (outcome.result() == WebSessionRecheck.Result.LIVE) return false;
+      if (outcome.result() == WebSessionRecheck.Result.RESTORED) {
+        if (run.authorityRevocationPending
+            || outcome.authentication() == null
+            || !outcome.authentication().ready()) return false;
+        if (run.registration != null) run.registration.revoke();
+        run.registration =
+            com.deepseekharness.app.util.AgentTaskRegistration.restore(
+                run.generation, run.instanceId, record.taskToken());
+        run.recoveredLive = true;
+        run.confirmedWebExit = false;
+        state.restoreUnknown = false;
+        return true;
+      }
+      boolean changed =
+          run.recoveredLive
+              || !state.restoreUnknown
+              || run.confirmedWebExit != (outcome.result() == WebSessionRecheck.Result.EXITED);
+      applyRecoveredWebProof(state, run, false);
+      run.confirmedWebExit = outcome.result() == WebSessionRecheck.Result.EXITED;
+      if (changed) run.authorityRevocationPending = true;
+      return changed;
+    }
+  }
+
+  /** 只由同一IO队列调用；真实新启发布排在本次撤销之后，界面启停只能先改变意图。 */
+  static boolean finishAuthorityRevocation(
+      HarnessSessionState state,
+      WebRun run,
+      com.deepseekharness.app.runtime.StoredWebSession.Record record,
+      Runnable revoke) {
+    synchronized (state.lifecycle) {
+      if (!currentRecheck(state, run, record)) return false;
+      if (!run.authorityRevocationPending) return true;
+    }
+    // HTTP的screen检查会从其自身锁调用controller，不能在lifecycle内反向获取该锁。
+    try {
+      revoke.run();
+    } catch (RuntimeException unavailable) {
+      return false;
+    }
+    synchronized (state.lifecycle) {
+      if (!currentRecheck(state, run, record)) return false;
+      run.authorityRevocationPending = false;
+      return true;
+    }
+  }
+
+  /** 展示身份只用于保留原页面，不能据此批准DOM/文件/麦克风或任务请求。 */
+  public boolean isWebSessionRetained(
+      com.deepseekharness.app.util.PreviewPageSession.Identity expected) {
+    WebRun run = state.currentRun;
+    return expected != null
+        && run != null
+        && run.recovered != null
+        && currentRecheck(state, run, run.recovered)
+        && !run.recoveredLive
+        && expected.generation() == run.generation
+        && expected.instanceId().equals(run.instanceId)
+        && expected.authUrl().equals(run.authUrl);
+  }
+
+  public boolean isWebSessionExited(
+      com.deepseekharness.app.util.PreviewPageSession.Identity expected) {
+    WebRun run = state.currentRun;
+    return isWebSessionRetained(expected) && run != null && run.confirmedWebExit;
+  }
+
+  /** Apply only this run's observed proof; UNKNOWN retires LAN, never the Web process. */
+  static boolean applyRecoveredWebProof(HarnessSessionState state, WebRun run, boolean live) {
+    synchronized (state.lifecycle) {
+      if (!state.lifecycle.isCurrent(run.generation) || state.currentRun != run) return false;
+      run.recoveredLive = live;
+      if (!live) state.restoreUnknown = true;
+      if (!live && run.registration != null) run.registration.revoke();
+      // Existing bridge publication uses the same lifecycle -> proxy lock order.
+      // clearDshAuth only retires this generation's LAN credential and sockets.
+      if (!live) com.deepseekharness.app.LanProxyService.clearDshAuth(run.generation);
+      return true;
+    }
+  }
+
+  private void saveRunningSession(WebRun run) {
+    if (!lifecycle.isCurrent(run.generation) || run.registration == null) return;
+    try {
+      String token = run.registration.launchEnvironment().get("DSH_TASK_TOKEN");
+      var proof = webProc.captureSession(run.generation, run.instanceId, token, run.launcher);
+      var record =
+          new com.deepseekharness.app.runtime.StoredWebSession.Record(
+              proof,
+              run.authUrl,
+              storedSession.appIdentity(),
+              proot.getRootfsDir().getCanonicalPath(),
+              proot.expectedRuntimeDescriptor().id(),
+              run.compatible,
+              token);
+      // 保存与停止完成后的清退共用IO队列，后来的停止意图优先。
+      if (lifecycle.isCurrent(run.generation)) {
+        storedSession.write(record);
+        state.retainedWebStopProof = proof;
+        run.recovered = record;
+        run.recoveredLive = true;
+      }
+    } catch (Exception unavailable) {
+      DiagnosticLog.record(ctx, "WEB_SESSION_SAVE", unavailable.getClass().getSimpleName());
+    }
+  }
+
   /** Web 是否在运行（按 pid 文件 + kill -0 判断，不依赖端口反查）。 */
   public boolean isWebRunning() {
-    return processes.running();
+    return runningWithProof(state, processes::running);
+  }
+
+  static boolean runningWithProof(
+      HarnessSessionState state, java.util.function.BooleanSupplier probe) {
+    WebRun run;
+    long generation;
+    synchronized (state.lifecycle) {
+      run = state.currentRun;
+      generation = state.lifecycle.generation();
+      if (!runningProofAllowed(state, run)) return false;
+    }
+    boolean running = probe.getAsBoolean();
+    synchronized (state.lifecycle) {
+      return running
+          && generation == state.lifecycle.generation()
+          && state.currentRun == run
+          && runningProofAllowed(state, run);
+    }
+  }
+
+  private static boolean runningProofAllowed(HarnessSessionState state, WebRun run) {
+    return !state.restoreUnknown
+        && !state.lifecycle.isStopping()
+        && !state.lifecycle.isUserStopped()
+        && (run == null
+            || !run.authorityRevocationPending && (run.recovered == null || run.recoveredLive));
   }
 
   public boolean isWebStoppedForMaintenance() throws IOException {
@@ -116,12 +579,16 @@ final class WebLifecycleController {
   /** 当前 BrowserAuth 鉴权链接；dsh 还没打印出来时为空串。 */
   public int getWebPort() {
     WebRun run = state.currentRun;
-    return run != null && run.port > 0 ? run.port : 0;
+    return run != null && run.port > 0 ? run.port : config.getPortInt();
   }
 
   public String getWebAuthUrl() {
     WebRun run = state.currentRun;
-    return run == null ? "" : run.authUrl;
+    return run == null
+            || run.authorityRevocationPending
+            || run.recovered != null && !run.recoveredLive
+        ? ""
+        : run.authUrl;
   }
 
   /** 地址可以复用，网页只能属于本次仍存活且已经鉴权的正式实例。 */
@@ -130,15 +597,6 @@ final class WebLifecycleController {
       WebRun run = state.currentRun;
       return readyWebPageIdentity(
           lifecycle, run, run != null && state.recovery.failed(run.generation));
-    }
-  }
-
-  public com.deepseekharness.app.util.AgentTaskRegistration.Snapshot getReadyTaskRegistration() {
-    synchronized (lifecycle) {
-      WebRun run = state.currentRun;
-      if (run == null || run.registration == null) return null;
-      return run.registration.ready(
-          readyWebPageIdentity(lifecycle, run, state.recovery.failed(run.generation)));
     }
   }
 
@@ -152,10 +610,21 @@ final class WebLifecycleController {
           || lifecycle.isStopping()
           || lifecycle.isUserStopped()
           || run.authUrl.isEmpty()
-          || run.launcher == null
-          || !Compat.isAlive(run.launcher)) return null;
+          || run.authorityRevocationPending
+          || (run.recovered != null && !run.recoveredLive)
+          || (run.launcher == null || !Compat.isAlive(run.launcher))
+              && !(run.recovered != null && run.recoveredLive)) return null;
       return new com.deepseekharness.app.util.PreviewPageSession.Identity(
           run.generation, run.instanceId, run.authUrl);
+    }
+  }
+
+  public com.deepseekharness.app.util.AgentTaskRegistration.Snapshot getReadyTaskRegistration() {
+    synchronized (lifecycle) {
+      WebRun run = state.currentRun;
+      if (run == null || run.registration == null) return null;
+      return run.registration.ready(
+          readyWebPageIdentity(lifecycle, run, state.recovery.failed(run.generation)));
     }
   }
 
@@ -212,10 +681,17 @@ final class WebLifecycleController {
     return requestStart(onStatus, false, 0, true);
   }
 
+  public boolean startWebIfUnchanged(
+      long expectedGeneration, boolean manual, Consumer<String> onStatus) {
+    return requestStart(onStatus, !manual, expectedGeneration, false, expectedGeneration);
+  }
+
   /** 看门狗不能撤销用户停止意图；检查与入队在同一把锁内完成。 */
   public boolean restartWebAutomatically(long expectedGeneration, Consumer<String> onStatus) {
+    if (!canAutoRestart()) return false;
     synchronized (lifecycle) {
-      if (expectedGeneration != lifecycle.generation() || !canAutoRestart()) return false;
+      if (expectedGeneration != lifecycle.generation() || !lifecycle.canAutoStart(false))
+        return false;
       recordWebFailure(
           expectedGeneration, com.deepseekharness.app.util.UiText.text("服务连续三次健康检查未响应"));
       if (state.recovery.blocked()) return false;
@@ -225,32 +701,65 @@ final class WebLifecycleController {
 
   private boolean requestStart(
       Consumer<String> onStatus, boolean automatic, long expectedGeneration, boolean safeMode) {
+    return requestStart(onStatus, automatic, expectedGeneration, safeMode, lifecycle.generation());
+  }
+
+  private boolean requestStart(
+      Consumer<String> onStatus,
+      boolean automatic,
+      long expectedGeneration,
+      boolean safeMode,
+      long admissionGeneration) {
     synchronized (lifecycle) {
-      // 覆盖安装后，前台 START_STICKY 服务可能先于 MainActivity 被系统重建。
-      // 尚未尝试的新受管候选必须先走维护事务；否则看门狗会用兼容但过期的
-      // 运行时重新拉起 Web，令本 APK 的运行补丁和系统插件尚未落地。
-      // 已经尝试失败的候选仍可使用通过健康确认的兼容前代。
-      if (!proot.isEnvironmentReady() || EnvironmentAccess.requiresMaintenanceBeforeStart(owner)) {
+      if (lifecycle.generation() != admissionGeneration) return false;
+      if (state.restoreChecking) {
         if (onStatus != null)
           onStatus.accept(
               com.deepseekharness.app.util.UiText.choose(
-                  "运行环境缺失或需要更新，请进入安装与修复；配置安全启动不能修复系统文件。",
-                  "The runtime is missing or needs an update. Open installation and repair; safe configuration cannot repair system files."));
+                  "正在核对原 Web 实例，请稍后重试", "Checking the existing Web instance. Try again shortly."));
         return false;
       }
-      if (StartupRepairs.pending(ctx)) {
-        if (onStatus != null)
-          onStatus.accept(
-              com.deepseekharness.app.util.UiText.choose(
-                  "配置修复尚未完成，请先进入启动恢复。",
-                  "Configuration repair is incomplete. Open Startup Recovery first."));
+      if (automatic && state.restoreUnknown) return false;
+      if (automatic
+          && (lifecycle.isUserStopped() || lifecycle.isStarting() || lifecycle.isStopping()))
         return false;
-      }
-      if (com.deepseekharness.app.core.MaintenanceCoordinator.pending(owner)) {
-        if (onStatus != null)
-          onStatus.accept(com.deepseekharness.app.util.UiText.text("上次环境维护未完成，请先到安装与修复页恢复中断维护"));
-        return false;
-      }
+    }
+    // ADB reconnect owns this nonblocking gate too. Never wait on filesystem preflight or
+    // hold the lifecycle monitor while that task is still preparing the environment.
+    if (MaintenanceCoordinator.isEnvironmentTaskBusy()) {
+      if (onStatus != null)
+        onStatus.accept(com.deepseekharness.app.util.UiText.text("正在执行环境任务，完成后再启动 Web"));
+      return false;
+    }
+    // 覆盖安装后，前台 START_STICKY 服务可能先于 MainActivity 被系统重建。
+    // 尚未尝试的新受管候选必须先走维护事务；否则看门狗会用兼容但过期的
+    // 运行时重新拉起 Web，令本 APK 的运行补丁和系统插件尚未落地。
+    // 已经尝试失败的候选仍可使用通过健康确认的兼容前代。
+    if (!proot.isEnvironmentReady() || EnvironmentAccess.requiresMaintenanceBeforeStart(owner)) {
+      if (onStatus != null)
+        onStatus.accept(
+            com.deepseekharness.app.util.UiText.choose(
+                "运行环境缺失或需要更新，请进入安装与修复；配置安全启动不能修复系统文件。",
+                "The runtime is missing or needs an update. Open installation and repair; safe configuration cannot repair system files."));
+      return false;
+    }
+    if (StartupRepairs.pending(ctx)) {
+      if (onStatus != null)
+        onStatus.accept(
+            com.deepseekharness.app.util.UiText.choose(
+                "配置修复尚未完成，请先进入启动恢复。",
+                "Configuration repair is incomplete. Open Startup Recovery first."));
+      return false;
+    }
+    if (com.deepseekharness.app.core.MaintenanceCoordinator.pending(owner)) {
+      if (onStatus != null)
+        onStatus.accept(com.deepseekharness.app.util.UiText.text("上次环境维护未完成，请先到安装与修复页恢复中断维护"));
+      return false;
+    }
+    boolean stopSentinelPresent = hasStopSentinel();
+    synchronized (lifecycle) {
+      // Slow preflight does not reserve authority. A Stop/new intent during it wins.
+      if (lifecycle.generation() != admissionGeneration) return false;
       if (com.deepseekharness.app.core.MaintenanceCoordinator.isEnvironmentTaskBusy()) {
         if (onStatus != null)
           onStatus.accept(com.deepseekharness.app.util.UiText.text("正在执行环境任务，完成后再启动 Web"));
@@ -271,7 +780,7 @@ final class WebLifecycleController {
       long startedGeneration = -1;
       boolean transferred = false;
       try {
-        final long generation = lifecycle.beginStart(automatic, hasStopSentinel());
+        final long generation = lifecycle.beginStart(automatic, stopSentinelPresent);
         if (generation < 0) return false;
         startedGeneration = generation;
         boolean priorCompatible = state.currentRun != null && state.currentRun.compatible;
@@ -279,6 +788,7 @@ final class WebLifecycleController {
           state.currentRun.registration.revoke();
         WebRun run = new WebRun(generation);
         state.currentRun = run;
+        state.restoreUnknown = false;
         webRuns.put(generation, run);
         notifyReadyWebPageChanged();
         state.recovery.begin(generation, !automatic);
@@ -286,7 +796,11 @@ final class WebLifecycleController {
         state.diagnostics.begin(generation, safeMode);
         state.diagnostics.message(
             generation,
-            com.deepseekharness.app.util.UiText.format("运行方式：%s", config.getContainerRuntime()));
+            com.deepseekharness.app.util.UiText.format(
+                "运行方式：%s",
+                config.isProroot() && android.os.Build.VERSION.SDK_INT >= 26
+                    ? "proroot"
+                    : "proot"));
         new File(proot.getRootfsDir(), "root/.dsha-web-activity.json").delete();
         io.execute(
             () -> {
@@ -346,28 +860,31 @@ final class WebLifecycleController {
             generation, onStatus, com.deepseekharness.app.util.UiText.text("存在未完成的环境维护，请先恢复中断维护"));
         return;
       }
+      processes.loadStopEvidence();
       String startupProfile =
-          run.startupProfile != null
-              ? run.startupProfile
-              : new StartupPipeline(config, boot, proot, webProc, state.diagnostics)
-                  .prepare(
+          new StartupPipeline(config, boot, proot, webProc, state.diagnostics)
+              .prepare(
+                  generation,
+                  safeMode,
+                  new StartupEnvironmentActions(
+                      owner,
+                      state,
+                      processes,
                       generation,
-                      safeMode,
-                      new StartupEnvironmentActions(
-                          owner,
-                          state,
-                          processes,
-                          generation,
-                          stage -> setWebStage(generation, stage),
-                          status -> reportStatus(generation, onStatus, status)));
+                      stage -> setWebStage(generation, stage),
+                      status -> reportStatus(generation, onStatus, status)));
       if (startupProfile == null) return;
-      run.startupProfile = startupProfile;
-      int preferred = run.portRetried ? run.requestedPort : config.getRequestedWebPort();
-      run.requestedPort = preferred;
+      // 准备流水线已分别确认旧guest与启动器全部退出；只有真实退休才可替换旧实例记录。
+      storedSession.clear();
+      String runtimeName = boot.runtime().id();
+      state.diagnostics.message(
+          generation, com.deepseekharness.app.util.UiText.format("本次实际运行方式：%s", runtimeName));
+      run.compatible = compatible;
+      int preferred = config.getRequestedWebPort();
       com.deepseekharness.app.util.WebPortPolicy.Choice ports =
           com.deepseekharness.app.util.WebPortPolicy.choose(
-              run.forceDynamicPort ? 0 : preferred,
-              run.forceDynamicPort ? 0 : config.fallbackWebPort(preferred),
+              preferred,
+              config.fallbackWebPort(preferred),
               com.deepseekharness.app.util.WebPortPolicy::available);
       if (!lifecycle.isCurrent(generation)) return;
       run.port = ports.listen;
@@ -381,37 +898,21 @@ final class WebLifecycleController {
             onStatus,
             com.deepseekharness.app.util.UiText.text("正在自动选择可用 Web 端口，首选端口设置保留"));
       }
-      String launchKey = config.readApiKey().requireValue();
-      Map<String, String> launchEnvironment = new java.util.HashMap<>();
-      if (!launchKey.isEmpty()) launchEnvironment.put("DEEPSEEK_API_KEY", launchKey);
+      Map<String, String> launchEnvironment =
+          new java.util.HashMap<>(
+              StartupPipeline.legacyCredentialEnvironment(
+                  config.readApiKey(), warning -> reportStatus(generation, onStatus, warning)));
       synchronized (lifecycle) {
         if (!lifecycle.isCurrent(generation)) return;
         if (run.registration != null) run.registration.revoke();
         run.registration =
             new com.deepseekharness.app.util.AgentTaskRegistration(generation, run.instanceId);
         launchEnvironment.putAll(run.registration.launchEnvironment());
-      }
-      try {
-        run.log =
-            com.deepseekharness.app.backup.HostWebLog.create(
-                new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
-                ctx.getFilesDir().getCanonicalFile());
-      } catch (IOException unavailable) {
-        run.log = null;
-        state.diagnostics.message(
-            generation, "WEB_LOG_UNAVAILABLE:" + unavailable.getClass().getSimpleName());
+        launchEnvironment.put("DSHA_WEB_GENERATION", Long.toString(generation));
       }
       Process p =
           boot.execRootfs(
               runCoreCommand(startupProfile, ports.listen, generation), launchEnvironment);
-      String runtimeName = com.deepseekharness.app.runtime.OwnedGuestProof.modeOf(p);
-      proot.recordActualWebRuntime(p);
-      if ("UNKNOWN".equals(runtimeName)) throw new IOException("WEB_ENGINE_NOT_RECORDED");
-      state.diagnostics.message(
-          generation, com.deepseekharness.app.util.UiText.format("本次实际运行方式：%s", runtimeName));
-      run.compatible =
-          compatible
-              || "proot".equals(runtimeName) && "bxroot".equals(config.getContainerRuntime());
       run.launcher = p;
       setWebStage(generation, com.deepseekharness.app.util.UiText.text("等待鉴权链接"));
       // 3090 桥就绪：agent 在容器里调设备能力（/exec /confirm /status）走这条通道。
@@ -465,7 +966,7 @@ final class WebLifecycleController {
     }
   }
 
-  /** Read the guest stdout pipe and send redacted output to this launch's private host sink. */
+  /** 读 dsh 进程输出：抓鉴权链接（宽松）、并把脱敏后的输出落到容器日志方便排查。 */
   private void drainWebOutput(
       Process p,
       long generation,
@@ -476,7 +977,6 @@ final class WebLifecycleController {
       com.deepseekharness.app.util.WebPortPolicy.Choice ports) {
     WebRun run = webRuns.get(generation);
     if (run == null) return;
-    final com.deepseekharness.app.backup.HostWebLog outputLog = run.log;
     new WebOutputSession(ports.listen)
         .drain(
             p,
@@ -488,21 +988,10 @@ final class WebLifecycleController {
               public void output(String lines) {
                 synchronized (lifecycle) {
                   if (!current()) return;
-                  int conflict = com.deepseekharness.app.util.WebPortPolicy.conflictPort(lines);
-                  if (conflict > 0) run.bindConflict = conflict;
-                  appendHostLog(outputLog, lines);
-                  if (com.deepseekharness.app.util.RuntimeEnginePolicy.engineFailure(lines))
-                    run.engineFailure = true;
+                  appendHostLog(lines);
                   state.diagnostics.output(generation, lines);
-                  if (state.diagnostics.hasExplicitStartupFailure(generation)) {
-                    boolean pendingBindRetry =
-                        !run.portRetried
-                            && run.authUrl.isEmpty()
-                            && com.deepseekharness.app.util.WebPortPolicy.onlyBindConflict(
-                                state.diagnostics.snapshot().issues, ports.listen);
-                    if (pendingBindRetry) run.bindConflict = ports.listen;
-                    else failedWebPage(generation, state.diagnostics.failureReason());
-                  }
+                  if (state.diagnostics.hasExplicitStartupFailure(generation))
+                    failedWebPage(generation, state.diagnostics.failureReason());
                 }
               }
 
@@ -519,9 +1008,8 @@ final class WebLifecycleController {
                   if (!current() || authenticated()) return;
                   if (!state.recovery.failed(generation)) {
                     if (!publishAuthenticatedRun(lifecycle, run, url)) return;
-                    config.rememberFallbackWebPort(run.requestedPort, run.port);
-                    config.rememberWebOriginPort(run.port);
                     if (ports.preferred == 0 || ports.fallback()) {
+                      config.rememberFallbackWebPort(ports.preferred, run.port);
                       reportStatus(
                           generation,
                           onStatus,
@@ -538,6 +1026,7 @@ final class WebLifecycleController {
                   }
                 }
                 notifyReadyWebPageChanged();
+                io.execute(() -> saveRunningSession(run));
                 // LAN exchanges and migration checks never pause the stdout drain.
                 Thread ready =
                     new Thread(
@@ -552,33 +1041,32 @@ final class WebLifecycleController {
               }
 
               public void exited(int exitCode) {
+                // proroot启动器可能先于已鉴权guest退休；父进程退出不能当作guest退出或业务重启依据。
+                if (run.recovered != null
+                    && lifecycle.isCurrent(generation)
+                    && !run.authUrl.isEmpty()) {
+                  synchronized (lifecycle) {
+                    if (!lifecycle.isCurrent(generation) || state.currentRun != run) return;
+                    if (run.launcher == p) run.launcher = null;
+                  }
+                  // 与前后台复核共用同一IO队列；父进程退休不授予guest退出结论。
+                  requestWebSessionRecheck(null);
+                  return;
+                }
+                if (run.registration != null) run.registration.revoke();
                 if (run.launcher == p) run.launcher = null;
                 processes.releaseBridge(generation);
                 synchronized (lifecycle) {
                   if (!lifecycle.isCurrent(generation)) return;
                   boolean hadAuth = !run.authUrl.isEmpty();
-                  if (ports.listen > 0
-                      && !run.portRetried
-                      && !hadAuth
-                      && run.bindConflict == ports.listen
-                      && com.deepseekharness.app.util.WebPortPolicy.onlyBindConflict(
-                          state.diagnostics.snapshot().issues, ports.listen)) {
-                    state.diagnostics.message(
-                        generation,
-                        "WEB_BIND_RACE_EXIT: port=" + ports.listen + " exit=" + exitCode);
-                    state.diagnostics.preserveFailure(outputLog, "WEB_BIND_RACE_EXIT:" + exitCode);
-                    state.diagnostics.completed(
-                        generation, "bind-conflict", "WEB_BIND_RACE_EXIT:" + exitCode);
-                    io.execute(() -> retryAfterPortConflict(generation, onStatus, safeMode));
-                    return;
-                  }
                   String exitReason =
                       com.deepseekharness.app.util.UiText.format(
                           hadAuth ? "%s 进程退出，退出码 %s（鉴权后）" : "%s 进程退出，退出码 %s（鉴权前）",
                           runtimeName,
                           exitCode);
                   state.diagnostics.message(generation, exitReason);
-                  state.diagnostics.preserveFailure(outputLog, exitReason);
+                  state.diagnostics.preserveFailure(
+                      new File(proot.getRootfsDir(), "root/dsh-web.log"), exitReason);
                   boolean namedFailure =
                       state.diagnostics.hasExplicitStartupFailure(generation)
                           || state.diagnostics.snapshot().issues.keySet().stream()
@@ -589,18 +1077,12 @@ final class WebLifecycleController {
                       hadAuth,
                       namedFailure,
                       lifecycle.isCurrent(generation),
-                      exitCode,
-                      p instanceof com.deepseekharness.app.runtime.OwnedGuestProof owned
-                          && owned.commandWasNeverExecuted(),
-                      p instanceof com.deepseekharness.app.runtime.OwnedGuestProof owned
-                          && owned.confirmedTreeExit(),
-                      !(p instanceof com.deepseekharness.app.runtime.OwnedGuestProof owned
-                          && owned.commandWasNeverExecuted()))) {
+                      exitCode)) {
                     reportStatus(
                         generation,
                         onStatus,
                         com.deepseekharness.app.util.UiText.text(
-                            "bxroot 引擎故障且本轮进程树已关闭，正在使用 proot 兼容重试；本轮只重试一次。"));
+                            "proroot 已退出，正在自动使用 proot 兼容重试；本轮只重试一次。"));
                     io.execute(() -> retryWithProot(generation, onStatus, safeMode));
                     return;
                   }
@@ -675,59 +1157,13 @@ final class WebLifecycleController {
         });
   }
 
-  private void retryAfterPortConflict(
-      long generation, Consumer<String> onStatus, boolean safeMode) {
-    WebRun run = webRuns.get(generation);
-    if (run == null) return;
-    try (com.deepseekharness.app.runtime.RuntimeHostPorts.Scope invocation =
-        owner.runtimeHostPorts().open()) {
-      synchronized (lifecycle) {
-        if (!lifecycle.isCurrent(generation) || !lifecycle.isStarting() || run.portRetried) return;
-      }
-      boolean stopped = processes.confirmStopped();
-      if (!com.deepseekharness.app.util.WebPortPolicy.retryBindRace(
-          run.port, run.portRetried, !run.authUrl.isEmpty(), run.bindConflict, stopped)) {
-        throw new IOException("WEB_BIND_RETRY_EXIT_UNCONFIRMED");
-      }
-      com.deepseekharness.app.util.EnvironmentTaskGate.Lease lease =
-          com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire(
-              com.deepseekharness.app.util.UiText.text("Web 端口冲突重试"));
-      if (lease == null) throw new IOException("WEB_BIND_RETRY_BUSY");
-      try (lease) {
-        lease.run(
-            () -> {
-              synchronized (lifecycle) {
-                if (!lifecycle.isCurrent(generation) || !lifecycle.isStarting() || run.portRetried)
-                  return null;
-                run.portRetried = true;
-                run.forceDynamicPort = true;
-                run.bindConflict = -1;
-                run.port = 0;
-                state.diagnostics.begin(generation, safeMode);
-                state.diagnostics.message(generation, "WEB_BIND_RACE_RETRY_DYNAMIC");
-              }
-              startWeb(generation, onStatus, safeMode, false, run.compatible);
-              return null;
-            });
-      }
-    } catch (Exception failed) {
-      synchronized (lifecycle) {
-        if (!lifecycle.isCurrent(generation)) return;
-        lifecycle.finishStart(generation);
-        String reason = com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(failed));
-        recordWebFailure(generation, reason);
-        reportStatus(generation, onStatus, reason);
-      }
-    }
-  }
-
   private void retryWithProot(long generation, Consumer<String> onStatus, boolean safeMode) {
     synchronized (lifecycle) {
       if (!lifecycle.isCurrent(generation) || !lifecycle.isStarting()) return;
     }
     com.deepseekharness.app.util.EnvironmentTaskGate.Lease lease =
         com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquire(
-            com.deepseekharness.app.util.UiText.text("bxroot 退出后的兼容重试"));
+            com.deepseekharness.app.util.UiText.text("proroot 退出后的兼容重试"));
     if (lease == null) {
       lifecycle.finishStart(generation);
       reportStatus(
@@ -739,8 +1175,6 @@ final class WebLifecycleController {
     try (lease) {
       lease.run(
           () -> {
-            if (!processes.confirmStopped())
-              throw new IOException("WEB_ENGINE_RETRY_EXIT_UNCONFIRMED");
             startWeb(generation, onStatus, safeMode, false, true);
             return null;
           });
@@ -758,11 +1192,15 @@ final class WebLifecycleController {
     return run != null && run.compatible;
   }
 
-  /** Guest stdout is redacted into this exact launch's private host sink. */
-  private void appendHostLog(com.deepseekharness.app.backup.HostWebLog log, String chunk) {
-    if (log == null) return;
+  /** 把 dsh 输出脱敏后落到容器内 /root/dsh-web.log（排查用，鉴权 token 不落盘）。 */
+  private void appendHostLog(String chunk) {
     try {
-      log.append(com.deepseekharness.app.util.SensitiveData.redact(redactAuthUrl(chunk)));
+      File log = new File(proot.getRootfsDir(), "root/dsh-web.log");
+      if (log.getParentFile() != null) log.getParentFile().mkdirs();
+      Compat.append(
+          log,
+          com.deepseekharness.app.util.SensitiveData.redact(redactAuthUrl(chunk))
+              .getBytes(StandardCharsets.UTF_8));
     } catch (Throwable ignored) {
     }
   }
@@ -797,8 +1235,6 @@ final class WebLifecycleController {
 
   /** 立即禁用自动拉起，实际停止在共享队列执行，回调在后台线程。 */
   public void stopWeb(Consumer<String> onStatus) {
-    com.deepseekharness.app.HttpShellService.revokeScreenGrant(ctx);
-    com.deepseekharness.app.vscreen.VirtualScreenManager.from(ctx).stop();
     enqueueStop(onStatus);
   }
 
@@ -843,20 +1279,60 @@ final class WebLifecycleController {
     }
   }
 
+  /** The main-thread delivery must still belong to this confirmed, completed stop. */
+  static Runnable foregroundRetirement(
+      WebLifecycle lifecycle, long generation, WebStopCoordinator.Result proof, Runnable retire) {
+    return () -> {
+      synchronized (lifecycle) {
+        if (proof == null
+            || !proof.stopped()
+            || !lifecycle.isCurrent(generation)
+            || !lifecycle.isUserStopped()
+            || lifecycle.isStarting()
+            || lifecycle.isStopping()) return;
+        retire.run();
+      }
+    };
+  }
+
+  /** A failed attempt replaces any older exit proof, including failures after guest exit. */
+  static WebStopCoordinator.Result recordStopFailure(HarnessSessionState state, Throwable failure) {
+    var result =
+        new WebStopCoordinator.Result(
+            WebStopCoordinator.Status.FAILED,
+            "WEB_STOP_FAILED",
+            java.util.List.of(
+                com.deepseekharness.app.util.WebStopDiagnostic.failure(
+                    com.deepseekharness.app.util.WebStopDiagnostic.Code.STOP_FAILED, failure)));
+    if (result.detail().isBlank())
+      result =
+          new WebStopCoordinator.Result(
+              WebStopCoordinator.Status.FAILED,
+              "WEB_STOP_FAILED",
+              java.util.List.of(
+                  com.deepseekharness.app.util.WebStopDiagnostic.of(
+                      com.deepseekharness.app.util.WebStopDiagnostic.Code.STOP_FAILED)));
+    state.lastStopResult = result;
+    state.lastStopError = result.detail();
+    return result;
+  }
+
   private Future<?> enqueueStop(Consumer<String> onStatus) {
     return enqueueStop(onStatus, null);
   }
 
   private Future<?> enqueueStop(
       Consumer<String> onStatus, WebProcessManager.ForceCandidate forcedCandidate) {
-    com.deepseekharness.app.HttpShellService.revokeScreenGrant(ctx);
-    com.deepseekharness.app.vscreen.VirtualScreenManager.from(ctx).stop();
+    screenLifetime.revoke();
     synchronized (lifecycle) {
       if (lifecycle.isStopping()) return state.stopTask;
       long previous = lifecycle.generation();
       state.diagnostics.completed(previous, "stopped", "");
       long generation = lifecycle.beginStop();
       state.lastStopError = "";
+      state.lastStopResult =
+          new WebStopCoordinator.Result(
+              WebStopCoordinator.Status.UNCONFIRMED, "WEB_STOP_PENDING", "");
       WebRun run = webRuns.get(previous);
       if (run != null) {
         run.authUrl = "";
@@ -874,7 +1350,12 @@ final class WebLifecycleController {
           io.submit(
               () -> {
                 String stopError = "";
+                WebStopCoordinator.Result retirementProof = null;
                 try {
+                  processes.loadStopEvidence();
+                  // Core HTTP/ADB close and exit probes must never run in an Activity/Service
+                  // callback. The epoch/permit revocation above has already fenced input.
+                  screenLifetime.stop();
                   WebStopCoordinator.Result result =
                       WebStopCoordinator.stop(
                           new WebStopCoordinator.Ports() {
@@ -906,6 +1387,16 @@ final class WebLifecycleController {
                   state.lastStopResult = result;
                   stopError = result.stopped() ? "" : result.detail();
                   if (stopError.isEmpty()) processes.releaseBridge(previous);
+                  if (stopError.isEmpty()) {
+                    try {
+                      storedSession.clear();
+                    } catch (IOException unavailable) {
+                      DiagnosticLog.record(
+                          ctx, "WEB_SESSION_RETIRE", unavailable.getClass().getSimpleName());
+                    }
+                    state.retainedWebStopProof = null;
+                    state.unreadableWebStopProof = false;
+                  }
                   if (stopError.isEmpty()
                       && !com.deepseekharness.app.core.MaintenanceCoordinator
                           .isEnvironmentTaskBusy()) {
@@ -913,10 +1404,25 @@ final class WebLifecycleController {
                     com.deepseekharness.app.backup.PostUpgradeCleanupService.schedule(ctx);
                   } // Guest and owned-launcher proof remain separate.
                   com.deepseekharness.app.LanProxyService.stop(previous);
+                  if (stopError.isEmpty()) retirementProof = result;
+                } catch (RuntimeException | Error failure) {
+                  retirementProof = null;
+                  stopError = recordStopFailure(state, failure).detail();
+                  if (failure instanceof Error) throw (Error) failure;
                 } finally {
                   synchronized (lifecycle) {
                     state.lastStopError = stopError == null ? "" : stopError;
                     lifecycle.finishStop(generation);
+                    if (retirementProof != null && retirementProof.stopped())
+                      new android.os.Handler(android.os.Looper.getMainLooper())
+                          .post(
+                              foregroundRetirement(
+                                  lifecycle,
+                                  generation,
+                                  retirementProof,
+                                  () ->
+                                      com.deepseekharness.app.HarnessService.retireStoppedRuntime(
+                                          ctx, generation)));
                     reportStatus(
                         generation,
                         onStatus,
@@ -951,10 +1457,15 @@ final class WebLifecycleController {
   }
 
   public boolean canAutoRestart() {
+    boolean recoveryRequested = config.isStartupRecoveryRequested();
+    boolean stopSentinelPresent = hasStopSentinel();
     synchronized (lifecycle) {
-      return !config.isStartupRecoveryRequested()
+      WebRun run = state.currentRun;
+      return !state.restoreUnknown
+          && !(run != null && run.recovered != null && !run.recoveredLive)
+          && !recoveryRequested
           && !state.recovery.blocked()
-          && lifecycle.canAutoStart(hasStopSentinel());
+          && lifecycle.canAutoStart(stopSentinelPresent);
     }
   }
 
@@ -986,6 +1497,15 @@ final class WebLifecycleController {
   }
 
   /** 用户主动恢复：停止当前任务后再启动，慢启动也能使用此入口。 */
+  public boolean recoverWebIfUnchanged(
+      long expectedGeneration, boolean safe, String disabledPlugin, Consumer<String> onStatus) {
+    synchronized (lifecycle) {
+      if (lifecycle.generation() != expectedGeneration) return false;
+      recoverWeb(safe, disabledPlugin, onStatus);
+      return true;
+    }
+  }
+
   public void recoverWeb(boolean safe, String disabledPlugin, Consumer<String> onStatus) {
     if (disabledPlugin != null
         && (!state.diagnostics.snapshot().issues.containsKey(disabledPlugin)
@@ -1044,7 +1564,7 @@ final class WebLifecycleController {
               return;
             }
           }
-          requestStart(onStatus, false, 0, safe);
+          requestStart(onStatus, false, 0, safe, stopped);
         });
   }
 
@@ -1055,9 +1575,9 @@ final class WebLifecycleController {
       if (!lifecycle.isCurrent(generation) || !state.recovery.fail(generation, reason)) return;
       notifyReadyWebPageChanged();
       state.diagnostics.completed(generation, "failed", reason);
-      WebRun run = webRuns.get(generation);
-      if (run != null && run.registration != null) run.registration.revoke();
-      state.diagnostics.preserveFailure(run == null ? null : run.log, reason);
+      WebRun failedRun = webRuns.get(generation);
+      if (failedRun != null && failedRun.registration != null) failedRun.registration.revoke();
+      state.diagnostics.preserveFailure(new File(proot.getRootfsDir(), "root/dsh-web.log"), reason);
       if (!state.diagnostics.snapshot().safe)
         PluginActivationHooks.failed(owner, generation, state.diagnostics.recordId());
       if (!state.diagnostics.snapshot().browserReady || state.recovery.blocked())

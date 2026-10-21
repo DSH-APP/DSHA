@@ -75,8 +75,8 @@ public final class ConfigurationSnapshots {
     return result;
   }
 
-  /** Only explicit configuration maintenance publishes the proof for validated history. */
-  private void verifyCompleted(boolean persistProof) throws IOException {
+  /** Old completed journals are checked once before ordinary startup treats this tree as inert history. */
+  private void verifyCompleted() throws IOException {
     File history = new File(operations, HostOperationArchive.COMPLETED),
         proof = new File(files, HISTORY_PROOF);
     String type = fs.stat(history).type;
@@ -106,13 +106,13 @@ public final class ConfigurationSnapshots {
       if (!fs.stat(fs.child(operations, id)).type.equals("MISSING"))
         throw new IOException("RECOVERY_OPERATION_DUPLICATE");
     }
-    if (persistProof) CompletedHistory.write(fs, proof, "filesKey", filesKey, historyKey);
+    CompletedHistory.write(fs, proof, "filesKey", filesKey, historyKey);
   }
 
   private void archiveCompletedOperations() throws IOException {
     File history = fs.child(operations, HostOperationArchive.COMPLETED);
     directory(history);
-    verifyCompleted(true);
+    verifyCompleted();
     for (String id : new ArrayList<>(activeOperations())) {
       if (!id.matches(com.deepseekharness.app.util.Ids.UUID_PATTERN)) continue;
       File source = fs.child(operations, id);
@@ -647,7 +647,7 @@ public final class ConfigurationSnapshots {
   }
 
   public List<File> pendingNative() throws IOException {
-    verifyCompleted(false);
+    verifyCompleted();
     if (fs.stat(operations).type.equals("MISSING")) return Collections.emptyList();
     List<File> pending = new ArrayList<>();
     File history = fs.child(operations, HostOperationArchive.COMPLETED);

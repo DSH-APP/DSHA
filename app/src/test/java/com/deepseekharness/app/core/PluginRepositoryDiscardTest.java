@@ -2,6 +2,8 @@ package com.deepseekharness.app.core;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import com.deepseekharness.app.util.BoundedProcessRunner;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,10 +12,48 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(sdk = 34, manifest = Config.NONE, application = android.app.Application.class)
 public class PluginRepositoryDiscardTest {
   private static final String OK =
       "PLUGIN_RESULT: {\"status\":\"ok\",\"message\":\"preview removed\"}\n";
+
+  @Test
+  public void listProjectionDoesNotTurnScopePrefixOrRuntimeLocationIntoBuiltinIdentity()
+      throws Exception {
+    for (String name :
+        new String[] {"@deepseek-ai/dsh-ai-created", "dsh-ai-created", "@author/dsh-custom"}) {
+      PluginRepository.Item item =
+          new PluginRepository.Item(
+              new org.json.JSONObject()
+                  .put("name", name)
+                  .put("builtin", true)
+                  .put("official", true)
+                  .put("runtimeLocated", true));
+      assertFalse(item.builtin);
+      assertFalse(item.official);
+      assertFalse(item.runtimeProvided);
+      assertEquals("user", item.origin);
+    }
+    PluginRepository.Item managed =
+        new PluginRepository.Item(
+            new org.json.JSONObject()
+                .put("name", "@deepseek-ai/dsh-experimental-voice-input-bundle")
+                .put("builtin", true)
+                .put("runtimeProvided", true));
+    assertFalse(managed.builtin);
+    assertTrue(managed.runtimeProvided);
+    assertEquals("dsh-managed", managed.origin);
+    PluginRepository.Item signed =
+        new PluginRepository.Item(
+            new org.json.JSONObject().put("name", "dsh-web-mobile").put("builtin", true));
+    assertTrue(signed.builtin);
+    assertEquals("dsha-signed", signed.origin);
+  }
 
   @Test
   public void onlyCompletedOkResultConfirmsPreviewRemoval() throws Exception {

@@ -1,19 +1,39 @@
 # 更新记录
 
-## 0.2.0-rc2.1 · build172（2026-10-14，本地软件交付）
+## 0.2.1-rc.2 · build190 / F13（2026-10-21）
 
-- 默认与首次升级优先 bxroot，保留 proot 兼容选择；新的退出证明覆盖 owned 后代树，明确引擎启动失败后才有限回退，未知结果不重放。
-- 删除彻底重装/完整格式化全部生产能力；旧恢复转为原生私有槽预检，外置工作区文件、备份与无法确认的旧现场保留。
-- 原生透明沉浸状态栏保持可见，快捷聊天复用当前页面；移动插件更新固定到 3.1.0。
-- 增加三档屏幕确认、标准任务进度通知与插件静态能力显示；强化工具身份、最终审批复核及文件覆盖事务，修复多用户范围、MIME 与脱敏。
-- 全 #1–150 已分组审阅；已修复项继承，插件收录及整合包/市场跳过，证据不足的原设备问题继续列明。本轮仅软件验证与同签名本地 rc2.1，完成结果见[build172 记录](docs/releases/v0.2.23-build172-20261014.md)。
+- 真实目录控制器独立组合，保留后端/Gateway、Config/name与named类行为，不删除工作区、会话或附件。[操作与边界](docs/plugins.md)。
+- FileUploads以精确注册对象退休，避免比较Cordis包装后的回调；保留重复拒绝、旧disposer围栏、上传接收和Session回执。[运行机制](docs/runtime-data-plugin-architecture.md)。
+- 区分LIVE/UNKNOWN/EXITED；UNKNOWN保留同DOM/Gecko会话与原生状态面板，不授ready。仅同record/代次/实例/URL/端口通过kernel→HTTP→kernel后创建新registration，旧票不复活，不重发对话或后台启动。[启动与恢复](docs/startup-and-diagnostics.md)。
 
-## 0.2.0-rc2.1 · build171（2026-10-13，本地整合）
+- Standard选定150类/952项JUnit（3跳过），Low选定150类/952项（76跳过），两版零失败/错误；Release Lint零错误、Standard/Low警告249/162，八项实际APK检查通过。原始失败/纠正/预期负控分别保留，不称一次连续全绿；无设备/ADB、真实账号/模型和新长时验收。[F13记录](docs/releases/v0.2.1-rc.2-build190-fix13-20261021.md) · [English](docs/en/releases/v0.2.1-rc.2-build190-fix13-20261021.md)。
 
-- 处置 PR102–150 的20个开放 PR：附件大文件与取消、PiP 测量、静态缓存、移动视口、虚拟屏授权/结果、迁移 CLI、内部工具 guard 与临时目录清理；重复 PR 以新版实现统一。
-- 默认 Web 端口改为内核分配，复用可用的上次成功端口，保留手动设置。鉴权、保活与 LAN 使用实际端口，提供旧端口网页草稿恢复入口。
-- 修复 issue121 的插件客户端依赖准备、issue122 的虚拟屏 bundle/MCP 生命周期、issue148 的冷安装进程退出与诊断、issue149 的单会话布局恢复；原件和个人数据保留。
-- 两版沿用包名和历史 E7E3 签名，完整离线资产；本轮不安装、不真机验收、不上传。最终检查、摘要与未验边界见[build171 报告](docs/releases/v0.2.22-build171-20261013.md)。
+下方旧条目的“当前/本轮”按其原时点阅读；已发布F12原记录和URL不改，F11未上传。
+
+## 0.2.1-rc.2 · build190 / F12（2026-10-21）
+
+- 修复插件全依赖同步扫描导致列表与DSH通道阻塞；改为真实bundle筛选、完整异步来源证明、短启停读回及独立刷新，保留事务与未知退出屏障。
+- 修复严格恢复既有Web后LAN cookie未发布，以及首次说明响应丢失/Host晚保存/明确revision冲突的处理；未保存不假报成功。
+- 保留自动Web端口；说明本机端口复用、origin变化及同WebServer OAuth临时回调路由，不把ADB端口与Web端口混用。
+- 补齐分发文档与完整现行英文版。148类/939项每flavor，零失败/错误；Lint零错误，八项实际APK检查通过；无本轮真机/真实账号/新长时验收。见[F12记录](docs/releases/v0.2.1-rc.2-build190-fix12-20261021.md)和[English](docs/en/releases/v0.2.1-rc.2-build190-fix12-20261021.md)。
+
+## 0.2.1-rc.2 · build190 / F11（2026-10-21，当前私有维护版本）
+
+- 当前诊断版本 `0.2.1-rc.2-20261021.1157-dsh0.2.1-rc.2` /190；DSH0.2.1-rc.2、移动UI3.2.1、Ubuntu base10、默认proot/可选proroot及正式包名/E7E3保持。最终软件及精确APK结果见下；附件摘要与远端状态由关联Release及独立外部回执核验。
+- 修订LAN后端端口、业务拒绝、回调路径和网络变化连接收尾；适配官方账号授权在内嵌浏览器的异步导航及首次说明Host确认。宿主恢复只识别同一活跃Web，不启动或重放业务；未知证据保留停止屏障及原生工作台。
+- 插件按APK受管proof和实际完整内容区分签名、受管、用户/未验证来源；不再凭npm scope、前缀或安装目录漏备用户包。普通失败临时候选与UNKNOWN保留现场分开说明。
+- 补齐21篇实际新Markdown和具体操作/权限/失败文档；源码分发清单2135成员/135MD，Java adoption1023。完整源码ZIP继续直接展开固定输入；最终冻结范围以回执为准。
+- 本轮暂停设备、ADB、真实账号/模型对话和四/八小时验收；Star快照1827属于原仓库。详见[F11范围与实际结果](docs/releases/v0.2.1-rc.2-build190-fix11-20261021.md)。
+- 最终增量构建两版各143类/881项，零失败/错误；Standard/Low跳过3/76。两版Lint零错误、249/162警告，八项实际APK检查通过；原始失败、复核负控及宿主端口占用限制见F11记录。
+
+## 0.2.1-rc.2 · build190 / F10（2026-10-21，已发布历史）
+
+- 以build170为基座迁入后续全局授权、虚拟屏等功能，内置DSH0.2.1-rc.2；按本轮用户决定恢复默认proot，同时保留显式proroot选择。此项覆盖下方DSHA v1.1.6的历史默认，不是宣称proroot上游版本为v1.1.6；当前vendor锁v1.2.8。详见[运行引擎与迁移](docs/runtime-engines.md)。
+- 键盘动画减少逐帧整页重排，移动插件3.2.1固定main10e58ce；新增直接保存Download/DSHA的一键无密码备份，先安全停止DSH/任务，不自动重启，外置工作区内容另备。
+- 新增项目框架、设备权限、运行环境/数据/插件、引擎、端口、DNS、虚拟屏架构和ADR、官方资料与来源索引；当前配置、历史性能/默认及未运行范围分开。
+- 默认Web端口自动选择；备用只在本机记忆、不跨设备迁移。auto/ipv4对Node做特定lookup兼容，ipv4另加glibc no-aaaa，详见[端口](docs/ports-and-networking.md)与[DNS](docs/dns-configuration.md)。
+- 软件双版各785项零失败/错误（Standard3、Low76跳过）、两版Release Lint零错误且有警告，正式Standard APK七项实际核验通过。F10当时未验手机；准确包与源码归属见[F10历史发布记录](docs/releases/v0.2.1-rc.2-build190-prerelease-20261020.md)。
+
 
 ## 0.2.0-rc2 正式版 · build170（2026-10-09）
 
@@ -468,6 +488,8 @@ assets 脚本真编译），发布时证书指纹不匹配直接中止 —— �
 | 深色模式按钮浅蓝底浅字看不清 | Material3 把 `<Button>` 膨胀成 MaterialButton 并用 `colorPrimary` 填充，**忽略 `android:background`**，对比度只有约 1.3:1 |
 
 ### 🚀 v1.1.6 起：默认 proroot 运行时，启动快 5~6 倍
+
+> 历史归属：本节是DSHA v1.1.6当时的默认、旧基准和回退设计，不描述当前build190，也不是proroot上游版本号。当前默认proot、proroot显式可选；当前加载器、shim、缺失的--kill-on-exit及退出监督见[运行引擎专页](docs/runtime-engines.md)。下方原历史正文保留。
 
 传统 proot 基于 ptrace，**每个系统调用要两次上下文切换**；
 [proroot](https://github.com/coderredlab/proroot) 改用 LD_PRELOAD + 二进制补丁做

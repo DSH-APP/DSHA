@@ -1,6 +1,6 @@
 # 现行工程规范
 
-本规范采用外部 build150 审计中经当前源码与用户要求复核的部分。原资料与首次复核见 [build154 审计](audits/build154/FINDINGS-BEFORE.md)，当前逐项处置以 README 指向的本轮台账为准。附件中的另一会话决策不直接成为本仓库规则。
+本规范采用外部 build150 审计中经当前源码与用户要求复核的部分。原资料与首次复核属于build154本机历史审计，材料分发范围见[文档索引](documentation-index.md#历史材料如何阅读)，当前逐项处置以 README 指向的本轮台账为准。附件中的另一会话决策不直接成为本仓库规则。
 
 上手步骤见[现行接手指南](接手指南.md)，职责见[模块图](module-map.md)，约束来源见[ADR 0001](adr/0001-build154-boundaries.md)，构建与提交见[CONTRIBUTING](../CONTRIBUTING.md)。旧指南和验收报告的原字节由[历史文档清单](audits/build154/history-document-sources.json)记录，不把旧命令重新纳入部署。
 

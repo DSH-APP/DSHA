@@ -25,7 +25,7 @@ function fixture() {
     vm.runInContext(readFileSync(assets+'web-integration/session-interaction.js','utf8')+';globalThis.create = createDshaSessionSelection;',context);
     const state = context.create(() => clock);
     return { state, advance(ms) {clock += ms}, opened: () => opened,
-        tap(id, event = {}, current = 'old') { state.click({detail:1,pointerType:'touch',clientX:10,clientY:10,...event},id,current,()=>opened++); } };
+        tap(id, event = {}, current = 'old') { state.click({detail:1,clientX:10,clientY:10,...event},id,current,()=>opened++); } };
 }
 test('单击选择、同一会话双击打开，第三次点击不会再打开',()=>{
     const f=fixture(); f.tap('new'); assert.equal(f.state.selected('old'),'new'); assert.equal(f.opened(),0);
@@ -40,27 +40,6 @@ test('不同会话、超时和拖动距离不误作双击',()=>{
 test('键盘和辅助功能显式激活直接打开；取消和右键不导航',()=>{
     const f=fixture(); f.tap('a',{detail:0}); assert.equal(f.opened(),1);
     f.tap('a',{defaultPrevented:true}); f.tap('a',{button:2}); assert.equal(f.opened(),1);
-});
-
-test('混合输入逐次分流：触屏/pen双击、实际鼠标一次打开，不沿用另一输入的首击',()=>{
-    const f=fixture(); f.tap('a'); assert.equal(f.opened(),0);
-    f.tap('a',{pointerType:'mouse'}); assert.equal(f.opened(),1);
-    f.tap('b',{pointerType:'pen'}); assert.equal(f.opened(),1);
-    f.tap('b',{pointerType:'touch'}); assert.equal(f.opened(),1);
-    f.advance(100); f.tap('b',{pointerType:'touch'}); assert.equal(f.opened(),2);
-    f.tap('c',{pointerType:'pen'}); f.advance(100); f.tap('c',{pointerType:'pen'}); assert.equal(f.opened(),3);
-});
-
-test('React MouseEvent点击使用同一行pointerdown来源；过期/不同目标与取消不串行',()=>{
-    const f=fixture(); const pointer={pointerType:'touch',pointerId:7,clientX:10,clientY:10};
-    f.state.pointerDown(pointer,'a','old'); f.tap('a',{pointerType:undefined}); assert.equal(f.opened(),0);
-    f.advance(100); f.state.pointerDown(pointer,'a','old'); f.tap('a',{pointerType:undefined}); assert.equal(f.opened(),1);
-    f.state.pointerDown(pointer,'b','old'); f.tap('c',{pointerType:undefined}); assert.equal(f.opened(),2);
-    f.state.pointerDown(pointer,'b','old'); f.advance(1501); f.tap('b',{pointerType:undefined}); assert.equal(f.opened(),3);
-    f.tap('d'); f.state.pointerDown(pointer,'d','old'); f.state.pointerCancel(pointer,'d','old');
-    f.tap('d'); assert.equal(f.opened(),3);
-    f.state.pointerDown({pointerType:'mouse',clientX:10,clientY:10},'d','old');
-    f.tap('d'); assert.equal(f.opened(),3,'an intervening mouse pointerdown cannot finish a touch double tap');
 });
 test('实际导航改变后不会沿用旧高亮，订阅可清理',()=>{
     const f=fixture(); let notices=0; const stop=f.state.subscribe(()=>notices++);

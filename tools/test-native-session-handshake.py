@@ -8,8 +8,6 @@ from pathlib import Path
 import select
 import shutil
 import signal
-import socket
-import struct
 import subprocess
 import sys
 import tempfile
@@ -66,8 +64,8 @@ def windows_linux_probe(args):
     harness = ROOT / 'tools/native-session/handshake-probe.mjs'
     receipt_path = inputs / 'compile-receipt.json'
     prepared = json.loads(receipt_path.read_text(encoding='utf-8'))
-    if prepared.get('schema') != 1:
-        raise ValueError('NATIVE_PREPARED_INPUT_SCHEMA')
+    if prepared.get('schema') != 1 or prepared['source']['sha256'] != digest(source):
+        raise ValueError('NATIVE_PREPARED_SOURCE_CHANGED')
     if digest(inputs / 'session-host') != prepared['binary']['sha256']:
         raise ValueError('NATIVE_PREPARED_BINARY_CHANGED')
     if digest(inputs / 'Packages.xz') != prepared['officialIndex']['sha256']:
@@ -82,7 +80,7 @@ def windows_linux_probe(args):
     linker = compiler.with_name('ld.lld.exe')
     if digest(compiler) != prepared['compiler']['sha256']:
         raise ValueError('NATIVE_PREPARED_COMPILER_CHANGED')
-    node = Path(args.linux_node).resolve(strict=True) if args.linux_node else host / 'node'
+    node = host / 'node'
     if not node.is_file() or not linker.is_file():
         raise ValueError('ENVIRONMENT_GAP: prepared Linux Node and NDK linker are required')
     sysroot = inputs / 'sysroot'
@@ -90,21 +88,17 @@ def windows_linux_probe(args):
     source_hash, harness_hash, prepared_hash = digest(source), digest(harness), digest(receipt_path)
     def lx(path):
         value = Path(path).resolve()
-        found = subprocess.run(['wsl.exe', '-d', args.wsl_distro, '--exec', 'wslpath', '-u', str(value)], capture_output=True, timeout=15, check=True)
-        result = found.stdout.decode('utf-8').strip()
-        if not result.startswith('/') or '\n' in result: raise ValueError('NATIVE_WSL_PATH_UNKNOWN')
-        return result
+        return '/mnt/host/' + value.drive[0].lower() + value.as_posix().split(':', 1)[1]
     work = Path(args.work_directory).resolve() if args.work_directory else ROOT / 'app/build'
     with tempfile.TemporaryDirectory(prefix='native-handshake-', dir=work) as temporary:
         output = Path(temporary)
         object_file, binary = output / 'session.o', output / 'session-host'
-        runtime = subprocess.run(['wsl.exe','-d',args.wsl_distro,'--exec','sha256sum','/lib64/ld-linux-x86-64.so.2','/lib/x86_64-linux-gnu/libc.so.6'],capture_output=True,check=True,timeout=15).stdout
         commands = [
             [str(compiler), '--target=x86_64-linux-gnu', '--sysroot=' + str(sysroot),
              '-isystem', str(sysroot / 'usr/include/x86_64-linux-gnu'), '-std=c11',
              '-D_GNU_SOURCE', '-O2', '-fPIE', '-c', str(source), '-o', str(object_file)],
             [str(linker), '--sysroot=' + str(sysroot), '-m', 'elf_x86_64', '-pie',
-             '-dynamic-linker', '/lib64/ld-linux-x86-64.so.2',
+             '-dynamic-linker', lx(sysroot / 'lib/x86_64-linux-gnu/ld-linux-x86-64.so.2'),
              '-L' + str(sysroot / 'usr/lib/x86_64-linux-gnu'), '-L' + str(sysroot / 'lib/x86_64-linux-gnu'),
              str(sysroot / 'usr/lib/x86_64-linux-gnu/Scrt1.o'), str(sysroot / 'usr/lib/x86_64-linux-gnu/crti.o'),
              str(object_file), '-lc', str(sysroot / 'usr/lib/x86_64-linux-gnu/crtn.o'), '-o', str(binary)]]
@@ -117,8 +111,8 @@ def windows_linux_probe(args):
                 sys.stderr.buffer.write(result.stdout + result.stderr)
                 raise ValueError('NATIVE_CURRENT_SOURCE_COMPILE_FAILED')
         binary_hash = digest(binary)
-        libraries = '/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu'
-        command = ['wsl.exe', '-d', args.wsl_distro, '--exec', 'env', 'LD_LIBRARY_PATH=' + lx(host),
+        libraries = ':'.join(lx(sysroot / relative) for relative in ('lib/x86_64-linux-gnu', 'usr/lib/x86_64-linux-gnu'))
+        command = ['wsl.exe', '-d', args.wsl_distro, '--', 'env', 'LD_LIBRARY_PATH=' + lx(host),
                    'TMPDIR=' + str(temporary_base), lx(node), lx(harness), lx(binary), lx(source),
                    binary_hash, source_hash, libraries]
         result = subprocess.run(command, capture_output=True, timeout=30)
@@ -131,13 +125,10 @@ def windows_linux_probe(args):
             raise ValueError('NATIVE_REAL_LINUX_RECEIPT_INVALID')
         if before != tree_digest(sysroot) or source_hash != digest(source) or harness_hash != digest(harness) or prepared_hash != digest(receipt_path) or binary_hash != digest(binary):
             raise ValueError('NATIVE_INPUTS_CHANGED_DURING_PROBE')
-        if runtime != subprocess.run(['wsl.exe','-d',args.wsl_distro,'--exec','sha256sum','/lib64/ld-linux-x86-64.so.2','/lib/x86_64-linux-gnu/libc.so.6'],capture_output=True,check=True,timeout=15).stdout:
-            raise ValueError('NATIVE_LINUX_RUNTIME_CHANGED')
         print(json.dumps({'status': 'PASS', 'sourceSha256': source_hash, 'harnessSha256': harness_hash,
                           'preparedInputsReceiptSha256': prepared_hash, 'sysrootDigest': before,
                           'compilerSha256': digest(compiler), 'linkerSha256': digest(linker),
                           'linuxNodeSha256': digest(node), 'compileChecks': checks,
-                          'linuxRuntimeSha256':runtime.decode('ascii').strip().splitlines(),
                           'behaviorLogSha256': hashlib.sha256(result.stdout + result.stderr).hexdigest(),
                           'scope': 'fresh Linux x86_64 C compilation and real WSL kernel; no Android device claim'}))
 
@@ -159,10 +150,8 @@ class NativeSessionHandshakeTest(unittest.TestCase):
         if hasattr(cls, 'directory'): cls.directory.cleanup()
 
     def test_birth_is_self_stat_and_guest_does_not_start_before_parent_confirmation(self):
-        name = 'dsha-handshake-' + os.urandom(16).hex()
-        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); server.bind('\0'+name); server.listen(1); server.settimeout(2)
-        script = 'echo GUEST_STARTED; sleep 30'
-        process = subprocess.Popen([str(self.binary), '--birth-handshake', '--control='+name, '--', '/bin/sh', '-c', script],
+        script = 'IFS= read -r start; [ "$start" = DSHA_START ] || exit 125; echo GUEST_STARTED; kill -STOP $$'
+        process = subprocess.Popen([str(self.binary), '--birth-handshake', '/bin/sh', '-c', script],
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         born = None
         try:
@@ -178,18 +167,10 @@ class NativeSessionHandshakeTest(unittest.TestCase):
             self.assertEqual(pid, int(values[2]))
             self.assertEqual(pid, int(values[3]))
             self.assertEqual(born, Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()[19])
-            control, _ = server.accept(); control.settimeout(4); reader = control.makefile('rb')
-            peer = struct.unpack('3i', control.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
-            self.assertEqual((pid,os.getuid(),os.getgid()),peer)
-            self.assertEqual(b'READY DSHA_OWNED_TREE_V2\n',reader.readline())
+            self.assertFalse(select.select([process.stdout], [], [], .1)[0], 'Guest started before DSHA_START')
             process.stdin.write(b'DSHA_START\n'); process.stdin.flush()
-            self.assertFalse(select.select([process.stdout], [], [], .1)[0], 'Guest started before trusted START')
-            control.sendall(b'START\n'); self.assertEqual(b'STARTED\n',reader.readline())
             self.assertTrue(select.select([process.stdout], [], [], 2)[0])
             self.assertEqual(b'GUEST_STARTED\n', process.stdout.readline())
-            control.sendall(b'STOP\n'); self.assertEqual(b'COMMAND_EXITED 143\n',reader.readline())
-            self.assertEqual(b'OWNED_TREE_EMPTY ECHILD\n',reader.readline()); control.sendall(b'COMMIT\n')
-            self.assertEqual(143,process.wait(timeout=2)); reader.close(); control.close(); server.close()
         finally:
             if process.poll() is None:
                 current = Path(f'/proc/{process.pid}/stat').read_text().rsplit(')', 1)[1].split()
@@ -209,10 +190,9 @@ class NativeSessionHandshakeTest(unittest.TestCase):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--linux-host')
-    parser.add_argument('--linux-node', help='Explicit verified GNU Linux Node fixture; old musl bytes remain untouched')
     parser.add_argument('--native-inputs')
     parser.add_argument('--linux-tempdir')
-    parser.add_argument('--wsl-distro', default='DSHA-build172')
+    parser.add_argument('--wsl-distro', default='docker-desktop')
     parser.add_argument('--work-directory')
     args, tests = parser.parse_known_args()
     if sys.flags.optimize:

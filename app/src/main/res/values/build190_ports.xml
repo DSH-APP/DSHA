@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="build190_auto_port">自动分配 Web 端口（推荐）</string>
+</resources>

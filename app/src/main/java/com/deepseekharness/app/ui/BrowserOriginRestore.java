@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 /** Explicit old-origin recovery; it never takes an occupied port or changes browser credentials. */
 public final class BrowserOriginRestore {
-  public static final String QUIESCE = "com.dsh.client.ORIGIN_RESTORE_QUIESCE";
+  public static final String QUIESCE = "dsh.android.client.ORIGIN_RESTORE_QUIESCE";
   private static final Object GATE = new Object();
   private static final java.util.Set<String> PREVIEWS = new java.util.HashSet<>();
   private static String restoring;

@@ -76,10 +76,20 @@ public class HarnessService extends Service {
   /** 仅在可见界面调用：已启动的 Web 恢复前台服务，不启动新请求或重启 Node。 */
   public static void ensureRuntimeForeground(Context context) {
     HarnessController controller = HarnessController.get(context);
+    if (controller.needsWebSessionRestore())
+      controller.restoreRunningWebSession(
+          () -> {
+            var activity = ForegroundActivity.current();
+            if (activity != null && ForegroundActivity.isResumed(activity))
+              ensureRuntimeForeground(activity);
+          });
+    else controller.requestWebSessionRecheck(null);
     if (controller.isUserStopped()
         || controller.isStopping()
         || controller.isRestartBlocked()
-        || (!controller.isStarting() && controller.getWebAuthUrl().isEmpty())) return;
+        || (!controller.isStarting()
+            && controller.getWebAuthUrl().isEmpty()
+            && !controller.hasUnresolvedWebSession())) return;
     HarnessService service = DshaApp.from(context).harnessService().current();
     try {
       if (service != null && service.keepAliveHealthy()) {
@@ -103,6 +113,13 @@ public class HarnessService extends Service {
   public void onCreate() {
     super.onCreate();
     c = HarnessController.get(this);
+    c.restoreRunningWebSession(
+        () -> {
+          if (DshaApp.from(this).harnessService().current() == this && !c.isUserStopped()) {
+            if (!keepAliveHealthy()) startKeepAlive();
+            else refreshLocks();
+          }
+        });
     DshaApp.from(this).harnessService().attach(this);
     android.content.IntentFilter screen = new android.content.IntentFilter(Intent.ACTION_SCREEN_ON);
     screen.addAction(Intent.ACTION_SCREEN_OFF);
@@ -153,7 +170,13 @@ public class HarnessService extends Service {
         && (c.isUserStopped()
             || c.isStopping()
             || c.isRestartBlocked()
-            || (!c.isStarting() && c.getWebAuthUrl().isEmpty()))) {
+            || (!c.isStarting() && c.getWebAuthUrl().isEmpty() && !c.hasUnresolvedWebSession()))) {
+      // A queued START cannot remove the protection for an unfinished/unknown stop.
+      var stopped = c.lastStopResult();
+      if (c.isStopping()
+          || (c.isUserStopped()
+              && (stopped == null || !stopped.stopped() || !c.lastStopError().isEmpty())))
+        return START_NOT_STICKY;
       stopKeepAlive();
       if (shellHttp != null) {
         shellHttp.close();
@@ -169,21 +192,45 @@ public class HarnessService extends Service {
   }
 
   private void stopWebAndSelf() {
-    stopKeepAlive();
     try {
+      // WebLifecycleController retires this service only after guest and launcher proof.
       c.stopWeb(msg -> {});
-    } catch (Throwable ignored) {
+    } catch (RuntimeException failure) {
+      com.deepseekharness.app.core.DiagnosticLog.record(
+          this, "RUNTIME_STOP_REQUEST", failure.getClass().getSimpleName());
     }
+  }
+
+  /** Called on main while the controller holds the same-generation completed-stop fence. */
+  public static void retireStoppedRuntime(Context context, long generation) {
+    if (android.os.Looper.myLooper() != android.os.Looper.getMainLooper())
+      throw new IllegalStateException("RUNTIME_RETIREMENT_REQUIRES_MAIN");
+    HarnessService service = DshaApp.from(context).harnessService().current();
+    if (service == null) return;
+    HarnessController controller = service.c;
+    var stopped = controller.lastStopResult();
+    if (generation <= 0
+        || generation != controller.getWebGeneration()
+        || !controller.isUserStopped()
+        || controller.isStarting()
+        || controller.isStopping()
+        || stopped == null
+        || !stopped.stopped()
+        || !controller.lastStopError().isEmpty()) return;
+    service.stopKeepAlive();
     try {
-      if (shellHttp != null) {
-        shellHttp.close();
-        shellHttp = null;
+      if (service.shellHttp != null) {
+        service.shellHttp.close();
+        service.shellHttp = null;
       }
-    } catch (Throwable ignored) {
+    } catch (RuntimeException failure) {
+      com.deepseekharness.app.core.DiagnosticLog.record(
+          context, "RUNTIME_SERVICE_RETIREMENT", failure.getClass().getSimpleName());
+      return;
     }
-    // ADB 保活属于用户单独启用的需求；停止 Web 不撤销设备服务的 lease。
-    stopForeground(true);
-    stopSelf();
+    // DeviceBridgeService owns a separate lease and the user's independent ADB intent.
+    service.stopForeground(true);
+    service.stopSelf();
   }
 
   // ================= 息屏保活 =================
@@ -224,7 +271,9 @@ public class HarnessService extends Service {
         starting
             || (!c.isUserStopped()
                 && !c.isRestartBlocked()
-                && (c.canAutoRestart() || !c.getWebAuthUrl().isEmpty()));
+                && (c.hasUnresolvedWebSession()
+                    || c.canAutoRestart()
+                    || !c.getWebAuthUrl().isEmpty()));
     boolean lan = c.config().isLanMode(), work = com.deepseekharness.app.core.RuntimeTasks.isBusy();
     android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
     // LAN 需要随时接收远端请求；不读取页面空闲文件决定是否允许休眠。
@@ -242,15 +291,19 @@ public class HarnessService extends Service {
     if (keep) acquireLocks(!eco || lan || work || !idle);
     else releaseLocks();
     String state =
-        c.isRestartBlocked()
-            ? com.deepseekharness.app.util.UiText.text("连续失败，自动重启已暂停；点此查看恢复选项")
-            : !active
-                ? com.deepseekharness.app.util.UiText.text("Web 已停止")
-                : !eco
-                    ? com.deepseekharness.app.util.UiText.text("持续运行 · 后台保活已开启")
-                    : keep
-                        ? com.deepseekharness.app.util.UiText.text("省电模式 · 有任务或状态待确认，继续保活")
-                        : com.deepseekharness.app.util.UiText.text("省电模式 · 已空闲，允许系统休眠");
+        c.hasUnresolvedWebSession() && !c.isUserStopped() && !c.isStopping()
+            ? com.deepseekharness.app.util.UiText.choose(
+                "正在验证原 Web 状态 · 保留后台保护",
+                "Verifying the existing Web session · background protection retained")
+            : c.isRestartBlocked()
+                ? com.deepseekharness.app.util.UiText.text("连续失败，自动重启已暂停；点此查看恢复选项")
+                : !active
+                    ? com.deepseekharness.app.util.UiText.text("Web 已停止")
+                    : !eco
+                        ? com.deepseekharness.app.util.UiText.text("持续运行 · 后台保活已开启")
+                        : keep
+                            ? com.deepseekharness.app.util.UiText.text("省电模式 · 有任务或状态待确认，继续保活")
+                            : com.deepseekharness.app.util.UiText.text("省电模式 · 已空闲，允许系统休眠");
     if (!state.equals(notificationState)) {
       notificationState = state;
       NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -331,6 +384,7 @@ public class HarnessService extends Service {
                 }
                 refreshLocks();
                 ensureLanListening();
+                c.refreshRecoveredWebSession();
                 if (!c.canAutoRestart()) {
                   fail = 0;
                   continue;

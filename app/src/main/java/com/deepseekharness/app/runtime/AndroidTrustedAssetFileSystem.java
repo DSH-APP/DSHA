@@ -460,8 +460,8 @@ final class AndroidTrustedAssetFileSystem
   }
 
   @Override
-  public TrustedAssetFileSystem.CreatedFile prepareSmallFile(
-      File file, byte[] bytes, int count, int mode) throws IOException {
+  public CreatedFile prepareSmallFile(File file, byte[] bytes, int count, int mode)
+      throws IOException {
     if (activeParent == null
         || !file.equals(activeTarget)
         || bytes == null
@@ -493,7 +493,7 @@ final class AndroidTrustedAssetFileSystem
             prepared.device,
             prepared.permissions);
     // 已创建的短成员即使写入失败也先把真实出生身份交回边界，close 再抛出失败。
-    return new TrustedAssetFileSystem.CreatedFile(PREPARED_OUTPUT, owned) {
+    return new CreatedFile(PREPARED_OUTPUT, owned) {
       boolean closed;
 
       @Override
@@ -522,7 +522,7 @@ final class AndroidTrustedAssetFileSystem
   }
 
   @Override
-  public TrustedAssetFileSystem.CreatedFile createWithMode(File file, int mode) throws IOException {
+  public CreatedFile createWithMode(File file, int mode) throws IOException {
     ParcelFileDescriptor handle =
         open(file, OsConstants.O_WRONLY | OsConstants.O_CREAT | OsConstants.O_EXCL, 0600);
     FileDescriptor fd = handle.getFileDescriptor();
@@ -539,7 +539,7 @@ final class AndroidTrustedAssetFileSystem
       }
       throw error instanceof ErrnoException errno ? failure(errno) : (IOException) error;
     }
-    return new TrustedAssetFileSystem.CreatedFile(output, opened) {
+    return new CreatedFile(output, opened) {
       boolean closed;
 
       @Override

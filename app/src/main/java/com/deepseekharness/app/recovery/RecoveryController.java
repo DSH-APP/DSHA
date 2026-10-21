@@ -45,7 +45,7 @@ public final class RecoveryController {
   private volatile RecoveryRepairBroker lastBroker;
   private volatile Process process;
   private volatile RecoveryRuntime runtime;
-  private volatile boolean cancel;
+  private volatile boolean cancel, resetBlocked;
   private long nextGeneration;
   private PowerManager.WakeLock wake;
 
@@ -106,7 +106,8 @@ public final class RecoveryController {
 
   /** API Key 只进入本次进程环境；不会写入正式 ConfigStore、日志或应急 profile。 */
   public synchronized boolean start(String temporaryApiKey) {
-    if (snapshot.busy
+    if (resetBlocked
+        || snapshot.busy
         || snapshot.ready
         || process != null
         || RecoveryRepairBroker.activeNativeRepairs() > 0) return false;
@@ -159,6 +160,35 @@ public final class RecoveryController {
           "");
     }
     return true;
+  }
+
+  /** 完整格式化先关闭这一独立写者。调用方在结束格式化作用域后释放 gate。 */
+  public void stopAndWaitForReset() throws IOException {
+    synchronized (this) {
+      resetBlocked = true;
+      stop();
+    }
+    long deadline = SystemClock.elapsedRealtime() + 15_000;
+    while (SystemClock.elapsedRealtime() < deadline) {
+      Snapshot state = snapshot;
+      if (!state.busy && !state.live && !state.ready && process == null) {
+        RecoveryRuntime.recoverInterrupted(context, () -> Thread.currentThread().isInterrupted());
+        return;
+      }
+      if (state.state.equals("STOP_UNCONFIRMED"))
+        throw new IOException("RECOVERY_PROCESS_UNCONFIRMED");
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException error) {
+        Thread.currentThread().interrupt();
+        throw new InterruptedIOException("RECOVERY_RESET_CANCELLED");
+      }
+    }
+    throw new IOException("RECOVERY_STOP_TIMEOUT");
+  }
+
+  public synchronized void releaseResetGate() {
+    resetBlocked = false;
   }
 
   private void run(long generation, String id, String[] key) {
@@ -228,27 +258,6 @@ public final class RecoveryController {
       while (!cancel && current(generation)) {
         output.drain();
         if (!output.failure.isEmpty()) throw new IOException(output.failure);
-        if (ProcessTermination.exited(launched)
-            && created.retryCompatible(
-                launched,
-                launched.exitValue(),
-                output.engineFailure,
-                output.pluginFailure,
-                output.auth != null || exchange != null)) {
-          created.recordOutcome(
-              "ENGINE_FALLBACK",
-              "bxroot -> proot; pre-auth exit="
-                  + launched.exitValue()
-                  + "; output="
-                  + output.tail());
-          launched = created.launch(output.secret, generation, broker);
-          process = launched;
-          created.recordLauncher(launched);
-          launcherVerified = true;
-          output = new Output(launched, id, output.secret, broker.token());
-          started = SystemClock.elapsedRealtime();
-          continue;
-        }
         if (ProcessTermination.exited(launched))
           throw new IOException(
               "RECOVERY_PROCESS_EXITED_" + launched.exitValue() + ": " + output.tail());
@@ -307,7 +316,10 @@ public final class RecoveryController {
                   generation,
                   id,
                   "READY",
-                  UiText.format("独立应急 DSH 已就绪；正式环境保持原状。%s", credentialNotice),
+                  UiText.choose(
+                          "独立应急 DSH 已就绪；正式环境保持原状。",
+                          "Independent recovery DSH is ready. The main environment is preserved.")
+                      + credentialNotice,
                   "",
                   auth.authUrl,
                   exchange.cookie,
@@ -510,7 +522,6 @@ public final class RecoveryController {
     final StringBuilder history = new StringBuilder();
     DshAuthUrl.Parsed auth;
     boolean agentReady;
-    boolean engineFailure, pluginFailure;
     String failure = "";
 
     Output(Process process, String id, String secret, String bridgeSecret) {
@@ -538,18 +549,6 @@ public final class RecoveryController {
             if (text.equals("DSHA_RECOVERY_AGENT_READY:" + id)) agentReady = true;
             if (text.startsWith("DSHA_RECOVERY_AGENT_FAILED"))
               failure = "RECOVERY_TOOL_CHECK_FAILED";
-            engineFailure |= com.deepseekharness.app.util.RuntimeEnginePolicy.engineFailure(text);
-            if (text.startsWith("[DSHA_STARTUP] ")) {
-              try {
-                var event =
-                    com.deepseekharness.app.backup.BackupJson.read(
-                        text.substring(15).getBytes(StandardCharsets.UTF_8), 65536);
-                pluginFailure |=
-                    "issue".equals(event.get("type")) && !Boolean.FALSE.equals(event.get("fatal"));
-              } catch (IOException malformed) {
-                pluginFailure = true;
-              }
-            }
             if (auth == null) auth = DshAuthUrl.fromStartupOutput(text);
             String safe = SensitiveData.redact(DshAuthUrl.redact(text));
             if (!secret.isEmpty()) safe = safe.replace(secret, "***");

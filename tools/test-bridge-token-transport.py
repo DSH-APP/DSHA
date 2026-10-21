@@ -2,6 +2,8 @@
 """Narrow source gate for active managed bridge clients; behavior is tested separately."""
 from pathlib import Path
 import re
+import shutil
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +29,11 @@ def main():
         failures.append('HttpShellService help: non-header credential guidance')
     if failures:
         raise RuntimeError('\n'.join(failures))
+    node = shutil.which('node')
+    if not node:
+        raise RuntimeError('NODE24_REQUIRED_FOR_REAL_HTTP_FIXTURE')
+    subprocess.run([node, str(ROOT / 'tools/fixtures/vscreen-production-http.mjs')],
+                   check=True, timeout=45)
     print('PASS active managed client/help header transport source gate; LAN/browser first-visit credentials and the limited migration shim are separate protocols.')
     return 0
 

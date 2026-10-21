@@ -44,14 +44,54 @@ def allowed():
     return names
 
 
+def required_lock(name, error):
+    try:
+        return json.loads(bounded(name).read_text(encoding="utf-8"))
+    except FileNotFoundError as missing:
+        raise ValueError(error) from missing
+
+
+def separate_input_pins():
+    # Only these two build inputs are outside runtime-descriptor.inputs.
+    # Never infer a missing pin from the local file being checked.
+    lock = required_lock("tools/ci-build-inputs.lock.json", "CI_BUILD_INPUT_LOCK_MISSING")
+    if not isinstance(lock, dict):
+        raise ValueError("CI_BUILD_INPUT_LOCK_INVALID")
+    rows = lock.get("archives")
+    if lock.get("schema") != 1 or not isinstance(rows, list) or len(rows) != 1:
+        raise ValueError("CI_BUILD_INPUT_LOCK_INVALID")
+    python = rows[0]
+    if not isinstance(python, dict) or python.get("asset") != "python-support.bin" \
+            or not isinstance(python.get("sha256"), str) \
+            or not re.fullmatch(r"[a-f0-9]{64}", python.get("sha256", "")) \
+            or type(python.get("bytes")) is not int or not 0 < python["bytes"] <= 2 * 1024 ** 3:
+        raise ValueError("CI_BUILD_INPUT_LOCK_INVALID")
+    adb = required_lock("app/src/main/assets/adb-wheels.lock.json", "CI_ADB_WHEELS_LOCK_MISSING")
+    if not isinstance(adb, dict) or adb.get("schema") != 1 or not isinstance(adb.get("archiveSha256"), str) \
+            or not re.fullmatch(r"[a-f0-9]{64}", adb["archiveSha256"]):
+        raise ValueError("CI_ADB_WHEELS_LOCK_INVALID")
+    return {"python-support.bin": (python["sha256"], python["bytes"]),
+            "adb-wheels.tar.gz": (adb["archiveSha256"], None)}
+
+
 def verify_sources():
     descriptor = json.loads((ROOT / "app/src/main/assets/runtime-descriptor.json").read_text(encoding="utf-8"))
+    separate = separate_input_pins()
     for name in NAMES:
         if name.endswith(".inputs.json"):
             continue
         path = bounded("app/src/main/assets/" + name)
         expected = descriptor["inputs"].get(name)
-        if expected is None or digest(path) != expected:
+        size = None
+        if name in separate:
+            pinned, size = separate[name]
+            if expected is not None and expected != pinned:
+                raise ValueError("CI_ASSET_PIN_CONFLICT: " + name)
+            expected = pinned
+        if not path.is_file() or path.is_symlink():
+            raise ValueError("CI_ASSET_NOT_REGULAR: " + name)
+        if not isinstance(expected, str) or not re.fullmatch(r"[a-f0-9]{64}", expected) \
+                or size is not None and path.stat().st_size != size or digest(path) != expected:
             raise ValueError("CI_ASSET_SOURCE_MISMATCH: " + name)
     lock = json.loads((ROOT / "tools/recovery-runtime/lock.json").read_text(encoding="utf-8"))
     for row in lock["archives"]:
@@ -59,13 +99,13 @@ def verify_sources():
             raise ValueError("CI_RECOVERY_ARCHIVE_MISMATCH")
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_mutually_exclusive_group(required=True)
     modes.add_argument("--pack", type=Path)
     modes.add_argument("--url")
     parser.add_argument("--sha256")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     names = allowed()
     if args.pack:
         verify_sources()

@@ -20,7 +20,7 @@ public class WebProcessSessionTest {
     }
   }
 
-  static class Child extends Process {
+  static final class Child extends Process {
     boolean alive = true;
 
     public OutputStream getOutputStream() {
@@ -48,72 +48,6 @@ public class WebProcessSessionTest {
     public void destroy() {
       alive = false;
     }
-  }
-
-  static final class OwnedChild extends Child
-      implements com.deepseekharness.app.runtime.OwnedGuestProof {
-    boolean stopResult, tree, launcherExited;
-    int stopCalls;
-
-    public boolean stopAndConfirm(long timeoutMs) {
-      assertEquals(4_000, timeoutMs);
-      stopCalls++;
-      if (launcherExited) alive = false;
-      return stopResult;
-    }
-
-    public boolean confirmedTreeExit() {
-      return tree;
-    }
-
-    @Override
-    public void destroy() {
-      throw new AssertionError("owned supervisor must receive STOP through its trusted control");
-    }
-  }
-
-  private void verifyOwnedStop(OwnedChild child, boolean expected) {
-    HarnessSessionState state = new HarnessSessionState();
-    try {
-      WebRun run = new WebRun(state.lifecycle.beginStart(false, false));
-      run.launcher = child;
-      state.currentRun = run;
-      state.runs.put(run.generation, run);
-      WebProcessSession processes =
-          new WebProcessSession(
-              state,
-              null,
-              () -> {
-                throw new AssertionError();
-              });
-      assertEquals(expected, processes.stopOwnedLauncherFacts().isEmpty());
-      assertEquals(1, child.stopCalls);
-      if (expected) assertNull(run.launcher);
-      else assertSame(child, run.launcher);
-    } finally {
-      state.io.shutdownNow();
-    }
-  }
-
-  @Test
-  public void ownedControlStopsAStartingWebWithoutParsingItsWrapperAsAndroidProcess() {
-    OwnedChild child = new OwnedChild();
-    child.stopResult = child.tree = child.launcherExited = true;
-    verifyOwnedStop(child, true);
-  }
-
-  @Test
-  public void stopWithoutTreeProofKeepsOwnedLauncherBarrier() {
-    OwnedChild child = new OwnedChild();
-    child.stopResult = true;
-    verifyOwnedStop(child, false);
-  }
-
-  @Test
-  public void emptyTreeWithoutLauncherExitKeepsOwnedLauncherBarrier() {
-    OwnedChild child = new OwnedChild();
-    child.stopResult = child.tree = true;
-    verifyOwnedStop(child, false);
   }
 
   @Test

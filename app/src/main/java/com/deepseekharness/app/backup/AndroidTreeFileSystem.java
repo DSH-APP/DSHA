@@ -536,13 +536,7 @@ final class AndroidTreeFileSystem extends AndroidBackupFileSystem implements Clo
       Held held = directory(relative(file));
       var stat = Os.fstat(held.handle.getFileDescriptor());
       if (stat.st_uid != android.os.Process.myUid())
-        throw new OwnershipCheckFailure(
-            file.getAbsolutePath(),
-            android.os.Process.myUid(),
-            stat.st_uid,
-            stat.st_mode,
-            stat.st_dev,
-            stat.st_ino);
+        throw new IOException("RETIRED_DIRECTORY_NOT_OWNED");
       if ((stat.st_mode & 0700) != 0700) Os.chmod(held.path(""), (stat.st_mode & 0777) | 0700);
     } catch (ErrnoException error) {
       throw failure(error);

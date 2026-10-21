@@ -4,7 +4,8 @@ import { SHADOW_MARKER } from './composer-keyboard-guard.ts'
 import { installMobileEffect } from '../platform/breakpoints.ts'
 
 /**
- * Mobile guard: entering a session must not raise the soft keyboard by itself.
+ * Mobile guard: entering a session — or coming back from a main-slot panel —
+ * must not raise the soft keyboard by itself.
  *
  * `dsh-client-ui-conversation`'s InputBar focuses the Lexical editor from a
  * passive effect keyed on `[locked, sessionId, editor]` — every session switch
@@ -30,6 +31,13 @@ import { installMobileEffect } from '../platform/breakpoints.ts'
  * observer re-shadows the freshly mounted `[data-composer-input]` inside the
  * window; arming also shadows an already-present input for switches that
  * reuse the element.
+ *
+ * 2026-10-20 (店主报障)：退出插件面板回会话时也会弹键盘。同一台机器上的成因是
+ * 同一个：面板占住主区时会话被卸载，退场（panel-exit 挂 data-mobile-panel-exit，
+ * 220ms 动画后才 selectPanel）结束时 InputBar 重新挂载，它的挂载期聚焦又跑了一遍。
+ * 退场标记由 panel-exit 在动画开始前就挂上，早于会话重挂载，所以这层只需要在
+ * MutationObserver 里看到该标记出现时顺手开同一个窗口；其余机制（影子 + focusin
+ * 兜底 + 点编辑面提前收窗）完全复用，不新增第二套 focus 拦截。
  *
  * 2026-09-29 headless correction (issue #140 verification run): the shadow
  * alone is NOT sufficient. When the InputBar remounts for the new session,
@@ -61,6 +69,18 @@ const FOCUS_GUARD_WINDOW_MS = 800
 
 /** The Lexical editing surface — the only element whose autofocus we swallow. */
 const COMPOSER_INPUT_SELECTOR = '[data-composer-input]'
+
+/** Frame marker panel-exit sets before it starts leaving (see effects/panel-exit.ts). */
+const PANEL_EXIT_ATTR = 'data-mobile-panel-exit'
+
+/**
+ * Synchronous companion event, dispatched by panel-exit the moment the marker
+ * lands. The marker alone is too late: the InputBar remounts and focuses inside
+ * the commit's synchronous layout-effect phase, i.e. before an observer
+ * microtask can open the window (the same 2026-09-29 measurement quoted in the
+ * header). The event opens the window first, the marker stays as the backstop.
+ */
+const PANEL_EXIT_EVENT = 'dsh-mobile-panel-exit'
 
 /**
  * Keep the session-switch autofocus from raising the soft keyboard, on the
@@ -99,6 +119,9 @@ export function installSessionFocusGuard(ctx: ClientContext): void {
       })
     }
 
+    const hasPanelExitMarker = (): boolean =>
+      document.querySelector(`[data-mobile-nav="frame"][${PANEL_EXIT_ATTR}]`) !== null
+
     const arm = (): void => {
       restore()
       windowOpen = true
@@ -109,7 +132,13 @@ export function installSessionFocusGuard(ctx: ClientContext): void {
 
     // Session switches remount the InputBar: catch the freshly mounted editor
     // inside the window. Microtask timing beats the host's passive effect.
+    // The same observer watches the panel-exit marker: a panel occupies the
+    // main slot while open, so leaving it remounts the InputBar and re-runs its
+    // mount-time focus. Arm on the marker's arrival — it lands before the panel
+    // actually leaves (panel-exit animates first, then selectPanel), so the
+    // window is already open when the conversation remounts.
     const observer = new MutationObserver(() => {
+      if (!windowOpen && hasPanelExitMarker()) arm()
       if (!windowOpen) return
       const el = document.querySelector<HTMLElement>(COMPOSER_INPUT_SELECTOR)
       if (el !== null) shadow(el)
@@ -145,12 +174,23 @@ export function installSessionFocusGuard(ctx: ClientContext): void {
       arm()
     })
 
-    observer.observe(document.documentElement, { childList: true, subtree: true })
+    const onPanelExit = (): void => {
+      if (!windowOpen) arm()
+    }
+
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [PANEL_EXIT_ATTR],
+    })
+    document.addEventListener(PANEL_EXIT_EVENT, onPanelExit)
     document.addEventListener('pointerdown', onPointerDown, true)
     document.addEventListener('focusin', onFocusIn, true)
     return () => {
       unsubscribe()
       observer.disconnect()
+      document.removeEventListener(PANEL_EXIT_EVENT, onPanelExit)
       document.removeEventListener('pointerdown', onPointerDown, true)
       document.removeEventListener('focusin', onFocusIn, true)
       restore()

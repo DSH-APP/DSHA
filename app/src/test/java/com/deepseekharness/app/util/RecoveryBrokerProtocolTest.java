@@ -21,7 +21,8 @@ public class RecoveryBrokerProtocolTest {
 
   @Test
   public void fixedRoutesOnlyAndNoNativeConfirmation() throws Exception {
-    for (String path : new String[] {"diagnostics", "targets", "read", "propose", "result"})
+    for (String path :
+        new String[] {"diagnostics", "targets", "read", "propose", "result", "consent"})
       RecoveryBrokerProtocol.validate(head("/v1/" + path, ""), 45000, TOKEN);
     for (String path :
         new String[] {"confirm", "reject", "shell", "read?path=/root/.env", "../confirm"})

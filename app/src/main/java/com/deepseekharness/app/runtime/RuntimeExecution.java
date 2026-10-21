@@ -52,18 +52,27 @@ final class RuntimeExecution {
   }
 
   ContainerRuntime runtime() {
-    EngineSpec selected = ports.engine(context, forceProot);
-    ports.record(
-        "RUNTIME_SELECTION",
-        selected.requested + " -> " + selected.effective + ":" + selected.reason);
-    if (RootfsReadiness.ready(rootfs) && new File(rootfs, "usr/bin/python3").exists()) {
-      try {
-        return launcher.preflight(selected.runtime, false);
-      } catch (IOException failure) {
-        throw new IllegalStateException("RUNTIME_CAPABILITY_UNCONFIRMED", failure);
+    RuntimeHostPorts.Settings settings = ports.settings();
+    try {
+      if (!forceProot && android.os.Build.VERSION.SDK_INT >= 26 && settings.proroot) {
+        ContainerRuntime selected =
+            new ContainerRuntime.Proroot(
+                context, ContainerRuntime.Proroot.defaultDir(context), settings.staticLoader);
+        if (selected.available()) {
+          selected.prepare();
+          return selected;
+        }
+        ports.record(
+            "RUNTIME_SELECTION_FALLBACK", SensitiveData.redact(selected.unavailableReason()));
       }
+    } catch (Exception failure) {
+      ports.record("RUNTIME_SELECTION_FALLBACK", SensitiveData.redact(String.valueOf(failure)));
     }
-    return selected.runtime;
+    return proot();
+  }
+
+  ContainerRuntime proot() {
+    return new ContainerRuntime.Proot(context, nativeFiles.find("libproot.so"));
   }
 
   LaunchSpec.Builder launch(ContainerRuntime runtime) {
@@ -151,7 +160,6 @@ final class RuntimeExecution {
   Process exec(String command, Map<String, String> environment) throws IOException {
     try (RuntimeHostPorts.Scope ignored = ports.open()) {
       requireReady();
-      nativeFiles();
       ContainerRuntime runtime = runtime();
       boolean links = hardlinks();
       prepareTools();
@@ -165,8 +173,10 @@ final class RuntimeExecution {
       ContainerRuntime runtime = selected == null ? runtime() : selected;
       boolean links = hardlinks();
       prepareTools();
+      if (!"proroot".equals(runtime.id()))
+        return start(command, launch(runtime).hardlinks(links).build());
       if (IsolatedInstallProcess.bundledLauncher(context) == null)
-        throw new IOException("BOUNDED_RUNTIME_SESSION_UNAVAILABLE");
+        throw new IOException("BOUNDED_PROROOT_SESSION_UNAVAILABLE");
       nativeFiles();
       BoundedGuestSessions.Operation record = BoundedGuestSessions.begin(context.getFilesDir());
       try {
@@ -182,84 +192,28 @@ final class RuntimeExecution {
   Process install(String command, boolean pipedInput) throws IOException {
     try (RuntimeHostPorts.Scope ignored = ports.open()) {
       nativeFiles();
-      ContainerRuntime selected = packageRuntime();
-      return start(
-          command,
-          launch(selected)
-              .isolated(true)
-              .record(BoundedGuestSessions.begin(context.getFilesDir()))
-              .pipedInput(pipedInput)
-              .build());
+      return start(command, launch(proot()).pipedInput(pipedInput).build());
     }
-  }
-
-  ContainerRuntime packageRuntime() throws IOException {
-    return launcher.preflight(runtime(), true);
   }
 
   Process trial(String command, File privateData, String guest, String expectedMode)
       throws IOException {
     try (RuntimeHostPorts.Scope ignored = ports.open()) {
       if (!MaintenanceGate.shared().isOwner()) throw new IOException("TRIAL_REQUIRES_MAINTENANCE");
-      TrialPaths.requireBinding(context.getFilesDir(), privateData, guest);
+      File parent = new File(base.getParentFile(), "runtime-trials").getCanonicalFile();
+      if (!privateData.getCanonicalFile().equals(privateData.getAbsoluteFile())
+          || !privateData.getParentFile().getParentFile().equals(parent)
+          || !guest.matches("/root/\\.dsha-runtime-trial-[a-f0-9]{32}"))
+        throw new IOException("TRIAL_DIRECTORY");
       nativeFiles();
-      ContainerRuntime runtime =
-          "proot".equals(expectedMode) ? ports.engine(context, true).runtime : runtime();
+      ContainerRuntime runtime = "proot".equals(expectedMode) ? proot() : runtime();
       if (!runtime.id().equals(expectedMode)) throw new IOException("TRIAL_RUNTIME_CHANGED");
       try {
         runtime.prepare();
       } catch (Exception error) {
         throw new IOException("TRIAL_RUNTIME_UNAVAILABLE", error);
       }
-      var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
-      File operation = privateData.getParentFile();
-      var record = BoundedGuestSessions.begin(context.getFilesDir());
-      return startBoundTrial(
-          fs, operation, privateData, guest, record, launch(runtime), spec -> start(command, spec));
-    }
-  }
-
-  interface TrialStarter {
-    Process start(LaunchSpec spec) throws IOException;
-  }
-
-  /** 真实 trial 共用此构造与派发边界；build/记录失败时尚未调用任何进程启动入口。 */
-  static Process startBoundTrial(
-      com.deepseekharness.app.backup.BackupFileSystem fs,
-      File operation,
-      File privateData,
-      String guest,
-      BoundedGuestSessions.Operation record,
-      LaunchSpec.Builder builder,
-      TrialStarter starter)
-      throws IOException {
-    boolean handedOff = false;
-    try {
-      record.retainCompletion();
-      TrialSupport.write(
-          fs,
-          operation,
-          "native-session-id",
-          record.id().getBytes(java.nio.charset.StandardCharsets.US_ASCII));
-      LaunchSpec spec =
-          builder.isolated(true).record(record).bind(privateData.getAbsolutePath(), guest).build();
-      TrialSupport.write(
-          fs,
-          operation,
-          "launched",
-          operation.getName().getBytes(java.nio.charset.StandardCharsets.US_ASCII));
-      // 此后异常也可能已有 guest；交给 RuntimeLauncher/IsolatedInstallProcess 的精确收尾。
-      handedOff = true;
-      return starter.start(spec);
-    } catch (IOException | RuntimeException | Error failure) {
-      record.uncertain();
-      if (!handedOff)
-        try {
-          record.completedBeforeDispatch();
-        } catch (IOException closing) {
-          failure.addSuppressed(closing);
-        }
-      throw failure;
+      return start(command, launch(runtime).bind(privateData.getAbsolutePath(), guest).build());
     }
   }
 
@@ -271,8 +225,8 @@ final class RuntimeExecution {
 
   Process cold(String command) throws IOException {
     try (RuntimeHostPorts.Scope ignored = ports.open()) {
-      nativeFiles();
-      ContainerRuntime runtime = runtime();
+      ContainerRuntime runtime =
+          new ContainerRuntime.Proroot(context, ContainerRuntime.Proroot.defaultDir(context));
       return start(command, launch(runtime).isolated(true).build());
     }
   }

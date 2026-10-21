@@ -18,7 +18,6 @@ class RuntimeInputContractTest(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.spec = {'schema': 1, 'installs': [{'asset': 'plugin.py', 'target': 'root/.dsh/plugin.py', 'executable': False}], 'assetFiles': ['offline-rootfs.version'], 'assetTrees': ['web'], 'launcherSources': ['util/Policy.java'], 'launcherTrees': [JAVA + '/runtime', 'app/src/main/jniLibs']}
         self.write(MANIFEST, json.dumps(self.spec))
-        self.write(JAVA + '/HttpShellService.java', 'class HttpShellService {\n  private static final int BRIDGE_PROTOCOL = 4;\n}')
         for path, text in {ASSETS + '/plugin.py': 'pass\n', ASSETS + '/offline-rootfs.version': '10', ASSETS + '/web/compat.js': 'true;', JAVA + '/util/Policy.java': 'policy', JAVA + '/runtime/Runner.java': 'runner', 'app/src/main/jniLibs/arm64-v8a/liba.so': 'elf', 'tools/dsh-runtime/package.json': '{"dependencies":{"@deepseek-ai/dsh":"0.1.7-rc.2"}}'}.items():
             self.write(path, text)
     def write(self, path, text):
@@ -66,13 +65,6 @@ class RuntimeInputContractTest(unittest.TestCase):
         self.write(JAVA + '/ui/Page.java', 'UI only')
         self.write('app/build.gradle', 'versionCode 148')
         self.assertEqual(before, self.identity())
-    def test_bridge_protocol_is_read_from_real_source_and_rejects_ambiguous_values(self):
-        before = self.identity()
-        self.write(JAVA + '/HttpShellService.java', 'class HttpShellService {\n  private static final int BRIDGE_PROTOCOL = 5;\n}')
-        self.assertNotEqual(before, self.identity())
-        self.write(JAVA + '/HttpShellService.java', 'class HttpShellService {}')
-        with self.assertRaises(ValueError):
-            self.identity()
     def test_production_cold_probe_and_package_policy_are_identified(self):
         selected = launcher_paths(ROOT)
         for name in ('util/ColdInstallPlan.java', 'util/ColdInstallPackages.java'):

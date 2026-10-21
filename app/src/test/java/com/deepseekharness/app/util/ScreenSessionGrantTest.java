@@ -1,9 +1,86 @@
 package com.deepseekharness.app.util;
 
 import org.junit.Test;
+import com.deepseekharness.app.capabilities.CapabilityRequest;
+import com.deepseekharness.app.capabilities.ScreenTargetEvidence;
+import com.deepseekharness.app.core.RuntimeSnapshot;
 import static org.junit.Assert.*;
 
 public class ScreenSessionGrantTest {
+  private static CapabilityRequest request(
+      RuntimeSnapshot.Epoch runtime, String bridge, long policy, long authority) {
+    return CapabilityRequest.create(
+        "screen",
+        "tap",
+        runtime,
+        runtime.ownerId,
+        bridge,
+        new ScreenTargetEvidence(0, 1, "com.example.app"),
+        policy,
+        authority,
+        1000);
+  }
+
+  @Test
+  public void typedGrantBindsWholeRuntimeBridgePolicyAndAuthority() {
+    var grant = new ScreenSessionGrant();
+    var runtime = new RuntimeSnapshot.Epoch("install-a", 7, "runtime-a");
+    var request = request(runtime, "bridge-a", 3, 8);
+    assertTrue(
+        grant.completeConfirmation(
+            true, request, runtime, "bridge-a", grant.revision(), 3, true, true));
+    assertTrue(grant.allowed(request));
+    assertFalse(
+        grant.allowed(
+            request(new RuntimeSnapshot.Epoch("install-a", 7, "runtime-b"), "bridge-a", 3, 8)));
+    assertFalse(grant.allowed(request(runtime, "bridge-b", 3, 8)));
+    assertFalse(grant.allowed(request(runtime, "bridge-a", 4, 8)));
+    assertFalse(grant.allowed(request(runtime, "bridge-a", 3, 9)));
+    grant.revoke();
+    assertFalse(grant.allowed(request));
+  }
+
+  @Test
+  public void typedOneShotAndOldApprovalCannotResurrectAfterRevoke() {
+    var grant = new ScreenSessionGrant();
+    var runtime = new RuntimeSnapshot.Epoch("install-a", 7, "runtime-a");
+    var request = request(runtime, "bridge-a", 3, 8);
+    long oldRevision = grant.revision();
+    assertTrue(
+        grant.completeConfirmation(
+            true, request, runtime, "bridge-a", oldRevision, 3, true, false));
+    assertFalse(grant.allowed(request));
+    grant.revoke();
+    assertFalse(
+        grant.completeConfirmation(true, request, runtime, "bridge-a", oldRevision, 3, true, true));
+    assertFalse(
+        grant.completeConfirmation(
+            true, request, runtime, "bridge-a", grant.revision(), 4, true, true));
+    assertFalse(
+        grant.completeConfirmation(
+            true, request, runtime, "bridge-a", grant.revision(), 3, false, true));
+  }
+
+  @Test
+  public void allowAllPolicyCannotOverridePausedTypedGrant() {
+    var grant = new ScreenSessionGrant();
+    var policy =
+        new ScreenConfirmationPolicy(
+            ScreenConfirmationPolicy.Mode.ALLOW_ALL, java.util.Map.of(), 3);
+    var runtime = new RuntimeSnapshot.Epoch("install-a", 7, "runtime-a");
+    var request = request(runtime, "bridge-a", policy.revision, 8);
+    assertTrue(policy.allows("com.example.sensitive"));
+    grant.setPaused(true);
+    assertFalse(
+        grant.completeConfirmation(
+            true, request, runtime, "bridge-a", grant.revision(), policy.revision, true, true));
+    assertFalse(grant.allowed(request));
+    grant.setPaused(false);
+    assertTrue(
+        grant.completeConfirmation(
+            true, request, runtime, "bridge-a", grant.revision(), policy.revision, true, true));
+  }
+
   @Test
   public void pauseBlocksAutomaticAndManualApprovalsUntilExplicitResume() {
     var grant = new ScreenSessionGrant();

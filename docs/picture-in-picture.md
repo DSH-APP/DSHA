@@ -1,41 +1,33 @@
-# DSH 对话画中画
+# 系统画中画与网页宿主
 
-## 使用
+核验日期：2026-10-21。参考基线：已发布 F10 `087724c`，并对照本轮工作树源码。本页没有新增手机验收；历史 PiP 结果只适用于相应记录绑定的 APK。
 
-在「设置 → 配置 → 对话画中画」勾选并保存，默认关闭。
+## 开启与生效
 
-- 先启动并进入 DSH 对话页。回桌面，或在网页处理完弹层/历史返回后退出对话页，都会保留 DSH 网页小窗。
-- 原生启动、设置和终端页面本身不进入画中画；已经打开的 DSH 小窗可以显示在这些页面上方。
-- 点小窗打开系统菜单，底部横/竖矩形按钮切换布局。窗口比例和网页视口一起变化，手机方向不变；记住上次手动选择。
-- 点系统展开按钮，或从原生启动页再次点「进入」，复用已有网页，恢复全屏后继续输入。
-- 点小窗的关闭按钮仅关闭网页预览，不停止后台 DSH。「停止」会走原有停止流程，并收起旧小窗；重新启动换代后也不保留旧预览。
-- 取消画中画勾选并保存会收起当前小窗，之后恢复普通退出行为。
+画中画默认关闭。配置中的选择由 [ConfigStore](../app/src/main/java/com/deepseekharness/app/core/ConfigStore.java) 写入本机明确选择键；旧版默认开启值、归档中的 `pictureInPicture=true` 或系统授权均不能证明用户本机选择，因此恢复设置不会自行开启 PiP。
 
-需要 Android 8.0+ 和设备支持。低版本设备禁用选项；系统画中画许可被关闭时，保存后引导到应用信息页。使用系统 PiP，不依赖悬浮窗权限。小窗用于查看，网页输入和复杂交互需展开后进行。
+进入 PiP 还要求 Android API 26+、设备支持、系统允许该应用使用画中画、当前网页内容就绪、当前 DSH 代次有效且未停止、未锁屏、宿主没有结束。Standard 本身 minSdk30；Low 在低于26的系统上没有系统 PiP。条件集中在 [PictureInPictureActivity](../app/src/main/java/com/deepseekharness/app/ui/PictureInPictureActivity.java) 与 [PictureInPicturePolicy](../app/src/main/java/com/deepseekharness/app/util/PictureInPicturePolicy.java)。开关保存后由运行中的宿主偏好观察器刷新；系统拒绝进入时保留普通页面，不把偏好保存成功当成已进入小窗。
 
-## 实现边界
+| 用户动作 | 当前行为 |
+|---|---|
+| 网页中回桌面或切应用 | 满足条件时，Android8–11 显式进入；Android12+ 使用受门禁约束的 auto-enter |
+| 网页返回原生 Main | 隐藏会话宿主、打开原生页，不隐式进入 PiP |
+| 打开文件选择器、系统浏览器等 | 暂停 auto-enter，避免主动外跳留下额外小窗 |
+| 关闭应用内 PiP 或撤销系统许可 | 宿主重新检查许可；若正处小窗，请求隐藏当前会话 |
+| 小窗中停止 DSH | 本代次失效，小窗监控结束空宿主；新一次启动使用有效的新宿主 |
 
-- 只有 `WebPreviewActivity` / `GeckoPreviewActivity` 声明 PiP 和 `singleTask`，共同使用 `PictureInPictureActivity`；不修改原生终端的生命周期。
-- `PictureInPictureFrame` 缓存完整网页视口，在小窗中缩放同一个浏览器实例。横竖切换交换逻辑视口宽高，不旋转文字，不加载截图，也不重载页面。
-- 开关与布局选择统一经 `ConfigStore` 读写，并参与配置备份/恢复回滚。
-- 系统动作使用每个预览实例独立的不可变 `PendingIntent` 和不导出的接收器，销毁时取消。
-- Android 12+ 使用系统自动进入；旧系统与网页返回出口显式进入。应用主动打开文件选择器、外部浏览器等时抑制自动进入。
-- 网页在 `onStop` 才暂停、`onStart` 恢复。仅小窗可见期间每 500ms 读取内存中的 Web 代次/停止状态，停止或换代后关闭预览，不探测端口、不终止进程。
+## 同一网页、代次与任务
 
-正常缩放、横竖切换和展开不重新加载网页；系统回收应用进程仍按原有浏览器恢复流程处理。
+全屏、PiP 与隐藏状态使用同代的网页实例，网页不应因为小窗切换而重新创建 DSH 会话。浏览器身份包含 generation 与 instance；停止、重启或换内核后，旧页面不能继续接收新代次操作。[BrowserPresentationState](../app/src/main/java/com/deepseekharness/app/util/BrowserPresentationState.java) 管显示状态，[BrowserConversationRoute](../app/src/main/java/com/deepseekharness/app/ui/BrowserConversationRoute.java) 管当前身份路由。
 
-## 本次验证
+Home 后重新点桌面图标可恢复仍有效的后台网页；用户明确返回 Main、打开终端/插件等原生目的地会取消该待恢复意图。[BrowserTasks](../app/src/main/java/com/deepseekharness/app/ui/BrowserTasks.java) 优先路由到原任务，核对内容和身份后才恢复。空宿主只在确认该 Task 只有自身时移除整个 Task；旧版本混合 Task 中的原生页面不能一起删除。已结束的空宿主退休后，新代次不会复用遗留 PiP 几何状态。
 
-- PR 分支不包含独立调试版配置：标准 Debug 精简资产构建成功（未打入离线 rootfs），低安卓 Gecko 源码编译成功；standard / low 两版各 388 项单元测试，387 通过、1 项原有跳过、无失败。
-- 新增 5 项纯逻辑测试，覆盖启用条件、比例边界、缩放、横竖视口、停止/换代。
-- PR 分支 `lintStandardRelease` / `lintLowRelease` 均通过，无错误。
-- 真机使用相同画中画实现加本地独立调试配置，包含完整离线环境；该调试配置不属于本功能改动，未覆盖正式应用。
-- Android 15 真机：默认关闭；原生页不会自行进入；网页返回原生页保留小窗；Home 进入；横竖切换；上次方向记忆；系统展开；原生「进入」复用；停止后小窗收起。
-- 网页内存标记在竖版 → 横版 → 全屏 → 横版 → 竖版 → 全屏期间保持相同，定时计数连续增长；仅修改测试内存标记，未发送聊天消息，测试后已清除。
-- 配置页通过中英文、日夜、短屏和 1.3 倍字体检查。整套 `LayoutAuditInstrumentation mode=style` 中英文各仍有 3 条既有悬浮条深色对比度失败（约 1.83），并非本次配置项。
-- 真机调试工作区的 Debug Lint 仍有原有验收代码的 API 错误：standard 2 条、low 17 条；本次 PiP 代码在 low 检查中无错误。未把 Debug 全库检查记为通过，未修改这些无关验收逻辑。
-- 尚未在 Android 8–11 或 Gecko 真机上验收；锁屏恢复和系统权限被拒绝的真机场景待补测。
+PiP 的“横向/纵向/自动”改变网页逻辑视口的宽高，让网页重新排版；不会旋转设备或文字。系统比例限制在 `1:2.39` 至 `2.39:1`，超长内容采用比例钳制与留边。小窗实际尺寸仍由 Android/ROM 管理。
 
-测试截图和日志只保留在调试临时目录，不随源码提交。
+## 全屏恢复与故障排查
 
-系统接口依据：[Android PiP 指南](https://developer.android.com/develop/ui/views/picture-in-picture)、[PictureInPictureParams.Builder](https://developer.android.com/reference/android/app/PictureInPictureParams.Builder)。
+[PictureInPictureFrame](../app/src/main/java/com/deepseekharness/app/ui/PictureInPictureFrame.java) 在全屏恢复时按系统当前 `isInPictureInPictureMode()` 同步 compact 状态，并幂等恢复子 View 的 scale 为1、translation 为0；几何缓存不是“已清除变换”的证据。过渡期间继续绘制网页，避免 `onPause/onStop` 早于 PiP callback 导致黑屏。
+
+若没有小窗，依次检查本机开关、系统 PiP 许可、页面是否就绪、是否正在外跳/锁屏/停止。若恢复后显示缩小，记录系统 PiP 状态、运行代次与是否复用了已结束宿主；不要清数据或重建 Ubuntu 作为普通排查步骤。PiP 可能覆盖控件，设备检查应核对真正可见区域，不能直接使用底层布局坐标。
+
+相关回归入口：[PictureInPictureOptInTest](../app/src/test/java/com/deepseekharness/app/ui/PictureInPictureOptInTest.java)、[PictureInPicturePolicyTest](../app/src/test/java/com/deepseekharness/app/util/PictureInPicturePolicyTest.java)、[BrowserPresentationStateTest](../app/src/test/java/com/deepseekharness/app/util/BrowserPresentationStateTest.java)、[BrowserTasksTest](../app/src/test/java/com/deepseekharness/app/ui/BrowserTasksTest.java)。这些软件门禁不能替代设备上的 SystemUI、Task 和两种网页内核检查。网页内核差异见[浏览器内核](browser-engines.md)。

@@ -1,6 +1,5 @@
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import { MobileNavToggle } from './components/MobileNavToggle.tsx'
-import { MobileDrawerFooter } from './components/MobileDrawerFooter.tsx'
 import { ComposerFileButton } from './components/ComposerFileButton.tsx'
 import { openFilesPanel } from './components/open-files-panel.ts'
 import { MOBILE_CSS } from './styles/index.ts'
@@ -23,7 +22,6 @@ import { installModelMenuKeyboardGuard } from './effects/model-menu-keyboard-gua
 import { installPluginCardTap } from './effects/plugin-card-tap.ts'
 import { installInstalledListRows } from './effects/installed-list.ts'
 import { installSessionFocusGuard } from './effects/session-focus-guard.ts'
-import { installReasoningDefaults } from './effects/reasoning-defaults.ts'
 import { installAionuiCompat } from './effects/aionui-compat.ts'
 import { installComposerPasteGuard } from './effects/composer-paste-guard.ts'
 import { installComposerFilePicker } from './effects/composer-file-picker.ts'
@@ -48,14 +46,6 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
  * does not actually read (issue #86 removed the never-read `workspaces`).
  */
 export const inject = ['slots', 'layout', 'locale', 'sessionLogDownload', 'sessions']
-
-/**
- * Session-id shape the installed host's sessionLogDownload.download expects.
- * Derived, never imported, so one program type-checks against every host
- * generation: 0.1.1 types the parameter as plain string, 0.1.2-alpha.1 brands
- * it Branded<'SessionId'>. The runtime value is always the host's own id.
- */
-type DownloadSessionId = Parameters<ClientContext['sessionLogDownload']['download']>[0]
 
 /**
  * How long a remembered scroll position stays usable (see {@link restoreConversationScroll}).
@@ -226,7 +216,6 @@ export function apply(ctx: ClientContext): void {
   // shadow-focus window per observed session switch swallows that one
   // autofocus; real taps are unaffected.
   installSessionFocusGuard(ctx)
-  installReasoningDefaults(ctx)
 
   // Multi-line paste after an IME commit keeps only the first line (host
   // Lexical routes Android's insertText paste through the text-insertion
@@ -264,31 +253,9 @@ export function apply(ctx: ClientContext): void {
     }),
   }, MobileNavToggle))
 
-
-  // Session log download, relocated from the session header to the drawer
-  // footer on mobile (the header capsule is hidden by CSS). The footer's
-  // Files action was removed on 2026-09-17 — see
-  // docs/specs/2026-09-17-sidebar-files-coexistence-design.md.
-  //
-  // Footer stacking relies on the list-slot sort by (priority, order):
-  // dsh-remote-web-ui leaves it unset (default 0, its two icon buttons stay
-  // on top) and dsh-usage-stats uses 10. Order 5 keeps the session-log pill
-  // directly under the icon row with the usage/balance badge below it —
-  // instead of a tie at 10 where registration order could wedge the badge
-  // between the icons and the pill.
-  ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
-    name: 'sidebar.footer.action',
-    id: 'mobile-nav-session-log',
-    order: 5,
-    locale: NS,
-    inject: () => ({
-      // The component's internal id is a plain string (slot runtime typing);
-      // the host-generation brand boundary lives here and only here, hence
-      // the double assertion (string and Branded<'SessionId'> do not overlap).
-      downloadSessionLog: (sessionId: string) =>
-        ctx.sessionLogDownload.download(sessionId as unknown as DownloadSessionId),
-    }),
-  }, MobileDrawerFooter))
+  // Session log download lives in the drawer brand row as an icon (issue #225):
+  // the reconciler task in effects/drawer-session-log.ts injects it there, so
+  // the drawer footer no longer carries a plugin row.
 
   // Composer file entry (0.1.6 host): the host deleted the paperclip attach
   // button, leaving the 「文件」row inside the "+" listbox as the only file
@@ -307,11 +274,11 @@ export function apply(ctx: ClientContext): void {
 }
 
 // Type-only augmentation imports: pull the layout / conversation / sidebar /
-// settings SlotMap merges and the sessionLogDownload service typing into this
-// program without any runtime import.
+// settings SlotMap merges and the sessions service typing into this program
+// without any runtime import (the sessionLogDownload augmentation lives in
+// effects/drawer-session-log.ts, which reads that service).
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-session-log-export/client'

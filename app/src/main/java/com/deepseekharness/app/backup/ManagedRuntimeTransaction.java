@@ -288,7 +288,7 @@ public final class ManagedRuntimeTransaction implements HostDataTransaction.Targ
 
   public static List<ManagedRuntimeTransaction> pending(BackupFileSystem fs, File files)
       throws IOException {
-    verifyHistory(fs, files, false);
+    verifyHistory(fs, files);
     List<ManagedRuntimeTransaction> result = new ArrayList<>();
     for (ManagedRuntimeTransaction item : active(fs, files)) {
       if (item.marker("switching") && !item.marker("finalized") && !item.marker("rolled-back"))
@@ -338,8 +338,7 @@ public final class ManagedRuntimeTransaction implements HostDataTransaction.Targ
     return result;
   }
 
-  private static void verifyHistory(BackupFileSystem fs, File files, boolean persistProof)
-      throws IOException {
+  private static void verifyHistory(BackupFileSystem fs, File files) throws IOException {
     File home = new File(files, HOME),
         history = new File(home, COMPLETED),
         proof = new File(files, HISTORY_PROOF);
@@ -363,7 +362,7 @@ public final class ManagedRuntimeTransaction implements HostDataTransaction.Targ
       if (!fs.stat(new File(home, id)).type.equals("MISSING"))
         throw new IOException("RUNTIME_OPERATION_DUPLICATE");
     }
-    if (persistProof) CompletedHistory.write(fs, proof, "filesKey", filesKey, historyKey);
+    CompletedHistory.write(fs, proof, "filesKey", filesKey, historyKey);
   }
 
   private boolean terminal() throws IOException {
@@ -389,10 +388,10 @@ public final class ManagedRuntimeTransaction implements HostDataTransaction.Targ
   public static void archiveCompleted(BackupFileSystem fs, File files) throws IOException {
     File home = new File(files, HOME);
     if (fs.stat(home).type.equals("MISSING")) {
-      verifyHistory(fs, files, true);
+      verifyHistory(fs, files);
       return;
     }
-    verifyHistory(fs, files, true);
+    verifyHistory(fs, files);
     File history = new File(home, COMPLETED);
     for (ManagedRuntimeTransaction item : active(fs, files)) {
       if (!item.marker("finalized") && !item.marker("rolled-back")) continue;
@@ -421,7 +420,7 @@ public final class ManagedRuntimeTransaction implements HostDataTransaction.Targ
                       .digest(
                           fs.small(fs.child(destination, "plan.json"), BackupLimits.MANIFEST)))))
         throw new IOException("RUNTIME_ARCHIVE_IDENTITY");
-      verifyHistory(fs, files, true);
+      verifyHistory(fs, files);
     }
   }
 

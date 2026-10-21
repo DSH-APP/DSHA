@@ -52,6 +52,18 @@ public final class OneShotLaunchAuthority {
     if (!ticket.isEmpty() && generation == ownerGeneration) clear();
   }
 
+  /**
+   * Atomically close one exact, still-live permit before any remote send was committed.
+   * A consumed, expired, canceled or unknown ticket never supplies this proof.
+   */
+  public synchronized boolean withdrawUncommitted(
+      String value, String exactCommand, long ownerGeneration, long now) {
+    if (!current(ownerGeneration, now) || !ticket.equals(value) || !command.equals(exactCommand))
+      return false;
+    clear();
+    return true;
+  }
+
   private boolean current(long ownerGeneration, long now) {
     if (ticket.isEmpty()) return false;
     if (now >= expiresAt) {

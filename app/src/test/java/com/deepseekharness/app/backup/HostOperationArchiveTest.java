@@ -330,8 +330,6 @@ public class HostOperationArchiveTest {
                   });
       assertTrue(HostPendingTransactions.pending(counted, files).isEmpty());
       assertEquals(1, historyLists[0]);
-      assertFalse(new File(files, "host-backup-completed-v1.json").exists());
-      HostOperationArchive.verifyCompleted(counted, files);
       historyLists[0] = 0;
       calls[0] = 0;
       long start = System.nanoTime();

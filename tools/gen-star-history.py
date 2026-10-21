@@ -172,11 +172,11 @@ def main():
     series = daily_series(stamps)
     if not os.path.isdir(OUT_DIR):
         os.makedirs(OUT_DIR)
-    with open(os.path.join(OUT_DIR, "star-history.svg"), "w", encoding="utf-8") as f:
+    with open(os.path.join(OUT_DIR, "star-history.svg"), "w", encoding="utf-8", newline="\n") as f:
         f.write(render(series, dark=False))
-    with open(os.path.join(OUT_DIR, "star-history-dark.svg"), "w", encoding="utf-8") as f:
+    with open(os.path.join(OUT_DIR, "star-history-dark.svg"), "w", encoding="utf-8", newline="\n") as f:
         f.write(render(series, dark=True))
-    with open(os.path.join(OUT_DIR, "star-history.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(OUT_DIR, "star-history.json"), "w", encoding="utf-8", newline="\n") as f:
         # 刻意**不写**「生成时间」这类每次都变的字段：写了的话，即使一颗新 star 都没有，
         # 每次跑都会产出一次「文件变了」的提交 —— 首次上线就撞到了，CI 那趟自动提交
         # 改的就只有这一行。只留与数据本身有关的东西，数据没变就完全没有 diff。

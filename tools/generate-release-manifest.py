@@ -27,7 +27,7 @@ def retain_channels(current, previous):
     """新预览发布时保留可下载的稳定版；官网仍展示首个当前发布。"""
     if previous is None:
         return [current]
-    if (previous.get('schemaVersion') != 1 or previous.get('packageName') != 'com.dsh.client'
+    if (previous.get('schemaVersion') != 1 or previous.get('packageName') != 'dsh.android.client'
             or previous.get('certificateSha256') != PUBLISH_CERT):
         raise ValueError('上一发布清单的结构、包名或签名不一致')
     latest = {current['channel']: current}
@@ -55,7 +55,7 @@ def inspect(apk, flavor, build_tools, java):
     package = re.search(r"package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'", badging)
     sdk = re.search(r"(?:minSdkVersion|sdkVersion):'(\d+)'", badging)
     abi = re.search(r"native-code: (.+)", badging)
-    if not package or package[1] != 'com.dsh.client' or not sdk or not abi:
+    if not package or package[1] != 'dsh.android.client' or not sdk or not abi:
         raise ValueError(f'{apk.name}: 无法读取 DSHA 包信息')
     if int(sdk[1]) != (30 if flavor == 'standard' else 23) or abi[1].strip() != "'arm64-v8a'":
         raise ValueError(f'{apk.name}: 系统要求或架构不匹配')
@@ -117,7 +117,7 @@ def main():
         apk.with_suffix('.apk.sha256').write_bytes(f'{artifact["sha256"]}  {apk.name}\n'.encode('utf-8'))
     release = dict(version=version, apkNameVersion=download_version, versionCode=code, channel=release_channel(version, args.channel),
                    pageUrl=origin + '/download/', notes=notes, dshVersion=artifacts[0]['dshVersion'], runtimeId=artifacts[0]['runtimeId'], artifacts=artifacts)
-    manifest = dict(schemaVersion=1, packageName='com.dsh.client', certificateSha256=PUBLISH_CERT,
+    manifest = dict(schemaVersion=1, packageName='dsh.android.client', certificateSha256=PUBLISH_CERT,
                     releases=retain_channels(release, previous))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

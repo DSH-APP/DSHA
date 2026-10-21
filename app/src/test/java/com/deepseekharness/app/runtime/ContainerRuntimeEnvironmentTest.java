@@ -47,6 +47,44 @@ public class ContainerRuntimeEnvironmentTest {
   }
 
   @Test
+  public void prorootAloneUsesIndependentProxyAndKeepsOriginalLinker() throws Exception {
+    File directory = temporary.newFolder(),
+        base = temporary.newFolder(),
+        lib = temporary.newFolder(),
+        tmp = temporary.newFolder();
+    for (String name : ContainerRuntime.Proroot.LIBS) put(directory, name);
+    var runtime = new ContainerRuntime.Proroot(null, directory, true);
+    assertFalse(runtime.available());
+    var builder = new ProcessBuilder("fixture");
+    assertEquals(
+        "PROROOT_COMPAT_PROXY_MISSING",
+        assertThrows(IOException.class, () -> runtime.applyEnv(builder, base, lib, tmp))
+            .getMessage());
+    put(directory, "libdsha-proroot-compat.so");
+    assertFalse(runtime.available());
+    assertEquals(
+        "PROROOT_COMPAT_ENTRY_MISSING",
+        assertThrows(IOException.class, () -> runtime.applyEnv(builder, base, lib, tmp))
+            .getMessage());
+    put(directory, "libdsha-proroot-linker.so");
+    assertTrue(runtime.available());
+    runtime.applyEnv(builder, base, lib, tmp);
+    assertEquals(
+        new File(directory, "libproroot-runtime.so").getAbsolutePath(),
+        builder.environment().get("PROROOT_LIB_PATH"));
+    assertEquals(
+        new File(directory, "libdsha-proroot-linker.so").getAbsolutePath(),
+        builder.environment().get("PROROOT_LINKER_PATH"));
+    assertEquals(
+        new File(directory, "libproroot-stub-loader.so").getAbsolutePath(),
+        builder.environment().get("PROROOT_STUB_LOADER"));
+    assertFalse(builder.environment().containsKey("LD_PRELOAD"));
+    var dynamic = new ContainerRuntime.Proroot(null, directory, false);
+    dynamic.applyEnv(builder, base, lib, tmp);
+    assertFalse(builder.environment().containsKey("PROROOT_STUB_LOADER"));
+  }
+
+  @Test
   public void bindsCannotBeMutatedByAnotherCaller() {
     assertThrows(UnsupportedOperationException.class, () -> ContainerRuntime.binds().clear());
     assertEquals("/dev", ContainerRuntime.binds().get(0).host());

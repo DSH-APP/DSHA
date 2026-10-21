@@ -1,0 +1,26 @@
+{
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-mcp-client/lib/index.js",
+  "patches": [
+    {
+      "before": "function createTransport(config) {",
+      "after": "// DSHA_STARTUP_MCP_TIMING_V1: timing only, preserving the original receiver/value/error.\nfunction dshaStartupMcpCall(config, phase, receiver, method, args) {\n\tlet observer, span;\n\ttry {\n\t\tif ([\"dsha-android\", \"dsha-vscreen\"].includes(config?.serverName)) {\n\t\t\tobserver = globalThis[Symbol.for(\"dsha.startup.timing.v1\")];\n\t\t\tspan = observer?.begin(config.serverName, phase);\n\t\t}\n\t} catch (_) {}\n\tlet result;\n\ttry { result = Reflect.apply(method, receiver, args); }\n\tcatch (error) { try { observer?.end(span, \"THREW\"); } catch (_) {} throw error; }\n\ttry { observer?.observe(span, result); } catch (_) {}\n\treturn result;\n}\nfunction dshaStartupMcpTransport(config, transport) {\n\ttry {\n\t\tif ([\"dsha-android\", \"dsha-vscreen\"].includes(config?.serverName)) {\n\t\t\tconst start = transport.start;\n\t\t\ttransport.start = function () {\n\t\t\t\treturn dshaStartupMcpCall(config, \"mcp-spawn\", this, start, arguments);\n\t\t\t};\n\t\t}\n\t} catch (_) {}\n\treturn transport;\n}\nfunction dshaStartupMcpSkip(config) {\n\ttry {\n\t\tif ([\"dsha-android\", \"dsha-vscreen\"].includes(config?.serverName))\n\t\t\tglobalThis[Symbol.for(\"dsha.startup.timing.v1\")]?.skipped(config.serverName);\n\t} catch (_) {}\n\treturn { tools: [] };\n}\nfunction createTransport(config) {"
+    },
+    {
+      "before": "case \"stdio\": return new StdioClientTransport({",
+      "after": "case \"stdio\": return dshaStartupMcpTransport(config, new StdioClientTransport({"
+    },
+    {
+      "before": "cwd: config.cwd\n\t\t});",
+      "after": "cwd: config.cwd\n\t\t}));"
+    },
+    {
+      "before": "const response = client.getServerCapabilities()?.tools === void 0 ? { tools: [] } : await client.listTools(void 0, { cacheMode: \"refresh\" });",
+      "after": "const response = client.getServerCapabilities()?.tools === void 0 ? dshaStartupMcpSkip(opts) : await dshaStartupMcpCall(opts, \"mcp-list-tools\", client, client.listTools, [void 0, { cacheMode: \"refresh\" }]);"
+    },
+    {
+      "before": "await generation.connect(transport);",
+      "after": "await dshaStartupMcpCall(config, \"mcp-connect\", generation, generation.connect, [transport]);"
+    }
+  ]
+}

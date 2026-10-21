@@ -545,7 +545,6 @@
     "en": "Stop",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HarnessService.java",
-      "app/src/main/java/com/deepseekharness/app/ui/AgentTasksActivity.java",
       "app/src/main/res/layout/fragment_launch.xml"
     ]
   },
@@ -2823,8 +2822,7 @@
       "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java",
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
       "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java",
-      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
     ]
   },
   {
@@ -3315,14 +3313,6 @@
     "en": "Container directory: files/linux/ubuntu/root\n",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
-    ]
-  },
-  {
-    "id": "m0403",
-    "zh": "密钥加密保存失败，原配置已保留，请重试",
-    "en": "Could not save the encrypted key. Original settings are preserved. Try again.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
     ]
   },
   {
@@ -4560,15 +4550,11 @@
   },
   {
     "id": "m0556",
-    "zh": "本次上传超过 %s",
-    "en": "This upload exceeds %s",
+    "zh": "本次上传超过 256 MiB",
+    "en": "This upload exceeds 256 MiB",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
-    ],
-    "source": [
-      "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
-    ],
-    "uiFormat": true
+    ]
   },
   {
     "id": "m0557",
@@ -7317,8 +7303,8 @@
   },
   {
     "id": "m0898",
-    "zh": "DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=%s）\n凭据由宿主写入 /root/.dsh/.bridge_headers；使用 curl -H @/root/.dsh/.bridge_headers，不把 token 写进 URL 或命令参数。\n带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\n\n== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\n读屏  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → 每行「[序号] \"文字\" 可点击 中心=(x,y) 区域=l,t,r,b」\n点按  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=设置\" -H @/root/.dsh/.bridge_headers\n      → 优先按文字点：控件位置随滚动/动画变，文字不变。没有文字才用 ?x=&y=\n输入  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=内容\" -H @/root/.dsh/.bridge_headers\n      → 填到当前焦点框；没有焦点先 tap 一下输入框\n按键  /app/ui/key?name=back  （back/home/recents/notifications/quicksettings/lock）\n滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n截屏  /app/ui/screenshot   → 存 PNG 到应用截图目录并返回路径（不回 base64）\n节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n\n== 独立虚拟屏（Android 11+；坐标与文本输入必须带“刚看过的那一帧”）==\n/app/vscreen/create?orientation=portrait|landscape  创建虚拟屏\n/app/vscreen/status  查询 displayId、尺寸和 frameSeq（只读；它的 frameSeq 不能直接用于输入）\n/app/vscreen/launch?package=com.example.app  启动已安装应用\n/app/vscreen/see  取最新预览（可带 since=<帧号> 去重）；输入要带的是它返回的 frameSeq\n/app/vscreen/tap?x=&y=&frameSeq=&generation=  按坐标点按\n/app/vscreen/swipe?x1=&y1=&x2=&y2=&ms=&frameSeq=&generation=  滑动\n/app/vscreen/touch?stroke=&action=0..3&x=&y=&frameSeq=&generation=  连续触控（stroke 为 16–64 位十六进制）\n/app/vscreen/type?text=&frameSeq=&generation=  输入文本（中文需开启无障碍）\n/app/vscreen/key?keycode=3|4|66|67&frameSeq=&generation=  系统按键\n/app/vscreen/tree  读虚拟屏控件树；返回的 generation 与 frameSeq 供 node 使用\n/app/vscreen/node  POST JSON {generation,nodeId,action,text?}  按 nodeId 做语义操作（click/long_click/scroll_forward/scroll_backward/focus/set_text）；与帧号无关，不需要 frameSeq，nodeId 用一次即失效\n/app/vscreen/editor|edit|submit  POST JSON {generation,editorId,text?,start?,end?}  读写当前焦点输入框\n/app/vscreen/close  关闭并回收虚拟屏\n帧门：坐标与文本输入要求“刚 see 过的那一帧仍是最新帧”。帧间隔短于一次 see→输入的往返时它必然过期（约 20–60fps 的界面基本必失败，1fps 那种慢速重绘仍可能成功），返回 STALE_FRAME 并带 reason：FRAME_NOT_OBSERVED（没 see 过这一帧）/ FRAME_EXPIRED（已被新帧顶掉）/ OBSERVATION_TIMEOUT（超过 30 秒）。先 see 再输入；动态界面请改用 tree + node（不受帧率影响，也不用回传图片）。\n协议4：ok:true 带 targetChangedAfterExecution/runChangedAfterExecution 是已提交后状态变化，先观察实际状态。executionUnknown:true 或 INPUT_RESULT_UNKNOWN 表示动作可能已执行，不得自动重放。\n空屏时 frameSeq 恒为 0、see 返回 FRAME_NOT_READY —— 那是“屏上还没有内容”，不是创建失败。\n创建失败：VSCREEN_TRUSTED_DISPLAY_DENIED（该通道拿不到 ADD_TRUSTED_DISPLAY，请改用 Root 或无障碍通道）/ VSCREEN_DISPLAY_CREATE_FAILED / VSCREEN_PERMISSION_DENIED。\n等待授权不等于被拒绝：确认没等到回答返回 USER_NO_ANSWER（等用户点“允许”后再试一次），用户明确拒绝才是 USER_REJECTED，确认通道不可用返回 USER_CONFIRM_UNAVAILABLE。\n\n== 设备与应用 ==\n/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n/app/launch?pkg=com.tencent.mm  启动应用\n/app/clip                       读剪贴板（需 App 在前台，系统限制）\n/app/clip + text=…              写剪贴板\n/app/readfile?path=/…          读取绝对路径的目录或文本，仍受 Android 权限限制；凭据区（.dsh/.ssh/.android）不可读\n设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n\n== 与用户交互 ==\n/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n/app/notify?title=… + text=…      通知栏\n/app/toast + text=…               App 内提示\n/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n/app/share（text= 或 path=）      分享到其它应用\n/app/open?url=https://…           打开链接\n/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA；凭据区不可导出\n建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n产出报告用 /app/export，别只留在容器里。\n\n== 传感器与位置（默认关闭，需用户在配置页勾选）==\n/app/location（加 fresh=1 强制重新定位，可能等数秒）\n/app/sensors 列表 · /app/sensor?name=light 读值\n（light 环境光 lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation 姿态四元数 / steps 开机后步数）\n/app/torch?on=1 手电\n这三类返回 DISABLED（用户没开该能力）或 NO_PERMISSION（没授系统权限）时，\n照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n\n== 元信息 ==\n/app/version                          桥协议版本 + App 版本（特性检测用）\n/app/help                             本清单\n\n== 插件状态 ==\n/app/plugins                          读回上次上报的加载状态\n/app/plugins?loaded=a,b&failed=c      上报（插件侧用）\n\n== 设备 shell（自动选择 root / Shizuku / ADB）==\n/root/dsh-bin/adb-shell \"命令\"        用 id 核验实际身份\n包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n短信只允许当前 Android 用户的 content query --uri content://sms，默认关闭；设置 → 设备能力授权可开启或撤销。\n短信预授权可能返回正文及验证码；不允许发送、修改或删除，Android 仍可拒绝访问。Shizuku 不执行此敏感查询。\n仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n设置 → 设备能力授权中连接可用通道，别反复试同一条命令。\n不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n\n== root（--su）==\n已启用并经 root 管理器授权的 su 可直接执行，无需 ADB 配对；其次使用 Shizuku，再使用 ADB。\n--su 仅在明确需要 root 时使用，须先在设备能力授权页允许；同一设备保护策略始终生效。\n[EXECUTION_UNKNOWN] 表示命令可能已执行，先核对实际状态，不能切换通道或自动重放。\n",
-    "en": "DSHA 3090 bridge endpoints (BRIDGE_PROTOCOL=\nProtocol 4: after execution, targetChangedAfterExecution/runChangedAfterExecution retain the real result. executionUnknown means an action may have executed: observe before retrying. Coordinate input requires the latest observed frame; node uses refreshed accessibility identity and accepts optional frameSeq.\n",
+    "zh": "DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=",
+    "en": "DSHA 3090 bridge endpoints (BRIDGE_PROTOCOL=",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
@@ -8147,48 +8133,48 @@
   },
   {
     "id": "m1001",
-    "zh": "[ERR] 未获得本次屏幕读取授权（未确认或已拒绝）",
-    "en": "[ERR] Screen read was not authorized (not confirmed, or declined)",
+    "zh": "[ERR] 你拒绝了这次屏幕读取",
+    "en": "[ERR] You declined this screen read",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1002",
-    "zh": "[ERR] 未获得本次截屏授权（未确认或已拒绝）",
-    "en": "[ERR] Screenshot was not authorized (not confirmed, or declined)",
+    "zh": "[ERR] 你拒绝了这次截屏",
+    "en": "[ERR] You declined this screenshot",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1003",
-    "zh": "[ERR] 未获得本次按键授权（未确认或已拒绝）",
-    "en": "[ERR] Key press was not authorized (not confirmed, or declined)",
+    "zh": "[ERR] 你拒绝了这次按键",
+    "en": "[ERR] You declined this key press",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1004",
-    "zh": "[ERR] 未获得本次滑动授权（未确认或已拒绝）",
-    "en": "[ERR] Swipe was not authorized (not confirmed, or declined)",
+    "zh": "[ERR] 你拒绝了这次滑动",
+    "en": "[ERR] You declined this swipe",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1005",
-    "zh": "[ERR] 未获得本次点击授权（未确认或已拒绝）",
-    "en": "[ERR] Tap was not authorized (not confirmed, or declined)",
+    "zh": "[ERR] 你拒绝了这次点击",
+    "en": "[ERR] You declined this tap",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
   },
   {
     "id": "m1006",
-    "zh": "[ERR] 未获得本次输入授权（未确认或已拒绝）",
-    "en": "[ERR] Input was not authorized (not confirmed, or declined)",
+    "zh": "[ERR] 你拒绝了这次输入",
+    "en": "[ERR] You declined this input",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
     ]
@@ -10020,8 +10006,7 @@
     "en": "Allow",
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java",
-      "app/src/main/java/com/deepseekharness/app/OverlayController.java",
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+      "app/src/main/java/com/deepseekharness/app/OverlayController.java"
     ]
   },
   {
@@ -17510,14 +17495,6 @@
     ]
   },
   {
-    "id": "stability_credential_retry",
-    "zh": "重试读取 API Key",
-    "en": "Retry reading API key",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
     "id": "stability_remove_action",
     "zh": "移除",
     "en": "Remove",
@@ -17526,49 +17503,9 @@
     ]
   },
   {
-    "id": "stability_credential_remove",
-    "zh": "移除不可用的凭据记录",
-    "en": "Remove unreadable credential record",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "stability_credential_remove_question",
-    "zh": "移除不可用的凭据记录？",
-    "en": "Remove the unreadable credential record?",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "stability_credential_remove_detail",
-    "zh": "仅移除本机保存的 API Key 记录，不删除对话或配置文件。继续使用相关接口时需要重新提供凭据。",
-    "en": "Remove only the API key record saved on this device. Conversations and configuration files remain. You will need to provide credentials again for services that require them.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
     "id": "stability_other_task",
     "zh": "有其他操作正在进行，请稍后重试。",
     "en": "Another operation is in progress. Try again after it finishes.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "stability_credential_save_failed",
-    "zh": "凭据记录未能保存，原记录已保留。",
-    "en": "The credential record could not be saved. The original record has been retained.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "stability_settings_key_retained",
-    "zh": "其他设置已保存；无法读取的 API Key 原记录保持不变。",
-    "en": "Other settings were saved. The unreadable API key record remains unchanged.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
     ]
@@ -23511,78 +23448,6 @@
     ]
   },
   {
-    "id": "alpha1_9fd3adac4817",
-    "zh": "服务未就绪。请查看启动日志或恢复选项后重试。",
-    "en": "The service is not ready. Check startup logs or recovery options, then retry.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
-    ]
-  },
-  {
-    "id": "alpha1_daf9a76e4a48",
-    "zh": "连接你的模型",
-    "en": "Connect your models",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
-    ]
-  },
-  {
-    "id": "alpha1_72cf9da5e091",
-    "zh": "配置 DeepSeek 或自定义模型服务。服务商、API Key、接口地址、协议和模型目录均由 DSH 统一保存，与你的对话共用。",
-    "en": "Configure DeepSeek or a custom model provider. DSH stores providers, API keys, endpoints, protocols and model catalogs for all conversations.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
-    ]
-  },
-  {
-    "id": "alpha1_8faa670b512b",
-    "zh": "打开模型配置",
-    "en": "Open model settings",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
-    ]
-  },
-  {
-    "id": "alpha1_717fb5482d12",
-    "zh": "稍后配置 · 进入 DSHA",
-    "en": "Configure later · Open DSHA",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
-    ]
-  },
-  {
-    "id": "alpha1_7cf34a1d7e5e",
-    "zh": "请先完成运行环境安装。",
-    "en": "Complete environment installation first.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
-    ]
-  },
-  {
-    "id": "alpha1_ab883c523430",
-    "zh": "正在连接 DSH 模型设置…",
-    "en": "Connecting to DSH model settings…",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
-    ]
-  },
-  {
-    "id": "alpha1_8b59d7564659",
-    "zh": "尚未完成鉴权，请重试：",
-    "en": "Authentication incomplete, retry: ",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
-    ]
-  },
-  {
-    "id": "alpha1_d09f8027dca6",
-    "zh": "已打开 DSH 模型配置。返回后可继续进入应用。",
-    "en": "DSH model settings opened. Return here to continue.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ModelSetupActivity.java"
-    ]
-  },
-  {
     "id": "alpha1_0871f0abbd53",
     "zh": "位置：",
     "en": "Location: ",
@@ -24506,16 +24371,16 @@
   },
   {
     "id": "ui2_port_preferred",
-    "zh": "手动 Web 端口",
-    "en": "Manual Web port",
+    "zh": "首选 Web 端口",
+    "en": "Preferred Web port",
     "files": [
       "app/src/main/res/values/ui_iteration.xml"
     ]
   },
   {
     "id": "ui2_port_hint",
-    "zh": "自动模式首次由系统分配，随后复用可用端口；占用时重新分配。关闭自动模式可指定端口。",
-    "en": "Automatic mode uses a system-assigned port, then reuses it while available. A conflict chooses another port. Turn this off to specify a port.",
+    "zh": "端口占用时保留首选设置，自动使用可用端口。",
+    "en": "If occupied, keep the preferred port and use an available one.",
     "files": [
       "app/src/main/res/values/ui_iteration.xml"
     ]
@@ -25092,62 +24957,6 @@
     "en": "Unknown time",
     "files": [
       "app/src/main/java/com/deepseekharness/app/backup/ExternalBackupScanner.java"
-    ]
-  },
-  {
-    "id": "build154_g1ui_12",
-    "zh": "输入新的 API Key；留空保持原记录",
-    "en": "New API key; leave blank to keep the saved record",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "build154_g1ui_13",
-    "zh": "API Key 已保存；这里不会回显密钥。",
-    "en": "An API key is saved; its value is not shown here.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "build154_g1ui_14",
-    "zh": "尚未保存 API Key。",
-    "en": "No API key has been saved.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "build154_g1ui_15",
-    "zh": "移除本机 API Key 记录",
-    "en": "Remove the saved API key",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "build154_g1ui_16",
-    "zh": "移除本机 API Key 记录？",
-    "en": "Remove the saved API key?",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "build154_g1ui_17",
-    "zh": "凭据已变化，请重新确认。",
-    "en": "The credential changed. Confirm again.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
-    ]
-  },
-  {
-    "id": "build154_g1ui_18",
-    "zh": "密钥保存后读取未通过，请重试。",
-    "en": "API key readback failed. Retry.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
     ]
   },
   {
@@ -25867,8 +25676,8 @@
     "id": "build156_2e39c95b00f5"
   },
   {
-    "zh": "DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=%s）\n凭据由宿主写入 /root/.dsh/.bridge_headers；使用 curl -H @/root/.dsh/.bridge_headers，不把 token 写进 URL 或命令参数。\n带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\n\n== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\n读屏  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → 每行「[序号] \"文字\" 可点击 中心=(x,y) 区域=l,t,r,b」\n点按  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=设置\" -H @/root/.dsh/.bridge_headers\n      → 优先按文字点：控件位置随滚动/动画变，文字不变。没有文字才用 ?x=&y=\n输入  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=内容\" -H @/root/.dsh/.bridge_headers\n      → 填到当前焦点框；没有焦点先 tap 一下输入框\n按键  /app/ui/key?name=back  （back/home/recents/notifications/quicksettings/lock）\n滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n截屏  /app/ui/screenshot   → 存 PNG 到应用截图目录并返回路径（不回 base64）\n节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n\n== 独立虚拟屏（Android 11+；坐标与文本输入必须带“刚看过的那一帧”）==\n/app/vscreen/create?orientation=portrait|landscape  创建虚拟屏\n/app/vscreen/status  查询 displayId、尺寸和 frameSeq（只读；它的 frameSeq 不能直接用于输入）\n/app/vscreen/launch?package=com.example.app  启动已安装应用\n/app/vscreen/see  取最新预览（可带 since=<帧号> 去重）；输入要带的是它返回的 frameSeq\n/app/vscreen/tap?x=&y=&frameSeq=&generation=  按坐标点按\n/app/vscreen/swipe?x1=&y1=&x2=&y2=&ms=&frameSeq=&generation=  滑动\n/app/vscreen/touch?stroke=&action=0..3&x=&y=&frameSeq=&generation=  连续触控（stroke 为 16–64 位十六进制）\n/app/vscreen/type?text=&frameSeq=&generation=  输入文本（中文需开启无障碍）\n/app/vscreen/key?keycode=3|4|66|67&frameSeq=&generation=  系统按键\n/app/vscreen/tree  读虚拟屏控件树；返回的 generation 与 frameSeq 供 node 使用\n/app/vscreen/node  POST JSON {generation,nodeId,action,text?}  按 nodeId 做语义操作（click/long_click/scroll_forward/scroll_backward/focus/set_text）；与帧号无关，不需要 frameSeq，nodeId 用一次即失效\n/app/vscreen/editor|edit|submit  POST JSON {generation,editorId,text?,start?,end?}  读写当前焦点输入框\n/app/vscreen/close  关闭并回收虚拟屏\n帧门：坐标与文本输入要求“刚 see 过的那一帧仍是最新帧”。帧间隔短于一次 see→输入的往返时它必然过期（约 20–60fps 的界面基本必失败，1fps 那种慢速重绘仍可能成功），返回 STALE_FRAME 并带 reason：FRAME_NOT_OBSERVED（没 see 过这一帧）/ FRAME_EXPIRED（已被新帧顶掉）/ OBSERVATION_TIMEOUT（超过 30 秒）。先 see 再输入；动态界面请改用 tree + node（不受帧率影响，也不用回传图片）。\n空屏时 frameSeq 恒为 0、see 返回 FRAME_NOT_READY —— 那是“屏上还没有内容”，不是创建失败。\n创建失败：VSCREEN_TRUSTED_DISPLAY_DENIED（该通道拿不到 ADD_TRUSTED_DISPLAY，请改用 Root 或无障碍通道）/ VSCREEN_DISPLAY_CREATE_FAILED / VSCREEN_PERMISSION_DENIED。\n等待授权不等于被拒绝：确认没等到回答返回 USER_NO_ANSWER（等用户点“允许”后再试一次），用户明确拒绝才是 USER_REJECTED，确认通道不可用返回 USER_CONFIRM_UNAVAILABLE。\n\n== 设备与应用 ==\n/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n/app/launch?pkg=com.tencent.mm  启动应用\n/app/clip                       读剪贴板（需 App 在前台，系统限制）\n/app/clip + text=…              写剪贴板\n/app/readfile?path=/…          读取绝对路径的目录或文本，仍受 Android 权限限制；凭据区（.dsh/.ssh/.android）不可读\n设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n\n== 与用户交互 ==\n/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n/app/notify?title=… + text=…      通知栏\n/app/toast + text=…               App 内提示\n/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n/app/share（text= 或 path=）      分享到其它应用\n/app/open?url=https://…           打开链接\n/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA；凭据区不可导出\n建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n产出报告用 /app/export，别只留在容器里。\n\n== 传感器与位置（默认关闭，需用户在配置页勾选）==\n/app/location（加 fresh=1 强制重新定位，可能等数秒）\n/app/sensors 列表 · /app/sensor?name=light 读值\n（light 环境光 lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation 姿态四元数 / steps 开机后步数）\n/app/torch?on=1 手电\n这三类返回 DISABLED（用户没开该能力）或 NO_PERMISSION（没授系统权限）时，\n照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n\n== 元信息 ==\n/app/version                          桥协议版本 + App 版本（特性检测用）\n/app/help                             本清单\n\n== 插件状态 ==\n/app/plugins                          读回上次上报的加载状态\n/app/plugins?loaded=a,b&failed=c      上报（插件侧用）\n\n== 设备 shell（自动选择 root / Shizuku / ADB）==\n/root/dsh-bin/adb-shell \"命令\"        用 id 核验实际身份\n包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n短信只允许当前 Android 用户的 content query --uri content://sms，默认关闭；设置 → 设备能力授权可开启或撤销。\n短信预授权可能返回正文及验证码；不允许发送、修改或删除，Android 仍可拒绝访问。Shizuku 不执行此敏感查询。\n仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n设置 → 设备能力授权中连接可用通道，别反复试同一条命令。\n不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n\n== root（--su）==\n已启用并经 root 管理器授权的 su 可直接执行，无需 ADB 配对；其次使用 Shizuku，再使用 ADB。\n--su 仅在明确需要 root 时使用，须先在设备能力授权页允许；同一设备保护策略始终生效。\n[EXECUTION_UNKNOWN] 表示命令可能已执行，先核对实际状态，不能切换通道或自动重放。\n",
-    "en": "DSHA 3090 bridge endpoints (BRIDGE_PROTOCOL=%s）\nThe host writes credentials to /root/.dsh/.bridge_headers. Use curl -H @/root/.dsh/.bridge_headers; keep tokens out of URLs and command arguments.\nFor parameters containing Chinese text or spaces, use -G --data-urlencode instead of encoding the URL manually.\n\n== Screen control (accessibility service; no ADB/Shizuku required) ==\nRead screen  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → Each line: [index] \"text\" clickable center=(x,y) bounds=l,t,r,b\nTap  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=Settings\" -H @/root/.dsh/.bridge_headers\n      → Prefer tapping by text: positions change with scrolling and animation. Use ?x=&y= only when no text is available.\nInput  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=content\" -H @/root/.dsh/.bridge_headers\n      → Types into the focused field. Tap an input field first if none is focused.\nKey  /app/ui/key?name=back  (back/home/recents/notifications/quicksettings/lock)\nSwipe  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\nScreenshot  /app/ui/screenshot   → save a PNG in the app's screenshot folder and return its path (not base64)\nAfter each tap or input, dump the screen again before deciding the next step. Do not tap repeatedly from memory.\n\n== Independent virtual display (Android 11+; coordinate and text input must carry the frame you just observed) ==\n/app/vscreen/create?orientation=portrait|landscape  Create a virtual display\n/app/vscreen/status  Query displayId, size and frameSeq (read-only; its frameSeq cannot be used for input)\n/app/vscreen/launch?package=com.example.app  Launch an installed application\n/app/vscreen/see  Get the latest preview (optional since=<frameSeq> to dedupe); input must carry the frameSeq it returns\n/app/vscreen/tap?x=&y=&frameSeq=&generation=  Tap by coordinate\n/app/vscreen/swipe?x1=&y1=&x2=&y2=&ms=&frameSeq=&generation=  Swipe\n/app/vscreen/touch?stroke=&action=0..3&x=&y=&frameSeq=&generation=  Continuous touch (stroke is 16-64 hex digits)\n/app/vscreen/type?text=&frameSeq=&generation=  Type text (CJK needs accessibility)\n/app/vscreen/key?keycode=3|4|66|67&frameSeq=&generation=  System key\n/app/vscreen/tree  Read the virtual display node tree; the returned generation and frameSeq feed node\n/app/vscreen/node  POST JSON {generation,nodeId,action,text?}  Semantic action by nodeId (click/long_click/scroll_forward/scroll_backward/focus/set_text); frame-independent, no frameSeq needed, a nodeId is single-use\n/app/vscreen/editor|edit|submit  POST JSON {generation,editorId,text?,start?,end?}  Read/write the focused input field\n/app/vscreen/close  Close and release the virtual display\nFrame gate: coordinate and text input require that the frame you just observed is still the newest one. When the frame interval is shorter than one see-to-input round trip (roughly 20-60fps screens) it is always stale, so the call returns STALE_FRAME with a reason: FRAME_NOT_OBSERVED (this frame was never observed) / FRAME_EXPIRED (a newer frame replaced it) / OBSERVATION_TIMEOUT (more than 30 seconds). Call see again before input; on a live screen use tree + node instead (frame-rate independent, no image round-trip).\nAn empty screen reports frameSeq 0 and see returns FRAME_NOT_READY - that means nothing is on screen yet, not a failed creation.\nCreation failures: VSCREEN_TRUSTED_DISPLAY_DENIED (this channel cannot hold ADD_TRUSTED_DISPLAY; use Root or the accessibility channel) / VSCREEN_DISPLAY_CREATE_FAILED / VSCREEN_PERMISSION_DENIED.\nWaiting for authorization is not a denial: an unanswered confirmation returns USER_NO_ANSWER (retry after the user taps Allow); only an explicit refusal returns USER_REJECTED, and an unusable confirmation channel returns USER_CONFIRM_UNAVAILABLE.\n\n== Device & apps ==\n/app/device                     Model / Android / battery / network / display / storage / memory\n/app/apps                       Installed apps, separated into user and system apps; filter with q/limit/user=1\n/app/launch?pkg=com.tencent.mm  Launch app\n/app/clip                       Read clipboard (app must be in foreground; Android restriction)\n/app/clip + text=…              Write clipboard\n/app/readfile?path=/…          Read a directory or text at an absolute path, subject to Android permissions; credential directories (.dsh/.ssh/.android) cannot be read\nUse the protected device shell below for device file writes. Ordinary Download files are writable; DCIM/Pictures/Android/data/obb remain read-only.\n\n== User interaction ==\n/app/ask?options=Continue|Cancel + q=…  Ask in a blocking dialog (up to three options)\n/app/notify?title=… + text=…      Notification\n/app/toast + text=…               In-app toast\n/app/vibrate?ms=300               Vibrate (notify the user after a long task)\n/app/share (text= or path=)      Share to another app\n/app/open?url=https://…           Open URL\n/app/export?path=/root/report.md  Export an artifact to Download/DSHA; credential directories cannot be exported\nUse /app/ask when a decision is needed, and notify or vibrate when a long task finishes.\nUse /app/export to deliver reports; do not leave them only in the container.\n\n== Sensors & location (off by default; enable in Configuration) ==\n/app/location (fresh=1 forces a new fix; may take a few seconds)\n/app/sensors lists sensors · /app/sensor?name=light reads a value\n(light: ambient lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation quaternion / steps since boot)\n/app/torch?on=1 Flashlight\nWhen these APIs return DISABLED (feature off) or NO_PERMISSION (system permission missing),\nTell the user exactly where to enable it. Do not retry; retrying cannot turn the setting on.\n\n== Metadata ==\n/app/version                          Bridge protocol + app version (feature detection)\n/app/help                             This endpoint list\n\n== Plugin status ==\n/app/plugins                          Read last reported loading status\n/app/plugins?loaded=a,b&failed=c      Report status (for plugins)\n\n== Device shell (selects root / Shizuku / ADB automatically) ==\n/root/dsh-bin/adb-shell \"command\"        Use id to verify the actual identity\nIf the wrapper is missing: python3 /root/.dsh/adb-shell.py \"command\"\nSMS queries only allow content query --uri content://sms for the current Android user. Off by default; enable or revoke in Device permissions.\nPreauthorized SMS queries may return message bodies and verification codes. Sending, editing and deleting are blocked; Android may still deny access. Shizuku does not run this sensitive query.\nOnly recognized single commands are allowed, including directory reads and ordinary file operations on explicit paths. Scripts, pipes, redirects and unknown commands are blocked.\nRoot and system directories are read-only. Block devices/partitions, SELinux changes, system setting writes, mounts and firmware flashing are blocked.\nRefresh the complete user/system app list before stopping processes. Ordinary user apps may be stopped; system apps and essential processes are protected.\nUse the full package name with am force-stop / killall / pkill -x. A positive PID with kill is checked against its UID before stopping by package name.\nPolicy blocks return [POLICY_BLOCKED]/126. Root and legacy confirmation switches cannot override them. Do not use another interpreter or the UI to bypass a block.\nIf a connection or pairing error occurs, first check whether the app-level APIs above can perform the task. Only if a shell is essential, ask the user to open\nSettings → Device permissions to connect an available channel. Do not keep retrying the same command.\nDo not use /root/dsh-bin/adb or bare adb; those are guarded wrappers and will fail.\n\n== root（--su）==\nWhen su is enabled and authorized by the root manager, commands run directly without ADB pairing. Otherwise, Shizuku is used before ADB.\nUse --su only when root is explicitly required and enabled in Device permissions. The same device protection policy always applies.\n[EXECUTION_UNKNOWN] means the command may have executed. Verify the actual state before proceeding; do not switch connections or replay automatically.\n",
+    "zh": "DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=%s）\n凭据由宿主写入 /root/.dsh/.bridge_headers；使用 curl -H @/root/.dsh/.bridge_headers，不把 token 写进 URL 或命令参数。\n带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\n\n== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\n读屏  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → 每行「[序号] \"文字\" 可点击 中心=(x,y) 区域=l,t,r,b」\n点按  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=设置\" -H @/root/.dsh/.bridge_headers\n      → 优先按文字点：控件位置随滚动/动画变，文字不变。没有文字才用 ?x=&y=\n输入  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=内容\" -H @/root/.dsh/.bridge_headers\n      → 填到当前焦点框；没有焦点先 tap 一下输入框\n按键  /app/ui/key?name=back  （back/home/recents/notifications/quicksettings/lock）\n滑动  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\n截屏  /app/ui/screenshot   → 存 PNG 到应用截图目录并返回路径（不回 base64）\n节奏：每次点按/输入后先 dump 再决定下一步，别凭记忆连点。\n\n== 独立虚拟屏（Android 11+；每次输入必须带最新 frameSeq）==\n/app/vscreen/create?orientation=portrait|landscape  创建虚拟屏\n/app/vscreen/status  查询 displayId、尺寸和 frameSeq\n/app/vscreen/launch?package=com.example.app  启动已安装应用\n/app/vscreen/see  获取最新预览；tap/swipe/type/key 必须携带该 frameSeq\n/app/vscreen/close  关闭并回收虚拟屏\n\n== 设备与应用 ==\n/app/device                     机型/系统/电量/网络/屏幕/存储/内存\n/app/apps                       全部已装应用，分用户应用与系统应用；可加 q/limit/user=1 筛选显示\n/app/launch?pkg=com.tencent.mm  启动应用\n/app/clip                       读剪贴板（需 App 在前台，系统限制）\n/app/clip + text=…              写剪贴板\n/app/readfile?path=/…          读取绝对路径的目录或文本，仍受 Android 权限限制；凭据区（.dsh/.ssh/.android）不可读\n设备文件写入请走下方受保护的设备 shell；普通 Download 文件可操作，DCIM/Pictures/Android/data/obb 只读。\n\n== 与用户交互 ==\n/app/ask?options=继续|取消 + q=…  弹窗阻塞等回答（最多三个选项）\n/app/notify?title=… + text=…      通知栏\n/app/toast + text=…               App 内提示\n/app/vibrate?ms=300               震动（长任务跑完叫醒用户）\n/app/share（text= 或 path=）      分享到其它应用\n/app/open?url=https://…           打开链接\n/app/export?path=/root/report.md  把产物交给用户 → 落 Download/DSHA；凭据区不可导出\n建议：需要用户拍板用 /app/ask 而不是干等；长任务结束用 notify 或 vibrate 叫人；\n产出报告用 /app/export，别只留在容器里。\n\n== 传感器与位置（默认关闭，需用户在配置页勾选）==\n/app/location（加 fresh=1 强制重新定位，可能等数秒）\n/app/sensors 列表 · /app/sensor?name=light 读值\n（light 环境光 lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation 姿态四元数 / steps 开机后步数）\n/app/torch?on=1 手电\n这三类返回 DISABLED（用户没开该能力）或 NO_PERMISSION（没授系统权限）时，\n照原话告诉用户去哪开，不要重试 —— 重试不会让开关自己变。\n\n== 元信息 ==\n/app/version                          桥协议版本 + App 版本（特性检测用）\n/app/help                             本清单\n\n== 插件状态 ==\n/app/plugins                          读回上次上报的加载状态\n/app/plugins?loaded=a,b&failed=c      上报（插件侧用）\n\n== 设备 shell（自动选择 root / Shizuku / ADB）==\n/root/dsh-bin/adb-shell \"命令\"        用 id 核验实际身份\n包装命令不存在时：python3 /root/.dsh/adb-shell.py \"命令\"\n短信只允许当前 Android 用户的 content query --uri content://sms，默认关闭；设置 → 设备能力授权可开启或撤销。\n短信预授权可能返回正文及验证码；不允许发送、修改或删除，Android 仍可拒绝访问。Shizuku 不执行此敏感查询。\n仅执行已识别的单条命令；允许读取各目录和明确路径的普通文件操作。禁止脚本、管道、重定向、未知命令。\n根目录及系统目录只读；禁止块设备/分区、SELinux、系统设置写入、挂载和刷机操作。\n结束进程前自动刷新全量用户/系统应用清单；普通用户应用直接结束，系统应用与关键进程拦截。\n按完整包名调用 am force-stop / killall / pkill -x；kill 正数 PID 会核对 UID 后按包名停止。\n策略拦截返回 [POLICY_BLOCKED]/126；root 和旧确认开关不能放行。不可用其它解释器或 UI 绕过。\n报连不上/未配对：先看上面的 App 层接口能不能办成；确实必须 shell 才请用户到\n设置 → 设备能力授权中连接可用通道，别反复试同一条命令。\n不要用 /root/dsh-bin/adb 或裸 adb —— 那是守卫包装脚本，会失败。\n\n== root（--su）==\n已启用并经 root 管理器授权的 su 可直接执行，无需 ADB 配对；其次使用 Shizuku，再使用 ADB。\n--su 仅在明确需要 root 时使用，须先在设备能力授权页允许；同一设备保护策略始终生效。\n[EXECUTION_UNKNOWN] 表示命令可能已执行，先核对实际状态，不能切换通道或自动重放。\n",
+    "en": "DSHA 3090 bridge endpoints (BRIDGE_PROTOCOL=%s）\nThe host writes credentials to /root/.dsh/.bridge_headers. Use curl -H @/root/.dsh/.bridge_headers; keep tokens out of URLs and command arguments.\nFor parameters containing Chinese text or spaces, use -G --data-urlencode instead of encoding the URL manually.\n\n== Screen control (accessibility service; no ADB/Shizuku required) ==\nRead screen  curl -s -H @/root/.dsh/.bridge_headers \"127.0.0.1:3090/app/ui/dump\"\n      → Each line: [index] \"text\" clickable center=(x,y) bounds=l,t,r,b\nTap  curl -s -G 127.0.0.1:3090/app/ui/tap --data-urlencode \"text=Settings\" -H @/root/.dsh/.bridge_headers\n      → Prefer tapping by text: positions change with scrolling and animation. Use ?x=&y= only when no text is available.\nInput  curl -s -G 127.0.0.1:3090/app/ui/input --data-urlencode \"text=content\" -H @/root/.dsh/.bridge_headers\n      → Types into the focused field. Tap an input field first if none is focused.\nKey  /app/ui/key?name=back  (back/home/recents/notifications/quicksettings/lock)\nSwipe  /app/ui/swipe?x1=500&y1=1500&x2=500&y2=500&ms=300\nScreenshot  /app/ui/screenshot   → save a PNG in the app's screenshot folder and return its path (not base64)\nAfter each tap or input, dump the screen again before deciding the next step. Do not tap repeatedly from memory.\n\n== Independent virtual display (Android 11+; each input requires the latest frameSeq) ==\n/app/vscreen/create?orientation=portrait|landscape  Create a virtual display\n/app/vscreen/status  Query displayId, size and frameSeq\n/app/vscreen/launch?package=com.example.app  Launch an installed application\n/app/vscreen/see  Get the latest preview; tap/swipe/type/key must include its frameSeq\n/app/vscreen/close  Close and release the virtual display\n\n== Device & apps ==\n/app/device                     Model / Android / battery / network / display / storage / memory\n/app/apps                       Installed apps, separated into user and system apps; filter with q/limit/user=1\n/app/launch?pkg=com.tencent.mm  Launch app\n/app/clip                       Read clipboard (app must be in foreground; Android restriction)\n/app/clip + text=…              Write clipboard\n/app/readfile?path=/…          Read a directory or text at an absolute path, subject to Android permissions; credential directories (.dsh/.ssh/.android) cannot be read\nUse the protected device shell below for device file writes. Ordinary Download files are writable; DCIM/Pictures/Android/data/obb remain read-only.\n\n== User interaction ==\n/app/ask?options=Continue|Cancel + q=…  Ask in a blocking dialog (up to three options)\n/app/notify?title=… + text=…      Notification\n/app/toast + text=…               In-app toast\n/app/vibrate?ms=300               Vibrate (notify the user after a long task)\n/app/share (text= or path=)      Share to another app\n/app/open?url=https://…           Open URL\n/app/export?path=/root/report.md  Export an artifact to Download/DSHA; credential directories cannot be exported\nUse /app/ask when a decision is needed, and notify or vibrate when a long task finishes.\nUse /app/export to deliver reports; do not leave them only in the container.\n\n== Sensors & location (off by default; enable in Configuration) ==\n/app/location (fresh=1 forces a new fix; may take a few seconds)\n/app/sensors lists sensors · /app/sensor?name=light reads a value\n(light: ambient lux / accel / gyro / magnet / pressure / proximity /\n gravity / rotation quaternion / steps since boot)\n/app/torch?on=1 Flashlight\nWhen these APIs return DISABLED (feature off) or NO_PERMISSION (system permission missing),\nTell the user exactly where to enable it. Do not retry; retrying cannot turn the setting on.\n\n== Metadata ==\n/app/version                          Bridge protocol + app version (feature detection)\n/app/help                             This endpoint list\n\n== Plugin status ==\n/app/plugins                          Read last reported loading status\n/app/plugins?loaded=a,b&failed=c      Report status (for plugins)\n\n== Device shell (selects root / Shizuku / ADB automatically) ==\n/root/dsh-bin/adb-shell \"command\"        Use id to verify the actual identity\nIf the wrapper is missing: python3 /root/.dsh/adb-shell.py \"command\"\nSMS queries only allow content query --uri content://sms for the current Android user. Off by default; enable or revoke in Device permissions.\nPreauthorized SMS queries may return message bodies and verification codes. Sending, editing and deleting are blocked; Android may still deny access. Shizuku does not run this sensitive query.\nOnly recognized single commands are allowed, including directory reads and ordinary file operations on explicit paths. Scripts, pipes, redirects and unknown commands are blocked.\nRoot and system directories are read-only. Block devices/partitions, SELinux changes, system setting writes, mounts and firmware flashing are blocked.\nRefresh the complete user/system app list before stopping processes. Ordinary user apps may be stopped; system apps and essential processes are protected.\nUse the full package name with am force-stop / killall / pkill -x. A positive PID with kill is checked against its UID before stopping by package name.\nPolicy blocks return [POLICY_BLOCKED]/126. Root and legacy confirmation switches cannot override them. Do not use another interpreter or the UI to bypass a block.\nIf a connection or pairing error occurs, first check whether the app-level APIs above can perform the task. Only if a shell is essential, ask the user to open\nSettings → Device permissions to connect an available channel. Do not keep retrying the same command.\nDo not use /root/dsh-bin/adb or bare adb; those are guarded wrappers and will fail.\n\n== root（--su）==\nWhen su is enabled and authorized by the root manager, commands run directly without ADB pairing. Otherwise, Shizuku is used before ADB.\nUse --su only when root is explicitly required and enabled in Device permissions. The same device protection policy always applies.\n[EXECUTION_UNKNOWN] means the command may have executed. Verify the actual state before proceeding; do not switch connections or replay automatically.\n",
     "uiFormat": true,
     "files": [
       "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
@@ -29688,11 +29497,11 @@
   },
   {
     "zh": "配置的工作目录暂不可读取，已打开个人文件目录。",
+    "id": "m9012",
     "en": "The configured workspace is temporarily unreadable. The personal files folder is open.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
-    ],
-    "id": "build171_workspace_unreadable"
+    ]
   },
   {
     "id": "build160_cold_timing_0",
@@ -30303,8 +30112,7 @@
     "source": [
       "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
       "app/src/main/java/com/deepseekharness/app/util/AdbDependencyPreparation.java"
-    ],
-    "files": []
+    ]
   },
   {
     "id": "m9009",
@@ -30314,8 +30122,7 @@
       "app/src/main/java/com/deepseekharness/app/bridge/AdbBridge.java",
       "app/src/main/java/com/deepseekharness/app/util/AdbDependencyPreparation.java"
     ],
-    "uiFormat": true,
-    "files": []
+    "uiFormat": true
   },
   {
     "id": "m9010",
@@ -30323,8 +30130,7 @@
     "en": "Preparing the offline ADB environment…",
     "source": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
-    ],
-    "files": []
+    ]
   },
   {
     "id": "m9011",
@@ -30332,909 +30138,6 @@
     "en": "ADB_OFFLINE_READY: Offline dependencies are ready; the connection has not been verified. Enable wireless debugging, then verify again.",
     "source": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
-    ],
-    "files": []
-  },
-  {
-    "id": "ui2_port_auto",
-    "zh": "自动分配 Web 端口",
-    "en": "Assign the Web port automatically",
-    "files": [
-      "app/src/main/res/values/ui_iteration.xml"
-    ]
-  },
-  {
-    "id": "m171_port_retry",
-    "zh": "Web 端口冲突重试",
-    "en": "Retrying after a Web port conflict",
-    "source": [
-      "app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java"
-    ],
-    "files": []
-  },
-  {
-    "id": "ui2_restore_port_drafts",
-    "zh": "恢复旧端口草稿",
-    "en": "Restore previous-port drafts",
-    "files": [
-      "app/src/main/res/values/ui_iteration.xml"
-    ]
-  },
-  {
-    "id": "web-upload-session-files",
-    "zh": "浏览器会话上传的文件数已达 %s 个，请重新打开对话后再试",
-    "en": "The browser session already holds %s uploaded files; reopen the conversation and try again",
-    "source": [
-      "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
-    ],
-    "uiFormat": true,
-    "files": []
-  },
-  {
-    "id": "web-upload-session-bytes",
-    "zh": "浏览器会话上传缓存已达 %s，请重新打开对话后再试",
-    "en": "The browser session upload cache has reached %s; reopen the conversation and try again",
-    "source": [
-      "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
-    ],
-    "uiFormat": true,
-    "files": []
-  },
-  {
-    "id": "web-upload-space-reserve",
-    "zh": "存储空间不足，上传缓存需保留 %s 可用空间",
-    "en": "Not enough storage; the upload cache must leave %s available",
-    "source": [
-      "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
-    ],
-    "uiFormat": true,
-    "files": []
-  },
-  {
-    "id": "web-upload-source-unavailable",
-    "zh": "所选文件暂不可读取，可能已移动、删除或尚未就绪，请重新选择",
-    "en": "The selected file cannot be read right now. It may have moved, been deleted, or not be ready. Select it again.",
-    "source": [
-      "app/src/main/java/com/deepseekharness/app/ui/WebUploads.java"
-    ],
-    "files": []
-  },
-  {
-    "id": "build171_guard_0",
-    "zh": "清理可再生缓存、临时文件与多余副本",
-    "en": "Clean reproducible caches, temporary files and excess copies",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java"
-    ]
-  },
-  {
-    "id": "build171_guard_1",
-    "zh": "清理前会安全停止 DSH 和终端，再清空临时文件目录（/root/.cache/dsha）、历史验收缓存，以及超过保留数量且已核验的受管回退副本。对话、附件、设置、插件、手动备份和无法核验的原件保留。",
-    "en": "DSH and terminals are stopped safely before cleanup. Empties the temporary directory (/root/.cache/dsha), old verification caches, and verified excess managed rollback copies. Keeps chats, attachments, settings, plugins, manual backups and unverified originals.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java"
-    ]
-  },
-  {
-    "id": "build171_guard_2",
-    "zh": "已释放 %s（删除 %d 项，跳过 %d 项，失败 %d 项）",
-    "en": "Freed %s (%d removed, %d skipped, %d failed)",
-    "uiFormat": true,
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java"
-    ]
-  },
-  {
-    "id": "build171_guard_3",
-    "zh": "已完成统计。清理只移除可再生缓存、临时文件目录和已核验的多余运行时副本，个人数据与备份保留。",
-    "en": "Sizes updated. Cleanup removes only reproducible caches, temporary files and verified excess runtime copies. Personal data and backups are retained.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java"
-    ]
-  },
-  {
-    "id": "build171_guard_4",
-    "zh": "临时文件目录",
-    "en": "Temporary files",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/StorageActivity.java"
-    ]
-  },
-  {
-    "id": "build171_origin_result",
-    "zh": "恢复结果：写入 %d，冲突 %d，未知 %d。候选与原数据已保留，请重新进入对话页读取。",
-    "en": "Restore result: written %d, conflicts %d, unknown %d. Candidates and source data were retained. Reopen the conversation page.",
-    "uiFormat": true,
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/BrowserOriginRestoreActivity.java"
-    ]
-  },
-  {
-    "id": "build171_vscreen_0",
-    "zh": "画面已被新帧替换：先 see 再输入；动画界面可改用 tree + node（需要系统提供控件树）。",
-    "en": "A newer frame replaced the observed view. Call see again, or use tree + node on an animated screen when the system provides an accessibility tree.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
-    ]
-  },
-  {
-    "id": "build171_vscreen_1",
-    "zh": "输入结果未知：动作可能已执行，请先观察实际画面，不要直接重试。",
-    "en": "The input result is unknown: the action may have executed. Observe the actual screen before retrying.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java"
-    ]
-  },
-  {
-    "id": "m3720",
-    "zh": "环境维护与外置工作区",
-    "en": "Environment maintenance and external workspaces",
-    "files": []
-  },
-  {
-    "id": "m3721",
-    "zh": "环境维护使用“恢复中断维护”或“保护数据并重建”。外置工作区中的文件和备份由用户管理；断开工作区只解除映射，不删除外置目录或文件。",
-    "en": "Use “Resume interrupted maintenance” or “Protect data and rebuild” for environment maintenance. You manage files and backups in external workspaces. Disconnecting a workspace only removes its mapping; it does not delete external folders or files.",
-    "files": []
-  },
-  {
-    "id": "m9012",
-    "zh": "正在生成回复",
-    "en": "Generating reply",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9013",
-    "zh": "正在执行工具",
-    "en": "Running tool",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9014",
-    "zh": "等待处理",
-    "en": "Waiting for input",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9015",
-    "zh": "已请求停止，等待结束",
-    "en": "Stop requested; waiting for end",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9016",
-    "zh": "状态暂不可确认",
-    "en": "Status cannot be confirmed",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9017",
-    "zh": "任务完成",
-    "en": "Task completed",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9018",
-    "zh": "任务已停止",
-    "en": "Task stopped",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9019",
-    "zh": "已达到输出上限",
-    "en": "Output limit reached",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9020",
-    "zh": "任务需要处理",
-    "en": "Task needs attention",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9021",
-    "zh": "任务运行中",
-    "en": "Task running",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9022",
-    "zh": "任务进度",
-    "en": "Task progress",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9023",
-    "zh": "DSHA 任务",
-    "en": "DSHA task",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/AgentTaskNotifications.java"
-    ]
-  },
-  {
-    "id": "m9024",
-    "zh": "回聊天",
-    "en": "Return to chat",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/AgentTasksActivity.java"
-    ]
-  },
-  {
-    "id": "m9025",
-    "zh": "Agent 任务",
-    "en": "Agent tasks",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/AgentTasksActivity.java"
-    ]
-  },
-  {
-    "id": "m9026",
-    "zh": "查看实际对话进度。停止只作用于对应任务。",
-    "en": "View actual conversation progress. Stop affects only the selected task.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/AgentTasksActivity.java"
-    ]
-  },
-  {
-    "id": "m9027",
-    "zh": "暂无任务记录",
-    "en": "No task records",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/AgentTasksActivity.java"
-    ]
-  },
-  {
-    "id": "m9028",
-    "zh": "现存内容与旧依赖记录不同；已按本次内容重新核对。\n",
-    "en": "Existing content differs from the old dependency record; the current content was checked.\n",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9029",
-    "zh": "作者声明（未作为本机验证结论）：",
-    "en": "Author claims (not local verification): ",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9030",
-    "zh": "\n\n安装后默认启用；Web 启动时加载，同名更新保留上一版。",
-    "en": "\n\nEnabled by default after installation; Web loads it on startup. Updates retain the previous version.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9031",
-    "zh": "\n\n正在处理启用或回退；启动 Web 后生效。",
-    "en": "\n\nApplying enable or rollback; the change takes effect on Web startup.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9032",
-    "zh": "\n插件将在 DSHA 的权限范围内运行。",
-    "en": "\nThe plugin runs with DSHA's permissions.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9033",
-    "zh": "正在读取插件能力声明…",
-    "en": "Reading plugin capability declarations…",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9034",
-    "zh": "\n静态能力信息（声明与源码线索，不代表权限或安全保证）\n",
-    "en": "\nStatic capabilities (declarations and source references, not permissions or safety guarantees)\n",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9035",
-    "zh": "历史记录无此信息；可在详情中重新检查。\n",
-    "en": "No information in this historical record; inspect again from plugin details.\n",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9036",
-    "zh": "声明的客户端服务：",
-    "en": "Declared client services: ",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9037",
-    "zh": "脚本声明：",
-    "en": "Script declarations: ",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9038",
-    "zh": "已读依赖 manifests / 脚本声明：",
-    "en": "Dependency manifests read / script declarations: ",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9039",
-    "zh": "声明的服务依赖：",
-    "en": "Declared service dependency: ",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9040",
-    "zh": "设备桥调用线索：",
-    "en": "Device bridge source reference: ",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9041",
-    "zh": "未确认范围：\n",
-    "en": "Unconfirmed scope:\n",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9042",
-    "zh": "未跟踪补丁引用与动态加载模块",
-    "en": "Patch references and dynamically loaded modules were not followed",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9043",
-    "zh": "动态服务声明未确认",
-    "en": "Dynamic service declarations are unconfirmed",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9044",
-    "zh": "重导出的服务声明未确认",
-    "en": "Reexported service declarations are unconfirmed",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9045",
-    "zh": "动态设备桥调用未确认",
-    "en": "Dynamic device bridge calls are unconfirmed",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9046",
-    "zh": "达到静态分析预算",
-    "en": "Static analysis budget reached",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9047",
-    "zh": "源码未能解析",
-    "en": "Source could not be parsed",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9048",
-    "zh": "未声明服务入口",
-    "en": "No server entry declared",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9049",
-    "zh": "脚本声明格式无效",
-    "en": "Invalid script declaration",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9050",
-    "zh": "依赖脚本声明未完整检查",
-    "en": "Dependency script declarations were not fully inspected",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9051",
-    "zh": "静态解析器不可用或超出预算",
-    "en": "Static parser unavailable or budget exceeded",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9052",
-    "zh": "包声明输入未能确认",
-    "en": "Package declaration input could not be confirmed",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9053",
-    "zh": "入口未检查：",
-    "en": "Entry not inspected: ",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9054",
-    "zh": "正在恢复未完成的插件安装…",
-    "en": "Resuming the pending plugin installation…",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9055",
-    "zh": "正在准备隔离插件…",
-    "en": "Preparing the retained plugin…",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9056",
-    "zh": "正在准备旧预设候选与当前依赖…",
-    "en": "Preparing the legacy preset and current dependencies…",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9057",
-    "zh": "插件包已解析，正在安装并启用",
-    "en": "Plugin package resolved; installing and enabling",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9058",
-    "zh": "正在提交插件并启用…",
-    "en": "Installing and enabling plugin…",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9059",
-    "zh": "插件已安装并启用；Web 未自动重启，请在启动页重试",
-    "en": "Plugin installed and enabled; restart Web from the launch page",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9060",
-    "zh": "正在解析本地插件包…",
-    "en": "Resolving local plugin package…",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9061",
-    "zh": "重试安装",
-    "en": "Retry installation",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
-    ]
-  },
-  {
-    "id": "m9062",
-    "zh": "清理临时包",
-    "en": "Remove temporary package",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
-    ]
-  },
-  {
-    "id": "m9063",
-    "zh": "能力声明",
-    "en": "Capabilities",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
-    ]
-  },
-  {
-    "id": "m9064",
-    "zh": "加载期间内容变化；检查后重新启用",
-    "en": "Content changed during loading; check and enable again",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
-    ]
-  },
-  {
-    "id": "m9065",
-    "zh": "随 DSH 安装提供",
-    "en": "Provided by DSH",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
-    ]
-  },
-  {
-    "id": "m9066",
-    "zh": "未提供路径",
-    "en": "Path not provided",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
-    ]
-  },
-  {
-    "id": "m9067",
-    "zh": "随包内置",
-    "en": "Bundled",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
-    ]
-  },
-  {
-    "id": "m9068",
-    "zh": "DSH 官方组件",
-    "en": "Official DSH component",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
-    ]
-  },
-  {
-    "id": "m9069",
-    "zh": "来源未记录",
-    "en": "Source not recorded",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
-    ]
-  },
-  {
-    "id": "m9070",
-    "zh": "撤销全部屏幕预授权",
-    "en": "Revoke all screen preauthorizations",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9071",
-    "zh": "已撤销，后续屏幕操作需要逐次确认",
-    "en": "Revoked. Future screen actions require individual confirmation",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9072",
-    "zh": "全部手动",
-    "en": "Confirm every action",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9073",
-    "zh": "按应用自定义",
-    "en": "Customize by app",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9074",
-    "zh": "全部允许",
-    "en": "Allow all",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9075",
-    "zh": "编辑应用确认规则",
-    "en": "Edit app confirmation rules",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9076",
-    "zh": "仅设置 DSHA 的屏幕确认；不会授予系统权限。全部允许包含敏感界面；自定义中未配置的应用仍询问。规则保存在本机，不随备份迁移。",
-    "en": "These rules only control DSHA confirmations and do not grant system permissions. Allow all includes sensitive screens. Unconfigured apps still ask in custom mode. Rules stay on this device and are excluded from backups.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9077",
-    "zh": "恢复助手屏幕操作",
-    "en": "Resume assistant screen actions",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9078",
-    "zh": "暂停助手屏幕操作",
-    "en": "Pause assistant screen actions",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9079",
-    "zh": "询问",
-    "en": "Ask",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9080",
-    "zh": "应用确认规则",
-    "en": "App confirmation rules",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9081",
-    "zh": "添加应用",
-    "en": "Add app",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9082",
-    "zh": "精确应用包名",
-    "en": "Exact app package name",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9083",
-    "zh": "允许该应用免确认（含敏感界面）",
-    "en": "Allow this app without confirmation, including sensitive screens",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9084",
-    "zh": "应用包名无效，规则未保存",
-    "en": "Invalid package name. Rule was not saved",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9085",
-    "zh": "删除规则",
-    "en": "Remove rule",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "m9086",
-    "zh": "启动应用：%s",
-    "en": "Launch app: %s",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/bridge/AppDeviceActions.java"
-    ]
-  },
-  {
-    "id": "m9087",
-    "zh": "在【%s】里：%s  # 当前确认策略要求你确认，界面可能涉及支付或隐私",
-    "en": "In [%s]: %s  # The current policy requires confirmation. This screen may involve payments or private information.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
-    ]
-  },
-  {
-    "id": "m9088",
-    "zh": "%s  # 仅批准本次操作；可在设备能力授权中设置确认策略",
-    "en": "%s  # Approval applies to this action only. Configure confirmation rules in Device capabilities.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
-    ]
-  },
-  {
-    "id": "m9089",
-    "zh": "最近安装与维护探针",
-    "en": "Latest install and maintenance probe",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
-    ]
-  },
-  {
-    "id": "m9090",
-    "zh": "查看本次任务、预算与实际结果",
-    "en": "Review the task, budgets and observed results",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/DiagnosticRepository.java"
-    ]
-  },
-  {
-    "id": "m9091",
-    "zh": "私有设置已重置；外置或无法确认的工作目录 .env 保留，对话及原生凭据保留。重置前配置原件：\n%s",
-    "en": "Private settings were reset; the .env in an external or unverified workspace, conversations and native credentials were retained. Original configuration files:\n%s",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/HostConfigService.java"
-    ]
-  },
-  {
-    "id": "m9093",
-    "zh": "全屏",
-    "en": "Full screen",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
-    ]
-  },
-  {
-    "id": "m9094",
-    "zh": "这条任务所属的聊天实例已结束，请从启动页重新进入。",
-    "en": "This task's chat instance has ended. Open the workspace from the start page.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/BrowserConversationRoute.java"
-    ]
-  },
-  {
-    "id": "m9095",
-    "zh": "无法打开该任务的会话，当前聊天已保留。",
-    "en": "The task's session could not be opened. Your current chat was kept.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/BrowserConversationRoute.java"
-    ]
-  },
-  {
-    "id": "m9096",
-    "zh": "入口未检查：%s",
-    "en": "Entry not inspected: %s",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/PluginRepository.java"
-    ]
-  },
-  {
-    "id": "m9097",
-    "zh": "环境重建完成，数据逐文件核验与运行试验通过。\n%s",
-    "en": "Environment rebuilt; data verification and the runtime trial passed.\n%s",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java"
-    ]
-  },
-  {
-    "id": "m9098",
-    "zh": "独立应急 DSH 已就绪；正式环境保持原状。%s",
-    "en": "Independent recovery DSH is ready. The main environment is preserved.%s",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java"
-    ]
-  },
-  {
-    "id": "m9099",
-    "zh": "数据已由 Android 恢复到私有目录；原件与外置工作区保留。",
-    "en": "Android restored data to private folders; originals and external workspaces are retained.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
-    ]
-  },
-  {
-    "id": "m9100",
-    "zh": "旧恢复已由 Android 处理；外置目录、原日志、原件与候选继续保留。",
-    "en": "Android handled the legacy restore; external folders, the original journal, originals and candidates are retained.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
-    ]
-  },
-  {
-    "id": "m9101",
-    "zh": "部分内容需确认，请查看备份清单。",
-    "en": "Some content needs review; see the backup manifest.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/BackupManager.java"
-    ]
-  },
-  {
-    "id": "m9102",
-    "zh": "请选择手机本地文件夹，例如 Downloads 下自建的备份文件夹。保存位置不支持安全写入时会停止；已验证的私有副本可通过“重新导出已验证副本”重试。本机副本不保证卸载后保留。",
-    "en": "Choose a local phone folder, such as a backup folder you create in Downloads. Export stops if the location does not support safe writing. Retry the verified private copy with “Export a verified copy again”. Local copies are not guaranteed to survive uninstalling the app.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
-    ]
-  },
-  {
-    "id": "m9103",
-    "zh": "选择保存文件夹",
-    "en": "Choose destination folder",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
-    ]
-  },
-  {
-    "id": "m9104",
-    "zh": "保存位置中可能留下未完成文件，应用不会自动删除它。请手动检查；已验证的私有副本可重新导出。",
-    "en": "The destination may contain an incomplete file. The app will not delete it automatically. Inspect it manually; the verified private copy can be exported again.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
-    ]
-  },
-  {
-    "id": "m9105",
-    "zh": "所选数据含大小写或 Unicode 归一后重名的不同路径，当前备份格式无法无损表示。未导出，也未合并或丢弃文件；可导出不含该根的其他范围，并保留以下定位标识。",
-    "en": "Selected data contains distinct paths that collide after case or Unicode normalization. This backup format cannot represent them without loss. Nothing was exported, merged, or omitted. Export another scope without that root and retain the diagnostic identity below.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
-    ]
-  },
-  {
-    "id": "m9106",
-    "zh": "数据源的中间路径不是目录。未导出，文件保持原位；请根据以下定位标识检查该根。",
-    "en": "An intermediate source path is not a directory. Nothing was exported and files stayed in place. Check that root using the diagnostic identity below.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
-    ]
-  },
-  {
-    "id": "m9107",
-    "zh": "保存位置不支持安全写入，或所选对象已变化。请选择手机本地文件夹，例如 Downloads 下自建的备份文件夹；已验证的私有副本可通过“重新导出已验证副本”重试。本机副本不保证卸载后保留。",
-    "en": "The location does not support safe writing, or the selected object changed. Choose a local phone folder, such as a backup folder you create in Downloads. Retry with “Export a verified copy again”. Local copies are not guaranteed to survive uninstalling the app.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
     ]
   }
 ]

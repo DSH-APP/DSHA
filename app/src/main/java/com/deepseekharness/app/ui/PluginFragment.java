@@ -535,7 +535,8 @@ public class PluginFragment extends Fragment {
     if (changed) {
       visibleItems.clear();
       for (PluginRepository.Item item : current.items) {
-        if (hideBuiltin.isChecked() && (item.builtin || item.official)) continue;
+        if (hideBuiltin.isChecked() && (item.builtin || item.official || item.runtimeProvided))
+          continue;
         if (!(item.name + " " + item.description).toLowerCase(Locale.ROOT).contains(query))
           continue;
         visibleItems.add(item);
@@ -551,15 +552,23 @@ public class PluginFragment extends Fragment {
     renderedBusy = current.busy;
     ((TextView) find(R.id.pluginCount))
         .setText(
-            getResources()
-                .getQuantityString(
-                    R.plurals.plugin_count, visibleItems.size(), visibleItems.size()));
+            !repository.hasKnownItems()
+                ? com.deepseekharness.app.util.UiText.choose(
+                    current.busy ? "正在检测插件…" : "插件列表尚未确认",
+                    current.busy ? "Checking plugins…" : "Plugin list unconfirmed")
+                : getResources()
+                    .getQuantityString(
+                        R.plurals.plugin_count, visibleItems.size(), visibleItems.size()));
     TextView empty = find(R.id.pluginEmpty);
     empty.setVisibility(!market && visibleItems.isEmpty() ? View.VISIBLE : View.GONE);
     empty.setText(
         current.busy
             ? com.deepseekharness.app.util.UiText.text("正在读取插件…")
-            : com.deepseekharness.app.util.UiText.text("没有符合条件的插件"));
+            : !repository.hasKnownItems()
+                ? com.deepseekharness.app.util.UiText.choose(
+                    "插件列表尚未确认，请查看状态并刷新重试",
+                    "The plugin list is unconfirmed. Check the status and refresh to retry.")
+                : com.deepseekharness.app.util.UiText.text("没有符合条件的插件"));
     if (rebind) adapter.notifyDataSetChanged();
     recognizeLink();
   }
@@ -646,7 +655,7 @@ public class PluginFragment extends Fragment {
       return;
     }
     if (item.official && !enabled) {
-      new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
+      new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext(), true)
           .setTitle(com.deepseekharness.app.util.UiText.text("禁用官方核心？"))
           .setMessage(
               item.name + com.deepseekharness.app.util.UiText.text(" 是 Web 运行所需的核心，禁用后页面可能无法启动。"))
@@ -727,7 +736,7 @@ public class PluginFragment extends Fragment {
               } else if (action == PluginAction.UPDATE) {
                 repository.prepareUpdate(item);
               } else if (action == PluginAction.ROLLBACK) {
-                new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
+                new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext(), true)
                     .setTitle(com.deepseekharness.app.util.UiText.text("回退插件？"))
                     .setMessage(
                         item.name
@@ -791,7 +800,7 @@ public class PluginFragment extends Fragment {
       toast(com.deepseekharness.app.util.UiText.text("请等待当前插件操作完成"));
       return;
     }
-    new DshaDialogBuilder(requireContext())
+    new DshaDialogBuilder(requireContext(), true)
         .setTitle(com.deepseekharness.app.util.UiText.choose("删除插件？", "Delete plugin?"))
         .setMessage(
             com.deepseekharness.app.util.UiText.format(
@@ -897,7 +906,11 @@ public class PluginFragment extends Fragment {
                       ? com.deepseekharness.app.util.UiText.choose("随 DSH 安装提供", "Provided by DSH")
                       : item.builtin
                           ? com.deepseekharness.app.util.UiText.text("DSHA 内置插件")
-                          : com.deepseekharness.app.util.UiText.text("第三方插件"))
+                          : item.runtimeLocated
+                              ? com.deepseekharness.app.util.UiText.choose(
+                                  "DSH 安装目录中的用户/未验证插件",
+                                  "User or unverified plugin in the DSH installation")
+                              : com.deepseekharness.app.util.UiText.text("第三方插件"))
               : item.builtin
                   ? com.deepseekharness.app.util.UiStateText.render(item.description)
                   : com.deepseekharness.app.util.UiText.raw(item.description));
@@ -919,10 +932,14 @@ public class PluginFragment extends Fragment {
           item.source.isEmpty()
               ? (item.builtin
                   ? com.deepseekharness.app.util.UiText.choose("随包内置", "Bundled")
-                  : item.official
+                  : item.runtimeProvided
                       ? com.deepseekharness.app.util.UiText.choose(
-                          "DSH 官方组件", "Official DSH component")
-                      : com.deepseekharness.app.util.UiText.choose("来源未记录", "Source not recorded"))
+                          "已核对当前 APK 受管内容", "Verified against the current APK")
+                      : item.official
+                          ? com.deepseekharness.app.util.UiText.choose(
+                              "DSH 官方组件", "Official DSH component")
+                          : com.deepseekharness.app.util.UiText.choose(
+                              "来源未记录", "Source not recorded"))
               : item.source;
       details.setText(
           com.deepseekharness.app.util.UiText.format(

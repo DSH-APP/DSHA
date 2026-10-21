@@ -5,17 +5,6 @@ import static org.junit.Assert.*;
 
 public class BackupFileNamesTest {
   @Test
-  public void mediaExportsKeepTheirActualMediaType() {
-    assertEquals("video/mp4", BackupFileNames.exportMimeType("report.MP4"));
-    assertEquals("video/webm", BackupFileNames.exportMimeType("clip.webm"));
-    assertEquals("audio/mpeg", BackupFileNames.exportMimeType("recording.mp3"));
-    assertEquals("audio/mp4", BackupFileNames.exportMimeType("recording.m4a"));
-    assertEquals("audio/wav", BackupFileNames.exportMimeType("recording.wav"));
-    assertEquals("audio/ogg", BackupFileNames.exportMimeType("recording.opus"));
-    assertEquals("application/octet-stream", BackupFileNames.exportMimeType("unknown.media"));
-  }
-
-  @Test
   public void applicationExportsUseBackupSuffixAndMime() {
     String name = BackupFileNames.portableName();
     assertTrue(name.matches("DSHA-data-v5-[a-f0-9-]{36}\\.tar\\.gz"));

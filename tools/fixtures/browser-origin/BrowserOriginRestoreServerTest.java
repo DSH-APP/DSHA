@@ -15,6 +15,62 @@ public final class BrowserOriginRestoreServerTest {
   private static final String NONCE = "a".repeat(64), TARGET = "http://127.0.0.1:12345/";
   private static int checks;
 
+  /** Android's framework alias resolves for lstat, while anchored NOFOLLOW traversal refuses it. */
+  private static final class FrameworkData extends File {
+    final File actual;
+
+    FrameworkData(File actual) {
+      super("/data/user/0/com.dsh.fixture");
+      this.actual = actual;
+    }
+
+    @Override public boolean isAbsolute() { return true; }
+    @Override public File getCanonicalFile() throws IOException { return actual.getCanonicalFile(); }
+  }
+
+  private static final class FrameworkFiles extends File {
+    final FrameworkData authority;
+
+    FrameworkFiles(FrameworkData authority) {
+      super(authority, "files");
+      this.authority = authority;
+    }
+
+    @Override public boolean isAbsolute() { return true; }
+    @Override public File getParentFile() { return authority; }
+  }
+
+  /** Real JVM persistence with only Android's platform-alias syscall distinction supplied. */
+  private static final class AndroidAliasFiles extends JvmBackupFileSystem {
+    final FrameworkData alias;
+    File linked;
+
+    AndroidAliasFiles(FrameworkData alias) { this.alias = alias; }
+    private String absolute(File file) { return file.getAbsoluteFile().getPath(); }
+    private File mapped(File file) {
+      String name = absolute(file), prefix = absolute(alias) + File.separator;
+      return name.startsWith(prefix) ? new File(alias.actual, name.substring(prefix.length())) : file;
+    }
+    private void anchored(File file) throws IOException {
+      if (absolute(file).startsWith(absolute(alias) + File.separator))
+        throw new IOException("PARENT_LINK");
+      for (File at = file.getParentFile(); at != null; at = at.getParentFile())
+        if (stat(at).type.equals("LINK")) throw new IOException("PARENT_LINK");
+    }
+    @Override public Node stat(File file) throws IOException {
+      if (linked != null && absolute(linked).equals(absolute(file)))
+        return new Node("LINK", "untrusted-link", 0, 0, 1, 0700);
+      return super.stat(mapped(file));
+    }
+    @Override public List<String> list(File file) throws IOException { anchored(file); return super.list(file); }
+    @Override public InputStream read(File file, Node expected) throws IOException { anchored(file); return super.read(file, expected); }
+    @Override public OutputStream create(File file) throws IOException { anchored(file); return super.create(file); }
+    @Override public void directory(File file) throws IOException { anchored(file); super.directory(file); }
+    @Override public void move(File source, File target) throws IOException { anchored(source); anchored(target); super.move(source, target); }
+    @Override public void delete(File file) throws IOException { anchored(file); super.delete(file); }
+    @Override public void syncDirectory(File file) throws IOException { anchored(file); super.syncDirectory(file); }
+  }
+
   private record Response(int code, String headers, byte[] body) {}
 
   private static void check(boolean value, String name) {
@@ -105,9 +161,20 @@ public final class BrowserOriginRestoreServerTest {
       java.util.function.LongSupplier clock)
       throws Exception {
     Files.createDirectories(root);
+    return server(root.toFile(), fs, current, captured, result, clock);
+  }
+
+  private static BrowserOriginRestoreServer server(
+      File root,
+      BackupFileSystem fs,
+      AtomicBoolean current,
+      AtomicInteger captured,
+      AtomicReference<JSONObject> result,
+      java.util.function.LongSupplier clock)
+      throws Exception {
     return new BrowserOriginRestoreServer(
         fs,
-        root.toFile(),
+        root,
         0,
         TARGET,
         "SIGNED_RESTORE_DOCUMENT",
@@ -118,9 +185,61 @@ public final class BrowserOriginRestoreServerTest {
         NONCE);
   }
 
+  private static void frameworkAlias(Path root) throws Exception {
+    File data = root.resolve("framework-data").toFile();
+    File files = new File(data, "files");
+    Files.createDirectories(files.toPath());
+    var declaredData = new FrameworkData(data);
+    var declaredFiles = new FrameworkFiles(declaredData);
+    var fs = new AndroidAliasFiles(declaredData);
+    check(fs.stat(declaredFiles).type.equals("DIRECTORY"), "framework alias remains visible to lstat");
+    try (var rejected = server(declaredFiles, fs, new AtomicBoolean(true), new AtomicInteger(), new AtomicReference<>(), () -> System.nanoTime() / 1_000_000)) {
+      throw new AssertionError("raw Android alias must not reach anchored creation");
+    } catch (IOException failure) {
+      check("PARENT_LINK".equals(failure.getMessage()), "raw framework authority is refused before candidate creation");
+    }
+    File canonical = BrowserOriginRestoreServer.privateFiles(fs, declaredData, declaredFiles);
+    check(canonical.equals(files.getCanonicalFile()), "production binding resolves only framework-provided app authority");
+    AtomicInteger captured = new AtomicInteger();
+    try (var opened = server(canonical.toPath(), fs, new AtomicBoolean(true), captured, new AtomicReference<>(), () -> System.nanoTime() / 1_000_000)) {
+      check(call(opened, "POST", "/manifest", json(manifest(opened, 0))).code == 200, "bound authority can persist source manifest");
+      check(call(opened, "POST", "/captured", new byte[0]).code == 200, "bound authority can complete capture");
+      long deadline = System.nanoTime() + 1_000_000_000L;
+      while (captured.get() == 0 && System.nanoTime() < deadline) Thread.yield();
+      check(captured.get() == 1, "bound capture delivers exactly one continuation");
+      File catalogue = new File(canonical, "host-browser-origin-restores");
+      List<String> candidates = fs.list(catalogue);
+      check(candidates.size() == 1 && fs.stat(new File(catalogue, candidates.get(0) + "/captured.json")).type.equals("FILE"), "captured candidate exists under canonical private files");
+    }
+    var outside = new FrameworkData(root.resolve("external-data").toFile());
+    Files.createDirectories(new File(outside.actual, "files").toPath());
+    try {
+      BrowserOriginRestoreServer.privateFiles(fs, declaredData, new FrameworkFiles(outside));
+      throw new AssertionError("external files authority must not be rebound");
+    } catch (IOException failure) {
+      check("COLD_PACKAGE_HOST_ROOT".equals(failure.getMessage()), "external provided files remain refused");
+    }
+    fs.linked = canonical;
+    try {
+      BrowserOriginRestoreServer.privateFiles(fs, declaredData, declaredFiles);
+      throw new AssertionError("writable files link must remain refused");
+    } catch (IOException failure) {
+      check("COLD_PACKAGE_FILES_LINK_OR_MISSING".equals(failure.getMessage()), "arbitrary files link remains refused");
+    }
+    fs.linked = new File(canonical, "host-browser-origin-restores");
+    try (var rejected = server(canonical.toPath(), fs, new AtomicBoolean(true), new AtomicInteger(), new AtomicReference<>(), () -> System.nanoTime() / 1_000_000)) {
+      throw new AssertionError("linked candidate catalogue must remain refused");
+    } catch (IOException failure) {
+      check("PARENT_LINK".equals(failure.getMessage()), "linked writable descendant remains refused");
+    }
+    check("PARENT_LINK".equals(BrowserOriginRestoreServer.failureCode(new IOException("PARENT_LINK"))), "known failure code remains public");
+    check("RESTORE_PREPARE_FAILED".equals(BrowserOriginRestoreServer.failureCode(new IOException("http://127.0.0.1:1/?token=fixture-secret /private/user-content"))), "unknown messages cannot expose URL token or user content");
+  }
+
   public static void main(String[] args) throws Exception {
     Path root = Path.of(args[0]);
     Files.createDirectories(root);
+    frameworkAlias(root);
     AtomicBoolean current = new AtomicBoolean(true);
     AtomicInteger captured = new AtomicInteger();
     AtomicReference<JSONObject> result = new AtomicReference<>();

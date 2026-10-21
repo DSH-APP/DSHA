@@ -12,10 +12,9 @@ public class HostMaintenancePendingTest {
   private static final File FILES = new File("synthetic-files");
 
   @Test
-  public void productionInventoryIncludesLegacyRestoreWithExactWeights() {
+  public void productionInventoryHasEightRecoverableDomainsAndExactWeights() {
     assertEquals(
         List.of(
-            "legacy-restore",
             "cold-install",
             "legacy-maintenance",
             "legacy-runtime",
@@ -26,40 +25,11 @@ public class HostMaintenancePendingTest {
             "host-data"),
         HostMaintenancePending.RECOVERABLE.stream().map(domain -> domain.name).toList());
     assertEquals(
-        List.of(false, false, false, false, true, false, false, false, true),
+        List.of(false, false, false, true, false, false, false, true),
         HostMaintenancePending.RECOVERABLE.stream().map(domain -> domain.countEach).toList());
     assertFalse(
         HostMaintenancePending.RECOVERABLE.stream()
             .anyMatch(domain -> domain.name.equals("bounded-guest")));
-  }
-
-  @Test
-  public void bothProductionReadAdaptersNormalizeOnlyTheTrustedFilesRoot() throws Exception {
-    java.nio.file.Path main =
-        java.nio.file.Path.of(System.getProperty("dsha.assetsDir", "app/src/main/assets"))
-            .toAbsolutePath()
-            .getParent();
-    java.nio.file.Path source = main.resolve("java/com/deepseekharness/app");
-    String domains =
-        java.nio.file.Files.readString(source.resolve("backup/HostMaintenancePending.java"));
-    String legacy =
-        domains.substring(
-            domains.indexOf("\"legacy-restore\""), domains.indexOf("\"cold-install\""));
-    assertTrue(
-        legacy
-            .replaceAll("\\s+", " ")
-            .contains(
-                "LegacyRestoreJournalRecovery.pending( new AndroidBackupFileSystem(), root.getCanonicalFile())"));
-    String manager = java.nio.file.Files.readString(source.resolve("BackupManager.java"));
-    String startup =
-        manager.substring(
-            manager.indexOf("public static void requireLegacyRestoreClosed("),
-            manager.indexOf("public static void recoverInterrupted("));
-    assertTrue(startup.contains("controller.context().getFilesDir().getCanonicalFile()"));
-    String reader =
-        java.nio.file.Files.readString(source.resolve("backup/LegacyRestoreJournalReader.java"));
-    assertFalse(reader.contains("getCanonical"));
-    assertTrue(reader.contains("return fs.child(files, GuestPaths.ROOT_RELATIVE + guest)"));
   }
 
   @Test

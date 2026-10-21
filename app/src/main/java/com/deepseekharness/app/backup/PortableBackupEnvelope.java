@@ -87,34 +87,6 @@ public final class PortableBackupEnvelope {
   }
 
   /** Probe names only to route legacy input; accepted envelopes always consume and verify all bytes. */
-  static void verifyUnencrypted(
-      BackupFileSystem fs, File envelope, String expectedSha, BackupControl control)
-      throws IOException {
-    boolean[] payload = {false}, readme = {false};
-    try (InputStream raw = fs.read(envelope, fs.stat(envelope))) {
-      LegacyTarReader.readWithLimit(
-          raw,
-          (member, data) -> {
-            if (!member.type.equals("FILE") || !member.target.isEmpty())
-              throw new IOException("ENVELOPE_MEMBER_TYPE");
-            if (member.path.equals(PAYLOAD)) {
-              if (payload[0] || member.size < 8 || member.size > CONTAINER_LIMIT)
-                throw new IOException("ENVELOPE_PAYLOAD_SIZE");
-              payload[0] = true;
-              if (!expectedSha.equals(BackupArchive.digest(data, control)))
-                throw new IOException("ENVELOPE_VERIFICATION");
-            } else if (member.path.equals(README)) {
-              if (readme[0] || member.size > 16384) throw new IOException("ENVELOPE_README");
-              readme[0] = true;
-            } else throw new IOException("ENVELOPE_EXTRA_MEMBER");
-          },
-          control,
-          CONTAINER_LIMIT);
-    }
-    if (!payload[0] || !readme[0]) throw new IOException("ENVELOPE_VERIFICATION");
-  }
-
-  /** Probe names only to route legacy input; accepted envelopes always consume and verify all bytes. */
   public static boolean unwrapIfPresent(
       BackupFileSystem fs, File input, File output, BackupControl control) throws IOException {
     final boolean[] recognized = {false}, payload = {false}, readme = {false};

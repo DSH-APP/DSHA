@@ -8,8 +8,15 @@ import com.deepseekharness.app.BuildConfig;
 public final class PostUpgradeCleanupService extends JobService {
   private static final int JOB = 9139, POLICY = 3;
   private static final WorkerQuiescence WORKERS = new WorkerQuiescence();
+  private static final java.util.concurrent.atomic.AtomicBoolean FACTORY_RESET =
+      new java.util.concurrent.atomic.AtomicBoolean();
 
   public static void schedule(Context context) {
+    if (AutomaticBackups.factoryResetPending(context)) {
+      JobScheduler scheduler = context.getSystemService(JobScheduler.class);
+      if (scheduler != null) scheduler.cancel(JOB);
+      return;
+    }
     var prefs = context.getSharedPreferences("dsha_storage_cleanup", MODE_PRIVATE);
     if (prefs.getInt("completedBuild", 0) >= BuildConfig.VERSION_CODE
         && prefs.getInt("policy", 0) >= POLICY) return;
@@ -24,16 +31,32 @@ public final class PostUpgradeCleanupService extends JobService {
               .build());
   }
 
-  private void save(boolean success, String value, String detail) {
+  static void suspendForFactoryReset(BackupControl control) throws java.io.IOException {
+    FACTORY_RESET.set(true);
+    WORKERS.closeGate();
+    try {
+      WORKERS.awaitIdle(control, 15_000);
+    } catch (java.io.IOException failure) {
+      FACTORY_RESET.set(false);
+      WORKERS.reopen();
+      throw failure;
+    }
+  }
+
+  static void resumeAfterFactoryReset() {
+    FACTORY_RESET.set(false);
+    WORKERS.reopen();
+  }
+
+  private void save(boolean success, String value) {
     synchronized (PostUpgradeCleanupService.class) {
+      if (FACTORY_RESET.get() || AutomaticBackups.factoryResetPending(this)) return;
       var edit = getSharedPreferences("dsha_storage_cleanup", MODE_PRIVATE).edit();
       if (success)
         edit.putInt("completedBuild", BuildConfig.VERSION_CODE)
             .putInt("policy", POLICY)
             .putLong("freedBytes", Long.parseLong(value))
-            .putString("error", "")
-            // 「删了什么/跳过什么/失败什么」跟随本任务既有的偏好通道留档，不新建渠道。
-            .putString("detail", detail);
+            .putString("error", "");
       else edit.putString("error", value);
       edit.commit();
     }
@@ -41,6 +64,7 @@ public final class PostUpgradeCleanupService extends JobService {
 
   @Override
   public boolean onStartJob(JobParameters params) {
+    if (FACTORY_RESET.get() || AutomaticBackups.factoryResetPending(this)) return false;
     WorkerQuiescence.Lease lease = WORKERS.tryBegin();
     if (lease == null) return false;
     Thread worker =
@@ -60,11 +84,10 @@ public final class PostUpgradeCleanupService extends JobService {
                     retry = true;
                     return;
                   }
-                  // 本任务没有 UI 侧诊断端口；明细跟 freedBytes 一起写进同一个偏好通道。
-                  var report = StorageMaintenance.clean(this, null);
-                  save(true, String.valueOf(report.bytes), report.detail);
+                  long bytes = StorageMaintenance.clean(this);
+                  save(true, String.valueOf(bytes));
                 } catch (Exception error) {
-                  save(false, NativeBackupJobs.code(error), "");
+                  save(false, NativeBackupJobs.code(error));
                 } finally {
                   jobFinished(params, retry);
                 }
@@ -76,13 +99,13 @@ public final class PostUpgradeCleanupService extends JobService {
       return true;
     } catch (RuntimeException | Error unavailable) {
       lease.close();
-      save(false, "WORKER_UNAVAILABLE", "");
+      save(false, "WORKER_UNAVAILABLE");
       return false;
     }
   }
 
   @Override
   public boolean onStopJob(JobParameters params) {
-    return true;
+    return !FACTORY_RESET.get() && !AutomaticBackups.factoryResetPending(this);
   }
 }

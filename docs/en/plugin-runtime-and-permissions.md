@@ -1,0 +1,80 @@
+# Built-in plugins, protocols, permissions, and when changes take effect
+
+> Translation verified: 2026-10-21. Source baseline: released F10 `087724c`, with the current build190/F12 registry, generators, plugin entry points, and host readers checked against the Chinese guide and production sources. F11 is an unpublished local checkpoint, not another released version. Final identity and executed scope are in the [English README](../../README.en.md), [release introduction](release-introduction.md), and [F12 record](releases/v0.2.1-rc.2-build190-fix12-20261021.md). This page adds no software-test or device-acceptance result. Runtime hot-reload conclusions require matching bundled inputs and actual execution evidence; this translation and older audits do not prove Android validation.
+
+## Seven optional entries, eight signed entries, and a policy source
+
+[builtin-plugins.json](../../app/src/main/assets/builtin-plugins.json) is the registration source of truth. [BuiltinPluginRegistry](../../app/src/main/java/com/deepseekharness/app/util/BuiltinPluginRegistry.java) is derived by the [generator](../../tools/generate-builtin-plugins.py): `DEFAULT` contains seven user-visible entries; `SIGNED` contains eight APK-supplied entries; `OFFICIAL` contains two official core bundles; `INTERNAL` contains the internal app integration and those two official bundles. Directory counts do not equal user-feature counts.
+
+| Layer | Package and source version | Purpose and entry point |
+|---|---|---|
+| Visible | `dsh-device-shell-guide` 0.1.19 | Device-channel and bridge guide, `lib/index.js` |
+| Visible | `dsh-task-notifier` 0.2.0 | `/app/tasks/*` task state and notifications |
+| Visible | `dsh-status-overlay` 0.1.4 | `/app/overlay` streaming status |
+| Visible | `dsh-web-mobile` 3.2.1 | Mobile Web interface; upstream lock and local differences are recorded separately |
+| Visible | `dsh-computer-use-android` 0.1.1 | MCP stdio `dsha-android`, 180-second call budget |
+| Visible | `dsh-tool-vscreen` 0.1.1 | MCP stdio `dsha-vscreen`, 60-second call budget |
+| Visible compatibility wrapper | `dsh-auto-review` 0.1.0 | Wrapper/alias; functionality comes from the locked official experimental Auto package, not the empty wrapper alone |
+| Internal | `dsh-app-integration` 1.2.3 | Activity heartbeat, temporary-plugin summaries, native back navigation, and browser-origin recovery |
+| Policy source | `dsh-destructive-guard` 0.1.0 | Outside the eight-entry registry; generates `destructive-policy` at build time rather than acting as a ninth ordinary removable plugin |
+
+Visible sources live in the [built-in plugin directory](../../app/src/main/assets/builtin-plugins/); internal integration lives in [app-integration](../../app/src/main/assets/app-integration/). Optional components can be disabled. Official core bundles can also be explicitly disabled and may make Web unavailable; restore them through the native page. Core/internal components do not thereby become third-party removal targets. System bytes are rebuilt from the current APK's managed proof, and backups save their enable/disable intent only. User plugin source, actual dependencies, and wrappers are archived separately. An upgrade must not clear a user's deliberate disable, an empty disable marker, or safe-mode intent.
+
+Managed provenance is not inferred from an npm scope, a `dsh-` prefix, installation-tree location, or writable `installation.dependencies`. The host supplies the APK proof digest; the guest first validates the proof's original bytes and then checks complete FILE/mode/LINK contents for each package. Signed registration identity, DSH-managed content, and user/unverified content are shown separately. An unproved user package inside the DSH installation tree may be toggled/exported, but native management does not automatically update or remove it there. Normal profile user plugins continue through the existing management flow. This provenance check does not certify safety against malicious code under the same UID.
+
+The discovery path filters small manifests and real patch bundles first, authenticates the proof table once per command/request, and deduplicates canonical directories. Complete FILE contents and mode, LINK text, directory membership, and before/after identity/race checks remain required. Cross-request stat, mtime, or old-digest caches are not content proof; later requests and commits verify current bytes again.
+
+The actual Node Host uses asynchronous filesystem operations from the [managed Plugin Manager patch](../../app/src/main/assets/plugin-manager-policy-patch.json) for bundle listing and full-content proof, with at most two content scans globally concurrent, file-read buffers of at most 64 KiB, and event-loop yields between blocks. This does not skip large-package contents. Read-only list does not occupy the profile writer lock. Node removal performs full preflight outside writer/HMR locks, then repeats complete verification for the actual target inside commit; an old list classification or another target's proof cannot substitute. Native Python removal retains its own NOFOLLOW object plan and before/after checks; Node asynchronous limits do not describe every script.
+
+## Author-facing contracts, internal integration, and upstream capabilities
+
+| Boundary | Caller and contents | Stability and failure interpretation |
+|---|---|---|
+| Plugin `package.json` | Valid npm name/version and required `dsh.bundle.patch`; declared `main/cordis.entry` files must exist | Missing patches or declared entries and invalid declarations are package failures; ordinary libraries do not automatically become plugins |
+| Profile/bundle | Profile `dsh.profile.bundles`, `link:` dependencies, and combined bundle-patch lines | Consumed by the registrar and DSH loader together; a profile is not an entry in the plugin list |
+| Cordis and client | `inject`, `apply`, effect/dispose, `dsh.client.platform: web`, and injection | The locked upstream supplies the API; declaring Web support does not guarantee that a native WebView bridge exists |
+| MCP stdio | Independent computer-use/vscreen server commands and timeouts | `failOnStartupError:true`, `reconnect.enabled:false`; startup failure does not silently switch channels |
+| Port 3090 bridge | `X-Token`, protocol 3, current capabilities, and endpoints | Local integration protocol; authentication and device capability checks remain independent; see [bridge and files](bridge-and-files.md) |
+| Activity summary file | `/root/.dsha-web-activity.json` | Internal read-only state, not an installation inventory or public control API |
+| Destructive-operation policy | Schema 1 and local consent identity | Strict validation; failure returns `DSHA_DESTRUCTIVE_BLOCKED`; no arbitrary-code sandbox |
+| Dynamic Cordis/HMR/Plugin Manager RPC | Internal events and services of the locked upstream | Verify against matching runtime inputs; internal events are not all stable DSHA protocols |
+
+The registrar owns only its registration fields and managed links. It does not replace the loader's semantic checks for every `dsh` field. This page does not promise that unknown fields are always ignored or always rejected. Authors must check actual declarations and loading errors against the locked upstream, rather than infer capabilities from field names.
+
+## Separate installation, selection, loading, and rollback
+
+[Plugin operations](plugins.md) covers GitHub/npm/local import and dependency policy. Current production candidates commit and enable automatically after package, path, digest, and transaction checks, without an added native review step. pnpm dependency resolution, lifecycle scripts, and pnpmfile remain open. Download-stage `--ignore-scripts` is not proof that no script executes later.
+
+Distinguish at least five states after a change: source/dependencies installed; selected by the profile; disabled intent; actually loaded in the current Web process; and restart required. Successful installation and a visible card do not prove that `apply` succeeded. [PluginRepository](../../app/src/main/java/com/deepseekharness/app/core/PluginRepository.java) drives the native list; startup observers report the actual plugin name and redacted failure. Loading errors must not all be classified as network failures.
+
+After native installation, toggles, or updates, follow the current instruction to **restart Web normally for changes to take effect**. Saving a profile does not guarantee that the current session has been hot-replaced. If execution is unknown after closing/canceling, do not replay prepare or dependency scripts automatically.
+
+Native `enable-state` / `disable-state` write enable/disable intent and actually read it back. Java requires the exact package name, Boolean state, and `intentVerified: true`. It presents the verified intent receipt first, then independently coalesces/schedules refresh. A slow or failed full-list refresh does not erase the confirmed toggle, nor promote it to component readiness, live-loader load/disposal, or hot-update success. Normal Web restart applies it. Cancelable list/refresh does not acquire the profile writer lock. Concurrent configuration rewrites or an existing writer lock return an error and preserve the old list; cached cards are not a newly verified result.
+
+Native read-only queries and short intent commands use a 30-second cooperative total budget covering queueing, preparation boundaries, and execution. [GuestScriptBudget](../../app/src/main/java/com/deepseekharness/app/runtime/GuestScriptBudget.java) checks remaining time/cancellation at query submission or queue handoff, preparation steps, and around stream reads; [GuestPluginScripts](../../app/src/main/java/com/deepseekharness/app/runtime/GuestPluginScripts.java) gives the runner remaining budget only. This is not hard real-time preemption: a single system I/O, monitor-entry wait, or Binder call must return before the next cooperative check. It does not promise every platform call ends within exactly 30 seconds after a tap. Unknown process/pipe exit retains the original stop/maintenance barrier; timeout does not justify deleting journals, releasing ownership, or automatically retrying writes.
+
+[plugin-transactions.py](../../app/src/main/assets/plugin-transactions.py) records candidates, originals, and journals against fixed targets and before/after digests. The host pending gate retains the scene when exit proof is insufficient. Rollback must use the corresponding transaction/recovery entry and its identity/digest checks; manual renames, journal deletion, or resolving historical dependencies again are not restoration of original bytes. A committed old journal cannot roll back later user data. Removal of a broken plugin uses a dedicated NOFOLLOW object proof and moves the object into retention without following links into a shared store or external source.
+
+Ordinary temporary preparation directories may be cleaned after success or a known failure. Scenes retained for unknown package-manager process/pipe exit, a pending transaction, or explicit original retention remain protected; it is incorrect to say that all failed candidates are kept forever. [NativePluginGraph](../../app/src/main/java/com/deepseekharness/app/backup/NativePluginGraph.java) reads managed proof from the APK, rechecks actual packages, and discovers runtime bundles that exist without aliases. It rechecks proof after directory scanning and before final backup so mutable manifests or same-scope packages cannot cause missed user content. Historical Python backup likewise does not exclude user originals by scope/prefix. These checks describe the actual contents observed, not successful loading of every plugin or device restore validation.
+
+## Activity files and temporary plugins
+
+When `DSHA_WEB_GENERATION` exists, the [internal integration](../../app/src/main/assets/app-integration/index.js) atomically writes `generation/at/idle/plugins` every two seconds. A sampling failure does not fabricate idle state; native code treats stale state as unknown and keeps the runtime alive. PluginRepository reads only summaries for the current generation, no older than ten seconds, at most 256 KiB, and takes at most 256 entries.
+
+[runtime-plugins.js](../../app/src/main/assets/app-integration/runtime-plugins.js) extracts truncated name, session, active, state, package ID, and related summaries from the dynamic runner's public list; it does not extract source. “Temporary plugin · running/not running” in this list differs from a persistent npm installation. The summary is not an export package, dependency lock, or restore source. A definition existing only in a process/session must not be described as an installed package automatically rebuilt after restart; redefinition follows the actual upstream execution flow.
+
+## Evidence limits for HMR and `patchReload`
+
+[register-builtin-plugins.py](../../app/src/main/assets/register-builtin-plugins.py) writes `patchReload: startup`; its comment expresses the intent to avoid live/HMR dependencies. Tests such as [NativeSafeProfileTest](../../app/src/test/java/com/deepseekharness/app/backup/NativeSafeProfileTest.java) can check the written value. Main Web and emergency startup use different Node arguments; a flag from one entry point must not be attributed to the other.
+
+Writing a field does not verify its consumer or controlling effect. An older report's `--dump-config` in a development container, or a global Node tree not bound to the bundled lock, cannot prove Android HMR success or failure. Open questions remain: the matching input's field consumer, actual HMR service state, whether profile recomposition replaces link packages, the real state after replacement fails, and persistent-data effects. Absence of a dedicated reload entry does not by itself establish an intentional product exclusion or an implementation defect. Documentation work does not change this field or introduce a hot-reload permission.
+
+## Who approves which action
+
+Tool approval by a DSH session/Creator/Auto reviewer, page approval by the upstream dynamic runner, the host's local “Allow all,” and Android system capabilities are different domains. Upstream Creator or `danger-full-access` mechanisms do not directly establish results for every DSHA entry point; each requires matching versions and call evidence.
+
+[destructive-policy](../../app/src/main/assets/destructive-policy/index.js) validates schema 1 and `globalAllow/revision/installationId/bridgeRunId/webGeneration/runtimeInstanceId`. It refuses requests when local policy is unavailable or identity is invalid. A global-policy change invalidates queued requests; grants are not imported from backups. Screen frame/node/target identities and system capabilities remain checked. “Allow all” neither removes same-UID risks nor turns arbitrary plugin code into a supervised sandbox program.
+
+Test entry points: [test-plugin-discovery.py](../../tools/test-plugin-discovery.py), [test-signed-builtin-web-intent.mjs](../../tools/test-signed-builtin-web-intent.mjs), [test-auto-review-alias.mjs](../../tools/test-auto-review-alias.mjs), [test-native-consent-transport.mjs](../../tools/test-native-consent-transport.mjs), and [test-plugin-transactions.py](../../tools/test-plugin-transactions.py). They verify registration, intent, transport, or transactions respectively; they do not substitute for end-to-end HMR, item-by-item persistent-session comparisons, or device attack testing.
+
+In the existing desktop [actual-Host concurrency fixture](../../tools/test-plugin-provenance-concurrency.mjs), the two list calls took about 0.65 seconds. An independent Worker sent an HTTP ping that took about 14 ms while content scanning remained pending. This observation covers only those Node/desktop fixture inputs, not a phone measurement, APK performance promise, limit for every plugin scale, or final end-to-end latency guarantee. This documentation update did not rerun the fixture or add a final F12 test total.

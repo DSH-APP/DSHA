@@ -273,20 +273,26 @@ export const MISC_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
      inherit none from the card, and an unselectable contenteditable cannot
      host a caret or a paste on WebKit. Dialogs and text fields portalled
      into the drawer DOM (settings sheet) are re-enabled the same way, so
-     their values stay copyable. Scope: the conversation header is the
-     header inside the [data-phase] root (chat content never renders one
-     there), and the anchor stays the DESCENDANT form on purpose: 0.2.0-rc.2
-     (live-host probe 2026-10-07) renders an unclassed wrapper <div> between
-     .wSkVaW_root[data-phase] and <header class="wSkVaW_header">, so the
-     child-combinator form this rule used to carry matched 0 elements - the
-     title bar kept user-select:auto and a drag-select up over it still ended
-     in the header title span (4391 selected chars, opening with the title /
-     mode / tab labels). On the composer side only the input card
-     ([data-composer-card], host marker since 0.1.2) and the plugin stats
-     row - the dock above the card (todo card, approval / ask-question
-     panels) is reply content and stays copyable. */
+     their values stay copyable. Scope: the conversation header is the host
+     header inside the [data-phase] root, anchored to the HOST HEADER CLASS
+     (header.wSkVaW_header) rather than to a bare header - a bare header also
+     hits every other <header> under [data-phase], and the ask-question card
+     (dsh-client-ui-user-questions QuestionComposer) renders its own
+     <header class="Mbwy4a_header"> in composerSeat with the question text
+     as the heading. A bare header made that text unselectable, so the
+     question could not be long-press-copied (2026-10-20, same anchor rule
+     as the layout.css.ts header block; the dock above the input card is
+     reply content and must stay copyable). The anchor stays the DESCENDANT
+     form on purpose: 0.2.0-rc.2 (live-host probe 2026-10-07) renders an
+     unclassed wrapper <div> between .wSkVaW_root[data-phase] and
+     <header class="wSkVaW_header">, so the child-combinator form this rule
+     used to carry matched 0 elements - the title bar kept user-select:auto
+     and a drag-select up over it still ended in the header title span (4391
+     selected chars, opening with the title / mode / tab labels). On the
+     composer side only the input card ([data-composer-card], host marker
+     since 0.1.2) and the plugin stats row. */
   [data-mobile-nav="frame"] > :first-child,
-  [data-mobile-nav="frame"] [data-phase] header,
+  [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header,
   [data-mobile-nav="frame"] [data-composer-card],
   [data-mobile-nav="stats"],
   [data-mobile-nav="fab"],
@@ -299,7 +305,7 @@ export const MISC_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   [data-mobile-nav="frame"] > :first-child [role="dialog"],
   [data-mobile-nav="frame"] > :first-child input,
   [data-mobile-nav="frame"] > :first-child textarea,
-  [data-mobile-nav="frame"] [data-phase] header input {
+  [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header input {
     -webkit-user-select: text !important;
     user-select: text !important;
   }
@@ -372,8 +378,8 @@ export const MISC_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   [data-mobile-nav="fab"],
   [data-mobile-nav="backdrop"],
   [data-mobile-nav="session-log"],
-  [data-mobile-nav="preview-full-toggle"],
-  [data-mobile-nav="drawer-actions"] {
+  [data-mobile-nav="session-log-wrap"],
+  [data-mobile-nav="preview-full-toggle"] {
     display: none !important;
   }
 }

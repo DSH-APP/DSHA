@@ -23,49 +23,6 @@ import java.util.UUID;
 public final class DownloadsExport {
   private DownloadsExport() {}
 
-  /** 只归一 Context 提供的应用根；cache 与新建文件仍经过 NOFOLLOW。 */
-  public static File stagePrivateCacheSource(Context context, byte[] bytes) throws IOException {
-    return stagePrivateCacheSource(
-        new AndroidBackupFileSystem(), context.getFilesDir(), context.getCacheDir(), bytes);
-  }
-
-  static File stagePrivateCacheSource(BackupFileSystem fs, File files, File cache, byte[] bytes)
-      throws IOException {
-    File app = files.getAbsoluteFile().getParentFile();
-    if (app == null
-        || !"files".equals(files.getName())
-        || !"cache".equals(cache.getName())
-        || !app.equals(cache.getAbsoluteFile().getParentFile())
-        || bytes == null) throw new IOException("EXPORT_CACHE_ROOT");
-    File root = app.getCanonicalFile();
-    File directory = fs.child(root, "cache");
-    if (!fs.stat(directory).type.equals("DIRECTORY")) throw new IOException("EXPORT_CACHE_TYPE");
-    File source = fs.child(directory, "dsha-download-" + UUID.randomUUID() + ".tmp");
-    try (OutputStream output = fs.create(source)) {
-      output.write(bytes);
-    }
-    return source;
-  }
-
-  static final class CheckedSource {
-    final BackupFileSystem.Node node;
-    final FileIntegrity.Result integrity;
-
-    CheckedSource(BackupFileSystem.Node node, FileIntegrity.Result integrity) {
-      this.node = node;
-      this.integrity = integrity;
-    }
-  }
-
-  static CheckedSource inspectSource(BackupFileSystem fs, File source, BackupControl control)
-      throws IOException {
-    var before = fs.stat(source);
-    if (!before.type.equals("FILE")) throw new IOException("EXPORT_SOURCE_TYPE");
-    try (InputStream in = fs.read(source, before)) {
-      return new CheckedSource(before, FileIntegrity.copy(in, null, before.size, control::check));
-    }
-  }
-
   public static final class Result {
     public final Uri uri;
     public final String displayName;
@@ -93,9 +50,12 @@ public final class DownloadsExport {
         || name.equals(".."))
       throw new IOException(com.deepseekharness.app.util.UiText.text("文件名无效"));
     BackupFileSystem fs = new AndroidBackupFileSystem();
-    CheckedSource checked = inspectSource(fs, source, control);
-    var before = checked.node;
-    FileIntegrity.Result expected = checked.integrity;
+    var before = fs.stat(source);
+    if (!before.type.equals("FILE")) throw new IOException("EXPORT_SOURCE_TYPE");
+    FileIntegrity.Result expected;
+    try (InputStream in = fs.read(source, before)) {
+      expected = FileIntegrity.copy(in, null, before.size, control::check);
+    }
     control.check();
     if (Build.VERSION.SDK_INT >= 29)
       return media(context, fs, source, before, name, expected, control);

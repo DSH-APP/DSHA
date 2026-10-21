@@ -10,45 +10,50 @@ import java.util.*;
 /** 自动备份只存个人数据，采用已有 v5 加密归档；本机密钥不参与系统迁移。 */
 public final class AutomaticBackups {
   public static final int JOB = 9137, NOW = 9138;
+  private static final java.util.concurrent.atomic.AtomicBoolean FACTORY_RESET =
+      new java.util.concurrent.atomic.AtomicBoolean();
   private static final WorkerQuiescence PRODUCERS = new WorkerQuiescence();
 
   private AutomaticBackups() {}
 
   public static android.content.SharedPreferences prefs(Context context) {
-    var saved = context.getSharedPreferences("dsha_automatic_backup", Context.MODE_PRIVATE);
-    retireLegacyResetHold(saved);
-    return saved;
-  }
-
-  /** 旧格式化入口已退休；只移除它的偏好 hold，不清任务、密钥、副本或真实事务。 */
-  static boolean retireLegacyResetHold(android.content.SharedPreferences saved) {
-    return !saved.contains("factoryResetPending")
-        || saved.edit().remove("factoryResetPending").commit();
+    return context.getSharedPreferences("dsha_automatic_backup", Context.MODE_PRIVATE);
   }
 
   public static boolean enabled(Context context) {
-    return enabled(prefs(context));
+    var saved = prefs(context);
+    return !FACTORY_RESET.get()
+        && !saved.getBoolean("factoryResetPending", false)
+        && saved.getBoolean("enabled", true);
   }
 
-  static boolean enabled(android.content.SharedPreferences saved) {
-    // 删除旧 hold 的 commit 失败也不能复活已退休的格式化策略；之后可幂等重试。
-    retireLegacyResetHold(saved);
-    return saved.getBoolean("enabled", true);
+  static boolean factoryResetSuspended() {
+    return FACTORY_RESET.get();
+  }
+
+  static boolean factoryResetPending(Context context) {
+    return FACTORY_RESET.get() || prefs(context).getBoolean("factoryResetPending", false);
   }
 
   static WorkerQuiescence.Lease beginProducer() {
-    return PRODUCERS.tryBegin();
+    return FACTORY_RESET.get() ? null : PRODUCERS.tryBegin();
   }
 
   static void recordError(Context context, String error) {
     synchronized (AutomaticBackups.class) {
-      prefs(context).edit().putString("error", error == null ? "" : error).commit();
+      if (!factoryResetPending(context))
+        prefs(context).edit().putString("error", error == null ? "" : error).commit();
     }
   }
 
   public static void schedule(Context context) {
     JobScheduler scheduler = context.getSystemService(JobScheduler.class);
     if (scheduler == null) return;
+    if (factoryResetPending(context)) {
+      scheduler.cancel(JOB);
+      scheduler.cancel(NOW);
+      return;
+    }
     var settings = prefs(context);
     if (!settings.contains("anchor"))
       settings.edit().putLong("anchor", System.currentTimeMillis()).commit();
@@ -82,6 +87,7 @@ public final class AutomaticBackups {
 
   public static void stopped(Context context) {
     synchronized (AutomaticBackups.class) {
+      if (factoryResetPending(context)) return;
       prefs(context).edit().putLong("stopped", System.currentTimeMillis()).commit();
     }
     schedule(context);
@@ -122,7 +128,76 @@ public final class AutomaticBackups {
         && c.isWebStoppedForMaintenance();
   }
 
+  /**
+   * 格式化在进入普通数据维护屏障前调用。先阻止 JobService/手动作业产生新任务，
+   * 再取消并等待 NativeBackupJobs 真正退出，避免删除 host-backup-operations 时迟到写回。
+   */
+  public static void suspendForFactoryReset(Context context, BackupControl control)
+      throws IOException {
+    boolean first = FACTORY_RESET.compareAndSet(false, true);
+    if (first && !prefs(context).edit().putBoolean("factoryResetPending", true).commit()) {
+      FACTORY_RESET.set(false);
+      throw new IOException("FACTORY_RESET_GATE_PERSISTENCE");
+    }
+    PRODUCERS.closeGate();
+    boolean nativeClosed = false;
+    try {
+      PostUpgradeCleanupService.suspendForFactoryReset(control);
+      JobScheduler scheduler = context.getSystemService(JobScheduler.class);
+      if (scheduler != null) {
+        // 某些 ROM 在后台/通知策略变更后会拒绝 JobScheduler.cancel。
+        // factoryResetPending 已先持久化，两个 Job 的 onStartJob 都会
+        // 看到该门禁并立即返回；取消失败不能阻断私有数据格式化。
+        try {
+          scheduler.cancel(JOB);
+        } catch (SecurityException ignored) {
+        }
+        try {
+          scheduler.cancel(NOW);
+        } catch (SecurityException ignored) {
+        }
+      }
+      NativeBackupJobs jobs = NativeBackupJobs.get(context);
+      jobs.beginFactoryResetQuiescence(control, 30_000);
+      nativeClosed = true;
+      PRODUCERS.awaitIdle(control, 15_000);
+      // password() 也用类锁；这里形成屏障，确保已进入的密钥准备已经返回。
+      synchronized (AutomaticBackups.class) {
+      }
+    } catch (IOException | RuntimeException failure) {
+      if (nativeClosed) NativeBackupJobs.get(context).abortFactoryResetQuiescence();
+      PostUpgradeCleanupService.resumeAfterFactoryReset();
+      if (first) {
+        prefs(context).edit().remove("factoryResetPending").commit();
+        PRODUCERS.reopen();
+        FACTORY_RESET.set(false);
+        schedule(context);
+        PostUpgradeCleanupService.schedule(context);
+      }
+      throw failure;
+    }
+  }
+
+  public static void abortFactoryReset(Context context) {
+    NativeBackupJobs.get(context).abortFactoryResetQuiescence();
+    PostUpgradeCleanupService.resumeAfterFactoryReset();
+    prefs(context).edit().remove("factoryResetPending").commit();
+    FACTORY_RESET.set(false);
+    PRODUCERS.reopen();
+    schedule(context);
+    PostUpgradeCleanupService.schedule(context);
+  }
+
+  public static void completeFactoryReset(Context context) {
+    NativeBackupJobs.get(context).completeFactoryResetQuiescence();
+    PostUpgradeCleanupService.resumeAfterFactoryReset();
+    prefs(context).edit().remove("factoryResetPending").commit();
+    FACTORY_RESET.set(false);
+    PRODUCERS.reopen();
+  }
+
   public static synchronized char[] password(Context context) throws IOException {
+    if (factoryResetPending(context)) throw new IOException("FACTORY_RESET_QUIESCING");
     var fs = new AndroidBackupFileSystem();
     File root = context.getNoBackupFilesDir().getCanonicalFile(),
         file = new File(root, "automatic-backup-key");
@@ -151,12 +226,13 @@ public final class AutomaticBackups {
 
   public static void completed(Context context, String id) {
     synchronized (AutomaticBackups.class) {
-      prefs(context)
-          .edit()
-          .putLong("last", System.currentTimeMillis())
-          .putString("lastId", id)
-          .putString("error", "")
-          .commit();
+      if (!FACTORY_RESET.get())
+        prefs(context)
+            .edit()
+            .putLong("last", System.currentTimeMillis())
+            .putString("lastId", id)
+            .putString("error", "")
+            .commit();
     }
   }
 

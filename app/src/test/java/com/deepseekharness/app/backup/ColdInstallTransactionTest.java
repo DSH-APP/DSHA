@@ -113,63 +113,6 @@ public class ColdInstallTransactionTest {
   }
 
   @Test
-  public void candidateSameLengthRewriteRestoringMtimeStillFailsWithExactCode() throws Exception {
-    var tx = create(null);
-    data(tx);
-    tx.prepared(() -> {});
-    File target = new File(tx.candidate().root(), "bin/bash");
-    var modified = Files.getLastModifiedTime(target.toPath());
-    Files.writeString(target.toPath(), "CANDIDATE EXECUTABLE");
-    Files.setLastModifiedTime(target.toPath(), modified);
-    assertEquals(
-        "COLD_PREPARED_CHANGED",
-        assertThrows(
-                IOException.class,
-                () ->
-                    tx.publish(
-                        () -> {},
-                        () -> {
-                          throw new AssertionError();
-                        },
-                        () -> {
-                          throw new AssertionError();
-                        }))
-            .getMessage());
-    assertFalse(new File(files, "linux").exists());
-    assertTrue(target.isFile());
-    tx.release();
-  }
-
-  @Test
-  public void originalSameLengthRewriteRestoringMtimeStillFailsWithExactCode() throws Exception {
-    File original = new File(files, "linux/lib/original");
-    Files.createDirectories(original.getParentFile().toPath());
-    Files.writeString(original.toPath(), "alpha");
-    var tx = create(null);
-    data(tx);
-    tx.prepared(() -> {});
-    var modified = Files.getLastModifiedTime(original.toPath());
-    Files.writeString(original.toPath(), "ALPHA");
-    Files.setLastModifiedTime(original.toPath(), modified);
-    assertEquals(
-        "COLD_ORIGINAL_CHANGED",
-        assertThrows(
-                IOException.class,
-                () ->
-                    tx.publish(
-                        () -> {},
-                        () -> {
-                          throw new AssertionError();
-                        },
-                        () -> {
-                          throw new AssertionError();
-                        }))
-            .getMessage());
-    assertEquals("ALPHA", Files.readString(original.toPath()));
-    tx.release();
-  }
-
-  @Test
   public void emptyRootfsWithStablePersonalDataMustUseProtectionTransaction() throws Exception {
     Files.createDirectories(new File(files, "user-data-v5/dsh/sessions").toPath());
     File original = new File(files, "user-data-v5/dsh/sessions/chat");

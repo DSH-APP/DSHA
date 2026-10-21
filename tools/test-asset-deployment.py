@@ -58,10 +58,6 @@ class Deployment(unittest.TestCase):
             self.assertNotIn(name,selected)
             self.assertFalse((ROOT/'app/src/main/assets'/name).exists())
         self.assertIn('bridge-token-compat.cjs',selected);self.assertIn('licenses/GPL-3.0.txt',selected)
-        self.assertNotIn('backup-engine.py',selected)
-        self.assertIn('backup-engine.py',manifest['sourceInputs'])
-        self.assertTrue((ROOT/'app/src/main/assets/backup-engine.py').is_file())
-        self.assertNotIn('backup-engine.py',(ROOT/'app/src/main/java/com/deepseekharness/app/BackupManager.java').read_text(encoding='utf-8'))
     def test_build156_retired_sources_keep_exact_bytes_outside_deployment(self):
         record=json.loads((ROOT/'docs/audits/build156/retired-asset-sources.json').read_text(encoding='utf-8'))
         self.assertEqual(record['schema'],1)

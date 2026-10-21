@@ -14,6 +14,16 @@ from unittest.mock import patch
 from runtime_fixture_proof import SCHEMA, content, validate, reuse, io_path, logical_path
 
 ROOT = Path(__file__).resolve().parents[1]
+from runtime_stable_patches import load_chains, apply as apply_stable_patches
+
+class FixtureBuilder:
+    PATCHES = {}
+    COMBO_MODULE = DEEPSEEK_MESSAGES_MODULE = CONVERSATION_MATERIALIZED_MODULE = RC1_SETTINGS_MODULE = STORAGE_JSON_MODULE = WORKSPACE_DIRECTORY_MODULE = SESSION_PERSISTENCE_JSONL_MODULE = 'third-party/index.js'
+    load_chains = staticmethod(load_chains)
+    apply_stable_patches = staticmethod(apply_stable_patches)
+    def recipe_inputs(self): return {}
+    def patched_content(self, path, body): return body
+    def destructive_policy_files(self): return {}
 
 
 class RuntimeProofTest(unittest.TestCase):
@@ -69,17 +79,8 @@ class RuntimeProofTest(unittest.TestCase):
         with self.assertRaises(ValueError):validate(self.fixture,proof)
 
     def test_managed_support_changes_are_rejected_by_both_consumers(self):
-        policy_files={name:self.put(self.fixture,'node_modules/dsha-destructive-policy/'+name,'signed policy fixture '+name)
-                      for name in ('package.json','index.js','destructive.js','workdir.js')}
         proof=self.proof();proof['kind']='managed';validate(self.fixture,proof)
-        for name,file in policy_files.items():
-            self.assertEqual(hashlib.sha256(file.read_bytes()).hexdigest(),proof['contentProof']['entries']['node_modules/dsha-destructive-policy/'+name]['sha256'])
-        original_support=(self.fixture/'node_modules/dsha-support/data.node').read_bytes()
         self.put(self.fixture,'node_modules/dsha-support/data.node',b'changed actual support bytes')
-        with self.assertRaisesRegex(ValueError,'BYTES_OR_MEMBERS_CHANGED'):validate(self.fixture,proof)
-        self.assertNotEqual(0,self.node(proof).returncode)
-        self.put(self.fixture,'node_modules/dsha-support/data.node',original_support)
-        self.put(self.fixture,'node_modules/dsha-destructive-policy/index.js','changed policy bytes')
         with self.assertRaisesRegex(ValueError,'BYTES_OR_MEMBERS_CHANGED'):validate(self.fixture,proof)
         self.assertNotEqual(0,self.node(proof).returncode)
 
@@ -116,17 +117,8 @@ class RuntimeProofTest(unittest.TestCase):
         self.put(assets,'runtime-patches.json',json.dumps({'schema':1,'dshVersion':'0.2.0-rc.2','active':[],'specialized':[],'retired':[]}))
         for folder in ['runtime-fs','session-compat','client-combo-cache']:self.put(assets,folder+'/index.cjs','signed-helper-fixture')
         module.ROOT=repository;module.ASSETS=assets;module.STORE=store
-        policy_files={name:logical_path(self.put(assets,'destructive-policy/'+name,'signed policy source fixture '+name))
-                      for name in ('package.json','index.js','destructive.js','workdir.js')}
-        class Builder:
-            def destructive_policy_files(self):return dict(policy_files)
-            def recipe_inputs(self):
-                return {file.relative_to(repository).as_posix():hashlib.sha256(file.read_bytes()).hexdigest()
-                        for file in policy_files.values()}
-            def patched_content(self,path,body):return body
-        builder=Builder()
-        self.put(assets,'dsh-runtime.inputs.json',json.dumps({'archive_sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'inputs':builder.recipe_inputs()}))
-        args=type('Args',(),dict(platform='host',offline=True,cache=None,allow_stale_archive=False))()
+        builder=FixtureBuilder()
+        args=type('Args',(),dict(platform='host',offline=True,cache=None,allow_stale_archive=False,archive=None))()
         calls=[]
         def install(command,check):
             calls.append(command);self.assertIn('--ignore-scripts',command);self.assertIn('--offline',command)
@@ -144,6 +136,24 @@ class RuntimeProofTest(unittest.TestCase):
         with contextlib.ExitStack() as stack:
             for p in patches:stack.enter_context(p)
             with contextlib.redirect_stdout(io.StringIO()):callback(module,args,calls,store)
+
+    def test_explicit_candidate_archive_proof_is_used_without_replacing_release_asset(self):
+        def run(module,args,calls,store):
+            candidate=self.put(self.root,'candidate/dsh-runtime.bin','explicit candidate bytes')
+            proof_path=candidate.with_suffix('.inputs.json')
+            proof_path.write_text(json.dumps({'archive_sha256':hashlib.sha256(candidate.read_bytes()).hexdigest(),'inputs':{}}))
+            original=(module.ASSETS/'dsh-runtime.bin').read_bytes()
+            args.archive=candidate
+            module.prepare(args)
+            raw=Path(json.loads((store/'current.json').read_text())['raw'])
+            proof=json.loads((raw/'dsha-test-runtime.json').read_text())
+            self.assertEqual(hashlib.sha256(candidate.read_bytes()).hexdigest(),proof['archiveSha256'])
+            self.assertTrue(proof['archiveCurrent'])
+            self.assertEqual(original,(module.ASSETS/'dsh-runtime.bin').read_bytes())
+            proof_path.write_text(json.dumps({'archive_sha256':'0'*64,'inputs':{}}))
+            with self.assertRaisesRegex(ValueError,'ARCHIVE_INPUTS_STALE'):module.prepare(args)
+            self.assertEqual(1,len(calls))
+        self.with_producer(run)
 
     def test_normal_same_input_reuse_does_not_reinstall_or_rebless_changed_bytes(self):
         def run(module,args,calls,store):
@@ -176,19 +186,6 @@ class RuntimeProofTest(unittest.TestCase):
             self.put(module.ASSETS,'runtime-patches.json',json.dumps({'schema':1,'dshVersion':'0.2.0-rc.2','active':[{'asset':'z-first.json'},{'asset':'a-second.json'}],'specialized':[],'retired':[]}))
             module.prepare(args);managed=Path(json.loads((store/'current.json').read_text())['managed'])
             self.assertEqual('step-two',(managed/'node_modules/third-party/index.js').read_text())
-            proof=json.loads((managed/'dsha-test-runtime.json').read_text())
-            for name,source in module.load_builder().destructive_policy_files().items():
-                target=managed/'node_modules/dsha-destructive-policy'/name
-                expected=hashlib.sha256(source.read_bytes()).hexdigest()
-                self.assertEqual(source.read_bytes(),target.read_bytes())
-                self.assertEqual(expected,proof['archiveRecipeInputs'][source.relative_to(module.ROOT).as_posix()])
-                self.assertEqual(expected,proof['contentProof']['entries']['node_modules/dsha-destructive-policy/'+name]['sha256'])
-            pointer=(store/'current.json').read_bytes()
-            raw=Path(json.loads(pointer)['raw']);raw_marker=(raw/'dsha-test-runtime.json').read_bytes()
-            source=module.ASSETS/'destructive-policy/index.js';source.write_bytes(b'changed current policy source')
-            with self.assertRaisesRegex(ValueError,'ARCHIVE_INPUTS_STALE'):module.prepare(args)
-            self.assertEqual(1,len(calls));self.assertEqual(pointer,(store/'current.json').read_bytes())
-            self.assertEqual(raw_marker,(raw/'dsha-test-runtime.json').read_bytes())
         self.with_producer(run)
 
     def test_active_builder_owned_after_form_is_verified_without_duplicate_prepend(self):
@@ -196,7 +193,8 @@ class RuntimeProofTest(unittest.TestCase):
             self.put(module.ASSETS,'prepend-helper.js','helper();')
             self.put(module.ASSETS,'deepseek-messages-compat-patch.json',json.dumps({'dshVersion':'0.2.0-rc.2','module':'third-party/index.js','patches':[{'before':'fresh locked install bytes','after':'fresh locked install bytes','prependAsset':'prepend-helper.js'}]}))
             self.put(module.ASSETS,'runtime-patches.json',json.dumps({'schema':1,'dshVersion':'0.2.0-rc.2','active':[{'asset':'deepseek-messages-compat-patch.json'}],'specialized':[],'retired':[]}))
-            class Builder(type(module.load_builder())):
+            class Builder(FixtureBuilder):
+                def recipe_inputs(self):return {}
                 def patched_content(self,path,body):return b'helper();\n'+body if path.as_posix()=='third-party/index.js' else body
             with patch.object(module,'load_builder',return_value=Builder()):module.prepare(args)
             managed=Path(json.loads((store/'current.json').read_text())['managed']);proof=json.loads((managed/'dsha-test-runtime.json').read_text())

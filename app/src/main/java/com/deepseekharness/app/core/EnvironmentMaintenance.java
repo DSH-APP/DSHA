@@ -14,86 +14,6 @@ import java.util.function.Consumer;
 public final class EnvironmentMaintenance {
   private EnvironmentMaintenance() {}
 
-  private static final String UPDATE_FAILURE_ZH = "运行时更新未完成，原运行时及个人数据已保留：";
-  private static final String UPDATE_FAILURE_EN =
-      "Runtime update did not complete; the previous runtime and personal data were retained:";
-
-  /** 只读核对失败正文所绑定的同一事务；无证据不能由全局 pending=false 推断回切。 */
-  public static boolean runtimeRollbackRecorded(android.content.Context context, String failure) {
-    try {
-      return runtimeRollbackRecorded(
-          new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
-          context.getFilesDir().getCanonicalFile(),
-          failure);
-    } catch (IOException | RuntimeException unavailable) {
-      return false;
-    }
-  }
-
-  static boolean runtimeRollbackRecorded(
-      com.deepseekharness.app.backup.BackupFileSystem fs, File files, String failure) {
-    if (failure == null || failure.length() > 4096) return false;
-    String[] lines = failure.split("\n", 3);
-    if (lines.length != 3
-        || !java.util.Set.of(UPDATE_FAILURE_ZH, UPDATE_FAILURE_EN).contains(lines[0])) return false;
-    String home =
-        new File(files, com.deepseekharness.app.backup.ManagedRuntimeTransaction.HOME)
-                .getAbsolutePath()
-            + File.separator;
-    if (!lines[1].startsWith(home)) return false;
-    String relative = lines[1].substring(home.length());
-    if (!relative.matches(
-        "(?:completed"
-            + java.util.regex.Pattern.quote(File.separator)
-            + ")?"
-            + com.deepseekharness.app.util.Ids.UUID_PATTERN)) return false;
-    return runtimeRollbackRecorded(fs, files, new File(lines[1]));
-  }
-
-  private static boolean runtimeRollbackRecorded(
-      com.deepseekharness.app.backup.BackupFileSystem fs, File files, File operation) {
-    try {
-      String id = operation.getName();
-      var record =
-          com.deepseekharness.app.backup.ManagedRuntimeTransaction.open(fs, files, id, null);
-      if (!record.directory().equals(operation)) return false;
-      var before = fs.stat(operation);
-      if (!before.type.equals("DIRECTORY")) return false;
-      for (String marker : new String[] {"verified", "switching", "rolling-back", "rolled-back"})
-        if (!com.deepseekharness.app.backup.TransactionMarkers.read(
-            fs, operation, marker, "RUNTIME_MARKER")) return false;
-      if (com.deepseekharness.app.backup.TransactionMarkers.read(
-          fs, operation, "finalized", "RUNTIME_MARKER")) return false;
-      var plan =
-          com.deepseekharness.app.backup.BackupJson.read(
-              fs.small(
-                  fs.child(operation, "plan.json"),
-                  com.deepseekharness.app.backup.BackupLimits.MANIFEST),
-              com.deepseekharness.app.backup.BackupLimits.MANIFEST);
-      if (com.deepseekharness.app.backup.BackupJson.number(plan, "version") != 1
-          || !id.equals(com.deepseekharness.app.backup.BackupJson.string(plan, "id"))
-          || !(plan.get("roots") instanceof java.util.List<?> roots)
-          || roots.isEmpty()
-          || roots.size() > 2048) return false;
-      var checked = new java.util.HashSet<String>();
-      for (Object value : roots) {
-        if (!(value instanceof java.util.Map<?, ?> row)
-            || !(row.get("root") instanceof String root)
-            || !checked.add(root)
-            || !(row.get("had") instanceof Boolean)
-            || row.containsKey("candidatePresent")
-                && !(row.get("candidatePresent") instanceof Boolean)) return false;
-        record.resolve(root);
-        for (String hash : new String[] {"before", "after"})
-          if (!(row.get(hash) instanceof String digest) || !digest.matches("[a-f0-9]{64}"))
-            return false;
-      }
-      return before.same(fs.stat(operation));
-    } catch (IOException | RuntimeException unavailable) {
-      return false;
-    }
-  }
-
   /** 包内故障注入缝；正式入口始终使用真实 APK 解压，debug fixture 可在此抛出失败。 */
   interface ExtractStep {
     void extract(java.util.function.BiConsumer<Long, Long> progress) throws Exception;
@@ -388,7 +308,10 @@ public final class EnvironmentMaintenance {
                 com.deepseekharness.app.backup.NativeBackupJobs.code(retained));
       }
       space.sample(Stage.RETIRED_CLEANUP, 0);
-      return com.deepseekharness.app.util.UiText.format("环境重建完成，数据逐文件核验与运行试验通过。\n%s", cleanup);
+      return com.deepseekharness.app.util.UiText.choose(
+              "环境重建完成，数据逐文件核验与运行试验通过。\n",
+              "Environment rebuilt; data verification and the runtime trial passed.\n")
+          + cleanup;
     } catch (Exception failure) {
       space.sample(Stage.FAILED, 0);
       if (began && !RuntimeTasks.hasOtherTasks())
@@ -438,8 +361,8 @@ public final class EnvironmentMaintenance {
           String title =
               stage.equals("TRIAL_COMPATIBILITY_RETRY")
                   ? com.deepseekharness.app.util.UiText.choose(
-                      "bxroot 已确认退出，正在使用 proot 进行一次兼容验证…",
-                      "bxroot has stopped; verifying once with proot compatibility mode…")
+                      "proroot 已确认退出，正在使用 proot 进行一次兼容验证…",
+                      "proroot has stopped; verifying once with proot compatibility mode…")
                   : stage.startsWith("TRIAL_")
                       ? trialProgress(stage)
                       : com.deepseekharness.app.util.UiText.choose(
@@ -506,11 +429,10 @@ public final class EnvironmentMaintenance {
     // 此处只核对不会启动 Node 的补丁/解析/组信息，避免重复加载整套 DSH。
     java.util.List<com.deepseekharness.app.util.InstallProbe.Check> checks =
         com.deepseekharness.app.util.InstallProbe.checks(6);
-    var plan = com.deepseekharness.app.util.InstallProbe.plan(checks);
-    var checked = new com.deepseekharness.app.util.InstallProbe.Results(plan);
-    String probe = readCheckedProot(proot, plan.script, plan.outerTimeoutMs);
-    for (String line : probe.split("\\r?\\n"))
-      if (checked.beginning(line) == null) checked.accept(line);
+    var checked = new com.deepseekharness.app.util.InstallProbe.Results(checks);
+    String probe =
+        readCheckedProot(proot, com.deepseekharness.app.util.InstallProbe.script(checks), 30_000);
+    for (String line : probe.split("\\r?\\n")) checked.accept(line);
     if (!checked.ok(6)) throw new IOException("RUNTIME_PATCH_CHECK_FAILED:" + checked.detail(6));
     if (register) readCheckedProot(proot, "python3 /root/.dsh/register-builtin-plugins.py", 30_000);
   }
@@ -576,22 +498,9 @@ public final class EnvironmentMaintenance {
   public static String recover(HarnessController controller) throws Exception {
     if (!MaintenanceCoordinator.isOwner())
       throw new IOException(com.deepseekharness.app.util.UiText.text("维护回滚必须经过停止屏障与全局数据任务锁"));
+    ensureSingleRecovery(controller);
     File files = controller.context().getFilesDir().getCanonicalFile();
     com.deepseekharness.app.runtime.BoundedGuestSessions.reapExited(files);
-    boolean retiredLegacy = BackupManager.retireInertLegacyReference(controller);
-    ensureSingleRecovery(controller);
-    if (retiredLegacy && !MaintenanceCoordinator.pending(files))
-      return com.deepseekharness.app.util.UiText.choose(
-          "旧恢复已由 Android 处理；外置目录、原日志、原件与候选继续保留。",
-          "Android handled the legacy restore; external folders, the original journal, originals and candidates are retained.");
-    if (com.deepseekharness.app.backup.LegacyRestoreJournalRecovery.pending(
-            new com.deepseekharness.app.backup.AndroidBackupFileSystem(), files)
-        != null) {
-      com.deepseekharness.app.BackupManager.recoverInterrupted(controller);
-      return com.deepseekharness.app.util.UiText.choose(
-          "旧恢复已由 Android 处理；外置目录、原日志、原件与候选继续保留。",
-          "Android handled the legacy restore; external folders, the original journal, originals and candidates are retained.");
-    }
     var filesystemCold = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
     if (!com.deepseekharness.app.backup.ColdInstallTransaction.pending(filesystemCold, files)
         .isEmpty()) {

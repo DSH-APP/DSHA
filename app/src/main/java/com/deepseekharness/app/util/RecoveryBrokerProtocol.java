@@ -8,7 +8,8 @@ import java.util.Set;
 /** 应急桥的固定路由与认证规则；确认、路径和任意命令不属于网络协议。 */
 public final class RecoveryBrokerProtocol {
   private static final Set<String> ROUTES =
-      Set.of("/v1/diagnostics", "/v1/targets", "/v1/read", "/v1/propose", "/v1/result");
+      Set.of(
+          "/v1/diagnostics", "/v1/targets", "/v1/read", "/v1/propose", "/v1/result", "/v1/consent");
 
   private RecoveryBrokerProtocol() {}
 

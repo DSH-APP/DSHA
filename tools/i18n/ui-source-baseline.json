@@ -11,5 +11,37 @@
       "residual": "External decompiled Shizuku source is protected by the pinned formatter/source-origin contract; no product-owned caller translates command/user text."
     }
   ],
-  "nonFindings": []
+  "nonFindings": [
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
+      "signature": "UiText.choose(\"环境重建完成，数据逐文件核验与运行试验通过。\\n\",\"Environment rebuilt; data verification and the runtime trial passed.\\n\")+",
+      "sourceSha256": "b4298523b8a96eff62323fee18b2527769163653893c85e4a008696c63354c29",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "The complete translated rebuild-result sentence ends with a newline. The separately assembled cleanup outcome is either its own complete static result or registered complete error templates preserving raw error arguments. Joining these paragraphs is intentional.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/recovery/RecoveryController.java",
+      "signature": "UiText.choose(\"独立应急 DSH 已就绪；正式环境保持原状。\",\"Independent recovery DSH is ready. The main environment is preserved.\")+",
+      "sourceSha256": "60ac14b4f30b2e6bf99ad6fcd32556b9fd0a658e25549214d77ee36e1f1eff1b",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "The complete recovery-ready sentence is followed by an optional independently translated credential notice. Each notice is a complete sentence with leading whitespace; no user credential or incomplete label is concatenated here.",
+      "evidence": "docs/audits/build156/choose-complete-paragraph-evidence.json"
+    },
+    {
+      "kind": "translated_choose_fragment_concat",
+      "file": "app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java",
+      "signature": "+UiText.choose(\"旧原生 API Key 无法读取，原记录已保留。本次不注入兼容凭据；可继续在网页配置模型和凭据。\",\"The legacy native API key is unavailable and its saved record was retained. No compatibility key will be injected; configure the model and credentials in Web.\")",
+      "line": 283,
+      "sourceSha256": "8dd52f256130e54a384e6da00c245dfd74d5d7339ad4b881bb697915785f59c7",
+      "occurrences": 1,
+      "classification": "independent_complete_paragraph_join",
+      "reason": "The prefix consists only of the literal diagnostic namespace and CredentialRead state/reason enum names followed by a colon. The UiText.choose arguments are independent complete translated sentences; no translated label or sentence fragment is assembled and no credential value is concatenated.",
+      "evidence": "docs/releases/v0.2.1-rc.2-build190-prerelease-20261020.md"
+    }
+  ]
 }

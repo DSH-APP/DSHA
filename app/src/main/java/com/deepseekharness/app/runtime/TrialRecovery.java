@@ -41,14 +41,11 @@ final class TrialRecovery {
           if (!launchedType.equals("FILE")
               || !id.equals(new String(fs.small(launched, 128), StandardCharsets.US_ASCII)))
             throw new IOException("TRIAL_MARKER");
-          if (TrialSupport.boundSession(fs, entry).isEmpty()
-              && fs.stat(fs.child(payload, ".dsha-web.pid")).type.equals("MISSING")
+          if (fs.stat(fs.child(payload, ".dsha-web.pid")).type.equals("MISSING")
               && fs.stat(fs.child(payload, ".dsha-web.pid.stale")).type.equals("MISSING"))
             throw new IOException(
                 "TRIAL_PROCESS_UNCONFIRMED",
                 new IOException("TRIAL_NO_PID_OR_BOUND_SESSION_EXIT_EVIDENCE"));
-          if (!TrialSupport.boundSession(fs, entry).isEmpty())
-            BoundedGuestSessions.recoverTrialPreparation(fs, home.getParentFile(), entry);
           stopper.stopAndConfirm(payload);
         }
         TrialSupport.write(fs, entry, "closed", id.getBytes(StandardCharsets.US_ASCII));

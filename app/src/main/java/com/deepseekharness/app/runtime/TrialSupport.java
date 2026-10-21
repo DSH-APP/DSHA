@@ -44,43 +44,6 @@ final class TrialSupport {
         + "printf '%s %s\\n' $$ \"$DSHA_BORN\" > .dsha-web.identity; ";
   }
 
-  static String runtimeMode(Process process) throws IOException {
-    String mode = OwnedGuestProof.modeOf(process);
-    if (!"bxroot".equals(mode) && !"proot".equals(mode))
-      throw new IOException("TRIAL_RUNTIME_UNCONFIRMED");
-    return mode;
-  }
-
-  interface RecordedExit {
-    boolean confirmed(String sessionId) throws IOException;
-  }
-
-  static String boundSession(BackupFileSystem fs, File operation) throws IOException {
-    File bound = fs.child(operation, "native-session-id");
-    String type = fs.stat(bound).type;
-    if (type.equals("MISSING")) return "";
-    if (!type.equals("FILE")) throw new IOException("TRIAL_SESSION_BINDING");
-    String id = new String(fs.small(bound, 128), java.nio.charset.StandardCharsets.US_ASCII);
-    if (!com.deepseekharness.app.util.Ids.uuid(id)) throw new IOException("TRIAL_SESSION_BINDING");
-    return id;
-  }
-
-  /** 无返回句柄仍可能已经 START；只有本次绑定的宿主退出回执可解除启动现场。 */
-  static boolean untrackedExitConfirmed(BackupFileSystem fs, File operation, RecordedExit recorded)
-      throws IOException {
-    File launched = fs.child(operation, "launched");
-    String type = fs.stat(launched).type;
-    if (type.equals("MISSING")) return true;
-    if (!type.equals("FILE")
-        || !operation
-            .getName()
-            .equals(
-                new String(fs.small(launched, 128), java.nio.charset.StandardCharsets.US_ASCII)))
-      throw new IOException("TRIAL_MARKER");
-    String id = boundSession(fs, operation);
-    return !id.isEmpty() && recorded.confirmed(id);
-  }
-
   static Process checkedExit(Process launcher, ExitCheck check, Runnable stop, String errorCode) {
     return checkedExit(launcher, check, stop, () -> {}, errorCode);
   }
@@ -100,16 +63,17 @@ final class TrialSupport {
       Throwable primary)
       throws IOException {
     IOException stopping = null;
-    try {
-      if (launcher != null) cleanup.stop();
-      if (!cleanup.confirmed(launcher)) throw new IOException("TRIAL_PROCESS_UNCONFIRMED");
-    } catch (IOException | RuntimeException error) {
-      stopping = new IOException("TRIAL_PROCESS_UNCONFIRMED", error);
-    }
+    if (launcher != null)
+      try {
+        cleanup.stop();
+        if (!cleanup.confirmed(launcher)) throw new IOException("TRIAL_PROCESS_UNCONFIRMED");
+      } catch (IOException | RuntimeException error) {
+        stopping = new IOException("TRIAL_PROCESS_UNCONFIRMED", error);
+      }
     if (stopping != null) {
       try {
         work.retainUntilExit(
-            new CheckedExit(
+            checkedExit(
                 launcher,
                 cleanup::confirmed,
                 () -> {
@@ -172,7 +136,7 @@ final class TrialSupport {
 
     @Override
     public synchronized int exitValue() {
-      int value = launcher == null ? 125 : launcher.exitValue();
+      int value = launcher.exitValue();
       try {
         if (!check.confirmed(launcher)) throw new IllegalThreadStateException(errorCode);
         if (!recordClosed) {
@@ -200,21 +164,17 @@ final class TrialSupport {
 
     @Override
     public InputStream getInputStream() {
-      return launcher == null
-          ? new java.io.ByteArrayInputStream(new byte[0])
-          : launcher.getInputStream();
+      return launcher.getInputStream();
     }
 
     @Override
     public InputStream getErrorStream() {
-      return launcher == null
-          ? new java.io.ByteArrayInputStream(new byte[0])
-          : launcher.getErrorStream();
+      return launcher.getErrorStream();
     }
 
     @Override
     public OutputStream getOutputStream() {
-      return launcher == null ? new java.io.ByteArrayOutputStream() : launcher.getOutputStream();
+      return launcher.getOutputStream();
     }
 
     @Override

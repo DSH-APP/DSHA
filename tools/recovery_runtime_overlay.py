@@ -22,10 +22,22 @@ MAX_SOURCE_BYTES = {'index.html': 1024 * 1024, 'client.pdf.js': 12 * 1024 * 1024
                     'client-resources.js': 1024 * 1024, 'client-locale.js': 1024 * 1024}
 INPUT_ASSETS = ('web-integration/es-compat.js', 'web-integration/startup.js',
                 'pdf-compat-patch.json', 'language-patch.json', 'web-integration/language.js')
+CAPSULE_DEPENDENCIES = {
+    **{'destructive-policy/' + name:
+       PREFIX + 'dsha-destructive-policy/' + name
+       for name in ('package.json', 'index.js', 'destructive.js', 'workdir.js')},
+    'recovery-native-consent.cjs': 'run/dsha-launcher/native-consent.cjs',
+}
 
 
 def exact(source, before, after):
-    if not before or not after or before == after or source.count(before) != 1 or after in source:
+    if not before or not after or before == after:
+        raise ValueError('RECOVERY_OVERLAY_ANCHOR')
+    # Current archives already carry active signed patch chains. Accept only the
+    # complete exact replacement, with no extra old anchor alongside it.
+    if source.count(after) == 1 and source.count(before) == after.count(before):
+        return source
+    if source.count(before) != 1 or after in source:
         raise ValueError('RECOVERY_OVERLAY_ANCHOR')
     return source.replace(before, after, 1)
 

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-llm-deepseek/lib/index.js",
+  "patches": [
+    {
+      "before": "async function* parseSse(body, activity) {\n\tconst events = body.pipeThrough(new TextDecoderStream()).pipeThrough(new EventSourceParserStream({ onComment: activity }));",
+      "after": "async function* parseSse(body, activity, signal) {\n\t// DSHA_DEEPSEEK_BODY_CANCEL_RC2_V1: abort the owned response pipeline as well as the fetch request.\n\tsignal.throwIfAborted();\n\tconst events = body.pipeThrough(new TextDecoderStream(), { signal }).pipeThrough(new EventSourceParserStream({ onComment: activity }), { signal });"
+    },
+    {
+      "before": "\t\t\t\tyield* translate(parseSse(response.body, activity), options.model);",
+      "after": "\t\t\t\tyield* translate(parseSse(response.body, activity, signal), options.model);"
+    }
+  ]
+}

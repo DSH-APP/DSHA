@@ -25,7 +25,8 @@ if (window.top === window) {
       const host = document.head || document.documentElement;
       if (!host) return false;
       const script = document.createElement('script');
-      script.textContent = "window.__DSHA_LANGUAGE__=" + JSON.stringify(message.language) + ";window.dispatchEvent(new CustomEvent('dsha-language'));";
+      script.textContent = (observationNonce ? "window.__DSHA_NATIVE_OAUTH__=true;" : "")
+        + "window.__DSHA_LANGUAGE__=" + JSON.stringify(message.language) + ";window.dispatchEvent(new CustomEvent('dsha-language'));";
       host.appendChild(script);script.remove();return true;
     };
     if (!inject()) {

@@ -7,13 +7,91 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 /** 所有应用内弹窗共用 Material 容器、排版、按钮和窗口动画，不接管业务监听器。 */
 public final class DshaDialogBuilder extends MaterialAlertDialogBuilder {
+  private final boolean safetyConfirmation;
+  private final long consentRevision;
+  private android.content.DialogInterface.OnClickListener positive;
+  private static final java.util.Map<AlertDialog, Long> safetyDialogs =
+      new java.util.WeakHashMap<>();
+
   public DshaDialogBuilder(Context context) {
+    this(context, false);
+  }
+
+  /** Only explicit yes/no safety approvals opt in. Parameter, scope and /ask dialogs never do. */
+  public DshaDialogBuilder(Context context, boolean safetyConfirmation) {
     super(context, R.style.Dialog_DSHA_Material);
+    this.safetyConfirmation = safetyConfirmation;
+    consentRevision =
+        safetyConfirmation
+            ? new com.deepseekharness.app.core.DeviceGrants(context).consentPolicy().revision()
+            : -1;
+  }
+
+  @Override
+  public DshaDialogBuilder setPositiveButton(
+      CharSequence text, android.content.DialogInterface.OnClickListener listener) {
+    positive = listener;
+    super.setPositiveButton(
+        text,
+        listener == null
+            ? null
+            : (dialog, which) -> {
+              if (!safetyConfirmation
+                  || consentRevision
+                      == new com.deepseekharness.app.core.DeviceGrants(getContext())
+                          .consentPolicy()
+                          .revision()) listener.onClick(dialog, which);
+            });
+    return this;
+  }
+
+  @Override
+  public DshaDialogBuilder setPositiveButton(
+      int text, android.content.DialogInterface.OnClickListener listener) {
+    return setPositiveButton(getContext().getText(text), listener);
+  }
+
+  @Override
+  public AlertDialog show() {
+    var policy =
+        safetyConfirmation
+            ? new com.deepseekharness.app.core.DeviceGrants(getContext()).consentPolicy()
+            : null;
+    if (policy != null && policy.revision() != consentRevision) return create();
+    if (positive != null && policy != null && policy.currentGlobal(consentRevision)) {
+      AlertDialog dialog = create();
+      // This builder exists only because the user already requested its concrete action.
+      if (new com.deepseekharness.app.core.DeviceGrants(getContext())
+          .consentPolicy()
+          .currentGlobal(consentRevision))
+        positive.onClick(dialog, android.content.DialogInterface.BUTTON_POSITIVE);
+      return dialog;
+    }
+    return super.show();
+  }
+
+  public static void invalidateSafetyConfirmations() {
+    new android.os.Handler(android.os.Looper.getMainLooper())
+        .post(
+            () -> {
+              for (var entry : new java.util.ArrayList<>(safetyDialogs.entrySet())) {
+                AlertDialog dialog = entry.getKey();
+                if (dialog != null
+                    && entry.getValue()
+                        != new com.deepseekharness.app.core.DeviceGrants(dialog.getContext())
+                            .consentPolicy()
+                            .revision()) {
+                  if (dialog.isShowing()) dialog.cancel();
+                  safetyDialogs.remove(dialog);
+                }
+              }
+            });
   }
 
   @Override
   public AlertDialog create() {
     AlertDialog dialog = super.create();
+    if (safetyConfirmation) safetyDialogs.put(dialog, consentRevision);
     if (dialog.getWindow() != null) {
       android.view.Window window = dialog.getWindow();
       window.setWindowAnimations(R.style.Animation_DSHA_Dialog);

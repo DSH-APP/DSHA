@@ -89,4 +89,52 @@ public class AgentTaskRegistrationTest {
         lease.ready(
             new PreviewPageSession.Identity(3, "other-instance", "http://127.0.0.1:41821/auth")));
   }
+
+  @Test
+  public void capturedOldSnapshotCannotClaimAfterSameGenerationStrictRegistrationReturns()
+      throws Exception {
+    var identity =
+        new PreviewPageSession.Identity(3, "actual-instance", "http://127.0.0.1:41821/auth");
+    var original = new AgentTaskRegistration(3, "actual-instance");
+    String nonce = original.launchEnvironment().get("DSH_TASK_TOKEN");
+    var old = original.ready(identity);
+    var state = new AgentTaskState();
+    assertTrue(old.register(state, REAL, 3, "actual-instance", nonce, 41821, 1));
+    var key = new AgentTaskState.Key(3, "actual-instance", "session", 1, "a".repeat(32));
+    assertTrue(state.event(REAL, key, 1, "running", "", 2));
+    assertTrue(state.requestStop(key, state.snapshot(2).get(0).action(), 3));
+    var captured = new java.util.concurrent.CountDownLatch(1);
+    var release = new java.util.concurrent.CountDownLatch(1);
+    var result = new java.util.concurrent.atomic.AtomicReference<String>();
+    Thread callback =
+        new Thread(
+            () -> {
+              captured.countDown();
+              try {
+                assertTrue(release.await(2, java.util.concurrent.TimeUnit.SECONDS));
+              } catch (InterruptedException interrupted) {
+                throw new AssertionError(interrupted);
+              }
+              result.set(
+                  old.whileActive(
+                      () -> {
+                        state.claim(REAL, 3, "actual-instance");
+                        return "dispatched";
+                      },
+                      "revoked"));
+            });
+    callback.start();
+    assertTrue(captured.await(1, java.util.concurrent.TimeUnit.SECONDS));
+    original.revoke();
+    state.invalidate(3, "actual-instance");
+    var restored = AgentTaskRegistration.restore(3, "actual-instance", nonce);
+    assertTrue(
+        restored.ready(identity).register(state, REAL, 3, "actual-instance", nonce, 41821, 4));
+    release.countDown();
+    callback.join(2000);
+    assertFalse(callback.isAlive());
+    assertEquals("revoked", result.get());
+    assertNull(state.claim(REAL, 3, "actual-instance"));
+    assertFalse(state.event(REAL, key, 2, "running", "", 5));
+  }
 }

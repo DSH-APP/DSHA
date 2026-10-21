@@ -18,10 +18,26 @@ import { installMobileEffect } from '../platform/breakpoints.ts'
  * Three exits, roughly in the order a phone user reaches for them:
  *  1. the system back key / back gesture (popstate) — the returned task
  *  2. tapping the already-selected panel row again — installPanelRowExit
- *  3. the top-left FAB, which reads as 「返回会话」 while a panel owns the main
- *     area — see createOverlayTask in overlay-backdrop-fab.ts
+ *  3. the top-left FAB, which reads as 「返回会话」 at the panel root and as
+ *     「返回」 on a panel subpage — see createOverlayTask in
+ *     overlay-backdrop-fab.ts
  *
  * All three funnel through the same `exit`, so they cannot drift apart.
+ *
+ * Panels can have SUBPAGES (2026-10: the plugin manager's 「更多」 list and its
+ * three detail roots). Those are component state inside the panel — they add no
+ * history entry and expose no service face — but the host does render its own
+ * 「返回上一级」 control for them (list: the moreBack button in the more head;
+ * detail: the crumb button). So the FAB and the system back go through back
+ * first: click that host control one level at a time, and only fall back to
+ * exit when no subpage control is on screen. Without it a single back press
+ * on a detail page closed the whole panel.
+ *
+ * History entries are pushed BEFORE a back press and never after one: this
+ * WebView drops a pushState issued in the same task as a same-document
+ * traversal (measured 2026-10-20 three ways). The panel pushes one entry for
+ * itself and one more for each subpage level it descends into, so every back
+ * press merely consumes an entry that is already there.
  */
 
 /**
@@ -64,6 +80,9 @@ function panelViewOpen(): boolean {
 /** Marker set on the frame while the incoming conversation fades in. */
 const PANEL_EXIT_ATTR = 'data-mobile-panel-exit'
 
+/** Synchronous companion of the marker, for the composer focus guard. */
+const PANEL_EXIT_EVENT = 'dsh-mobile-panel-exit'
+
 /** Safety net: clears the marker if the reveal animation never fires. */
 const PANEL_EXIT_FALLBACK_MS = 2000
 
@@ -84,6 +103,30 @@ const PANEL_GHOST_MS = 280
  */
 const PANEL_ELEMENT_SELECTOR = '[data-mobile-nav="frame"] [class*="_centerCol"] > * > *'
 
+/* @patch
+   id: plugin-panel-subpage-back
+   for: 0.1.6-alpha.2 宿主的插件管理页子页：列表「更多」头的 button class 含 _moreBack，三种详情根（data-plugin-detail / data-plugin-item-detail / data-plugin-row-detail）里的 crumb button class 含 _crumb
+   why: 宿主的「返回上一级」只是组件闭包里的 setView({kind:"list"}) 与 DetailTop 的 onBack，没有公开服务面；而子页是同一个 store 的 view 状态，不产生 history entry —— 只能点宿主自己的控件，不能替它改状态
+   until: 宿主把面板子页的返回暴露成 ctx.layout / panel 服务上的公开动作，或子页自己进 history
+   test: tests/panel-exit-animation.test.ts
+*/
+/**
+ * The host's own 「返回上一级」 control while a plugin-panel subpage is open.
+ *
+ * Comma-merged because the three detail roots are siblings, not one family:
+ * builtin detail (data-plugin-detail), official item detail
+ * (data-plugin-item-detail) and market row detail (data-plugin-row-detail)
+ * each get their own crumb. Anchors are host data-* markers / hashed-class
+ * SUBSTRINGS only (the repo forbids suffix matching: [class*="_crumb"]
+ * deliberately also excludes the crumbIcon svg because it is not a button).
+ * Scoped to section[data-plugin-panel] so no other panel's crumb can match.
+ */
+const PANEL_SUBPAGE_BACK =
+  'section[data-plugin-panel] button[class*="_moreBack"],' +
+  'section[data-plugin-panel] [data-plugin-detail] button[class*="_crumb"],' +
+  'section[data-plugin-panel] [data-plugin-item-detail] button[class*="_crumb"],' +
+  'section[data-plugin-panel] [data-plugin-row-detail] button[class*="_crumb"]'
+
 /**
  * `ctx.layout.selectPanel` exists on 0.1.6-alpha.2 but NOT on rc.6, whose
  * layout face carries only toggleSidebar/openDetails/closeDetails (the same
@@ -98,6 +141,14 @@ const PANEL_ELEMENT_SELECTOR = '[data-mobile-nav="frame"] [class*="_centerCol"] 
 export interface PanelExit {
   /** Leave the panel (no-op when the host has no panel-selection API). */
   exit: () => void
+  /**
+   * Step back ONE level: click the host's own 「返回上一级」 control when a
+   * panel subpage is open, otherwise leave the panel. Shares exit's in-flight
+   * and disposed guards.
+   */
+  back: () => void
+  /** Whether a panel subpage currently carries the host's own back control. */
+  subpageOpen: () => boolean
   /** Whether the host can select a panel at all; false on rc.6. */
   supported: boolean
   /**
@@ -270,6 +321,22 @@ export function createPanelExit(layout: unknown): PanelExit {
   }
 
   /**
+   * The host's own subpage back control, or null at the panel root. Queried
+   * live on every call: the subpage is host component state, so the control
+   * appears and disappears without any URL or marker of ours changing.
+   */
+  function subpageControl(): HTMLElement | null {
+    if (!panelOwnsMainArea()) return null
+    const el = document.querySelector(PANEL_SUBPAGE_BACK)
+    return el instanceof HTMLElement ? el : null
+  }
+
+  /** Whether a subpage (not the panel root) is on screen right now. */
+  function subpageOpen(): boolean {
+    return subpageControl() !== null
+  }
+
+  /**
    * Freeze the outgoing panel into an inert clone that can slide away.
    *
    * An older snapshot of ours is dropped through `finishGhost()` — this
@@ -300,6 +367,12 @@ export function createPanelExit(layout: unknown): PanelExit {
     // reveal from its first style resolution (no full-opacity frame).
     const frame = getFrame()
     if (frame !== null) frame.setAttribute(PANEL_EXIT_ATTR, '')
+    // Synchronous heads-up for the composer focus guard
+    // (effects/session-focus-guard.ts): leaving a panel remounts the InputBar,
+    // and the host's mount-time focus runs inside the commit's synchronous
+    // layout-effect phase — earlier than any MutationObserver microtask. A
+    // custom event is the only decoupled way to open that window in time.
+    document.dispatchEvent(new CustomEvent(PANEL_EXIT_EVENT))
     const panel = panelElement()
     ghost = panel === null ? null : freezePanel(panel)
     // Commit on this very tick — the whole point of the snapshot is that the
@@ -331,6 +404,28 @@ export function createPanelExit(layout: unknown): PanelExit {
   }
 
   /**
+   * Leave ONE level. A plugin-panel subpage has its own 「返回上一级」 control
+   * owned by the host; clicking it is the only available API (the host keeps
+   * that view in component state and publishes no service). At the panel root
+   * there is no such control, so this is exactly exit.
+   *
+   * Same guards as exit: a tap that lands while the panel is already leaving,
+   * or after teardown, must be a no-op rather than a second swap.
+   */
+  const back = (): void => {
+    if (disposed || !supported || leaving) return
+    const control = subpageControl()
+    if (control !== null) {
+      // No marker, no history work: the panel is still open and its single
+      // armed history entry stays valid. The host re-renders the previous view
+      // and the next back call re-queries.
+      control.click()
+      return
+    }
+    exit()
+  }
+
+  /**
    * Teardown: the plugin may be unloaded (or the breakpoint flipped) while an
    * exit is in flight, and nothing of ours may survive it — not the marker, not
    * the timers, not a snapshot still covering the screen. Both halves are
@@ -345,9 +440,11 @@ export function createPanelExit(layout: unknown): PanelExit {
 
   return {
     exit,
+    back,
     supported,
     panelOpen: panelOwnsMainArea,
-    task: createPanelBackExitTask(exit, supported),
+    subpageOpen,
+    task: createPanelBackExitTask(exit, supported, back, subpageControl),
     dispose,
   }
 }
@@ -373,9 +470,26 @@ export function createPanelExit(layout: unknown): PanelExit {
  * @param exitPanel - the shared exit action.
  * @param supported - false on hosts with no panel-selection API; the task then
  *   never arms a history entry at all.
+ * @param backOneLevel - the shared one-level action (the FAB's too): click the
+ *   host's own subpage back control, or leave the panel when none is on screen.
+ * @param subpageOpen - whether that host control is on screen right now. A
+ *   panel subpage gets no history entry of its own, so a back press there must
+ *   climb the host view and RE-ARM the entry it just consumed.
  */
-export function createPanelBackExitTask(exitPanel: () => void, supported: boolean): ReconcilerTask {
-  let armed = false
+export function createPanelBackExitTask(
+  exitPanel: () => void,
+  supported: boolean,
+  backOneLevel: () => void,
+  subpageControl: () => HTMLElement | null,
+): ReconcilerTask {
+  /** Entry for the panel itself: the press that consumes it leaves the panel. */
+  let rootArmed = false
+  /** Entries pre-pushed for host subpage levels — one per level we descend. */
+  let extraArmed = 0
+  /** Which host back control is on screen; its level tells us where we are. */
+  let lastControl: HTMLElement | null = null
+  /** Set by a popstate climb so ensure() does not arm for the level it just left. */
+  let justClimbed = false
   let listening = false
   let selfBackPending = false
   let selfBackTimer: number | null = null
@@ -399,13 +513,47 @@ export function createPanelBackExitTask(exitPanel: () => void, supported: boolea
     }
   }
 
+  /** Add one poppable entry (no URL change). False when the frame refuses it. */
+  function pushEntry(): boolean {
+    try {
+      history.pushState({ mobilePanelExit: true }, '')
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  function armRoot(): void {
+    if (!supported || rootArmed) return
+    if (pushEntry()) rootArmed = true
+  }
+
+  function armExtra(): void {
+    if (!supported) return
+    if (pushEntry()) extraArmed += 1
+  }
+
+  /** Deeper control = deeper host view. 0 = panel root, 1 = more list, 2 = detail. */
+  function levelOf(control: HTMLElement | null): number {
+    if (control === null) return 0
+    return control.className.includes('_moreBack') ? 1 : 2
+  }
+
   function onPopState(): void {
     if (selfBackPending) {
       clearSelfBack()
       return
     }
-    if (!armed) return
-    armed = false
+    // LIFO: the per-level entries sit above the panel entry, so the top one is
+    // an extra entry while any remain.
+    if (extraArmed > 0) extraArmed -= 1
+    else if (rootArmed) rootArmed = false
+    else return
+    if (panelViewOpen() && subpageControl() !== null) {
+      justClimbed = true
+      backOneLevel()
+      return
+    }
     if (panelViewOpen()) exitPanel()
   }
 
@@ -424,32 +572,50 @@ export function createPanelBackExitTask(exitPanel: () => void, supported: boolea
   return {
     name: 'panel-back-exit',
     scopes: ['*'],
+    /*
+     * Entries are pushed BEFORE a back press, never after: this WebView drops a
+     * pushState issued in the same task as a same-document traversal (measured
+     * 2026-10-20 three ways — inside popstate, from the reconciler rAF right
+     * after it, and from a setTimeout(0) task). So the panel pushes one entry
+     * for itself, and one more for every host subpage level it descends into;
+     * a back press then merely consumes what is already there.
+     */
     ensure: (): void => {
       if (!supported) return
       listen()
-      if (panelViewOpen()) {
-        if (armed) return
-        armed = true
-        try {
-          // Second argument empty: add a poppable entry without touching the URL.
-          history.pushState({ mobilePanelExit: true }, '')
-        } catch {
-          // Sandboxed frames refuse pushState; give up on this exit rather than
-          // breaking anything else.
-          armed = false
+      if (!panelViewOpen()) {
+        if (rootArmed) {
+          rootArmed = false
+          selfBack()
         }
+        lastControl = null
+        justClimbed = false
         return
       }
-      if (armed) {
-        armed = false
+      armRoot()
+      const control = subpageControl()
+      const previous = levelOf(lastControl)
+      const current = levelOf(control)
+      if (current === previous) return
+      const climbed = justClimbed
+      justClimbed = false
+      lastControl = control
+      if (current > previous) {
+        if (!climbed) armExtra()
+        return
+      }
+      // Went up without a back press (host crumb or the FAB): give back the
+      // entry that level was holding.
+      if (!climbed && extraArmed > 0) {
+        extraArmed -= 1
         selfBack()
       }
     },
     dispose: (): void => {
       unlisten()
       clearSelfBack()
-      if (armed) {
-        armed = false
+      if (rootArmed) {
+        rootArmed = false
         selfBack()
       }
     },

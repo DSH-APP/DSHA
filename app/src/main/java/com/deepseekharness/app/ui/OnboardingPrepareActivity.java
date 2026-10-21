@@ -17,7 +17,7 @@ public final class OnboardingPrepareActivity extends AppCompatActivity {
     var ui =
         new OnboardingUi(
             this,
-            "4 / 7",
+            "4 / 4",
             UiText.choose("为第一次启动做准备", "Prepare your first launch"),
             UiText.choose(
                 "内置 Ubuntu 与运行组件将部署到应用私有目录。",
@@ -47,18 +47,11 @@ public final class OnboardingPrepareActivity extends AppCompatActivity {
             "Setup performs real checks and preserves existing data through the maintenance workflow. Device permissions remain optional."));
     ui.primary(
         controller.isEnvironmentReady()
-            ? UiText.choose("继续模型配置", "Continue to model setup")
+            ? UiText.choose("进入主界面", "Open the home screen")
             : UiText.choose("安装内置环境", "Install bundled runtime"),
         () -> {
           new ConfigStore(this).setWelcomed(true);
-          startActivity(
-              new Intent(
-                      this,
-                      controller.isEnvironmentReady()
-                          ? ModelSetupActivity.class
-                          : ExtractActivity.class)
-                  .putExtra("first_setup", true)
-                  .putExtra("first_run", true));
+          startActivity(new Intent(this, ExtractActivity.class).putExtra("first_setup", true));
           finish();
         });
     ui.secondary(UiText.choose("返回介绍", "Back to introduction"), this::finish);

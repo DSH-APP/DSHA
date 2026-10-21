@@ -133,6 +133,7 @@ public final class VirtualScreenOverlayController {
                       shown = frame.bitmap;
                       image.setImageBitmap(shown);
                       if (old != null) old.recycle();
+                      frame.adopted();
                     }
                     if ("VSCREEN_NOT_RUNNING".equals(frame.value.optString("error"))
                         || "VSCREEN_REVOKED".equals(frame.value.optString("error"))) hide();

@@ -18,27 +18,11 @@ public final class EnvironmentAccess {
     }
   }
 
-  /** 同一 APK 安装只自动尝试一次；覆盖安装修复包后可重新尝试同一受管候选。 */
-  public static String candidateAttemptKey(HarnessController controller)
-      throws java.io.IOException {
-    String candidate = "runtime:" + controller.proot().expectedRuntimeDescriptor().id();
-    long updatedAt = 0;
-    try {
-      android.content.Context context = controller.context();
-      updatedAt =
-          context.getPackageManager().getPackageInfo(context.getPackageName(), 0).lastUpdateTime;
-    } catch (android.content.pm.PackageManager.NameNotFoundException
-        | RuntimeException unavailable) {
-      // 无法读取本机包记录时沿用旧键，不能在每次打开页面时生成新的重试身份。
-    }
-    return com.deepseekharness.app.util.EnvironmentIdentity.attemptKey(candidate, updatedAt);
-  }
-
   /** 返回 true 时启动前必须进入维护；新候选只自动尝试一次，健康兼容前代仍可使用。 */
   public static boolean requiresMaintenanceBeforeStart(HarnessController controller) {
     if (runtimeLatest(controller)) return false;
     try {
-      String candidate = candidateAttemptKey(controller);
+      String candidate = "runtime:" + controller.proot().expectedRuntimeDescriptor().id();
       return com.deepseekharness.app.util.EnvironmentIdentity.shouldBlockRuntimeStart(
           false,
           true,

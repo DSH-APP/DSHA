@@ -13,6 +13,7 @@ public final class StartupRecoveryModel extends AndroidViewModel {
   public final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
   public List<StartupHistoryStore.Entry> attempts = Collections.emptyList();
   private volatile boolean working;
+  private volatile boolean waitingForEnvironment;
 
   public StartupRecoveryModel(Application app) {
     super(app);
@@ -21,6 +22,7 @@ public final class StartupRecoveryModel extends AndroidViewModel {
   public void load() {
     if (working) return;
     working = true;
+    waitingForEnvironment = false;
     loading.setValue(true);
     new Thread(
             () -> {
@@ -33,7 +35,14 @@ public final class StartupRecoveryModel extends AndroidViewModel {
                         .put("items", new JSONArray());
                 {
                   EnvironmentTaskGate.Lease lease = EnvironmentTaskGate.tryAcquire("读取启动恢复记录");
-                  if (lease == null) throw new java.io.IOException("RECOVERY_BUSY");
+                  if (lease == null) {
+                    waitingForEnvironment = true;
+                    DiagnosticLog.record(
+                        getApplication(),
+                        "STARTUP_RECOVERY_WAIT",
+                        SensitiveData.redact(EnvironmentTaskGate.activeKind()));
+                    throw new java.io.IOException("RECOVERY_BUSY");
+                  }
                   try (lease) {
                     lease.run(
                         () -> {
@@ -65,5 +74,13 @@ public final class StartupRecoveryModel extends AndroidViewModel {
             },
             "startup-recovery-read")
         .start();
+  }
+
+  /** Only retry a contended read; a failed repair or plugin operation is never replayed. */
+  public void retryWhenIdle() {
+    if (waitingForEnvironment
+        && !working
+        && !EnvironmentTaskGate.isBusy()
+        && !MaintenanceCoordinator.isExclusive()) load();
   }
 }

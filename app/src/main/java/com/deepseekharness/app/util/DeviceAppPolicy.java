@@ -31,11 +31,9 @@ public final class DeviceAppPolicy {
     public final Map<String, App> apps = new LinkedHashMap<>();
     private final Set<Integer> protectedUids = new HashSet<>();
     private final String selfPackage;
-    private final int user;
 
-    private Snapshot(String selfPackage, int user) {
+    private Snapshot(String selfPackage) {
       this.selfPackage = selfPackage;
-      this.user = user;
     }
 
     private void add(String output, boolean system) {
@@ -48,12 +46,7 @@ public final class DeviceAppPolicy {
           throw new IllegalArgumentException(
               com.deepseekharness.app.util.UiText.text("应用清单格式无法确认"));
         Set<Integer> uids = new LinkedHashSet<>();
-        for (String value : m.group(2).split(",")) {
-          int uid = Integer.parseInt(value);
-          if (user >= 0 && uid / 100000 != user)
-            throw new IllegalArgumentException("DEVICE_USER_SCOPE_MISMATCH");
-          uids.add(uid);
-        }
+        for (String value : m.group(2).split(",")) uids.add(Integer.parseInt(value));
         App old = apps.get(m.group(1));
         if (old != null && (!old.uids.equals(uids) || old.system != system))
           throw new IllegalArgumentException(com.deepseekharness.app.util.UiText.text("应用归属冲突"));
@@ -117,10 +110,7 @@ public final class DeviceAppPolicy {
         }
         for (String value : plan.operands) {
           Integer uid = processes.get(Integer.parseInt(value));
-          if (uid == null
-              || user >= 0 && uid / 100000 != user
-              || uid % 100000 < 10000
-              || protectedUids.contains(uid))
+          if (uid == null || uid % 100000 < 10000 || protectedUids.contains(uid))
             throw new IllegalArgumentException(
                 com.deepseekharness.app.util.UiText.format("系统关键进程或归属不明的 PID 不可结束：%s", value));
           List<String> owners = new ArrayList<>();
@@ -140,31 +130,16 @@ public final class DeviceAppPolicy {
   }
 
   public static Snapshot snapshot(String users, String systems, String selfPackage) {
-    return snapshot(users, systems, selfPackage, -1);
-  }
-
-  public static Snapshot snapshot(String users, String systems, String selfPackage, int user) {
-    if (user < -1 || user > 21474) throw new IllegalArgumentException("DEVICE_USER_SCOPE_INVALID");
     if (!SelfPackageIdentity.validName(selfPackage))
       throw new IllegalArgumentException("SELF_PACKAGE_UNVERIFIED");
     if (systems == null || systems.trim().isEmpty() || users == null)
       throw new IllegalArgumentException(
           com.deepseekharness.app.util.UiText.text("应用清单不完整，未结束任何应用"));
-    Snapshot snapshot = new Snapshot(selfPackage, user);
+    Snapshot snapshot = new Snapshot(selfPackage);
     snapshot.add(users, false);
     snapshot.add(systems, true);
     if (!snapshot.apps.containsKey(selfPackage))
       throw new IllegalArgumentException("SELF_PACKAGE_INVENTORY_MISSING");
-    return snapshot;
-  }
-
-  public static Snapshot snapshot(
-      String users, String systems, String selfPackage, int user, int selfUid) {
-    if (selfUid < 10000 || selfUid / 100000 != user)
-      throw new IllegalArgumentException("SELF_PACKAGE_USER_UNVERIFIED");
-    Snapshot snapshot = snapshot(users, systems, selfPackage, user);
-    if (!snapshot.apps.get(selfPackage).uids.contains(selfUid))
-      throw new IllegalArgumentException("SELF_PACKAGE_UID_INVENTORY_MISMATCH");
     return snapshot;
   }
 }

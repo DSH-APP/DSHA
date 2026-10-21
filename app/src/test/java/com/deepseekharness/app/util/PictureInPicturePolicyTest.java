@@ -29,14 +29,19 @@ public class PictureInPicturePolicyTest {
   }
 
   @Test
-  public void onlySystemAllowedReadyContentMayEnter() {
-    assertTrue(PictureInPicturePolicy.canEnter(true, true, true, false, false));
-    for (int denied = 0; denied < 5; denied++) {
-      boolean[] conditions = {true, true, true, false, false};
+  public void onlyExplicitlyEnabledSystemAllowedReadyContentMayEnter() {
+    assertTrue(PictureInPicturePolicy.canEnter(true, true, true, true, false, false));
+    for (int denied = 0; denied < 6; denied++) {
+      boolean[] conditions = {true, true, true, true, false, false};
       conditions[denied] = !conditions[denied];
       assertFalse(
           PictureInPicturePolicy.canEnter(
-              conditions[0], conditions[1], conditions[2], conditions[3], conditions[4]));
+              conditions[0],
+              conditions[1],
+              conditions[2],
+              conditions[3],
+              conditions[4],
+              conditions[5]));
     }
   }
 

@@ -4,10 +4,38 @@ plugins {
 
 // 两版共用功能和离线环境；只有 low 携带兼容旧 Android 的 Gecko 内核。
 // 文件名独立于可诊断版本名，保持当前用户下载入口不变。
-ext.dshaApkNameVersion = '0.2.0-rc2.1'
+ext.dshaApkNameVersion = '0.2.1-rc.2'
 def bundledTools = new groovy.json.JsonSlurper().parse(rootProject.file('tools/runtime-tools.lock.json'))
 if (bundledTools.schema != 1 || !(bundledTools.pnpm.version ==~ /[0-9]+\.[0-9]+\.[0-9]+/))
     throw new GradleException('随包工具身份格式错误')
+// BEGIN DSHA_BUNDLED_DSH_VERSION_GATE
+// Read during configuration too: assemble/package/test must reject a mixed native/asset generation.
+def verifyBundledDshGeneration = {
+    def manifest = new groovy.json.JsonSlurper().parse(rootProject.file('tools/dsh-runtime/package.json'))
+    def lock = new groovy.json.JsonSlurper().parse(rootProject.file('tools/dsh-runtime/package-lock.json'))
+    def registry = new groovy.json.JsonSlurper().parse(file('src/main/assets/runtime-patches.json'))
+    def source = file('src/main/java/com/deepseekharness/app/util/Constants.java').getText('UTF-8')
+    def declarations = (source =~ /(?m)^\s*public static final String DSH_VERSION = "([^"\r\n]+)";\s*$/)
+    if (declarations.count != 1)
+        throw new GradleException('BUNDLED_DSH_NATIVE_VERSION_ANCHOR')
+    def version = manifest.dependencies['@deepseek-ai/dsh']
+    if (!(version instanceof String) || !(version ==~ /[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?/)
+            || manifest.version != version || lock.version != version
+            || lock.packages[''].version != version
+            || lock.packages[''].dependencies['@deepseek-ai/dsh'] != version
+            || lock.packages['node_modules/@deepseek-ai/dsh'].version != version
+            || registry.schema != 1 || registry.dshVersion != version
+            || declarations[0][1] != version)
+        throw new GradleException('BUNDLED_DSH_VERSION_MISMATCH: native, npm lock and signed patch registry must agree')
+}
+verifyBundledDshGeneration()
+def verifyBundledDshVersion = tasks.register('verifyBundledDshVersion') {
+    inputs.files(rootProject.files('tools/dsh-runtime/package.json', 'tools/dsh-runtime/package-lock.json'))
+    inputs.files(file('src/main/assets/runtime-patches.json'),
+            file('src/main/java/com/deepseekharness/app/util/Constants.java'))
+    doLast { verifyBundledDshGeneration() }
+}
+// END DSHA_BUNDLED_DSH_VERSION_GATE
 // CI 只生成未签名完整包；该产物不得进入 release 或覆盖安装。
 def unsignedPackage = project.findProperty('dsha.unsignedPackage') == 'true'
 
@@ -19,13 +47,13 @@ android {
     ndkVersion '26.3.11579264'
 
     defaultConfig {
-        applicationId "com.dsh.client"
+        applicationId "dsh.android.client"
         minSdk 30
         targetSdk 37
         buildConfigField 'String', 'BUNDLED_PNPM_VERSION', '"' + bundledTools.pnpm.version + '"'
-        versionCode 173
+        versionCode 190
         // DSHA 修订号 + 固定的北京时间戳 + 内置 DSH 版本；同一交付重建不变。
-        versionName "0.2.24-20261014.1308-dsh0.2.0-rc.2"
+        versionName "0.2.1-rc.2-20261021.2107-dsh0.2.1-rc.2"
         testInstrumentationRunner project.findProperty('dsha.testRunner') ?: "com.deepseekharness.app.Rc13Instrumentation"
         ndk {
             abiFilters 'arm64-v8a'
@@ -90,10 +118,8 @@ android {
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true
-            // 运行时和应急启动器绑定签名 APK 中的完整字节，禁止打包阶段 strip 改写。
-            keepDebugSymbols += ['**/libproot.so', '**/libprootloader.so',
-                                 '**/libbxroot.so', '**/libbxroot-runtime.so', '**/libbxroot-ulx.so',
-                                 '**/libdsha-session.so', '**/libtermux.so']
+            // 应急启动器按签名 APK 中的完整字节校验，禁止打包阶段再改写这两份 ELF。
+            keepDebugSymbols += ['**/libproot.so', '**/libprootloader.so']
             // 使用 app 自带的同版本 16 KB JNI，覆盖 terminal-emulator AAR 中的旧库。
             pickFirsts += ['**/libtermux.so']
             excludes += ['**/x86/**', '**/x86_64/**', '**/armeabi/**', '**/armeabi-v7a/**']
@@ -116,6 +142,10 @@ android {
         resValues = true
         aidl = true
         buildConfig = true
+    }
+
+    testOptions {
+        unitTests.includeAndroidResources = true
     }
 
     sourceSets {
@@ -164,38 +194,27 @@ def verifyBuiltinRegistry = tasks.register('verifyBuiltinRegistry', Exec) {
     commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
             rootProject.file('tools/generate-builtin-plugins.py').absolutePath, '--verify')
 }
-def verifyBxrootNative = tasks.register('verifyBxrootNative', Exec) {
-    inputs.files(rootProject.files('tools/bxroot/lock.json', 'tools/bxroot/build.py',
-            'tools/prepare-bxroot-native-proof.py', 'tools/native_runtime_proof.py',
-            'tools/native-packaging.lock.json', 'tools/native-dependencies.lock.json',
-            'app/src/main/assets/bxroot-native-lock.json'))
-    inputs.files(fileTree(rootProject.file('tools/bxroot')) {
-        exclude 'build/**', 'archives/**', '__pycache__/**', '**/*.pyc'
-    })
-    inputs.files(fileTree('src/main/jniLibs'), fileTree('src/low/jniLibs'))
-    commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
-            rootProject.file('tools/bxroot/build.py').absolutePath, '--check')
-}
-def verifyBxrootProjection = tasks.register('verifyBxrootProjection', Exec) {
-    inputs.files(rootProject.files('tools/bxroot/lock.json', 'tools/prepare-bxroot-native-proof.py',
-            'tools/native_runtime_proof.py', 'tools/source_text.py', 'app/src/main/assets/bxroot-native-lock.json'))
-    inputs.files(fileTree('src/main/jniLibs'))
-    commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
-            rootProject.file('tools/prepare-bxroot-native-proof.py').absolutePath, '--check')
-}
 def verifyCredentialRegistry = tasks.register('verifyCredentialRegistry', Exec) {
     inputs.files(rootProject.files('tools/generate-credential-paths.py', 'app/src/main/assets/credential-paths.json',
             'app/src/main/java/com/deepseekharness/app/util/CredentialPathRules.java'))
     commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
             rootProject.file('tools/generate-credential-paths.py').absolutePath, '--check')
 }
-tasks.named('preBuild').configure { dependsOn(verifyBundledIdentities, verifyBuiltinRegistry, verifyCredentialRegistry, verifyBxrootNative, verifyBxrootProjection) }
-tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+def verifyProrootCompat = tasks.register('verifyProrootCompat', Exec) {
+    inputs.files(rootProject.files('tools/test-proroot-compat.py',
+            'tools/proroot-compat/stack-sysconf.c', 'tools/proroot-compat/abi.lock.json',
+            'tools/proroot-compat/build.py', 'tools/proroot-compat/linker-entry.c'))
+    inputs.files(fileTree('src/main/jniLibs') { include '**/libproroot*.so', '**/libdsha-proroot*.so' })
+    commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
+            rootProject.file('tools/test-proroot-compat.py').absolutePath)
+}
+tasks.named('preBuild').configure { dependsOn(verifyBundledIdentities, verifyBuiltinRegistry, verifyCredentialRegistry, verifyBundledDshVersion, verifyProrootCompat) }
+tasks.withType(Test).configureEach {
     systemProperty 'dsha.assetsDir', file('src/main/assets').absolutePath
 }
 tasks.configureEach {
     if (name in ['verifyBundledIdentities', 'verifyBuiltinRegistry', 'prepareStandardAssets',
-                 'prepareBackupAssets', 'preparePortableTools', 'prepareRuntimeDescriptor', 'prepareRecoveryAssets', 'prepareUiLanguages'])
+                 'prepareBackupAssets', 'prepareRuntimeDescriptor', 'prepareRecoveryAssets', 'prepareUiLanguages'])
         inputs.file(rootProject.file('tools/source_text.py'))
 }
 
@@ -203,7 +222,6 @@ def prepareStandardAssets = tasks.register("prepareStandardAssets", Exec) {
     inputs.dir("src/main/assets")
     inputs.file(rootProject.file("tools/prepare-standard-assets.py"))
     inputs.file(rootProject.file("tools/generated_asset_directory.py"))
-    inputs.file(rootProject.file("tools/native_runtime_proof.py"))
     inputs.files(rootProject.files("tools/asset-deployment.json", "tools/asset_deployment.py", "tools/verify-asset-deployment.py"))
     inputs.file(rootProject.file("tools/prepare-web-compat.mjs"))
     inputs.files(rootProject.files("tools/web-compat/entry.cjs", "tools/web-compat/package.json", "tools/web-compat/package-lock.json"))
@@ -218,19 +236,6 @@ def prepareStandardAssets = tasks.register("prepareStandardAssets", Exec) {
             "--source", file("src/main/assets").absolutePath,
             "--output", layout.buildDirectory.dir("generated/standardAssets").get().asFile.absolutePath)
 }
-
-def preparePortableTools = tasks.register("preparePortableTools", Exec) {
-    inputs.files(fileTree(rootProject.file('tools/pc-migration')) {
-        exclude 'node_modules/**', '**/__pycache__/**', '**/*.pyc'
-    })
-    outputs.dir(file('src/main/assets/pc-migration'))
-    outputs.file(file('src/main/assets/dsha-portable'))
-    outputs.file(file('src/main/assets/portable-tools.manifest.json'))
-    commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
-            rootProject.file('tools/pc-migration/prepare-assets.py').absolutePath,
-            '--output', file('src/main/assets').absolutePath)
-}
-prepareStandardAssets.configure { dependsOn(preparePortableTools) }
 def prepareBackupAssets = tasks.register("prepareBackupAssets", Exec) {
     inputs.file(rootProject.file("tools/prepare-backup-assets.py"))
     inputs.file(file("src/main/assets/dsh-runtime.bin"))
@@ -259,7 +264,6 @@ def prepareRuntimeDescriptor = tasks.register("prepareRuntimeDescriptor", Exec) 
     commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B", rootProject.file("tools/prepare-runtime-descriptor.py").absolutePath, "--check")
 }
 def verifyRuntimeDescriptorInputs = tasks.register("verifyRuntimeDescriptorInputs", Exec) {
-    dependsOn(preparePortableTools)
     inputs.file(rootProject.file("tools/test-runtime-descriptor-inputs.py"))
     inputs.file(rootProject.file("tools/prepare-runtime-descriptor.py"))
     inputs.file(rootProject.file("tools/runtime_input_contract.py"))
@@ -269,6 +273,8 @@ def verifyRuntimeDescriptorInputs = tasks.register("verifyRuntimeDescriptorInput
 }
 prepareRuntimeDescriptor.configure { dependsOn(verifyRuntimeDescriptorInputs) }
 prepareStandardAssets.configure { dependsOn(prepareRuntimeDescriptor) }
+// 包来源证明也是运行时身份输入，显式保证检查顺序，避免并行任务读取未检查的证明。
+prepareRuntimeDescriptor.configure { dependsOn(prepareBackupAssets) }
 
 // 应急运行时拥有独立锁；正式 DSH 更新不会把它隐式替换。
 def prepareRecoveryAssets = tasks.register("prepareRecoveryAssets", Exec) {
@@ -276,7 +282,6 @@ def prepareRecoveryAssets = tasks.register("prepareRecoveryAssets", Exec) {
     inputs.file(rootProject.file("tools/prepare-recovery-assets.py"))
     inputs.file(rootProject.file("tools/recovery_runtime_overlay.py"))
     inputs.file(rootProject.file("tools/generated_asset_directory.py"))
-    inputs.file(rootProject.file("tools/native_runtime_proof.py"))
     inputs.files(rootProject.files("tools/asset-deployment.json", "tools/asset_deployment.py"))
     inputs.file(rootProject.file("tools/recovery-runtime/lock.json"))
     // 正式归档变化必须重算物理位置；固定副本可以首次缺失后由同摘要种子建立。
@@ -286,6 +291,7 @@ def prepareRecoveryAssets = tasks.register("prepareRecoveryAssets", Exec) {
     inputs.files(fileTree(rootProject.file("tools/recovery-runtime/archives")))
             .withPropertyName("recoveryPinnedArchives")
     inputs.files(file("src/main/assets/recovery-agent.js"), file("src/main/assets/recovery-profile-package.json"), file("src/main/assets/recovery-profile.patch.yml"))
+    inputs.files(fileTree("src/main/assets/destructive-policy"), file("src/main/assets/recovery-native-consent.cjs"))
     inputs.files(file("src/main/assets/web-integration/es-compat.js"), file("src/main/assets/web-integration/startup.js"), file("src/main/assets/pdf-compat-patch.json"),
             file("src/main/assets/language-patch.json"), file("src/main/assets/web-integration/language.js"))
     inputs.files(fileTree("src/main/jniLibs"), fileTree("src/low/jniLibs"))
@@ -386,7 +392,6 @@ dependencies {
     testImplementation 'org.robolectric:robolectric:4.15.1'
 }
 
-// Host Provider fixtures use SDK 23/34. This configuration never changes APK dependencies.
 tasks.withType(Test).configureEach {
     jvmArgs '--add-opens=java.base/java.io=ALL-UNNAMED'
     def frameworkDirectory = System.getenv('DSHA_ROBOLECTRIC_DEPENDENCY_DIR')

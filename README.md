@@ -21,7 +21,7 @@
 
 > 🤖 下一个 AI / 开发者请先读 **[AGENTS.md](AGENTS.md)**（项目结构、启动契约、踩过的坑），不要先全库扫描。
 
-> 当前仓库已同步 build173 源码：bxroot 迁移、移动 UI 3.1.0、外置工作区保护、导出和画中画恢复修复，见[源码更新说明](docs/source-updates/build173.md)。本轮仅更新源码和 Star History；下方已发布 APK 下载仍为 build170。兼容版设备验收继续暂缓。
+> **0.2.1-rc.2 · build190**：标准版正式发布，包名 `dsh.android.client`，可与旧版 `com.dsh.client` 并排安装，应用数据独立。[下载](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.1-rc.2) · [文档](docs/documentation-index.md) · [发布范围](docs/releases/v0.2.1-rc.2-build190-package-rename-20261021.md)。
 
 ## ❤️ 赞助商
 
@@ -47,8 +47,8 @@ DeepSeek Harness（`@deepseek-ai/dsh`）是 DeepSeek 官方的 agent harness，�
 它是为 glibc Linux 写的，直接在安卓上跑会撞上一堆事：原生模块编译不过、`link(2)` 被
 SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 
-**DSHA 把这些全部封在一个 APK 里。** 装 APK、填 API key（或跳过）、点启动 —— 不需要 Termux、
-不需要 ROOT、不需要敲一行命令。里面是一个完整的 Ubuntu 环境：`apt` 能用、
+**DSHA 把这些全部封在一个 APK 里。** 安装并解压离线环境后进入Main，Web在后台启动；
+打开Web UI后再设置模型和API Key。不需要Termux、ROOT或命令行。里面是完整的Ubuntu环境：`apt`能用、
 交互式 PTY 能用、需要编译的原生模块能装，跟你在服务器上用是同一套东西。
 
 由贡献者 [@ym2025szz](https://github.com/ym2025szz) 维护并发布，感谢原作者
@@ -58,42 +58,37 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 
 ## 下载
 
-当前正式版 **v0.2.0-rc2 · build170**（[发布说明](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.0-rc2) ·
-[完整更新记录](CHANGELOG.md)），两个版本共享 `com.dsh.client` 包名与数据，**不能并排安装**：
+**0.2.1-rc.2 / build190**，按 GitHub 正式版发布。APK 版本名仍为 `0.2.1-rc.2-20261021.2107-dsh0.2.1-rc.2`，E7E3 签名、内置 DSH 0.2.1-rc.2、Ubuntu base10 不变。由贡献者 [@ym2025szz](https://github.com/ym2025szz) 维护并发布，感谢原作者及其他贡献者。
 
-| 版本 | 适用设备 | 内核 | 下载 | 大小 |
-|---|---|---|---|---:|
-| **Standard 标准版** | Android 11+ / arm64 | 系统 WebView；支持实验性虚拟屏 | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2.apk.sha256) | 273.10 MiB |
-| **Low 兼容版** | Android 6+ / arm64 | 内置 GeckoView 143；暂不支持虚拟屏 | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2low.apk.sha256) | 345.27 MiB |
-
-- **升级**：用同签名 APK 覆盖安装即可（证书指纹 `e7e3a3…a53f5`，验装方法见[安全模型](docs/security-model.md)）。相同 Ubuntu 基础版本只更新受管组件，不重建整个环境。
-- **本次下载**：APK 与对应 SHA-256 以上表 GitHub Release 为准；[校验方法](docs/download-verification.md)。应用内更新另读取官网 [`dsha.cc`](https://dsha.cc) 的发布清单。
-- **历史版本**：[Releases](https://github.com/DSH-APP/DSHA/releases)。
-
-本次为 **GitHub 正式版 / Latest**，不标记预发布；版本码 **170**，Ubuntu 基础环境编号仍为 **10**。[对应源码](https://github.com/DSH-APP/DSHA/tree/v0.2.0-rc2)。
-
-### 本版更新与旧版对比
-
-- DSH 升级至 **0.2.0-rc.2**，移动 UI 更新至 **3.0.5**，修复手机焦点、弹窗与插件卡片交互。
-- 文件直接进入系统文档选择器，支持多选；修复图片草稿保存与恢复、ADB 首次离线依赖准备和聊天 shell 的 `/tmp` 问题。
-- 网页增加原生分享与保存，补充虚拟屏开启说明、LAN 失效链接指引；作品导出、存储指南和技能统一放入“数据与备份”。
-- 插件检查后自动启用，允许依赖安装脚本；新用户导出统一为无需密码的 `.tar.gz`，历史加密备份仍可读取。
-
-| 以前发布的版本 | 本版主要增加 |
+| 下载 | 内容 |
 |---|---|
-| [v0.1.7-rc2 / 147，上一正式版](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.7-rc2) | DSH 0.1.7 → 0.2.0 rc2、移动 UI 3.0.3 → 3.0.5，以及上面的文件、草稿、ADB、shell、插件和备份改进。 |
-| [v0.1.5-rc2 / 129](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.5-rc2) | 还累积加入自动备份、独立应急、按需录音、PiP、Standard 实验性虚拟屏及受管更新改进。 |
+| [Standard 标准版 APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/dsha-0.2.1-rc.2.apk) | Android 11+ / arm64，系统 WebView，非调试正式签名 |
+| [完整源码 ZIP](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/DSHA-0.2.1-rc.2-build190-source.zip) | 源码、文档、锁与固定离线构建输入，按项目路径展开 |
+
+包名为 **`dsh.android.client`**，可与旧版 `com.dsh.client` 并排安装；应用数据和系统权限独立。需要迁移时通过备份导出、恢复；本次不发布新的 Low APK，旧版仍可从 [Releases](https://github.com/DSH-APP/DSHA/releases) 获取。
+
+### 相比上一正式版的变化
+
+- **虚拟屏**：Standard 支持实验性的独立显示、读屏与输入；能力前提见[虚拟屏说明](docs/virtual-screen-architecture.md)。
+- **全局权限**：支持全部手动、按应用自定义、全部允许；该选项控制 DSHA 内的确认，Android / ADB / Root / Shizuku 的系统能力仍需单独授权。
+- **运行与界面**：内置 DSH 0.2.1-rc.2、移动 UI 3.2.1，默认 proot、可选 proroot，模型在 Web UI 中配置。
+- **维护与备份**：一键无密码备份、外置工作区保护；修复插件安装、目录选择、局域网鉴权与后台 Web 恢复，画中画由用户主动开启。
+
+| 历史版本 | 保留记录 |
+|---|---|
 | [v1.1.10 及更早版本](https://github.com/DSH-APP/DSHA/releases/tag/v1.1.10) | 已转为双 APK、受管 Ubuntu/DSH 更新与宿主备份恢复；完整直接升级矩阵尚未重新验证，原版说明保留在历史标签。 |
 
-两版各 **45 项关联单测与 Release Lint** 通过；Android13 真机验证正式包覆盖、两种网页内核附件/图片草稿、15 个离线 ADB 依赖准备及最终启动。完整无线配对、原 vivo Android16、Android6/7、16KiB 真机和原生 SAF 最终保存未在本轮覆盖。[正式版完整说明](docs/releases/v0.2.0-rc2-notes.md) · [build170 验收](docs/releases/v0.2.21-build170-20261009.md)。
+相对最新 build190 维护包，本次 APK 只改包名及关联身份；[验证范围与限制](docs/releases/v0.2.1-rc.2-build190-package-rename-20261021.md)。本次发布未新增真机或长时验收。
 
 ### 开始使用
 
-1. 装 APK（仅 arm64；Android 11+ 选 Standard，更老的系统选 Low）
-2. 首次启动解压并准备内置离线环境；耗时取决于机型，历史完整冷安装为 42.412 秒，尚未达到 30 秒目标
-3. 「配置」页填 DeepSeek API key →「启动」页点启动 → 自动打开 Web UI
+1. 安装对应正式APK，首次启动解压并校验内置离线环境。
+2. 解压完成立即进入Main，Web在后台启动；Main显示启动进度和结果，不再先经过原生模型配置向导。
+3. Web就绪后进入Web UI，在网页设置中配置提供商、模型与API Key。首次启动页及原生接口配置页不提供这些编辑入口。
 
-就这样。想跑得更细可以走「分步安装」，每步都能单独重装、单独更新。
+首次解压和Web就绪是两个阶段；耗时取决于设备与环境，本轮没有新的手机测速。启动失败时在Main查看状态或诊断，不以界面跳转代替就绪证明。
+
+旧原生API Key临时不可读时保留记录并提示警告，仍可进入Web配置；不会把不可读等同为空值或静默替换。
 
 ---
 
@@ -102,11 +97,11 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 |  | 说明 |
 |---|---|
 | 🚫 **零命令行门槛** | 内置离线 Ubuntu rootfs，APK 装完就能用。不装 Termux、不配 pkg、不敲命令 |
-| 🐧 **完整 glibc 环境** | 不是裁剪版：`apt` / PTY / 原生模块 / Python / git 都在。上游插件不用改就能跑 |
-| ⚙️ **bxroot / proot** | bxroot 优先，proot 兼容；实际 Android 性能与兼容性须按新版本设备证据判断 |
+| 🐧 **完整 glibc 环境** | 不是裁剪版：`apt` / PTY / 原生模块 / Python / git 都在。插件仍需符合Linux arm64/glibc依赖及本机能力边界 |
+| ⚡ **proroot 零 ptrace 开销** | 传统 proot 每个系统调用两次上下文切换；proroot 走 LD_PRELOAD + 二进制补丁做进程内路径翻译。历史vivo/Android14旧构建曾记录关键项合计**+58%**，不代表本轮或当前默认proot性能 |
 | 🔌 **手机就是 agent 的手** | 无障碍 + ADB 免 Shizuku 直连 + 独立虚拟屏：读屏、点按、装应用、跑自动化，全部内置 |
 | 💾 **导出后迁移数据** | “数据与备份”导出无需密码的 `.tar.gz`；数据位置可在存储指南查看，本机副本不保证卸载后存续 |
-| 🩺 **坏了能自己说清哪坏了** | 组件级自检 + 按需修补 + 启动诊断 + 独立应急 DSH；Web 起不来时直接点名是哪个插件 |
+| 🩺 **坏了能自己说清哪坏了** | 组件级自检 + 按需修补 + 启动诊断 + 独立应急 DSH；展示启动阶段以及核心或插件诊断，不把所有核心错误归为插件 |
 
 ---
 
@@ -117,24 +112,26 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 | 能力 | 说明 |
 |---|---|
 | 内置离线 rootfs | Ubuntu 24.04 (noble) arm64 打进 APK，无网也能完成环境部署 |
-| 六步安装流水线 | 解压 → 基础工具 → Node.js → pnpm → dsh → 补丁，每步先探测再执行、装完即校验；只修失败项，不从头重来 |
+| 六步组件检查 | Linux 环境 → 基础工具 → Node.js → pnpm → dsh → 运行补丁；先检查，按需修复允许修补的失败项并复验。已有环境、Node 和 dsh 的替换须走保数据维护，详见[安装与维护](docs/install-and-maintenance.md) |
 | 分步重装 / 更新 | rootfs、工具、Node、harness 相互独立，可单独重装，不重复下载 |
 | 双装机路径 | 预构建包与源码构建都支持，源码路径自动处理 node-pty 等原生模块编译 |
 | 离线工具链 | curl / git / Python / 证书随包锁定版本（`packages.lock.json`），不依赖用户先跑 `apt` |
-| 镜像与网络 | apt 源官方 / 中科大镜像自动回退；DNS 三模式（auto / 强制 IPv4 / 系统原生），AAAA 被拒时仅重试解析、不重放 HTTP 请求 |
+| 镜像与网络 | apt 源官方 / 中科大镜像自动回退；DNS 三模式（auto / ipv4 / native，作用层见专页），AAAA 被拒时仅重试解析、不重放 HTTP 请求 |
 | 基础环境版本化 | Ubuntu 基础环境独立编号；界面更新不重建环境，普通 dsh 更新不递增基础版本 |
+
+DNS 设置中，`auto` 与 `ipv4` 都对特定 Node lookup 错误做窄重试；`ipv4` 另写受管 glibc `no-aaaa`，不等于关闭 IPv6 或控制所有解析器。`native` 退出该 Node 兼容路径，详见[DNS 专页](docs/dns-configuration.md)。build190 回到 build170 基座时恢复默认 proot，显式 proroot 仍可选择，历史与兼容细节见[运行引擎](docs/runtime-engines.md)。
 
 ### ② 运行时
 
 | 能力 | 说明 |
 |---|---|
-| bxroot / proot 双运行时 | 首次升级优先 bxroot；配置可显式选择 proot，实际兼容结果依机型 |
-| 性能证据 | 旧 proroot 的历史测速不能代表 bxroot；本轮未进行 Android 性能验收 |
-| 有限兼容回退 | bxroot 明确启动引擎失败、无插件故障或业务提交，确认后代树与 launcher 退出后仅重试一次 proot；未知结果不重放 |
+| proroot / proot 双运行时 | 默认稳定的 proot；可在“配置”选择 proroot，实际兼容结果依机型 |
+| 历史性能记录 | vivo V2352A / Android14 的旧构建曾记录特定基准提升；不代表当前默认引擎或本轮手机性能，见[运行引擎](docs/runtime-engines.md) |
+| 有限兼容回退 | proroot 在鉴权前明确退出且无插件故障时，确认 guest 退出后仅重试一次 proot；慢启动不触发回退 |
 | Node.js 24 + pnpm 10 | 与上游一致的运行环境，随包锁版本 |
 | 分包更新 | Ubuntu 与 dsh 运行时在 APK 内分包；冷安装两份都解压，局部更新只读 dsh 包 |
 | 受管更新试运行 | 新环境先在隔离区真实启动、验证端口 / 鉴权 / 会话读写 / 插件加载，全过后才切换提交，失败自动回切 |
-| 前台服务 + 看门狗 | 通知栏可见运行状态；Web 掉了自动拉起，不用手动重启 |
+| 前台服务与运行意图 | 通知栏显示状态，监督进程按当前运行意图协调；退出未知时保留屏障，不能承诺无条件自动重启 |
 | 慢启动保护 | 等待鉴权不设强杀时限（60 秒仅提示），看门狗不会把慢启动当故障误杀 |
 
 ### ③ 数据与备份
@@ -146,11 +143,11 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 | 自动备份计划 | 默认开启：每天指定时间 / 每隔 1–168 小时 / 停止 DSH 后，三种模式；运行中自动延后不打断工作；保留最近 3 份已验证副本 |
 | 分范围备份 | 全量 / 只对话 / 只插件 / 只设置任选，恢复时只覆盖对应内容 |
 | 换机恢复 | 导出实际对话、附件、设置及用户插件，先校验摘要和范围再预检恢复，保留当前内容与冲突原件 |
-| 凭据不进备份 | 桥 token 整文件排除；`.credentials.yaml` 字段级剔除本机密钥、保留用户 API key |
+| 本机凭据与用户配置 | 桥 token 整文件排除；`.credentials.yaml` 字段级剔除本机密钥、保留用户 API key |
 | 兼容旧备份 | 先完整认证/摘要核验再预检；未知或依赖不完整时如实提示。系统插件由当前 APK 重建，用户原件继续保留 |
 | 会话损坏隔离 | 坏掉的会话文件挪到 `corrupt-backup` 可取回，不让一个坏文件卡住整个 Web |
 | 覆盖更新自动清理 | 升级后闲时清理可再生缓存与多余旧副本；保留至少两份健康前代，改过的原件不动 |
-| 外置工作区保护 | 彻底重装与完整格式化已移除；维护只断开外置引用，保留其文件和备份 |
+| 保数据维护 | 完整格式化生产能力已退休；维护继续保留个人数据和未知原件 |
 
 ### ④ 设备能力（让 agent 真正操作这台手机）
 
@@ -160,7 +157,7 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 |---|---|
 | 屏幕操作 | **无障碍服务实现，不需要 ADB**：读屏结构化输出（带可点击区域坐标）、按文字 / 坐标点按、输入、按键、滑动、截屏存 PNG |
 | 独立虚拟屏（实验） | Standard / Android 11+，先授权 ADB、Shizuku 或 Root 任一通道，再到虚拟屏页面创建屏幕；仅开启无障碍不会创建虚拟屏，详见[开启说明](docs/virtual-screen-guide.md) |
-| ADB 无线直连 | 内置无线配对（TLS 1.3-PSK + SPAKE2）与保活，**不需要 Shizuku**，重启手机自动恢复 |
+| ADB 无线直连 | 内置无线配对与连接管理，独立于 Shizuku；系统无线调试及授权有效时尝试连接，重启后可能需用户重新开启调试，见[权限文档](docs/device-permissions-architecture.md) |
 | Shizuku / Root 通道 | 备用设备命令通道，与 ADB 同受命令白名单约束 |
 | 与用户交互 | 系统通知、App 内提示、震动（长任务叫醒用户）、弹窗三选项征询、分享 / 打开链接 |
 | 文件交换 | 读目录 / 文本文件、导出产物到 `Download/DSHA`；凭据区（`.dsh` / `.ssh` / `.android`）读写均被拒绝 |
@@ -183,14 +180,14 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 | 能力 | 说明 |
 |---|---|
 | 双内核 | Standard 用系统 WebView；Low 内置 GeckoView 143，不受系统 WebView 版本拖累 |
-| 移动端适配 | 内置 [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) **3.1.0**（MIT），固定源码与保留差异均受摘要核验 |
-| 画中画 | 对话窗口支持 PiP 小窗悬浮 |
-| 高刷与省电 | 按用户刷新率上限请求高刷（实测 120 Hz 零掉帧）；空闲自动交还系统省电 |
+| 移动端适配 | 内置 [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) **3.2.1**（MIT），保留手机快捷键和窄屏适配，修复焦点、弹窗及插件卡片 |
+| 画中画 | 默认关闭，用户主动开启后使用 PiP 小窗；正常返回与后台恢复保留同代网页实例 |
+| 高刷与省电 | 按用户上限请求刷新率，空闲交还系统；实际帧率依设备和系统，不把请求成功当作性能证明 |
 | 深浅色与多语言 | 深色 / 浅色 / 跟随系统；简体中文 / English，默认跟随系统语言 |
 | 局域网访问 | 电脑 / 平板浏览器直接用手机上的 dsh。token 鉴权 fail-closed，命中后回设 `SameSite=Strict` Cookie，不让 token 随外链泄漏 |
 | 老浏览器兼容 | 自动注入 `AbortSignal.any/timeout` 与 `crypto.randomUUID` polyfill（局域网 HTTP 下必需） |
 | 流式悬浮条 | AI 输出像歌词一样贴在屏幕顶部，工具调用翻译成人话；底色 / 透明度 / 行数可调；危险命令可直接在悬浮条上批准 |
-| 端口可配 | Web 端口自定义，冲突自动回退并说明 |
+| Web 端口 | 默认自动分配，可显式手动指定；启动前选择可用端口，实际端口以鉴权启动信息为准。备用仅本机记忆、不随换机迁移；启动后绑定竞态不承诺自动重试，见[专页](docs/ports-and-networking.md) |
 
 ### ⑦ 插件生态
 
@@ -226,7 +223,7 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 | 层面 | 做法 |
 |---|---|
 | 什么权限都不给也能用 | 最小配置（不给 ADB、不给文件权限、不开局域网）下 DSHA 照常跑 dsh；每项能力默认关闭、随时撤销 |
-| API key | Android Keystore + AES/GCM，密钥不出 Keystore；失败不清空旧密文 |
+| 模型与API Key | 只在Web UI设置；原生页面不编辑，既有凭据不因入口退休自动清除 |
 | 设备命令 | 白名单始终开启，Root / Shizuku / ADB 三通道同一套策略，应用停止前逐个核验归属，防 PID 复用误伤 |
 | 桥凭据护栏 | `/app/export`、`/app/readfile` 拒绝凭据区路径，规范化 + canonical path 双重判定，堵住「软链接指凭据」的绕法 |
 | 无遥测 | 不上传任何日志或使用数据；更新、插件下载、模型调用之外不发起网络请求 |
@@ -242,10 +239,10 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 
 | | **容器派**（DSHA 走这条） | **Termux bootstrap 派** |
 |---|---|---|
-| 做法 | bxroot/proot + 完整 glibc rootfs | 用 Termux 的包在 Android bionic 上裸跑 |
+| 做法 | proot/proroot + 完整 glibc rootfs | 用 Termux 的包在 Android bionic 上裸跑 |
 | 装机 | 装 APK 就完事 | 装 Termux → 敲命令 → 装工具链 |
 | 环境 | 完整 Ubuntu，`apt` 与原生模块随便用 | 需要为 bionic 逐个打补丁 / 重编 |
-| 开销 | bxroot 的 Android 性能尚未重新验收 | 无容器层，理论最快 |
+| 开销 | proroot 已无 ptrace 开销 | 无容器层，理论最快 |
 | 沙箱 | 两边都受限 | 两边都受限 |
 
 ---
@@ -279,15 +276,15 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 │  ├ LAN 代理 :3081 · ADB / Shizuku / Root 设备通道    │
 │  └ 悬浮条（TYPE_APPLICATION_OVERLAY）                │
 ├─────────────────────────────────────────────────────┤
-│ bxroot（优先）/ proot（兼容，依机型核验）           │
+│ proot（默认）/ proroot（可选，依机型兼容）           │
 ├─────────────────────────────────────────────────────┤
 │ Ubuntu 24.04 arm64 · Node.js 24 · pnpm 10           │
-│  └ @deepseek-ai/dsh  →  Web UI :auto                │
+│  └ @deepseek-ai/dsh  →  Web UI :<动态端口>                │
 └─────────────────────────────────────────────────────┘
 ```
 
 数据：实际位置以“数据与备份 → 存储指南”为准；旧 `Documents/dshdata` 数据继续兼容读取。
-API key 由 Android Keystore 保护，本机密钥与自动副本不保证卸载后存续。
+模型凭据由Web UI管理；本机数据、密钥与自动副本不保证卸载后存续。
 
 ---
 
@@ -322,22 +319,27 @@ cp -r agent-skills/screen-ocr-operator ~/.agents/skills/
 
 ---
 
-## 构建
+## 从源码编译
 
-本地构建需要 JDK 17、Android SDK（API 37）、NDK 26 与 Python 3.9+，详见 [BUILD.md](BUILD.md)：
+从新私有仓库的最终tag/完整commit或对应源码附件构建；不要把旧173检出当成本轮源码。需要JDK17、Node24、Python3.9+、Android SDK37和NDK26。先按[CONTRIBUTING.md](CONTRIBUTING.md)准备锁定资产，再参考[BUILD.md](BUILD.md)的工具链与签名配置。
 
 ```bash
-bash build.sh                                # 默认构建 Standard Debug
-bash build.sh :app:assembleLowRelease        # 构建 Low Release
-bash build.sh :app:testStandardDebugUnitTest # 纯逻辑单测
-python tools/verify-stability.py             # 稳定性验收门禁
+python3 tools/run-host-tests.py --check-manifest
+python3 tools/run-host-tests.py --stage fast
+./gradlew :app:testStandardDebugUnitTest :app:testLowDebugUnitTest \
+  :app:lintStandardRelease :app:lintLowRelease
+./gradlew :app:assembleStandardRelease
 ```
 
-离线 rootfs 不提交 Git；发布流程（签名、门禁、真机验收、产物替换）见 [BUILD.md](BUILD.md) 与 [docs/releases/](docs/releases/)。
+Windows使用`gradlew.bat`。测试任务名中的Debug只表示测试变体，不要求生成或安装调试APK。正式包需既有E7E3签名凭据，并核对实际APK身份、资产、许可与摘要。Git检出不含大生成归档；完整打包使用Release源码ZIP内逐SHA核对的原始构建输入和现有recipe，无需另找独立bundle，也不能从APK逆还原全部输入。必要小型预编译依赖保留，但不承诺所有vendor native可从源码复现。私钥、用户数据、设备图或日志不进入交付。
+
+当前范围见[F12构建与证据记录](docs/releases/v0.2.1-rc.2-build190-fix12-20261021.md)，各阶段命令见[BUILD](BUILD.md)。本轮源码分发清单为2206个成员、198篇Markdown；完整源码ZIP的固定输入直接展开到项目路径，不嵌套输入包。最终源码、测试结果、APK与ZIP摘要由统一交付回执绑定。F9/F10的选择集和原始失败继续保留在各自历史记录，不作为F12测试数。
 
 ---
 
 ## 文档索引
+
+完整导航见[文档总索引](docs/documentation-index.md)与[31主题缺口核对矩阵](docs/documentation-gap-matrix.md)。新增备份恢复、安装维护、更新、桥/文件、应急、诊断、插件权限、终端、PiP、语言及通知等专题；当前指南、历史说明和未分发本机证据分开标明。
 
 | 文档 | 内容 |
 |---|---|
@@ -352,16 +354,14 @@ python tools/verify-stability.py             # 稳定性验收门禁
 ## 致谢
 
 - [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) —— 本体
-- [bxroot](https://github.com/qiannianhuanxiang/bxroot) / [proot](https://github.com/termux/proot) —— 免 ROOT 容器（见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)）
+- [proot](https://github.com/termux/proot) / [proroot](https://github.com/coderredlab/proroot) —— 免 ROOT 容器（见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)）
 - [Termux terminal-view / terminal-emulator](https://github.com/termux/termux-app)（Apache-2.0）—— PTY 终端
 - [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) —— 内置移动端适配
 - [Shizuku](https://shizuku.rikka.app/) —— 备用设备命令通道
 
 ## 交流
 
-QQ 群 **975836806** (二群)—— 测试版、问题反馈、插件交流。
-❗二群已满，请加一群❗
-★QQ 群**960636357** (老一群)现已扩容！
+QQ 群 **975836806** —— 测试版、问题反馈、插件交流。
 
 | 事宜 | 联系 |
 |---|---|
@@ -375,6 +375,8 @@ QQ 群 **975836806** (二群)—— 测试版、问题反馈、插件交流。
 
 ## Star History
 
+本轮原仓库Star快照为1827（2026-10-21）；这是原仓库历史统计，不是当前私有仓库的Star数。
+
 <a href="https://github.com/DSH-APP/DSHA/stargazers">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/star-history-dark.svg" />
@@ -383,4 +385,4 @@ QQ 群 **975836806** (二群)—— 测试版、问题反馈、插件交流。
   </picture>
 </a>
 
-<sub>由 [`tools/gen-star-history.py`](tools/gen-star-history.py) 每 12 小时读取 GitHub 星标时间并更新（[workflow](.github/workflows/star-history.yml)）。浅色、深色 SVG 保存在本仓库；曲线按当前仍保留的星标汇总。</sub>
+<sub>本源码包含 2026-10-21 核对的上游公开仓库静态快照及[聚合数据](docs/star-history.json)，只保存日期与数量。通过 [`tools/gen-star-history.py`](tools/gen-star-history.py) 设置 `STAR_REPO=DSH-APP/DSHA` 可手动重新生成；仓库现有工作流负责后续更新，实际执行状态以 Actions 为准。</sub>

@@ -14,6 +14,27 @@ public class DshaApp extends Application
         com.deepseekharness.app.data.PortableSettings.Owner,
         com.deepseekharness.app.backup.MaintenanceUiPorts {
 
+  private final com.deepseekharness.app.capabilities.CapabilityBroker screenCapabilityBroker =
+      new com.deepseekharness.app.capabilities.CapabilityBroker(
+          android.os.SystemClock::elapsedRealtime);
+  private volatile String screenInstallationId;
+
+  public com.deepseekharness.app.capabilities.CapabilityBroker capabilityBroker() {
+    return screenCapabilityBroker;
+  }
+
+  /** Local installation authority is never taken from an imported data archive. */
+  public synchronized String installationId() {
+    if (screenInstallationId == null) {
+      try {
+        screenInstallationId = com.deepseekharness.app.core.InstallationIdentity.loadOrCreate(this);
+      } catch (java.io.IOException unavailable) {
+        throw new IllegalStateException("INSTALLATION_IDENTITY_UNAVAILABLE", unavailable);
+      }
+    }
+    return screenInstallationId;
+  }
+
   private final com.deepseekharness.app.runtime.RuntimeHostPorts runtimeHostPorts =
       new com.deepseekharness.app.runtime.RuntimeHostPorts();
 

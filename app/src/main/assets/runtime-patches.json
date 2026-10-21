@@ -1,10 +1,42 @@
 {
   "schema": 1,
-  "dshVersion": "0.2.0-rc.2",
+  "dshVersion": "0.2.1-rc.2",
   "active": [
+    {
+      "asset": "permission-full-access-patch.json"
+    },
+    {
+      "asset": "retire-guarded-preset-patch.json"
+    },
+    {
+      "asset": "startup-mcp-timing-patch.json",
+      "module": "@deepseek-ai/dsh-mcp-client/lib/index.js",
+      "markers": [
+        "DSHA_STARTUP_MCP_TIMING_V1"
+      ]
+    },
+    {
+      "asset": "welcome-notice-patch.json",
+      "markers": [
+        "DSHA_WELCOME_NOTICE_RC2_V1",
+        "DSHA_WELCOME_STORE_RC2_V1"
+      ]
+    },
     {
       "asset": "composer-enter-patch.json",
       "module": "@deepseek-ai/dsh-client-ui-conversation/lib/client.js"
+    },
+    {
+      "asset": "conversation-stream-cancel-patch.json",
+      "markers": [
+        "DSHA_STREAM_CANCEL_SIGNAL_RC2_V1"
+      ]
+    },
+    {
+      "asset": "deepseek-stream-cancel-patch.json",
+      "markers": [
+        "DSHA_DEEPSEEK_BODY_CANCEL_RC2_V1"
+      ]
     },
     {
       "asset": "session-interaction-patch.json",
@@ -103,6 +135,48 @@
       "markers": [
         "DSHA_REQUIRED_POLICY_V1"
       ]
+    },
+    {
+      "asset": "retired-market-optional-patch.json",
+      "module": "@deepseek-ai/dsh-app-boot/lib/index.js",
+      "markers": [
+        "DSHA_RETIRED_MARKET_OPTIONAL_V1"
+      ]
+    },
+    {
+      "asset": "retired-market-catalog-patch.json",
+      "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
+      "markers": [
+        "DSHA_RETIRED_MARKET_CATALOG_V1"
+      ]
+    },
+    {
+      "asset": "auto-review-native-disabled-patch.json",
+      "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
+      "markers": [
+        "DSHA_AUTO_REVIEW_NATIVE_DISABLED_V1"
+      ]
+    },
+    {
+      "asset": "deepseek-native-oauth-patch.json",
+      "module": "@deepseek-ai/dsh-client-ui-settings-account/lib/client.js",
+      "markers": [
+        "DSHA_NATIVE_OAUTH_NAVIGATION_V1"
+      ]
+    },
+    {
+      "asset": "directory-picker-service-patch.json",
+      "module": "@deepseek-ai/dsh-api-workspace-controller/lib/index.js",
+      "markers": [
+        "DSHA_DIRECTORY_PICKER_INDEPENDENT_LIFETIME_V1"
+      ]
+    },
+    {
+      "asset": "file-upload-resolver-lifecycle-patch.json",
+      "module": "@deepseek-ai/dsh-client-file-upload/lib/index.js",
+      "markers": [
+        "DSHA_FILE_UPLOAD_RESOLVER_LIFETIME_V1"
+      ]
     }
   ],
   "specialized": [
@@ -124,6 +198,10 @@
     {
       "asset": "web-integration/tooltip-patch.json",
       "reason": "Old 0.1.5 component replacement preserved as history. Current rc2 interaction/entry recipes retain the upstream Tooltip and add dismissal only."
+    },
+    {
+      "asset": "lexical-claim-patch.json",
+      "reason": "Reviewed 0.2.1 atomic CommandChipNode replaces the old splitText/TOKEN_STYLE transform; exact raw retirement proof remains required, with materialized-node patch preserved."
     }
   ]
 }

@@ -151,15 +151,17 @@ public final class NativeRestoreTargets
   public File resolve(String root) throws IOException {
     BackupLimits.root(root);
     File value = known.get(root);
-    if (value != null) return value;
-    if (root.matches("package-[a-f0-9]{20}"))
-      return new File(files, "plugin-imports/" + task.getName() + "/packages/" + root);
-    if (root.matches("project-[a-f0-9]{20}")) return project(root);
-    if (root.matches("data-[a-f0-9]{20}") || root.equals("profiles"))
-      return new File(files, "plugin-imports/" + task.getName() + "/" + root);
-    if (root.equals("legacy-plugins"))
-      return new File(files, "plugin-imports/" + task.getName() + "/legacy-plugins");
-    throw new IOException("UNKNOWN_LOCAL_TARGET");
+    if (value == null) {
+      if (root.matches("package-[a-f0-9]{20}"))
+        value = new File(files, "plugin-imports/" + task.getName() + "/packages/" + root);
+      else if (root.matches("project-[a-f0-9]{20}")) value = project(root);
+      else if (root.matches("data-[a-f0-9]{20}") || root.equals("profiles"))
+        value = new File(files, "plugin-imports/" + task.getName() + "/" + root);
+      else if (root.equals("legacy-plugins"))
+        value = new File(files, "plugin-imports/" + task.getName() + "/legacy-plugins");
+      else throw new IOException("UNKNOWN_LOCAL_TARGET");
+    }
+    return PrivateMaintenancePaths.target(fs, files, value);
   }
 
   public long prepareSystemPluginState(

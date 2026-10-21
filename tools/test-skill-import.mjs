@@ -146,7 +146,7 @@ const require = createRequire(pathToFileURL(path.join(runtime, 'package.json')))
 const load = name => import(pathToFileURL(require.resolve(name)));
 for (const name of ['@deepseek-ai/dsh-skill', '@deepseek-ai/dsh-skill-filesystem', '@deepseek-ai/dsh-tool-skill'])
   assert.equal(JSON.parse(await fs.readFile(require.resolve(name + '/package.json'), 'utf8')).version,
-    '0.2.0-rc.2');
+    '0.2.1-rc.2');
 const base = await fs.readFile(path.join(runtime,
   'node_modules/@deepseek-ai/dsh-base/cordis.patch.yml'), 'utf8');
 assert(base.includes("name: '@deepseek-ai/dsh-skill-filesystem'"));
@@ -196,7 +196,7 @@ try {
 } finally {
   await ctx.fiber.dispose();
 }
-console.log(JSON.stringify({ status: 'PASS', dshVersion: '0.2.0-rc.2', checks,
+console.log(JSON.stringify({ status: 'PASS', dshVersion: '0.2.1-rc.2', checks,
   ...(importerProof === undefined ? {} : { importer: importerProof }) }, null, 2));
 } finally {
   await removeOwnedFixture();

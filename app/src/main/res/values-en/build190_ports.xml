@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="build190_auto_port">Assign the Web port automatically (recommended)</string>
+</resources>

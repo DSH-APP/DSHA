@@ -16,6 +16,7 @@ public final class BridgeRoutes {
     TASK_EVENT(false),
     TASK_CLAIM(false),
     TASK_ACK(false),
+    CONSENT_POLICY(false),
     TOAST(false),
     READ_FILE(false),
     HEALTH(false),
@@ -68,6 +69,8 @@ public final class BridgeRoutes {
     add(routes, "/app/tasks/event", Route.TASK_EVENT);
     add(routes, "/app/tasks/claim", Route.TASK_CLAIM);
     add(routes, "/app/tasks/ack", Route.TASK_ACK);
+    add(routes, "/app/native-policy", Route.CONSENT_POLICY);
+    add(routes, "/device/consent", Route.CONSENT_POLICY);
     add(routes, "/app/toast", Route.TOAST);
     add(routes, "/app/readfile", Route.READ_FILE);
     add(routes, "/health", Route.HEALTH);

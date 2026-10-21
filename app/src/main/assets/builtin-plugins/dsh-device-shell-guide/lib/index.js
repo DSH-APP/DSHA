@@ -1,53 +1,24 @@
-/**
- * DSHA 设备能力引导：使用 dsh 0.1.5 的消息工厂与已提交事件判重。
- *
- * 本文件同时是「DSHA 容器级常驻约定」的唯一注入点（systemPrompt 分区），因此临时文件目录的约定
- * 也写在这里：AGENTS.md 走 workspace 指令链（按目录、受 64 KiB 预算淘汰），不适合承载每个会话
- * 都必须读到的容器约定。目录字面量以 App 侧 util/ScratchPaths.java 为准，本文件只做兜底。
- */
-import fs from 'node:fs';
+/** DSHA 设备能力引导：使用 dsh 0.1.5 的消息工厂与已提交事件判重。 */
 import { createUserMessage } from '@deepseek-ai/dsh-llm';
 export const name = 'dsh-device-shell-guide';
 
-/** 与 app/src/main/java/com/deepseekharness/app/util/ScratchPaths.java 的 GUEST_DIRECTORY 一致。 */
-const CACHE_DIRECTORY = '/root/.cache/dsha';
-
-/** 只准备固定路径，各父级必须为真实目录，创建失败不能冒称成功。 */
-export function prepareCacheDirectory(api = fs) {
-  try {
-    let at = '';
-    for (const part of ['root', '.cache', 'dsha']) {
-      at += '/' + part;
-      let node;
-      try { node = api.lstatSync(at); }
-      catch (error) {
-        if (error?.code !== 'ENOENT') throw error;
-        api.mkdirSync(at, { mode: 0o700 });
-        node = api.lstatSync(at);
-      }
-      if (!node.isDirectory() || node.isSymbolicLink()) throw Object.assign(new Error('cache parent type'), { code: 'CACHE_PARENT_TYPE' });
-    }
-    return { ready: true, code: '' };
-  } catch (error) {
-    return { ready: false, code: /^[A-Z0-9_]+$/.test(error?.code ?? '') ? error.code : 'CACHE_UNAVAILABLE' };
-  }
-}
-
-const buildPrompt = cache => [
+const PROMPT = [
   '【设备操作能力 · DSHA】你正运行在用户 Android 手机的容器里，可以干预这台实体手机。',
-
-  '■ 临时文件与缓存目录（唯一约定，别到处乱放）：',
-  `  - 目录：${CACHE_DIRECTORY}（${cache.ready ? '已创建并核验' : '当前不可用：' + cache.code}；原生启动的 $DSHA_CACHE_DIR 使用此固定路径）。`,
-  '  - 放这里：Agent 自建探针脚本、中间产物、下载/解压副本、可再生诊断日志。',
-  '  - 不移动 DSH 已有系统临时文件、会话草稿或其它持久数据；不可用时说明原因，不声称创建成功。',
-  '  - 这个目录按约定可再生：App 的「清理存储空间」会清空它，且不另行确认；',
-  '    需要保留的成果写到用户工作区或 /root/Documents 下。',
 
   '■ 三条通道，按这个顺序选：',
   '  1) Ubuntu 工作区内的开发与文件操作使用普通工具；Android 设备文件写入必须走受保护的设备 shell。',
   '  2) App 层接口 /app/*（走 127.0.0.1:3090，零配置，不需要 ADB，也不需要 Shizuku）',
   '  3) 设备 shell（adb-shell 命令自动选择已授权的 root、Shizuku 或 ADB）—— 查询设备日志、普通设备文件操作和结束用户应用。',
   '  例：查设备状态用 /app/device 而不是 dumpsys battery；启动应用用 /app/launch 而不是 am start。',
+
+  '■ 屏幕目标先按用户要求区分：',
+  '  - 实体主屏（display 0）使用 mcp__dsha-android__* 或 /app/ui/*；这些接口不会转到虚拟屏。',
+  '  - 用户要求操作独立虚拟屏时，使用 mcp__dsha-vscreen__*。先 android_vscreen_status；已有或待清理的 Core 不得重新 create。' +
+  '    保留状态返回的 coreInstance，再显式 see 或 tree 观察该屏，不从实体主屏截图推断虚拟屏内容。',
+  '  - 虚拟屏读图用 see；可读控件用 tree 返回的 nodeId 做 node(click/focus/set_text)，' +
+  '    已聚焦输入框可用 editor(get/edit/submit)。中文和动态页面输入优先选择已观察的 editable 节点或 editor；节点操作不靠旧像素坐标。',
+  '  - 观察、节点或输入框身份必须来自同一 coreInstance/generation；坐标动作仍须最新观察帧，锚定操作遵守工具返回的原观察与一次性规则。' +
+  '    结果 UNKNOWN 或执行后目标变化时不得自动重放，也不得切换到另一块屏幕兜底；工具或权限不可用时说明实际原因。',
 
   '■ 完整端点清单（读屏 / 点按 / 输入 / 截屏 / 通知 / 剪贴板 / 传感器 / 导出文件 …）：',
   '  # Credentials are sent by header file; do not place them in URLs or argv.',
@@ -77,8 +48,8 @@ const buildPrompt = cache => [
   '    不可用普通 shell、Python/Node、裸 ADB 或 UI 操作绕过设备策略；',
   '  - 接口回 DISABLED / NO_PERMISSION、或 ADB 连不上时，照原话告诉用户去哪里开，' +
   '    不要反复重试同一条 —— 重试不会让开关自己变；',
-  '  - 屏幕操作的节奏：每次点按或输入之后先 /app/ui/dump 再决定下一步，别凭记忆连点，' +
-  '    界面可能已经变了；',
+  '  - 屏幕操作的节奏：实体主屏每次点按或输入之后先 /app/ui/dump；虚拟屏操作后重新 see 或 tree，再决定下一步。' +
+  '    别凭记忆连点，界面可能已经变了；',
   '  - 设备 shell 优先使用用户已在「设置 → 设备能力授权」开启且经 root 管理器授权的 su，可直接执行，无需 ADB 配对；' +
   '    否则使用已授权的 Shizuku，再尝试已启用的 ADB。用 id 核验实际身份，不假设一定是 uid=2000 或 root。' +
   '    --su 只在明确需要 root 时使用，仍须原生授权，不能绕过任何设备保护；',
@@ -88,16 +59,11 @@ const buildPrompt = cache => [
 ].join('\n')
 
 export function apply(ctx) {
-  const cache = prepareCacheDirectory();
-  if (!cache.ready) ctx.logger?.warn?.('DSHA cache directory unavailable: ' + cache.code);
-  const PROMPT = buildPrompt(cache);
   let systemActive = false;
   const guided = new WeakSet();
   const inspected = new WeakSet();
   const isGuide = event => event?.type === 'user/message'
     && event.data?.source?.kind === 'plugin' && event.data.source.plugin === name;
-  // 约定目录在每次启动时由插件创建：AI 与脚本都不必先探测目录是否存在。
-  // 创建失败不能挡住插件加载，提示词里的约定路径仍然有效（脚本用 mkdir -p 兜底）。
   // 作用域注入不会阻塞极简配置的启动；标准配置只走系统提示，避免双份引导。
   ctx.inject(['systemPrompt'], promptCtx => {
     promptCtx.systemPrompt.section({ name: 'dsh:device-shell-guide', order: 150, text: PROMPT });

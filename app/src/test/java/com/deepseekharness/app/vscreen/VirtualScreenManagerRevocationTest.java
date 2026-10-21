@@ -10,6 +10,11 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /** Real manager admission/cleanup with its worker held; no device channel or remote command runs. */
+@org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner.class)
+@org.robolectric.annotation.Config(
+    sdk = 34,
+    manifest = org.robolectric.annotation.Config.NONE,
+    application = android.app.Application.class)
 public final class VirtualScreenManagerRevocationTest {
   private static final String OLD = "0123456789abcdef0123456789abcdef0123456789abcdef";
   private static final String NEW = "fedcba9876543210fedcba9876543210fedcba9876543210";

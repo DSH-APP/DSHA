@@ -181,7 +181,7 @@ try {
   await page.setViewportSize({width:360,height:800});
   await page.waitForFunction(() => HTMLInputElement.prototype.focus !== originalFocus);
   await page.evaluate(() => disposers.pop()());
-  const gestures = await page.evaluate(() => {
+  const gestures = await page.evaluate(async () => {
     root.unmount();
     const frame=document.createElement('div'); frame.dataset.mobileNav='frame'; frame.setAttribute('data-sidebar-collapsed','');
     frame.style.cssText='position:fixed;inset:0';
@@ -191,29 +191,39 @@ try {
     const ctx={effect:context.effect,layout:{toggleSidebar(){frame.toggleAttribute('data-sidebar-collapsed');}}};
     const swipe=mobileRequire('./effects/sidebar-swipe.js');
     swipe.installSidebarSwipe(ctx,()=>{});
-    const pointer=(type,x=20)=>target.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerType:'touch',pointerId:1,clientX:x,clientY:100}));
+    const pointer=(type,x=20,y=100)=>target.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerType:'touch',pointerId:1,clientX:x,clientY:y}));
     const touch=(cancelable=true,count=1)=>{
       const event=new Event('touchmove',{bubbles:true,cancelable});
       Object.defineProperty(event,'touches',{value:Array(count).fill({})}); target.dispatchEvent(event); return event.defaultPrevented;
     };
+    // 3.2.0 fixes iOS dead scroll zones: touchmove belongs to the browser until
+    // the pointer has locked horizontally. Test both sides of that boundary.
+    pointer('pointerdown'); const beforeLock=touch();
+    pointer('pointermove',22,150); const verticalPrevented=touch(); pointer('pointercancel');
     const rows=[];
     for(const cause of ['blur','hidden','uncancelable','multitouch','pointercancel']) {
-      pointer('pointerdown'); const owned=touch();
+      pointer('pointerdown'); pointer('pointermove',100); const owned=touch();
       if(cause==='blur')window.dispatchEvent(new Event('blur'));
       if(cause==='hidden'){Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));delete document.hidden;}
       if(cause==='uncancelable')touch(false);
       if(cause==='multitouch')touch(true,2);
       if(cause==='pointercancel')pointer('pointercancel');
-      rows.push({cause,owned,released:!touch()});
+      const released=!touch();
+      // Each cancel may close with a 280ms animation and a 350ms input
+      // cooldown. Settle that real transition before starting another stroke.
+      await new Promise(resolve=>window.setTimeout(resolve,400));
+      rows.push({cause,owned,released,closed:frame.hasAttribute('data-sidebar-collapsed'),inlineTransform:drawer.style.transform});
     }
-    pointer('pointerdown');pointer('pointermove',100);
+    pointer('pointerdown');pointer('pointermove',100);const owned=touch();
     disposers.pop()();
-    const disposed={released:!touch(),closed:frame.hasAttribute('data-sidebar-collapsed'),inlineTransform:drawer.style.transform};
+    const disposed={owned,released:!touch(),closed:frame.hasAttribute('data-sidebar-collapsed'),inlineTransform:drawer.style.transform};
     frame.remove();
-    return {rows,disposed};
+    return {beforeLock,verticalPrevented,rows,disposed};
   });
-  for(const row of gestures.rows)assert.deepEqual(row,{cause:row.cause,owned:true,released:true});
-  assert.deepEqual(gestures.disposed,{released:true,closed:true,inlineTransform:''});
+  assert.equal(gestures.beforeLock,false,'pre-lock touchmove must preserve native scrolling');
+  assert.equal(gestures.verticalPrevented,false,'vertical strokes must preserve native scrolling');
+  for(const row of gestures.rows)assert.deepEqual(row,{cause:row.cause,owned:true,released:true,closed:true,inlineTransform:''});
+  assert.deepEqual(gestures.disposed,{owned:true,released:true,closed:true,inlineTransform:''});
   const frozen = await page.evaluate(() => {
     guard.installShortcutModalKeyboardGuard(context);
     Object.defineProperty(HTMLInputElement.prototype,'focus',{configurable:false});

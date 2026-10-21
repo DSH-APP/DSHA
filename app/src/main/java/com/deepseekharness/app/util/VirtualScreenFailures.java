@@ -47,7 +47,7 @@ public final class VirtualScreenFailures {
    * 只看最外层会把它误报成「状态不对」。根因认不出来时，再沿链取第一个能识别的类别。
    */
   public static String code(Throwable error) {
-    List<Throwable> chain = chain(error);
+    List<Throwable> chain = semanticChain(error);
     if (chain.isEmpty()) return OPERATION_FAILED;
     String root = classify(chain.get(chain.size() - 1));
     if (root != null) return root;
@@ -64,7 +64,7 @@ public final class VirtualScreenFailures {
    */
   public static String cause(Throwable error) {
     Throwable root = null;
-    for (Throwable current : chain(error)) root = current;
+    for (Throwable current : semanticChain(error)) root = current;
     if (root == null) return "";
     String message = root.getMessage();
     String text =
@@ -102,5 +102,19 @@ public final class VirtualScreenFailures {
         current != null && chain.size() < 16 && seen.add(current);
         current = current.getCause()) chain.add(current);
     return chain;
+  }
+
+  /** Parcel 附加的远端栈只是诊断附件，不是覆盖外层 Security/参数异常的根因。 */
+  private static List<Throwable> semanticChain(Throwable error) {
+    List<Throwable> result = chain(error);
+    while (result.size() > 1) {
+      Throwable last = result.get(result.size() - 1);
+      String message = last.getMessage();
+      if (!"android.os.RemoteException".equals(last.getClass().getName())
+          || message == null
+          || !message.startsWith("Remote stack trace:")) break;
+      result.remove(result.size() - 1);
+    }
+    return result;
   }
 }

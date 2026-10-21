@@ -208,21 +208,8 @@ public final class NativeBackupJobs {
 
   public synchronized boolean reexport(
       String sourceId, char[] suppliedOriginalPassword, Uri destination, String name) {
-    return reexportInternal(sourceId, suppliedOriginalPassword, destination, name, false);
-  }
-
-  public synchronized boolean reexportToDirectory(
-      String sourceId, char[] originalPassword, Uri directory, String name) {
-    return reexportInternal(sourceId, originalPassword, directory, name, true);
-  }
-
-  private synchronized boolean reexportInternal(
-      String sourceId,
-      char[] suppliedOriginalPassword,
-      Uri destination,
-      String name,
-      boolean directory) {
-    if (state.busy || workers.isClosed()) return false;
+    if (state.busy || workers.isClosed() || AutomaticBackups.factoryResetPending(context))
+      return false;
     final char[] originalPassword =
         suppliedOriginalPassword == null ? null : suppliedOriginalPassword.clone();
     final VerifiedBackupCopy source;
@@ -265,11 +252,8 @@ public final class NativeBackupJobs {
                     automaticPassword == null ? originalPassword : automaticPassword,
                     cancellation);
             DocumentCopy exported =
-                directory
-                    ? copyToDirectory(
-                        plaintext.artifact, plaintext.sha256, destination, name, cancellation)
-                    : copyToDocument(
-                        plaintext.artifact, plaintext.sha256, destination, name, cancellation);
+                copyToDocument(
+                    plaintext.artifact, plaintext.sha256, destination, name, cancellation);
             String result = source.result(exported.readback);
             if (result.equals("COMPLETE")) {
               File catalogue =
@@ -289,17 +273,16 @@ public final class NativeBackupJobs {
                           "sourceSha256",
                           source.sha256,
                           "uri",
-                          (directory ? exported.uri : destination).toString(),
+                          destination.toString(),
                           "name",
                           name),
                       16384));
               new ConfigStore(context)
-                  .recordVerifiedNativeBackup(
-                      (directory ? exported.uri : destination).toString(), name, source.scope);
+                  .recordVerifiedNativeBackup(destination.toString(), name, source.scope);
             }
             update("FINISHED", result, "", "", source.entries, source.bytes, false);
           } catch (Exception error) {
-            failed(error, source.entries, source.bytes);
+            failed(error);
           } finally {
             if (originalPassword != null) Arrays.fill(originalPassword, '\0');
             if (automaticPassword != null) Arrays.fill(automaticPassword, '\0');
@@ -336,6 +319,53 @@ public final class NativeBackupJobs {
     synchronized (approval) {
       approval.notifyAll();
     }
+  }
+
+  /** 界面的迟到取消只影响点击时的作业，不撤销后来启动的另一作业。 */
+  synchronized void cancelIfCurrent(String id) {
+    if (id != null && !id.isEmpty() && state.busy && state.id.equals(id)) cancel();
+  }
+
+  /**
+   * 格式化专用：先封住所有手动/自动入口，再取消现有任务，并等待 worker 的
+   * 整个 finally 完成。state.busy 会在 finally 之前变为 false，不能单独作为空闲证据。
+   */
+  public void beginFactoryResetQuiescence(BackupControl waiting, long timeoutMillis)
+      throws IOException {
+    workers.closeGate();
+    try {
+      // cancel() 同时充当 NativeBackupJobs monitor 的屏障：已经进入的启动方法
+      // 必须先完成线程登记或失败收尾，之后本调用才会继续。
+      cancel();
+      workers.awaitIdle(waiting, timeoutMillis);
+      synchronized (this) {
+        if (state.busy) throw new IOException("NATIVE_BACKUP_STATE_STILL_BUSY");
+      }
+    } catch (IOException | RuntimeException failure) {
+      workers.reopen();
+      throw failure;
+    }
+  }
+
+  /** 格式化失败且尚需继续使用当前数据时重新开放入口。 */
+  public void abortFactoryResetQuiescence() {
+    workers.reopen();
+  }
+
+  /** 磁盘作业记录已被格式化删除；同步清掉单例中的旧引用后再开放入口。 */
+  public void completeFactoryResetQuiescence() {
+    synchronized (this) {
+      if (workers.active() != 0)
+        throw new IllegalStateException("NATIVE_BACKUP_WORKER_STILL_ACTIVE");
+      control = null;
+      task = null;
+      decision = null;
+      lastProgress = 0;
+      state = new State("", "IDLE", "", "", "", 0, 0, false);
+      State reset = state;
+      main.post(() -> changes.setValue(reset));
+    }
+    workers.reopen();
   }
 
   public boolean decide(String id, boolean accept) {
@@ -426,7 +456,7 @@ public final class NativeBackupJobs {
     WorkerQuiescence.Lease lease = workers.tryBegin();
     if (lease == null) {
       if (password != null) Arrays.fill(password, '\0');
-      beginFailed(new IOException("NATIVE_BACKUP_WORKER_CLOSED"));
+      beginFailed(new IOException("FACTORY_RESET_QUIESCING"));
       return false;
     }
     try {
@@ -448,10 +478,6 @@ public final class NativeBackupJobs {
   }
 
   private synchronized void failed(Exception error) {
-    failed(error, 0, 0);
-  }
-
-  private synchronized void failed(Exception error, long entries, long bytes) {
     boolean cancelled =
         error instanceof InterruptedIOException
             || "CANCELLED".equals(code(error))
@@ -461,14 +487,7 @@ public final class NativeBackupJobs {
             ? "CANCELLED"
             : "FAILED_RETAINED";
     try {
-      update(
-          stage,
-          error instanceof NewDocumentExport.Retained ? "OUTPUT_POSSIBLE_PARTIAL" : "",
-          code(error),
-          "",
-          entries,
-          bytes,
-          false);
+      update(stage, "", code(error), "", 0, 0, false);
     } catch (IOException failure) {
       state =
           new State(
@@ -490,12 +509,7 @@ public final class NativeBackupJobs {
       Uri destination,
       String expectedName,
       boolean rescue) {
-    return exportInternal(selection, null, destination, expectedName, rescue, false, false, false);
-  }
-
-  public synchronized boolean exportToDirectory(
-      NativeDataLocations.Selection selection, Uri directory, String expectedName, boolean rescue) {
-    return exportInternal(selection, null, directory, expectedName, rescue, false, false, true);
+    return exportInternal(selection, null, destination, expectedName, rescue, false, false);
   }
 
   /** Legacy native entry points use the same host v5 writer and a new verified Downloads file. */
@@ -508,8 +522,21 @@ public final class NativeBackupJobs {
         com.deepseekharness.app.util.BackupFileNames.portableName(),
         rescue,
         false,
-        true,
-        false);
+        true);
+  }
+
+  /** API23-28 的一键目标：仅在本次受保护作业内创建新文件。 */
+  public synchronized boolean exportToDirectory(NativeDataLocations.Selection selection, Uri tree) {
+    if (tree == null) return false;
+    return exportInternal(
+        selection,
+        null,
+        null,
+        com.deepseekharness.app.util.BackupFileNames.portableName(),
+        false,
+        false,
+        false,
+        tree);
   }
 
   public synchronized boolean exportAutomatic(char[] password) {
@@ -519,7 +546,19 @@ public final class NativeBackupJobs {
       return false;
     }
     return exportInternal(
-        new NativeDataLocations.Selection(), password, null, "", false, true, false, false);
+        new NativeDataLocations.Selection(), password, null, "", false, true, false);
+  }
+
+  private synchronized boolean exportInternal(
+      NativeDataLocations.Selection selection,
+      char[] suppliedPassword,
+      Uri destination,
+      String expectedName,
+      boolean rescue,
+      boolean automatic,
+      boolean downloads) {
+    return exportInternal(
+        selection, suppliedPassword, destination, expectedName, rescue, automatic, downloads, null);
   }
 
   private synchronized boolean exportInternal(
@@ -530,8 +569,11 @@ public final class NativeBackupJobs {
       boolean rescue,
       boolean automatic,
       boolean downloads,
-      boolean directory) {
-    if (selection == null || state.busy || workers.isClosed()) return false;
+      Uri directory) {
+    if (selection == null
+        || state.busy
+        || workers.isClosed()
+        || AutomaticBackups.factoryResetPending(context)) return false;
     if (!rescue && MaintenanceCoordinator.pending(context.getFilesDir())) return false;
     // 密码仅供内部自动副本；所有用户导出由无密码 public API 创建。
     if (suppliedPassword != null
@@ -576,9 +618,7 @@ public final class NativeBackupJobs {
         () -> {
           File plain = new File(owned, "snapshot.dshdata"),
               encrypted = new File(owned, "portable.dshbak");
-          OwnedBackupArtifact[] snapshotArtifact = {null};
-          long[] capturedCounts = {0, 0};
-          OwnedBackupArtifact encryptedArtifact = null;
+          BackupDirectoryTarget selectedTarget = null;
           try {
             if (activeProtection != null) activeProtection.await();
             NativeDataLocations locations = new NativeDataLocations(context);
@@ -611,15 +651,7 @@ public final class NativeBackupJobs {
             if (rescue)
               summary =
                   HostSnapshot.create(
-                      fs,
-                      located.sources,
-                      owned,
-                      plain,
-                      provenance,
-                      true,
-                      cancellation,
-                      check,
-                      value -> snapshotArtifact[0] = value);
+                      fs, located.sources, owned, plain, provenance, true, cancellation, check);
             else if (automatic)
               summary =
                   MaintenanceCoordinator.snapshot(
@@ -640,8 +672,7 @@ public final class NativeBackupJobs {
                               provenance,
                               false,
                               cancellation,
-                              check,
-                              value -> snapshotArtifact[0] = value);
+                              check);
                         }
                       });
             else
@@ -657,10 +688,7 @@ public final class NativeBackupJobs {
                               provenance,
                               false,
                               cancellation,
-                              check,
-                              value -> snapshotArtifact[0] = value));
-            capturedCounts[0] = BackupJson.number(summary, "entries");
-            capturedCounts[1] = BackupJson.number(summary, "bytes");
+                              check));
             try (InputStream input = fs.read(plain, fs.stat(plain))) {
               BackupArchive.read(input, null, cancellation);
             }
@@ -677,9 +705,8 @@ public final class NativeBackupJobs {
                 BackupJson.number(summary, "bytes"),
                 true);
             if (password != null) {
-              encryptedArtifact = OwnedBackupArtifact.create(fs, encrypted);
               try (InputStream input = fs.read(plain, fs.stat(plain));
-                  OutputStream output = encryptedArtifact.stream) {
+                  OutputStream output = fs.create(encrypted)) {
                 PortableBackupCrypto.encrypt(input, output, password, cancellation);
               }
               java.security.MessageDigest authenticated = BackupArchive.sha();
@@ -699,9 +726,8 @@ public final class NativeBackupJobs {
             } else {
               // 无密码 dshbak 保留同一个带完整尾摘要的 BackupArchive 格式，
               // 导入时仍执行相同的范围、路径和校验流程。
-              encryptedArtifact = OwnedBackupArtifact.create(fs, encrypted);
               try (InputStream input = fs.read(plain, fs.stat(plain));
-                  OutputStream output = encryptedArtifact.stream) {
+                  OutputStream output = fs.create(encrypted)) {
                 byte[] buffer = new byte[65536];
                 int n;
                 while ((n = input.read(buffer)) != -1) {
@@ -724,7 +750,7 @@ public final class NativeBackupJobs {
             verification.put("encryptedBytes", fs.stat(encrypted).size);
             fs.atomic(
                 owned, "verified.json", BackupJson.write(verification, BackupLimits.MANIFEST));
-            snapshotArtifact[0].remove();
+            fs.delete(plain);
             update(
                 "EXPORTING",
                 "",
@@ -733,16 +759,39 @@ public final class NativeBackupJobs {
                 BackupJson.number(summary, "entries"),
                 fs.stat(encrypted).size,
                 true);
+            if (directory != null)
+              selectedTarget =
+                  BackupDirectoryTarget.create(
+                      context.getContentResolver(), directory, expectedName, cancellation);
+            Uri actualDestination = selectedTarget == null ? destination : selectedTarget.uri;
             DocumentCopy exported =
                 automatic
                     ? null
                     : downloads
                         ? copyToDownloads(encrypted, artifactHash, expectedName, cancellation)
-                        : directory
-                            ? copyToDirectory(
-                                encrypted, artifactHash, destination, expectedName, cancellation)
-                            : copyToDocument(
-                                encrypted, artifactHash, destination, expectedName, cancellation);
+                        : copyToDocument(
+                            encrypted, artifactHash, actualDestination, expectedName, cancellation);
+            if (selectedTarget != null) {
+              selectedTarget.retain();
+              fs.atomic(
+                  owned,
+                  "exported.json",
+                  BackupJson.write(
+                      Map.of(
+                          "version",
+                          1L,
+                          "operation",
+                          owned.getName(),
+                          "uri",
+                          actualDestination.toString(),
+                          "name",
+                          expectedName,
+                          "sha256",
+                          exported.sha256,
+                          "readback",
+                          exported.readback),
+                      16384));
+            }
             boolean readback = automatic || exported.readback;
             String quality = BackupJson.string(summary, "integrity");
             String result =
@@ -771,13 +820,13 @@ public final class NativeBackupJobs {
                           "payloadSha256",
                           artifactHash,
                           "uri",
-                          (downloads || directory ? exported.uri : destination).toString(),
+                          (downloads ? exported.uri : actualDestination).toString(),
                           "name",
                           downloads ? exported.name : expectedName),
                       16384));
               new ConfigStore(context)
                   .recordVerifiedNativeBackup(
-                      (downloads || directory ? exported.uri : destination).toString(),
+                      (downloads ? exported.uri : actualDestination).toString(),
                       downloads ? exported.name : expectedName,
                       frozen.scope);
             }
@@ -805,13 +854,13 @@ public final class NativeBackupJobs {
                           || "CANCELLED".equals(code(error))
                       ? "CANCELLED"
                       : "FAILED",
-                  error instanceof NewDocumentExport.Retained ? "OUTPUT_POSSIBLE_PARTIAL" : "",
+                  "",
                   code(error),
                   fs.stat(new File(owned, "verified.json")).type.equals("FILE")
                       ? "portable.dshbak"
                       : "",
-                  capturedCounts[0],
-                  capturedCounts[1],
+                  0,
+                  0,
                   false);
             } catch (IOException retained) {
               synchronized (this) {
@@ -829,16 +878,11 @@ public final class NativeBackupJobs {
               main.post(() -> changes.setValue(state()));
             }
           } finally {
+            if (selectedTarget != null) selectedTarget.discard();
             if (password != null) Arrays.fill(password, '\0');
             try {
-              if (snapshotArtifact[0] != null) snapshotArtifact[0].remove();
+              if (!fs.stat(plain).type.equals("MISSING")) fs.delete(plain);
             } catch (IOException ignored) {
-            }
-            try {
-              if (encryptedArtifact != null
-                  && !fs.stat(new File(owned, "verified.json")).type.equals("FILE"))
-                encryptedArtifact.remove();
-            } catch (IOException retained) {
             }
             try {
               HostOperationArchive.archiveIfTerminal(
@@ -926,75 +970,6 @@ public final class NativeBackupJobs {
     } finally {
       if (fs.stat(envelope).type.equals("FILE")) fs.delete(envelope);
       if (fs.stat(verification).type.equals("FILE")) fs.delete(verification);
-    }
-  }
-
-  private DocumentCopy copyToDirectory(
-      File source, String expected, Uri directory, String name, BackupControl cancellation)
-      throws IOException {
-    // No external document exists until this private container and its tar/gzip envelope pass.
-    File envelope = fs.child(task, "export.tar.gz");
-    OwnedBackupArtifact owned = OwnedBackupArtifact.create(fs, envelope);
-    IOException failed = null;
-    try {
-      try (OutputStream output = owned.stream) {
-        PortableBackupEnvelope.writeUnencrypted(fs, source, expected, output, cancellation);
-      }
-      PortableBackupEnvelope.verifyUnencrypted(fs, envelope, expected, cancellation);
-      String outerHash;
-      try (InputStream input = fs.read(envelope, fs.stat(envelope))) {
-        outerHash = BackupArchive.digest(input, cancellation);
-      }
-      NewDocumentExport.Result result =
-          NewDocumentExport.write(
-              fs,
-              envelope,
-              outerHash,
-              name,
-              new SafExportDirectory(context.getContentResolver(), directory),
-              cancellation);
-      return new DocumentCopy(result.readback, outerHash, (Uri) result.document.handle, name);
-    } catch (NewDocumentExport.Retained retained) {
-      failed = retained;
-      try {
-        fs.atomic(
-            task,
-            "export-incomplete.json",
-            BackupJson.write(
-                Map.of(
-                    "version",
-                    1L,
-                    "operation",
-                    task.getName(),
-                    "status",
-                    "POSSIBLE_PARTIAL",
-                    "name",
-                    name,
-                    "uri",
-                    retained.document != null && retained.document.handle instanceof Uri
-                        ? retained.document.handle.toString()
-                        : "",
-                    "acknowledgedBytes",
-                    retained.acknowledgedBytes,
-                    "creationAttempted",
-                    true,
-                    "error",
-                    BackupErrorCode.from(retained)),
-                16384));
-      } catch (IOException recordFailure) {
-        retained.addSuppressed(recordFailure);
-      }
-      throw retained;
-    } catch (IOException failure) {
-      failed = failure;
-      throw failure;
-    } finally {
-      try {
-        owned.remove();
-      } catch (IOException retained) {
-        if (failed != null) failed.addSuppressed(retained);
-        else throw retained;
-      }
     }
   }
 
@@ -1134,6 +1109,7 @@ public final class NativeBackupJobs {
       String projects) {
     if (state.busy
         || workers.isClosed()
+        || AutomaticBackups.factoryResetPending(context)
         || (retained == null
             && retainedTree == null
             && (uri == null || !"content".equals(uri.getScheme())))) return false;
@@ -1211,8 +1187,40 @@ public final class NativeBackupJobs {
                   if (!retained.sha256.equals(BackupArchive.digest(copied, cancellation)))
                     throw new IOException("RETAINED_COPY_CHANGED");
                 }
-              String filename = retained != null ? retained.artifact.getName() : null;
-              if (uri != null)
+              File portable = input;
+              byte[] signature = new byte[8];
+              try (InputStream source = fs.read(input, fs.stat(input))) {
+                new DataInputStream(source).readFully(signature);
+              }
+              if ((signature[0] & 255) == 31 && (signature[1] & 255) == 139) {
+                File unwrapped = new File(owned, "transport.dshbak");
+                if (PortableBackupEnvelope.unwrapIfPresent(fs, input, unwrapped, cancellation)) {
+                  portable = unwrapped;
+                  try (InputStream source = fs.read(portable, fs.stat(portable))) {
+                    new DataInputStream(source).readFully(signature);
+                  }
+                }
+              }
+              if (Arrays.equals(signature, PortableBackupCrypto.MAGIC)) {
+                update("AUTHENTICATING", "", "", "", 0, fs.stat(input).size, true);
+                try (InputStream source = fs.read(portable, fs.stat(portable));
+                    OutputStream out = fs.create(plain)) {
+                  PortableBackupCrypto.decrypt(source, out, password, cancellation);
+                }
+              } else if (BackupArchive.hasMagic(signature)) {
+                // 无密码导出的 v5 dshbak 已经是可直接读取的 BackupArchive。
+                try (InputStream source = fs.read(portable, fs.stat(portable));
+                    OutputStream out = fs.create(plain)) {
+                  byte[] buffer = new byte[65536];
+                  int n;
+                  while ((n = source.read(buffer)) != -1) {
+                    cancellation.check();
+                    out.write(buffer, 0, n);
+                  }
+                  out.flush();
+                }
+              } else {
+                String filename = null;
                 try (android.database.Cursor cursor =
                     DocumentStreams.query(
                         context.getContentResolver(),
@@ -1221,18 +1229,7 @@ public final class NativeBackupJobs {
                         cancellation)) {
                   if (cursor != null && cursor.moveToFirst()) filename = cursor.getString(0);
                 }
-              File prepared =
-                  NativeBackupInput.prepare(fs, owned, input, filename, password, cancellation);
-              if (!prepared.equals(plain)) {
-                try (InputStream source = fs.read(prepared, fs.stat(prepared));
-                    OutputStream out = fs.create(plain)) {
-                  byte[] buffer = new byte[65536];
-                  int n;
-                  while ((n = source.read(buffer)) != -1) {
-                    cancellation.check();
-                    out.write(buffer, 0, n);
-                  }
-                }
+                new LegacyBackupImporter(fs, owned).convert(input, plain, filename, cancellation);
               }
             }
             if (password != null) Arrays.fill(password, '\0');
@@ -1372,7 +1369,8 @@ public final class NativeBackupJobs {
   }
 
   public synchronized boolean recoverPending() {
-    if (state.busy || workers.isClosed()) return false;
+    if (state.busy || workers.isClosed() || AutomaticBackups.factoryResetPending(context))
+      return false;
     final DataProtectionService.StartTicket protection;
     List<File> pending;
     try {

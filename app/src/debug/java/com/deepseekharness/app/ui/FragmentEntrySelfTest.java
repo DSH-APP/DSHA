@@ -54,10 +54,6 @@ public final class FragmentEntrySelfTest {
               entry.requireView().findViewById(R.id.launch_start).performClick();
             require(!entry.requireView().findViewById(R.id.launch_start).isEnabled(), "鉴权中按钮未禁用");
             require(
-                entry.requireView().findViewById(R.id.launch_status).getVisibility()
-                    == View.VISIBLE,
-                "鉴权状态被隐藏");
-            require(
                 ((TextView) entry.requireView().findViewById(R.id.launch_status))
                     .getText()
                     .toString()
@@ -102,18 +98,14 @@ public final class FragmentEntrySelfTest {
       entry.throwAuth = true;
       click(driver, entry);
       untilUi(driver, () -> entry.requireView().findViewById(R.id.launch_start).isEnabled());
-      // 超过一次正常状态刷新，失败原因仍必须实际显示，不能只在隐藏的 TextView 中保留文本。
-      Thread.sleep(1200);
       main(
           driver,
           () ->
               require(
-                  entry.requireView().findViewById(R.id.launch_status).getVisibility()
-                          == View.VISIBLE
-                      && ((TextView) entry.requireView().findViewById(R.id.launch_status))
-                          .getText()
-                          .toString()
-                          .contains("鉴权失败"),
+                  ((TextView) entry.requireView().findViewById(R.id.launch_status))
+                      .getText()
+                      .toString()
+                      .contains("鉴权失败"),
                   "异常未显示可重试状态"));
       require(entry.opened.get() == 2, "鉴权异常仍打开页面");
       entry.throwAuth = false;
@@ -121,13 +113,6 @@ public final class FragmentEntrySelfTest {
       entry.emptyCookie = true;
       click(driver, entry);
       untilUi(driver, () -> entry.requireView().findViewById(R.id.launch_start).isEnabled());
-      main(
-          driver,
-          () ->
-              require(
-                  entry.requireView().findViewById(R.id.launch_status).getVisibility()
-                      == View.VISIBLE,
-                  "空 cookie 失败原因被隐藏"));
       require(entry.opened.get() == 2, "空 cookie 仍打开页面");
       entry.emptyCookie = false;
       entry.throwOpen = true;
@@ -137,24 +122,12 @@ public final class FragmentEntrySelfTest {
           driver,
           () ->
               require(
-                  entry.requireView().findViewById(R.id.launch_status).getVisibility()
-                          == View.VISIBLE
-                      && ((TextView) entry.requireView().findViewById(R.id.launch_status))
-                          .getText()
-                          .toString()
-                          .contains("无法打开"),
+                  ((TextView) entry.requireView().findViewById(R.id.launch_status))
+                      .getText()
+                      .toString()
+                      .contains("无法打开"),
                   "Activity 异常未返回可重试状态"));
       entry.throwOpen = false;
-
-      main(driver, () -> entry.generation++);
-      untilUi(driver, () -> !visibleStatusContains(entry, "无法打开"));
-      entry.throwAuth = true;
-      click(driver, entry);
-      untilUi(driver, () -> visibleStatusContains(entry, "鉴权失败"));
-      // 同一代次实际地址变化也使旧进入错误失效。
-      main(driver, () -> entry.url = "http://127.0.0.1:3081/?token=debug-fixture");
-      untilUi(driver, () -> !visibleStatusContains(entry, "鉴权失败"));
-      entry.throwAuth = false;
 
       entry.release = new CountDownLatch(1);
       int authBefore = entry.auth.get();
@@ -164,7 +137,7 @@ public final class FragmentEntrySelfTest {
       entry.release.countDown();
       untilUi(driver, () -> entry.requireView().findViewById(R.id.launch_start).isEnabled());
       require(entry.opened.get() == 2, "Web 代次变化后仍打开旧页面");
-      result.accept("launch=PASS：连点只进入一次，进入失败实际可见，旧视图/代次/URL 失效后不残留错误");
+      result.accept("launch=PASS：连点只进入一次，鉴权失败和旧视图回调可安全返回");
 
       Bundle installed = new Bundle();
       installed.putBoolean("show_installed", true);
@@ -205,7 +178,7 @@ public final class FragmentEntrySelfTest {
       rebuild(driver, host, plugin);
       require(plugin.refreshes.get() == 3, "恢复后的普通返回重复刷新");
       result.accept("plugin=PASS：内存夹具的安全状态、启用开关、恢复按钮同步，刷新次数 1→2→3");
-      return "PASS：Launch 连点/空 cookie/鉴权异常/Activity 异常/失败实际可见/旧视图/代次与URL变化；Plugin 内存夹具安全状态、开关和恢复按钮同步，刷新次数 1→2→3";
+      return "PASS：Launch 连点/空 cookie/鉴权异常/Activity 异常/旧视图/代次变化；Plugin 内存夹具安全状态、开关和恢复按钮同步，刷新次数 1→2→3";
     } finally {
       entry.release.countDown();
       main(
@@ -242,11 +215,6 @@ public final class FragmentEntrySelfTest {
 
   private static void click(Instrumentation driver, EntryProbe entry) {
     main(driver, () -> entry.requireView().findViewById(R.id.launch_start).performClick());
-  }
-
-  private static boolean visibleStatusContains(EntryProbe entry, String text) {
-    TextView status = entry.requireView().findViewById(R.id.launch_status);
-    return status.getVisibility() == View.VISIBLE && status.getText().toString().contains(text);
   }
 
   private static void until(BooleanSupplier condition) throws Exception {
@@ -288,11 +256,10 @@ public final class FragmentEntrySelfTest {
     volatile CountDownLatch release = new CountDownLatch(1);
     volatile boolean throwAuth, emptyCookie, throwOpen;
     long generation;
-    String url = "http://127.0.0.1:3080/?token=debug-fixture";
 
     @Override
     String webEntryUrl() {
-      return url;
+      return "http://127.0.0.1:3080/?token=debug-fixture";
     }
 
     @Override

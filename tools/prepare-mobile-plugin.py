@@ -15,7 +15,7 @@ PATCHED = {'lib/client.js', 'lib/compress.js', 'lib/delete-session.js', 'lib/ind
 
 def prepare(source, write):
     lock = json.loads(LOCK.read_text(encoding='utf8'))
-    if lock['schema'] != 1 or lock['version'] != '3.1.0' or lock['commit'] != 'ab3a85bead1c53b723e8627f5b44e3c306d85604':
+    if lock['schema'] != 1 or lock['version'] != '3.2.1' or lock['commit'] != '10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4':
         raise ValueError('MOBILE_UPSTREAM_LOCK')
     source = source.resolve(strict=True)
     contents = {}
@@ -34,7 +34,9 @@ def prepare(source, write):
     if package['version'] != lock['version'] or package['license'] != 'MIT':
         raise ValueError('MOBILE_UPSTREAM_METADATA')
     package['dshaUpstream'] = {key: lock[key] for key in ['version', 'source', 'commit', 'sourceDate']}
-    package['dshaUpstream'].update(ref=lock['tag'], clientSha256=lock['files']['lib/client.js']['sha256'],
+    # 最新 main 已撤回标签之后的视口试验；发布标签与实际取用提交分别记录。
+    package['dshaUpstream'].update(ref=lock.get('ref', lock['tag']), releaseTag=lock['tag'],
+                                  releaseCommit=lock['releaseCommit'], clientSha256=lock['files']['lib/client.js']['sha256'],
                                   lock='tools/mobile-plugin-upstream.lock.json', prebuilt=True)
     contents['package.json'] = (json.dumps(package, ensure_ascii=False, indent=2) + '\n').encode()
     for name, content in contents.items():
@@ -58,6 +60,20 @@ def prepare(source, write):
     patch = ROOT / 'tools/apply-mobile-client-patches.mjs'
     subprocess.run([node, str(patch), str(source / 'lib/client.js'), action], cwd=ROOT, check=True)
     subprocess.run([node, str(patch), '--server', str(source / 'lib'), action], cwd=ROOT, check=True)
+    # Retire only the explicitly reviewed previous-version members; unknown local files stay errors.
+    for name in lock.get('retiredFiles', []):
+        relative = PurePosixPath(name)
+        if relative.is_absolute() or '..' in relative.parts or '\\' in name or name in contents:
+            raise ValueError('MOBILE_RETIRED_PATH')
+        target = DESTINATION / name
+        if not target.exists() and not target.is_symlink():
+            continue
+        if target.is_symlink() or not target.is_file() or not target.resolve().is_relative_to(DESTINATION.resolve()):
+            raise ValueError('MOBILE_RETIRED_FILE: ' + name)
+        if write:
+            target.unlink()
+        else:
+            raise ValueError('MOBILE_RETIRED_PRESENT: ' + name)
     actual = {p.relative_to(DESTINATION).as_posix() for p in DESTINATION.rglob('*') if p.is_file()}
     if actual != set(contents):
         raise ValueError('MOBILE_DEPLOYED_MEMBERS: ' + str(sorted(actual.symmetric_difference(contents))))

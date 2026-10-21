@@ -21,7 +21,7 @@ let fadeHook: (() => void) | null = null
 const BACKDROP_FADE_MS = 200
 
 /** The FAB's second face: an arrow, shown while a sidebar panel owns the main
- * area (see the panelViewOpen note in the task body). */
+ * area — both the subpage 「返回」 and the panel-root 「返回会话」 modes. */
 const FAB_BACK_ICON =
   '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="18" height="18">' +
   '<path d="M9.8 3.4 5.2 8l4.6 4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
@@ -36,8 +36,9 @@ const FAB_DRAWER_ICON =
  * @param t - our dictionary (the `NS` locale namespace, i18n/locales.ts).
  * @param toggleSidebar - opens/closes the drawer.
  * @param panelExit - the sidebar-panel exit face (panel-exit.ts). The FAB is the
- *   screen's only control while a panel owns the main area — the header toggle
- *   does not render there — so it doubles as 「返回会话」. Null on a host that
+ *   screen's only full-size control while a panel owns the main area — the
+ *   header toggle does not render there — so it also steps back: one host view
+ *   level on a panel subpage, out of the panel at its root. Null on a host that
  *   cannot select panels (rc.6), where it stays a plain drawer button.
  */
 export function createOverlayTask(
@@ -66,35 +67,45 @@ export function createOverlayTask(
   const heroPhase = (): boolean =>
     document.querySelector('[data-phase="active"]') === null
   /**
-   * The FAB has two faces. While a sidebar panel owns the main area it reads as
-   * 「返回会话」 and leaves the panel; everywhere else it opens the drawer.
+   * The FAB does one job per view. While a sidebar panel owns the main area it
+   * steps back through the panel and everywhere else it opens the drawer.
    *
-   * It matters because the FAB is the ONLY control on screen there: the panel
-   * replaces the conversation, so the header (and with it the drawer toggle)
-   * does not render, and a panel's own page head carries no way back either.
-   * Same button, same corner — only its meaning follows the view.
+   * It matters because the FAB is the ONLY full-size control on screen there:
+   * the panel replaces the conversation, so the header (and with it the drawer
+   * toggle) does not render. A panel subpage does ship the host's own
+   * 「返回上一级」 control (moreBack / crumb), but it sits in the same top-left
+   * corner and is geometrically covered by the FAB — so the FAB has to be the
+   * one that climbs a level.
    */
   const onFabClick = (event: MouseEvent): void => {
     if (panelExit !== null && panelExit.panelOpen()) {
       event.preventDefault()
       event.stopPropagation()
-      panelExit.exit()
+      // One level, not the whole panel: on a plugin subpage this clicks the
+      // host's own 「返回上一级」 (see back in panel-exit.ts).
+      panelExit.back()
       return
     }
     toggleSidebar()
   }
-  /** Icon and accessible name follow the view so the button never reads as a
-   * mystery control. Idempotent: ensure() runs on every mutation burst. */
+  /**
+   * Icon and accessible name follow the view so the button never reads as a
+   * mystery control. Three states, two icons: open-drawer (no panel),
+   * back-level (panel subpage — same arrow, named 「返回」, because it climbs a
+   * host view level and does not leave the panel) and exit-panel (panel root —
+   * named 「返回会话」). Idempotent: ensure() runs on every mutation burst.
+   */
   const syncFab = (): void => {
     if (fab === null) return
-    const exiting = panelExit !== null && panelExit.panelOpen()
-    const mode = exiting ? 'exit-panel' : 'open-drawer'
+    const onPanel = panelExit !== null && panelExit.panelOpen()
+    const onSubpage = onPanel && panelExit !== null && panelExit.subpageOpen()
+    const mode = onSubpage ? 'back-level' : onPanel ? 'exit-panel' : 'open-drawer'
     if (fab.dataset.mobileNavFabMode === mode) return
     fab.dataset.mobileNavFabMode = mode
-    const label = t(exiting ? 'backToConversation' : 'open')
+    const label = onSubpage ? t('back') : onPanel ? t('backToConversation') : t('open')
     fab.setAttribute('aria-label', label)
     fab.title = label
-    fab.innerHTML = exiting ? FAB_BACK_ICON : FAB_DRAWER_ICON
+    fab.innerHTML = onPanel ? FAB_BACK_ICON : FAB_DRAWER_ICON
   }
   return {
     name: 'overlay-backdrop-fab',

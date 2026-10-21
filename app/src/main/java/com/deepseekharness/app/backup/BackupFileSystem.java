@@ -9,18 +9,9 @@ public interface BackupFileSystem {
     public final String type, key;
     public final com.deepseekharness.app.util.FileKind kind;
     public final long size, modified, device;
-
-    /** ctime 纳秒见证；0 表示后端不提供。不得用它代替跨阶段全量内容核验。 */
-    public final long ctime;
-
     public final int mode;
 
     public Node(String type, String key, long size, long modified, long device, int mode) {
-      this(type, key, size, modified, device, mode, 0);
-    }
-
-    public Node(
-        String type, String key, long size, long modified, long device, int mode, long ctime) {
       this.kind = com.deepseekharness.app.util.FileKind.fromWire(type);
       this.type = kind.wire();
       this.key = key;
@@ -28,7 +19,6 @@ public interface BackupFileSystem {
       this.modified = modified;
       this.device = device;
       this.mode = mode;
-      this.ctime = ctime;
     }
 
     public boolean same(Node other) {
@@ -51,31 +41,6 @@ public interface BackupFileSystem {
   InputStream read(File file, Node expected) throws IOException;
 
   OutputStream create(File file) throws IOException;
-
-  final class CreatedFile {
-    public final OutputStream stream;
-    public final Node identity;
-
-    public CreatedFile(OutputStream stream, Node identity) {
-      this.stream = stream;
-      this.identity = identity;
-    }
-  }
-
-  /** Production captures this identity from the opened descriptor, before exposing the stream. */
-  default CreatedFile createOwned(File file) throws IOException {
-    OutputStream stream = create(file);
-    try {
-      return new CreatedFile(stream, stat(file));
-    } catch (IOException failure) {
-      try {
-        stream.close();
-      } catch (IOException closing) {
-        failure.addSuppressed(closing);
-      }
-      throw failure;
-    }
-  }
 
   void directory(File file) throws IOException;
 

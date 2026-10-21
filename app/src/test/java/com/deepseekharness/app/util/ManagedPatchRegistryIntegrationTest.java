@@ -26,6 +26,9 @@ public class ManagedPatchRegistryIntegrationTest {
     JsonObject registry = json(assets.resolve("runtime-patches.json"));
     String current = registry.get("dshVersion").getAsString();
     assertEquals(
+        "Native startup must use the signed registry generation", current, Constants.DSH_VERSION);
+    assertEquals("dsh-v" + current, Constants.DSH_RUNTIME_ID);
+    assertEquals(
         current, json(assets.resolve("runtime-descriptor.json")).get("dshVersion").getAsString());
     assertEquals(
         current,

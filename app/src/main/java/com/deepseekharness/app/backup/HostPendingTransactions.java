@@ -9,7 +9,7 @@ public final class HostPendingTransactions {
   private HostPendingTransactions() {}
 
   public static List<File> pending(BackupFileSystem fs, File files) throws IOException {
-    HostOperationArchive.inspectCompleted(fs, files);
+    HostOperationArchive.verifyCompleted(fs, files);
     File root = HostOperationArchive.root(files);
     if (fs.stat(root).type.equals("MISSING")) return Collections.emptyList();
     List<File> result = new ArrayList<>();

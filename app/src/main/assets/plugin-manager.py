@@ -4,6 +4,7 @@
 仅安装声明 dsh.bundle.patch 的发布包；0.2.0-rc2 按用户请求允许依赖生命周期脚本。
 """
 import importlib.util
+import hashlib
 import json
 import contextlib
 import os
@@ -815,7 +816,7 @@ def cmd_delete(name):
     """只移除指定第三方插件；不追随链接去删除用户工作区或共享 pnpm 仓库。"""
     if not builtin.valid_name(name):
         raise ValueError("无效的插件名称")
-    if name in builtin.OFFICIAL_BUNDLES or name in builtin.builtin_names():
+    if name in builtin.OFFICIAL_BUNDLES or name in builtin.builtin_names() or name in builtin.AUTO_REVIEW_ALIASES:
         raise ValueError("官方核心和内置插件请使用禁用开关，不能删除")
     runtime = builtin.runtime_bundle_dir(name)
     directory = resolve_plugin_dir(name)
@@ -959,14 +960,68 @@ def cmd_release(owner, repo, tag, *, consume=None):
     return cmd_download(archives[0]["browser_download_url"], **({"consume": consume} if consume else {}))
 
 
+def list_state_revision():
+    """A display snapshot guard, never a substitute for package-content proof.
+
+    Listing is read-only and must not own the profile writer lock during a
+    potentially slow scan. Reject a mixed manifest/marker view instead of
+    reporting a stale switch state as a confirmed change.
+    """
+    # Do not enter, remove, or wait on another writer's lock. Its manifest and
+    # markers may be between atomic steps even when two quick reads look equal.
+    if os.path.lexists(local(builtin.MANIFEST) + '.lock'):
+        raise ValueError('插件配置正在修改或有待确认的锁；保留上次列表，请稍后刷新')
+    if os.path.isfile(os.path.join(os.path.dirname(local(DSH_HOME)), '.dsha-restore-journal.json')):
+        raise ValueError('恢复事务尚未完成；保留上次列表，请先完成恢复')
+    state = []
+    home = os.stat(local(DSH_HOME))
+    state.append(('home', home.st_dev, home.st_ino))
+    for path in (local(builtin.MANIFEST), local(SOURCES),
+                 lifecycle().path('plugin-updates.json'), lifecycle().path('plugin-safe-mode.json'),
+                 lifecycle().path('plugin-activations.json')):
+        check_cancel()
+        try:
+            before = os.stat(path)
+            if before.st_size > 2 * 1024 * 1024:
+                raise ValueError('插件列表状态文件过大，原件已保留')
+            with open(path, 'rb') as stream:
+                data = stream.read(2 * 1024 * 1024 + 1)
+            after = os.stat(path)
+            if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+                raise ValueError('插件状态在读取期间变化，请刷新重试')
+            state.append((path, before.st_dev, before.st_ino, hashlib.sha256(data).hexdigest()))
+        except FileNotFoundError:
+            state.append((path, None))
+    modules = local(builtin.NODE_MODULES)
+    directories = [modules]
+    if os.path.isdir(modules):
+        directories += [os.path.join(modules, name) for name in sorted(os.listdir(modules))
+                        if name.startswith('@') and os.path.isdir(os.path.join(modules, name))]
+    for directory in directories:
+        check_cancel()
+        if not os.path.isdir(directory):
+            state.append((directory, None)); continue
+        names = sorted(os.listdir(directory))
+        state.append((directory, names))
+        for name in names:
+            if not name.endswith('.disabled'):
+                continue
+            path = os.path.join(directory, name)
+            node = os.lstat(path)
+            state.append((path, node.st_dev, node.st_ino, node.st_size, node.st_mtime_ns, node.st_ctime_ns))
+    return state
+
+
 def cmd_list(message="插件状态已同步"):
+    revision = list_state_revision()
+    provenance = builtin.ProvenancePass(check_cancel)
     doc = builtin.read_manifest() or {}
     bundles = doc.get("dsh", {}).get("profile", {}).get("bundles", [])
     deps = doc.get("dependencies", {})
     sources = read_json(local(SOURCES), {})
     if not isinstance(sources, dict):
         sources = {}
-    discovered = builtin.discover_plugins()
+    discovered = builtin.discover_plugins(provenance=provenance)
     system_names = set(builtin.builtin_names())
     disabled_names = []
     modules = local(builtin.NODE_MODULES)
@@ -979,36 +1034,49 @@ def cmd_list(message="插件状态已同步"):
                 disabled_names.append(entry[:-9])
     names = list(dict.fromkeys(list(builtin.OFFICIAL_BUNDLES) + builtin.builtin_names()
                               + list(deps) + bundles + list(discovered) + disabled_names))
+    # The APK wrapper and the DSH bundle select the same Auto review service.
+    # Project their selection onto its canonical card without rewriting the profile.
+    names = list(dict.fromkeys(builtin.AUTO_REVIEW_ALIASES[1] if name in builtin.AUTO_REVIEW_ALIASES else name
+                               for name in names))
     items = []
     updates = lifecycle().read(lifecycle().path('plugin-updates.json'), {})
     for name in names:
+        check_cancel()
         if not builtin.valid_name(name):
             continue
         official = name in builtin.OFFICIAL_BUNDLES
-        directory = resolve_plugin_dir(name, discovered)
+        auto_review = name in builtin.AUTO_REVIEW_ALIASES
+        system_plugin = name in system_names or auto_review
+        directory = builtin.runtime_bundle_dir(name) if auto_review else resolve_plugin_dir(name, discovered)
         pkg = read_json(os.path.join(directory, "package.json"), {}) if directory else {}
         runtime_directory = builtin.runtime_bundle_dir(name)
-        runtime_provided = bool(directory and runtime_directory and os.path.realpath(directory) == os.path.realpath(runtime_directory))
-        if name not in builtin.OFFICIAL_BUNDLES and name not in system_names \
+        runtime_located = bool(directory and runtime_directory and os.path.realpath(directory) == os.path.realpath(runtime_directory))
+        if name not in builtin.OFFICIAL_BUNDLES and not system_plugin \
                 and name not in bundles and not (pkg.get("dsh") or {}).get("bundle"):
             continue
+        runtime_provided = runtime_located and provenance.managed(name, directory)
         source = repository_url(pkg) if runtime_provided else sources.get(name, "") or repository_url(pkg)
-        updatable = bool(directory) and not official and name not in system_names and not runtime_provided \
+        updatable = bool(directory) and not official and not system_plugin and not runtime_located \
                     and lifecycle().can_check_updates(source)
-        items.append(dict(name=name, enabled=name in bundles, builtin=name in system_names or runtime_provided,
+        enabled = any(alias in bundles for alias in builtin.AUTO_REVIEW_ALIASES) and not builtin.is_disabled(name) \
+                  if auto_review else name in bundles
+        items.append(dict(name=name, enabled=enabled, builtin=system_plugin,
                           runtimeProvided=runtime_provided,
+                          runtimeLocated=runtime_located,
+                          origin='dsha-signed' if system_plugin else 'dsh-managed' if runtime_provided else 'user',
                           official=official, available=official or directory is not None,
                           version=pkg.get("version", ""), description=pkg.get("description", ""),
                           source=source, updatable=updatable,
                           exportable=not official and directory is not None,
-                          deletable=not official and name not in system_names and not runtime_provided
+                          deletable=not official and not system_plugin and not runtime_located
                                     and (name in deps or name in bundles),
-                          internal=official or name in builtin.INTERNAL_BUILTINS,
+                          internal=official or name == 'dsh-app-integration',
                           detected=name in discovered and name not in deps and name not in bundles,
-                          location='随 DSH 安装提供' if runtime_provided else '、'.join(discovered.get(name, {}).get('locations', []))))
+                          location='随 DSH 安装提供' if runtime_provided else 'DSH 安装目录中的用户/未验证插件' if runtime_located
+                                   else '、'.join(discovered.get(name, {}).get('locations', []))))
         update = updates.get(name, {})
-        previous = lifecycle().history_info(name) if not official and name not in system_names and not runtime_provided else {}
-        items[-1].update(latestVersion=update.get('latestVersion', ''), updateAvailable=not runtime_provided and bool(update.get('available'))
+        previous = lifecycle().history_info(name) if not official and not system_plugin and not runtime_located else {}
+        items[-1].update(latestVersion=update.get('latestVersion', ''), updateAvailable=not auto_review and not runtime_provided and bool(update.get('available'))
                          and update.get('installedVersion') == str(pkg.get('version', '')),
                          updatePreviewId=update.get('previewId', ''), updateMessage=update.get('message', '')
                          if update.get('installedVersion') == str(pkg.get('version', '')) else '',
@@ -1024,8 +1092,47 @@ def cmd_list(message="插件状态已同步"):
                 if stream.read() == 'DSHA_REVIEW_REQUIRED\n':
                     item['loadState'] = 'review-required'
     pending, unreadable = lifecycle().pending_previews()
+    if list_state_revision() != revision:
+        raise ValueError('插件状态在列表读取期间变化；保留上次列表，请刷新重试')
     result("ok", message, items=items, safeMode=bool(mode.get('active')), pendingReviews=pending, unreadableReviews=unreadable)
     return 0
+
+
+def set_plugin_state(name, enable):
+    """Persist and read back only this switch intent, without a list scan."""
+    if not builtin.valid_name(name):
+        raise ValueError('无效的插件名称')
+    package = None
+    runtime_located = False
+    if enable and name not in builtin.OFFICIAL_BUNDLES and name not in builtin.builtin_names():
+        directory = builtin.runtime_bundle_dir(name) if name in builtin.AUTO_REVIEW_ALIASES else resolve_plugin_dir(name)
+        if not directory:
+            raise ValueError('找不到插件实体，请重新导入：' + name)
+        package = plugin_package(directory)
+        if package['name'] != name:
+            raise ValueError('插件名称与请求不一致，未更改启用意图')
+        runtime = builtin.runtime_bundle_dir(name)
+        runtime_located = bool(runtime and os.path.realpath(runtime) == os.path.realpath(directory))
+    with builtin.operation_lock(check_cancel):
+        progress('configure', '正在更新插件状态…', cancellable=False)
+        if package is not None and not runtime_located:
+            # The switch records intent; the actual load still verifies current
+            # bytes and dependencies. No full graph or list belongs in this lock.
+            lifecycle().queue_activation(name, '', package['version'])
+        if (builtin.enable_plugin(name) if enable else builtin.disable_plugin(name)) != 0:
+            raise ValueError('插件状态更新失败，请检查配置和安装文件')
+        doc = builtin.read_manifest()
+        if doc is None:
+            raise ValueError('无法读回插件配置，未确认操作结果')
+        bundles = doc.get('dsh', {}).get('profile', {}).get('bundles', [])
+        aliases = builtin.selection_aliases(name)
+        selected = any(alias in bundles for alias in aliases)
+        disabled = any(os.path.isfile(builtin.marker_path(alias)) for alias in aliases)
+        actual = selected and not disabled
+        if actual != enable or (not enable and selected):
+            raise ValueError('插件启停意图读回不一致，未确认操作结果；请检查原配置')
+    return dict(name=name, enabled=actual, intentVerified=True,
+                message='已' + ('启用 ' if actual else '禁用 ') + name + '；重启 Web 后生效')
 
 
 def cmd_npm(package, *, consume=None):
@@ -1061,40 +1168,42 @@ def main():
             raise ValueError('不支持的插件操作')
         # 一次容器启动内完成变更与状态读取；仍沿用原锁与事务提交边界。
         if args == ["refresh"]:
+            progress('refresh', '正在检测已安装插件…')
+            # A read-only list never holds the shared profile writer lock.
+            # Snapshot changes are rejected by cmd_list, not hidden as success.
+            return cmd_list('插件检测完成；变更后重启 Web 生效')
+        if args == ['materialize-cas-links']:
+            # Native startup calls this only after the old Web/launcher exited.
+            # Never call it from a Web operation holding the profile writer lock.
             with builtin.operation_lock(check_cancel):
-                progress('refresh', '正在检测已安装插件…', cancellable=False)
-                # Registration and legacy migration belong to environment/Web
-                # preparation. Opening the list must not relink every runtime
-                # module, modify the profile, or hash all installed dependencies.
-                return cmd_list('插件检测完成；变更后重启 Web 生效')
+                transaction = transactions()
+                try:
+                    copied = transaction.materialize_cas_links()
+                except PluginCancelled:
+                    raise
+                except Exception as error:
+                    pending = transaction.pending()
+                    result('pending' if pending else 'error', str(error),
+                           pendingOperations=[os.path.basename(path) for path in pending], automaticRetry=False)
+                    return 1
+                result('ok', '旧 pnpm 内容链接已按原字节实体化' if copied['changed'] else '无需修复旧 pnpm 内容链接',
+                       **copied, algorithm='DSHA_PNPM_CAS_COPY_V1', profile='web', storeReadOnly=True)
+                return 0
         if args == ["migrate-review-markers"]:
             return lifecycle().migrate_legacy_reviews()
-        if len(args) == 2 and args[0] in ('enable-list', 'disable-list'):
-            name = args[1]
-            if not builtin.valid_name(name):
-                raise ValueError('无效的插件名称')
-            with builtin.operation_lock(check_cancel):
-                enable = args[0] == 'enable-list'
-                progress('configure', '正在更新插件状态…', cancellable=False)
-                if enable and name not in builtin.OFFICIAL_BUNDLES and name not in builtin.builtin_names():
-                    directory = resolve_plugin_dir(name)
-                    if not directory:
-                        raise ValueError('找不到插件实体，请重新导入：' + name)
-                    package = plugin_package(directory)
-                    # The switch records intent. Check bytes/dependency graph at
-                    # the next Web load, where they are actually consumed.
-                    runtime = builtin.runtime_bundle_dir(name)
-                    if not runtime or os.path.realpath(runtime) != os.path.realpath(directory):
-                        lifecycle().queue_activation(name, '', package['version'])
-                if (builtin.enable_plugin(name) if enable else builtin.disable_plugin(name)) != 0:
-                    raise ValueError('插件状态更新失败，请检查配置和安装文件')
-                return cmd_list('已' + ('启用 ' if enable else '禁用 ') + name + '；重启 Web 后生效')
+        if len(args) == 2 and args[0] in ('enable-state', 'disable-state', 'enable-list', 'disable-list'):
+            state = set_plugin_state(args[1], args[0].startswith('enable-'))
+            if args[0].endswith('-state'):
+                result('ok', **state)
+                return 0
+            # Legacy combined callers retain their list shape, but scanning is
+            # strictly after the mutation lock has closed.
+            return cmd_list(state['message'])
         if len(args) == 2 and args[0] == 'delete-list':
             if cmd_delete(args[1]) != 0:
                 return 1
-            with builtin.operation_lock():
-                progress('refresh', '插件已删除，正在同步列表…', cancellable=False)
-                return cmd_list('已移除 ' + args[1] + ' 的加载入口；原件保留在数据页的保留区，重启 Web 后生效。')
+            progress('refresh', '插件已删除，正在同步列表…')
+            return cmd_list('已移除 ' + args[1] + ' 的加载入口；原件保留在数据页的保留区，重启 Web 后生效。')
         if args[0] == "inspect" and len(args) == 2:
             return lifecycle().inspect(args[1])
         if args[0] == 'capabilities' and len(args) == 2:
@@ -1161,8 +1270,8 @@ def main():
         if args[0] == "release" and len(args) == 4:
             return lifecycle().inspect({"command": " ".join(__import__("shlex").quote(arg) for arg in args)})
         if args[0] == "list":
-            with builtin.operation_lock(check_cancel):
-                return cmd_list()
+            progress('refresh', '正在读取已安装插件…')
+            return cmd_list()
         raise ValueError("不支持的插件操作")
     except PackageCommandUnknown as error:
         result('unknown', str(error), candidateRetained=True, executionState='unknown')

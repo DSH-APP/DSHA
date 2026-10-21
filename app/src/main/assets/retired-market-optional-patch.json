@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-app-boot/lib/index.js",
+  "sourceSha256": "5135179ac810e4f626f32ec3bdc3293dc7d2028e8aa92e5e0c006f1a33b78e76",
+  "patches": [
+    {
+      "before": "\t\"@deepseek-ai/dsh-experimental-plugin-market-bundle\",\n",
+      "after": "\t// DSHA_RETIRED_MARKET_OPTIONAL_V1: this installation does not offer the retired market bundle.\n"
+    }
+  ]
+}

@@ -71,13 +71,7 @@ final class RecoveryToolchain {
         var entry = BundledRootfsAsset.find(apk);
         if (entry == null) throw new IOException(UiText.text("APK 缺少独立恢复所需的基础文件"));
         try (InputStream input = apk.getInputStream(entry)) {
-          TarGzipExtractor.extractSelected(
-              input,
-              root,
-              0,
-              name ->
-                  RootfsBootstrap.recoveryAsset(name)
-                      || name.replaceFirst("^\\./", "").matches("(?:usr/)?bin/true"));
+          TarGzipExtractor.extractSelected(input, root, 0, RootfsBootstrap::recoveryAsset);
         }
       }
       RootfsInstaller.python(context, root);
@@ -128,9 +122,8 @@ final class RecoveryToolchain {
       if (fs.stat(home).type.equals("MISSING")) fs.directory(home);
       if (!fs.stat(home).type.equals("DIRECTORY"))
         throw new IOException(UiText.text("个人数据目录无效，已停止操作"));
-      ContainerRuntime runtime = ports.engine(context, false).runtime;
-      var independent = new RuntimeLauncher(context, root, root.getParentFile(), lib, tmp, ports);
-      runtime = independent.preflight(runtime, false);
+      ContainerRuntime runtime =
+          new ContainerRuntime.Proot(context, nativeFiles.find("libproot.so"));
       List<String> argv = runtime.baseArgv(root, false, null);
       launcher.bindPreloads(argv);
       // 源数据单独绑定；Bash、glibc、Python 始终来自签名工具根。
@@ -153,15 +146,10 @@ final class RecoveryToolchain {
       argv.add(command);
       ProcessBuilder builder = new ProcessBuilder(argv).redirectErrorStream(true);
       Compat.redirectStdinDevNull(builder);
-      runtime.applyEnv(builder, root.getParentFile(), lib, tmp, root);
-      builder.environment().put("HOME", "/root");
-      RuntimeTools.applyEnvironment(root, builder.environment(), ports.settings());
-      if ("proot".equals(runtime.id()))
-        builder.environment().put("PROOT_L2S_DIR", new File(root, ".l2s").getAbsolutePath());
+      launcher.environment(builder, LaunchSpec.runtime(runtime).hardlinks(true).build());
+      builder.environment().put("PROOT_L2S_DIR", new File(root, ".l2s").getAbsolutePath());
       builder.environment().put("PATH", "/usr/bin:/bin");
-      builder.environment().put("DSHA_RUNTIME_ENGINE", runtime.id());
-      process = IsolatedInstallProcess.start(builder, tmp, context, null);
-      ports.businessDispatched();
+      process = builder.start();
       return BoundedProcessRunner.collect(process, timeoutMs, 256 * 1024, Compat::destroy, onLine);
     } finally {
       if (process != null && !com.deepseekharness.app.util.ProcessTermination.exited(process))

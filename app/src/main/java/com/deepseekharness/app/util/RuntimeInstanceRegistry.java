@@ -60,7 +60,8 @@ public final class RuntimeInstanceRegistry {
   public static boolean matchesCommand(String command, String profile) {
     if (command == null || profile == null || !profile.matches("dsha-emergency-[a-f0-9]{32}"))
       return false;
-    String[] args = WebProcSel.logicalArguments(command);
+    String[] args =
+        command.indexOf('\0') >= 0 ? command.split("\u0000") : command.trim().split("\\s+");
     if (args.length < 4 || !(args[0].equals("node") || args[0].endsWith("/node"))) return false;
     int entry = args[1].equals("--expose-internals") ? 2 : 1;
     if (entry + 2 >= args.length

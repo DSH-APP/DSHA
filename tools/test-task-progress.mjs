@@ -121,7 +121,8 @@ mismatchedContextReporter.dispose();
 // Import the actual canonical rc2 scrubber used by bash/MCP/PTY launchers.
 const raw=testRuntime('raw');
 const subprocessSource=path.join(raw,'node_modules/@deepseek-ai/dsh-subprocess/lib/index.js');
-assert.equal(JSON.parse(readFileSync(path.join(raw,'node_modules/@deepseek-ai/dsh-subprocess/package.json'),'utf8')).version,'0.2.0-rc.2');
+assert.equal(JSON.parse(readFileSync(path.join(raw,'node_modules/@deepseek-ai/dsh-subprocess/package.json'),'utf8')).version,
+  JSON.parse(readFileSync('tools/dsh-runtime/package.json','utf8')).dependencies['@deepseek-ai/dsh']);
 const {scrubbedParentEnv}=await import(pathToFileURL(subprocessSource).href);
 for(const [key,value]of Object.entries(webRegistration)) process.env[key]=value;
 const filtered=scrubbedParentEnv();

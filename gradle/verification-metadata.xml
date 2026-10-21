@@ -3375,241 +3375,246 @@
             <sha256 value="e154a3231cd6cde68aabf274fd18964d49a9c1a5f5e9ed3bf471e9ae7bdf08e6" origin="Official Maven Central POM; published SHA-1 verified, SHA-256 calculated"/>
          </artifact>
       </component>
-      <component group="org.robolectric" name="annotations" version="4.15.1">
+<component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="annotations" version="4.15.1">
          <artifact name="annotations-4.15.1.jar">
-            <sha256 value="cf061a05d76dfcaf67f7c764dc18c9c2bb2e46337624af734d949e46579d859d" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/annotations/4.15.1/annotations-4.15.1.jar"/>
+            <sha256 value="cf061a05d76dfcaf67f7c764dc18c9c2bb2e46337624af734d949e46579d859d" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/annotations/4.15.1/annotations-4.15.1.jar" />
          </artifact>
          <artifact name="annotations-4.15.1.module">
-            <sha256 value="608c034e5c39e881210111400fb021e3300f7e583ea692b2cdc1766d4f870efc" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/annotations/4.15.1/annotations-4.15.1.module"/>
+            <sha256 value="608c034e5c39e881210111400fb021e3300f7e583ea692b2cdc1766d4f870efc" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/annotations/4.15.1/annotations-4.15.1.module" />
          </artifact>
       </component>
-      <component group="org.ow2.asm" name="asm" version="9.8">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.ow2.asm" name="asm" version="9.8">
          <artifact name="asm-9.8.jar">
-            <sha256 value="876eab6a83daecad5ca67eb9fcabb063c97b5aeb8cf1fca7a989ecde17522051" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.8/asm-9.8.jar"/>
+            <sha256 value="876eab6a83daecad5ca67eb9fcabb063c97b5aeb8cf1fca7a989ecde17522051" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.8/asm-9.8.jar" />
          </artifact>
          <artifact name="asm-9.8.pom">
-            <sha256 value="c1367c3bb383d7619e7f797e38df7513885f2eef04ae7b5908f68222657b5baa" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.8/asm-9.8.pom"/>
+            <sha256 value="c1367c3bb383d7619e7f797e38df7513885f2eef04ae7b5908f68222657b5baa" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.8/asm-9.8.pom" />
          </artifact>
       </component>
-      <component group="org.ow2.asm" name="asm-commons" version="9.8">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.ow2.asm" name="asm-commons" version="9.8">
          <artifact name="asm-commons-9.8.jar">
-            <sha256 value="3301a1c1cb4c59fcc5292648dac1d7c5aed4c0f067dfbe88873b8cdfe77404f4" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.8/asm-commons-9.8.jar"/>
+            <sha256 value="3301a1c1cb4c59fcc5292648dac1d7c5aed4c0f067dfbe88873b8cdfe77404f4" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.8/asm-commons-9.8.jar" />
          </artifact>
          <artifact name="asm-commons-9.8.pom">
-            <sha256 value="f793e78f01f703717d09472e56cdf212fe298970c882e2116e8e549fb6d140c2" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.8/asm-commons-9.8.pom"/>
+            <sha256 value="f793e78f01f703717d09472e56cdf212fe298970c882e2116e8e549fb6d140c2" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.8/asm-commons-9.8.pom" />
          </artifact>
       </component>
-      <component group="org.ow2.asm" name="asm-tree" version="9.8">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.ow2.asm" name="asm-tree" version="9.8">
          <artifact name="asm-tree-9.8.jar">
-            <sha256 value="14b7880cb7c85eed101e2710432fc3ffb83275532a6a894dc4c4095d49ad59f1" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/9.8/asm-tree-9.8.jar"/>
+            <sha256 value="14b7880cb7c85eed101e2710432fc3ffb83275532a6a894dc4c4095d49ad59f1" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/9.8/asm-tree-9.8.jar" />
          </artifact>
          <artifact name="asm-tree-9.8.pom">
-            <sha256 value="7149e7faa0e191296f879aeed9209c8942d398f0698d2cca1a9c628f2e2a8f77" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/9.8/asm-tree-9.8.pom"/>
+            <sha256 value="7149e7faa0e191296f879aeed9209c8942d398f0698d2cca1a9c628f2e2a8f77" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/9.8/asm-tree-9.8.pom" />
          </artifact>
       </component>
-      <component group="com.google.auto.value" name="auto-value-annotations" version="1.11.0">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.google.auto.value" name="auto-value-annotations" version="1.11.0">
          <artifact name="auto-value-annotations-1.11.0.jar">
-            <sha256 value="5a055ce4255333b3346e1a8703da5bf8ff049532286fdcd31712d624abe111dd" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/auto/value/auto-value-annotations/1.11.0/auto-value-annotations-1.11.0.jar"/>
+            <sha256 value="5a055ce4255333b3346e1a8703da5bf8ff049532286fdcd31712d624abe111dd" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/auto/value/auto-value-annotations/1.11.0/auto-value-annotations-1.11.0.jar" />
          </artifact>
          <artifact name="auto-value-annotations-1.11.0.pom">
-            <sha256 value="2aec16e34ea3e011621a0322f4f36f8f9bf988bb54462b5570976e89ea07b122" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/auto/value/auto-value-annotations/1.11.0/auto-value-annotations-1.11.0.pom"/>
+            <sha256 value="2aec16e34ea3e011621a0322f4f36f8f9bf988bb54462b5570976e89ea07b122" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/auto/value/auto-value-annotations/1.11.0/auto-value-annotations-1.11.0.pom" />
          </artifact>
       </component>
-      <component group="com.google.auto.value" name="auto-value-parent" version="1.11.0">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.google.auto.value" name="auto-value-parent" version="1.11.0">
          <artifact name="auto-value-parent-1.11.0.pom">
-            <sha256 value="5a0d1d718552e8a45dcce0128d1b6b9623fa971a82cd245753233ba7208cb29d" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/auto/value/auto-value-parent/1.11.0/auto-value-parent-1.11.0.pom"/>
+            <sha256 value="5a0d1d718552e8a45dcce0128d1b6b9623fa971a82cd245753233ba7208cb29d" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/auto/value/auto-value-parent/1.11.0/auto-value-parent-1.11.0.pom" />
          </artifact>
       </component>
-      <component group="org.bouncycastle" name="bcprov-jdk18on" version="1.80">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.bouncycastle" name="bcprov-jdk18on" version="1.80">
          <artifact name="bcprov-jdk18on-1.80.jar">
-            <sha256 value="e8ad209f8c58d291a37ca9750e9e9fac60596956c983e49dd8282381dd8b3249" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk18on/1.80/bcprov-jdk18on-1.80.jar"/>
+            <sha256 value="e8ad209f8c58d291a37ca9750e9e9fac60596956c983e49dd8282381dd8b3249" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk18on/1.80/bcprov-jdk18on-1.80.jar" />
          </artifact>
          <artifact name="bcprov-jdk18on-1.80.pom">
-            <sha256 value="a0a75c76d91c421eea56d0f6062fb8f63edf7fac7ec724fd420ccdcad7181d43" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk18on/1.80/bcprov-jdk18on-1.80.pom"/>
+            <sha256 value="a0a75c76d91c421eea56d0f6062fb8f63edf7fac7ec724fd420ccdcad7181d43" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk18on/1.80/bcprov-jdk18on-1.80.pom" />
          </artifact>
       </component>
-      <component group="com.google.guava" name="failureaccess" version="1.0.3">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.google.guava" name="failureaccess" version="1.0.3">
          <artifact name="failureaccess-1.0.3.jar">
-            <sha256 value="cbfc3906b19b8f55dd7cfd6dfe0aa4532e834250d7f080bd8d211a3e246b59cb" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/failureaccess/1.0.3/failureaccess-1.0.3.jar"/>
+            <sha256 value="cbfc3906b19b8f55dd7cfd6dfe0aa4532e834250d7f080bd8d211a3e246b59cb" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/failureaccess/1.0.3/failureaccess-1.0.3.jar" />
          </artifact>
          <artifact name="failureaccess-1.0.3.pom">
-            <sha256 value="c54beff37f6d42d43e14722d54a522c9ad51ef97fc5b79277e62a3ebf882f3bb" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/failureaccess/1.0.3/failureaccess-1.0.3.pom"/>
+            <sha256 value="c54beff37f6d42d43e14722d54a522c9ad51ef97fc5b79277e62a3ebf882f3bb" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/failureaccess/1.0.3/failureaccess-1.0.3.pom" />
          </artifact>
       </component>
-      <component group="com.google.guava" name="guava" version="33.4.8-jre">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.google.guava" name="guava" version="33.4.8-jre">
          <artifact name="guava-33.4.8-android.jar">
-            <sha256 value="a1f8a4bafe5a77232d333356843e194599b30837574a7f4be1063daaaaab102c" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/guava/33.4.8-android/guava-33.4.8-android.jar"/>
+            <sha256 value="a1f8a4bafe5a77232d333356843e194599b30837574a7f4be1063daaaaab102c" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/guava/33.4.8-android/guava-33.4.8-android.jar" />
          </artifact>
          <artifact name="guava-33.4.8-jre.module">
-            <sha256 value="58a3357303069a21930e7b9fe9b864de8bfb8bd4607433dbe48263459620cffc" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/guava/33.4.8-jre/guava-33.4.8-jre.module"/>
+            <sha256 value="58a3357303069a21930e7b9fe9b864de8bfb8bd4607433dbe48263459620cffc" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/guava/33.4.8-jre/guava-33.4.8-jre.module" />
          </artifact>
       </component>
-      <component group="com.google.guava" name="guava-parent" version="33.4.0-android">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.google.guava" name="guava-parent" version="33.4.8-jre">
+         <artifact name="guava-parent-33.4.8-jre.pom">
+            <sha256 value="a03c5199a1be14443df7fd40ba8673b1c6aae04deef6688ce7d573ea489e3a20" origin="Official HTTPS bytes and published SHA-1 verified against fresh Gradle download: https://repo.maven.apache.org/maven2/com/google/guava/guava-parent/33.4.8-jre/guava-parent-33.4.8-jre.pom" />
+         </artifact>
+      </component>
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.google.guava" name="guava-parent" version="33.4.0-android">
          <artifact name="guava-parent-33.4.0-android.pom">
-            <sha256 value="7220ede61026596fbc720ee4b93246fa2d14f328058532b59ef053de397c7d83" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/guava-parent/33.4.0-android/guava-parent-33.4.0-android.pom"/>
+            <sha256 value="7220ede61026596fbc720ee4b93246fa2d14f328058532b59ef053de397c7d83" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/guava/guava-parent/33.4.0-android/guava-parent-33.4.0-android.pom" />
          </artifact>
       </component>
-      <component group="com.ibm.icu" name="icu4j" version="77.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.ibm.icu" name="icu4j" version="77.1">
          <artifact name="icu4j-77.1.jar">
-            <sha256 value="b3640b9f416a4411fd33c59abbeea8fd57d024c23e1819bf9673220a97499fe3" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/ibm/icu/icu4j/77.1/icu4j-77.1.jar"/>
+            <sha256 value="b3640b9f416a4411fd33c59abbeea8fd57d024c23e1819bf9673220a97499fe3" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/ibm/icu/icu4j/77.1/icu4j-77.1.jar" />
          </artifact>
          <artifact name="icu4j-77.1.pom">
-            <sha256 value="16e54bf6bfa9fb221bb57e133a8373f442110f3dae3710156e92615c82476e18" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/ibm/icu/icu4j/77.1/icu4j-77.1.pom"/>
+            <sha256 value="16e54bf6bfa9fb221bb57e133a8373f442110f3dae3710156e92615c82476e18" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/ibm/icu/icu4j/77.1/icu4j-77.1.pom" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="junit" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="junit" version="4.15.1">
          <artifact name="junit-4.15.1.jar">
-            <sha256 value="6dd0d61885d49bf26aebf7a73db29f40d15ab5d530336f677d8b9d355b23a9a9" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/junit/4.15.1/junit-4.15.1.jar"/>
+            <sha256 value="6dd0d61885d49bf26aebf7a73db29f40d15ab5d530336f677d8b9d355b23a9a9" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/junit/4.15.1/junit-4.15.1.jar" />
          </artifact>
          <artifact name="junit-4.15.1.module">
-            <sha256 value="65f43c1416a13dee7f6dfafffc7258d1c5f20ac6ccf7e6c213987c43ed68da26" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/junit/4.15.1/junit-4.15.1.module"/>
+            <sha256 value="65f43c1416a13dee7f6dfafffc7258d1c5f20ac6ccf7e6c213987c43ed68da26" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/junit/4.15.1/junit-4.15.1.module" />
          </artifact>
       </component>
-      <component group="androidx.test" name="monitor" version="1.7.2">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="androidx.test" name="monitor" version="1.7.2">
          <artifact name="monitor-1.7.2.aar">
-            <sha256 value="868cc120d10d024b886fa157e1e1eaee0e6a8e5d55e7f765ef41d8fc0fea775b" origin="Official HTTPS bytes verified against cache: https://dl.google.com/dl/android/maven2/androidx/test/monitor/1.7.2/monitor-1.7.2.aar"/>
+            <sha256 value="868cc120d10d024b886fa157e1e1eaee0e6a8e5d55e7f765ef41d8fc0fea775b" origin="Official HTTPS bytes verified against cache: https://dl.google.com/dl/android/maven2/androidx/test/monitor/1.7.2/monitor-1.7.2.aar" />
          </artifact>
          <artifact name="monitor-1.7.2.pom">
-            <sha256 value="388fe58cf6062ffcce209853ac5c006d1d6efee9ba76b16fabfb45a7f26521ce" origin="Official HTTPS bytes verified against cache: https://dl.google.com/dl/android/maven2/androidx/test/monitor/1.7.2/monitor-1.7.2.pom"/>
+            <sha256 value="388fe58cf6062ffcce209853ac5c006d1d6efee9ba76b16fabfb45a7f26521ce" origin="Official HTTPS bytes verified against cache: https://dl.google.com/dl/android/maven2/androidx/test/monitor/1.7.2/monitor-1.7.2.pom" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="nativeruntime" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="nativeruntime" version="4.15.1">
          <artifact name="nativeruntime-4.15.1.jar">
-            <sha256 value="e51f4c87a9e3441a2ceefbe442753ee45d26826a7fb52b7c4c4ddd38595fd463" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/nativeruntime/4.15.1/nativeruntime-4.15.1.jar"/>
+            <sha256 value="e51f4c87a9e3441a2ceefbe442753ee45d26826a7fb52b7c4c4ddd38595fd463" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/nativeruntime/4.15.1/nativeruntime-4.15.1.jar" />
          </artifact>
          <artifact name="nativeruntime-4.15.1.module">
-            <sha256 value="76fa7b98ce065c6c6a3956c40d2c30a04238f5dd3be401cda5d1626cb92098aa" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/nativeruntime/4.15.1/nativeruntime-4.15.1.module"/>
+            <sha256 value="76fa7b98ce065c6c6a3956c40d2c30a04238f5dd3be401cda5d1626cb92098aa" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/nativeruntime/4.15.1/nativeruntime-4.15.1.module" />
          </artifact>
       </component>
-      <component group="org.sonatype.oss" name="oss-parent" version="4">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.sonatype.oss" name="oss-parent" version="4">
          <artifact name="oss-parent-4.pom">
-            <sha256 value="c513995cf019d9213d4fda666589937b2bf1bea5c4cdd337e6170e80b18406ee" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/4/oss-parent-4.pom"/>
+            <sha256 value="c513995cf019d9213d4fda666589937b2bf1bea5c4cdd337e6170e80b18406ee" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/4/oss-parent-4.pom" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="pluginapi" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="pluginapi" version="4.15.1">
          <artifact name="pluginapi-4.15.1.jar">
-            <sha256 value="4f56ad63096fe70a9e3999f4d6270f477ccaeee184c1223d27427ab4427b43e9" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/pluginapi/4.15.1/pluginapi-4.15.1.jar"/>
+            <sha256 value="4f56ad63096fe70a9e3999f4d6270f477ccaeee184c1223d27427ab4427b43e9" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/pluginapi/4.15.1/pluginapi-4.15.1.jar" />
          </artifact>
          <artifact name="pluginapi-4.15.1.module">
-            <sha256 value="2abaafe3550352c048f623001310f015537332b81f35f40070d9ec4c3460f845" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/pluginapi/4.15.1/pluginapi-4.15.1.module"/>
+            <sha256 value="2abaafe3550352c048f623001310f015537332b81f35f40070d9ec4c3460f845" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/pluginapi/4.15.1/pluginapi-4.15.1.module" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="plugins-maven-dependency-resolver" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="plugins-maven-dependency-resolver" version="4.15.1">
          <artifact name="plugins-maven-dependency-resolver-4.15.1.jar">
-            <sha256 value="6512964ab2cf55003f37c3c33ee9ae687cea5bd289cebf0d46e715c317e5653a" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/plugins-maven-dependency-resolver/4.15.1/plugins-maven-dependency-resolver-4.15.1.jar"/>
+            <sha256 value="6512964ab2cf55003f37c3c33ee9ae687cea5bd289cebf0d46e715c317e5653a" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/plugins-maven-dependency-resolver/4.15.1/plugins-maven-dependency-resolver-4.15.1.jar" />
          </artifact>
          <artifact name="plugins-maven-dependency-resolver-4.15.1.pom">
-            <sha256 value="88a5161436167ae0c0edb188eed171d3895cd16acdcc749a185c1a9e3b000df8" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/plugins-maven-dependency-resolver/4.15.1/plugins-maven-dependency-resolver-4.15.1.pom"/>
+            <sha256 value="88a5161436167ae0c0edb188eed171d3895cd16acdcc749a185c1a9e3b000df8" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/plugins-maven-dependency-resolver/4.15.1/plugins-maven-dependency-resolver-4.15.1.pom" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="resources" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="resources" version="4.15.1">
          <artifact name="resources-4.15.1.jar">
-            <sha256 value="9e49fa451bfd76b61718264f1047a5cbca0b25ffc4c34c2690fac24bd48125e8" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/resources/4.15.1/resources-4.15.1.jar"/>
+            <sha256 value="9e49fa451bfd76b61718264f1047a5cbca0b25ffc4c34c2690fac24bd48125e8" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/resources/4.15.1/resources-4.15.1.jar" />
          </artifact>
          <artifact name="resources-4.15.1.module">
-            <sha256 value="422ff4f37ed5271594dced67ff07c17f292e9f270338486c27004e0fba182dcd" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/resources/4.15.1/resources-4.15.1.module"/>
+            <sha256 value="422ff4f37ed5271594dced67ff07c17f292e9f270338486c27004e0fba182dcd" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/resources/4.15.1/resources-4.15.1.module" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="robolectric" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="robolectric" version="4.15.1">
          <artifact name="robolectric-4.15.1.jar">
-            <sha256 value="592ce454d42d36382194d5505fb1cdd8a19689351b5cf1049b8bbe1af4de9f81" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/robolectric/4.15.1/robolectric-4.15.1.jar"/>
+            <sha256 value="592ce454d42d36382194d5505fb1cdd8a19689351b5cf1049b8bbe1af4de9f81" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/robolectric/4.15.1/robolectric-4.15.1.jar" />
          </artifact>
          <artifact name="robolectric-4.15.1.module">
-            <sha256 value="1dafeb956e746531de64e2de5074c9ec6960c8754cc64d27d63d68aecbd5386b" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/robolectric/4.15.1/robolectric-4.15.1.module"/>
+            <sha256 value="1dafeb956e746531de64e2de5074c9ec6960c8754cc64d27d63d68aecbd5386b" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/robolectric/4.15.1/robolectric-4.15.1.module" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="sandbox" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="sandbox" version="4.15.1">
          <artifact name="sandbox-4.15.1.jar">
-            <sha256 value="27a326a22c2c8c04e4021e4802d90f60ea98d68229211e7bb124ad76ce1868d4" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/sandbox/4.15.1/sandbox-4.15.1.jar"/>
+            <sha256 value="27a326a22c2c8c04e4021e4802d90f60ea98d68229211e7bb124ad76ce1868d4" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/sandbox/4.15.1/sandbox-4.15.1.jar" />
          </artifact>
          <artifact name="sandbox-4.15.1.module">
-            <sha256 value="1b431bd706626961613ae4da2c56d86ebb6c23778898e8d2379df76bc7cf9c32" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/sandbox/4.15.1/sandbox-4.15.1.module"/>
+            <sha256 value="1b431bd706626961613ae4da2c56d86ebb6c23778898e8d2379df76bc7cf9c32" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/sandbox/4.15.1/sandbox-4.15.1.module" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="shadowapi" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="shadowapi" version="4.15.1">
          <artifact name="shadowapi-4.15.1.jar">
-            <sha256 value="2b4312a1b3a74cb237cd443869b8d7e6cfabfd5c92beb70d4df4150f10365253" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/shadowapi/4.15.1/shadowapi-4.15.1.jar"/>
+            <sha256 value="2b4312a1b3a74cb237cd443869b8d7e6cfabfd5c92beb70d4df4150f10365253" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/shadowapi/4.15.1/shadowapi-4.15.1.jar" />
          </artifact>
          <artifact name="shadowapi-4.15.1.module">
-            <sha256 value="103f9c8957c1d1da4b28c908ca06c86654249a98577449a9dc4fe8de2c24e456" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/shadowapi/4.15.1/shadowapi-4.15.1.module"/>
+            <sha256 value="103f9c8957c1d1da4b28c908ca06c86654249a98577449a9dc4fe8de2c24e456" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/shadowapi/4.15.1/shadowapi-4.15.1.module" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="shadows-framework" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="shadows-framework" version="4.15.1">
          <artifact name="shadows-framework-4.15.1.jar">
-            <sha256 value="5561ae64783c3cb95c64d23354f8a27bc315445eb536ab06d2b50e921083b684" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/shadows-framework/4.15.1/shadows-framework-4.15.1.jar"/>
+            <sha256 value="5561ae64783c3cb95c64d23354f8a27bc315445eb536ab06d2b50e921083b684" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/shadows-framework/4.15.1/shadows-framework-4.15.1.jar" />
          </artifact>
          <artifact name="shadows-framework-4.15.1.module">
-            <sha256 value="1f81b08889d9541da1224a19a14ad94d585b62b9b40626fc10443cf44238a645" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/shadows-framework/4.15.1/shadows-framework-4.15.1.module"/>
+            <sha256 value="1f81b08889d9541da1224a19a14ad94d585b62b9b40626fc10443cf44238a645" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/shadows-framework/4.15.1/shadows-framework-4.15.1.module" />
          </artifact>
       </component>
-      <component group="com.almworks.sqlite4java" name="sqlite4java" version="1.0.392">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.almworks.sqlite4java" name="sqlite4java" version="1.0.392">
          <artifact name="sqlite4java-1.0.392.jar">
-            <sha256 value="243a64470fda0e86a6fddeb0af4c7aa9426ce84e68cbfe18d75ee5da4b7e0b92" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/almworks/sqlite4java/sqlite4java/1.0.392/sqlite4java-1.0.392.jar"/>
+            <sha256 value="243a64470fda0e86a6fddeb0af4c7aa9426ce84e68cbfe18d75ee5da4b7e0b92" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/almworks/sqlite4java/sqlite4java/1.0.392/sqlite4java-1.0.392.jar" />
          </artifact>
          <artifact name="sqlite4java-1.0.392.pom">
-            <sha256 value="139552c586a57bf6d98f87d6b7e23fef4db53cf74097be962f7868e3606c79d2" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/almworks/sqlite4java/sqlite4java/1.0.392/sqlite4java-1.0.392.pom"/>
+            <sha256 value="139552c586a57bf6d98f87d6b7e23fef4db53cf74097be962f7868e3606c79d2" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/almworks/sqlite4java/sqlite4java/1.0.392/sqlite4java-1.0.392.pom" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="utils" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="utils" version="4.15.1">
          <artifact name="utils-4.15.1.jar">
-            <sha256 value="5ea6dc1c70a5c343c956b4d27715a646fdacc312a9c12be22aee3ec300745c91" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/utils/4.15.1/utils-4.15.1.jar"/>
+            <sha256 value="5ea6dc1c70a5c343c956b4d27715a646fdacc312a9c12be22aee3ec300745c91" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/utils/4.15.1/utils-4.15.1.jar" />
          </artifact>
          <artifact name="utils-4.15.1.pom">
-            <sha256 value="f200fb62b40ee03092cd75f6f5429cf04da05be80c4527964ea7501820f22775" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/utils/4.15.1/utils-4.15.1.pom"/>
+            <sha256 value="f200fb62b40ee03092cd75f6f5429cf04da05be80c4527964ea7501820f22775" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/utils/4.15.1/utils-4.15.1.pom" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="utils-reflector" version="4.15.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="utils-reflector" version="4.15.1">
          <artifact name="utils-reflector-4.15.1.jar">
-            <sha256 value="199ecbcc077d0b9130aae9772e48be51bdbd5d7ea2e1c20b0a48e8eaa1e2d4f8" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/utils-reflector/4.15.1/utils-reflector-4.15.1.jar"/>
+            <sha256 value="199ecbcc077d0b9130aae9772e48be51bdbd5d7ea2e1c20b0a48e8eaa1e2d4f8" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/utils-reflector/4.15.1/utils-reflector-4.15.1.jar" />
          </artifact>
          <artifact name="utils-reflector-4.15.1.module">
-            <sha256 value="afd81dedc74fe08ea18d59f8aa269749b807ec2c365106e87b5c7b1395e3140d" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/utils-reflector/4.15.1/utils-reflector-4.15.1.module"/>
+            <sha256 value="afd81dedc74fe08ea18d59f8aa269749b807ec2c365106e87b5c7b1395e3140d" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/utils-reflector/4.15.1/utils-reflector-4.15.1.module" />
          </artifact>
       </component>
-      <component group="org.conscrypt" name="conscrypt-openjdk-uber" version="2.5.2">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.conscrypt" name="conscrypt-openjdk-uber" version="2.5.2">
          <artifact name="conscrypt-openjdk-uber-2.5.2.pom">
-            <sha256 value="b5fd548732f932545d777890eb995222bfe866232351be908137e39c3c672d8b" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/conscrypt/conscrypt-openjdk-uber/2.5.2/conscrypt-openjdk-uber-2.5.2.pom"/>
+            <sha256 value="b5fd548732f932545d777890eb995222bfe866232351be908137e39c3c672d8b" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/conscrypt/conscrypt-openjdk-uber/2.5.2/conscrypt-openjdk-uber-2.5.2.pom" />
          </artifact>
          <artifact name="conscrypt-openjdk-uber-2.5.2.jar">
-            <sha256 value="eaf537d98e033d0f0451cd1b8cc74e02d7b55ec882da63c88060d806ba89c348" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/conscrypt/conscrypt-openjdk-uber/2.5.2/conscrypt-openjdk-uber-2.5.2.jar"/>
+            <sha256 value="eaf537d98e033d0f0451cd1b8cc74e02d7b55ec882da63c88060d806ba89c348" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/conscrypt/conscrypt-openjdk-uber/2.5.2/conscrypt-openjdk-uber-2.5.2.jar" />
          </artifact>
       </component>
-      <component group="com.google.errorprone" name="error_prone_annotation" version="2.38.0">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.google.errorprone" name="error_prone_annotation" version="2.38.0">
          <artifact name="error_prone_annotation-2.38.0.pom">
-            <sha256 value="b09e282049957b4c58215e1738eeb05ea44231697bb641a6a612d7dd17df0975" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/errorprone/error_prone_annotation/2.38.0/error_prone_annotation-2.38.0.pom"/>
+            <sha256 value="b09e282049957b4c58215e1738eeb05ea44231697bb641a6a612d7dd17df0975" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/errorprone/error_prone_annotation/2.38.0/error_prone_annotation-2.38.0.pom" />
          </artifact>
          <artifact name="error_prone_annotation-2.38.0.jar">
-            <sha256 value="cc6484df1374964d7d957263f2b1131a2deff7e6b26ff8f309cb038020d5f873" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/errorprone/error_prone_annotation/2.38.0/error_prone_annotation-2.38.0.jar"/>
+            <sha256 value="cc6484df1374964d7d957263f2b1131a2deff7e6b26ff8f309cb038020d5f873" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/errorprone/error_prone_annotation/2.38.0/error_prone_annotation-2.38.0.jar" />
          </artifact>
       </component>
-      <component group="androidx.test.espresso" name="espresso-idling-resource" version="3.6.1">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="androidx.test.espresso" name="espresso-idling-resource" version="3.6.1">
          <artifact name="espresso-idling-resource-3.6.1.pom">
-            <sha256 value="8dcb942e951ab2954e74003ddfcd4f899d26537d04be9209e10518069810645f" origin="Official HTTPS bytes verified against cache: https://dl.google.com/dl/android/maven2/androidx/test/espresso/espresso-idling-resource/3.6.1/espresso-idling-resource-3.6.1.pom"/>
+            <sha256 value="8dcb942e951ab2954e74003ddfcd4f899d26537d04be9209e10518069810645f" origin="Official HTTPS bytes verified against cache: https://dl.google.com/dl/android/maven2/androidx/test/espresso/espresso-idling-resource/3.6.1/espresso-idling-resource-3.6.1.pom" />
          </artifact>
          <artifact name="espresso-idling-resource-3.6.1.aar">
-            <sha256 value="bc63a8780f1c707724e389f530cb2e1a6847da97f6a8114604c002aba2fd86ca" origin="Official HTTPS bytes verified against cache: https://dl.google.com/dl/android/maven2/androidx/test/espresso/espresso-idling-resource/3.6.1/espresso-idling-resource-3.6.1.aar"/>
+            <sha256 value="bc63a8780f1c707724e389f530cb2e1a6847da97f6a8114604c002aba2fd86ca" origin="Official HTTPS bytes verified against cache: https://dl.google.com/dl/android/maven2/androidx/test/espresso/espresso-idling-resource/3.6.1/espresso-idling-resource-3.6.1.aar" />
          </artifact>
       </component>
-      <component group="org.robolectric" name="nativeruntime-dist-compat" version="1.0.17">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="org.robolectric" name="nativeruntime-dist-compat" version="1.0.17">
          <artifact name="nativeruntime-dist-compat-1.0.17.pom">
-            <sha256 value="1cf8c075d1cb72f7c96f612b7a50106875e302ef33c2b88a69e54a46513be4e2" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/nativeruntime-dist-compat/1.0.17/nativeruntime-dist-compat-1.0.17.pom"/>
+            <sha256 value="1cf8c075d1cb72f7c96f612b7a50106875e302ef33c2b88a69e54a46513be4e2" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/nativeruntime-dist-compat/1.0.17/nativeruntime-dist-compat-1.0.17.pom" />
          </artifact>
          <artifact name="nativeruntime-dist-compat-1.0.17.jar">
-            <sha256 value="4327201eeee6a50f534ef5fb26a61f54bf9c2c9efeaab842a814e7da4ee58994" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/nativeruntime-dist-compat/1.0.17/nativeruntime-dist-compat-1.0.17.jar"/>
+            <sha256 value="4327201eeee6a50f534ef5fb26a61f54bf9c2c9efeaab842a814e7da4ee58994" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/org/robolectric/nativeruntime-dist-compat/1.0.17/nativeruntime-dist-compat-1.0.17.jar" />
          </artifact>
       </component>
-      <component group="com.google.testparameterinjector" name="test-parameter-injector" version="1.18">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.google.testparameterinjector" name="test-parameter-injector" version="1.18">
          <artifact name="test-parameter-injector-1.18.pom">
-            <sha256 value="de05732fbdcb5b05e19985abc0a284e41be3ec685387d04f8488a5e6504ea08e" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/testparameterinjector/test-parameter-injector/1.18/test-parameter-injector-1.18.pom"/>
+            <sha256 value="de05732fbdcb5b05e19985abc0a284e41be3ec685387d04f8488a5e6504ea08e" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/testparameterinjector/test-parameter-injector/1.18/test-parameter-injector-1.18.pom" />
          </artifact>
          <artifact name="test-parameter-injector-1.18.jar">
-            <sha256 value="e5a7c649c54c412049908247ca5e25fe6921d746849c6017a84dc6044237a4b4" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/testparameterinjector/test-parameter-injector/1.18/test-parameter-injector-1.18.jar"/>
+            <sha256 value="e5a7c649c54c412049908247ca5e25fe6921d746849c6017a84dc6044237a4b4" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/testparameterinjector/test-parameter-injector/1.18/test-parameter-injector-1.18.jar" />
          </artifact>
       </component>
-      <component group="com.google.testparameterinjector" name="test-parameter-injector-parent" version="1.18">
+      <component xmlns="https://schema.gradle.org/dependency-verification" group="com.google.testparameterinjector" name="test-parameter-injector-parent" version="1.18">
          <artifact name="test-parameter-injector-parent-1.18.pom">
-            <sha256 value="b4aee6be3f6dfafa68309e9da4fb38af7fbc2f8c3e26197451f1db38dc4a85d0" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/testparameterinjector/test-parameter-injector-parent/1.18/test-parameter-injector-parent-1.18.pom"/>
+            <sha256 value="b4aee6be3f6dfafa68309e9da4fb38af7fbc2f8c3e26197451f1db38dc4a85d0" origin="Official HTTPS bytes verified against cache: https://repo.maven.apache.org/maven2/com/google/testparameterinjector/test-parameter-injector-parent/1.18/test-parameter-injector-parent-1.18.pom" />
          </artifact>
       </component>
-   </components>
+      </components>
 </verification-metadata>

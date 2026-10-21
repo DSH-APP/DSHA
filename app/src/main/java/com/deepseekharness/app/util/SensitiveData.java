@@ -16,11 +16,11 @@ public final class SensitiveData {
     java.util.regex.Pattern.compile(
         "(?im)((?:authorization|proxy-authorization|cookie|set-cookie|x-token)\\s*:\\s*)[^\\r\\n]+"),
     java.util.regex.Pattern.compile(
-        "(?i)([?&](?:token|api[_-]?key|access[_-]?token|refresh[_-]?token|auth|secret|password)=)[^\\s&#'\"<>]+"),
+        "(?i)([?&](?:token|api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|auth|secret|password|code|state|authorization_code|code_verifier|code_challenge|authorize_id)=)[^\\s&#'\"<>]+"),
     java.util.regex.Pattern.compile(
-        "(?i)(\\b(?:[A-Z0-9_]*API_KEY|api[_-]?key|authorization|cookie|access[_-]?token|refresh[_-]?token|token|password|passwd|secret|[A-Z0-9_]*(?:client[_-]?secret|id[_-]?token|private[_-]?key|credential|signature))\\b[\"']?\\s*[:=：]\\s*)(?:\"[^\"]*\"|'[^']*'|[^\\s,;<>]+)"),
+        "(?i)(\\b(?:[A-Z0-9_]*API_KEY|api[_-]?key|authorization|cookie|access[_-]?token|refresh[_-]?token|id[_-]?token|token|password|passwd|secret|code_verifier|code_challenge|authorization_code|authorize_id)\\b[\"']?\\s*[:=：]\\s*)(?:\"[^\"]*\"|'[^']*'|[^\\s,;<>&#]+)"),
     java.util.regex.Pattern.compile("(?i)(https?://)[^\\s/@:]+:[^\\s/@]+@"),
-    java.util.regex.Pattern.compile("(?i)\\b(Bearer|Basic)\\s+[A-Za-z0-9._~+/-]+=*"),
+    java.util.regex.Pattern.compile("(?i)\\bBearer\\s+[A-Za-z0-9._~+/-]+=*"),
     java.util.regex.Pattern.compile(
         "\\b(?:sk-[A-Za-z0-9_-]{12,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AIza[0-9A-Za-z_-]{35}|AKIA[0-9A-Z]{16}|xox[abpr]-[A-Za-z0-9-]{10,}|eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+)\\b")
   };
@@ -48,7 +48,7 @@ public final class SensitiveData {
     known.sort((a, b) -> Integer.compare(b.length(), a.length()));
     for (String secret : known) safe = safe.replace(secret, "***");
     String[] replacements = {
-      UiText.text("[私钥已隐藏]"), "$1***", "$1***", "$1***", "$1***@", "$1 ***", "***"
+      UiText.text("[私钥已隐藏]"), "$1***", "$1***", "$1***", "$1***@", "Bearer ***", "***"
     };
     for (int i = 0; i < RULES.length; i++)
       safe = RULES[i].matcher(safe).replaceAll(replacements[i]);

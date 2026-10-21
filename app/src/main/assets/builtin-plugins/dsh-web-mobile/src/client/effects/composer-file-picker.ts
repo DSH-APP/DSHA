@@ -259,10 +259,10 @@ export interface PickerVisibleBand {
  * 浮层落位纯核（无 DOM，2026-10-13 抽出并导出，好让数值被测试钉住）：
  * 锚点上方优先 8px，放不下就翻到下方，最后夹进可见带、四舍五入到整像素。
  *
- * 为什么是「带」而不是「视口高」：键盘弹起时只缩**视觉**视口（本仓 viewport meta 没有
- * interactive-widget，即默认 resizes-visual），`getBoundingClientRect()` 与
- * `position: fixed` 的 top/left 都仍是 layout 视口坐标 —— 所以锚点盒与返回的 top/left
- * 都**不需要**换算，只有「夹进哪一段」得用视觉视口那一段（见 `visibleBand()`）。
+ * 为什么是「带」而不是「视口高」：`getBoundingClientRect()` 与 `position: fixed` 的
+ * top/left 都是 layout 视口坐标，与视觉视口可能只差一个平移（iOS 键盘滚动模型，Safari
+ * 不认 `interactive-widget`；Chromium 自 2026-10-18 起键盘缩 layout 视口，两条通道重合）
+ * —— 锚点盒与返回值都**不需要**换算，只有「夹进哪一段」得用视觉视口那一段（`visibleBand()`）。
  * @param anchor - 锚点（回形针）盒，layout 视口坐标。
  * @param own - 浮层自身尺寸。
  * @param band - 可见带，layout 视口坐标。

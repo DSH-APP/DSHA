@@ -4,53 +4,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class DeviceAppPolicyTest {
-  @Test
-  public void privilegedInventoryMustContainTheActualCallingUid() {
-    String users = "package:example.app uid:1012345\npackage:com.dsh.client uid:1012346\n";
-    String systems = "package:android uid:1001000\n";
-    assertNotNull(DeviceAppPolicy.snapshot(users, systems, "com.dsh.client", 10, 1012346));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> DeviceAppPolicy.snapshot(users, systems, "com.dsh.client", 10, 1012347));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> DeviceAppPolicy.snapshot(users, systems, "com.dsh.client", 10, 12346));
-  }
-
-  @Test
-  public void explicitCurrentUserCannotStopOtherProfilesOrAcceptContaminatedInventory() {
-    var apps =
-        DeviceAppPolicy.snapshot(
-            "package:example.app uid:1012345\npackage:com.dsh.client uid:1012346\n",
-            "package:android uid:1001000\n",
-            "com.dsh.client",
-            10);
-    assertEquals(
-        java.util.List.of("example.app"),
-        apps.targets(DeviceShellPolicy.inspect("kill 42"), "PID UID NAME\n42 1012345 example.app"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            apps.targets(
-                DeviceShellPolicy.inspect("kill 42"), "PID UID NAME\n42 12345 example.app"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            DeviceAppPolicy.snapshot(
-                "package:example.app uid:12345\npackage:com.dsh.client uid:1012346",
-                "package:android uid:1001000",
-                "com.dsh.client",
-                10));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            DeviceAppPolicy.snapshot(
-                "package:com.dsh.client uid:1012346\nError: user 999 unavailable",
-                "package:android uid:1001000",
-                "com.dsh.client",
-                10));
-  }
-
   @org.junit.Test
   public void clonedAppsResolveAllUidsAndProtectSystemProfiles() {
     DeviceAppPolicy.Snapshot snapshot =

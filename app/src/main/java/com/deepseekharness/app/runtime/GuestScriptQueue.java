@@ -19,7 +19,12 @@ final class GuestScriptQueue {
   }
 
   Lease enter() throws IOException, InterruptedException {
+    return enter(null);
+  }
+
+  Lease enter(GuestScriptBudget budget) throws IOException, InterruptedException {
     if (Thread.interrupted()) throw new InterruptedException("SCRIPT_QUEUE_CANCELLED");
+    if (budget != null) budget.remainingMillis();
     synchronized (lock) {
       if (active != null && active.owner == Thread.currentThread()) {
         depth++;
@@ -29,8 +34,12 @@ final class GuestScriptQueue {
       Ticket ticket = new Ticket(Thread.currentThread());
       waiting.addLast(ticket);
       try {
-        while (active != null || waiting.peekFirst() != ticket) lock.wait();
-      } catch (InterruptedException cancelled) {
+        while (active != null || waiting.peekFirst() != ticket) {
+          if (budget == null) lock.wait();
+          else lock.wait(Math.min(100, budget.remainingMillis()));
+        }
+        if (budget != null) budget.remainingMillis();
+      } catch (IOException | InterruptedException | RuntimeException | Error cancelled) {
         waiting.remove(ticket);
         lock.notifyAll();
         throw cancelled;

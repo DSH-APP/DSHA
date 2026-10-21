@@ -145,7 +145,7 @@ public final class StartupTrace {
     owned(
         expected,
         now,
-        conflict > 0 ? "Web 端口被占用：" + conflict : name.isEmpty() ? "插件加载异常" : "插件加载异常：" + name);
+        conflict > 0 ? "Web 端口被占用：" + conflict : name.isEmpty() ? "DSH 启动异常" : "插件加载异常：" + name);
     add(expected, now, reason);
   }
 

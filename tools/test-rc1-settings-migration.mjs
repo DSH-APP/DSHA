@@ -34,8 +34,8 @@ function forms(home) {
   }};
   return {settings,add,entries,get writes(){return writes;},change(ns,value){const entry=entries.get(ns);entry.options.config={...entry.options.config,...value};entry.fiber.config=resolveConfig(entry.fiber.runtime,entry.options.config);}};
 }
-async function fixture(document, run) {
-  const root=await mkdtemp(join(tmpdir(),'dsha-real-settings-'));const home=join(root,'.dsh'),state=join(root,'state');await mkdir(home);await writeFile(join(home,'settings.yaml'),document);
+async function fixture(document, run, version=expectedVersion) {
+  const root=await mkdtemp(join(tmpdir(),'dsha-real-settings-'));const home=join(root,'.dsh'),state=join(root,'state');await mkdir(home);await writeFile(join(home,'runtime-patches.json'),JSON.stringify({schema:1,dshVersion:version}));await writeFile(join(home,'settings.yaml'),document);
   const p=spawnSync(process.env.DSHA_PYTHON || 'python',['app/src/main/assets/rc1-migration.py','prepare','--root',root,'--state-root',state,'--startup-id','test'],{encoding:'utf8'});
   assert.equal(p.status,0,p.stderr+p.stdout);
   const current=JSON.parse(await readFile(join(state,'current.json'),'utf8'));const ledger=join(state,'generations',current.generation,'settings-result.json');
@@ -70,3 +70,44 @@ test('源正文在正式写入前变化时拒绝旧快照',()=>fixture('first: {
   api.add('first');await writeFile(join(root,'.dsh','settings.yaml'),'first: {model: changed}\n');
   await assert.rejects(migrate(api.settings,parse,{}, {stateRoot:state}),/SOURCE_CHANGED/);assert.equal(api.writes,0);
 }));
+
+
+test('runtime升级保留旧committed代与用户后改值，旧记录不提升为新版host缓存',()=>fixture('first: {model: old1}\n',async(api,state,ledger,root)=>{
+  api.add('first');await migrate(api.settings,parse,{}, {stateRoot:state});assert.equal(api.writes,1);
+  const current=JSON.parse(await readFile(join(state,'current.json'),'utf8'));
+  const folder=join(state,'generations',current.generation);
+  const run=command=>spawnSync(process.env.DSHA_PYTHON || 'python',['app/src/main/assets/rc1-migration.py',command,'--root',root,'--state-root',state,'--startup-id','test'],{encoding:'utf8'});
+  let result=run('finalize');assert.equal(result.status,0,result.stderr+result.stdout);
+  const before=await readFile(join(folder,'receipt.json'),'utf8');assert.equal(JSON.parse(before).dshVersion,'0.2.0-rc.2');
+  const oldCache=await readFile(join(folder,'reuse.json'),'utf8');
+  await writeFile(join(root,'.dsh','runtime-patches.json'),JSON.stringify({schema:1,dshVersion:expectedVersion}));
+  api.change('first',{model:'user-later'});
+  result=run('prepare');assert.equal(result.status,0,result.stderr+result.stdout);
+  await migrate(api.settings,parse,{}, {stateRoot:state});assert.equal(api.writes,1);
+  assert.equal(api.settings.describe().find(x=>x.ns==='first').value.model,'user-later');
+  result=run('finalize');assert.equal(result.status,0,result.stderr+result.stdout);
+  assert.equal(await readFile(join(folder,'receipt.json'),'utf8'),before);
+  assert.equal(await readFile(join(folder,'reuse.json'),'utf8'),oldCache);
+  assert.equal(JSON.parse(oldCache).dshVersion,'0.2.0-rc.2');
+  assert.equal(JSON.parse(await readFile(join(state,'current.json'),'utf8')).generation,current.generation);
+},'0.2.0-rc.2'));
+
+test('runtime升级接续旧pending代仅补未完成节，不重写已完成节或抬升证明版本',()=>fixture('first: {model: old1}\nmissing: {model: old2}\n',async(api,state,ledger,root)=>{
+  const run=command=>spawnSync(process.env.DSHA_PYTHON || 'python',['app/src/main/assets/rc1-migration.py',command,'--root',root,'--state-root',state,'--startup-id','test'],{encoding:'utf8'});
+  const current=JSON.parse(await readFile(join(state,'current.json'),'utf8'));
+  const folder=join(state,'generations',current.generation);
+  api.add('first');await migrate(api.settings,parse,{}, {stateRoot:state});assert.equal(api.writes,1);
+  let result=run('finalize');assert.equal(result.status,0,result.stderr+result.stdout);
+  assert.equal(JSON.parse(await readFile(join(folder,'receipt.json'),'utf8')).status,'pending');
+  api.change('first',{model:'user-later'});api.add('missing');
+  await writeFile(join(root,'.dsh','runtime-patches.json'),JSON.stringify({schema:1,dshVersion:expectedVersion}));
+  result=run('prepare');assert.equal(result.status,0,result.stderr+result.stdout);
+  await migrate(api.settings,parse,{}, {stateRoot:state});assert.equal(api.writes,2);
+  assert.equal(api.settings.describe().find(x=>x.ns==='first').value.model,'user-later');
+  assert.equal(api.settings.describe().find(x=>x.ns==='missing').value.model,'old2');
+  result=run('finalize');assert.equal(result.status,0,result.stderr+result.stdout);
+  const receipt=JSON.parse(await readFile(join(folder,'receipt.json'),'utf8'));
+  assert.equal(receipt.status,'committed');assert.equal(receipt.dshVersion,'0.2.0-rc.2');assert.equal(receipt.runtimeDshVersion,expectedVersion);
+  await assert.rejects(readFile(join(folder,'reuse.json')),/ENOENT/);
+  assert.equal(JSON.parse(await readFile(join(state,'current.json'),'utf8')).generation,current.generation);
+},'0.2.0-rc.2'));

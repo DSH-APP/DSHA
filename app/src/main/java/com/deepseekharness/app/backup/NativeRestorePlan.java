@@ -297,8 +297,8 @@ public final class NativeRestorePlan {
         throw new IOException("ARCHIVE_LINK_CYCLE");
       File root = fs.child(candidate, rootId);
       if (fs.stat(root).type.equals("MISSING")) fs.directory(root);
-      File resolved = existingLinkTarget(root, target.substring(rootId.length() + 1));
-      if (resolved == null || fs.stat(resolved).type.equals("LINK")) {
+      File resolved = fs.child(root, target.substring(rootId.length() + 1));
+      if (fs.stat(resolved).type.equals("MISSING") || fs.stat(resolved).type.equals("LINK")) {
         saveLinkMetadata(row);
         continue;
       }
@@ -321,21 +321,6 @@ public final class NativeRestorePlan {
 
   private static String joined(String prefix, String path) {
     return prefix.isEmpty() ? path : path.isEmpty() ? prefix : prefix + "/" + path;
-  }
-
-  /** 缺失目标只保留链接元数据；存在的非目录祖先仍拒绝，绝不创建目标后缀。 */
-  private File existingLinkTarget(File root, String relative) throws IOException {
-    BackupLimits.path(relative);
-    File current = root;
-    if (!fs.stat(current).type.equals("DIRECTORY")) throw new IOException("UNSAFE_ROOT");
-    if (relative.isEmpty()) return current;
-    for (String part : relative.split("/")) {
-      BackupFileSystem.Node parent = fs.stat(current);
-      if (parent.type.equals("MISSING")) return null;
-      if (!parent.type.equals("DIRECTORY")) throw new IOException("PARENT_LINK_OR_MISSING");
-      current = new File(current, part);
-    }
-    return fs.stat(current).type.equals("MISSING") ? null : current;
   }
 
   private void saveLinkMetadata(Map<String, Object> row) throws IOException {

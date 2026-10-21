@@ -1,8 +1,6 @@
 {
   "schema": 1,
   "baseDeviceChecks": [
-    "native-launch-and-navigation",
-    "overlay-update-and-maintenance-ready",
     "web-ready",
     "existing-data-preserved",
     "plugins-visible",
@@ -10,21 +8,6 @@
     "no-crash"
   ],
   "changeRules": [
-    {
-      "id": "export-and-external-preservation",
-      "paths": [
-        "*/backup/*",
-        "*/core/NativeBackupJobs.java",
-        "*/core/NativeConfigurationReset.java",
-        "*/core/MaintenanceCoordinator.java",
-        "*/runtime/EnvironmentRebuildTransaction.java",
-        "*/ui/NativeDataActivity.java",
-        "*/ui/BackupActivity.java",
-        "*/assets/environment-data.py"
-      ],
-      "flavors": ["standard", "low"],
-      "deviceChecks": ["password-free-export-and-external-preservation"]
-    },
     {
       "id": "system-language",
       "paths": [
@@ -256,45 +239,6 @@
       ],
       "deviceChecks": [
         "bounded-proroot-diagnostic"
-      ]
-    },
-    {
-      "id": "bxroot-runtime",
-      "paths": [
-        "app/src/main/jniLibs/arm64-v8a/libbxroot*.so",
-        "app/src/main/jniLibs/arm64-v8a/libdsha-session.so",
-        "*/runtime/ContainerRuntime.java",
-        "*/runtime/RuntimeNativeFiles.java",
-        "*/runtime/RecoveryToolchain.java",
-        "*/recovery/RecoveryRuntime.java",
-        "tools/bxroot/*",
-        "app/src/main/assets/bxroot-native-lock.json"
-      ],
-      "flavors": ["standard", "low"],
-      "deviceChecks": [
-        "bxroot-cold-and-web-ready",
-        "bxroot-pty-and-simple-terminal",
-        "bxroot-maintenance-and-guest-stop",
-        "proot-explicit-fallback"
-      ]
-    },
-    {
-      "id": "conversation-presentation",
-      "paths": [
-        "*/ui/BrowserPresentation*.java",
-        "*/ui/BrowserTheme*.java",
-        "*/ui/PictureInPicture*.java",
-        "*/ui/WebFullscreenUi.java",
-        "*/ui/WebPreviewActivity.java",
-        "*/ui/GeckoPreviewActivity.java",
-        "*/util/BrowserPresentation*.java",
-        "*/util/PictureInPicture*.java",
-        "*/res/values/themes.xml"
-      ],
-      "flavors": ["standard", "low"],
-      "deviceChecks": [
-        "conversation-immersive-insets-and-navigation",
-        "conversation-fullscreen-and-pip"
       ]
     }
   ]

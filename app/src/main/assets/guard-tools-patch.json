@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "dshVersion": "0.2.0-rc.2",
+  "dshVersion": "0.2.1-rc.2",
   "module": "@deepseek-ai/dsh-tools/lib/index.js",
   "patches": [
     {
-      "before": "import { Service } from \"@deepseek-ai/cordis\";",
-      "after": "import { attachPolicy, captureExecution, prepareOperation, verifyDispatch } from \"dsha-destructive-policy\"; // DSHA_REQUIRED_POLICY_V1\nimport { Service } from \"@deepseek-ai/cordis\";"
+      "before": "import { Service, symbols } from \"@deepseek-ai/cordis\";",
+      "after": "import { attachPolicy, captureExecution, prepareOperation, verifyGlobalConsent, verifyDispatch } from \"dsha-destructive-policy\"; // DSHA_REQUIRED_POLICY_V1\nimport { Service, symbols } from \"@deepseek-ai/cordis\";"
     },
     {
       "before": "\t\tsuper(ctx, \"tools\");",
@@ -20,8 +20,9 @@
       "after": "\t\t\tif (decision.kind === \"allow\") await prepareOperation(this, exec);\n\t\t\tconst denialReason = decision.kind === \"allow\" ? this.guardReason(exec) : decision.reason;"
     },
     {
-      "before": "\t\t\tif (!tool) throw new ToolNotFoundError(exec.name);\n\t\t\tstate.bodyInvoked = true;",
-      "after": "\t\t\tif (!tool) throw new ToolNotFoundError(exec.name);\n\t\t\tverifyDispatch(this, exec, tool);\n\t\t\tstate.bodyInvoked = true;"
+      "before": "\t\t\tconst tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== void 0);\n\t\t\tif (!tool) throw new ToolNotFoundError(exec.name);\n\t\t\tstate.bodyInvoked = true;",
+      "after": "\t\t\tawait verifyGlobalConsent(exec);\n\t\t\tconst tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== void 0);\n\t\t\tif (!tool) throw new ToolNotFoundError(exec.name);\n\t\t\tverifyDispatch(this, exec, tool);\n\t\t\tstate.bodyInvoked = true;"
     }
-  ]
+  ],
+  "sourceSha256": "1e53932e7c4213ea24a7d87f06960b7a7702cb21f8a5741c97242b4a470a442a"
 }

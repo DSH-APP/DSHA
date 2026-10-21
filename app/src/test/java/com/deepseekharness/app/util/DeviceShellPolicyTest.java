@@ -217,7 +217,7 @@ public class DeviceShellPolicyTest {
         "app_process -Djava.class.path="
             + apk
             + " /system/bin "
-            + "com.deepseekharness.app.vscreen.VirtualScreenCore --launch --port 8998 --package com.dsh.clienu";
+            + "com.deepseekharness.app.vscreen.VirtualScreenCore --launch --port 0 --package com.dsh.clienu";
     assertEquals(
         DeviceShellPolicy.Kind.VIRTUAL_SCREEN,
         DeviceShellPolicy.inspectVirtualScreenLaunch(prefix, apk, "com.dsh.clienu").kind);
@@ -237,7 +237,7 @@ public class DeviceShellPolicyTest {
     assertEquals(
         DeviceShellPolicy.Kind.DENY,
         DeviceShellPolicy.inspectVirtualScreenLaunch(
-                prefix.replace("8998", "89999"), apk, "com.dsh.clienu")
+                prefix.replace("--port 0", "--port 89999"), apk, "com.dsh.clienu")
             .kind);
     assertEquals(
         DeviceShellPolicy.Kind.DENY,
@@ -345,5 +345,34 @@ public class DeviceShellPolicyTest {
             "/data_mirror/data_ce/null/0",
             "/mnt/expand/fixture/user/0"))
       assertTrue(root, DeviceShellPolicy.smsProviderDescendant(root));
+  }
+
+  @Test
+  public void managedVirtualScreenProbeBindsFullBirthIdentityAndHasNoSignalArgument() {
+    String apk = "/data/app/com.dsh.client/base.apk";
+    String identity =
+        "123:456:2000:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:11111111-2222-3333-4444-555555555555";
+    String prefix =
+        "app_process -Djava.class.path="
+            + apk
+            + " /system/bin com.deepseekharness.app.vscreen.VirtualScreenCore --probe-exit --identity "
+            + identity
+            + " --package com.dsh.client";
+    assertEquals(
+        DeviceShellPolicy.Kind.VIRTUAL_SCREEN,
+        DeviceShellPolicy.inspectManagedVirtualScreen(prefix, apk, "com.dsh.client").kind);
+    assertEquals(
+        DeviceShellPolicy.Kind.DENY,
+        DeviceShellPolicy.inspectVirtualScreenLaunch(prefix, apk, "com.dsh.client").kind);
+    for (String invalid :
+        new String[] {
+          prefix + " --signal 9",
+          prefix.replace(identity, "123"),
+          prefix.replace("--probe-exit", "--kill"),
+          prefix.replace("--package com.dsh.client", "--package com.other.app")
+        })
+      assertEquals(
+          DeviceShellPolicy.Kind.DENY,
+          DeviceShellPolicy.inspectManagedVirtualScreen(invalid, apk, "com.dsh.client").kind);
   }
 }

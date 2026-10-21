@@ -26,8 +26,6 @@ export type HostIcon = (props: {
 }) => ReactElement | null;
 /** 输入区文件入口（回形针）。 */
 export declare const IconPaperclip: HostIcon;
-/** 抽屉页脚的会话日志导出。 */
-export declare const IconDownload: HostIcon;
 /** 会话头部的目录抽屉开关。 */
 export declare const IconPanelLeft: HostIcon;
 /** 会话头部的 Files/右侧栏入口。 */

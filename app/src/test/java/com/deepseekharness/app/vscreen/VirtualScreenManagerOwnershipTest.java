@@ -22,6 +22,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Test;
 
 /** Executes the current owner/manager APIs; Android framework construction is not acceptance. */
+@org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner.class)
+@org.robolectric.annotation.Config(
+    sdk = 34,
+    manifest = org.robolectric.annotation.Config.NONE,
+    application = android.app.Application.class)
 public final class VirtualScreenManagerOwnershipTest {
   private static final String TICKET = "0123456789abcdef0123456789abcdef0123456789abcdef";
   private static final String COMMAND = "fixed managed launch";

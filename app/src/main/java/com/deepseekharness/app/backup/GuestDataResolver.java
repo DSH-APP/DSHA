@@ -72,8 +72,6 @@ public final class GuestDataResolver {
         }
         if (node.type.equals("MISSING"))
           return new Resolved(target, BackupArchive.hex(proof.digest()));
-        if (!cursor.equals(target) && !node.type.equals("DIRECTORY"))
-          throw new IOException("SOURCE_NOT_DIRECTORY");
       }
       if (!followed) return new Resolved(target, BackupArchive.hex(proof.digest()));
     }

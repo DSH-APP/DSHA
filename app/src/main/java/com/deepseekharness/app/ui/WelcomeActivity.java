@@ -86,7 +86,7 @@ public class WelcomeActivity extends AppCompatActivity {
                         : com.deepseekharness.app.util.UiText.choose(
                             "开始准备环境", "Prepare the environment"));
             ((TextView) findViewById(R.id.welcome_counter))
-                .setText(getString(R.string.ui_welcome_counter, position + 1));
+                .setText(getString(R.string.ui_welcome_counter, position + 1, dots.length));
           }
         });
 
@@ -114,7 +114,13 @@ public class WelcomeActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBindViewHolder(@NonNull Holder holder, int position) {}
+    public void onBindViewHolder(@NonNull Holder holder, int position) {
+      TextView version = holder.itemView.findViewWithTag("welcome_runtime_version");
+      if (version != null)
+        version.setText(
+            getString(
+                R.string.ui2_offline_badge, com.deepseekharness.app.util.Constants.DSH_VERSION));
+    }
 
     @Override
     public int getItemViewType(int position) {
